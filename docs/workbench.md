@@ -49,7 +49,9 @@ make visual item=title section=modal mode=focus theme=frost-dark vp=1280 out=tit
 make visual item=title section=wrapping mode=focus theme=pixel-light vp=360 scale=120 dir=rtl out=title-stress.png
 ```
 
-`make visual` prepares its renderer and library build, then captures an offline Chromium screenshot at 2× resolution. Files go to Git-ignored `.artifacts/visual/`. `raw=0` includes the workbench controls; the default captures artboards. Keep other temporary evidence in `.artifacts/<task>/` inside the checkout. Stop the preview with `make down` when it is no longer needed.
+`make visual` checks workspace readiness through the pinned Devkit engine and prepares missing dependencies and Chromium automatically. Prepared workspaces reuse their dependencies; Vite resolves library exports directly to source, so screenshots need no library build and include current source edits. Dependency or environment changes remain subject to Devkit validation; follow its `make sync` or `make setup` guidance if required. The capture itself runs offline at 2× resolution. This preview does not replace `make check`, `make build`, or package verification.
+
+Files go to Git-ignored `.artifacts/visual/`. `raw=0` includes the workbench controls; the default captures artboards. Keep other temporary evidence in `.artifacts/<task>/` inside the checkout. Stop the preview with `make down` when it is no longer needed.
 
 ## Boundaries and Handoff
 
