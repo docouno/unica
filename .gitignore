@@ -10,6 +10,7 @@
 /packages/*/release/
 .devkit/cache/
 .devkit/state/
+.artifacts/
 .env
 .env.*
 !.env.example

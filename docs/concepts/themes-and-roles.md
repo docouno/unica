@@ -51,13 +51,18 @@ Controls and choice cards (`RadioCard`, `CheckboxCard`, `SwitchCard`) adapt auto
 
 ```css
 [data-theme='frost-dark'] {
-  --control-bg: #0c0f17;
-  --control-border: rgb(255 255 255 / 0.12);
+  --_base-control-bg: #0c0f17;
+  --_overlay-control-bg: rgb(255 255 255 / 0.05);
 }
 
-[data-theme='frost-dark'] [data-surface='overlay'] {
-  --control-bg: rgb(255 255 255 / 0.05);
-  --control-border: rgb(255 255 255 / 0.16);
+:root,
+[data-theme],
+[data-surface='base'] {
+  --control-bg: var(--_base-control-bg);
+}
+
+[data-surface='overlay'] {
+  --control-bg: var(--_overlay-control-bg);
 }
 ```
 
@@ -68,11 +73,11 @@ Controls and choice cards (`RadioCard`, `CheckboxCard`, `SwitchCard`) adapt auto
 
 Components reference only semantic tokens — never raw palette steps or `#hex` literals:
 
-- **Surfaces:** `--bg-shell`, `--bg-aside`, `--bg-canvas`, `--bg-surface`, `--bg-surface-subtle`, `--bg-surface-raised`, `--bg-overlay`
-- **Foregrounds:** `--fg-primary`, `--fg-secondary`, `--fg-muted`, `--fg-subtle`, `--fg-disabled`, `--fg-on-accent`
-- **Borders:** `--border-subtle`, `--border-default`, `--border-strong`
+- **Surfaces:** `--bg-shell`, `--bg-aside`, `--bg-canvas`, `--bg-surface`, `--bg-surface-subtle`, `--bg-surface-raised`, `--bg-overlay`, `--scrim-bg`
+- **Foregrounds:** `--fg-primary`, `--fg-secondary`, `--fg-muted`, `--fg-subtle`, `--fg-disabled`, `--fg-on-accent`, `--fg-on-neutral`, `--fg-on-{info,success,warning,danger}`
+- **Borders:** `--border-subtle`, `--border-default`, `--border-strong`, `--binary-border`, `--binary-border-hover`
 - **Controls & Choice Cards:** `--control-bg`, `--control-border`, `--control-border-hover`, `--choice-card-bg`, `--choice-card-bg-selected`, `--choice-card-border`, `--choice-card-border-selected`
-- **Accent & Statuses:** `--accent-{solid,solid-hover,solid-active,soft-bg,soft-fg,border,signal}` and `--status-{info,success,warning,danger}-{solid,soft-bg,soft-fg,border,signal}`
+- **Accent, Neutral & Statuses:** `--accent-{solid,solid-hover,solid-active,soft-bg,soft-fg,border,signal}`, `--neutral-{solid,solid-hover,solid-active,soft-bg,soft-fg,border,signal}`, and `--status-{info,success,warning,danger}-{solid,soft-bg,soft-fg,border,signal}`
 
 ### Strict Palette Boundaries
 

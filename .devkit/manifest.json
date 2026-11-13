@@ -1,8 +1,8 @@
 {
   "schemaVersion": 2,
-  "version": "0.4.0",
-  "releaseIdentity": "00cb60cd694697e61d908c36922be254a12f2b819800e311cc97f67b8ee9f1ef",
-  "generation": "eeaf0d00-226c-4d4f-b25a-a377f8e8b2a1",
+  "version": "0.4.1",
+  "releaseIdentity": "0c2f111d8d53cd95aaa9dc7ed6e34e4c764d96ea4f537a7e758ee2f44e5b8a5a",
+  "generation": "ff12b40d-3e98-4e00-9ed9-70c55c2c630e",
   "packageMode": "registry",
   "managed": {
     ".devkit/compose.apps.yaml": {
@@ -18,11 +18,11 @@
       "mode": 420
     },
     ".devkit/runtime.sha256": {
-      "sha256": "e1b083c1e28ee85f38f1d99a055743137c0da6790166e21e042b04a613979dd4",
+      "sha256": "d5cfa76b95b2fd2be22e720ee9f480d6a87f66014f62fbac584ac2d7d0566afd",
       "mode": 420
     },
     ".devkit/runtime/GUIDE.md": {
-      "sha256": "3cc0fc771ac50907d61e165a70ccded516611ff0fe43668c3cdbd2d00a385050",
+      "sha256": "91ccaebd845aa00cd8ab615d27ecb45b992a404f9e0b97effac96d3920cd17f7",
       "mode": 420
     },
     ".devkit/runtime/LICENSE": {
@@ -42,11 +42,11 @@
       "mode": 420
     },
     ".devkit/runtime/devkit.mk": {
-      "sha256": "dc199ae88d717fe5e1ffd081e26dfce229b10f77926597634f225ade262d58f3",
+      "sha256": "c94d1ee12fa917dae5342a9917210d1206efc50579e2d5afe2964d3cf046c795",
       "mode": 420
     },
     ".devkit/runtime/devkit.sh": {
-      "sha256": "f32ffde071ce5b281b67dc5b67d02b9472fa07334bfb52f52d671cba26591467",
+      "sha256": "93cf98b41b40070e472a82a97b2565c3f451f8d65bfb18d0b203c77ac35d3724",
       "mode": 493
     },
     ".devkit/runtime/licenses/Apache-2.0.txt": {
@@ -62,11 +62,11 @@
       "mode": 420
     },
     ".devkit/runtime/toolchains.env": {
-      "sha256": "d05de1dd59920510f397ed906f78fa53d7ca5fd6ca1ca731152befa6e2015a12",
+      "sha256": "f495ddcf6078e26b3347445312ba0a7473a189aa77d7d71f1523c97636350272",
       "mode": 420
     },
     ".devkit/tooling-profiles.json": {
-      "sha256": "f7f3b758bdcfd6be96d9be3c9a182cf79ddf54bcff13e56293a72b79ed239cf7",
+      "sha256": "b178d84b9d07a205c49bb98da1037a35de1a95c4bcef96ca9009c52a114548d1",
       "mode": 420
     }
   },
@@ -80,7 +80,7 @@
         "version": "0.4.0"
       },
       "toolDependencies": {
-        "@docouno/env": "0.4.0",
+        "@docouno/env": "0.4.1",
         "@testing-library/dom": "10.4.2",
         "@testing-library/react": "16.3.3",
         "@types/node": "24.19.2",
@@ -113,7 +113,7 @@
       },
       "toolDependencies": {
         "@arethetypeswrong/core": "0.18.5",
-        "@docouno/env": "0.4.0",
+        "@docouno/env": "0.4.1",
         "@testing-library/dom": "10.4.2",
         "@testing-library/react": "16.3.3",
         "@tsdown/css": "0.23.7",

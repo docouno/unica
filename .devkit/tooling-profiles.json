@@ -1,11 +1,11 @@
 {
   "schemaVersion": 1,
-  "version": "0.4.0",
+  "version": "0.4.1",
   "packageMode": "registry",
   "profiles": {
     "react-ui": {
       "@arethetypeswrong/core": "0.18.5",
-      "@docouno/env": "0.4.0",
+      "@docouno/env": "0.4.1",
       "@testing-library/dom": "10.4.2",
       "@testing-library/react": "16.3.3",
       "@tsdown/css": "0.23.7",
@@ -21,7 +21,7 @@
       "vitest": "5.0.5"
     },
     "web": {
-      "@docouno/env": "0.4.0",
+      "@docouno/env": "0.4.1",
       "@testing-library/dom": "10.4.2",
       "@testing-library/react": "16.3.3",
       "@types/node": "24.19.2",

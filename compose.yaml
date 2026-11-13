@@ -1,2 +1,7 @@
 # Product-owned development overrides.
-services: {}
+# Ephemeral loopback port binding (127.0.0.1::5173) stays in .devkit/compose.apps.yaml
+# so multiple parallel worktrees can run live stands concurrently without port collisions.
+services:
+  playground:
+    environment:
+      VITE_ALLOWED_HOSTS: ${VITE_ALLOWED_HOSTS:-}

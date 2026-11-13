@@ -1,0 +1,16 @@
+.wb-artboard[data-theme] {
+  --wb-stage-bg: var(--bg-canvas);
+  --wb-stage-bg-image: var(--motif-canvas-grid);
+  --wb-stage-fg: var(--fg-primary);
+  --wb-stage-fg-secondary: var(--fg-secondary);
+  --wb-stage-fg-subtle: var(--fg-subtle);
+  --wb-stage-border: var(--border-subtle);
+  --wb-stage-font: var(--font-family-base);
+  --wb-stage-mono: var(--font-family-mono);
+  --wb-stage-body-size: var(--text-size-body-s);
+  --wb-stage-body-lh: var(--text-size-body-s-lh);
+  --wb-stage-caption-size: var(--text-size-caption-l);
+  --wb-stage-caption-lh: var(--text-size-caption-l-lh);
+  --wb-stage-tag-size: var(--text-size-caption-m);
+  --wb-stage-radius: var(--surface-m-radius);
+}

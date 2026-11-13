@@ -17,7 +17,7 @@ Unica enforces two explicit browser tiers across CSS compilation and runtime beh
 
 ```css
 .textareaAutosize {
-  min-block-size: calc(var(--line-height-m) * 3 + var(--space-m));
+  min-block-size: calc(var(--text-size-body-m-lh) * 3 + var(--space-m));
 }
 
 @supports (field-sizing: content) {
@@ -82,4 +82,4 @@ All six reference presets (`soft-dark`, `soft-light`, `frost-dark`, `frost-light
 ```
 
 - **`forced-colors: active`:** Because High Contrast modes strip `box-shadow` and backdrop blur, cards, buttons, active segments, switches, and overlays preserve explicit `1px`–`2px` structural borders mapped to system color keywords (`Canvas`, `CanvasText`, `Highlight`, `HighlightText`, `ButtonText`, `GrayText`).
-- **`prefers-reduced-motion: reduce`:** Collapses spatial slide/scale transitions, keycap bounce, and continuous shimmer/shader motion to instant state changes while preserving clear non-vestibular status feedback.
+- **`prefers-reduced-motion: reduce`:** Collapses spatial slide/scale transitions, keycap bounce, and continuous shimmer motion to instant state changes while preserving clear non-vestibular status feedback.

@@ -2,7 +2,7 @@
 
 `@docouno/unica` is a role-based React 19+ design system — accessible components, layout primitives, semantic tokens, and multi-material themes in a pure-ESM TypeScript package (`isolatedDeclarations: true`).
 
-The repository is managed with [`@docouno/devkit`](https://github.com/docouno/devkit) and contains the shared library (`packages/ui`) alongside an interactive Vite workbench (`apps/playground`).
+The repository is managed with [`@docouno/devkit`](https://github.com/docouno/devkit) and contains the shared library (`packages/ui`) alongside a 6-preset interactive Vite workbench (`apps/playground`).
 
 ## Environment & Commands
 
@@ -11,18 +11,20 @@ All toolchains run inside pinned Devkit containers on Linux x86_64 with Docker E
 | Command | Purpose |
 | --- | --- |
 | `make setup` | Prepare accepted container images and workspace dependencies |
+| `make sync [reconcile=1] [preview=1]` | Synchronize workspace manifests and optionally reconcile lockfiles in-container |
 | `make check` | Run read-only formatting, lint, `isolatedDeclarations` typecheck, and gates |
 | `make fix` | Apply deterministic formatting and lint autofixes |
 | `make test` | Run unit and component test suites across registered components |
 | `make build` | Build `packages/ui` and `apps/playground` |
 | `make package` | Pack `@docouno/unica` and verify exports (`publint` + `attw`) |
-| `make dev app=playground` | Start the Vite playground server for interactive inspection |
-| `npx @docouno/devkit sync` | Synchronize workspace wiring after manifest or registration changes |
+| `make dev app=playground` | Start the interactive 6-preset Vite workbench |
+| `make visual` | Render deterministic `2x` PNG screenshots (`item=`, `mode=6up\|focus`, `theme=`, `surface=auto\|base\|overlay`, `section=`, `vp=`, `scale=`, `dir=`, `raw=0\|1`, `out=`) |
 
 Scope commands during iteration with `package=ui` or `app=playground` (for example `make check package=ui` or `make test package=ui`). Checks and builds keep source, configuration, and lockfiles read-only. To modify dependencies with the accepted toolchain:
 
 ```sh
-npx @docouno/devkit exec --component packages/ui --write --network bridge -- npm install <pkg>
+sh .devkit/runtime/devkit.sh cli exec --component packages/ui --write --network bridge -- npm install <pkg>
+make sync reconcile=1
 make setup
 make check
 ```
@@ -31,13 +33,15 @@ make check
 
 ```text
 unica/
-├── packages/ui/       @docouno/unica source, CSS tokens, themes, and ESM exports
-├── apps/playground/   Vite interactive workbench: family review views and live compositions across all 6 presets
-├── designs/           pen.dev upfront visual prototypes (unica.lib.pen, assets, theme compositions & specimens)
-└── docs/              core concepts (docs/concepts/) and component contracts (docs/components/)
+├── packages/ui/                 @docouno/unica source, CSS tokens, themes, and ESM exports
+├── apps/playground/             6-preset Vite workbench
+│   ├── src/workbench/           Portable workbench shell (zero @docouno/* imports)
+│   ├── src/prototypes/<family>/ Component specimens (*.specimen.tsx) and upfront visual prototypes (*.proto.tsx, *.css)
+│   └── src/scenes/              Live application compositions (*.scene.tsx)
+└── docs/                        Core concepts, compositions (folio.md), and component contracts
 ```
 
-Read [`docs/README.md`](docs/README.md) and [`designs/README.md`](designs/README.md) before modifying public props, tokens, or `.pen` files.
+Read [`docs/README.md`](docs/README.md) before modifying public props, tokens, or specimens.
 
 ## Architectural Invariants
 
@@ -71,11 +75,11 @@ export function InviteForm({ inputRef }: { inputRef?: Ref<HTMLInputElement> }): 
 - Render modal surfaces (`Modal`, `Drawer`) on native `<dialog>` via `showModal()` and non-modal anchored overlays/toasts on the native Popover API (`popover="auto" | "manual"`), avoiding `z-index` escalation wars.
 - Guarantee native `<form>` participation: `FormData` submission, native `<form>` `reset` restoration, `disabled` / `readOnly` / `loading` invariants, and strict controlled vs uncontrolled authority.
 
-### 3. Visual prototyping (`.pen`) vs canonical code (`packages/ui` & `apps/playground`)
+### 3. Workbench prototypes (`src/prototypes/`) vs canonical library (`packages/ui`)
 
-- `.pen` files under `designs/` serve as upfront visual prototypes when introducing new component families, new compositions, or major visual explorations before writing code.
-- Once a component ships in `packages/ui`, **the code, `apps/playground` (per-family review views and live React application compositions), and `docs/components/<family>.md` are the canonical source of truth**. Native browser optics (optical CTA glow, multi-layer CSS shadows, live `backdrop-filter`, subpixel borders, and motion) take precedence over static `.pen` approximations — do not back-port routine code polish into `.pen` files.
-- When editing `.pen` prototypes, use `pen interactive` or desktop `pen.dev` exclusively (never raw JSON text edits) and bind visual properties to semantic tokens in [`designs/unica.lib.pen`](designs/unica.lib.pen) with zero raw `#hex` overrides.
+- New visual component families are prototyped first in `apps/playground/src/prototypes/<family>/` (`<family>.proto.tsx`, `<family>.css`, and `<family>.specimen.tsx` auto-discovered via `import.meta.glob`) and verified across all 6 presets simultaneously using `make dev app=playground` and `make visual`.
+- Prototype and component stylesheets consume semantic CSS custom properties from `@docouno/unica/styles.css` with **zero `[data-theme]` selectors and zero raw `#hex` literals** (enforced by `unica.contract.test.tsx`), and `apps/playground/src/workbench/` maintains **zero `@docouno/*` imports** (enforced by ESLint).
+- Once a component ships in `packages/ui`, its `<family>.specimen.tsx` and Scene imports switch from the local prototype to `@docouno/unica`, its temporary `<family>.proto.tsx` and prototype `<family>.css` are removed, and `packages/ui` + `docs/components/<family>.md` serve as the sole canonical source of truth.
 
 ## Definition of Done
 
@@ -83,5 +87,5 @@ Every change must satisfy all of the following before completion:
 
 1. `make check`, `make test`, `make build`, and `make package` (`isolatedDeclarations`, `publint`, and `@arethetypeswrong/core` pure-ESM verification) pass cleanly with zero warnings.
 2. Keyboard navigation, focus return, top-layer dismissal, native `<form>` submission/reset, `forced-colors`, and `prefers-reduced-motion` comply with [Overlays and Forms](docs/concepts/overlays-and-forms.md) and [Support and Accessibility](docs/concepts/support-and-accessibility.md).
-3. Visual rendering and interactive states are verified in `apps/playground` across all 3 themes × Dark/Light (`soft-dark`, `soft-light`, `frost-dark`, `frost-light`, `pixel-dark`, `pixel-light`).
-4. Public documentation (`README.md`, `AGENTS.md`, `docs/concepts/*`, `docs/components/*`) is updated in the same change whenever public APIs, tokens, or workflows evolve.
+3. Visual rendering and interactive states are verified in `apps/playground` (`6-up` matrix, `Focus`, `Overlay` surface, `360px`–`1440px`, `120%` text, `RTL`, and `make visual`) across all 6 presets (`soft-dark`, `soft-light`, `frost-dark`, `frost-light`, `pixel-dark`, `pixel-light`).
+4. Public documentation (`README.md`, `AGENTS.md`, `docs/concepts/*`, `docs/compositions/*`, `docs/components/*`) is updated in the same change whenever public APIs, tokens, or workflows evolve.

@@ -1,7 +1,7 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
-import '@docouno/unica/styles.css';
-import { Playground } from './Playground.js';
+import { unicaWorkbench } from './unica.workbench.js';
+import { WorkbenchApp } from './workbench/WorkbenchApp.js';
 
 const element = document.getElementById('root');
 if (!element) {
@@ -10,6 +10,6 @@ if (!element) {
 
 createRoot(element).render(
   <StrictMode>
-    <Playground />
+    <WorkbenchApp config={unicaWorkbench} />
   </StrictMode>,
 );

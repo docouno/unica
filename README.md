@@ -43,9 +43,8 @@ unica/
 ├── packages/
 │   └── ui/            # @docouno/unica library source, CSS tokens, and themes
 ├── apps/
-│   └── playground/    # Interactive Vite workbench and live compositions across all 6 presets
-├── designs/           # Upfront pen.dev prototypes, shaders, and compositions (starting with Folio)
-└── docs/              # Architecture concepts and component contracts
+│   └── playground/    # 6-preset Vite workbench, component specimens, and live scenes
+└── docs/              # Architecture concepts, compositions, and component contracts
 ```
 
 ## Development
@@ -66,13 +65,14 @@ make dev app=playground
 | `make test` | Run unit and component test suites |
 | `make build` | Build `packages/ui` and `apps/playground` |
 | `make package` | Pack `@docouno/unica` and verify ESM/TypeScript exports |
-| `make dev app=playground` | Start the interactive Vite playground |
+| `make dev app=playground` | Start the interactive 6-preset Vite workbench |
+| `make visual` | Render deterministic `2x` PNG screenshots into `.artifacts/visual/` |
 | `make status` / `make down` | Show active ports or stop running services |
 
 ## Documentation
 
 - [Documentation Index](docs/README.md) — themes, geometry, overlays, forms, and browser support
-- [Design Prototypes](designs/README.md) — `unica.lib.pen` library and visual compositions (starting with **Folio**)
+- [Folio Composition](docs/compositions/folio.md) — baseline product scenes across `Soft`, `Frost`, and `Pixel`
 - [Contributor & Agent Guide](AGENTS.md) — architectural invariants and verification workflow
 - [Devkit Runtime Guide](.devkit/runtime/GUIDE.md) — container toolchain, dependency workflows, and packaging
 
