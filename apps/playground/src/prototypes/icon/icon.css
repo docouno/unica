@@ -1,0 +1,15 @@
+.icon-proto {
+  display: inline-block;
+  flex: none;
+  vertical-align: -0.125em;
+}
+
+.icon-proto[data-directional]:dir(rtl) {
+  transform: scaleX(-1);
+}
+
+@media (forced-colors: active) {
+  .icon-proto {
+    color: inherit !important;
+  }
+}

@@ -55,7 +55,7 @@ it('renders the Unica Workbench across all 6 presets and toggles focus/stress co
   fireEvent.click(screen.getByText('120% Text'));
   expect(container.querySelector('.wb-artboard[data-text-scale="120"]')).toBeTruthy();
 
-  fireEvent.click(screen.getByText('RTL'));
+  fireEvent.click(screen.getByRole('button', { name: 'RTL' }));
   expect(container.querySelector('.wb-artboard[dir="rtl"]')).toBeTruthy();
 
   fireEvent.click(screen.getByText('Live Focus'));

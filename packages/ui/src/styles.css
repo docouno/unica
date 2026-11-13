@@ -464,7 +464,7 @@ textarea {
   --status-danger-soft-fg: #f28884;
   --status-danger-solid: #d62436;
   --status-info-border: rgb(34 70 140 / 0.749);
-  --status-info-signal: #145ce6;
+  --status-info-signal: var(--status-info-soft-fg);
   --status-info-soft-bg: #192844;
   --status-info-soft-fg: #7baaff;
   --status-info-solid: #145ce6;
