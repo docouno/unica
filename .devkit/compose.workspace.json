@@ -1,0 +1,132 @@
+{
+  "services": {
+    "node": {
+      "volumes": [
+        {
+          "type": "bind",
+          "source": "${DEVKIT_PROJECT_ROOT:?}/apps/playground/dist",
+          "target": "/workspace/apps/playground/dist",
+          "read_only": false,
+          "bind": {
+            "create_host_path": false,
+            "selinux": "z"
+          }
+        },
+        {
+          "type": "bind",
+          "source": "${DEVKIT_PROJECT_ROOT:?}/apps/playground/node_modules",
+          "target": "/workspace/apps/playground/node_modules",
+          "read_only": false,
+          "bind": {
+            "create_host_path": false,
+            "selinux": "z"
+          }
+        },
+        {
+          "type": "bind",
+          "source": "${DEVKIT_PROJECT_ROOT:?}/node_modules",
+          "target": "/workspace/node_modules",
+          "read_only": false,
+          "bind": {
+            "create_host_path": false,
+            "selinux": "z"
+          }
+        },
+        {
+          "type": "bind",
+          "source": "${DEVKIT_PROJECT_ROOT:?}/packages/ui/dist",
+          "target": "/workspace/packages/ui/dist",
+          "read_only": false,
+          "bind": {
+            "create_host_path": false,
+            "selinux": "z"
+          }
+        },
+        {
+          "type": "bind",
+          "source": "${DEVKIT_PROJECT_ROOT:?}/packages/ui/node_modules",
+          "target": "/workspace/packages/ui/node_modules",
+          "read_only": false,
+          "bind": {
+            "create_host_path": false,
+            "selinux": "z"
+          }
+        },
+        {
+          "type": "bind",
+          "source": "${DEVKIT_PROJECT_ROOT:?}/packages/ui/release",
+          "target": "/workspace/packages/ui/release",
+          "read_only": false,
+          "bind": {
+            "create_host_path": false,
+            "selinux": "z"
+          }
+        }
+      ]
+    },
+    "desktop": {
+      "volumes": [
+        {
+          "type": "bind",
+          "source": "${DEVKIT_PROJECT_ROOT:?}/apps/playground/dist",
+          "target": "/workspace/apps/playground/dist",
+          "read_only": false,
+          "bind": {
+            "create_host_path": false,
+            "selinux": "z"
+          }
+        },
+        {
+          "type": "bind",
+          "source": "${DEVKIT_PROJECT_ROOT:?}/apps/playground/node_modules",
+          "target": "/workspace/apps/playground/node_modules",
+          "read_only": false,
+          "bind": {
+            "create_host_path": false,
+            "selinux": "z"
+          }
+        },
+        {
+          "type": "bind",
+          "source": "${DEVKIT_PROJECT_ROOT:?}/node_modules",
+          "target": "/workspace/node_modules",
+          "read_only": false,
+          "bind": {
+            "create_host_path": false,
+            "selinux": "z"
+          }
+        },
+        {
+          "type": "bind",
+          "source": "${DEVKIT_PROJECT_ROOT:?}/packages/ui/dist",
+          "target": "/workspace/packages/ui/dist",
+          "read_only": false,
+          "bind": {
+            "create_host_path": false,
+            "selinux": "z"
+          }
+        },
+        {
+          "type": "bind",
+          "source": "${DEVKIT_PROJECT_ROOT:?}/packages/ui/node_modules",
+          "target": "/workspace/packages/ui/node_modules",
+          "read_only": false,
+          "bind": {
+            "create_host_path": false,
+            "selinux": "z"
+          }
+        },
+        {
+          "type": "bind",
+          "source": "${DEVKIT_PROJECT_ROOT:?}/packages/ui/release",
+          "target": "/workspace/packages/ui/release",
+          "read_only": false,
+          "bind": {
+            "create_host_path": false,
+            "selinux": "z"
+          }
+        }
+      ]
+    }
+  }
+}
