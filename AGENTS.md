@@ -43,6 +43,8 @@ unica/
 
 Read [`docs/README.md`](docs/README.md) before modifying public props, tokens, or specimens.
 
+Keep temporary renders, logs, probes, and scratch scripts in a task-specific subdirectory of the Git-ignored `.artifacts/` directory inside the current checkout. `make visual` writes to `.artifacts/visual/`. Do not commit task artifacts or store them outside the checkout.
+
 ## Architectural Invariants
 
 ### 1. Role-based API, zero decorative `appearance` prop
@@ -55,6 +57,7 @@ Material physics belong to the active theme (`Soft`, `Frost`, `Pixel` in `Dark` 
 - **Button roles & tones:** `variant="primary" | "secondary" | "ghost"` crossed with `tone="accent" | "neutral" | "danger"`. Status hues (`info`, `success`, `warning`, `danger`) belong exclusively to passive markers and validation feedback.
 
 ```tsx
+// Target component API; see package exports for currently implemented families.
 import type { JSX, Ref } from 'react';
 import { Button, Card, Input } from '@docouno/unica';
 
@@ -78,6 +81,7 @@ export function InviteForm({ inputRef }: { inputRef?: Ref<HTMLInputElement> }): 
 ### 3. Workbench prototypes (`src/prototypes/`) vs canonical library (`packages/ui`)
 
 - New visual component families are prototyped first in `apps/playground/src/prototypes/<family>/` (`<family>.proto.tsx`, `<family>.css`, and `<family>.specimen.tsx` auto-discovered via `import.meta.glob`) and verified across all 6 presets simultaneously using `make dev app=playground` and `make visual`.
+- Follow [Workbench workflow](docs/workbench.md) for specimen sections and context vignettes. Component prototype tasks leave `packages/ui` and the portable `src/workbench/` shell unchanged; full accessibility, focus, and form integration belong to library implementation.
 - Prototype and component stylesheets consume semantic CSS custom properties from `@docouno/unica/styles.css` with **zero `[data-theme]` selectors and zero raw `#hex` literals** (enforced by `unica.contract.test.tsx`), and `apps/playground/src/workbench/` maintains **zero `@docouno/*` imports** (enforced by ESLint).
 - Once a component ships in `packages/ui`, its `<family>.specimen.tsx` and Scene imports switch from the local prototype to `@docouno/unica`, its temporary `<family>.proto.tsx` and prototype `<family>.css` are removed, and `packages/ui` + `docs/components/<family>.md` serve as the sole canonical source of truth.
 

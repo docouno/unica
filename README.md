@@ -16,23 +16,22 @@ Every launch theme ships in calibrated `Dark` and `Light` presets (`6` presets t
 
 ```tsx
 import '@docouno/unica/styles.css';
-import { Button, Card, Input, Stack } from '@docouno/unica';
+import { THEME_PRESETS } from '@docouno/unica';
 
-export function SignInCard() {
+export function ThemePreview() {
   return (
-    <div data-theme="frost-dark">
-      <Card variant="default">
-        <form>
-          <Stack gap="m">
-            <Input name="email" type="email" placeholder="you@example.com" required />
-            <Button type="submit" variant="primary" tone="accent">Continue</Button>
-          </Stack>
-        </form>
-      </Card>
+    <div data-theme="frost-dark" style={{
+      background: 'var(--bg-canvas)',
+      color: 'var(--fg-primary)',
+      padding: 'var(--space-24)',
+    }}>
+      {THEME_PRESETS.find((preset) => preset.id === 'frost-dark')?.label}
     </div>
   );
 }
 ```
+
+The library currently provides theme tokens, preset metadata, and a starter Button. New component families are reviewed as live prototypes in the playground before their public package APIs ship. Architectural documents describe the target component contracts.
 
 ## Repository Structure
 
@@ -72,6 +71,7 @@ make dev app=playground
 ## Documentation
 
 - [Documentation Index](docs/README.md) — themes, geometry, overlays, forms, and browser support
+- [Workbench Workflow](docs/workbench.md) — author prototypes, inspect six presets, and render screenshots
 - [Folio Composition](docs/compositions/folio.md) — baseline product scenes across `Soft`, `Frost`, and `Pixel`
 - [Contributor & Agent Guide](AGENTS.md) — architectural invariants and verification workflow
 - [Devkit Runtime Guide](.devkit/runtime/GUIDE.md) — container toolchain, dependency workflows, and packaging

@@ -2,7 +2,7 @@
 
 Unica separates **component roles** (declared in application JSX) from **material physics** (owned by the active theme). Applications express workflow hierarchy and intent; the theme determines whether that role renders as warm editorial matte paper, tactile hardware keycaps with frosted glass, or sharp-corner terminal geometry.
 
-## Flat `ThemeConfig` & Reference Presets
+## Flat Tokens & Reference Presets
 
 Themes are flat semantic token dictionaries rather than per-component style-prop matrices. One structural stylesheet defines component layout and state hooks, while six reference presets bind values on `:root` or `[data-theme="<preset>"]`:
 
@@ -15,13 +15,8 @@ export type ThemePreset =
   | 'pixel-dark'
   | 'pixel-light';
 
-export interface ThemeConfig {
-  readonly name: string;
-  readonly colorScheme: 'dark' | 'light';
-  readonly radiusFactor: 0 | 1;
-  readonly fontFamilyBase: string;
-  readonly tokens: Readonly<Record<`--${string}`, string>>;
-}
+// Import ThemePreset, ThemePresetMeta, and THEME_PRESETS from @docouno/unica.
+// Apply a preset with <div data-theme="frost-dark">...</div>.
 ```
 
 | Family | Presets | Material & Surface Physics |
@@ -30,7 +25,7 @@ export interface ThemeConfig {
 | **Frost** | `frost-dark`, `frost-light` | Obsidian (`Dark`) and crystalline alabaster (`Light`) neutrals, electric indigo-violet gradient CTAs with directional lamp sheen and `0 2px 0` keycap ledges, `1px`-rimmed jewel badges, and `backdrop-filter` frosted glass exclusively on floating overlays. |
 | **Pixel** | `pixel-dark`, `pixel-light` | Carbon-phosphor (`Dark`) and drafting-paper (`Light`) surfaces, `0px` sharp corners (`--radius-factor: 0`), `JetBrains Mono` base typography, `1px` structural borders, `8px` corner registration ticks, coordinate grids, and crisp `{2px, 2px}` / `{6px, 6px}` `blur: 0` block shadows. |
 
-Custom product themes satisfy `ThemeConfig` or override semantic `--*` variables on any DOM subtree without touching component CSS.
+`THEME_PRESETS` exposes the six presets and their display metadata. Custom product themes override semantic `--*` variables on a DOM subtree without touching component CSS; there is no exported `ThemeConfig` object API.
 
 ## Role-Based API Over Decorative `appearance`
 

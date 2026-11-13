@@ -176,7 +176,7 @@ textarea {
   --fg-on-accent: #211512;
   --fg-primary: #f7efe0;
   --fg-secondary: #e4d8c5;
-  --fg-subtle: #8a979f;
+  --fg-subtle: #909da5;
   --focus-ring-color: #f7efe0;
   --font-family-base: 'Inter Variable', 'Inter', system-ui, sans-serif;
   --status-danger-border: rgb(154 89 92 / 0.722);
@@ -455,7 +455,7 @@ textarea {
   --fg-on-accent: #ffffff;
   --fg-primary: #f4f7ff;
   --fg-secondary: #ccd4e6;
-  --fg-subtle: #76829e;
+  --fg-subtle: #7d89a5;
   --focus-ring-color: #f4f7ff;
   --font-family-base: 'Inter Variable', 'Inter', system-ui, sans-serif;
   --status-danger-border: rgb(126 41 43 / 0.749);

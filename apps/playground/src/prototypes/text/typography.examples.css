@@ -1,0 +1,125 @@
+.type-study {
+  inline-size: 100%;
+  min-inline-size: 0;
+  display: grid;
+  gap: var(--space-16);
+  color: var(--fg-primary);
+}
+
+.type-example {
+  display: grid;
+  gap: var(--space-4);
+  min-inline-size: 0;
+}
+
+.type-example-label {
+  font-family: var(--font-family-mono);
+}
+
+.type-example-content {
+  min-inline-size: 0;
+}
+
+.type-inline-row {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: var(--space-8) var(--space-16);
+}
+
+.type-context {
+  gap: var(--space-12);
+  padding: var(--surface-l-padding);
+  border: 1px solid var(--border-default);
+  border-radius: var(--surface-l-radius);
+  background: var(--bg-surface);
+}
+
+.type-auth {
+  max-inline-size: 520px;
+  background-image: var(--auth-stage-aura);
+}
+
+.type-prose {
+  max-inline-size: 760px;
+  margin-inline: auto;
+  gap: var(--space-24);
+}
+
+.type-context-divider {
+  block-size: 1px;
+  background: var(--border-default);
+}
+
+[data-surface='overlay'] .type-study {
+  padding: var(--surface-l-padding);
+  border: 1px solid var(--border-default);
+  border-radius: var(--surface-l-radius);
+  background: var(--bg-overlay);
+  backdrop-filter: var(--overlay-backdrop);
+  box-shadow: var(--overlay-rim), var(--overlay-shadow-popover);
+}
+
+.type-drawer {
+  max-inline-size: 520px;
+}
+.type-modal {
+  max-inline-size: 548px;
+}
+
+.type-surface {
+  padding: var(--space-12);
+  border: 1px solid var(--border-default);
+  border-radius: var(--surface-s-radius);
+  display: grid;
+  gap: var(--space-4);
+}
+.type-surface[data-sample-surface='canvas'] {
+  background: var(--bg-canvas);
+}
+.type-surface[data-sample-surface='surface'] {
+  background: var(--bg-surface);
+}
+.type-surface[data-sample-surface='overlay'] {
+  background: var(--bg-overlay);
+  backdrop-filter: var(--overlay-backdrop);
+}
+
+.type-measure {
+  max-inline-size: 360px;
+}
+.type-nowrap-window {
+  overflow-x: auto;
+}
+.type-baseline {
+  background-image: linear-gradient(to top, var(--border-default) 1px, transparent 1px);
+  background-size: 100% var(--text-size-heading-m-lh);
+}
+.type-inline-badge {
+  display: inline-block;
+  vertical-align: baseline;
+  padding-inline: var(--space-8);
+  background: var(--status-info-soft-bg);
+  color: var(--status-info-soft-fg);
+  border: var(--pill-border-width) solid var(--status-info-border);
+  border-radius: var(--radius-full);
+  font-size: var(--text-size-caption-l);
+  line-height: var(--text-size-caption-l-lh);
+  letter-spacing: normal;
+}
+.type-inline-key {
+  font: inherit;
+  padding-inline: var(--space-4);
+  border: 1px solid var(--kbd-cap-border);
+  border-radius: var(--radius-xs);
+  background: var(--kbd-cap-bg);
+  color: var(--fg-secondary);
+}
+.type-inline-link {
+  color: var(--accent-soft-fg);
+  text-underline-offset: 0.15em;
+}
+.type-inline-link:focus-visible {
+  outline: 2px solid var(--focus-ring-color);
+  outline-offset: 2px;
+}
