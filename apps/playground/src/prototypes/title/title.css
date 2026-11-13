@@ -1,0 +1,31 @@
+.title-proto[data-size='display-l'] {
+  letter-spacing: calc(-1.5px * var(--font-scale));
+}
+.title-proto[data-size='display-m'] {
+  letter-spacing: calc(-1.2px * var(--font-scale));
+}
+.title-proto[data-size='display-s'] {
+  letter-spacing: calc(-0.9px * var(--font-scale));
+}
+.title-proto[data-size='heading-xl'] {
+  letter-spacing: calc(-0.7px * var(--font-scale));
+}
+.title-proto[data-size='heading-l'] {
+  letter-spacing: calc(-0.5px * var(--font-scale));
+}
+.title-proto[data-size='heading-m'] {
+  letter-spacing: calc(-0.3px * var(--font-scale));
+}
+.title-proto[data-size='heading-s'] {
+  letter-spacing: calc(-0.15px * var(--font-scale));
+}
+
+.title-proto[data-wrap='nowrap']:not([data-overflow]) {
+  white-space: nowrap;
+}
+.title-proto[data-wrap='pretty']:not([data-overflow]) {
+  text-wrap: pretty;
+}
+.title-proto[data-wrap='balance']:not([data-overflow]) {
+  text-wrap: balance;
+}

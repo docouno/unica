@@ -1,0 +1,33 @@
+.type-proto {
+  margin: 0;
+  min-inline-size: 0;
+  font-family: var(--font-family-base);
+  overflow-wrap: anywhere;
+  letter-spacing: normal;
+}
+
+.type-proto[data-overflow='truncate']:not([hidden]) {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  max-inline-size: 100%;
+}
+
+.text-proto:is(span, strong, em, label)[data-overflow='truncate']:not([hidden]) {
+  display: inline-block;
+  vertical-align: bottom;
+}
+
+.type-proto[data-overflow='clamp']:not([hidden]) {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  white-space: normal;
+  text-wrap: wrap;
+}
+
+@media (forced-colors: active) {
+  .type-proto {
+    color: inherit !important;
+  }
+}
