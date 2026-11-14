@@ -1,0 +1,189 @@
+.button-study {
+  display: grid;
+  gap: var(--space-24);
+  min-inline-size: 0;
+  inline-size: 100%;
+  color: var(--fg-primary);
+}
+
+.button-study-group {
+  display: grid;
+  gap: var(--space-12);
+  min-inline-size: 0;
+  justify-items: start;
+}
+
+.button-study-columns {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: start;
+  gap: var(--space-12);
+  inline-size: 100%;
+}
+
+.button-study-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-12);
+  min-inline-size: 0;
+}
+
+.button-study-states {
+  gap: var(--space-24) var(--space-16);
+}
+.button-study-sample {
+  display: grid;
+  gap: var(--space-12);
+  justify-items: start;
+}
+.button-study-control {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  font-size: var(--text-size-body-s);
+}
+.button-study-control input {
+  accent-color: var(--accent-solid);
+}
+
+.button-study-auth,
+.button-study-import {
+  padding: var(--surface-l-padding);
+  border: 1px solid var(--border-default);
+  border-radius: var(--surface-l-radius);
+  background: var(--bg-surface);
+  max-inline-size: 520px;
+  margin-inline: auto;
+}
+
+.button-study-auth {
+  background-image: var(--auth-stage-aura);
+}
+
+.button-study-field {
+  display: grid;
+  gap: var(--space-8);
+  font-size: var(--text-size-body-s);
+}
+
+.button-study-field input {
+  inline-size: 100%;
+  min-inline-size: 0;
+  block-size: var(--size-m-height);
+  padding-inline: var(--size-m-padding-x);
+  color: var(--fg-primary);
+  background: var(--control-bg);
+  border: 1px solid var(--control-border);
+  border-radius: var(--size-m-radius);
+}
+
+.button-study-field input::placeholder {
+  color: var(--fg-muted);
+}
+.button-study-field input:focus-visible {
+  outline: 2px solid var(--focus-ring-color);
+  outline-offset: 2px;
+}
+
+.button-study-rule {
+  display: flex;
+  align-items: center;
+  gap: var(--space-16);
+  color: var(--fg-muted);
+  font-size: var(--text-size-caption-l);
+}
+
+.button-study-rule::before,
+.button-study-rule::after {
+  content: '';
+  block-size: 1px;
+  flex: 1;
+  background: var(--border-default);
+}
+
+.button-study-editor {
+  display: flex;
+  inline-size: 100%;
+  min-inline-size: 0;
+  border: 1px solid var(--border-default);
+  border-radius: var(--surface-m-radius);
+  background: var(--bg-canvas);
+  color: var(--fg-primary);
+}
+
+.button-study-rail {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-16);
+  padding: var(--space-16) var(--space-8);
+  border-inline-end: 1px solid var(--border-default);
+  background: var(--bg-shell);
+  border-start-start-radius: inherit;
+  border-end-start-radius: inherit;
+}
+
+.button-study-editor-main {
+  min-inline-size: 0;
+  flex: 1;
+}
+.button-study-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-12);
+}
+.button-study-editor .button-study-toolbar {
+  padding: var(--space-12);
+  border-block-end: 1px solid var(--border-default);
+}
+.button-study-editor .button-study-row {
+  gap: var(--space-8);
+}
+.button-study-prose {
+  display: grid;
+  gap: var(--space-16);
+  padding: var(--space-24) var(--space-16);
+}
+
+.button-study-overlay {
+  max-inline-size: 520px;
+  margin-inline: auto;
+  padding: var(--surface-l-padding);
+  gap: var(--space-16);
+  border: 1px solid var(--border-default);
+  border-radius: var(--surface-l-radius);
+  background: var(--bg-overlay);
+  backdrop-filter: var(--overlay-backdrop);
+  box-shadow: var(--overlay-shadow-modal);
+}
+
+.button-study-popover {
+  max-inline-size: 360px;
+  border-radius: var(--surface-s-radius);
+  box-shadow: var(--overlay-shadow-popover);
+}
+.button-study-footer {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  align-items: center;
+  gap: var(--space-12);
+  padding-block-start: var(--space-8);
+}
+.button-study-import-file {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: var(--space-8);
+  padding-block: var(--space-16);
+  border-block: 1px solid var(--border-default);
+}
+.button-study-light {
+  display: grid;
+  min-block-size: 144px;
+  place-items: center;
+  padding: var(--space-24);
+}

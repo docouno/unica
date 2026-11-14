@@ -1,0 +1,106 @@
+.segmented-control-proto {
+  --segment-height: var(--size-m-height);
+  --segment-radius: var(--size-m-radius);
+  --segment-padding: var(--size-m-padding-x);
+  --segment-font: var(--text-size-body-s);
+  display: inline-flex;
+  flex: 0 0 auto;
+  flex-wrap: wrap;
+  align-items: stretch;
+  inline-size: fit-content;
+  min-inline-size: 0;
+  max-inline-size: 100%;
+  min-block-size: var(--segment-height);
+  padding: var(--space-2);
+  border: 1px solid var(--segmented-rail-border);
+  border-radius: var(--segment-radius);
+  background: var(--segmented-rail-bg);
+  font-family: var(--font-family-base);
+  font-size: var(--segment-font);
+  line-height: 1.4;
+}
+
+.segmented-control-proto[data-size='s'] {
+  --segment-height: var(--size-s-height);
+  --segment-radius: var(--size-s-radius);
+  --segment-padding: var(--size-s-padding-x);
+  --segment-font: var(--size-s-control-font);
+}
+
+.segmented-control-proto[data-size='l'] {
+  --segment-height: var(--size-l-height);
+  --segment-radius: var(--size-l-radius);
+  --segment-padding: var(--size-l-padding-x);
+  --segment-font: var(--text-size-body-m);
+}
+
+.segment-proto {
+  position: relative;
+  display: flex;
+  flex: 1 0 auto;
+  min-inline-size: max-content;
+  cursor: pointer;
+}
+
+.segment-proto > input {
+  position: absolute;
+  inset: 0;
+  inline-size: 100%;
+  block-size: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: inherit;
+}
+
+.segment-proto > span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-4);
+  inline-size: 100%;
+  min-inline-size: 0;
+  min-block-size: calc(var(--segment-height) - 6px);
+  padding: var(--space-2) var(--segment-padding);
+  border: 1px solid transparent;
+  border-radius: max(0px, calc(var(--segment-radius) - 3px));
+  color: var(--fg-muted);
+  text-align: center;
+  white-space: nowrap;
+}
+
+.segment-proto > input:checked + span {
+  border-color: var(--segmented-thumb-border);
+  background: var(--segmented-thumb-bg);
+  color: var(--fg-primary);
+  font-weight: 500;
+}
+
+.segment-proto:hover > input:not(:disabled) + span {
+  color: var(--fg-primary);
+}
+
+.segment-proto > input:focus-visible + span {
+  outline: 2px solid var(--focus-ring-color);
+  outline-offset: 1px;
+}
+
+.segment-proto > input:disabled + span {
+  color: var(--fg-disabled);
+  cursor: not-allowed;
+}
+
+.segmented-control-proto[hidden] {
+  display: none;
+}
+
+@media (forced-colors: active) {
+  .segmented-control-proto {
+    border-color: ButtonText;
+    background: Canvas;
+  }
+
+  .segment-proto > input:checked + span {
+    border-color: Highlight;
+    color: CanvasText;
+  }
+}

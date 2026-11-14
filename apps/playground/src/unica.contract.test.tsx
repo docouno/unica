@@ -119,6 +119,38 @@ it('supports Auto/Base/Overlay surface overrides and respects SceneDefinition.de
   expect(direct.container.querySelector('.wb-viewport-inner')).toBeNull();
 });
 
+it('navigates between the real scenes and specimen sections without sharing their hooks', () => {
+  window.history.replaceState(null, '', '/?item=01-sign-in&mode=focus');
+  const { container } = render(<WorkbenchApp config={unicaWorkbench} />);
+
+  for (const scene of unicaWorkbench.scenes ?? []) {
+    fireEvent.click(screen.getByRole('button', { name: new RegExp(`^${scene.title}\\s*Folio$`) }));
+    expect(container.querySelectorAll('.folio-scene')).toHaveLength(1);
+    expect(screen.getByText('Unica Workbench')).toBeTruthy();
+  }
+
+  const buttons = unicaWorkbench.specimens.find((specimen) => specimen.id === 'button');
+  expect(buttons).toBeDefined();
+  fireEvent.click(screen.getByText(buttons!.title, { exact: true }));
+  fireEvent.click(screen.getByRole('button', { name: 'Light & response' }));
+  expect(screen.getByText('Unica Workbench')).toBeTruthy();
+  expect(container.querySelectorAll('.wb-artboard')).toHaveLength(1);
+});
+
+it('keeps native selection examples independent across the six theme artboards', () => {
+  window.history.replaceState(null, '', '/?item=selection&mode=6up&section=cards');
+  const { container } = render(<WorkbenchApp config={unicaWorkbench} />);
+  const artboards = [...container.querySelectorAll('.wb-artboard')];
+  const chosen = (): number[] =>
+    artboards.map((artboard) => artboard.querySelectorAll('input[type="radio"]:checked').length);
+  expect(chosen()).toEqual([1, 1, 1, 1, 1, 1]);
+
+  const choices = artboards[0]!.querySelectorAll<HTMLInputElement>('input[type="radio"]');
+  fireEvent.click(choices[1]!);
+  expect(choices[1]!.checked).toBe(true);
+  expect(chosen()).toEqual([1, 1, 1, 1, 1, 1]);
+});
+
 it('keeps src/workbench portable with zero @docouno references or Unica CSS token leaks', async () => {
   const workbenchDir = resolve(import.meta.dirname, 'workbench');
   const workbenchFiles = await collectFiles(workbenchDir, ['.ts', '.tsx', '.css']);

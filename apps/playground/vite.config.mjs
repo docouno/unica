@@ -23,6 +23,15 @@ export default defineConfig({
   optimizeDeps: {
     include: ['@phosphor-icons/react'],
   },
+  build: {
+    rolldownOptions: {
+      output: {
+        codeSplitting: {
+          groups: [{ name: 'react', test: /\/node_modules\/(?:react|react-dom|scheduler)\// }],
+        },
+      },
+    },
+  },
   server: {
     host: '0.0.0.0',
     port: 5173,

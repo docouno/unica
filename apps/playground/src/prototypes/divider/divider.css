@@ -1,0 +1,38 @@
+.divider-proto {
+  display: flex;
+  align-items: center;
+  gap: var(--space-12);
+  min-inline-size: 0;
+  inline-size: 100%;
+  color: var(--fg-muted);
+  font-family: var(--font-family-base);
+  font-size: var(--text-size-caption-l);
+  line-height: var(--text-size-caption-l-lh);
+}
+.divider-proto::before,
+.divider-proto[data-labeled]::after {
+  content: '';
+  flex: 1;
+  min-inline-size: var(--space-12);
+  block-size: 1px;
+  background: var(--border-default);
+}
+.divider-label-proto {
+  min-inline-size: 0;
+  max-inline-size: 80%;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+.divider-proto[data-orientation='vertical'] {
+  inline-size: 1px;
+  align-self: stretch;
+  min-block-size: 1em;
+  background: var(--border-default);
+}
+.divider-proto[data-orientation='vertical']::before,
+.divider-proto[data-orientation='vertical']::after {
+  display: none;
+}
+.divider-proto[hidden] {
+  display: none;
+}

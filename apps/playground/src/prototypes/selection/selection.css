@@ -1,0 +1,265 @@
+.choice-proto {
+  --choice-box: 18px;
+  --choice-height: var(--size-m-height);
+  --choice-font: var(--text-size-body-s);
+  --switch-width: 36px;
+  --switch-height: 20px;
+  display: inline-flex;
+  align-items: flex-start;
+  gap: var(--space-8);
+  min-inline-size: 0;
+  min-block-size: var(--choice-height);
+  padding-block: var(--space-8);
+  color: var(--fg-primary);
+  font-family: var(--font-family-base);
+  font-size: var(--choice-font);
+  line-height: 1.4;
+  cursor: pointer;
+}
+
+.choice-proto[data-size='s'] {
+  --choice-box: 16px;
+  --choice-height: var(--size-s-height);
+  --choice-font: var(--size-s-control-font);
+  --switch-width: 30px;
+  --switch-height: 18px;
+  gap: var(--size-s-gap);
+  padding-block: var(--space-4);
+}
+
+.choice-proto[data-size='l'] {
+  --choice-box: 22px;
+  --choice-height: var(--size-l-height);
+  --choice-font: var(--text-size-body-m);
+  --switch-width: 44px;
+  --switch-height: 24px;
+  gap: var(--space-12);
+}
+
+.choice-control-proto {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  block-size: 1.4em;
+  min-inline-size: var(--choice-box);
+}
+
+.choice-native-proto {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  inline-size: 100%;
+  block-size: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: inherit;
+}
+
+.choice-indicator-proto {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: var(--choice-box);
+  block-size: var(--choice-box);
+  border: 1px solid var(--binary-border);
+  border-radius: var(--radius-xs);
+  background: var(--control-bg);
+  color: var(--fg-on-accent);
+}
+
+.choice-indicator-proto > svg {
+  inline-size: 80%;
+  block-size: 80%;
+  visibility: hidden;
+}
+
+.choice-proto[data-kind='radio'] .choice-indicator-proto {
+  border-radius: var(--radius-circular);
+}
+
+.choice-proto[data-kind='radio'] .choice-indicator-proto::after {
+  content: '';
+  inline-size: 50%;
+  block-size: 50%;
+  border-radius: var(--radius-circular);
+  background: var(--fg-on-accent);
+  opacity: 0;
+}
+
+.choice-native-proto:checked + .choice-indicator-proto {
+  border-color: var(--accent-solid);
+  background: var(--accent-solid);
+}
+
+.choice-native-proto:checked + .choice-indicator-proto > svg {
+  visibility: visible;
+}
+
+.choice-native-proto:checked + .choice-indicator-proto::after {
+  opacity: 1;
+}
+
+.choice-proto:hover:not(:has(:disabled)) .choice-indicator-proto {
+  border-color: var(--binary-border-hover);
+}
+
+.choice-native-proto:focus-visible + .choice-indicator-proto {
+  outline: 2px solid var(--focus-ring-color);
+  outline-offset: 3px;
+}
+
+.choice-proto[data-kind='switch'] .choice-control-proto {
+  min-inline-size: var(--switch-width);
+}
+
+.choice-proto[data-kind='switch'] .choice-indicator-proto {
+  inline-size: var(--switch-width);
+  block-size: var(--switch-height);
+  border-color: transparent;
+  border-radius: var(--radius-full);
+  background: var(--switch-track-off);
+}
+
+.choice-proto[data-kind='switch'] .choice-indicator-proto::after {
+  content: '';
+  position: absolute;
+  inset-inline-start: 2px;
+  inset-block-start: 2px;
+  inline-size: calc(var(--switch-height) - 6px);
+  block-size: calc(var(--switch-height) - 6px);
+  border-radius: var(--radius-full);
+  background: var(--switch-thumb-bg);
+  box-shadow: 0 1px 2px var(--border-subtle);
+}
+
+.choice-proto[data-kind='switch'] .choice-native-proto:checked + .choice-indicator-proto {
+  background: var(--switch-track-on);
+}
+
+.choice-proto[data-kind='switch'] .choice-native-proto:checked + .choice-indicator-proto::after {
+  inset-inline-start: calc(100% - var(--switch-height) + 4px);
+}
+
+.choice-proto[data-kind='switch']:hover:not(:has(:disabled)) .choice-indicator-proto {
+  background: var(--switch-track-off-hover);
+}
+
+.choice-proto[data-kind='switch']:hover:not(:has(:disabled))
+  .choice-native-proto:checked
+  + .choice-indicator-proto {
+  background: var(--switch-track-on-hover);
+}
+
+.choice-copy-proto {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  min-inline-size: 0;
+  overflow-wrap: anywhere;
+}
+
+.choice-description-proto {
+  font-size: var(--text-size-caption-l);
+  font-weight: 400;
+  line-height: 1.5;
+  color: var(--fg-muted);
+}
+
+.choice-proto:has(:disabled) {
+  color: var(--fg-disabled);
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.choice-card-proto {
+  display: flex;
+  inline-size: 100%;
+  padding: var(--surface-m-padding);
+  border: 1px solid var(--choice-card-border);
+  border-radius: var(--surface-m-radius);
+  background: var(--choice-card-bg);
+  gap: var(--space-12);
+  line-height: 1.5;
+}
+
+.choice-card-proto[data-size='m'] {
+  --choice-box: 20px;
+}
+
+.choice-card-proto[data-size='s'] {
+  padding: var(--surface-s-padding);
+  border-radius: var(--surface-s-radius);
+}
+
+.choice-card-proto:has(:checked) {
+  border-color: var(--choice-card-border-selected);
+  background: var(--choice-card-bg-selected);
+}
+
+.choice-card-proto .choice-label-proto {
+  font-size: var(--text-size-body-m);
+  font-weight: 500;
+}
+
+.choice-card-proto .choice-description-proto {
+  font-size: var(--text-size-body-s);
+  line-height: 1.428571;
+}
+
+.choice-card-proto:is([data-kind='checkbox'], [data-kind='radio'])
+  .choice-native-proto:checked
+  + .choice-indicator-proto {
+  border-color: var(--accent-soft-fg);
+  background: transparent;
+  color: var(--accent-soft-fg);
+}
+
+.choice-card-proto[data-kind='radio'] .choice-indicator-proto::after {
+  background: currentcolor;
+}
+
+.choice-card-proto[data-kind='switch'] .choice-control-proto {
+  order: 1;
+  margin-inline-start: auto;
+}
+
+.choice-card-proto[hidden],
+.choice-proto[hidden] {
+  display: none;
+}
+
+@media (pointer: coarse) {
+  .choice-proto {
+    min-block-size: 44px;
+    padding-block: var(--space-12);
+  }
+}
+
+@media (forced-colors: active) {
+  .choice-proto,
+  .choice-card-proto {
+    color: CanvasText;
+    opacity: 1;
+  }
+
+  .choice-card-proto,
+  .choice-indicator-proto {
+    background: Canvas;
+    border-color: ButtonText;
+  }
+
+  .choice-native-proto:checked + .choice-indicator-proto {
+    forced-color-adjust: none;
+    background: Highlight;
+    border-color: Highlight;
+    color: HighlightText;
+  }
+
+  .choice-proto[data-kind='radio'] .choice-indicator-proto::after,
+  .choice-proto[data-kind='switch'] .choice-indicator-proto::after {
+    background: CanvasText;
+  }
+}

@@ -1,0 +1,341 @@
+.folio-extensions-content > section {
+  padding-block-start: var(--space-8);
+}
+
+.folio-connector-card.card-proto {
+  gap: var(--space-12);
+  padding: var(--space-16);
+}
+
+.folio-connector-featured {
+  min-block-size: 236px;
+}
+
+.folio-connector-copy {
+  display: grid;
+  gap: var(--space-4);
+  min-inline-size: 0;
+}
+
+.folio-connector-copy > .text-proto {
+  --text-size-body-s: var(--text-size-body-xs);
+  --text-size-body-s-lh: var(--text-size-body-xs-lh);
+}
+
+.folio-connector-title.folio-row,
+.folio-connector-link.folio-row {
+  gap: var(--space-8);
+}
+
+.folio-connector-link > .icon-proto {
+  color: var(--fg-muted);
+  font-size: var(--text-size-body-xs);
+}
+
+.folio-connector-sync.folio-row {
+  gap: 6px;
+  color: var(--status-success-signal);
+  font-size: var(--text-size-body-xs);
+}
+
+.folio-connector-icon {
+  display: grid;
+  flex: none;
+  place-items: center;
+  inline-size: 34px;
+  block-size: 34px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--size-m-radius);
+  background: var(--bg-surface-subtle);
+  color: var(--fg-primary);
+  font-size: 16px;
+}
+
+.folio-connector-footer {
+  margin-block-start: auto;
+  padding-block-start: 10px;
+  border-block-start: 1px solid var(--border-subtle);
+}
+
+.folio-connector-footer > .text-proto {
+  min-inline-size: 0;
+}
+
+.folio-connector-skeleton {
+  inline-size: 100%;
+  block-size: 22px;
+}
+
+.folio-connector-installed {
+  min-block-size: 186px;
+}
+
+.folio-connector-installed .folio-connector-icon {
+  inline-size: 32px;
+  block-size: 32px;
+}
+
+.folio-connector-installed-title {
+  --text-size-body-m: var(--text-size-body-s);
+  --text-size-body-m-lh: var(--text-size-body-s-lh);
+}
+
+.folio-connector-installed .folio-connector-footer {
+  padding-block-start: var(--space-8);
+  border-block-start: 0;
+}
+
+.folio-webhook-card.card-proto {
+  min-block-size: 356px;
+  padding: 0;
+  background-image: var(--motif-canvas-grid);
+  background-size: 24px 24px;
+}
+
+.folio-webhook-card .empty-proto {
+  flex: 1;
+  justify-content: center;
+  padding: 28px 32px;
+}
+
+.folio-webhook-card .empty-copy-proto > h3 {
+  font-size: var(--text-size-heading-m);
+  line-height: var(--text-size-heading-m-lh);
+}
+
+.folio-webhook-card .empty-copy-proto {
+  max-inline-size: 520px;
+}
+
+.folio-webhook-card .empty-description-proto {
+  font-size: var(--text-size-body-m);
+  line-height: var(--text-size-body-m-lh);
+}
+
+.folio-preferences-column {
+  gap: 22px;
+}
+
+.folio-preferences-card.card-proto {
+  gap: 0;
+  padding: 4px 20px;
+}
+
+.folio-preference-row {
+  display: grid;
+  gap: var(--space-12);
+  min-inline-size: 0;
+  padding-block: var(--space-16);
+  border-block-end: 1px solid var(--border-subtle);
+}
+
+.folio-preference-row:last-child {
+  border-block-end: 0;
+}
+
+.folio-preference-label.folio-stack {
+  gap: var(--space-2);
+}
+
+.folio-preference-inline {
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-24);
+}
+
+.folio-preference-radio-row {
+  gap: 20px;
+}
+
+.folio-preference-description.text-proto {
+  --text-size-body-s: var(--text-size-body-xs);
+  --text-size-body-s-lh: var(--text-size-body-xs-lh);
+}
+
+.folio-preference-row > .segmented-control-proto {
+  inline-size: fit-content;
+}
+
+.folio-preference-row > .select-shell-proto {
+  inline-size: 224px;
+  max-inline-size: 100%;
+}
+
+.folio-preference-numeric-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 220px;
+  align-items: end;
+  gap: 20px;
+}
+
+.folio-preference-context {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 20px;
+}
+
+.folio-preference-context .range-slider-heading-proto {
+  display: none;
+}
+
+.folio-governance-card.card-proto {
+  gap: var(--space-12);
+  padding: 18px 20px;
+}
+
+.folio-governance-card .collapsible-proto > summary {
+  min-block-size: 32px;
+  padding: 6px var(--space-8);
+}
+
+.folio-governance-card .collapsible-body-proto {
+  padding: var(--space-4) var(--space-8) var(--space-12);
+}
+
+.folio-governance-card .collapsible-body-proto .text-proto {
+  --text-size-body-s: var(--text-size-body-xs);
+  --text-size-body-s-lh: var(--text-size-body-xs-lh);
+}
+
+.folio-preference-policy {
+  align-items: start;
+}
+
+.folio-preference-policy .text-proto {
+  max-inline-size: 610px;
+}
+
+.folio-preferences-actions.app-shell-sticky-bar {
+  min-block-size: 52px;
+  margin: 0;
+  background: var(--bg-surface);
+}
+
+.folio-preferences-status {
+  flex: none;
+  inline-size: 6px;
+  block-size: 6px;
+  border-radius: var(--radius-full);
+  background: var(--status-success-signal);
+}
+
+.folio-preferences-status[data-dirty] {
+  background: var(--status-warning-signal);
+}
+
+.folio-shortcuts-table thead tr {
+  block-size: 36px;
+}
+
+.folio-shortcuts-table tbody tr {
+  block-size: 40px;
+}
+
+.folio-shortcuts-table :is(th, td):nth-child(2) {
+  inline-size: 180px;
+}
+
+.folio-shortcuts-table :is(th, td):nth-child(3) {
+  inline-size: 196px;
+}
+
+.folio-import-stage {
+  padding-block-end: 152px;
+}
+
+.folio-import-card.card-proto {
+  gap: var(--space-16);
+  padding: 20px;
+}
+
+.folio-import-policy {
+  display: grid;
+  gap: var(--space-8);
+}
+
+.folio-import-card-heading {
+  align-items: start;
+}
+
+.folio-import-card-heading > div {
+  min-inline-size: 0;
+}
+
+.folio-import-queue-label {
+  color: var(--fg-muted);
+  font-size: var(--text-size-caption-l);
+}
+
+.folio-import-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-12);
+  padding-block-start: var(--space-12);
+}
+
+.folio-import-footer .folio-row {
+  flex-wrap: wrap;
+}
+
+.folio-import-dropzone .dropzone-surface-proto {
+  min-block-size: 114px;
+  gap: var(--space-8);
+  padding: var(--space-12);
+  background: var(--bg-canvas);
+}
+
+.folio-import-dropzone .dropzone-surface-proto > svg {
+  font-size: 24px;
+}
+
+.folio-import-file-status {
+  margin-inline-start: var(--space-12);
+}
+
+@container artboard (max-width: 900px) {
+  .folio-connector-footer {
+    flex-wrap: wrap;
+  }
+}
+
+@container artboard (max-width: 700px) {
+  .folio-import-policy .folio-grid-2 {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .folio-preference-inline,
+  .folio-preference-context {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-12);
+  }
+  .folio-preference-numeric-row {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-16);
+  }
+
+  .folio-preference-row > .segmented-control-proto {
+    inline-size: 100%;
+  }
+
+  .folio-preference-policy {
+    flex-wrap: wrap;
+  }
+
+  .folio-webhook-card .empty-proto {
+    padding: var(--space-24) var(--space-16);
+  }
+
+  .folio-preferences-actions .app-shell-header-actions {
+    inline-size: 100%;
+  }
+
+  .folio-import-card-heading {
+    flex-wrap: wrap;
+  }
+
+  .folio-import-stage {
+    padding-block-end: var(--space-64);
+  }
+}

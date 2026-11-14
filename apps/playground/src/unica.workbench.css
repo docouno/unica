@@ -14,3 +14,8 @@
   --wb-stage-tag-size: var(--text-size-caption-m);
   --wb-stage-radius: var(--surface-m-radius);
 }
+
+/* Full product scenes own the canvas edge and their internal gutters. */
+.wb-artboard:has(> .folio-scene) {
+  padding: 0;
+}

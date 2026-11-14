@@ -34,12 +34,15 @@ Unica enforces two explicit browser tiers across CSS compilation and runtime beh
 
 ## WCAG Contrast & Non-Color Differentiation
 
-All six reference presets (`soft-dark`, `soft-light`, `frost-dark`, `frost-light`, `pixel-dark`, `pixel-light`) enforce WCAG 2.1 AA contrast floors:
+Evaluate all six reference presets (`soft-dark`, `soft-light`, `frost-dark`, `frost-light`, `pixel-dark`, `pixel-light`) in their actual component compositions:
 
 - **Typography (`--fg-primary`, `--fg-secondary`):** Minimum `4.5:1` contrast against owning `--bg-*` and `--control-bg` surfaces (`>= 3:1` for large display headings).
-- **Control boundaries & focus contours:** Resting field borders (`--control-border`), binary choice indicators (`Checkbox`, `Radio`, `Switch`), and `:focus-visible` outlines maintain `>= 3:1` adjacent contrast.
+- **Essential control and state indicators:** Apply the `>= 3:1` adjacent contrast requirement to the visual information needed to identify a control or its state, including binary choice indicators and custom focus indicators. Determine which border, fill, glyph, or other cue carries that information in the complete composition.
+- **Resting borders:** Preserve the themes' subtle `--control-border` and overlay borders. A decorative boundary has no blanket `3:1` target; do not strengthen shared border tokens merely to satisfy a palette-wide border check. If a border is the only cue identifying an editable area, it is essential and must meet the non-text contrast requirement. Check empty fields and ghost controls explicitly; a readable label alone is not proof that the editable area can be identified.
 - **Adaptive `--fg-on-accent` polarity:** Solid accent and status fills pair automatically with dark ink on high-luminance pastel/phosphor fills (`soft-dark`, `pixel-dark`) and crisp light ink on deep indigo, terracotta, and drafting-ink fills (`frost-*`, `soft-light`, `pixel-light`).
 - **Non-color cues:** Validation states pair `--status-danger-*` borders with explicit `FormField` error copy (`aria-invalid="true"`, `aria-describedby`); selected cards/tabs pair tint with structural indicators; circular `Radio` indicators stay distinct from rectangular `Checkbox` frames even under `0px` `Pixel` geometry.
+
+Follow [WCAG 1.4.11: Non-text Contrast](https://www.w3.org/WAI/WCAG22/Understanding/non-text-contrast.html) when selecting the essential indicators to measure. Token-level measurements alone do not establish component accessibility or palette-wide WCAG conformance.
 
 ## Keyboard Navigation & Pointer Targets
 

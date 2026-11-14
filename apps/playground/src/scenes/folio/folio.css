@@ -1,0 +1,706 @@
+.folio-scene {
+  position: relative;
+  min-inline-size: 0;
+  inline-size: 100%;
+  isolation: isolate;
+  color: var(--fg-primary);
+  background: var(--bg-canvas);
+  font-family: var(--font-family-base);
+  font-size: var(--text-size-body-s);
+  line-height: var(--text-size-body-s-lh);
+}
+.folio-auth {
+  min-block-size: 920px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  background-image: var(--motif-canvas-grid);
+  background-size: 24px 24px;
+}
+.folio-auth-topbar,
+.folio-auth-footer {
+  padding: 0 48px;
+  min-block-size: 68px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-16);
+}
+.folio-auth-footer {
+  min-block-size: 56px;
+  font-size: var(--text-size-caption-l);
+}
+.folio-auth-footer .folio-row {
+  gap: var(--space-24);
+}
+.folio-auth-divider {
+  inline-size: 1px;
+  block-size: 14px;
+  background: var(--border-subtle);
+  margin-inline: var(--space-4);
+}
+.folio-auth-stage {
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  gap: var(--space-16);
+  justify-items: center;
+  padding: var(--space-32) var(--space-16);
+}
+.folio-auth-stage::before {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  inset: -90px 0;
+  pointer-events: none;
+  background-image: var(--auth-stage-aura);
+}
+.folio-auth-card.card-proto {
+  inline-size: min(428px, 100%);
+  padding: 28px;
+  gap: 18px;
+}
+.folio-auth-card > .segmented-control-proto {
+  inline-size: 100%;
+}
+.folio-auth-compliance {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: var(--space-8);
+}
+.folio-auth-compliance > .text-proto {
+  font-size: var(--text-size-caption-l);
+}
+.folio-content {
+  container: folio-content / inline-size;
+  min-inline-size: 0;
+  padding: 32px 72px 48px;
+  display: grid;
+  gap: var(--space-24);
+  align-content: start;
+}
+.folio-content-overview {
+  padding: 32px 86px 64px;
+  gap: 26px;
+}
+.folio-content-collection {
+  padding: 30px 28px 44px;
+  gap: var(--space-32);
+}
+.folio-collection-intro {
+  display: grid;
+  gap: 14px;
+  min-inline-size: 0;
+}
+.folio-page-intro,
+.folio-section-heading {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: var(--space-16);
+}
+.folio-page-intro > div {
+  min-inline-size: 0;
+  display: grid;
+  gap: var(--space-8);
+}
+.folio-section-heading {
+  align-items: center;
+}
+.folio-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  min-inline-size: 0;
+}
+.folio-wrap {
+  flex-wrap: wrap;
+}
+.folio-between {
+  justify-content: space-between;
+}
+.folio-end {
+  justify-content: end;
+}
+.folio-stack {
+  display: grid;
+  gap: var(--space-12);
+  min-inline-size: 0;
+}
+.folio-stack-lg {
+  display: grid;
+  gap: var(--space-24);
+  min-inline-size: 0;
+}
+.folio-grid-2 {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-16);
+}
+.folio-grid-3 {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-16);
+}
+.folio-overview-columns {
+  display: grid;
+  grid-template-columns: minmax(0, 2.05fr) minmax(0, 1fr);
+  gap: var(--space-16);
+}
+.folio-eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.folio-person {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-8);
+  min-inline-size: 0;
+  color: var(--fg-secondary);
+  font-size: var(--text-size-caption-l);
+}
+.folio-person > span {
+  overflow-wrap: anywhere;
+}
+.folio-document-name {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-8);
+  min-inline-size: 0;
+}
+.folio-document-name > span {
+  min-inline-size: 0;
+  overflow-wrap: anywhere;
+}
+.folio-metric-strip {
+  display: flex;
+  align-items: center;
+  gap: var(--space-16);
+  flex-wrap: wrap;
+  color: var(--fg-muted);
+  font-size: var(--text-size-caption-l);
+}
+.folio-metric-strip > span + span {
+  border-inline-start: 1px solid var(--border-subtle);
+  padding-inline-start: var(--space-16);
+}
+.folio-document-card {
+  display: grid;
+  gap: var(--space-12);
+  align-content: start;
+}
+.folio-document-copy {
+  display: grid;
+  gap: 6px;
+}
+.folio-document-description.text-proto {
+  --text-size-body-s: var(--text-size-body-xs);
+  --text-size-body-s-lh: var(--text-size-body-xs-lh);
+}
+.folio-document-title {
+  --text-size-body-m: var(--text-size-body-s);
+  --text-size-body-m-lh: var(--text-size-body-s-lh);
+}
+.folio-sort-control.input-shell-proto {
+  inline-size: 226px;
+  max-inline-size: 100%;
+}
+.folio-activity-card.card-proto {
+  gap: 0;
+}
+.folio-topology {
+  min-block-size: 100px;
+  display: grid;
+  align-content: center;
+  gap: var(--space-12);
+  padding: var(--space-12);
+  background-image: var(--motif-canvas-grid);
+  background-size: 24px 24px;
+  font-family: var(--font-family-mono);
+  font-size: var(--text-size-caption-m);
+  line-height: var(--text-size-caption-m-lh);
+}
+.folio-topology-caption {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-8);
+  color: var(--fg-muted);
+  font-size: var(--text-size-caption-s);
+}
+.folio-topology-caption > strong {
+  color: var(--fg-secondary);
+  font-weight: 500;
+}
+.folio-topology-chain {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+.folio-topology-node {
+  flex: 1;
+  display: grid;
+  justify-items: center;
+  min-inline-size: 0;
+  padding: var(--space-4);
+  border: 1px solid var(--border-default);
+  border-radius: var(--size-s-radius);
+  background: var(--bg-surface);
+  font-family: var(--font-family-base);
+}
+.folio-topology-node > span {
+  color: var(--fg-muted);
+  font-size: var(--text-size-caption-s);
+}
+.folio-topology-node[data-primary] {
+  border-color: var(--accent-border);
+  background: var(--accent-soft-bg);
+  color: var(--accent-soft-fg);
+}
+.folio-topology-traffic {
+  display: grid;
+  gap: var(--space-8);
+}
+.folio-topology-route {
+  display: grid;
+  grid-template-columns: auto 72px minmax(0, 1fr) 66px;
+  align-items: center;
+  gap: var(--space-4);
+  color: var(--fg-muted);
+  font-size: var(--text-size-caption-s);
+}
+.folio-topology-route[data-active] {
+  color: var(--accent-soft-fg);
+}
+.folio-topology-dot {
+  inline-size: 4px;
+  block-size: 4px;
+  border-radius: var(--radius-circular);
+  background: currentColor;
+}
+.folio-topology-track {
+  block-size: 3px;
+  background: var(--neutral-soft-bg);
+}
+.folio-topology-track > span {
+  display: block;
+  block-size: 100%;
+  background: var(--accent-solid);
+}
+.folio-topology-card.card-proto {
+  gap: var(--space-12);
+}
+.folio-topology-heading {
+  --text-size-body-m: var(--text-size-caption-m);
+  --text-size-body-m-lh: var(--text-size-caption-m-lh);
+}
+.folio-activity-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: var(--space-12);
+  padding-block: var(--space-8);
+  border-block-end: 1px solid var(--border-subtle);
+}
+.folio-activity-row:last-child {
+  border-block-end: 0;
+}
+.folio-activity-row > div {
+  display: grid;
+  gap: 0;
+  min-inline-size: 0;
+}
+.folio-activity-meta {
+  text-align: end;
+  align-content: start;
+}
+.folio-revision-diff {
+  color: var(--status-success-soft-fg);
+  font-family: var(--font-family-mono);
+  font-size: var(--text-size-caption-l);
+}
+.folio-inspector-section {
+  display: grid;
+  gap: var(--space-12);
+  padding: 14px 16px;
+  border-block-end: 1px solid var(--border-subtle);
+}
+.folio-inspector-section:last-child {
+  border-block-end: 0;
+}
+.folio-inspector-properties {
+  display: grid;
+  gap: var(--space-4);
+}
+.folio-inspector-properties > div {
+  display: grid;
+  grid-template-columns: 82px minmax(0, 1fr);
+  align-items: center;
+  min-block-size: 30px;
+  gap: var(--space-8);
+}
+.folio-inspector-properties dt {
+  color: var(--fg-muted);
+  font-size: var(--text-size-caption-l);
+}
+.folio-inspector-properties dd {
+  margin: 0;
+  min-inline-size: 0;
+  font-size: var(--text-size-caption-l);
+}
+.folio-prose-stage {
+  padding: 36px 32px 48px;
+}
+.folio-prose {
+  max-inline-size: 760px;
+  margin-inline: auto;
+  display: grid;
+  align-content: start;
+  gap: var(--space-24);
+  min-inline-size: 0;
+}
+.folio-runbook {
+  max-inline-size: 700px;
+  gap: 28px;
+}
+.folio-runbook-compact {
+  gap: 20px;
+}
+.folio-runbook .table-proto thead th,
+.folio-content-collection .table-proto thead th,
+.folio-members-content .table-proto thead th {
+  block-size: 36px;
+}
+.folio-runbook .table-proto tbody td,
+.folio-content-collection .table-proto tbody td {
+  block-size: 42px;
+}
+.folio-members-content .table-proto tbody td {
+  block-size: 44px;
+}
+.folio-runbook .table-proto,
+.folio-content-collection .table-proto {
+  min-inline-size: 640px;
+}
+.folio-members-content .table-proto {
+  min-inline-size: 720px;
+}
+.folio-collection .folio-inspector-section > .choice-proto[data-kind='switch'] {
+  flex-direction: row-reverse;
+  justify-content: space-between;
+}
+.folio-reader .app-shell-aside[data-side='right'] .app-shell-aside-body,
+.folio-collection .app-shell-aside[data-side='right'] .app-shell-aside-body {
+  padding: 0;
+  gap: 0;
+  overflow: visible;
+}
+.folio-owner-profile {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-8);
+}
+.folio-owner-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-8);
+  padding-block-start: var(--space-12);
+  border-block-start: 1px solid var(--border-subtle);
+}
+.folio-checklist {
+  display: grid;
+  gap: var(--space-8);
+  padding-inline-start: var(--space-24);
+  margin: 0;
+  font-size: var(--text-size-body-s);
+}
+.folio-checklist li::marker {
+  color: var(--status-success-signal);
+}
+.folio-toast-dock {
+  position: absolute;
+  inset-inline-end: var(--space-24);
+  inset-block-end: var(--space-24);
+  inline-size: min(360px, calc(100% - 48px));
+  z-index: 4;
+}
+.folio-toast-dock > * {
+  inline-size: 100%;
+}
+.folio-preferences-hint {
+  position: absolute;
+  z-index: 4;
+  inset-inline-start: 62px;
+  inset-block-end: 68px;
+}
+.folio-floating-actions {
+  position: absolute;
+  z-index: 3;
+  inset-block-start: 92px;
+  inset-inline-end: 363px;
+}
+.folio-owner-preview {
+  position: relative;
+}
+.folio-owner-preview > .hover-card-proto {
+  position: absolute;
+  inset-block-start: calc(100% + 8px);
+  inset-inline-end: 0;
+  z-index: 4;
+}
+.folio-notice {
+  padding: var(--space-12) var(--space-16);
+  background: var(--accent-soft-bg);
+  color: var(--accent-soft-fg);
+  border-radius: var(--size-m-radius);
+  font-size: var(--text-size-caption-l);
+}
+.folio-settings-stage,
+.folio-admin-stage {
+  padding: 32px 32px 64px;
+}
+.folio-settings-column {
+  max-inline-size: 820px;
+  margin-inline: auto;
+  display: grid;
+  gap: var(--space-24);
+}
+.folio-admin-column {
+  max-inline-size: 840px;
+  margin-inline: auto;
+  display: grid;
+  gap: var(--space-24);
+}
+.folio-settings-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(160px, 0.8fr);
+  gap: var(--space-24);
+  padding-block: var(--space-16);
+  border-block-end: 1px solid var(--border-subtle);
+  align-items: center;
+}
+.folio-settings-row > div:first-child {
+  display: grid;
+  gap: var(--space-4);
+}
+.folio-settings-row:last-child {
+  border-block-end: 0;
+}
+.folio-rule {
+  border: 0;
+  border-block-start: 1px solid var(--border-subtle);
+  margin: 0;
+}
+.folio-editor-stage {
+  position: relative;
+  min-block-size: 840px;
+}
+.folio-editor-tool-divider {
+  align-self: stretch;
+  inline-size: 1px;
+  background: var(--border-subtle);
+  margin-inline: var(--space-8);
+}
+.folio-editor-reference.popover-content-proto {
+  position: absolute;
+  z-index: 3;
+  inline-size: 344px;
+  inset-inline-end: 96px;
+  inset-block-start: 390px;
+}
+.folio-slash-command {
+  display: grid;
+  gap: var(--space-4);
+  inline-size: min(344px, 100%);
+}
+.folio-slash-command > .choice-panel-proto {
+  inline-size: 100%;
+}
+.folio-fieldset {
+  padding: 0;
+  border: 0;
+  margin: 0;
+  min-inline-size: 0;
+  display: grid;
+  gap: var(--space-8);
+}
+.folio-fieldset > legend {
+  font-size: var(--text-size-body-s);
+  font-weight: 500;
+  padding: 0;
+  margin-block-end: var(--space-8);
+}
+.folio-combobox-reserve {
+  min-block-size: 120px;
+}
+.folio-members-content {
+  padding-inline: 88px;
+}
+.folio-role-field {
+  position: relative;
+  min-inline-size: 0;
+}
+.folio-invite-role-panel.popover-content-proto {
+  position: absolute;
+  z-index: 3;
+  inset-block-start: calc(100% + 4px);
+  inset-inline-start: 0;
+  inline-size: 300px;
+  max-inline-size: 100%;
+}
+.folio-invite-dialog .dialog-preview-body {
+  overflow: visible;
+}
+.folio-invite-dialog .dialog-preview-body > form {
+  gap: 14px;
+}
+.folio-invite-dialog .dialog-preview-body > form > .folio-grid-2 {
+  grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+}
+.folio-minor-action {
+  appearance: none;
+  border: 0;
+  background: none;
+  color: var(--accent-soft-fg);
+  font: inherit;
+  font-size: var(--text-size-caption-l);
+  text-align: start;
+  cursor: pointer;
+  padding: 0;
+}
+.folio-minor-action:focus-visible {
+  outline: 2px solid var(--focus-ring-color);
+  outline-offset: 3px;
+}
+@container artboard (max-width: 1200px) {
+  .folio-content,
+  .folio-content-overview {
+    padding-inline: var(--space-32);
+  }
+  .folio-floating-actions {
+    inset-inline-end: var(--space-24);
+  }
+}
+@container folio-content (max-width: 640px) {
+  .folio-grid-3 {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .folio-overview-columns {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .folio-grid-2 {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@container artboard (max-width: 700px) {
+  .folio-fieldset > .folio-grid-2,
+  .folio-invite-dialog .dialog-preview-body > form > .folio-grid-2 {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .folio-toast-dock {
+    position: relative;
+    inset: auto;
+    inline-size: auto;
+    margin: var(--space-16);
+  }
+  .folio-preferences-hint {
+    display: none;
+  }
+  .folio-content,
+  .folio-content-collection,
+  .folio-content-overview,
+  .folio-prose-stage,
+  .folio-settings-stage,
+  .folio-admin-stage {
+    padding: var(--space-24) var(--space-16);
+  }
+  .folio-page-intro {
+    flex-direction: column;
+  }
+  .folio-section-heading {
+    align-items: start;
+    flex-wrap: wrap;
+  }
+  .folio-metric-strip {
+    gap: var(--space-8);
+  }
+  .folio-metric-strip > span + span {
+    padding-inline-start: var(--space-8);
+  }
+  .folio-settings-row {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-12);
+  }
+  .folio-activity-row {
+    gap: var(--space-8);
+  }
+  .folio-activity-meta {
+    max-inline-size: 75px;
+  }
+  .folio-person {
+    flex-wrap: wrap;
+  }
+  .folio-floating-actions {
+    position: relative;
+    inset: auto;
+    margin: var(--space-16);
+  }
+}
+@container artboard (max-width: 600px) {
+  .folio-auth {
+    min-block-size: 850px;
+  }
+  .folio-auth-topbar,
+  .folio-auth-footer {
+    padding: var(--space-16);
+    flex-wrap: wrap;
+  }
+  .folio-auth-topbar > .folio-row:last-child {
+    inline-size: 100%;
+    justify-content: end;
+  }
+  .folio-auth-topbar .text-proto {
+    font-size: var(--text-size-caption-l);
+  }
+  .folio-auth-card.card-proto {
+    padding: var(--space-24);
+  }
+  .folio-auth-footer {
+    justify-content: center;
+    text-align: center;
+  }
+}
+@container artboard (max-width: 900px) {
+  .folio-editor-reference.popover-content-proto {
+    position: relative;
+    inset: auto;
+    margin: var(--space-24) auto 0;
+    max-inline-size: 100%;
+  }
+}
+@container artboard (max-width: 700px) {
+  .folio-invite-dialog .dialog-preview-body {
+    overflow: auto;
+  }
+  .folio-invite-dialog .folio-grid-2 {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .folio-invite-role-panel.popover-content-proto {
+    position: relative;
+    inset: auto;
+    margin-block-start: var(--space-4);
+    inline-size: 100%;
+  }
+}
+@media (forced-colors: active) {
+  .folio-notice {
+    border: 1px solid Highlight;
+    background: Canvas;
+    color: CanvasText;
+  }
+  .folio-revision-diff {
+    color: CanvasText;
+  }
+}
