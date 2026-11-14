@@ -1,6 +1,6 @@
 # Themes and Roles
 
-Unica separates **component roles** (declared in application JSX) from **material physics** (owned by the active theme). Applications express workflow hierarchy and intent; the theme determines whether that role renders as warm editorial matte paper, tactile hardware keycaps with frosted glass, or sharp-corner terminal geometry.
+Unica separates **component roles** (declared in application JSX) from **material physics** (owned by the active theme). Applications express workflow hierarchy and intent; the theme determines whether that role renders as warm editorial matte paper, saturated color with soft light and frosted overlays, or sharp-corner terminal geometry.
 
 ## Flat Tokens & Reference Presets
 
@@ -22,10 +22,18 @@ export type ThemePreset =
 | Family | Presets | Material & Surface Physics |
 | --- | --- | --- |
 | **Soft** | `soft-dark`, `soft-light` | Dusty slate (`Dark`) and warm cream-vellum (`Light`) matte surfaces, luminous pastel solids, borderless pills and callouts, soft matte secondary plates, and 100% opaque floating overlays. |
-| **Frost** | `frost-dark`, `frost-light` | Obsidian (`Dark`) and crystalline alabaster (`Light`) neutrals, electric indigo-violet gradient CTAs with directional lamp sheen and `0 2px 0` keycap ledges, `1px`-rimmed jewel badges, and `backdrop-filter` frosted glass exclusively on floating overlays. |
+| **Frost** | `frost-dark`, `frost-light` | Obsidian (`Dark`) and crystalline alabaster (`Light`) neutrals, deep violet CTAs with diagonal chromatic volume and diffuse ambient light, quiet neutral and danger solids, `1px`-rimmed jewel badges, and `backdrop-filter` frosted glass exclusively on floating overlays. |
 | **Pixel** | `pixel-dark`, `pixel-light` | Carbon-phosphor (`Dark`) and drafting-paper (`Light`) surfaces, `0px` sharp corners (`--radius-factor: 0`), `JetBrains Mono` base typography, `1px` structural borders, `8px` corner registration ticks, coordinate grids, and crisp `{2px, 2px}` / `{6px, 6px}` `blur: 0` block shadows. |
 
 `THEME_PRESETS` exposes the six presets and their display metadata. Custom product themes override semantic `--*` variables on a DOM subtree without touching component CSS; there is no exported `ThemeConfig` object API.
+
+Primary accent buttons use `--btn-primary-fill`, `--btn-primary-fill-hover`, and `--btn-primary-fill-active` for their background images. The matching `--btn-primary-shadow`, `--btn-primary-shadow-hover`, and `--btn-primary-shadow-active` recipes set depth and ambient light; `--btn-primary-press-transform` sets the press travel. Soft and Pixel use solid fills. Frost combines diagonal violet color stops, a colored lower edge, and two diffuse light layers that brighten on hover and recede on press. Its `--btn-primary-backlight-color` supplies a localized light that follows a fine pointer outside the opaque face; Soft and Pixel set it to `transparent`. Pointer light is absent during loading, disabled and active states, in forced colors, and with reduced motion. Neutral and danger actions retain their own solid colors. Secondary plates use the separate `--btn-secondary-*` recipe.
+
+Floating surfaces use `--overlay-border` for their perimeter and `--overlay-rim-mask` for the
+highlight's extent. Frost uses a transparent perimeter and a soft highlight that follows the
+upper corners, with a lighter translucent fill and popover shadow. Soft and Pixel keep fully
+opaque fills and their existing edge and shadow treatments. Material choices are theme tokens;
+the component specimen presents one current design per preset.
 
 ## Role-Based API Over Decorative `appearance`
 
@@ -38,7 +46,7 @@ Exposing low-level material switches (`solid`, `soft`, `glass`, `lamp`, `outline
 | **Binary, choice-card & continuous controls** (`Checkbox`, `Radio`, `Switch`, `CheckboxCard`, `RadioCard`, `SwitchCard`, `Slider`, `RangeSlider`, `SegmentedControl`, `Progress`) | *None (`0` variants)* | Track fills, `--choice-card-*` plates, thumb contrast, and edge rules follow theme tokens directly (with automatic `[data-surface="overlay"]` adaptation). |
 | **Fields & pickers** (`Input`, `Textarea`, `NumberInput`, `Select`, `Combobox`, `Autocomplete`, `DatePicker`, `DateRangePicker`, `TagsInput`, `FileInput`) | `variant?: 'default' \| 'ghost'` | Selects framed field chrome (`default`) vs borderless inline/toolbar placement (`ghost`). |
 | **Surface containers** (`Card`) | `variant?: 'default' \| 'subtle'` | Selects primary bounded surfaces (`default`) vs quiet secondary groupings (`subtle`). |
-| **Action triggers** (`Button`) | `variant?: 'primary' \| 'secondary' \| 'ghost'` | Expresses action weight; the active theme maps `primary` and `secondary` to matte plates, 3D keycaps, or offset block shadows. |
+| **Action triggers** (`Button`) | `variant?: 'primary' \| 'secondary' \| 'ghost'` | Expresses action weight; the active theme maps `primary` and `secondary` to matte plates, chromatic volume and ambient light, or offset block shadows. |
 
 ## Contextual Surface Adaptation (`base` vs `overlay`)
 

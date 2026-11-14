@@ -9,7 +9,7 @@ Components expose semantic roles rather than decorative material props. Switchin
 Every launch theme ships in calibrated `Dark` and `Light` presets (`6` presets total):
 
 - **Soft (`soft-dark`, `soft-light`)** — Warm editorial matte surfaces, cream-vellum and slate contrast, borderless pastel accents, and opaque floating layers.
-- **Frost (`frost-dark`, `frost-light`)** — Obsidian and alabaster neutrals, electric indigo-violet accents, volumetric primary CTAs with tactile `0 2px 0` keycap ledges, and frosted glass overlays.
+- **Frost (`frost-dark`, `frost-light`)** — Obsidian and alabaster neutrals, electric indigo-violet accents, deep violet primary CTAs with diagonal color volume and diffuse ambient light, and frosted glass overlays.
 - **Pixel (`pixel-dark`, `pixel-light`)** — Sharp `0px` orthogonal geometry (preserving circular `Radio` indicators), `JetBrains Mono` typography, `1px` structural borders, corner registration ticks, and crisp offset block shadows.
 
 ## Quick Example
