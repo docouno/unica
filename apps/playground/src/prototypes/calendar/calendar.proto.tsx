@@ -16,7 +16,21 @@ export interface CalendarProps extends Omit<HTMLAttributes<HTMLDivElement>, 'onS
   readonly disabled?: boolean | undefined;
 }
 
-const weekdays: readonly string[] = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'];
+const weekdays: readonly string[] = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+const shortMonths: readonly string[] = [
+  'Jan',
+  'Feb',
+  'Mar',
+  'Apr',
+  'May',
+  'Jun',
+  'Jul',
+  'Aug',
+  'Sep',
+  'Oct',
+  'Nov',
+  'Dec',
+];
 
 function monthParts(value: string): readonly [number, number] {
   const match = /^(\d{4})-(\d{2})/.exec(value);
@@ -32,12 +46,7 @@ function displayDate(value: string): string {
     return value;
   }
   const [year, month] = monthParts(value);
-  return new Intl.DateTimeFormat('en-GB', {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-    timeZone: 'UTC',
-  }).format(new Date(Date.UTC(year, month, Number(value.slice(8, 10)))));
+  return `${value.slice(8, 10)} ${shortMonths[month]} ${year}`;
 }
 
 // A deterministic month grid with native day buttons, not a production date-picker state machine.
@@ -71,27 +80,27 @@ export function Calendar({
   return (
     <div {...props} className={`calendar-proto ${className}`}>
       <div className="calendar-heading-proto">
-        <strong>{heading}</strong>
-        <span className="calendar-navigation-proto">
-          <button
-            type="button"
-            className="field-icon-button-proto"
-            aria-label="Previous month"
-            disabled={disabled}
-            onClick={() => moveMonth(-1)}
-          >
-            <CaretLeftIcon size="1em" className="calendar-arrow-proto" />
-          </button>
-          <button
-            type="button"
-            className="field-icon-button-proto"
-            aria-label="Next month"
-            disabled={disabled}
-            onClick={() => moveMonth(1)}
-          >
-            <CaretRightIcon size="1em" className="calendar-arrow-proto" />
-          </button>
-        </span>
+        <button
+          type="button"
+          className="field-icon-button-proto"
+          aria-label="Previous month"
+          disabled={disabled}
+          onClick={() => moveMonth(-1)}
+        >
+          <CaretLeftIcon size="1em" className="calendar-arrow-proto" />
+        </button>
+        <strong>
+          {shortMonths[monthIndex]} {year}
+        </strong>
+        <button
+          type="button"
+          className="field-icon-button-proto"
+          aria-label="Next month"
+          disabled={disabled}
+          onClick={() => moveMonth(1)}
+        >
+          <CaretRightIcon size="1em" className="calendar-arrow-proto" />
+        </button>
       </div>
       <div className="calendar-grid-proto">
         {weekdays.map((day) => (
@@ -226,12 +235,14 @@ export interface DateRangePickerProps extends Omit<
   readonly value?: readonly [string, string] | undefined;
   readonly defaultValue?: readonly [string, string] | undefined;
   readonly onValueChange?: ((value: readonly [string, string]) => void) | undefined;
+  readonly panelTitle?: ReactNode;
 }
 
 export function DateRangePicker({
   value,
   defaultValue = ['2026-09-14', '2026-09-17'],
   onValueChange,
+  panelTitle = 'Date range',
   defaultOpen = false,
   label,
   disabled,
@@ -283,6 +294,34 @@ export function DateRangePicker({
       />
       {open && !disabled && (
         <PopoverContent className="date-picker-panel-proto" aria-label="Choose a date range">
+          <div className="calendar-panel-heading-proto">
+            <strong>{panelTitle}</strong>
+            <button
+              type="button"
+              className="field-icon-button-proto"
+              aria-label="Close date range"
+              onClick={() => setOpen(false)}
+            >
+              <XIcon size="1em" />
+            </button>
+          </div>
+          <div className="calendar-range-fields-proto">
+            <Input
+              size="s"
+              variant="ghost"
+              value={displayDate(current[0])}
+              readOnly
+              aria-label="Range start"
+            />
+            <span aria-hidden="true">–</span>
+            <Input
+              size="s"
+              variant="ghost"
+              value={displayDate(current[1])}
+              readOnly
+              aria-label="Range end"
+            />
+          </div>
           <Calendar
             month={current[0]}
             range={[Number(current[0].slice(8, 10)), Number(current[1].slice(8, 10))]}

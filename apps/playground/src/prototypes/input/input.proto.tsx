@@ -47,7 +47,11 @@ export function FormField({
       {label && (
         <label className="form-field-label-proto" htmlFor={htmlFor}>
           {label}
-          {required && <span className="form-field-required-proto">*</span>}
+          {required && (
+            <span className="form-field-required-proto" aria-hidden="true">
+              *
+            </span>
+          )}
         </label>
       )}
       {children}

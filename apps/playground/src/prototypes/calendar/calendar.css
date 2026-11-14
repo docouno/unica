@@ -1,5 +1,6 @@
 .calendar-proto {
-  inline-size: 100%;
+  inline-size: 280px;
+  max-inline-size: 100%;
   min-inline-size: 0;
   color: var(--fg-primary);
   font-family: var(--font-family-base);
@@ -8,8 +9,8 @@
 }
 
 .calendar-heading-proto {
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr) 24px;
   align-items: center;
   gap: var(--space-8);
   min-block-size: var(--size-s-height);
@@ -17,13 +18,9 @@
 }
 
 .calendar-heading-proto > strong {
-  font-size: var(--text-size-body-s);
-  font-weight: 600;
-}
-
-.calendar-navigation-proto {
-  display: flex;
-  gap: var(--space-4);
+  font-size: var(--text-size-body-m);
+  font-weight: 400;
+  text-align: center;
 }
 
 .calendar-grid-proto {
@@ -44,21 +41,20 @@
   display: grid;
   place-items: center;
   min-inline-size: 0;
-  min-block-size: 30px;
+  min-block-size: var(--size-m-height);
   padding: var(--space-4) var(--space-2);
   border: 1px solid transparent;
   border-radius: var(--size-s-radius);
   background: transparent;
   color: var(--fg-primary);
   font: inherit;
-  font-size: var(--text-size-caption-l);
+  font-size: var(--text-size-body-m);
   line-height: 1.4;
   cursor: pointer;
 }
 
 .calendar-day-proto[data-outside] {
-  color: var(--fg-subtle);
-  cursor: default;
+  visibility: hidden;
 }
 
 .calendar-day-proto[data-range] {
@@ -69,9 +65,9 @@
 
 .calendar-day-proto[data-edge] {
   border-radius: var(--size-s-radius);
-  background: var(--accent-solid);
-  color: var(--fg-on-accent);
-  font-weight: 600;
+  background: var(--accent-soft-bg);
+  color: var(--accent-soft-fg);
+  font-weight: 500;
 }
 
 .calendar-day-proto:hover:not(:disabled, [data-edge]) {
@@ -93,15 +89,44 @@
 }
 
 .date-picker-panel-proto.popover-content-proto {
-  --popover-width: 19rem;
+  --popover-width: 324px;
   position: absolute;
   inset-inline-end: 0;
   inset-block-start: calc(100% + var(--space-8));
   z-index: 2;
-  inline-size: min(19rem, 100%);
-  min-inline-size: min(17rem, 100%);
+  inline-size: min(324px, 100%);
+  min-inline-size: 0;
   padding: var(--space-12);
   gap: var(--space-12);
+}
+
+.date-picker-panel-proto > .calendar-proto {
+  justify-self: center;
+}
+
+.calendar-panel-heading-proto {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-8);
+  font-size: var(--text-size-body-l);
+}
+
+.calendar-panel-heading-proto > strong {
+  font-weight: 500;
+}
+
+.calendar-range-fields-proto {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: var(--space-4);
+  color: var(--fg-muted);
+}
+
+.calendar-range-fields-proto input {
+  font-size: var(--text-size-body-m);
+  text-align: center;
 }
 
 .date-field-actions-proto {

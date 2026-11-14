@@ -16,6 +16,9 @@ import {
   LeftRail,
   TopRail,
   WorkspaceNavigation,
+  WorkspaceBadge,
+  WorkspaceSwitcher,
+  WorkspaceTrash,
   WorkspaceStatus,
 } from '../../prototypes/app-shell/app-shell.proto.js';
 import type { RailDestination } from '../../prototypes/app-shell/app-shell.proto.js';
@@ -51,6 +54,7 @@ export interface WorkspaceProps {
   readonly activeRail?: RailDestination;
   readonly classic?: boolean;
   readonly railOnly?: boolean;
+  readonly expandedNavigation?: readonly string[];
   readonly minHeight?: number;
 }
 
@@ -66,6 +70,7 @@ export function FolioWorkspace({
   activeRail = 'documents',
   classic = false,
   railOnly = false,
+  expandedNavigation,
   minHeight = 960,
 }: WorkspaceProps): ReactElement {
   const [navigationVisible, setNavigationVisible] = useState(true);
@@ -85,9 +90,20 @@ export function FolioWorkspace({
         railOnly
           ? undefined
           : (leftAside ?? (
-              <AsidePanel title="Platform Eng">
+              <AsidePanel
+                title="Platform Eng"
+                leading={<WorkspaceBadge />}
+                actions={<WorkspaceSwitcher />}
+                footer={<WorkspaceTrash />}
+              >
                 <WorkspaceNavigation
-                  expanded={documentTabs ? ['architecture', 'runbooks'] : ['architecture']}
+                  defaultActive={
+                    documentTabs ? (activeDocument === 'runbook' ? 'pg-failover' : 'adr-014') : ''
+                  }
+                  expanded={
+                    expandedNavigation ??
+                    (documentTabs ? ['architecture', 'runbooks'] : ['architecture'])
+                  }
                 />
               </AsidePanel>
             ))
@@ -142,16 +158,18 @@ export function TeamMembers({ compact = false }: { readonly compact?: boolean })
 export function PageIntro({
   title,
   description,
+  meta,
   children,
 }: {
   readonly title: string;
   readonly description?: string;
+  readonly meta?: ReactNode;
   readonly children?: ReactNode;
 }): ReactElement {
   return (
     <div className="folio-page-intro">
       <div>
-        <Title as="h1" size="heading-m">
+        <Title as="h1" size="heading-l">
           {title}
         </Title>
         {description && (
@@ -159,6 +177,7 @@ export function PageIntro({
             {description}
           </Text>
         )}
+        {meta}
       </div>
       {children}
     </div>
@@ -202,13 +221,15 @@ export function InspectorSection({
 export function Person({
   initials = 'DB',
   name = 'Database reliability',
+  size = '2xs',
 }: {
   readonly initials?: string;
   readonly name?: string;
+  readonly size?: '2xs' | 'xs';
 }): ReactElement {
   return (
     <span className="folio-person">
-      <Avatar initials={initials} size="2xs" />
+      <Avatar initials={initials} size={size} />
       <span>{name}</span>
     </span>
   );
@@ -259,7 +280,7 @@ export function RecoveryTable(): ReactElement {
 
 export function RunbookArticle({ compact = false }: { readonly compact?: boolean }): ReactElement {
   return (
-    <article className="folio-prose">
+    <article className={`folio-prose folio-runbook ${compact ? 'folio-runbook-compact' : ''}`}>
       <div className="folio-row folio-wrap">
         <Badge status="success" dot>
           Verified Runbook
@@ -271,10 +292,10 @@ export function RunbookArticle({ compact = false }: { readonly compact?: boolean
         )}
       </div>
       <div className="folio-stack">
-        <Title as="h1" size="heading-m">
+        <Title as="h1" size="heading-xl">
           Zero-Downtime PG Failover
         </Title>
-        <Text size="body-s" color="secondary">
+        <Text size="body-m" color="secondary">
           Operational procedure for promoting a synchronous standby replica during primary hardware
           degradation without dropping pooled transactions.
         </Text>

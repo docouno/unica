@@ -19,6 +19,8 @@ export interface FileInputProps extends Omit<
   readonly description?: ReactNode;
   readonly fileName?: string | undefined;
   readonly initialFileName?: string | undefined;
+  readonly fileDetail?: ReactNode;
+  readonly browseLabel?: string | undefined;
   readonly placeholder?: string | undefined;
   readonly onFilesChange?: ((files: readonly File[]) => void) | undefined;
 }
@@ -29,6 +31,8 @@ export function FileInput({
   description,
   fileName,
   initialFileName = '',
+  fileDetail,
+  browseLabel,
   placeholder = 'Choose a file…',
   onFilesChange,
   onChange,
@@ -41,14 +45,28 @@ export function FileInput({
   ...props
 }: FileInputProps): ReactElement {
   const [localName, setLocalName] = useState(initialFileName);
+  const [localDetail, setLocalDetail] = useState('');
   const generatedId = useId();
   const inputId = id ?? generatedId;
+  const currentName = fileName ?? localName;
+  const detail = fileDetail ?? localDetail;
   return (
     <FormField label={label} description={description} htmlFor={inputId} hidden={hidden}>
-      <span className={`file-input-proto ${className}`} style={style}>
-        <FileIcon size="1em" aria-hidden="true" />
-        <span className="file-input-name-proto">{fileName ?? (localName || placeholder)}</span>
-        <span className="file-input-browse-proto">Browse</span>
+      <span
+        className={`file-input-proto ${className}`}
+        style={style}
+        data-selected={Boolean(currentName) || undefined}
+      >
+        <span className="file-input-icon-proto">
+          <FileIcon size="1em" aria-hidden="true" />
+        </span>
+        <span className="file-input-copy-proto">
+          <span className="file-input-name-proto">{currentName || placeholder}</span>
+          {currentName && detail && <span className="file-input-detail-proto">{detail}</span>}
+        </span>
+        <span className="file-input-browse-proto">
+          {browseLabel ?? (currentName ? 'Replace file' : 'Browse')}
+        </span>
         <input
           {...props}
           id={inputId}
@@ -59,6 +77,14 @@ export function FileInput({
           onChange={(event) => {
             const files = Array.from(event.currentTarget.files ?? []);
             setLocalName(files.map((file) => file.name).join(', '));
+            const bytes = files.reduce((total, file) => total + file.size, 0);
+            setLocalDetail(
+              bytes < 1000
+                ? `${bytes} B`
+                : bytes < 1000000
+                  ? `${(bytes / 1000).toFixed(1)} KB`
+                  : `${(bytes / 1000000).toFixed(1)} MB`,
+            );
             onFilesChange?.(files);
             onChange?.(event);
           }}
@@ -75,6 +101,7 @@ export interface DropzoneProps extends Omit<HTMLAttributes<HTMLDivElement>, 'tit
   readonly accept?: string | undefined;
   readonly multiple?: boolean | undefined;
   readonly onFilesChange?: ((files: readonly File[]) => void) | undefined;
+  readonly browseLabel?: string | undefined;
 }
 
 export function Dropzone({
@@ -84,6 +111,7 @@ export function Dropzone({
   accept = '.md,.mdx,.zip',
   multiple = true,
   onFilesChange,
+  browseLabel = 'Browse files',
   className = '',
   children,
   onDragOver,
@@ -122,8 +150,8 @@ export function Dropzone({
       <label className="dropzone-surface-proto" htmlFor={inputId}>
         <UploadSimpleIcon size="1.5em" aria-hidden="true" />
         <strong>{dragging ? 'Release to add these files' : title}</strong>
-        <span className="dropzone-description-proto">{description}</span>
-        <span className="dropzone-browse-proto">Browse files</span>
+        {description && <span className="dropzone-description-proto">{description}</span>}
+        <span className="dropzone-browse-proto">{browseLabel}</span>
         <input
           id={inputId}
           type="file"

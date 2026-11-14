@@ -1,6 +1,7 @@
 import type { ComponentPropsWithRef, ReactElement, ReactNode } from 'react';
 import type { GlyphComponent } from '../icon/icon.proto.js';
 import { Icon } from '../icon/icon.proto.js';
+import { Kbd } from '../kbd/kbd.proto.js';
 import './menu.css';
 
 export interface MenuProps extends ComponentPropsWithRef<'div'> {
@@ -44,7 +45,7 @@ export function MenuItem({
     >
       {icon && <Icon icon={icon} size="s" />}
       <span>{children}</span>
-      {shortcut && <kbd>{shortcut}</kbd>}
+      {shortcut && <Kbd>{shortcut}</Kbd>}
     </button>
   );
 }
@@ -56,4 +57,21 @@ export interface HoverCardProps extends ComponentPropsWithRef<'div'> {
 }
 export function HoverCard({ className = '', ...props }: HoverCardProps): ReactElement {
   return <div {...props} data-surface="overlay" className={`hover-card-proto ${className}`} />;
+}
+
+export interface TooltipProps extends ComponentPropsWithRef<'div'> {
+  readonly shortcut?: ReactNode;
+}
+export function Tooltip({
+  shortcut,
+  children,
+  className = '',
+  ...props
+}: TooltipProps): ReactElement {
+  return (
+    <div {...props} role="tooltip" data-surface="overlay" className={`tooltip-proto ${className}`}>
+      <span>{children}</span>
+      {shortcut && <Kbd>{shortcut}</Kbd>}
+    </div>
+  );
 }

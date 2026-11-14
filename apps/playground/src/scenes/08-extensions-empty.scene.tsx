@@ -1,6 +1,9 @@
 import { useState } from 'react';
 import type { ReactElement } from 'react';
 import {
+  ArrowsLeftRightIcon,
+  BooksIcon,
+  CheckCircleIcon,
   DatabaseIcon,
   GithubLogoIcon,
   MagnifyingGlassIcon,
@@ -69,20 +72,14 @@ function ExtensionsScene(): ReactElement {
               size="s"
               variant="secondary"
               tone="neutral"
-              onClick={() =>
-                setNotice('Delivery log preview: all connected integrations are healthy.')
-              }
+              onClick={() => setNotice('All connected integrations are healthy.')}
             >
               Delivery logs
             </Button>
             <Button
               size="s"
               iconLeft={PlusIcon}
-              onClick={() =>
-                setNotice(
-                  'Connector registration preview opened. Choose a connector below to review its setup.',
-                )
-              }
+              onClick={() => setNotice('Choose a connector below to review its setup.')}
             >
               Register connector
             </Button>
@@ -99,37 +96,48 @@ function ExtensionsScene(): ReactElement {
               {show('GitHub Enterprise', 'source-control') && (
                 <Card className="folio-connector-card folio-connector-featured">
                   <div className="folio-row folio-between">
-                    <span className="folio-connector-icon">
-                      <Icon icon={GithubLogoIcon} />
-                    </span>
+                    <div className="folio-row folio-connector-link">
+                      <span className="folio-connector-icon">
+                        <Icon icon={BooksIcon} />
+                      </span>
+                      <Icon icon={ArrowsLeftRightIcon} />
+                      <span className="folio-connector-icon">
+                        <Icon icon={GithubLogoIcon} />
+                      </span>
+                    </div>
                     <Badge status="success" dot>
                       Active
                     </Badge>
                   </div>
-                  <div className="folio-stack">
-                    <Title as="h2" size="body-m">
-                      GitHub Enterprise
-                    </Title>
-                    <div>
-                      <Tag>v2.4 · GitOps</Tag>
+                  <div className="folio-connector-copy">
+                    <div className="folio-row folio-wrap folio-connector-title">
+                      <Title as="h2" size="body-m">
+                        GitHub Enterprise
+                      </Title>
+                      <Text size="caption-l" color="muted">
+                        v2.4 · GitOps
+                      </Text>
                     </div>
+                    <Text size="body-s" color="secondary">
+                      Syncs ADR pull requests and runbook frontmatter with default branch commits.
+                    </Text>
                   </div>
-                  <Text size="body-s" color="secondary">
-                    Syncs ADR pull requests and runbook frontmatter with default branch commits.
-                  </Text>
                   <div className="folio-row folio-wrap">
                     <Tag>Bi-directional</Tag>
                     <Tag>Signed commits</Tag>
                   </div>
                   <div className="folio-row folio-between folio-connector-footer">
-                    <Text size="caption-l" color="muted">
-                      Synced 2m ago
-                    </Text>
+                    <div className="folio-row folio-connector-sync">
+                      <Icon icon={CheckCircleIcon} />
+                      <Text size="caption-l" color="muted">
+                        Synced 2m ago
+                      </Text>
+                    </div>
                     <Button
                       size="s"
                       variant="secondary"
                       tone="neutral"
-                      onClick={() => setNotice('GitHub Enterprise configuration preview selected.')}
+                      onClick={() => setNotice('GitHub Enterprise configuration selected.')}
                     >
                       Configure
                     </Button>
@@ -139,39 +147,49 @@ function ExtensionsScene(): ReactElement {
               {show('PagerDuty Incident Sync', 'incident-response') && (
                 <Card className="folio-connector-card folio-connector-featured">
                   <div className="folio-row folio-between">
-                    <span className="folio-connector-icon">
-                      <Icon icon={PhoneCallIcon} />
-                    </span>
+                    <div className="folio-row folio-connector-link">
+                      <span className="folio-connector-icon">
+                        <Icon icon={BooksIcon} />
+                      </span>
+                      <Icon icon={ArrowsLeftRightIcon} />
+                      <span className="folio-connector-icon">
+                        <Icon icon={PhoneCallIcon} />
+                      </span>
+                    </div>
                     <Badge status="success" dot>
                       Active
                     </Badge>
                   </div>
-                  <div className="folio-stack">
-                    <Title as="h2" size="body-m">
-                      PagerDuty Incident Sync
-                    </Title>
-                    <div>
-                      <Tag>v1.9 · On-call</Tag>
+                  <div className="folio-connector-copy">
+                    <div className="folio-row folio-wrap folio-connector-title">
+                      <Title as="h2" size="body-m">
+                        PagerDuty Incident Sync
+                      </Title>
+                      <Text size="caption-l" color="muted">
+                        v1.9 · On-call
+                      </Text>
                     </div>
+                    <Text size="body-s" color="secondary">
+                      Attaches verified Tier-0 playbooks automatically to high-urgency service
+                      alerts.
+                    </Text>
                   </div>
-                  <Text size="body-s" color="secondary">
-                    Attaches verified Tier-0 playbooks automatically to high-urgency service alerts.
-                  </Text>
                   <div className="folio-row folio-wrap">
                     <Tag>Auto-attach</Tag>
                     <Tag>Escalation</Tag>
                   </div>
                   <div className="folio-row folio-between folio-connector-footer">
-                    <Text size="caption-l" color="muted">
-                      14 services linked
-                    </Text>
+                    <div className="folio-row folio-connector-sync">
+                      <Icon icon={CheckCircleIcon} />
+                      <Text size="caption-l" color="muted">
+                        14 services linked
+                      </Text>
+                    </div>
                     <Button
                       size="s"
                       variant="secondary"
                       tone="neutral"
-                      onClick={() =>
-                        setNotice('PagerDuty Incident Sync configuration preview selected.')
-                      }
+                      onClick={() => setNotice('PagerDuty Incident Sync configuration selected.')}
                     >
                       Configure
                     </Button>
@@ -185,19 +203,21 @@ function ExtensionsScene(): ReactElement {
             {installedVisible ? (
               <div className="folio-grid-3">
                 {show('Slack Triage Bridge', 'incident-response') && (
-                  <Card className="folio-connector-card">
+                  <Card className="folio-connector-card folio-connector-installed">
                     <div className="folio-row folio-between">
                       <span className="folio-connector-icon">
                         <Icon icon={SlackLogoIcon} />
                       </span>
                       <Badge>Installed</Badge>
                     </div>
-                    <Title as="h3" size="body-m">
-                      Slack Triage Bridge
-                    </Title>
-                    <Text size="body-s" color="secondary">
-                      Posts runbook verification reminders and drill summaries to #infra-drills.
-                    </Text>
+                    <div className="folio-connector-copy">
+                      <Title as="h3" size="body-m" className="folio-connector-installed-title">
+                        Slack Triage Bridge
+                      </Title>
+                      <Text size="body-s" color="secondary">
+                        Posts runbook verification reminders and drill summaries to #infra-drills.
+                      </Text>
+                    </div>
                     <div className="folio-row folio-between folio-connector-footer">
                       <Text size="caption-l" color="muted">
                         Channel #infra-drills
@@ -206,9 +226,7 @@ function ExtensionsScene(): ReactElement {
                         size="s"
                         variant="ghost"
                         tone="neutral"
-                        onClick={() =>
-                          setNotice('Slack Triage Bridge management preview selected.')
-                        }
+                        onClick={() => setNotice('Slack Triage Bridge management selected.')}
                       >
                         Manage
                       </Button>
@@ -216,19 +234,21 @@ function ExtensionsScene(): ReactElement {
                   </Card>
                 )}
                 {show('S3 Cold Snapshot', 'source-control') && (
-                  <Card className="folio-connector-card">
+                  <Card className="folio-connector-card folio-connector-installed">
                     <div className="folio-row folio-between">
                       <span className="folio-connector-icon">
                         <Icon icon={DatabaseIcon} />
                       </span>
                       <Badge>Installed</Badge>
                     </div>
-                    <Title as="h3" size="body-m">
-                      S3 Cold Snapshot
-                    </Title>
-                    <Text size="body-s" color="secondary">
-                      Writes immutable nightly Parquet &amp; Markdown bundles to eu-central-1.
-                    </Text>
+                    <div className="folio-connector-copy">
+                      <Title as="h3" size="body-m" className="folio-connector-installed-title">
+                        S3 Cold Snapshot
+                      </Title>
+                      <Text size="body-s" color="secondary">
+                        Writes immutable nightly Parquet &amp; Markdown bundles to eu-central-1.
+                      </Text>
+                    </div>
                     <div className="folio-row folio-between folio-connector-footer">
                       <Text size="caption-l" color="muted">
                         Nightly 02:00 UTC
@@ -237,7 +257,7 @@ function ExtensionsScene(): ReactElement {
                         size="s"
                         variant="ghost"
                         tone="neutral"
-                        onClick={() => setNotice('S3 Cold Snapshot management preview selected.')}
+                        onClick={() => setNotice('S3 Cold Snapshot management selected.')}
                       >
                         Manage
                       </Button>
@@ -245,23 +265,25 @@ function ExtensionsScene(): ReactElement {
                   </Card>
                 )}
                 {show('GitHub ADR Mirror', 'source-control') && (
-                  <Card className="folio-connector-card" aria-busy="true">
+                  <Card
+                    className="folio-connector-card folio-connector-installed folio-connector-indexing"
+                    aria-busy="true"
+                  >
                     <div className="folio-row folio-between">
-                      <span className="folio-connector-icon">
-                        <Icon icon={GithubLogoIcon} />
-                      </span>
+                      <div className="folio-row folio-connector-title">
+                        <Spinner size="s" label="Indexing repository trees" />
+                        <Title as="h3" size="body-m" className="folio-connector-installed-title">
+                          GitHub ADR Mirror
+                        </Title>
+                      </div>
                       <Badge status="info" dot>
                         Indexing
                       </Badge>
                     </div>
-                    <Title as="h3" size="body-m">
-                      GitHub ADR Mirror
-                    </Title>
-                    <SkeletonText lines={2} />
                     <Skeleton className="folio-connector-skeleton" />
+                    <SkeletonText lines={3} />
                     <div className="folio-row folio-connector-footer">
-                      <Spinner size="s" label="Indexing repository trees" />
-                      <Text size="caption-l" color="muted">
+                      <Text size="caption-m" color="muted">
                         Scanning 48 repository trees…
                       </Text>
                     </div>
@@ -280,8 +302,8 @@ function ExtensionsScene(): ReactElement {
               {sandboxCreated ? (
                 <Empty
                   icon={<PlugsConnectedIcon size="1em" />}
-                  title="Dry-run sandbox preview"
-                  description="The sandbox is ready for inspection in this local preview."
+                  title="Webhook sandbox ready"
+                  description="Inspect signed event payloads before routing production alerts."
                 >
                   <Button
                     size="s"
@@ -289,7 +311,7 @@ function ExtensionsScene(): ReactElement {
                     tone="neutral"
                     onClick={() => setSandboxCreated(false)}
                   >
-                    Remove sandbox preview
+                    Remove sandbox
                   </Button>
                 </Empty>
               ) : (
@@ -298,7 +320,12 @@ function ExtensionsScene(): ReactElement {
                   title="No custom webhook sandboxes yet"
                   description="Deploy an isolated dry-run endpoint to inspect signed event payloads before routing production alerts."
                 >
-                  <Button size="s" iconLeft={PlusIcon} onClick={() => setSandboxCreated(true)}>
+                  <Button
+                    size="s"
+                    variant="secondary"
+                    tone="neutral"
+                    onClick={() => setSandboxCreated(true)}
+                  >
                     Create webhook sandbox
                   </Button>
                 </Empty>
@@ -309,7 +336,7 @@ function ExtensionsScene(): ReactElement {
       </FolioWorkspace>
       {notice && (
         <div className="folio-toast-dock">
-          <Toast status="info" title="Connector preview" onDismiss={() => setNotice('')}>
+          <Toast status="info" title="Connectors" onDismiss={() => setNotice('')}>
             {notice}
           </Toast>
         </div>

@@ -1,11 +1,11 @@
 import { CopyIcon, DownloadSimpleIcon, GitDiffIcon, TrashIcon } from '@phosphor-icons/react';
 import { defineSpecimen } from '../../workbench/types.js';
 import { Text } from '../text/text.proto.js';
-import { Menu, MenuItem, MenuSeparator, HoverCard } from './menu.proto.js';
+import { Menu, MenuItem, MenuSeparator, HoverCard, Tooltip } from './menu.proto.js';
 
 export default defineSpecimen({
   id: 'menu',
-  title: 'Menu & HoverCard',
+  title: 'Menu, HoverCard & Tooltip',
   group: 'Overlays',
   sections: [
     {
@@ -40,6 +40,13 @@ export default defineSpecimen({
           <MenuItem disabled>Export unavailable revision</MenuItem>
         </Menu>
       ),
+    },
+    {
+      id: 'hint',
+      title: 'Folio · Preferences hint',
+      kind: 'context',
+      overlayStage: true,
+      render: () => <Tooltip shortcut="⌘,">Preferences & shortcuts</Tooltip>,
     },
     {
       id: 'owner',

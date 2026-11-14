@@ -18,6 +18,7 @@
 }
 
 .textarea-proto[data-size='s'] {
+  min-block-size: 72px;
   padding: var(--space-8) var(--size-s-padding-x);
   border-radius: var(--size-s-radius);
   font-size: var(--size-s-control-font);

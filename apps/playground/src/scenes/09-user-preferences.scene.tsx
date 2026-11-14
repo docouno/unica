@@ -82,7 +82,7 @@ function PreferencesScene(): ReactElement {
                 </Badge>
                 <Button
                   size="s"
-                  variant="secondary"
+                  variant="ghost"
                   tone="neutral"
                   onClick={() => setPreferences(defaults)}
                 >
@@ -292,7 +292,7 @@ function PreferencesScene(): ReactElement {
             <section className="folio-stack">
               <SectionHeading>Keyboard shortcuts</SectionHeading>
               <TableScroll>
-                <Table>
+                <Table className="folio-shortcuts-table">
                   <thead>
                     <tr>
                       <th>Command</th>
@@ -340,6 +340,11 @@ function PreferencesScene(): ReactElement {
                 </Table>
               </TableScroll>
             </section>
+            {notice && (
+              <Toast status="success" title="Preferences saved" onDismiss={() => setNotice('')}>
+                {notice}
+              </Toast>
+            )}
             <StickyActionBar
               className="folio-preferences-actions"
               actions={
@@ -358,7 +363,7 @@ function PreferencesScene(): ReactElement {
                     disabled={!dirty}
                     onClick={() => {
                       setSaved(preferences);
-                      setNotice('Your preferences are saved in this local preview.');
+                      setNotice('Your preferences have been saved.');
                     }}
                   >
                     Save preferences
@@ -366,20 +371,16 @@ function PreferencesScene(): ReactElement {
                 </>
               }
             >
-              <Text size="body-s">
-                {dirty ? `${dirty} unsaved preference changes` : 'All preference changes saved'}
-              </Text>
+              <div className="folio-row">
+                <span className="folio-preferences-status" data-dirty={dirty > 0 || undefined} />
+                <Text size="body-s">
+                  {dirty ? `${dirty} unsaved preference changes` : 'All preference changes saved'}
+                </Text>
+              </div>
             </StickyActionBar>
           </div>
         </div>
       </AppShell>
-      {notice && (
-        <div className="folio-toast-dock">
-          <Toast status="success" title="Preferences saved" onDismiss={() => setNotice('')}>
-            {notice}
-          </Toast>
-        </div>
-      )}
     </FolioScene>
   );
 }

@@ -76,7 +76,6 @@ function PropertiesScene(): ReactElement {
             <legend>Space visibility</legend>
             <div className="folio-grid-2">
               <RadioCard
-                size="s"
                 name={visibilityName}
                 value="workspace"
                 checked={visibility === 'workspace'}
@@ -85,7 +84,6 @@ function PropertiesScene(): ReactElement {
                 description="All 14 engineers"
               />
               <RadioCard
-                size="s"
                 name={visibilityName}
                 value="responders"
                 checked={visibility === 'responders'}
@@ -96,7 +94,6 @@ function PropertiesScene(): ReactElement {
             </div>
           </fieldset>
           <SwitchCard
-            size="s"
             checked={paging}
             onChange={(event) => setPaging(event.currentTarget.checked)}
             label="Page on-call when verification expires"

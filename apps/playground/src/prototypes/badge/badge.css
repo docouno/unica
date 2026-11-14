@@ -1,10 +1,12 @@
 .badge-proto {
   display: inline-flex;
+  flex: none;
   align-items: center;
   gap: var(--space-4);
   min-inline-size: 0;
+  min-block-size: 20px;
   max-inline-size: 100%;
-  padding: 2px 7px;
+  padding: 1px 7px;
   border: var(--pill-border-width) solid var(--mark-border);
   border-radius: var(--radius-full);
   background: var(--mark-bg);
@@ -16,12 +18,14 @@
   vertical-align: middle;
 }
 .badge-proto[data-size='m'] {
-  padding: 3px 9px;
+  min-block-size: 24px;
+  padding-inline: 9px;
   font-size: var(--text-size-body-s);
   line-height: var(--text-size-body-s-lh);
 }
 .badge-proto[data-size='l'] {
-  padding: 5px 11px;
+  min-block-size: 28px;
+  padding-inline: 11px;
   font-size: var(--text-size-body-m);
   line-height: var(--text-size-body-m-lh);
 }
@@ -41,7 +45,9 @@
 }
 .badge-label-proto {
   min-inline-size: 0;
-  overflow-wrap: anywhere;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 .badge-proto[hidden] {
   display: none;

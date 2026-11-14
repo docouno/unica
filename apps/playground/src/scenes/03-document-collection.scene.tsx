@@ -72,8 +72,9 @@ function CollectionScene(): ReactElement {
       current.includes(title) ? current.filter((item) => item !== title) : [...current, title],
     );
   return (
-    <FolioScene>
+    <FolioScene className="folio-collection">
       <FolioWorkspace
+        expandedNavigation={['architecture', 'runbooks']}
         crumbs={['Platform Eng', 'Runbooks']}
         minHeight={960}
         actions={
@@ -106,7 +107,7 @@ function CollectionScene(): ReactElement {
           </div>
         }
         rightAside={
-          <AsidePanel title="Collection scope" side="right" width={360}>
+          <AsidePanel aria-label="Collection scope" side="right" width={360}>
             <InspectorSection title="Verification gates">
               <Switch size="s" defaultChecked label="Verified only" />
               <Switch size="s" label="Include RFCs" />
@@ -124,7 +125,12 @@ function CollectionScene(): ReactElement {
               <Text size="caption-l" color="secondary">
                 Filter by drill window
               </Text>
-              <DateRangePicker size="s" defaultValue={['2026-09-14', '2026-09-17']} defaultOpen />
+              <DateRangePicker
+                size="s"
+                panelTitle="Modified date range"
+                defaultValue={['2026-09-14', '2026-09-17']}
+                defaultOpen
+              />
             </InspectorSection>
           </AsidePanel>
         }
@@ -132,12 +138,13 @@ function CollectionScene(): ReactElement {
         <div className="folio-content folio-content-collection">
           <div className="folio-row folio-between folio-wrap">
             <div className="folio-row">
-              <Title as="h1" size="heading-m">
+              <Title as="h1" size="heading-l">
                 Runbooks & Playbooks
               </Title>
               <Badge status="success">28 verified</Badge>
             </div>
             <Select
+              className="folio-sort-control"
               size="s"
               aria-label="Sort runbooks"
               options={[

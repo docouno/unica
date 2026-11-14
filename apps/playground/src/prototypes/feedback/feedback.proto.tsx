@@ -12,7 +12,13 @@ export interface FeedbackProps extends Omit<ComponentPropsWithRef<'div'>, 'title
   readonly onDismiss?: () => void;
 }
 
-function StatusGlyph({ status }: { readonly status: DisplayStatus }): ReactElement {
+function StatusGlyph({
+  status,
+  size = 'm',
+}: {
+  readonly status: DisplayStatus;
+  readonly size?: 's' | 'm';
+}): ReactElement {
   const glyph =
     status === 'success'
       ? CheckCircleIcon
@@ -21,7 +27,7 @@ function StatusGlyph({ status }: { readonly status: DisplayStatus }): ReactEleme
         : status === 'danger'
           ? XCircleIcon
           : InfoIcon;
-  return <Icon icon={glyph} size="m" />;
+  return <Icon icon={glyph} size={size} />;
 }
 
 export function Alert({
@@ -42,7 +48,7 @@ export function Alert({
       style={{ ...statusStyle(status), ...style }}
     >
       <span className="feedback-icon-proto" aria-hidden="true">
-        {icon ?? <StatusGlyph status={status} />}
+        {icon ?? <StatusGlyph status={status} size="s" />}
       </span>
       <div className="feedback-copy-proto">
         {title && <div className="feedback-title-proto">{title}</div>}

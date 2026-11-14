@@ -66,14 +66,14 @@ button.stepper-marker-proto:focus-visible {
   outline-offset: 2px;
 }
 .stepper-step-proto[data-state='completed'] .stepper-marker-proto {
-  border-color: var(--accent-border);
-  background: var(--accent-soft-bg);
-  color: var(--accent-soft-fg);
-}
-.stepper-step-proto[data-state='current'] .stepper-marker-proto {
   border-color: var(--accent-solid);
   background: var(--accent-solid);
   color: var(--fg-on-accent);
+}
+.stepper-step-proto[data-state='current'] .stepper-marker-proto {
+  border-color: var(--accent-border);
+  background: var(--accent-soft-bg);
+  color: var(--accent-soft-fg);
 }
 .stepper-step-proto[data-state='invalid'] .stepper-marker-proto {
   border-color: var(--status-danger-border);

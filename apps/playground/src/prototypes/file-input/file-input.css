@@ -15,19 +15,50 @@
   background: var(--control-bg);
   color: var(--fg-primary);
   font-family: var(--font-family-base);
-  font-size: var(--text-size-body-s);
+  font-size: var(--size-s-control-font);
 }
 
-.file-input-proto > svg {
+.file-input-icon-proto {
+  display: inline-grid;
+  place-items: center;
   flex: none;
+  inline-size: 32px;
+  block-size: 32px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--size-s-radius);
+  background: var(--bg-surface);
   color: var(--fg-muted);
 }
 
-.file-input-name-proto {
+.file-input-copy-proto {
+  display: grid;
   flex: 1;
+  gap: var(--space-2);
   min-inline-size: 0;
   padding-block: var(--space-8);
+}
+
+.file-input-name-proto {
   overflow-wrap: anywhere;
+}
+
+.file-input-detail-proto {
+  color: var(--fg-muted);
+  font-size: var(--text-size-caption-l);
+  line-height: var(--text-size-caption-l-lh);
+}
+
+.file-input-proto[data-selected] {
+  min-block-size: 56px;
+}
+
+.file-input-proto[data-selected] .file-input-browse-proto {
+  border-color: transparent;
+  background: transparent;
+  font-size: var(--text-size-body-m);
+  font-weight: 400;
+  text-decoration: underline;
+  text-underline-offset: 4px;
 }
 
 .file-input-browse-proto,
@@ -137,20 +168,31 @@
   align-items: flex-start;
   gap: var(--space-12);
   min-inline-size: 0;
-  padding-block: var(--space-12);
-  border-block-end: 1px solid var(--border-subtle);
+  min-block-size: 80px;
+  padding: var(--space-12);
+  border: 1px solid var(--control-border);
+  border-radius: var(--size-m-radius);
+  background: var(--control-bg);
   color: var(--fg-primary);
   font-family: var(--font-family-base);
   font-size: var(--text-size-body-s);
   line-height: 1.4;
 }
 
-.file-item-proto:last-child {
-  border-block-end: 0;
+.file-item-proto:has(.file-item-progress-proto) {
+  min-block-size: 110px;
 }
 
 .file-item-icon-proto {
+  display: inline-grid;
+  place-items: center;
   flex: none;
+  align-self: center;
+  inline-size: 32px;
+  block-size: 32px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--size-s-radius);
+  background: var(--bg-surface);
   color: var(--fg-muted);
 }
 
@@ -186,6 +228,7 @@
   display: flex;
   gap: var(--space-4);
   flex: none;
+  align-self: center;
 }
 
 .file-item-progress-proto {
@@ -221,6 +264,9 @@
 
 @media (forced-colors: active) {
   .file-input-proto,
+  .file-input-icon-proto,
+  .file-item-proto,
+  .file-item-icon-proto,
   .dropzone-surface-proto,
   .file-input-browse-proto,
   .dropzone-browse-proto {

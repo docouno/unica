@@ -286,7 +286,7 @@ export function DocumentTabs({
 }
 
 export type RailDestination =
-  'overview' | 'notifications' | 'documents' | 'extensions' | 'admin' | 'preferences';
+  'overview' | 'notifications' | 'documents' | 'extensions' | 'search' | 'admin' | 'preferences';
 
 interface RailItem {
   readonly value: RailDestination;
@@ -338,7 +338,12 @@ export function LeftRail({
     );
   }
   return (
-    <nav aria-label="Workspace sections" {...props} className={`app-shell-left-rail ${className}`}>
+    <nav
+      aria-label="Workspace sections"
+      {...props}
+      className={`app-shell-left-rail ${className}`}
+      data-brand={showBrand || undefined}
+    >
       <div className="app-shell-rail-items">
         {showBrand && (
           <div className="app-shell-rail-brand">
@@ -346,6 +351,8 @@ export function LeftRail({
           </div>
         )}
         {primaryRailItems.map(item)}
+        {showBrand &&
+          item({ value: 'search', label: 'Search workspace', icon: MagnifyingGlassIcon })}
       </div>
       <div className="app-shell-rail-items">
         {utilityRailItems.map(item)}
@@ -540,6 +547,7 @@ interface NavigationProps {
   readonly sections: readonly NavigationSection[];
   readonly defaultActive: string;
   readonly expanded?: readonly string[] | undefined;
+  readonly tree?: boolean;
   readonly onNavigate?: ((value: string) => void) | undefined;
 }
 
@@ -547,6 +555,7 @@ function Navigation({
   sections,
   defaultActive,
   expanded = [],
+  tree = false,
   onNavigate,
 }: NavigationProps): ReactElement {
   const [current, setCurrent] = useState(defaultActive);
@@ -563,6 +572,9 @@ function Navigation({
           onNavigate?.(entry.value);
         }}
       >
+        {tree && !nested && (
+          <Icon icon={CaretRightIcon} className="app-shell-group-caret" directional />
+        )}
         <Icon icon={entry.icon ?? (nested ? FileTextIcon : FolderIcon)} />
         <span className="app-shell-nav-label">{entry.label}</span>
         {entry.count !== undefined && <span className="app-shell-nav-count">{entry.count}</span>}
@@ -570,7 +582,11 @@ function Navigation({
     );
   }
   return (
-    <nav className="app-shell-navigation" aria-label="Workspace pages">
+    <nav
+      className="app-shell-navigation"
+      aria-label="Workspace pages"
+      data-tree={tree || undefined}
+    >
       {sections.map((section) => (
         <div className="app-shell-nav-section" key={section.label}>
           <div className="app-shell-nav-section-label">
@@ -622,6 +638,7 @@ export function WorkspaceNavigation({
       sections={sections}
       defaultActive={defaultActive}
       expanded={expanded}
+      tree={kind === 'documents'}
       onNavigate={onNavigate}
     />
   );

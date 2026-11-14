@@ -7,7 +7,7 @@
   padding: 1px 5px;
   border: 1px solid var(--kbd-cap-border);
   border-block-end-width: 2px;
-  border-radius: var(--radius-xs);
+  border-radius: var(--size-s-radius);
   background: var(--kbd-cap-bg);
   color: var(--fg-secondary);
   font-family: var(--font-family-mono);

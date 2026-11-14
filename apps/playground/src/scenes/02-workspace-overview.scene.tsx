@@ -13,7 +13,7 @@ import { Button } from '../prototypes/button/button.proto.js';
 import { Card } from '../prototypes/card/card.proto.js';
 import { Alert, Toast } from '../prototypes/feedback/feedback.proto.js';
 import { Icon } from '../prototypes/icon/icon.proto.js';
-import { Kbd } from '../prototypes/kbd/kbd.proto.js';
+import { Tooltip } from '../prototypes/menu/menu.proto.js';
 import { Link } from '../prototypes/link/link.proto.js';
 import { SegmentedControl } from '../prototypes/segmented-control/segmented-control.proto.js';
 import { Text } from '../prototypes/text/text.proto.js';
@@ -115,6 +115,7 @@ function OverviewScene(): ReactElement {
   return (
     <FolioScene>
       <FolioWorkspace
+        activeRail="overview"
         crumbs={['Platform Eng', 'Overview']}
         minHeight={1060}
         actions={
@@ -136,16 +137,18 @@ function OverviewScene(): ReactElement {
           <PageIntro
             title="Platform Engineering"
             description="Architecture decisions, production runbooks, and service topology owned by Core Infrastructure."
+            meta={
+              <div className="folio-metric-strip">
+                <span>142 published docs</span>
+                <span>28 Tier-0 runbooks</span>
+                <span>98.6% link health</span>
+              </div>
+            }
           >
             <Badge status="success" dot>
               Synced 2m ago
             </Badge>
           </PageIntro>
-          <div className="folio-metric-strip">
-            <span>142 published docs</span>
-            <span>28 Tier-0 runbooks</span>
-            <span>98.6% link health</span>
-          </div>
           <section className="folio-stack">
             <SectionHeading action={<Link href="#documents">Browse all documents →</Link>}>
               Continue reading & editing
@@ -164,16 +167,16 @@ function OverviewScene(): ReactElement {
                       {document.status}
                     </Badge>
                   </div>
-                  <div className="folio-stack">
-                    <Title as="h3" size="body-m">
+                  <div className="folio-document-copy">
+                    <Title as="h3" size="body-m" className="folio-document-title">
                       {document.title}
                     </Title>
-                    <Text size="body-s" color="secondary">
+                    <Text className="folio-document-description" size="body-s" color="secondary">
                       {document.description}
                     </Text>
                   </div>
                   <div className="folio-row folio-between">
-                    <Person initials={document.initials} name={document.owner} />
+                    <Person initials={document.initials} name={document.owner} size="xs" />
                     <Text size="caption-m" color="muted">
                       {document.time}
                     </Text>
@@ -200,7 +203,7 @@ function OverviewScene(): ReactElement {
               >
                 Recent activity
               </SectionHeading>
-              <Card>
+              <Card className="folio-activity-card">
                 {activity
                   .filter(
                     (row) =>
@@ -209,7 +212,7 @@ function OverviewScene(): ReactElement {
                   )
                   .map((row) => (
                     <div className="folio-activity-row" key={row.title}>
-                      <Avatar initials={row.initials} size="s" />
+                      <Avatar initials={row.initials} size="xs" />
                       <div>
                         <Text size="body-s" weight="medium">
                           {row.title}{' '}
@@ -233,7 +236,7 @@ function OverviewScene(): ReactElement {
             </section>
             <section className="folio-stack">
               <SectionHeading>Pinned documents</SectionHeading>
-              <Card>
+              <Card className="folio-activity-card">
                 {[
                   { title: 'Zero-Downtime PG Failover', category: 'Runbooks · Tier-0' },
                   { title: 'ADR-014 Traffic Draining', category: 'Architecture · Accepted' },
@@ -257,16 +260,13 @@ function OverviewScene(): ReactElement {
                 Quarterly failover game-day runs Thu 17 Sep at 10:00 UTC. Verify replica lag
                 thresholds beforehand.
               </Alert>
-              <div className="folio-row folio-between">
-                <Link tone="neutral" href="?item=09-user-preferences">
-                  Preferences & shortcuts
-                </Link>
-                <Kbd>⌘,</Kbd>
-              </div>
             </section>
           </div>
         </div>
       </FolioWorkspace>
+      <Tooltip className="folio-preferences-hint" shortcut="⌘,">
+        Preferences & shortcuts
+      </Tooltip>
       {toast && (
         <div className="folio-toast-dock">
           <Toast

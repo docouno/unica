@@ -3,6 +3,7 @@ import type { ReactElement } from 'react';
 import { CopyIcon, DownloadSimpleIcon, GitDiffIcon, TrashIcon } from '@phosphor-icons/react';
 import { AsidePanel } from '../prototypes/app-shell/app-shell.proto.js';
 import { Badge } from '../prototypes/badge/badge.proto.js';
+import { Avatar } from '../prototypes/avatar/avatar.proto.js';
 import { Collapsible } from '../prototypes/accordion/accordion.proto.js';
 import { Progress } from '../prototypes/feedback/feedback.proto.js';
 import { HoverCard, Menu, MenuItem, MenuSeparator } from '../prototypes/menu/menu.proto.js';
@@ -30,7 +31,7 @@ function ReaderScene(): ReactElement {
     setMenu(false);
   };
   return (
-    <FolioScene>
+    <FolioScene className="folio-reader">
       <FolioWorkspace
         crumbs={['Platform Eng', 'Runbooks', 'Zero-Downtime PG Failover']}
         documentTabs
@@ -43,7 +44,7 @@ function ReaderScene(): ReactElement {
           />
         }
         rightAside={
-          <AsidePanel title="Document inspector" side="right" width={296}>
+          <AsidePanel aria-label="Document inspector" side="right" width={296}>
             <Tabs
               value={tab}
               onValueChange={setTab}
@@ -92,32 +93,32 @@ function ReaderScene(): ReactElement {
                           </button>
                           {owner && (
                             <HoverCard>
-                              <Person name="Database reliability" />
-                              <Text size="caption-l" color="secondary">
-                                Staff SRE · Core Infrastructure
-                              </Text>
-                              <Badge status="success" size="s">
-                                On-call
-                              </Badge>
-                              <Text size="caption-l" color="muted">
-                                28 Tier-0 runbooks owned · UTC+1
-                              </Text>
+                              <div className="folio-owner-profile">
+                                <Avatar initials="DB" size="m" tone="info" />
+                                <div>
+                                  <Text size="caption-l" weight="semibold">
+                                    Database reliability
+                                  </Text>
+                                  <Text size="caption-l" color="secondary">
+                                    Staff SRE · Core Infra
+                                  </Text>
+                                </div>
+                                <Badge status="accent" size="s" dot>
+                                  On-call
+                                </Badge>
+                              </div>
+                              <div className="folio-owner-summary">
+                                <Text size="caption-l" color="secondary">
+                                  28 Tier-0 runbooks owned
+                                </Text>
+                                <Text size="caption-m" color="muted">
+                                  UTC+1
+                                </Text>
+                              </div>
                             </HoverCard>
                           )}
                         </div>
                       </dd>
-                    </div>
-                    <div>
-                      <dt>Service</dt>
-                      <dd>Core Postgres</dd>
-                    </div>
-                    <div>
-                      <dt>Review due</dt>
-                      <dd>15 Jan 2027</dd>
-                    </div>
-                    <div>
-                      <dt>Cluster</dt>
-                      <dd>eu-central-1 · Tier-0</dd>
                     </div>
                   </dl>
                 </InspectorSection>
@@ -126,7 +127,7 @@ function ReaderScene(): ReactElement {
                     <Text size="caption-l" color="secondary">
                       pg-replica-01 · sync_state = sync (0 B)
                     </Text>
-                    <Progress value={100} label="WAL catch-up" status="success" />
+                    <Progress value={100} label="WAL catch-up" />
                   </Collapsible>
                 </InspectorSection>
               </>
@@ -139,12 +140,9 @@ function ReaderScene(): ReactElement {
                   { label: 'v12 · 28 Aug', team: 'Platform', diff: '+94' },
                 ].map((revision) => (
                   <div key={revision.label} className="folio-row folio-between">
-                    <div>
-                      <Text size="caption-l">{revision.label}</Text>
-                      <Text size="caption-m" color="muted">
-                        {revision.team}
-                      </Text>
-                    </div>
+                    <Text size="caption-l">
+                      {revision.label} · {revision.team}
+                    </Text>
                     <span className="folio-revision-diff">{revision.diff}</span>
                   </div>
                 ))}

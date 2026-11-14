@@ -3,8 +3,9 @@
   align-items: center;
   gap: var(--space-4);
   min-inline-size: 0;
+  min-block-size: 20px;
   max-inline-size: 100%;
-  padding: 3px 7px;
+  padding: 0 7px;
   border: var(--pill-border-width) solid var(--mark-border);
   border-radius: var(--radius-full);
   background: var(--mark-bg);
@@ -14,14 +15,16 @@
   line-height: var(--text-size-caption-l-lh);
 }
 .tag-proto[data-size='m'] {
-  padding: 5px 9px;
-  font-size: var(--text-size-body-xs);
-  line-height: var(--text-size-body-xs-lh);
-}
-.tag-proto[data-size='l'] {
-  padding: 7px 11px;
+  min-block-size: 24px;
+  padding-inline: 9px;
   font-size: var(--text-size-body-s);
   line-height: var(--text-size-body-s-lh);
+}
+.tag-proto[data-size='l'] {
+  min-block-size: 28px;
+  padding-inline: 11px;
+  font-size: var(--text-size-body-m);
+  line-height: var(--text-size-body-m-lh);
 }
 .tag-icon-proto {
   display: inline-flex;
@@ -69,14 +72,15 @@
   display: inline-flex;
   align-items: center;
   min-inline-size: 0;
+  min-block-size: 20px;
   max-inline-size: 100%;
   border: var(--pill-border-width) solid var(--chip-border);
   border-radius: var(--size-s-radius);
   background: var(--chip-bg);
   color: var(--chip-fg);
   font-family: var(--font-family-base);
-  font-size: var(--text-size-body-xs);
-  line-height: var(--text-size-body-xs-lh);
+  font-size: var(--text-size-caption-l);
+  line-height: var(--text-size-caption-l-lh);
 }
 .chip-main-proto {
   display: inline-flex;
@@ -84,8 +88,8 @@
   justify-content: center;
   gap: var(--space-4);
   min-inline-size: 0;
-  min-block-size: var(--size-s-height);
-  padding: 4px 9px;
+  min-block-size: 0;
+  padding: 1px 7px;
   border: 0;
   border-radius: inherit;
   background: transparent;

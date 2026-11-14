@@ -1,11 +1,6 @@
 import { useId, useState } from 'react';
 import type { ReactElement } from 'react';
-import {
-  ArrowLeftIcon,
-  CheckCircleIcon,
-  ClockCounterClockwiseIcon,
-  PlayIcon,
-} from '@phosphor-icons/react';
+import { ArrowLeftIcon } from '@phosphor-icons/react';
 import { defineScene } from '../workbench/types.js';
 import { AppShell, Header, LeftRail } from '../prototypes/app-shell/app-shell.proto.js';
 import { Badge } from '../prototypes/badge/badge.proto.js';
@@ -73,7 +68,7 @@ function WorkspaceAdminScene(): ReactElement {
       return;
     }
     if (!/\.ya?ml$/i.test(file.name)) {
-      setError('Choose a YAML mapping schema. The selected file stays in your browser.');
+      setError('Choose a YAML mapping schema.');
       return;
     }
     setSchema(file.name);
@@ -98,7 +93,7 @@ function WorkspaceAdminScene(): ReactElement {
           id: `${file.name}-${file.size}-${file.lastModified}`,
           name: file.name,
           megabytes: file.size / 1024 / 1024,
-          detail: 'Queued in local preview',
+          detail: 'Queued for validation',
           status: 'neutral' as const,
         })),
     ]);
@@ -117,22 +112,16 @@ function WorkspaceAdminScene(): ReactElement {
                   size="s"
                   variant="secondary"
                   tone="neutral"
-                  iconLeft={ClockCounterClockwiseIcon}
-                  onClick={() =>
-                    setNotice('Import history preview: the staged archives have not been uploaded.')
-                  }
+                  onClick={() => setNotice('No completed imports yet.')}
                 >
                   Import history
                 </Button>
                 <Button
                   size="s"
-                  variant="secondary"
-                  tone="neutral"
-                  iconLeft={PlayIcon}
                   disabled={archives.length === 0}
                   onClick={() => {
                     setNotice(
-                      `Dry-run preview: ${archives.length} archives are staged. No files were uploaded.`,
+                      `Dry-run check complete: ${archives.length} archives are staged for validation.`,
                     );
                     setCurrentStep(1);
                   }}
@@ -188,14 +177,11 @@ function WorkspaceAdminScene(): ReactElement {
                 accept=".yaml,.yml"
                 label="Frontmatter mapping schema"
                 fileName={schema}
+                fileDetail={schemaSize}
+                browseLabel="Replace file"
                 onFilesChange={chooseSchema}
                 description="Optional YAML mapping for custom status and service tags."
               />
-              <div className="folio-import-schema-meta">
-                <CheckCircleIcon size="1em" aria-hidden="true" />
-                <span>{schema}</span>
-                <span>{schemaSize}</span>
-              </div>
               <div
                 className="folio-import-policy"
                 role="group"
@@ -236,16 +222,22 @@ function WorkspaceAdminScene(): ReactElement {
                   {archives.length} staged · {totalSize.toFixed(1)} MB
                 </Badge>
               </div>
-              <Dropzone
-                title="Drop Markdown or ZIP archives here"
-                accept=".md,.mdx,.zip"
-                description="UTF-8 .md, .mdx, or .zip up to 50 MB per archive"
-                onFilesChange={addArchives}
-              >
-                <Text size="caption-l" color="muted" className="folio-import-queue-label">
-                  {stagedLabel}
-                </Text>
-              </Dropzone>
+              <div className="folio-stack folio-import-dropzone">
+                <Dropzone
+                  title="Drop Markdown or ZIP archives here"
+                  browseLabel="Browse bundles"
+                  accept=".md,.mdx,.zip"
+                  onFilesChange={addArchives}
+                />
+                <div className="folio-row folio-between folio-wrap">
+                  <Text size="caption-l" color="muted">
+                    UTF-8 .md, .mdx, or .zip up to 50 MB per archive
+                  </Text>
+                  <Text size="caption-l" color="muted" className="folio-import-queue-label">
+                    {stagedLabel}
+                  </Text>
+                </div>
+              </div>
               <Progress value={archives.length ? 84 : 0} label="Schema & cross-link validation" />
               <FileList>
                 {archives.map((archive) => (
@@ -282,7 +274,7 @@ function WorkspaceAdminScene(): ReactElement {
                     setArchives([]);
                     setCurrentStep(0);
                     setShowValidationToast(false);
-                    setNotice('The local import preview was cleared.');
+                    setNotice('The staged import was cleared.');
                   }}
                 >
                   Abort import
@@ -303,7 +295,7 @@ function WorkspaceAdminScene(): ReactElement {
                     onClick={() => {
                       setCurrentStep(2);
                       setShowValidationToast(false);
-                      setNotice('Import preview complete. No archive was uploaded or published.');
+                      setNotice('28 documents prepared for import.');
                     }}
                   >
                     Commit 28 documents
@@ -327,7 +319,7 @@ function WorkspaceAdminScene(): ReactElement {
       )}
       {notice && (
         <div className="folio-toast-dock">
-          <Toast status="info" title="Archive import preview" onDismiss={() => setNotice('')}>
+          <Toast status="info" title="Archive import" onDismiss={() => setNotice('')}>
             {notice}
           </Toast>
         </div>

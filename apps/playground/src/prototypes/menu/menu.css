@@ -1,5 +1,6 @@
 .menu-proto,
-.hover-card-proto {
+.hover-card-proto,
+.tooltip-proto {
   position: relative;
   min-inline-size: 0;
   border: 1px solid var(--overlay-border);
@@ -10,7 +11,8 @@
   box-shadow: var(--overlay-shadow-popover);
 }
 .menu-proto::before,
-.hover-card-proto::before {
+.hover-card-proto::before,
+.tooltip-proto::before {
   content: '';
   position: absolute;
   inset: 0;
@@ -20,7 +22,8 @@
   pointer-events: none;
 }
 .menu-proto::after,
-.hover-card-proto::after {
+.hover-card-proto::after,
+.tooltip-proto::after {
   content: '';
   position: absolute;
   inset: -1px;
@@ -79,22 +82,39 @@
   margin: var(--space-4);
 }
 .hover-card-proto {
-  inline-size: 300px;
-  max-inline-size: 100%;
+  inline-size: 332px;
+  max-inline-size: none;
   padding: var(--space-16);
   display: grid;
   gap: var(--space-12);
   box-shadow: var(--overlay-shadow-hover);
 }
+.tooltip-proto {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-12);
+  min-block-size: 30px;
+  padding: var(--space-4) var(--space-8);
+  border-radius: var(--size-s-radius);
+  box-shadow: var(--overlay-shadow-tooltip);
+  font-size: var(--text-size-body-s);
+  line-height: var(--text-size-body-s-lh);
+  white-space: nowrap;
+}
+:is(.menu-proto, .hover-card-proto, .tooltip-proto)[hidden] {
+  display: none;
+}
 @supports not (backdrop-filter: blur(1px)) {
   .menu-proto,
-  .hover-card-proto {
+  .hover-card-proto,
+  .tooltip-proto {
     background: var(--bg-surface);
   }
 }
 @media (forced-colors: active) {
   .menu-proto,
-  .hover-card-proto {
+  .hover-card-proto,
+  .tooltip-proto {
     background: Canvas;
     color: CanvasText;
     border-color: CanvasText;
@@ -103,7 +123,9 @@
   .menu-proto::before,
   .menu-proto::after,
   .hover-card-proto::before,
-  .hover-card-proto::after {
+  .hover-card-proto::after,
+  .tooltip-proto::before,
+  .tooltip-proto::after {
     display: none;
   }
 }

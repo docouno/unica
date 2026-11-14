@@ -168,10 +168,10 @@ function EditorScene(): ReactElement {
               <Person initials="NW" name="Core networking · Editing" />
             </div>
             <div className="folio-stack">
-              <Title as="h1" size="heading-m">
+              <Title as="h1" size="heading-xl">
                 ADR-014: Regional Envoy Traffic Draining
               </Title>
-              <Text size="body-s" color="secondary">
+              <Text size="body-m" color="secondary">
                 Defines deterministic connection-draining budgets and healthcheck shedding when
                 evacuating an availability zone under elevated p99 latency.
               </Text>

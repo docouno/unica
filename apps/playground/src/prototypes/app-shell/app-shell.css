@@ -294,6 +294,10 @@
   gap: 6px;
 }
 
+.app-shell-left-rail[data-brand] {
+  padding-block-start: 10px;
+}
+
 .app-shell-rail-item {
   position: relative;
   display: grid;
@@ -340,7 +344,11 @@
 }
 
 .app-shell-rail-brand {
-  padding-block: var(--space-4) var(--space-16);
+  display: grid;
+  place-items: center;
+  inline-size: 36px;
+  block-size: 38px;
+  padding-block-end: var(--space-4);
 }
 
 .app-shell-profile {
@@ -485,7 +493,12 @@
 .app-shell-navigation {
   display: flex;
   flex-direction: column;
-  gap: var(--space-16);
+  gap: var(--space-12);
+}
+
+.app-shell-nav-section + .app-shell-nav-section {
+  padding-block-start: var(--space-12);
+  border-block-start: 1px solid var(--border-subtle);
 }
 
 .app-shell-nav-section-label {
@@ -493,7 +506,7 @@
   align-items: center;
   justify-content: space-between;
   gap: var(--space-8);
-  padding: var(--space-8) 6px;
+  padding: var(--space-2) var(--space-8) var(--space-4);
   color: var(--fg-muted);
   font-size: var(--text-size-caption-m);
   line-height: var(--text-size-caption-m-lh);
@@ -512,11 +525,11 @@
 .app-shell-nav-group > summary {
   display: flex;
   align-items: center;
-  gap: var(--space-8);
+  gap: 9px;
   inline-size: 100%;
   min-inline-size: 0;
-  min-block-size: 32px;
-  padding: 5px 6px;
+  min-block-size: 30px;
+  padding: 0 10px;
   border: 0;
   border-radius: var(--size-s-radius);
   background: transparent;
@@ -531,12 +544,42 @@
 .app-shell-nav-row > .icon-proto,
 .app-shell-nav-group > summary > .icon-proto {
   color: var(--fg-muted);
-  font-size: var(--text-size-caption-l);
+  font-size: 15px;
 }
 
 .app-shell-nav-row[data-nested] {
   min-block-size: 30px;
   padding-inline-start: 10px;
+}
+
+.app-shell-navigation[data-tree] .app-shell-nav-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.app-shell-navigation[data-tree] .app-shell-nav-section-label {
+  min-block-size: 26px;
+  padding: 0 6px var(--space-2);
+}
+
+.app-shell-navigation[data-tree] :is(.app-shell-nav-row, .app-shell-nav-group > summary) {
+  gap: 6px;
+  min-block-size: 28px;
+  padding: 0 var(--space-8) 0 6px;
+}
+
+.app-shell-navigation[data-tree] .app-shell-nav-row[data-nested] {
+  min-block-size: 27px;
+  padding-inline: var(--space-8);
+}
+
+.app-shell-navigation[data-tree] .app-shell-nav-row[data-nested] > .icon-proto {
+  font-size: 14px;
+}
+
+.app-shell-navigation[data-tree] .app-shell-group-caret {
+  font-size: 11px;
 }
 
 .app-shell-nav-label {
@@ -576,8 +619,11 @@
 }
 
 .app-shell-nav-children {
-  margin-inline-start: 14px;
-  padding-inline-start: var(--space-4);
+  display: grid;
+  gap: 1px;
+  margin-inline-start: var(--space-12);
+  padding-block: 1px 3px;
+  padding-inline-start: var(--space-8);
   border-inline-start: 1px solid var(--border-subtle);
 }
 
@@ -726,10 +772,30 @@
   .app-shell-header-content,
   .app-shell-subbar-content {
     flex-basis: 100%;
+    flex-wrap: wrap;
+    max-inline-size: 100%;
   }
 
   .app-shell-header-actions,
   .app-shell-subbar-actions {
+    flex-wrap: wrap;
+    inline-size: 100%;
+    max-inline-size: 100%;
+  }
+
+  :is(
+      .app-shell-header-content,
+      .app-shell-subbar-content,
+      .app-shell-header-actions,
+      .app-shell-subbar-actions
+    )
+    > * {
+    min-inline-size: 0;
+    max-inline-size: 100%;
+  }
+
+  :is(.app-shell-header-actions, .app-shell-subbar-actions) > :is(div, span),
+  .app-shell-subbar-content > :is(div, span) {
     flex-wrap: wrap;
   }
 

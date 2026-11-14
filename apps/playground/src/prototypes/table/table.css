@@ -12,24 +12,27 @@
   --table-py: var(--size-s-padding-y);
   --table-px: var(--size-s-padding-x);
   --table-font: var(--text-size-body-xs);
+  --table-line: var(--text-size-body-xs-lh);
   inline-size: 100%;
   border-collapse: collapse;
   border-spacing: 0;
   color: var(--fg-secondary);
   font-family: var(--font-family-base);
   font-size: var(--table-font);
-  line-height: 1.5;
+  line-height: var(--table-line);
   text-align: start;
 }
 .table-proto[data-size='m'] {
   --table-py: var(--size-m-padding-y);
   --table-px: var(--size-m-padding-x);
   --table-font: var(--text-size-body-m);
+  --table-line: var(--text-size-body-m-lh);
 }
 .table-proto[data-size='l'] {
   --table-py: var(--size-l-padding-y);
   --table-px: var(--size-l-padding-x);
   --table-font: var(--text-size-body-l);
+  --table-line: var(--text-size-body-l-lh);
 }
 .table-proto :is(th, td) {
   padding: var(--table-py) var(--table-px);

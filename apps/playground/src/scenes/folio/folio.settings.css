@@ -1,32 +1,60 @@
+.folio-extensions-content > section {
+  padding-block-start: var(--space-8);
+}
+
 .folio-connector-card.card-proto {
   gap: var(--space-12);
-  padding: 20px;
+  padding: var(--space-16);
 }
 
 .folio-connector-featured {
-  min-block-size: 260px;
+  min-block-size: 236px;
 }
 
-.folio-connector-card > .text-proto {
-  flex: 1;
+.folio-connector-copy {
+  display: grid;
+  gap: var(--space-4);
+  min-inline-size: 0;
+}
+
+.folio-connector-copy > .text-proto {
+  --text-size-body-s: var(--text-size-body-xs);
+  --text-size-body-s-lh: var(--text-size-body-xs-lh);
+}
+
+.folio-connector-title.folio-row,
+.folio-connector-link.folio-row {
+  gap: var(--space-8);
+}
+
+.folio-connector-link > .icon-proto {
+  color: var(--fg-muted);
+  font-size: var(--text-size-body-xs);
+}
+
+.folio-connector-sync.folio-row {
+  gap: 6px;
+  color: var(--status-success-signal);
+  font-size: var(--text-size-body-xs);
 }
 
 .folio-connector-icon {
   display: grid;
   flex: none;
   place-items: center;
-  inline-size: 36px;
-  block-size: 36px;
+  inline-size: 34px;
+  block-size: 34px;
   border: 1px solid var(--border-subtle);
   border-radius: var(--size-m-radius);
   background: var(--bg-surface-subtle);
   color: var(--fg-primary);
-  font-size: 22px;
+  font-size: 16px;
 }
 
 .folio-connector-footer {
   margin-block-start: auto;
-  padding-block-start: var(--space-8);
+  padding-block-start: 10px;
+  border-block-start: 1px solid var(--border-subtle);
 }
 
 .folio-connector-footer > .text-proto {
@@ -34,17 +62,54 @@
 }
 
 .folio-connector-skeleton {
-  inline-size: 72%;
+  inline-size: 100%;
+  block-size: 22px;
+}
+
+.folio-connector-installed {
+  min-block-size: 186px;
+}
+
+.folio-connector-installed .folio-connector-icon {
+  inline-size: 32px;
+  block-size: 32px;
+}
+
+.folio-connector-installed-title {
+  --text-size-body-m: var(--text-size-body-s);
+  --text-size-body-m-lh: var(--text-size-body-s-lh);
+}
+
+.folio-connector-installed .folio-connector-footer {
+  padding-block-start: var(--space-8);
+  border-block-start: 0;
 }
 
 .folio-webhook-card.card-proto {
-  padding: var(--space-4);
+  min-block-size: 356px;
+  padding: 0;
   background-image: var(--motif-canvas-grid);
   background-size: 24px 24px;
 }
 
 .folio-webhook-card .empty-proto {
+  flex: 1;
+  justify-content: center;
   padding: 28px 32px;
+}
+
+.folio-webhook-card .empty-copy-proto > h3 {
+  font-size: var(--text-size-heading-m);
+  line-height: var(--text-size-heading-m-lh);
+}
+
+.folio-webhook-card .empty-copy-proto {
+  max-inline-size: 520px;
+}
+
+.folio-webhook-card .empty-description-proto {
+  font-size: var(--text-size-body-m);
+  line-height: var(--text-size-body-m-lh);
 }
 
 .folio-preferences-column {
@@ -83,8 +148,8 @@
 }
 
 .folio-preference-description.text-proto {
-  font-size: var(--text-size-body-xs);
-  line-height: var(--text-size-body-xs-lh);
+  --text-size-body-s: var(--text-size-body-xs);
+  --text-size-body-s-lh: var(--text-size-body-xs-lh);
 }
 
 .folio-preference-row > .segmented-control-proto {
@@ -119,6 +184,20 @@
   padding: 18px 20px;
 }
 
+.folio-governance-card .collapsible-proto > summary {
+  min-block-size: 32px;
+  padding: 6px var(--space-8);
+}
+
+.folio-governance-card .collapsible-body-proto {
+  padding: var(--space-4) var(--space-8) var(--space-12);
+}
+
+.folio-governance-card .collapsible-body-proto .text-proto {
+  --text-size-body-s: var(--text-size-body-xs);
+  --text-size-body-s-lh: var(--text-size-body-xs-lh);
+}
+
 .folio-preference-policy {
   align-items: start;
 }
@@ -130,6 +209,35 @@
 .folio-preferences-actions.app-shell-sticky-bar {
   min-block-size: 52px;
   margin: 0;
+  background: var(--bg-surface);
+}
+
+.folio-preferences-status {
+  flex: none;
+  inline-size: 6px;
+  block-size: 6px;
+  border-radius: var(--radius-full);
+  background: var(--status-success-signal);
+}
+
+.folio-preferences-status[data-dirty] {
+  background: var(--status-warning-signal);
+}
+
+.folio-shortcuts-table thead tr {
+  block-size: 36px;
+}
+
+.folio-shortcuts-table tbody tr {
+  block-size: 40px;
+}
+
+.folio-shortcuts-table :is(th, td):nth-child(2) {
+  inline-size: 180px;
+}
+
+.folio-shortcuts-table :is(th, td):nth-child(3) {
+  inline-size: 196px;
 }
 
 .folio-import-stage {
@@ -172,17 +280,15 @@
   flex-wrap: wrap;
 }
 
-.folio-import-schema-meta {
-  display: flex;
-  align-items: center;
+.folio-import-dropzone .dropzone-surface-proto {
+  min-block-size: 114px;
   gap: var(--space-8);
-  color: var(--fg-muted);
-  font-size: var(--text-size-caption-l);
+  padding: var(--space-12);
+  background: var(--bg-canvas);
 }
 
-.folio-import-schema-meta > span:first-of-type {
-  min-inline-size: 0;
-  overflow-wrap: anywhere;
+.folio-import-dropzone .dropzone-surface-proto > svg {
+  font-size: 24px;
 }
 
 .folio-import-file-status {

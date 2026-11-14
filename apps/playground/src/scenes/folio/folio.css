@@ -14,10 +14,8 @@
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  background-image: var(--auth-stage-aura), var(--motif-canvas-grid);
-  background-size:
-    auto,
-    24px 24px;
+  background-image: var(--motif-canvas-grid);
+  background-size: 24px 24px;
 }
 .folio-auth-topbar,
 .folio-auth-footer {
@@ -42,10 +40,20 @@
   margin-inline: var(--space-4);
 }
 .folio-auth-stage {
+  position: relative;
+  isolation: isolate;
   display: grid;
   gap: var(--space-16);
   justify-items: center;
   padding: var(--space-32) var(--space-16);
+}
+.folio-auth-stage::before {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  inset: -90px 0;
+  pointer-events: none;
+  background-image: var(--auth-stage-aura);
 }
 .folio-auth-card.card-proto {
   inline-size: min(428px, 100%);
@@ -130,8 +138,8 @@
 }
 .folio-overview-columns {
   display: grid;
-  grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr);
-  gap: var(--space-24);
+  grid-template-columns: minmax(0, 2.05fr) minmax(0, 1fr);
+  gap: var(--space-16);
 }
 .folio-eyebrow {
   text-transform: uppercase;
@@ -172,11 +180,27 @@
 }
 .folio-document-card {
   display: grid;
-  gap: var(--space-16);
+  gap: var(--space-12);
   align-content: start;
 }
-.folio-document-card h3 {
-  min-block-size: 2.6em;
+.folio-document-copy {
+  display: grid;
+  gap: 6px;
+}
+.folio-document-description.text-proto {
+  --text-size-body-s: var(--text-size-body-xs);
+  --text-size-body-s-lh: var(--text-size-body-xs-lh);
+}
+.folio-document-title {
+  --text-size-body-m: var(--text-size-body-s);
+  --text-size-body-m-lh: var(--text-size-body-s-lh);
+}
+.folio-sort-control.input-shell-proto {
+  inline-size: 226px;
+  max-inline-size: 100%;
+}
+.folio-activity-card.card-proto {
+  gap: 0;
 }
 .folio-topology {
   min-block-size: 126px;
@@ -220,7 +244,7 @@
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
   gap: var(--space-12);
-  padding-block: var(--space-16);
+  padding-block: var(--space-8);
   border-block-end: 1px solid var(--border-subtle);
 }
 .folio-activity-row:last-child {
@@ -228,7 +252,7 @@
 }
 .folio-activity-row > div {
   display: grid;
-  gap: var(--space-4);
+  gap: 0;
   min-inline-size: 0;
 }
 .folio-activity-meta {
@@ -251,12 +275,13 @@
 }
 .folio-inspector-properties {
   display: grid;
-  gap: var(--space-16);
+  gap: var(--space-4);
 }
 .folio-inspector-properties > div {
   display: grid;
   grid-template-columns: 82px minmax(0, 1fr);
   align-items: center;
+  min-block-size: 30px;
   gap: var(--space-8);
 }
 .folio-inspector-properties dt {
@@ -279,6 +304,56 @@
   gap: var(--space-24);
   min-inline-size: 0;
 }
+.folio-runbook {
+  max-inline-size: 700px;
+  gap: 28px;
+}
+.folio-runbook-compact {
+  gap: 20px;
+}
+.folio-runbook .table-proto thead th,
+.folio-content-collection .table-proto thead th,
+.folio-members-content .table-proto thead th {
+  block-size: 36px;
+}
+.folio-runbook .table-proto tbody td,
+.folio-content-collection .table-proto tbody td {
+  block-size: 42px;
+}
+.folio-members-content .table-proto tbody td {
+  block-size: 44px;
+}
+.folio-runbook .table-proto,
+.folio-content-collection .table-proto {
+  min-inline-size: 640px;
+}
+.folio-members-content .table-proto {
+  min-inline-size: 720px;
+}
+.folio-collection .folio-inspector-section > .choice-proto[data-kind='switch'] {
+  flex-direction: row-reverse;
+  justify-content: space-between;
+}
+.folio-reader .app-shell-aside[data-side='right'] .app-shell-aside-body,
+.folio-collection .app-shell-aside[data-side='right'] .app-shell-aside-body {
+  padding: 0;
+  gap: 0;
+  overflow: visible;
+}
+.folio-owner-profile {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-8);
+}
+.folio-owner-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-8);
+  padding-block-start: var(--space-12);
+  border-block-start: 1px solid var(--border-subtle);
+}
 .folio-checklist {
   display: grid;
   gap: var(--space-8);
@@ -298,6 +373,12 @@
 }
 .folio-toast-dock > * {
   inline-size: 100%;
+}
+.folio-preferences-hint {
+  position: absolute;
+  z-index: 4;
+  inset-inline-start: 62px;
+  inset-block-end: 68px;
 }
 .folio-floating-actions {
   position: absolute;
@@ -417,6 +498,12 @@
 .folio-invite-dialog .dialog-preview-body {
   overflow: visible;
 }
+.folio-invite-dialog .dialog-preview-body > form {
+  gap: 14px;
+}
+.folio-invite-dialog .dialog-preview-body > form > .folio-grid-2 {
+  grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+}
 .folio-minor-action {
   appearance: none;
   border: 0;
@@ -453,6 +540,15 @@
   }
 }
 @container artboard (max-width: 700px) {
+  .folio-toast-dock {
+    position: relative;
+    inset: auto;
+    inline-size: auto;
+    margin: var(--space-16);
+  }
+  .folio-preferences-hint {
+    display: none;
+  }
   .folio-content,
   .folio-content-collection,
   .folio-content-overview,

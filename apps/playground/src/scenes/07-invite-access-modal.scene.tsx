@@ -205,6 +205,7 @@ function InviteScene(): ReactElement {
           }}
         >
           <TagsInput
+            size="s"
             label="Invite by work email"
             values={invites}
             onValuesChange={setInvites}
@@ -222,17 +223,11 @@ function InviteScene(): ReactElement {
             <legend>Initial space capabilities</legend>
             <div className="folio-grid-2">
               <CheckboxCard
-                size="s"
                 defaultChecked
                 label="Tier-0 runbook edit"
                 description="Promote failover runbooks"
               />
-              <CheckboxCard
-                size="s"
-                defaultChecked
-                label="Incident digest"
-                description="Weekly reliability summary"
-              />
+              <CheckboxCard label="Incident digest" description="Weekly reliability summary" />
             </div>
           </fieldset>
           <FormField label="Welcome note" htmlFor={welcomeId}>

@@ -4,7 +4,10 @@
   --segment-padding: var(--size-m-padding-x);
   --segment-font: var(--text-size-body-s);
   display: inline-flex;
+  flex: 0 0 auto;
+  flex-wrap: wrap;
   align-items: stretch;
+  inline-size: fit-content;
   min-inline-size: 0;
   max-inline-size: 100%;
   min-block-size: var(--segment-height);
@@ -34,8 +37,8 @@
 .segment-proto {
   position: relative;
   display: flex;
-  flex: 1 1 0;
-  min-inline-size: 0;
+  flex: 1 0 auto;
+  min-inline-size: max-content;
   cursor: pointer;
 }
 
@@ -62,7 +65,7 @@
   border-radius: max(0px, calc(var(--segment-radius) - 3px));
   color: var(--fg-muted);
   text-align: center;
-  overflow-wrap: anywhere;
+  white-space: nowrap;
 }
 
 .segment-proto > input:checked + span {

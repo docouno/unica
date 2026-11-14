@@ -104,6 +104,7 @@ export interface ListboxProps extends Omit<HTMLAttributes<HTMLDivElement>, 'onCh
   readonly onValueChange?: ((value: string) => void) | undefined;
   readonly title?: string | undefined;
   readonly footer?: ReactNode;
+  readonly size?: ControlSize | undefined;
 }
 
 // A visible choice panel for composition review; each row is an ordinary native button.
@@ -113,11 +114,17 @@ export function Listbox({
   onValueChange,
   title,
   footer,
+  size = 's',
   className = '',
   ...props
 }: ListboxProps): ReactElement {
   return (
-    <PopoverContent {...props} className={`choice-panel-proto ${className}`} role="group">
+    <PopoverContent
+      {...props}
+      className={`choice-panel-proto ${className}`}
+      role="group"
+      data-size={size}
+    >
       {title && <div className="choice-panel-heading-proto">{title}</div>}
       {options.length === 0 && <p className="choice-panel-empty-proto">No matching results</p>}
       {options.map((option, index) => (
@@ -230,6 +237,7 @@ export function Combobox({
       {open && !disabled && (
         <Listbox
           className="combobox-panel-proto"
+          size={size}
           options={shown}
           value={current}
           onValueChange={choose}
@@ -248,6 +256,7 @@ export interface TagsInputProps extends Omit<HTMLAttributes<HTMLDivElement>, 'on
   readonly placeholder?: string | undefined;
   readonly disabled?: boolean | undefined;
   readonly status?: FieldStatus | undefined;
+  readonly size?: ControlSize | undefined;
 }
 
 export function TagsInput({
@@ -258,6 +267,7 @@ export function TagsInput({
   placeholder = 'Add a person or email…',
   disabled,
   status = 'neutral',
+  size = 'm',
   className = '',
   ...props
 }: TagsInputProps): ReactElement {
@@ -283,6 +293,7 @@ export function TagsInput({
         className={`tags-input-proto ${className}`}
         data-status={status}
         data-disabled={disabled || undefined}
+        data-size={size}
       >
         {tags.map((tag) => (
           <span className="tags-input-tag-proto" key={tag}>
