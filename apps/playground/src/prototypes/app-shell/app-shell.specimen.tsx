@@ -2,6 +2,7 @@ import type { ReactElement } from 'react';
 import { ArrowRightIcon } from '@phosphor-icons/react';
 import { defineSpecimen } from '../../workbench/types.js';
 import { Button } from '../button/button.proto.js';
+import { Kbd } from '../kbd/kbd.proto.js';
 import { Text } from '../text/text.proto.js';
 import { Title } from '../title/title.proto.js';
 import {
@@ -200,9 +201,12 @@ function EditorContext(): ReactElement {
       subbar={
         <Subbar
           actions={
-            <Text size="caption-l" color="muted">
-              Insert block · ⌘/
-            </Text>
+            <>
+              <Text size="caption-l" color="muted">
+                Insert block
+              </Text>
+              <Kbd>⌘/</Kbd>
+            </>
           }
         >
           <span>Write</span>
