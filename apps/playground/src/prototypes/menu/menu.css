@@ -1,0 +1,109 @@
+.menu-proto,
+.hover-card-proto {
+  position: relative;
+  min-inline-size: 0;
+  border: 1px solid var(--overlay-border);
+  border-radius: var(--surface-s-radius);
+  background: var(--bg-overlay);
+  color: var(--fg-primary);
+  backdrop-filter: var(--overlay-backdrop);
+  box-shadow: var(--overlay-shadow-popover);
+}
+.menu-proto::before,
+.hover-card-proto::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: var(--overlay-rim);
+  mask-image: var(--overlay-rim-mask);
+  pointer-events: none;
+}
+.menu-proto::after,
+.hover-card-proto::after {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  background: var(--motif-corner-ticks);
+  pointer-events: none;
+}
+.menu-proto {
+  inline-size: 216px;
+  max-inline-size: 100%;
+  padding: var(--space-4);
+}
+.menu-item-proto {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  inline-size: 100%;
+  min-block-size: 32px;
+  padding: var(--space-8);
+  border: 0;
+  border-radius: min(var(--radius-xs), var(--surface-s-radius));
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: var(--text-size-caption-l);
+  text-align: start;
+  cursor: pointer;
+}
+.menu-item-proto > span {
+  flex: 1;
+  min-inline-size: 0;
+  overflow-wrap: anywhere;
+}
+.menu-item-proto kbd {
+  color: var(--fg-muted);
+  font-size: var(--text-size-caption-m);
+  font-family: var(--font-family-mono);
+}
+.menu-item-proto:hover {
+  background: var(--neutral-soft-bg);
+}
+.menu-item-proto[data-danger] {
+  color: var(--status-danger-soft-fg);
+}
+.menu-item-proto:disabled {
+  color: var(--fg-disabled);
+  cursor: default;
+}
+.menu-item-proto:focus-visible {
+  outline: 2px solid var(--focus-ring-color);
+  outline-offset: -2px;
+}
+.menu-separator-proto {
+  border: 0;
+  border-block-start: 1px solid var(--border-subtle);
+  margin: var(--space-4);
+}
+.hover-card-proto {
+  inline-size: 300px;
+  max-inline-size: 100%;
+  padding: var(--space-16);
+  display: grid;
+  gap: var(--space-12);
+  box-shadow: var(--overlay-shadow-hover);
+}
+@supports not (backdrop-filter: blur(1px)) {
+  .menu-proto,
+  .hover-card-proto {
+    background: var(--bg-surface);
+  }
+}
+@media (forced-colors: active) {
+  .menu-proto,
+  .hover-card-proto {
+    background: Canvas;
+    color: CanvasText;
+    border-color: CanvasText;
+    box-shadow: none;
+  }
+  .menu-proto::before,
+  .menu-proto::after,
+  .hover-card-proto::before,
+  .hover-card-proto::after {
+    display: none;
+  }
+}

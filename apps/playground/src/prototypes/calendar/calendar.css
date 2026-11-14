@@ -1,0 +1,141 @@
+.calendar-proto {
+  inline-size: 100%;
+  min-inline-size: 0;
+  color: var(--fg-primary);
+  font-family: var(--font-family-base);
+  font-size: var(--text-size-body-s);
+  line-height: 1.4;
+}
+
+.calendar-heading-proto {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-8);
+  min-block-size: var(--size-s-height);
+  margin-block-end: var(--space-12);
+}
+
+.calendar-heading-proto > strong {
+  font-size: var(--text-size-body-s);
+  font-weight: 600;
+}
+
+.calendar-navigation-proto {
+  display: flex;
+  gap: var(--space-4);
+}
+
+.calendar-grid-proto {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  row-gap: var(--space-4);
+}
+
+.calendar-weekday-proto {
+  display: grid;
+  place-items: center;
+  min-block-size: 24px;
+  color: var(--fg-muted);
+  font-size: var(--text-size-caption-l);
+}
+
+.calendar-day-proto {
+  display: grid;
+  place-items: center;
+  min-inline-size: 0;
+  min-block-size: 30px;
+  padding: var(--space-4) var(--space-2);
+  border: 1px solid transparent;
+  border-radius: var(--size-s-radius);
+  background: transparent;
+  color: var(--fg-primary);
+  font: inherit;
+  font-size: var(--text-size-caption-l);
+  line-height: 1.4;
+  cursor: pointer;
+}
+
+.calendar-day-proto[data-outside] {
+  color: var(--fg-subtle);
+  cursor: default;
+}
+
+.calendar-day-proto[data-range] {
+  border-radius: 0;
+  background: var(--accent-soft-bg);
+  color: var(--accent-soft-fg);
+}
+
+.calendar-day-proto[data-edge] {
+  border-radius: var(--size-s-radius);
+  background: var(--accent-solid);
+  color: var(--fg-on-accent);
+  font-weight: 600;
+}
+
+.calendar-day-proto:hover:not(:disabled, [data-edge]) {
+  background: var(--neutral-soft-bg);
+}
+
+.calendar-day-proto:focus-visible {
+  outline: 2px solid var(--focus-ring-color);
+  outline-offset: 1px;
+}
+
+.calendar-arrow-proto:dir(rtl) {
+  transform: scaleX(-1);
+}
+
+.date-picker-proto {
+  position: relative;
+  min-inline-size: 0;
+}
+
+.date-picker-panel-proto.popover-content-proto {
+  --popover-width: 19rem;
+  position: absolute;
+  inset-inline-end: 0;
+  inset-block-start: calc(100% + var(--space-8));
+  z-index: 2;
+  inline-size: min(19rem, 100%);
+  min-inline-size: min(17rem, 100%);
+  padding: var(--space-12);
+  gap: var(--space-12);
+}
+
+.date-field-actions-proto {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.calendar-footer-proto {
+  border-block-start: 1px solid var(--border-subtle);
+  padding-block-start: var(--space-12);
+  color: var(--fg-muted);
+  font-size: var(--text-size-caption-l);
+  line-height: 1.4;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
+.calendar-specimen-stage-proto {
+  min-block-size: 26rem;
+}
+
+.calendar-proto[hidden],
+.date-picker-proto[hidden] {
+  display: none;
+}
+
+@media (forced-colors: active) {
+  .calendar-day-proto[data-edge] {
+    border-color: Highlight;
+    outline: 1px solid Highlight;
+  }
+
+  .calendar-day-proto[data-range] {
+    border-block-color: Highlight;
+  }
+}

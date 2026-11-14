@@ -33,6 +33,8 @@ export function ThemePreview() {
 
 The library currently provides theme tokens, preset metadata, and a starter Button. New component families are reviewed as live prototypes in the playground before their public package APIs ship. Architectural documents describe the target component contracts.
 
+The playground includes all ten [Folio product scenes](docs/compositions/folio.md), assembled from shared visual prototypes. Open `/?item=02-workspace-overview` for the workspace, `/?item=05-rich-editor` for the editor, or `/?item=09-user-preferences` for settings. Inspect them in the six-preset matrix or Live Focus, then use the viewport, text-scale, and direction controls to check the same composition under stress. Scene interactions update local preview state; the prototypes are separate from the package's public API.
+
 ## Repository Structure
 
 ```text

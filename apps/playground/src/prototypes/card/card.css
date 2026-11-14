@@ -1,0 +1,81 @@
+.card-proto {
+  --card-padding: var(--surface-m-padding);
+  --card-gap: var(--surface-m-gap);
+  --element-radius: var(--surface-m-radius);
+  position: relative;
+  min-inline-size: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--card-gap);
+  padding: var(--card-padding);
+  border: 1px solid var(--border-default);
+  border-radius: var(--element-radius);
+  background: var(--bg-surface);
+  color: var(--fg-primary);
+  font-family: var(--font-family-base);
+  overflow-wrap: anywhere;
+}
+.card-proto::after {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  background: var(--motif-corner-ticks);
+  pointer-events: none;
+}
+.card-proto[data-variant='subtle'] {
+  background-color: var(--bg-surface-subtle);
+  border-color: var(--border-subtle);
+}
+.card-proto[data-size='s'] {
+  --card-padding: var(--surface-s-padding);
+  --card-gap: var(--surface-s-gap);
+  --element-radius: var(--surface-s-radius);
+}
+.card-proto[data-size='l'] {
+  --card-padding: var(--surface-l-padding);
+  --card-gap: var(--surface-l-gap);
+  --element-radius: var(--surface-l-radius);
+}
+.card-header-proto,
+.card-footer-proto {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: var(--space-12);
+  min-inline-size: 0;
+}
+.card-footer-proto {
+  margin-block-start: var(--space-4);
+  padding-block-start: var(--space-12);
+  border-block-start: 1px solid var(--border-subtle);
+}
+.card-media-proto {
+  min-inline-size: 0;
+  overflow: hidden;
+  border-radius: min(
+    var(--element-radius),
+    max(var(--radius-xs), calc(var(--element-radius) - var(--card-padding)))
+  );
+  background: var(--bg-canvas);
+}
+.card-media-proto > :is(img, svg) {
+  display: block;
+  inline-size: 100%;
+  max-block-size: 240px;
+  object-fit: cover;
+}
+:is(.card-proto, .card-header-proto, .card-footer-proto, .card-media-proto)[hidden] {
+  display: none;
+}
+@media (forced-colors: active) {
+  .card-proto {
+    border-color: CanvasText;
+    background: Canvas;
+    color: CanvasText;
+  }
+  .card-proto::after {
+    display: none;
+  }
+}

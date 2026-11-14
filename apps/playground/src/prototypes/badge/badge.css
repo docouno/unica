@@ -1,0 +1,59 @@
+.badge-proto {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-4);
+  min-inline-size: 0;
+  max-inline-size: 100%;
+  padding: 2px 7px;
+  border: var(--pill-border-width) solid var(--mark-border);
+  border-radius: var(--radius-full);
+  background: var(--mark-bg);
+  color: var(--mark-fg);
+  font-family: var(--font-family-base);
+  font-size: var(--text-size-caption-l);
+  line-height: var(--text-size-caption-l-lh);
+  font-weight: 500;
+  vertical-align: middle;
+}
+.badge-proto[data-size='m'] {
+  padding: 3px 9px;
+  font-size: var(--text-size-body-s);
+  line-height: var(--text-size-body-s-lh);
+}
+.badge-proto[data-size='l'] {
+  padding: 5px 11px;
+  font-size: var(--text-size-body-m);
+  line-height: var(--text-size-body-m-lh);
+}
+.badge-dot-proto {
+  flex: none;
+  inline-size: 5px;
+  block-size: 5px;
+  border-radius: var(--radius-circular);
+  background: var(--mark-signal);
+  box-shadow: var(--badge-dot-shadow);
+}
+.badge-icon-proto {
+  display: inline-flex;
+  align-items: center;
+  flex: none;
+  font-size: 1em;
+}
+.badge-label-proto {
+  min-inline-size: 0;
+  overflow-wrap: anywhere;
+}
+.badge-proto[hidden] {
+  display: none;
+}
+@media (forced-colors: active) {
+  .badge-proto {
+    border: 1px solid CanvasText;
+    background: Canvas;
+    color: CanvasText;
+  }
+  .badge-dot-proto {
+    background: CanvasText;
+    box-shadow: none;
+  }
+}

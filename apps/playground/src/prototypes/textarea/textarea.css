@@ -1,0 +1,91 @@
+@import '../input/input.css';
+
+.textarea-proto {
+  --textarea-focus: var(--focus-ring-color);
+  display: block;
+  inline-size: 100%;
+  min-inline-size: 0;
+  min-block-size: 6rem;
+  padding: var(--space-12) var(--size-m-padding-x);
+  border: 1px solid var(--control-border);
+  border-radius: var(--size-m-radius);
+  background: var(--control-bg);
+  color: var(--fg-primary);
+  font-family: var(--font-family-base);
+  font-size: var(--text-size-body-s);
+  line-height: 1.5;
+  resize: vertical;
+}
+
+.textarea-proto[data-size='s'] {
+  padding: var(--space-8) var(--size-s-padding-x);
+  border-radius: var(--size-s-radius);
+  font-size: var(--size-s-control-font);
+}
+
+.textarea-proto[data-size='l'] {
+  padding: var(--space-16) var(--size-l-padding-x);
+  border-radius: var(--size-l-radius);
+  font-size: var(--text-size-body-m);
+}
+
+.textarea-proto[data-variant='ghost'] {
+  border-color: transparent;
+  background: transparent;
+}
+
+.textarea-proto:hover:not(:disabled) {
+  border-color: var(--control-border-hover);
+}
+
+.textarea-proto[data-status='danger'] {
+  border-color: var(--status-danger-border);
+  --textarea-focus: var(--status-danger-signal);
+}
+
+.textarea-proto[data-status='warning'] {
+  border-color: var(--status-warning-border);
+  --textarea-focus: var(--status-warning-signal);
+}
+
+.textarea-proto[data-status='info'] {
+  border-color: var(--status-info-border);
+  --textarea-focus: var(--status-info-signal);
+}
+
+.textarea-proto[data-status='success'] {
+  border-color: var(--status-success-border);
+  --textarea-focus: var(--status-success-signal);
+}
+
+.textarea-proto:focus-visible {
+  outline: 2px solid var(--textarea-focus);
+  outline-offset: 2px;
+}
+
+.textarea-proto:disabled {
+  color: var(--fg-disabled);
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.textarea-proto::placeholder {
+  color: var(--fg-muted);
+  opacity: 1;
+}
+
+.textarea-proto[hidden] {
+  display: none;
+}
+
+@media (forced-colors: active) {
+  .textarea-proto {
+    border-color: ButtonText;
+    background: Canvas;
+    color: CanvasText;
+  }
+
+  .textarea-proto:focus-visible {
+    outline-color: Highlight;
+  }
+}

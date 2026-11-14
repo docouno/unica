@@ -1,0 +1,84 @@
+.table-scroll-proto {
+  min-inline-size: 0;
+  max-inline-size: 100%;
+  overflow: auto;
+  border-radius: var(--surface-s-radius);
+}
+.table-scroll-proto:focus-visible {
+  outline: 2px solid var(--focus-ring-color);
+  outline-offset: 2px;
+}
+.table-proto {
+  --table-py: var(--size-s-padding-y);
+  --table-px: var(--size-s-padding-x);
+  --table-font: var(--text-size-body-xs);
+  inline-size: 100%;
+  border-collapse: collapse;
+  border-spacing: 0;
+  color: var(--fg-secondary);
+  font-family: var(--font-family-base);
+  font-size: var(--table-font);
+  line-height: 1.5;
+  text-align: start;
+}
+.table-proto[data-size='m'] {
+  --table-py: var(--size-m-padding-y);
+  --table-px: var(--size-m-padding-x);
+  --table-font: var(--text-size-body-m);
+}
+.table-proto[data-size='l'] {
+  --table-py: var(--size-l-padding-y);
+  --table-px: var(--size-l-padding-x);
+  --table-font: var(--text-size-body-l);
+}
+.table-proto :is(th, td) {
+  padding: var(--table-py) var(--table-px);
+  text-align: start;
+  vertical-align: middle;
+}
+.table-proto :is(thead th, tfoot td) {
+  font-size: var(--text-size-caption-l);
+  color: var(--fg-muted);
+  font-weight: 500;
+}
+.table-proto tbody th {
+  font-weight: 500;
+  color: var(--fg-primary);
+}
+.table-proto thead > tr {
+  border-block-end: 1px solid var(--border-default);
+}
+.table-proto tbody > tr + tr,
+.table-proto tfoot {
+  border-block-start: 1px solid var(--border-subtle);
+}
+.table-proto tbody > tr[data-selected] {
+  background: var(--table-row-selected-bg);
+}
+.table-proto tbody > tr[data-interactive]:hover {
+  background: var(--bg-surface-raised);
+}
+.table-proto caption {
+  padding: var(--space-12) var(--table-px);
+  color: var(--fg-primary);
+  font-size: var(--text-size-body-s);
+  font-weight: 600;
+  text-align: start;
+}
+.table-proto td > :is(.badge-proto, .tag-proto) {
+  vertical-align: middle;
+}
+.table-proto button {
+  font: inherit;
+}
+:is(.table-scroll-proto, .table-proto)[hidden] {
+  display: none;
+}
+@media (forced-colors: active) {
+  .table-proto :is(thead > tr, tbody > tr + tr, tfoot) {
+    border-color: CanvasText;
+  }
+  .table-proto tbody > tr[data-selected] {
+    outline: 1px solid Highlight;
+  }
+}

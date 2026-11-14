@@ -1,0 +1,61 @@
+.avatar-proto {
+  --avatar-size: 40px;
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  inline-size: var(--avatar-size);
+  block-size: var(--avatar-size);
+  border-radius: var(--radius-full);
+  background: var(--mark-bg);
+  color: var(--mark-fg);
+  font-family: var(--font-family-base);
+  font-size: var(--text-size-body-s);
+  line-height: 1;
+  font-weight: 600;
+  overflow: hidden;
+  vertical-align: middle;
+}
+.avatar-proto[data-size='2xs'] {
+  --avatar-size: 20px;
+  font-size: var(--text-size-caption-s);
+}
+.avatar-proto[data-size='xs'] {
+  --avatar-size: 24px;
+  font-size: var(--text-size-caption-m);
+}
+.avatar-proto[data-size='s'] {
+  --avatar-size: 32px;
+  font-size: var(--text-size-caption-l);
+}
+.avatar-proto[data-size='l'] {
+  --avatar-size: 48px;
+  font-size: var(--text-size-body-m);
+}
+.avatar-proto img {
+  inline-size: 100%;
+  block-size: 100%;
+  object-fit: cover;
+}
+.avatar-group-proto {
+  display: inline-flex;
+  align-items: center;
+  padding-inline-start: 5px;
+}
+.avatar-group-proto > .avatar-proto {
+  margin-inline-start: -5px;
+  border: 2px solid var(--bg-canvas);
+}
+:is(.avatar-proto, .avatar-group-proto)[hidden] {
+  display: none;
+}
+@media (forced-colors: active) {
+  .avatar-proto {
+    outline: 1px solid CanvasText;
+    background: Canvas;
+    color: CanvasText;
+  }
+  .avatar-group-proto > .avatar-proto {
+    border-color: Canvas;
+  }
+}

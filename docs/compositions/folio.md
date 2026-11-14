@@ -11,7 +11,7 @@
 - **Contextual surface adaptation (`base` vs `[data-surface="overlay"]`)**
 - **A flat semantic CSS custom property dictionary** (`0` `[data-theme]` selectors inside component stylesheets)
 
-Every scene renders identically across all six presets from one JSX tree with zero per-theme layout forks and zero raw `#hex` color literals:
+Every scene uses one JSX structure across all six presets, with theme-owned typography and geometry, zero per-theme layout forks, and zero raw `#hex` color literals:
 
 1. **`Soft` (`soft-dark`, `soft-light`):**
    - **Dark (`soft-dark`):** Dusty evening slate surfaces (`#151a1e < #1a2025 < #20272d < #273038`), warm cream-vellum ink (`#f7efe0` / `#e4d8c5`), luminous retro-pastel accents (terracotta coral `#e28365`, honey-marigold `#efc262`, pistachio-sage `#a8c284`, dusty petrol `#8ab2c2`) paired with dark espresso `--fg-on-accent` ink, soft matte secondary plates, borderless pastel badges/tags/chips/alerts (`--pill-border-width: 0px`), and 100% opaque warm-slate overlays.
@@ -22,6 +22,29 @@ Every scene renders identically across all six presets from one JSX tree with ze
 3. **`Pixel` (`pixel-dark`, `pixel-light`):**
    - **Dark (`pixel-dark`):** Carbon-phosphor terminal surfaces (`#090b0d < #0d1013 < #111519 < #161b20`), strict `0px` sharp corners (`--radius-factor: 0`) across chrome, cards, fields, buttons, badges, tags, chips, avatars, checkboxes, and rectangular switches while keeping `Radio` indicators circular (`--radius-circular: 50%`), `JetBrains Mono` as `--font-family-base` (`14/12/11` calibrated scale), high-contrast phosphor accents (cyan `#22c3dc`, emerald `#2ed16c`, amber `#f5ac27`, signal red `#f45864`), crisp `1px` structural borders, `--motif-corner-ticks` (`8px` corner registration brackets on cards and floating panels), `--motif-canvas-grid` (`24px` dot matrix), `2px 2px 0 0` block shadows on primary and secondary buttons, and `6px 6px 0 0` (`-6px 0 0 0` on right-docked `Drawer`) crisp drop shadows on 100% opaque overlays.
    - **Light (`pixel-light`):** Architectural drafting-paper surfaces (`#dde2e6 < #e7ebee < #f2f5f7 < #ffffff`), strict `0px` sharp corners, `JetBrains Mono` typography, deep drafting inks (petrol-cyan `#096c7c`, forest green `#14753c`, ochre-amber `#965500`, vermilion `#c21f2d`), corner registration brackets, coordinate grid backdrops, `2px 2px 0 0` button block shadows, and `6px 6px 0 0` crisp block shadows on opaque overlays.
+
+## Explore the Live Compositions
+
+Run `make dev app=playground` and select a scene in the workbench's **Folio** group. The URL preserves the selected scene and review controls; for example, `/?item=05-rich-editor&mode=focus&theme=frost-light&vp=1440` opens the editor at its desktop reference width.
+
+| Scene | Useful interactions |
+| --- | --- |
+| `01-sign-in` | Switch sign-in mode, edit credentials, and toggle device trust. |
+| `02-workspace-overview` | Filter activity and dismiss the indexing notification. |
+| `03-document-collection` | Filter tiers, select rows, remove filter chips, and inspect the date range. |
+| `04-document-reader` | Open document actions, switch inspector sections, and inspect the owner card. |
+| `05-rich-editor` | Toggle formatting, edit a document reference, and select a slash-command block. |
+| `06-page-properties-drawer` | Change visibility and review cadence, then close and reopen the drawer. |
+| `07-invite-access-modal` | Add or remove invitation addresses, select capabilities, and choose a role. |
+| `08-extensions-empty` | Filter connectors and transition the webhook empty state. |
+| `09-user-preferences` | Adjust local preferences, numeric values, and save or discard changes. |
+| `10-workspace-admin` | Inspect staged archives, choose local files, and try validation feedback. |
+
+These are visual compositions with local state. Authentication, publishing, invitations, uploads, and integrations do not contact external services. Full editor behavior and production accessibility, focus, and form coordination belong to the library implementation phase.
+
+Scenes import shared families from `src/prototypes/`; their `folio/` helpers contain product content and layout rather than duplicate controls. The shell owns the rail and aside topologies, while the theme owns all materials. The product scenes stay in place as individual prototype imports are replaced by package components later.
+
+Use `make visual item=02-workspace-overview` for a six-preset capture or `make visual item=07-invite-access-modal mode=focus theme=pixel-light vp=360 scale=120 dir=rtl` for a focused stress capture. See [Workbench Workflow](../workbench.md) for the complete controls and screenshot options.
 
 ## Semantic Token Dictionary
 

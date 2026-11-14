@@ -1,0 +1,36 @@
+.kbd-proto {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-inline-size: 20px;
+  min-block-size: 20px;
+  padding: 1px 5px;
+  border: 1px solid var(--kbd-cap-border);
+  border-block-end-width: 2px;
+  border-radius: var(--radius-xs);
+  background: var(--kbd-cap-bg);
+  color: var(--fg-secondary);
+  font-family: var(--font-family-mono);
+  font-size: var(--text-size-caption-m);
+  line-height: 1.2;
+  font-weight: 500;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+.kbd-group-proto {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+  color: var(--fg-muted);
+}
+:is(.kbd-proto, .kbd-group-proto)[hidden] {
+  display: none;
+}
+@media (forced-colors: active) {
+  .kbd-proto {
+    border-color: ButtonText;
+    background: ButtonFace;
+    color: ButtonText;
+  }
+}
