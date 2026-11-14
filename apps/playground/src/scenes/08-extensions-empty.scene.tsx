@@ -351,5 +351,5 @@ export default defineScene({
   group: 'Folio',
   summary: 'Connector discovery, indexing feedback, and a webhook sandbox empty state.',
   defaultViewport: 1440,
-  render: ExtensionsScene,
+  render: () => <ExtensionsScene />,
 });

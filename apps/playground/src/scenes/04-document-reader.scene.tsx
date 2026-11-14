@@ -213,5 +213,5 @@ export default defineScene({
   title: '04 · Document Reader & Overlays',
   group: 'Folio',
   defaultViewport: 1440,
-  render: ReaderScene,
+  render: () => <ReaderScene />,
 });

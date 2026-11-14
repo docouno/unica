@@ -43,13 +43,13 @@ export default defineSpecimen({
   title: 'Modal & Drawer',
   group: 'Overlays',
   sections: [
-    { id: 'modal', title: 'Centered task', kind: 'matrix', render: DialogExample },
+    { id: 'modal', title: 'Centered task', kind: 'matrix', render: () => <DialogExample /> },
     {
       id: 'drawer',
       title: 'Properties at the edge',
       kind: 'context',
       render: () => <DialogExample drawer />,
     },
-    { id: 'dismissal', title: 'Close and reopen', kind: 'states', render: DialogExample },
+    { id: 'dismissal', title: 'Close and reopen', kind: 'states', render: () => <DialogExample /> },
   ],
 });

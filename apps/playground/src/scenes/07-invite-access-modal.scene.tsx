@@ -293,5 +293,5 @@ export default defineScene({
   title: '07 · Invite & Access Modal',
   group: 'Folio',
   defaultViewport: 1440,
-  render: InviteScene,
+  render: () => <InviteScene />,
 });

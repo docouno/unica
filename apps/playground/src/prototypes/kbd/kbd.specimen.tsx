@@ -17,6 +17,10 @@ export default defineSpecimen({
       render: () => (
         <div className="display-example-row">
           <Kbd>⌘</Kbd>
+          <Kbd>⇧</Kbd>
+          <Kbd>⌥</Kbd>
+          <Kbd>↵</Kbd>
+          <Kbd>⌫</Kbd>
           <Kbd>K</Kbd>
           <Kbd>Esc</Kbd>
           <Kbd>Enter</Kbd>

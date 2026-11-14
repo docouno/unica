@@ -335,5 +335,5 @@ export default defineScene({
   summary:
     'Archive schema mapping, duplicate policies, local file selection, and validation feedback.',
   defaultViewport: 1440,
-  render: WorkspaceAdminScene,
+  render: () => <WorkspaceAdminScene />,
 });

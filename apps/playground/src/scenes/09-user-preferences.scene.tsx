@@ -392,5 +392,5 @@ export default defineScene({
   summary:
     'Personal preferences, numeric inputs, governance disclosures, and an unsaved changes bar.',
   defaultViewport: 1440,
-  render: PreferencesScene,
+  render: () => <PreferencesScene />,
 });

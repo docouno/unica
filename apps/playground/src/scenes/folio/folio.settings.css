@@ -302,6 +302,9 @@
 }
 
 @container artboard (max-width: 700px) {
+  .folio-import-policy .folio-grid-2 {
+    grid-template-columns: minmax(0, 1fr);
+  }
   .folio-preference-inline,
   .folio-preference-context {
     grid-template-columns: minmax(0, 1fr);

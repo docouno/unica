@@ -135,7 +135,17 @@ export default defineSpecimen({
         </div>
       ),
     },
-    { id: 'reader', title: 'Folio · Document reader', kind: 'context', render: ReaderCopy },
-    { id: 'settings', title: 'Folio · Dense preferences', kind: 'context', render: SettingsCopy },
+    {
+      id: 'reader',
+      title: 'Folio · Document reader',
+      kind: 'context',
+      render: () => <ReaderCopy />,
+    },
+    {
+      id: 'settings',
+      title: 'Folio · Dense preferences',
+      kind: 'context',
+      render: () => <SettingsCopy />,
+    },
   ],
 });

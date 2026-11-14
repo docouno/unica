@@ -24,7 +24,6 @@ import {
   FolioWorkspace,
   InspectorSection,
   Person,
-  SectionHeading,
 } from './folio/folio.shared.js';
 
 const rows = [
@@ -74,6 +73,7 @@ function CollectionScene(): ReactElement {
   return (
     <FolioScene className="folio-collection">
       <FolioWorkspace
+        activeNavigation="runbooks"
         expandedNavigation={['architecture', 'runbooks']}
         crumbs={['Platform Eng', 'Runbooks']}
         minHeight={960}
@@ -107,7 +107,7 @@ function CollectionScene(): ReactElement {
           </div>
         }
         rightAside={
-          <AsidePanel aria-label="Collection scope" side="right" width={360}>
+          <AsidePanel title="Collection scope" side="right" width={360}>
             <InspectorSection title="Verification gates">
               <Switch size="s" defaultChecked label="Verified only" />
               <Switch size="s" label="Include RFCs" />
@@ -136,36 +136,36 @@ function CollectionScene(): ReactElement {
         }
       >
         <div className="folio-content folio-content-collection">
-          <div className="folio-row folio-between folio-wrap">
-            <div className="folio-row">
-              <Title as="h1" size="heading-l">
-                Runbooks & Playbooks
-              </Title>
-              <Badge status="success">28 verified</Badge>
+          <div className="folio-collection-intro">
+            <div className="folio-row folio-between folio-wrap">
+              <div className="folio-row">
+                <Title as="h1" size="heading-l">
+                  Runbooks & Playbooks
+                </Title>
+                <Badge status="success">28 verified</Badge>
+              </div>
+              <Select
+                className="folio-sort-control"
+                size="s"
+                aria-label="Sort runbooks"
+                options={[
+                  { value: 'verified', label: 'Sort: Recently verified' },
+                  { value: 'name', label: 'Sort: Name' },
+                ]}
+              />
             </div>
-            <Select
-              className="folio-sort-control"
-              size="s"
-              aria-label="Sort runbooks"
-              options={[
-                { value: 'verified', label: 'Sort: Recently verified' },
-                { value: 'name', label: 'Sort: Name' },
-              ]}
-            />
-          </div>
-          <div className="folio-stack">
-            <SegmentedControl
-              size="s"
-              value={tab}
-              onValueChange={setTab}
-              items={[
-                { value: 'all', label: 'All (42)' },
-                { value: 'tier0', label: 'Tier-0 (14)' },
-                { value: 'verified', label: 'Verified (28)' },
-                { value: 'drafts', label: 'Drafts (4)' },
-              ]}
-            />
             <div className="folio-row folio-wrap">
+              <SegmentedControl
+                size="s"
+                value={tab}
+                onValueChange={setTab}
+                items={[
+                  { value: 'all', label: 'All (42)' },
+                  { value: 'tier0', label: 'Tier-0 (14)' },
+                  { value: 'verified', label: 'Verified (28)' },
+                  { value: 'drafts', label: 'Drafts (4)' },
+                ]}
+              />
               {scope && <Chip onRemove={() => setScope(false)}>scope: prod</Chip>}
               {windowFilter && <Chip onRemove={() => setWindowFilter(false)}>14–17 Sep</Chip>}
               <Link
@@ -182,25 +182,21 @@ function CollectionScene(): ReactElement {
             </div>
           </div>
           <section className="folio-stack">
-            <SectionHeading
-              action={
-                <Text size="caption-l" color="muted">
-                  2 critical schematics
-                </Text>
-              }
-            >
-              Pinned topology playbooks
-            </SectionHeading>
+            <div className="folio-row folio-between">
+              <Title
+                as="h2"
+                size="body-m"
+                color="muted"
+                className="folio-topology-heading folio-eyebrow"
+              >
+                Pinned topology playbooks
+              </Title>
+              <Text size="caption-l" color="muted">
+                2 critical schematics
+              </Text>
+            </div>
             <div className="folio-grid-2">
               <Card className="folio-topology-card">
-                <div className="folio-row folio-between">
-                  <Text size="caption-m" weight="semibold" color="muted">
-                    POSTGRES · TIER-0
-                  </Text>
-                  <Badge status="success" size="s">
-                    RTO &lt; 30s
-                  </Badge>
-                </div>
                 <CardMedia>
                   <DatabaseTopology />
                 </CardMedia>
@@ -218,14 +214,6 @@ function CollectionScene(): ReactElement {
                 </div>
               </Card>
               <Card className="folio-topology-card">
-                <div className="folio-row folio-between">
-                  <Text size="caption-m" weight="semibold" color="muted">
-                    INGRESS · GLOBAL
-                  </Text>
-                  <Badge status="info" size="s">
-                    0% drop
-                  </Badge>
-                </div>
                 <CardMedia>
                   <IngressTopology />
                 </CardMedia>
@@ -347,5 +335,5 @@ export default defineScene({
   title: '03 · Document Collection & Date Filter',
   group: 'Folio',
   defaultViewport: 1440,
-  render: CollectionScene,
+  render: () => <CollectionScene />,
 });

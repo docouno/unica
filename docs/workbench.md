@@ -19,14 +19,14 @@ export default defineSpecimen({
   title: 'Family',
   group: 'Foundations',
   sections: [
-    { id: 'roles', title: 'Roles', kind: 'matrix', render: RoleExamples },
-    { id: 'overflow', title: 'Overflow', kind: 'states', render: OverflowExamples },
-    { id: 'context', title: 'Folio context', kind: 'context', render: ProductVignette },
+    { id: 'roles', title: 'Roles', kind: 'matrix', render: () => <RoleExamples /> },
+    { id: 'overflow', title: 'Overflow', kind: 'states', render: () => <OverflowExamples /> },
+    { id: 'context', title: 'Folio context', kind: 'context', render: () => <ProductVignette /> },
   ],
 });
 ```
 
-`RoleExamples`, `OverflowExamples`, and `ProductVignette` are local example render functions. The files are discovered automatically; no registry edit is needed. Text and Title provide working examples.
+`RoleExamples`, `OverflowExamples`, and `ProductVignette` are local React components. Render callbacks return their JSX elements so hooks belong to the example component when the selected item or section changes. Keep hooks inside components, and use instance-specific native radio group names because all six artboards share one document. The files are discovered automatically; no registry edit is needed. Text and Title provide working examples.
 
 Use `matrix` for supported roles and sizes, `states` for relevant states and long content, and `context` for a compact product vignette from [Folio](compositions/folio.md). A family task needs its relevant vignettes; it does not need to recreate all ten full screens. Full compositions live in `src/scenes/<NN>-<slug>.scene.tsx` and default-export `defineScene(...)` from the same types module.
 

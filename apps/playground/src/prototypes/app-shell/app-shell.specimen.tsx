@@ -255,7 +255,7 @@ export default defineSpecimen({
       id: 'topologies',
       title: 'Composable workspace topologies',
       kind: 'matrix',
-      render: TopologyExamples,
+      render: () => <TopologyExamples />,
     },
     {
       id: 'navigation',
@@ -263,7 +263,7 @@ export default defineSpecimen({
       kind: 'states',
       caption:
         'Open folders, select pages, and navigate by keyboard. Full treeview behavior belongs to the library implementation.',
-      render: NavigationExamples,
+      render: () => <NavigationExamples />,
     },
     {
       id: 'editor',
@@ -271,7 +271,7 @@ export default defineSpecimen({
       kind: 'context',
       caption:
         'At narrow widths, Navigation and Inspector open the corresponding panel. Escape closes it and restores its trigger.',
-      render: EditorContext,
+      render: () => <EditorContext />,
     },
   ],
 });

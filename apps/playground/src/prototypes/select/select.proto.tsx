@@ -123,7 +123,7 @@ export function Listbox({
       {...props}
       className={`choice-panel-proto ${className}`}
       role="group"
-      data-size={size}
+      size={size}
     >
       {title && <div className="choice-panel-heading-proto">{title}</div>}
       {options.length === 0 && <p className="choice-panel-empty-proto">No matching results</p>}

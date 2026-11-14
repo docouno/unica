@@ -1,3 +1,10 @@
+.code-proto,
+.code-block-proto {
+  direction: ltr;
+  unicode-bidi: isolate;
+  text-align: start;
+}
+
 .code-proto {
   padding: 1px 4px;
   border-radius: var(--radius-xs);

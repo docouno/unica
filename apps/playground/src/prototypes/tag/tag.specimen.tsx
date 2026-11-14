@@ -84,6 +84,11 @@ export default defineSpecimen({
         </TagGroup>
       ),
     },
-    { id: 'context', title: 'Folio · Collection filters', kind: 'context', render: FilterExample },
+    {
+      id: 'context',
+      title: 'Folio · Collection filters',
+      kind: 'context',
+      render: () => <FilterExample />,
+    },
   ],
 });

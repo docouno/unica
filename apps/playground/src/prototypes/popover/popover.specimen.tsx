@@ -21,7 +21,7 @@ export default defineSpecimen({
       caption:
         '18 / 22 / 28rem width ceilings. Shared surface-s radius. Close and reopen each panel.',
       overlayStage: true,
-      render: SizeExamples,
+      render: () => <SizeExamples />,
     },
     {
       id: 'placements',
@@ -30,7 +30,7 @@ export default defineSpecimen({
       caption:
         'Explore all 12 logical placements and RTL. In-flow visual study; collision handling belongs to the library implementation.',
       overlayStage: true,
-      render: PlacementExamples,
+      render: () => <PlacementExamples />,
     },
     {
       id: 'states',
@@ -39,7 +39,7 @@ export default defineSpecimen({
       caption:
         'Native field and button stand-ins. Try hover, keyboard focus, editing, and closing. Full overlay behavior ships in Wave 2.',
       overlayStage: true,
-      render: StateExamples,
+      render: () => <StateExamples />,
     },
     {
       id: 'editor',
@@ -48,7 +48,7 @@ export default defineSpecimen({
       caption:
         'Rich editor vignette with a 760px prose column. Edit and save a link; native controls stand in for upcoming families.',
       overlayStage: true,
-      render: EditorExample,
+      render: () => <EditorExample />,
     },
   ],
 });

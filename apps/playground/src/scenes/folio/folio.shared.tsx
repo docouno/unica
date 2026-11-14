@@ -52,6 +52,7 @@ export interface WorkspaceProps {
   readonly documentTabs?: boolean;
   readonly activeDocument?: string;
   readonly activeRail?: RailDestination;
+  readonly activeNavigation?: string;
   readonly classic?: boolean;
   readonly railOnly?: boolean;
   readonly expandedNavigation?: readonly string[];
@@ -68,6 +69,7 @@ export function FolioWorkspace({
   documentTabs = false,
   activeDocument = 'adr',
   activeRail = 'documents',
+  activeNavigation,
   classic = false,
   railOnly = false,
   expandedNavigation,
@@ -98,7 +100,8 @@ export function FolioWorkspace({
               >
                 <WorkspaceNavigation
                   defaultActive={
-                    documentTabs ? (activeDocument === 'runbook' ? 'pg-failover' : 'adr-014') : ''
+                    activeNavigation ??
+                    (documentTabs ? (activeDocument === 'runbook' ? 'pg-failover' : 'adr-014') : '')
                   }
                   expanded={
                     expandedNavigation ??

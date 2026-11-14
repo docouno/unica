@@ -299,5 +299,5 @@ export default defineScene({
   title: '02 · Workspace Overview',
   group: 'Folio',
   defaultViewport: 1440,
-  render: OverviewScene,
+  render: () => <OverviewScene />,
 });

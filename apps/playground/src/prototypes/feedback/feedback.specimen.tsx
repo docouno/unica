@@ -103,7 +103,7 @@ export default defineSpecimen({
       kind: 'context',
       surface: 'overlay',
       overlayStage: true,
-      render: ToastExample,
+      render: () => <ToastExample />,
     },
   ],
 });

@@ -65,6 +65,11 @@ export default defineSpecimen({
         />
       ),
     },
-    { id: 'context', title: 'Folio · Batch import', kind: 'context', render: ImportExample },
+    {
+      id: 'context',
+      title: 'Folio · Batch import',
+      kind: 'context',
+      render: () => <ImportExample />,
+    },
   ],
 });

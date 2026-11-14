@@ -1,7 +1,14 @@
+.kbd-proto,
+.kbd-group-proto {
+  direction: ltr;
+  unicode-bidi: isolate;
+}
+
 .kbd-proto {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  gap: var(--space-2);
   min-inline-size: 20px;
   min-block-size: 20px;
   padding: 1px 5px;
@@ -16,6 +23,11 @@
   font-weight: 500;
   white-space: nowrap;
   vertical-align: middle;
+}
+.kbd-symbol-proto {
+  flex: none;
+  inline-size: 1em;
+  block-size: 1em;
 }
 .kbd-group-proto {
   display: inline-flex;

@@ -128,12 +128,17 @@ export default defineSpecimen({
         </div>
       ),
     },
-    { id: 'auth', title: 'Folio · Sign-in introduction', kind: 'context', render: SignInCopy },
+    {
+      id: 'auth',
+      title: 'Folio · Sign-in introduction',
+      kind: 'context',
+      render: () => <SignInCopy />,
+    },
     {
       id: 'editor',
       title: 'Folio · Editor, 760px maximum measure',
       kind: 'context',
-      render: EditorCopy,
+      render: () => <EditorCopy />,
     },
     {
       id: 'drawer',

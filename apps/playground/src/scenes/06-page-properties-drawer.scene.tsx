@@ -155,5 +155,5 @@ export default defineScene({
   title: '06 · Page Properties & Relations Drawer',
   group: 'Folio',
   defaultViewport: 1440,
-  render: PropertiesScene,
+  render: () => <PropertiesScene />,
 });

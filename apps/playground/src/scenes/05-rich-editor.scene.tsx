@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { ReactElement } from 'react';
 import {
+  ArrowUpRightIcon,
   CodeIcon,
   LinkIcon,
   ListBulletsIcon,
@@ -16,6 +17,7 @@ import { Button, IconButton } from '../prototypes/button/button.proto.js';
 import { Blockquote, Code } from '../prototypes/code/code.proto.js';
 import { Spinner, Toast } from '../prototypes/feedback/feedback.proto.js';
 import { Input } from '../prototypes/input/input.proto.js';
+import { Icon } from '../prototypes/icon/icon.proto.js';
 import { Kbd } from '../prototypes/kbd/kbd.proto.js';
 import { Link } from '../prototypes/link/link.proto.js';
 import { PopoverContent } from '../prototypes/popover/popover.proto.js';
@@ -202,7 +204,7 @@ function EditorScene(): ReactElement {
                     setReferenceOpen(!referenceOpen);
                   }}
                 >
-                  Zero-Downtime PG Failover ↗
+                  Zero-Downtime PG Failover <Icon icon={ArrowUpRightIcon} size="inherit" />
                 </Link>
               </Text>
               <Text
@@ -333,5 +335,5 @@ export default defineScene({
   title: '05 · Rich Editor & Slash Autocomplete',
   group: 'Folio',
   defaultViewport: 1440,
-  render: EditorScene,
+  render: () => <EditorScene />,
 });

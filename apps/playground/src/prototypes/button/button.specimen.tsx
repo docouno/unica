@@ -20,28 +20,33 @@ export default defineSpecimen({
   summary:
     'Three action weights, three tones. Tactile materials, quiet toggles, and steady loading geometry.',
   sections: [
-    { id: 'light', title: 'Light & response', kind: 'states', render: LightExample },
-    { id: 'roles', title: 'Role × tone', kind: 'matrix', render: RoleExamples },
-    { id: 'sizes', title: 'Sizes, slots & squares', kind: 'matrix', render: SizeExamples },
+    { id: 'light', title: 'Light & response', kind: 'states', render: () => <LightExample /> },
+    { id: 'roles', title: 'Role × tone', kind: 'matrix', render: () => <RoleExamples /> },
+    {
+      id: 'sizes',
+      title: 'Sizes, slots & squares',
+      kind: 'matrix',
+      render: () => <SizeExamples />,
+    },
     {
       id: 'states',
       title: 'Interaction & availability',
       kind: 'states',
       caption:
         'Pinned visual states; hover and keyboard focus also work on every available button.',
-      render: StateExamples,
+      render: () => <StateExamples />,
     },
     {
       id: 'toggles',
       title: 'Live toggles & pending actions',
       kind: 'states',
-      render: ToggleExamples,
+      render: () => <ToggleExamples />,
     },
     {
       id: 'overflow',
       title: 'Long labels & stable loading',
       kind: 'states',
-      render: OverflowExamples,
+      render: () => <OverflowExamples />,
     },
     {
       id: 'sign-in',
@@ -49,14 +54,14 @@ export default defineSpecimen({
       kind: 'context',
       caption:
         'Native email field stands in for the Input family. Authentication is a visual preview.',
-      render: SignInExample,
+      render: () => <SignInExample />,
     },
     {
       id: 'editor',
       title: 'Folio · Workspace & editor',
       kind: 'context',
       caption: 'Toggle Bold, Italic, or Pin while the primary publishing action stays distinct.',
-      render: EditorExample,
+      render: () => <EditorExample />,
     },
     {
       id: 'popover',
@@ -65,7 +70,7 @@ export default defineSpecimen({
       surface: 'overlay',
       overlayStage: true,
       caption: 'Static Popover stand-in; close and copy actions preview visual placement.',
-      render: PopoverExample,
+      render: () => <PopoverExample />,
     },
     {
       id: 'invite',
@@ -75,8 +80,13 @@ export default defineSpecimen({
       overlayStage: true,
       caption:
         'Static Modal and native Input stand-ins. Send and Cancel update local preview feedback.',
-      render: OverlayExample,
+      render: () => <OverlayExample />,
     },
-    { id: 'import', title: 'Folio · Workspace import', kind: 'context', render: ImportExample },
+    {
+      id: 'import',
+      title: 'Folio · Workspace import',
+      kind: 'context',
+      render: () => <ImportExample />,
+    },
   ],
 });

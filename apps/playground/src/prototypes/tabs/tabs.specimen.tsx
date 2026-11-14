@@ -65,6 +65,11 @@ export default defineSpecimen({
         />
       ),
     },
-    { id: 'context', title: 'Folio · Reader inspector', kind: 'context', render: InspectorExample },
+    {
+      id: 'context',
+      title: 'Folio · Reader inspector',
+      kind: 'context',
+      render: () => <InspectorExample />,
+    },
   ],
 });

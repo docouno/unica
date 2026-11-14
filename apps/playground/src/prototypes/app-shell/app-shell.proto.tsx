@@ -27,6 +27,7 @@ import {
 import { Icon } from '../icon/icon.proto.js';
 import type { GlyphComponent } from '../icon/icon.proto.js';
 import './app-shell.css';
+import { Kbd } from '../kbd/kbd.proto.js';
 
 export interface AppShellProps extends ComponentPropsWithRef<'div'> {
   readonly topRail?: ReactNode;
@@ -220,7 +221,7 @@ export function GlobalSearch({
     <label className="app-shell-search">
       <Icon icon={MagnifyingGlassIcon} />
       <input {...props} type="search" aria-label="Search workspace" placeholder={placeholder} />
-      <kbd>{shortcut}</kbd>
+      <Kbd>{shortcut}</Kbd>
     </label>
   );
 }

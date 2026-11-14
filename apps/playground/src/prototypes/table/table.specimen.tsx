@@ -138,7 +138,7 @@ export default defineSpecimen({
       id: 'context',
       title: 'Folio · Document directory',
       kind: 'context',
-      render: DirectoryExample,
+      render: () => <DirectoryExample />,
     },
   ],
 });

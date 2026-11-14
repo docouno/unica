@@ -78,6 +78,11 @@ export default defineSpecimen({
         </div>
       ),
     },
-    { id: 'import', title: 'Folio · Archive import', kind: 'context', render: ImportExample },
+    {
+      id: 'import',
+      title: 'Folio · Archive import',
+      kind: 'context',
+      render: () => <ImportExample />,
+    },
   ],
 });

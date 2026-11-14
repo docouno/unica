@@ -182,5 +182,5 @@ export default defineScene({
   title: '01 · Sign In & SSO',
   group: 'Folio',
   defaultViewport: 1440,
-  render: SignInScene,
+  render: () => <SignInScene />,
 });
