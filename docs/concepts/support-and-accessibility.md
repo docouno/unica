@@ -54,6 +54,7 @@ Follow [WCAG 1.4.11: Non-text Contrast](https://www.w3.org/WAI/WCAG22/Understand
 | `Modal`, `Drawer` | Native `<dialog>` `showModal()` containment | `Tab` / `Shift+Tab` cycle inside dialog; `Escape` fires cancellable `cancel` and restores trigger focus. |
 
 - **Unclipped `:focus-visible` ring:** Keyboard navigation paints a crisp `2px` `--focus-ring-color` outline at `2px` offset (`0px` sharp in `Pixel`, concentric rounded in `Soft` and `Frost`); pointer clicks do not leave sticky rings on action buttons.
+- **Text-field focus:** Pointer editing uses a quieter active edge (`--control-border-focus` for Input) while keyboard navigation retains the explicit contour. Typing after a pointer click must not suddenly enable the navigation contour. Native `:focus-visible` also matches clicked text inputs; distinguish interaction origins when the design requires it, preserve focus return, and retain explicit system-color focus in forced colors.
 - **Coarse-pointer targets:** Dense desktop (`pointer: fine`) UIs use `size="s"` (`30px`) and `size="m"` (`40px`); touch-primary (`pointer: coarse`) layouts use `size="l"` (`48px`) or expanded hit areas meeting the `44×44px` target floor.
 
 ## Forced Colors & Reduced Motion

@@ -192,6 +192,7 @@ textarea {
   --fg-primary: #f7efe0;
   --fg-secondary: #e4d8c5;
   --fg-subtle: #909da5;
+  --control-border-focus: #84939e;
   --focus-ring-color: #f7efe0;
   --font-family-base: 'Inter Variable', 'Inter', system-ui, sans-serif;
   --status-danger-border: rgb(154 89 92 / 0.722);
@@ -346,6 +347,7 @@ textarea {
   --fg-primary: #292421;
   --fg-secondary: #3d3733;
   --fg-subtle: #6d635a;
+  --control-border-focus: #736659;
   --focus-ring-color: #292421;
   --font-family-base: 'Inter Variable', 'Inter', system-ui, sans-serif;
   --status-danger-border: rgb(154 80 79 / 0.478);
@@ -506,6 +508,7 @@ textarea {
   --fg-primary: #f4f7ff;
   --fg-secondary: #ccd4e6;
   --fg-subtle: #7d89a5;
+  --control-border-focus: #7280a3;
   --focus-ring-color: #f4f7ff;
   --font-family-base: 'Inter Variable', 'Inter', system-ui, sans-serif;
   --status-danger-border: rgb(126 41 43 / 0.749);
@@ -671,6 +674,7 @@ textarea {
   --fg-primary: #0c101c;
   --fg-secondary: #232a3b;
   --fg-subtle: #5f6b85;
+  --control-border-focus: #626f8a;
   --focus-ring-color: #0c101c;
   --font-family-base: 'Inter Variable', 'Inter', system-ui, sans-serif;
   --status-danger-border: rgb(162 79 76 / 0.502);
@@ -830,6 +834,7 @@ textarea {
   --fg-primary: #edf3f7;
   --fg-secondary: #cad6e0;
   --fg-subtle: #788896;
+  --control-border-focus: #7a8e9f;
   --focus-ring-color: #22c3dc;
   --font-family-base: 'JetBrains Mono Variable', 'JetBrains Mono', ui-monospace, monospace;
   --status-danger-border: rgb(175 85 88 / 0.78);
@@ -989,6 +994,7 @@ textarea {
   --fg-primary: #0f1419;
   --fg-secondary: #222b33;
   --fg-subtle: #596875;
+  --control-border-focus: #546370;
   --focus-ring-color: #096c7c;
   --font-family-base: 'JetBrains Mono Variable', 'JetBrains Mono', ui-monospace, monospace;
   --status-danger-border: rgb(140 58 56 / 0.58);

@@ -1,13 +1,16 @@
-import { useId } from 'react';
+import { useId, useRef } from 'react';
 import type { ComponentPropsWithRef, HTMLAttributes, ReactElement, ReactNode } from 'react';
 import {
   CheckCircleIcon,
   CircleNotchIcon,
   InfoIcon,
   WarningCircleIcon,
+  WarningIcon,
+  XIcon,
 } from '@phosphor-icons/react';
 import { Icon } from '../icon/icon.proto.js';
 import type { GlyphComponent } from '../icon/icon.proto.js';
+import { useInputFocus } from './input-focus.proto.js';
 import './input.css';
 
 export type ControlSize = 's' | 'm' | 'l';
@@ -17,7 +20,7 @@ export type FieldVariant = 'default' | 'ghost';
 const statusIcons: Record<Exclude<FieldStatus, 'neutral'>, GlyphComponent> = {
   info: InfoIcon,
   success: CheckCircleIcon,
-  warning: WarningCircleIcon,
+  warning: WarningIcon,
   danger: WarningCircleIcon,
 };
 
@@ -28,6 +31,8 @@ export interface FormFieldProps extends HTMLAttributes<HTMLDivElement> {
   readonly status?: FieldStatus | undefined;
   readonly required?: boolean | undefined;
   readonly htmlFor?: string | undefined;
+  /** Input already carries the status glyph inside its shell. */
+  readonly messageIcon?: boolean | undefined;
 }
 
 export function FormField({
@@ -37,6 +42,7 @@ export function FormField({
   status = 'neutral',
   required,
   htmlFor,
+  messageIcon = true,
   className = '',
   children,
   ...props
@@ -46,7 +52,7 @@ export function FormField({
     <div {...props} className={`form-field-proto ${className}`} data-status={status}>
       {label && (
         <label className="form-field-label-proto" htmlFor={htmlFor}>
-          {label}
+          <span>{label}</span>
           {required && (
             <span className="form-field-required-proto" aria-hidden="true">
               *
@@ -55,18 +61,25 @@ export function FormField({
         </label>
       )}
       {children}
-      {description && (
-        <div
-          id={htmlFor ? `${htmlFor}-description` : undefined}
-          className="form-field-description-proto"
-        >
-          {description}
-        </div>
-      )}
-      {message && (
-        <div id={htmlFor ? `${htmlFor}-message` : undefined} className="form-field-message-proto">
-          {StatusGlyph && <StatusGlyph size="1em" aria-hidden="true" />}
-          {message}
+      {(description || message) && (
+        <div className="form-field-support-proto">
+          {description && (
+            <div
+              id={htmlFor ? `${htmlFor}-description` : undefined}
+              className="form-field-description-proto"
+            >
+              {description}
+            </div>
+          )}
+          {message && (
+            <div
+              id={htmlFor ? `${htmlFor}-message` : undefined}
+              className="form-field-message-proto"
+            >
+              {messageIcon && StatusGlyph && <StatusGlyph size="1em" aria-hidden="true" />}
+              <span>{message}</span>
+            </div>
+          )}
         </div>
       )}
     </div>
@@ -82,13 +95,20 @@ export interface InputProps extends Omit<ComponentPropsWithRef<'input'>, 'size' 
   readonly prefix?: ReactNode;
   readonly suffix?: ReactNode;
   readonly loading?: boolean | undefined;
+  readonly clearable?: boolean | undefined;
+  readonly clearLabel?: string | undefined;
+  readonly onClear?: (() => void) | undefined;
   readonly width?: 'auto' | 'full' | undefined;
   readonly label?: ReactNode;
   readonly description?: ReactNode;
   readonly message?: ReactNode;
+  /** Pins appearance for specimen comparison; does not move DOM focus. */
+  readonly previewState?:
+    'rest' | 'hover' | 'pointer-focus' | 'keyboard-focus' | 'clear-focus' | undefined;
+  readonly previewClearState?: 'hover' | 'active' | undefined;
 }
 
-// A native input with visual slots. Full library form coordination belongs to Wave 2.
+// Native behavior makes the design inspectable. These props and DOM are not the library API.
 export function Input({
   size = 'm',
   variant = 'default',
@@ -98,6 +118,9 @@ export function Input({
   prefix,
   suffix,
   loading,
+  clearable,
+  clearLabel = 'Clear value',
+  onClear,
   width = 'full',
   label,
   description,
@@ -109,11 +132,20 @@ export function Input({
   readOnly,
   required,
   hidden,
+  placeholder = '',
+  previewState,
+  previewClearState,
+  onCompositionStart,
+  onCompositionEnd,
   ...props
 }: InputProps): ReactElement {
   const generatedId = useId();
+  const focusScope = useInputFocus();
+  const composing = useRef(false);
   const inputId = id ?? generatedId;
-  const StatusGlyph = status === 'neutral' ? null : statusIcons[status];
+  const effectiveStatus = disabled ? 'neutral' : status;
+  const StatusGlyph = effectiveStatus === 'neutral' ? null : statusIcons[effectiveStatus];
+  const busy = loading && !disabled;
   const describedBy =
     [
       props['aria-describedby'],
@@ -124,34 +156,97 @@ export function Input({
       .join(' ') || undefined;
   const control = (
     <span
+      ref={focusScope}
+      data-input-focus-scope=""
       className={`input-shell-proto ${className}`}
       data-size={size}
       data-variant={variant}
-      data-status={status}
+      data-status={effectiveStatus}
       data-width={width}
-      aria-busy={loading || undefined}
+      dir={props.dir}
+      data-preview={previewState}
+      data-clear-preview={previewClearState}
+      data-loading={busy || undefined}
       style={style}
       hidden={hidden}
+      onClick={(event) => {
+        const target = event.target as Element;
+        if (!target.closest('input, button')) {
+          event.currentTarget.querySelector<HTMLInputElement>('input')?.focus();
+        }
+      }}
     >
-      {iconLeft && <Icon icon={iconLeft} size={size} />}
-      {prefix && <span className="input-affix-proto">{prefix}</span>}
+      {iconLeft && <Icon icon={iconLeft} size={size} color="secondary" />}
+      {prefix && (
+        <span className="input-affix-proto" dir="auto">
+          {prefix}
+        </span>
+      )}
       <input
         {...props}
         id={inputId}
         className="input-native-proto"
+        placeholder={placeholder}
         disabled={disabled}
-        readOnly={readOnly || loading}
+        readOnly={readOnly}
         required={required}
-        aria-invalid={status === 'danger' || props['aria-invalid'] || undefined}
+        aria-busy={busy || undefined}
+        aria-invalid={
+          effectiveStatus === 'danger' || (!disabled && props['aria-invalid']) || undefined
+        }
         aria-describedby={describedBy}
+        onCompositionStart={(event) => {
+          composing.current = true;
+          onCompositionStart?.(event);
+        }}
+        onCompositionEnd={(event) => {
+          composing.current = false;
+          onCompositionEnd?.(event);
+        }}
       />
-      {suffix && <span className="input-affix-proto">{suffix}</span>}
-      {loading ? (
-        <CircleNotchIcon className="control-spinner-proto" size="1em" aria-hidden="true" />
-      ) : StatusGlyph ? (
-        <StatusGlyph className="input-status-proto" size="1em" aria-hidden="true" />
-      ) : (
-        iconRight && <Icon icon={iconRight} size={size} />
+      {suffix && (
+        <span className="input-affix-proto" dir="auto">
+          {suffix}
+        </span>
+      )}
+      {clearable && (
+        <button
+          type="button"
+          className="input-clear-proto"
+          aria-label={clearLabel}
+          aria-controls={inputId}
+          aria-disabled={busy || undefined}
+          disabled={disabled || readOnly}
+          onMouseDown={(event) => event.preventDefault()}
+          onClick={(event) => {
+            const input = event.currentTarget.parentElement?.querySelector('input');
+            if (!input || input.matches(':disabled') || readOnly || busy || composing.current) {
+              return;
+            }
+            // A native input event keeps the live controlled examples honest.
+            const nativeValue = Object.getOwnPropertyDescriptor(
+              HTMLInputElement.prototype,
+              'value',
+            );
+            nativeValue?.set?.call(input, '');
+            input.dispatchEvent(new Event('input', { bubbles: true }));
+            onClear?.();
+            input.focus();
+          }}
+        >
+          <Icon icon={XIcon} size={size} />
+        </button>
+      )}
+      {StatusGlyph && (
+        <span className="input-status-proto">
+          <Icon icon={StatusGlyph} size={size} />
+        </span>
+      )}
+      {busy && (
+        <Icon icon={CircleNotchIcon} size={size} color="muted" className="control-spinner-proto" />
+      )}
+      {!StatusGlyph && !busy && iconRight && (
+        <Icon icon={iconRight} size={size} color="secondary" className="input-trailing-proto" />
       )}
     </span>
   );
@@ -160,10 +255,12 @@ export function Input({
       label={label}
       description={description}
       message={message}
-      status={status}
+      messageIcon={false}
+      status={effectiveStatus}
       required={required}
       htmlFor={inputId}
       hidden={hidden}
+      data-width={width}
     >
       {control}
     </FormField>
