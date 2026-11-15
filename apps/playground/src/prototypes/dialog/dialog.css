@@ -67,8 +67,6 @@
   min-block-size: 0;
   overflow: auto;
   overscroll-behavior: contain;
-  scrollbar-width: thin;
-  scrollbar-color: var(--border-strong) transparent;
 }
 .dialog-preview-footer {
   display: flex;

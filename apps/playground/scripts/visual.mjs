@@ -1,4 +1,5 @@
-import { mkdir } from 'node:fs/promises';
+import { Buffer } from 'node:buffer';
+import { mkdir, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import process from 'node:process';
 import { devkitWorkspaceSource } from '@docouno/env/vite';
@@ -40,7 +41,14 @@ const [server, browser] = await Promise.all([
   chromium.launch({
     headless: true,
     chromiumSandbox: false,
-    args: ['--disable-gpu', '--font-render-hinting=none'],
+    // Keep native overflow visible in design review, including classic scrollbars.
+    ignoreDefaultArgs: ['--hide-scrollbars'],
+    args: [
+      '--disable-gpu',
+      '--font-render-hinting=none',
+      // Paint the full document without changing viewport units or inner overflow.
+      '--blink-settings=mainFrameClipsContent=false',
+    ],
   }),
 ]);
 
@@ -114,7 +122,28 @@ try {
   }
 
   const outPath = resolve(outDir, outName);
-  await page.screenshot({ path: outPath, fullPage: true });
+  const layoutViewport = page.viewportSize();
+  const captureSize = await page.evaluate(() => ({
+    width: Math.max(window.innerWidth, document.documentElement.scrollWidth),
+    height: Math.max(window.innerHeight, document.documentElement.scrollHeight),
+  }));
+  if (!layoutViewport) {
+    throw new Error('A fixed layout viewport is required for visual capture.');
+  }
+  const captureSession = await page.context().newCDPSession(page);
+  await captureSession.send('Emulation.setDeviceMetricsOverride', {
+    mobile: false,
+    ...layoutViewport,
+    deviceScaleFactor: 2,
+  });
+  // The fullPage path hides native scrollbars and changes their occupied space.
+  // Capture the unclipped document directly while preserving its layout viewport.
+  const capture = await captureSession.send('Page.captureScreenshot', {
+    format: 'png',
+    captureBeyondViewport: false,
+    clip: { x: 0, y: 0, ...captureSize, scale: 1 },
+  });
+  await writeFile(outPath, Buffer.from(capture.data, 'base64'));
   const elapsedMs = Math.round(performance.now() - t0);
   process.stdout.write(`visual: wrote ${outPath} (${String(elapsedMs)} ms)\n`);
 } finally {

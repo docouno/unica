@@ -1,5 +1,6 @@
 import type { ComponentPropsWithRef, ReactElement } from 'react';
 import './table.css';
+import '../scrollbar/scrollbar.css';
 
 export interface TableProps extends ComponentPropsWithRef<'table'> {
   readonly size?: 's' | 'm' | 'l';
@@ -13,5 +14,7 @@ export function TableScroll({
   className = '',
   ...props
 }: ComponentPropsWithRef<'div'>): ReactElement {
-  return <div tabIndex={0} {...props} className={`table-scroll-proto ${className}`} />;
+  return (
+    <div tabIndex={0} {...props} className={`table-scroll-proto scrollbar-proto ${className}`} />
+  );
 }

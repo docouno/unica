@@ -33,6 +33,8 @@ Frost accent combines diagonal violet color stops, a colored lower edge, and dif
 
 Material response can require shared input sampling as well as CSS. Keep input services separate from the material recipe: components retain the same action, keyboard, form, and availability semantics across themes. The live prototype demonstrates proximity with a family-local shared sampler; it does not export a provider or establish the future library service API.
 
+The native scrollbar recipe has separate `--scrollbar-thumb-opacity`, `--scrollbar-thumb-hover-opacity`, and `--scrollbar-thumb-active-opacity` values in each preset. Soft stays quiet, Frost gives the glass more space, and Pixel keeps a firmer indicator. Geometry follows `--radius-full` where the browser exposes native scrollbar parts. See [Native Scrollbars](scrollbars.md) for states, dimensions, and platform fallbacks.
+
 Floating surfaces use `--overlay-border` for their perimeter and `--overlay-rim-mask` for the
 highlight's extent. Frost uses a transparent perimeter and a soft highlight that follows the
 upper corners, with a lighter translucent fill and popover shadow. Soft and Pixel keep fully

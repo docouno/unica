@@ -27,6 +27,7 @@ import {
 import { Icon } from '../icon/icon.proto.js';
 import type { GlyphComponent } from '../icon/icon.proto.js';
 import './app-shell.css';
+import '../scrollbar/scrollbar.css';
 import { Kbd } from '../kbd/kbd.proto.js';
 
 export interface AppShellProps extends ComponentPropsWithRef<'div'> {
@@ -262,7 +263,7 @@ export function DocumentTabs({
 }: DocumentTabsProps): ReactElement {
   const [current, setCurrent] = useState(defaultValue);
   return (
-    <nav className="app-shell-document-tabs" aria-label="Open documents">
+    <nav className="app-shell-document-tabs scrollbar-proto" aria-label="Open documents">
       {items.map((item) => (
         <button
           type="button"

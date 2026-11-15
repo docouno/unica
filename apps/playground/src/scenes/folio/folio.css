@@ -506,9 +506,20 @@
 .folio-editor-reference.popover-content-proto {
   position: absolute;
   z-index: 3;
-  inline-size: 344px;
+  inline-size: min(22rem, 100%);
   inset-inline-end: 96px;
   inset-block-start: 390px;
+}
+.folio-editor-reference-actions {
+  justify-content: space-between;
+}
+.folio-editor-reference-actions > .folio-row {
+  margin-inline-start: auto;
+  justify-content: end;
+}
+.folio-editor-reference:focus-visible {
+  outline: 2px solid var(--focus-ring-color);
+  outline-offset: 2px;
 }
 .folio-slash-command {
   display: grid;

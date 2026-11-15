@@ -68,6 +68,8 @@ make visual item=title section=wrapping mode=focus theme=pixel-light vp=360 scal
 
 `make visual` checks workspace readiness through the pinned Devkit engine and prepares missing dependencies and Chromium automatically. Prepared workspaces reuse their dependencies; Vite resolves library exports directly to source, so screenshots need no library build and include current source edits. Dependency or environment changes remain subject to Devkit validation; follow its `make sync` or `make setup` guidance if required. The capture itself runs offline at 2× resolution. Run repository checks for the affected code and dependencies as described in [Definition of Done](../AGENTS.md#definition-of-done); screenshots and package checks establish different things.
 
+Captures keep Chromium's native inner scrollbars visible. The renderer paints the full document without clipping the root frame, then captures it directly: Chromium's usual full-page path hides scrollbars and changes their occupied space. The 900px layout viewport and viewport-relative units remain unchanged. The outer document scrollbar is omitted; inspect that scrollbar in the live browser. Inner overflow and classic scrollbar geometry remain visible as a platform sample, not a promise of identical macOS or touch rendering.
+
 Files go to Git-ignored `.artifacts/visual/`. `raw=0` includes the workbench controls; the default captures artboards. Keep other temporary evidence in `.artifacts/<task>/` inside the checkout. Stop the preview with `make down` when it is no longer needed.
 
 ## Boundaries and Handoff
