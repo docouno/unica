@@ -1,6 +1,6 @@
 # Blockquote — design reference
 
-Status: candidate for visual review. Open `/?item=blockquote`. This is a reusable design reference, not a package export or final TypeScript API. The document-reader and rich-editor scenes consume the same prototype.
+Status: approved visual design (2026-11-15). Open `/?item=blockquote`. This is a reusable design reference, not a package export or final TypeScript API. The document-reader and rich-editor scenes consume the same prototype.
 
 ## Purpose and limits
 
@@ -42,7 +42,7 @@ A nested quotation keeps its own rail and a 4px vertical inset, with no trailing
 
 The figure has no fixed height, internal scrollbar, ellipsis, or collapse affordance. Long passages, URLs, source titles, and code fragments wrap completely. Text starts at the logical reading edge. The source metadata does not force language direction; Latin Code isolates its own LTR run inside RTL prose. The entire figure respects native `hidden`.
 
-Tab visits embedded links in document order; the figure and glyphs add no stops. Links retain their underline, hover foreground, and 2px keyboard focus contour at 3px offset. There is no clipping or overflow-hidden on the figure, so wrapped links and focus outlines remain visible. Enter follows the source using normal browser navigation, without making the whole quote clickable. Native text selection covers only selected characters, not the figure background.
+Tab visits embedded links in document order; the figure and glyphs add no stops. Links retain their underline, hover treatment, and 2px keyboard focus contour at 3px offset. There is no clipping or overflow-hidden on the figure, so wrapped links and focus outlines remain visible. Enter follows the source using normal browser navigation, without making the whole quote clickable. Native text selection covers only selected characters, not the figure background.
 
 Forced colors retain a system-text rail, body, caption, and glyphs over the inherited system surface. Links retain their system link color and focus treatment. Tone distinctions collapse to textual context. Reduced motion is identical because the quotation has no animation.
 

@@ -1,6 +1,6 @@
 # Code — design reference
 
-Status: candidate for visual review. Open `/?item=code` in the playground. This is an inline typography reference, not a package export or a final TypeScript API. The neighboring `CodeBlock` sketch is outside this reference's scope.
+Status: approved visual design (2026-11-15). Open `/?item=code` in the playground. This is an inline typography reference, not a package export or a final TypeScript API. The neighboring `CodeBlock` sketch is outside this reference's scope.
 
 ## Purpose and anatomy
 
