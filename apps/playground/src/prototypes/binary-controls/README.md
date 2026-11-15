@@ -1,6 +1,6 @@
 # Binary controls — design reference
 
-Status: design candidate, awaiting visual approval. Open `/?item=checkbox` in the playground. This reference defines the intended experience; prototype props and DOM are not the final package API.
+Status: design candidate, awaiting visual approval. Open `/?item=checkbox`, `/?item=radio`, or `/?item=switch` in the playground. This reference defines the intended experience; prototype props and DOM are not the final package API.
 
 ## Checkbox
 
@@ -45,7 +45,7 @@ Validation belongs to the containing field or application. The example reveals �
 
 ### Inspection and handoff
 
-The specimen includes sizes/values, pinned hover/press/focus, availability, validation intersections, live aggregation, horizontal wrapping, long labels, external names, and actual Base/Overlay material plates. Pinned interaction states do not move DOM focus; mixed examples hold a controlled visual mask. All ordinary checkboxes remain live. Existing sign-in, collection, editor, and invite scenes consume this same control/indicator.
+The specimen includes sizes/values, pinned hover/press/focus, availability, validation intersections, live aggregation, horizontal wrapping, long labels, external names, and actual Base/Overlay material plates. Pinned interaction states do not move DOM focus; mixed examples hold a controlled visual mask. All ordinary checkboxes remain live. Existing sign-in, collection, editor, invite, and batch-saved preferences scenes consume this same control/indicator.
 
 `CheckboxIndicator` is decorative and can be composed after a native `.binary-native` input, as demonstrated by CheckboxCard. It adds no second input or focus stop. The card's spacing, selection surface, and secondary actions belong to its own future design task.
 
@@ -77,3 +77,42 @@ Sections cover sizes, live pairs with pinned interaction styling, read-only/disa
 The prototype uses native arrow behavior plus local Home/End handling. Full reusable navigation, assistive announcement timing, reset/form guarantees, and cross-browser selected-disabled entry are not claimed as shipped behavior. The separate technical implementation may change DOM and state architecture while preserving these decisions.
 
 Interaction reference: [WAI-ARIA Radio Group pattern](https://www.w3.org/WAI/ARIA/apg/patterns/radio/).
+
+## Switch
+
+Open `/?item=switch`. Use Switch for an immediate on/off setting with a stable label, such as “Email notifications”. Do not rename the setting when it changes. Checkbox is preferable for inclusion/consent saved with a form; a toolbar command belongs to Button. Switch has no mixed state, decorative variants, status palette, or localized ON/OFF text inside the track.
+
+### Geometry and materials
+
+| Metric                                | S         | M         | L         |
+| ------------------------------------- | --------- | --------- | --------- |
+| Track                                 | 40 × 22px | 44 × 24px | 52 × 28px |
+| Thumb                                 | 18px      | 20px      | 24px      |
+| Glyph / spinner                       | 14px      | 16px      | 20px      |
+| Inner inset from the outer track edge | 2px       | 2px       | 2px       |
+| Minimum row                           | 30px      | 40px      | 48px      |
+
+The thumb stays light in both states; its position and the on-track accent jointly identify the value. Soft/Frost use capsules; Pixel uses rectangular tracks and thumbs. The spinner remains circular. The 1px track edge is included in the specified dimensions, and the thumb sits another 1px inside it. No extra shadow, halo, thumb expansion, or row translation appears on press. The icon is optional decoration, never the setting's only accessible name. It is replaced by a spinner while pending without changing any geometry.
+
+Off uses the dedicated neutral track recipe and binary edge. Light themes use a medium neutral off track to maintain thumb separation; this is an intentional correction to the earlier pale tracks, which had only 1.44–1.50:1 thumb separation. On uses `--switch-track-on` and an accent-signal edge; the dedicated darker track keeps the same light thumb readable in dark themes. The inner icon/spinner uses the on-track ink against the thumb. All fills remain calm enough for a settings panel with many independent rows.
+
+Soft uses 160ms lateral thumb travel, Frost 140ms, Pixel an immediate positional change. The track color changes immediately. These durations belong to `--switch-travel-duration`, independently of radii. Hover changes the neutral/accent track recipe; press uses the active on recipe or a stronger neutral edge. There is no displacement perpendicular to the track. Reduced motion removes travel and freezes the spinner; adjacent “Turning … on/off” copy preserves pending meaning.
+
+### State outcomes and priorities
+
+- Off/on keep identical outer geometry. The thumb moves from inline-start to inline-end; RTL mirrors the movement. Pointer/touch anywhere in the label toggles once. Tab visits each available setting independently, with no radio-style arrow navigation. Space toggles; Enter toggles once per key press and must not submit a containing form.
+- Keyboard focus uses the same 2px contour at 2px offset as the other binary controls. A setting without visible label receives an external name. Use an externally labelled switch for a trailing settings-row layout; the specimen shows that arrangement without adding a decorative layout variant.
+- Read-only preserves the readable value and focus, blocks changes, and suppresses hover/press. Explain the reason beside the setting. Disabled uses a muted neutral track/thumb while retaining position, suppresses interaction/focus, and hides icon/spinner; supporting explanation remains readable.
+- Pending retains the committed on/off value and thumb position, replaces the icon with a spinner, suppresses repeated activation, and retains input focus. It is busy and temporarily unavailable, without native disabled. This deliberately avoids displaying an unconfirmed remote value as already saved.
+- On success, adopt the requested state, stop pending, and show a saved confirmation until the next change. On failure, retain the previous state, stop pending, and show an adjacent error plus retry instruction. The control's setting label stays unchanged. Failure feedback belongs beside the setting; it does not turn an off switch into a red destructive control. A new attempt clears the old error.
+- Disabled takes precedence over pending and read-only decoration. Read-only plus pending can describe background synchronization and retains its full-contrast state. Group restrictions combine with individual restrictions. SwitchGroup groups independent settings; it does not require “at least one on”.
+
+Pointer target/label wrapping rules match Checkbox: at least 44px on coarse pointers, first-line alignment, descriptive text below the stable label, no essential truncation. A trailing control keeps its width while the neighboring text wraps. Forced colors preserve an explicit track border and thumb: Canvas/ButtonText when off, Highlight/HighlightText when on, GrayText when disabled. Position keeps the value identifiable even when color differences disappear.
+
+### Inspection and boundary
+
+The specimen covers S/M/L off/on/icon, pinned pointer/keyboard states, read-only and disabled at both values, pending at both values and every size, read-only+pending, disabled+pending, a live success/failure/retry cycle, independent groups, trailing external labels, long content, and actual Base/Overlay surfaces. “Succeed” and “Fail” are explicit inspection controls, not a network service; clicking them naturally moves focus to that button. Pending itself never remounts or disables the focused switch. The pinned loading examples remain pending until the specimen is changed.
+
+Existing collection/reader scenes consume Switch; SwitchCard composes SwitchIndicator. The preferences composition uses Checkbox for flags submitted together by Save preferences; the properties drawer similarly uses CheckboxCard for its deferred automation flag. Draft changes are therefore not mistaken for immediately applied settings. Production implementation must preserve the selected experience and verify async controlled authority, no repeated Enter activation, focus retention through actual responses, native form/reset/fieldset behavior, announcement timing, and cross-browser input behavior. Application request cancellation, retry policy, and network transport remain application concerns.
+
+Interaction reference: [WAI-ARIA Switch pattern](https://www.w3.org/WAI/ARIA/apg/patterns/switch/).

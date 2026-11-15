@@ -1,5 +1,9 @@
 import type { ComponentPropsWithRef, ReactElement, ReactNode } from 'react';
-import { CheckboxIndicator, RadioIndicator } from '../binary-controls/binary-controls.proto.js';
+import {
+  CheckboxIndicator,
+  RadioIndicator,
+  SwitchIndicator,
+} from '../binary-controls/binary-controls.proto.js';
 import type { ControlSize } from '../input/input.proto.js';
 import './selection.css';
 
@@ -30,7 +34,7 @@ function ChoiceControl({
 }: ChoiceControlProps): ReactElement {
   return (
     <label
-      className={`choice-proto ${card ? 'choice-card-proto' : ''} ${kind !== 'switch' ? 'binary-control' : ''} ${className}`}
+      className={`choice-proto ${card ? 'choice-card-proto' : ''} binary-control ${className}`}
       data-readonly={readOnly || undefined}
       data-kind={kind}
       data-size={size}
@@ -42,7 +46,7 @@ function ChoiceControl({
           {...props}
           type={kind === 'radio' ? 'radio' : 'checkbox'}
           role={kind === 'switch' ? 'switch' : undefined}
-          className={`choice-native-proto ${kind !== 'switch' ? 'binary-native' : ''}`}
+          className="choice-native-proto binary-native"
           readOnly={readOnly}
           aria-readonly={readOnly || undefined}
           onClick={(event) => {
@@ -57,7 +61,7 @@ function ChoiceControl({
         ) : kind === 'radio' ? (
           <RadioIndicator size={size} />
         ) : (
-          <span className="choice-indicator-proto" aria-hidden="true" />
+          <SwitchIndicator size={size} />
         )}
       </span>
       {(label || description || children) && (
@@ -68,10 +72,6 @@ function ChoiceControl({
       )}
     </label>
   );
-}
-
-export function Switch(props: ChoiceProps): ReactElement {
-  return <ChoiceControl {...props} kind="switch" />;
 }
 
 export function CheckboxCard(props: ChoiceProps): ReactElement {

@@ -1,8 +1,9 @@
 import { useId } from 'react';
 import type { ReactElement } from 'react';
 import { defineSpecimen } from '../../workbench/types.js';
-import { Checkbox, Radio, RadioGroup } from '../binary-controls/binary-controls.proto.js';
-import { CheckboxCard, RadioCard, Switch, SwitchCard } from './selection.proto.js';
+import { Checkbox, Radio, RadioGroup, Switch } from '../binary-controls/binary-controls.proto.js';
+import { PopoverContent } from '../popover/popover.proto.js';
+import { CheckboxCard, RadioCard, SwitchCard } from './selection.proto.js';
 import '../input/input.css';
 
 function SizesPreview(): ReactElement {
@@ -64,10 +65,10 @@ function CardsPreview(): ReactElement {
 
 export default defineSpecimen({
   id: 'selection',
-  title: 'Checkbox, Radio & Switch',
+  title: 'Choice cards',
   group: 'Forms',
   summary:
-    'Native selection, clear shape differences, and contextual choice cards without material switches.',
+    'Early choice-card compositions consuming shared binary indicators. Dedicated binary control references live in Checkbox, Radio, and Switch.',
   sections: [
     {
       id: 'sizes',
@@ -95,11 +96,17 @@ export default defineSpecimen({
     },
     {
       id: 'cards',
-      title: 'Folio · Access & visibility',
+      title: 'Choice indicators in a floating surface',
       kind: 'context',
       surface: 'overlay',
       overlayStage: true,
-      render: () => <CardsPreview />,
+      caption:
+        'Static overlay plate with live choices. Full choice-card design is a separate study.',
+      render: () => (
+        <PopoverContent size="l" role="group" aria-label="Choice cards in a floating surface">
+          <CardsPreview />
+        </PopoverContent>
+      ),
     },
   ],
 });

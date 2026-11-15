@@ -249,3 +249,167 @@
 .binary-indicator[data-checked] > .binary-dot {
   visibility: visible;
 }
+
+.switch-indicator {
+  --switch-width: 44px;
+  --switch-height: 24px;
+  --switch-thumb-size: 20px;
+  --switch-glyph-size: 16px;
+  position: relative;
+  display: inline-flex;
+  flex: 0 0 auto;
+  inline-size: var(--switch-width);
+  block-size: var(--switch-height);
+  border: 1px solid var(--binary-border);
+  border-radius: var(--radius-full);
+  background: var(--switch-track-off);
+  pointer-events: none;
+}
+.switch-indicator[data-size='s'] {
+  --switch-width: 40px;
+  --switch-height: 22px;
+  --switch-thumb-size: 18px;
+  --switch-glyph-size: 14px;
+}
+.switch-indicator[data-size='l'] {
+  --switch-width: 52px;
+  --switch-height: 28px;
+  --switch-thumb-size: 24px;
+  --switch-glyph-size: 20px;
+}
+.switch-thumb {
+  position: absolute;
+  inset-inline-start: 1px;
+  inset-block-start: 1px;
+  display: grid;
+  place-items: center;
+  inline-size: var(--switch-thumb-size);
+  block-size: var(--switch-thumb-size);
+  border-radius: var(--radius-full);
+  background: var(--switch-thumb-bg);
+  color: var(--switch-track-on);
+  transition: inset-inline-start var(--switch-travel-duration, 0ms) ease-out;
+}
+.switch-thumb > svg {
+  inline-size: var(--switch-glyph-size);
+  block-size: var(--switch-glyph-size);
+}
+.binary-native:checked + .switch-indicator,
+.switch-indicator[data-checked] {
+  background: var(--switch-track-on);
+  border-color: var(--accent-signal);
+}
+.binary-native:checked + .switch-indicator > .switch-thumb,
+.switch-indicator[data-checked] > .switch-thumb {
+  inset-inline-start: calc(100% - var(--switch-thumb-size) - 1px);
+}
+.binary-control:not([data-readonly]):not([data-busy]):not(:has(:disabled)):is(
+    :hover,
+    [data-preview='hover']
+  )
+  .switch-indicator {
+  background: var(--switch-track-off-hover);
+  border-color: var(--binary-border-hover);
+}
+.binary-control:not([data-readonly]):not([data-busy]):not(:has(:disabled)):is(
+    :hover,
+    [data-preview='hover']
+  )
+  .binary-native:checked
+  + .switch-indicator {
+  background: var(--switch-track-on-hover);
+  border-color: var(--accent-signal);
+}
+.binary-control:not([data-readonly]):not([data-busy]):not(:has(:disabled)):is(
+    :active,
+    [data-preview='active']
+  )
+  .switch-indicator {
+  background: var(--switch-track-off-hover);
+  border-color: var(--fg-secondary);
+}
+.binary-control:not([data-readonly]):not([data-busy]):not(:has(:disabled)):is(
+    :active,
+    [data-preview='active']
+  )
+  .binary-native:checked
+  + .switch-indicator {
+  background: var(--switch-track-on-active);
+  border-color: var(--accent-signal);
+}
+.binary-native:focus-visible + .switch-indicator,
+.binary-control[data-preview='focus'] .switch-indicator {
+  outline: 2px solid var(--focus-ring-color);
+  outline-offset: 2px;
+}
+.binary-control[data-busy] {
+  cursor: progress;
+}
+.binary-native:disabled + .switch-indicator {
+  background: var(--bg-surface-subtle);
+  border-color: var(--border-default);
+}
+.binary-native:disabled + .switch-indicator > .switch-thumb {
+  background: var(--fg-disabled);
+}
+.switch-spinner {
+  animation: switch-spin 800ms linear infinite;
+}
+@keyframes switch-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .switch-thumb {
+    transition: none;
+  }
+  .switch-spinner {
+    animation: none;
+  }
+}
+@media (forced-colors: active) {
+  .switch-indicator,
+  .binary-control:not([data-readonly]):not([data-busy]):not(:has(:disabled)):is(
+      :hover,
+      :active,
+      [data-preview]
+    )
+    .switch-indicator {
+    forced-color-adjust: none;
+    background: Canvas;
+    border-color: ButtonText;
+  }
+  .switch-thumb {
+    background: ButtonText;
+    color: Canvas;
+  }
+  .binary-native:checked + .switch-indicator,
+  .switch-indicator[data-checked],
+  .binary-control:not([data-readonly]):not([data-busy]):not(:has(:disabled)):is(
+      :hover,
+      :active,
+      [data-preview]
+    )
+    .binary-native:checked
+    + .switch-indicator {
+    background: Highlight;
+    border-color: Highlight;
+  }
+  .binary-native:checked + .switch-indicator > .switch-thumb,
+  .switch-indicator[data-checked] > .switch-thumb {
+    background: HighlightText;
+    color: Highlight;
+  }
+  .binary-native:disabled + .switch-indicator {
+    background: Canvas;
+    border-color: GrayText;
+  }
+  .binary-native:disabled + .switch-indicator > .switch-thumb {
+    background: GrayText;
+  }
+  .binary-native:focus-visible + .switch-indicator,
+  .binary-control[data-preview='focus'] .switch-indicator {
+    outline-color: Highlight;
+  }
+}

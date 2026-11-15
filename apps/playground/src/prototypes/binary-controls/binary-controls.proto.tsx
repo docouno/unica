@@ -8,7 +8,8 @@ import {
   useState,
 } from 'react';
 import type { ComponentPropsWithRef, HTMLAttributes, ReactElement, ReactNode } from 'react';
-import { CheckIcon, MinusIcon } from '@phosphor-icons/react';
+import { CheckIcon, CircleNotchIcon, MinusIcon } from '@phosphor-icons/react';
+import type { GlyphComponent } from '../icon/icon.proto.js';
 import type { ControlSize } from '../input/input.proto.js';
 import './binary-controls.css';
 
@@ -446,5 +447,209 @@ export function RadioGroup({
         {children}
       </div>
     </RadioContext>
+  );
+}
+
+export interface SwitchIndicatorProps extends Omit<BinaryIndicatorProps, 'indeterminate'> {
+  readonly loading?: boolean | undefined;
+  readonly thumbIcon?: GlyphComponent | undefined;
+}
+
+export function SwitchIndicator({
+  size = 'm',
+  checked,
+  loading,
+  thumbIcon: ThumbIcon,
+}: SwitchIndicatorProps): ReactElement {
+  return (
+    <span
+      className="switch-indicator"
+      data-size={size}
+      data-checked={checked || undefined}
+      aria-hidden="true"
+    >
+      <span className="switch-thumb">
+        {loading ? (
+          <CircleNotchIcon className="switch-spinner" weight="bold" />
+        ) : ThumbIcon ? (
+          <ThumbIcon weight="regular" />
+        ) : null}
+      </span>
+    </span>
+  );
+}
+
+const SwitchContext = createContext<BinaryGroupContextValue>({});
+export interface SwitchProps extends Omit<CheckboxProps, 'indeterminate' | 'status'> {
+  readonly loading?: boolean | undefined;
+  readonly thumbIcon?: GlyphComponent | undefined;
+}
+
+export function Switch({
+  label,
+  description,
+  size,
+  loading,
+  thumbIcon,
+  onCheckedChange,
+  previewState,
+  className = '',
+  style,
+  hidden,
+  id,
+  ref,
+  checked,
+  defaultChecked,
+  disabled,
+  readOnly,
+  name,
+  value,
+  onClick,
+  onChange,
+  onKeyDown,
+  ...props
+}: SwitchProps): ReactElement {
+  const group = useContext(SwitchContext);
+  const generatedId = useId();
+  const inputId = id ?? generatedId;
+  const [localChecked, setLocalChecked] = useState(defaultChecked ?? false);
+  const selected =
+    group.value && typeof value === 'string'
+      ? group.value.includes(value)
+      : (checked ?? localChecked);
+  const unavailable = disabled || group.disabled;
+  const locked = readOnly || group.readOnly;
+  const busy = loading && !unavailable;
+  const effectiveSize = size ?? group.size ?? 'm';
+  return (
+    <label
+      className={`binary-control ${className}`}
+      data-kind="switch"
+      data-size={effectiveSize}
+      data-readonly={locked || undefined}
+      data-busy={busy || undefined}
+      data-preview={previewState}
+      data-standalone={(!label && !description) || undefined}
+      style={style}
+      hidden={hidden}
+    >
+      <span className="binary-target">
+        <input
+          {...props}
+          ref={ref}
+          id={inputId}
+          type="checkbox"
+          role="switch"
+          className="binary-native"
+          name={name ?? group.name}
+          value={value}
+          checked={selected}
+          disabled={unavailable}
+          aria-readonly={locked || undefined}
+          aria-busy={busy || undefined}
+          aria-disabled={busy || undefined}
+          aria-labelledby={
+            props['aria-labelledby'] ??
+            (label && !props['aria-label'] ? `${inputId}-label` : undefined)
+          }
+          aria-describedby={
+            [props['aria-describedby'], description ? `${inputId}-description` : '']
+              .filter(Boolean)
+              .join(' ') || undefined
+          }
+          onClick={(event) => {
+            onClick?.(event);
+            if (locked || busy) {
+              event.preventDefault();
+            }
+          }}
+          onKeyDown={(event) => {
+            onKeyDown?.(event);
+            if (event.defaultPrevented || event.key !== 'Enter') {
+              return;
+            }
+            event.preventDefault();
+            if (!event.repeat && !locked && !busy) {
+              event.currentTarget.click();
+            }
+          }}
+          onChange={(event) => {
+            if (locked || busy) {
+              return;
+            }
+            const next = event.currentTarget.checked;
+            setLocalChecked(next);
+            if (group.value && typeof value === 'string') {
+              group.onValueChange?.(
+                next ? [...group.value, value] : group.value.filter((item) => item !== value),
+              );
+            }
+            onCheckedChange?.(next);
+            onChange?.(event);
+          }}
+        />
+        <SwitchIndicator
+          size={effectiveSize}
+          loading={busy}
+          thumbIcon={unavailable ? undefined : thumbIcon}
+        />
+      </span>
+      {(label || description) && (
+        <span className="binary-copy">
+          {label && (
+            <span className="binary-label" id={`${inputId}-label`}>
+              {label}
+            </span>
+          )}
+          {description && (
+            <span className="binary-description" id={`${inputId}-description`}>
+              {description}
+            </span>
+          )}
+        </span>
+      )}
+    </label>
+  );
+}
+
+export type SwitchGroupProps = Omit<CheckboxGroupProps, 'status'>;
+export function SwitchGroup({
+  value,
+  defaultValue = [],
+  onValueChange,
+  name,
+  size,
+  disabled,
+  readOnly,
+  orientation = 'vertical',
+  className = '',
+  children,
+  ...props
+}: SwitchGroupProps): ReactElement {
+  const [localValue, setLocalValue] = useState<readonly string[]>(defaultValue);
+  return (
+    <SwitchContext
+      value={{
+        value: value ?? localValue,
+        name,
+        size,
+        disabled,
+        readOnly,
+        onValueChange: (next) => {
+          setLocalValue(next);
+          onValueChange?.(next);
+        },
+      }}
+    >
+      <div
+        {...props}
+        role="group"
+        aria-disabled={disabled || undefined}
+        className={`binary-group ${className}`}
+        data-orientation={orientation}
+      >
+        {children}
+      </div>
+    </SwitchContext>
   );
 }
