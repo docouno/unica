@@ -1,6 +1,6 @@
 # Binary controls — design reference
 
-Status: design candidate, awaiting visual approval. Open `/?item=checkbox`, `/?item=radio`, or `/?item=switch` in the playground. This reference defines the intended experience; prototype props and DOM are not the final package API.
+Status: visual design approved on 2026-11-15. Open `/?item=checkbox`, `/?item=radio`, or `/?item=switch` in the playground. This reference defines the intended experience; prototype props and DOM are not the final package API.
 
 ## Checkbox
 
@@ -57,7 +57,7 @@ Interaction references: [WAI-ARIA Checkbox pattern](https://www.w3.org/WAI/ARIA/
 
 Open `/?item=radio`. Use Radio for a short, visible set of mutually exclusive alternatives. No answer is a valid initial state when a deliberate decision is required; never silently select the first option. A chosen item cannot be cleared by clicking it again. Offer an explicit “No email” / “None” option when declining is meaningful. Use Select for long lists and SegmentedControl for compact peer modes.
 
-Radio shares Checkbox's row sizes, label/description alignment, target expansion, full-contrast read-only treatment, disabled treatment, status edge, and immediate interaction feedback. The indicator is a true circle at every size and in every theme, including Pixel. Its concentric dot occupies 50% of the outer diameter (8/10/12px at S/M/L). Even diameters keep the dot on the same pixel grid as its outer circle, avoiding a half-pixel paint offset. The accent fill and `--fg-on-accent` dot share Checkbox's polarity. Hover/press changes fill or edge, without shrinking the circle, moving the row, or animating a dot bounce. Danger keeps the error edge even when hover and keyboard focus coincide.
+Radio shares Checkbox's row sizes, label/description alignment, target expansion, full-contrast read-only treatment, disabled treatment, status edge, and immediate interaction feedback. The indicator is a true circle at every size and in every theme, including Pixel, so an unselected Radio remains distinct from Checkbox. Its concentric dot occupies 50% of the outer diameter (8/10/12px at S/M/L). Even diameters keep the dot on the same pixel grid as its outer circle, avoiding a half-pixel paint offset. The accent fill and `--fg-on-accent` dot share Checkbox's polarity. Hover/press changes fill or edge, without shrinking the circle, moving the row, or animating a dot bounce. Danger keeps the error edge even when hover and keyboard focus coincide.
 
 ### Group outcomes
 
@@ -101,7 +101,7 @@ Soft uses 160ms lateral thumb travel, Frost 140ms, Pixel an immediate positional
 ### State outcomes and priorities
 
 - Off/on keep identical outer geometry. The thumb moves from inline-start to inline-end; RTL mirrors the movement. Pointer/touch anywhere in the label toggles once. Tab visits each available setting independently, with no radio-style arrow navigation. Space toggles; Enter toggles once per key press and must not submit a containing form.
-- Keyboard focus uses the same 2px contour at 2px offset as the other binary controls. A setting without visible label receives an external name. Use an externally labelled switch for a trailing settings-row layout; the specimen shows that arrangement without adding a decorative layout variant.
+- Keyboard focus uses the same 2px contour at 2px offset as the other binary controls. A setting without visible label receives an external name. Use an externally labelled switch for a trailing settings-row layout; the specimen shows that arrangement without adding a decorative layout variant. Hover and press on the external label provide the same track feedback as an internal label.
 - Read-only preserves the readable value and focus, blocks changes, and suppresses hover/press. Explain the reason beside the setting. Disabled uses a muted neutral track/thumb while retaining position, suppresses interaction/focus, and hides icon/spinner; supporting explanation remains readable.
 - Pending retains the committed on/off value and thumb position, replaces the icon with a spinner, suppresses repeated activation, and retains input focus. It is busy and temporarily unavailable, without native disabled. This deliberately avoids displaying an unconfirmed remote value as already saved.
 - On success, adopt the requested state, stop pending, and show a saved confirmation until the next change. On failure, retain the previous state, stop pending, and show an adjacent error plus retry instruction. The control's setting label stays unchanged. Failure feedback belongs beside the setting; it does not turn an off switch into a red destructive control. A new attempt clears the old error.

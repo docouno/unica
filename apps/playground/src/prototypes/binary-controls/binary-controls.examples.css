@@ -166,6 +166,9 @@
   flex: 1;
   padding-block-start: 10px;
 }
+.binary-demo-setting label[for] {
+  cursor: pointer;
+}
 .binary-demo-setting > .binary-control {
   flex: 0 0 auto;
 }

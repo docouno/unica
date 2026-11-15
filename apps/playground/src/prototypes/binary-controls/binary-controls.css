@@ -332,6 +332,7 @@
 }
 .binary-control:not([data-readonly]):not([data-busy]):not(:has(:disabled)):is(
     :hover,
+    :has(:where(.binary-native:hover)),
     [data-preview='hover']
   )
   .switch-indicator {
@@ -340,6 +341,7 @@
 }
 .binary-control:not([data-readonly]):not([data-busy]):not(:has(:disabled)):is(
     :hover,
+    :has(:where(.binary-native:hover)),
     [data-preview='hover']
   )
   .binary-native:checked
@@ -349,6 +351,7 @@
 }
 .binary-control:not([data-readonly]):not([data-busy]):not(:has(:disabled)):is(
     :active,
+    :has(:where(.binary-native:active)),
     [data-preview='active']
   )
   .switch-indicator {
@@ -357,6 +360,7 @@
 }
 .binary-control:not([data-readonly]):not([data-busy]):not(:has(:disabled)):is(
     :active,
+    :has(:where(.binary-native:active)),
     [data-preview='active']
   )
   .binary-native:checked
@@ -400,6 +404,7 @@
   .binary-control:not([data-readonly]):not([data-busy]):not(:has(:disabled)):is(
       :hover,
       :active,
+      :has(:where(.binary-native:is(:hover, :active))),
       [data-preview]
     )
     .switch-indicator {
@@ -416,6 +421,7 @@
   .binary-control:not([data-readonly]):not([data-busy]):not(:has(:disabled)):is(
       :hover,
       :active,
+      :has(:where(.binary-native:is(:hover, :active))),
       [data-preview]
     )
     .binary-native:checked
