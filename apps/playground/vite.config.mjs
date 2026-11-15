@@ -27,7 +27,10 @@ export default defineConfig({
     rolldownOptions: {
       output: {
         codeSplitting: {
-          groups: [{ name: 'react', test: /\/node_modules\/(?:react|react-dom|scheduler)\// }],
+          groups: [
+            { name: 'react', test: /\/node_modules\/(?:react|react-dom|scheduler)\// },
+            { name: 'icons', test: /\/node_modules\/@phosphor-icons\/react\// },
+          ],
         },
       },
     },
