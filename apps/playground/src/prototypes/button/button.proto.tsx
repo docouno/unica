@@ -1,6 +1,8 @@
+import { useCallback, useLayoutEffect, useRef } from 'react';
 import type { ButtonHTMLAttributes, ReactElement, Ref } from 'react';
 import { Icon } from '../icon/icon.proto.js';
 import type { GlyphComponent } from '../icon/icon.proto.js';
+import { bindButtonPointerLight } from './button-light.proto.js';
 import './button.css';
 
 export type ButtonVariant = 'primary' | 'secondary' | 'ghost';
@@ -19,11 +21,14 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   readonly pressed?: boolean | undefined;
   readonly onPressedChange?: (pressed: boolean) => void;
   /** Pins a visual state for comparison in the specimen only. */
-  readonly previewState?: 'hover' | 'active' | 'focus' | undefined;
+  readonly previewState?: 'rest' | 'near' | 'hover' | 'active' | 'focus' | undefined;
+  /** Adds focus to a pinned hover, press, or pending state in the specimen only. */
+  readonly previewFocus?: boolean;
 }
 
 // Visual prototype. Polymorphism and the full form/focus contract belong to Wave 2.
 export function Button({
+  ref,
   variant = 'primary',
   tone = 'accent',
   size = 'm',
@@ -34,44 +39,70 @@ export function Button({
   pressed,
   onPressedChange,
   previewState,
+  previewFocus,
   disabled,
   type = 'button',
   className = '',
   children,
   onClick,
-  onPointerMove,
   ...rest
 }: ButtonProps): ReactElement {
+  const elementRef = useRef<HTMLButtonElement | null>(null);
+  const trackLight =
+    variant === 'primary' &&
+    tone === 'accent' &&
+    !loading &&
+    !disabled &&
+    !pressed &&
+    !previewState;
+  const attach = useCallback(
+    (element: HTMLButtonElement | null) => {
+      if (!element) {
+        return;
+      }
+      elementRef.current = element;
+      const releaseRef = typeof ref === 'function' ? ref(element) : undefined;
+      if (ref && typeof ref !== 'function') {
+        ref.current = element;
+      }
+      return () => {
+        elementRef.current = null;
+        if (typeof releaseRef === 'function') {
+          releaseRef();
+        } else if (typeof ref === 'function') {
+          ref(null);
+        } else if (ref) {
+          ref.current = null;
+        }
+      };
+    },
+    [ref],
+  );
+  useLayoutEffect(() => {
+    const element = elementRef.current;
+    if (trackLight && element) {
+      return bindButtonPointerLight(element);
+    }
+  }, [trackLight]);
   return (
     <button
       {...rest}
+      ref={attach}
       type={type}
       className={`button-proto ${className}`}
       data-variant={variant}
       data-tone={tone}
       data-size={size}
       data-width={width}
+      data-icon-left={iconLeft ? true : undefined}
+      data-icon-right={iconRight ? true : undefined}
       data-loading={loading || undefined}
       data-preview={previewState}
+      data-preview-focus={previewFocus || undefined}
       disabled={disabled}
-      aria-busy={loading || undefined}
+      aria-busy={(loading && !disabled) || undefined}
       aria-disabled={disabled || loading || undefined}
       aria-pressed={pressed}
-      onPointerMove={(event) => {
-        onPointerMove?.(event);
-        if (
-          event.defaultPrevented ||
-          loading ||
-          disabled ||
-          variant !== 'primary' ||
-          tone !== 'accent'
-        ) {
-          return;
-        }
-        const box = event.currentTarget.getBoundingClientRect();
-        event.currentTarget.style.setProperty('--button-light-x', `${event.clientX - box.left}px`);
-        event.currentTarget.style.setProperty('--button-light-y', `${event.clientY - box.top}px`);
-      }}
       onClick={(event) => {
         if (loading) {
           event.preventDefault();

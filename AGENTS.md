@@ -73,6 +73,8 @@ export function InviteForm({ inputRef }: { inputRef?: Ref<HTMLInputElement> }): 
 
 ### 2. React 19 native platform model
 
+These are library implementation obligations. During design, specify the intended experience and use enough native behavior to evaluate it; follow the [prototype boundary](docs/workbench.md#design-outcome-and-prototype-behavior).
+
 - Accept `ref` directly as a regular prop on every component; never wrap components in `React.forwardRef`.
 - Annotate exported functions, props, and hooks explicitly so `isolatedDeclarations: true` emits deterministic `.d.ts` files without full-program inference.
 - Render modal surfaces (`Modal`, `Drawer`) on native `<dialog>` via `showModal()` and non-modal anchored overlays/toasts on the native Popover API (`popover="auto" | "manual"`), avoiding `z-index` escalation wars.
@@ -81,15 +83,16 @@ export function InviteForm({ inputRef }: { inputRef?: Ref<HTMLInputElement> }): 
 ### 3. Workbench prototypes (`src/prototypes/`) vs canonical library (`packages/ui`)
 
 - New visual component families are prototyped first in `apps/playground/src/prototypes/<family>/` (`<family>.proto.tsx`, `<family>.css`, and `<family>.specimen.tsx` auto-discovered via `import.meta.glob`) and verified across all 6 presets simultaneously using `make dev app=playground` and `make visual`.
-- Follow [Workbench workflow](docs/workbench.md) for specimen sections and context vignettes. Component prototype tasks leave `packages/ui` and the portable `src/workbench/` shell unchanged; full accessibility, focus, and form integration belong to library implementation.
+- The design deliverable is a detailed visual and interaction specification with a live reference. Prototype code serves inspection; its props and internal structure do not define the shipped contract. Implement enough behavior to evaluate design decisions honestly, and state which examples pin a state rather than implement its full mechanism. Deferred engineering must not leave agreed visual or interaction decisions to the library implementer.
+- Follow [Workbench workflow](docs/workbench.md) for component matrices, states, and optional focused usage examples. Application compositions consume components and stay in `src/scenes/`; do not duplicate them inside component specimens or expand every specimen when a composition is added. Full accessibility, focus, and form integration belong to library implementation. Keep the portable `src/workbench/` shell unchanged. Ordinary prototype tasks leave `packages/ui` unchanged; a demonstrated material recipe defect is repaired explicitly at the theme-token source, with its consumers and documentation verified.
 - Prototype and component stylesheets consume semantic CSS custom properties from `@docouno/unica/styles.css` with **zero `[data-theme]` selectors and zero raw `#hex` literals** (enforced by `unica.contract.test.tsx`), and `apps/playground/src/workbench/` maintains **zero `@docouno/*` imports** (enforced by ESLint).
 - Once a component ships in `packages/ui`, its `<family>.specimen.tsx` and Scene imports switch from the local prototype to `@docouno/unica`, its temporary `<family>.proto.tsx` and prototype `<family>.css` are removed, and `packages/ui` + `docs/components/<family>.md` serve as the sole canonical source of truth.
 
 ## Definition of Done
 
-Every change must satisfy all of the following before completion:
+Apply completion criteria to the stage and the surfaces being changed:
 
-1. `make check`, `make test`, `make build`, and `make package` (`isolatedDeclarations`, `publint`, and `@arethetypeswrong/core` pure-ESM verification) pass cleanly with zero warnings.
-2. Keyboard navigation, focus return, top-layer dismissal, native `<form>` submission/reset, `forced-colors`, and `prefers-reduced-motion` comply with [Overlays and Forms](docs/concepts/overlays-and-forms.md) and [Support and Accessibility](docs/concepts/support-and-accessibility.md).
-3. Visual rendering and interactive states are verified in `apps/playground` (`6-up` matrix, `Focus`, `Overlay` surface, `360px`–`1440px`, `120%` text, `RTL`, and `make visual`) across all 6 presets (`soft-dark`, `soft-light`, `frost-dark`, `frost-light`, `pixel-dark`, `pixel-light`).
-4. Public documentation (`README.md`, `AGENTS.md`, `docs/concepts/*`, `docs/compositions/*`, `docs/components/*`) is updated in the same change whenever public APIs, tokens, or workflows evolve.
+1. **Repository health:** Code changes pass canonical `make check`, `make test`, and `make build` for affected components and dependencies with zero warnings. Changes affecting the library package also pass `make package package=ui` (`publint` and `@arethetypeswrong/core`). Documentation-only changes require consistency, link, and diff review; they do not require repeating unchanged runtime or package checks. Repeat passed checks when a change, failure, or unresolved concern justifies it.
+2. **Design:** The agreed anatomy, states, relevant combinations, transitions, and intended accessible interaction are specified and inspectable in the live prototype. Evaluate visual quality and material coherence alongside measured readability, geometry, focus, motion, and availability feedback. Check all 6 presets, relevant Base/Overlay consumers, `360px`–`1440px`, `120%` text, and `RTL`. Probes should answer design questions; full production contract coverage is not a design completion requirement. Owner visual approval accepts the design.
+3. **Library implementation:** The shipped component preserves the approved experience and proves its full public API, keyboard, focus return, top-layer dismissal, state, and native `<form>` submission/reset contracts, including `forced-colors` and `prefers-reduced-motion`, under [Overlays and Forms](docs/concepts/overlays-and-forms.md) and [Support and Accessibility](docs/concepts/support-and-accessibility.md).
+4. **Current documentation:** Update affected public APIs, tokens, workflows, and design handoff in the same change. Distinguish intended behavior from prototype limitations and from verified library behavior.

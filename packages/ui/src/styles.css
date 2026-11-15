@@ -111,16 +111,23 @@ textarea {
   --btn-primary-fill: none;
   --btn-primary-fill-hover: none;
   --btn-primary-fill-active: none;
-  --btn-primary-shadow: 0 1px 2px rgb(0 0 0 / 0.28);
-  --btn-primary-shadow-hover: 0 1px 2px rgb(0 0 0 / 0.28);
+  --btn-primary-shadow: none;
+  --btn-primary-shadow-hover: none;
   --btn-primary-shadow-active: none;
-  --btn-primary-press-transform: translate(0, 2px);
+  --btn-primary-press-transform: none;
   --btn-primary-backlight-color: transparent;
+  --btn-primary-backlight-reach: 0px;
   --btn-secondary-bg: #313c46;
   --btn-secondary-bg-hover: #3b4854;
   --btn-secondary-border: transparent;
   --btn-secondary-border-width: 0px;
   --btn-secondary-shadow: none;
+  --btn-material-depth: 0;
+  --btn-state-duration: 120ms;
+  --btn-primary-contact-shadow: none;
+  --btn-secondary-shadow-hover: none;
+  --btn-secondary-shadow-active: none;
+  --btn-secondary-press-transform: none;
   --binary-border: #84939e;
   --binary-border-hover: #a6b3bc;
   --switch-track-off: #2e3942;
@@ -258,16 +265,23 @@ textarea {
   --btn-primary-fill: none;
   --btn-primary-fill-hover: none;
   --btn-primary-fill-active: none;
-  --btn-primary-shadow: 0 1px 2px rgb(42 32 24 / 0.16);
-  --btn-primary-shadow-hover: 0 1px 2px rgb(42 32 24 / 0.16);
+  --btn-primary-shadow: none;
+  --btn-primary-shadow-hover: none;
   --btn-primary-shadow-active: none;
-  --btn-primary-press-transform: translate(0, 2px);
+  --btn-primary-press-transform: none;
   --btn-primary-backlight-color: transparent;
+  --btn-primary-backlight-reach: 0px;
   --btn-secondary-bg: #efe3cf;
   --btn-secondary-bg-hover: #e5d5bc;
   --btn-secondary-border: transparent;
   --btn-secondary-border-width: 0px;
   --btn-secondary-shadow: none;
+  --btn-material-depth: 0;
+  --btn-state-duration: 120ms;
+  --btn-primary-contact-shadow: none;
+  --btn-secondary-shadow-hover: none;
+  --btn-secondary-shadow-active: none;
+  --btn-secondary-press-transform: none;
   --binary-border: #736659;
   --binary-border-hover: #574d43;
   --switch-track-off: #dfd0ba;
@@ -408,19 +422,26 @@ textarea {
   --btn-primary-fill-hover: linear-gradient(135deg, #5f4ad7 0%, #5f4ad7 35%, #4931d1 100%);
   --btn-primary-fill-active: linear-gradient(135deg, #4931d1 0%, #3f2aba 55%, #3f2aba 100%);
   --btn-primary-shadow:
-    2px 3px 0 rgb(38 27 94 / 0.9), 0 0 20px 2px rgb(73 49 209 / 0.45),
+    0 2px 0 rgb(38 27 94 / 0.9), 0 0 20px 2px rgb(73 49 209 / 0.45),
     0 0 44px 4px rgb(73 49 209 / 0.22);
   --btn-primary-shadow-hover:
-    2px 3px 0 rgb(38 27 94 / 0.9), 0 0 26px 3px rgb(95 74 215 / 0.65),
+    0 2px 0 rgb(38 27 94 / 0.9), 0 0 26px 3px rgb(95 74 215 / 0.65),
     0 0 56px 6px rgb(73 49 209 / 0.35);
-  --btn-primary-shadow-active: 1px 1px 0 rgb(38 27 94 / 0.9);
-  --btn-primary-press-transform: translate(1px, 3px);
+  --btn-primary-shadow-active: none;
+  --btn-primary-press-transform: translateY(2px);
   --btn-primary-backlight-color: #5f4ad7;
+  --btn-primary-backlight-reach: 100px;
   --btn-secondary-bg: #1f273b;
   --btn-secondary-bg-hover: #28324b;
   --btn-secondary-border: #3d4968;
   --btn-secondary-border-width: 1px;
-  --btn-secondary-shadow: 0 1px 2px rgb(4 7 15 / 0.24);
+  --btn-secondary-shadow: 0 1px 0 rgb(4 7 15 / 0.5), 0 2px 4px rgb(4 7 15 / 0.24);
+  --btn-material-depth: 1;
+  --btn-state-duration: 120ms;
+  --btn-primary-contact-shadow: 0 2px 0 rgb(4 7 15 / 0.55), 0 4px 8px rgb(4 7 15 / 0.24);
+  --btn-secondary-shadow-hover: 0 1px 0 rgb(4 7 15 / 0.5), 0 3px 6px rgb(4 7 15 / 0.28);
+  --btn-secondary-shadow-active: none;
+  --btn-secondary-press-transform: translateY(1px);
   --binary-border: #7280a3;
   --binary-border-hover: #93a2c7;
   --switch-track-off: #20273a;
@@ -562,19 +583,26 @@ textarea {
   --btn-primary-fill-hover: linear-gradient(135deg, #4931d1 0%, #3f2aba 55%, #3f2aba 100%);
   --btn-primary-fill-active: linear-gradient(135deg, #3f2aba 0%, #35239e 100%);
   --btn-primary-shadow:
-    2px 3px 0 rgb(55 38 142 / 0.65), 0 0 20px 2px rgb(73 49 209 / 0.22),
+    0 2px 0 rgb(55 38 142 / 0.65), 0 0 20px 2px rgb(73 49 209 / 0.22),
     0 0 44px 4px rgb(73 49 209 / 0.1);
   --btn-primary-shadow-hover:
-    2px 3px 0 rgb(55 38 142 / 0.65), 0 0 26px 3px rgb(95 74 215 / 0.32),
+    0 2px 0 rgb(55 38 142 / 0.65), 0 0 26px 3px rgb(95 74 215 / 0.32),
     0 0 56px 6px rgb(73 49 209 / 0.16);
-  --btn-primary-shadow-active: 1px 1px 0 rgb(55 38 142 / 0.65);
-  --btn-primary-press-transform: translate(1px, 3px);
+  --btn-primary-shadow-active: none;
+  --btn-primary-press-transform: translateY(2px);
   --btn-primary-backlight-color: #4931d1;
+  --btn-primary-backlight-reach: 100px;
   --btn-secondary-bg: #f3f6fc;
   --btn-secondary-bg-hover: #e6ecf7;
   --btn-secondary-border: #c2cde2;
   --btn-secondary-border-width: 1px;
-  --btn-secondary-shadow: 0 1px 2px rgb(15 23 42 / 0.06);
+  --btn-secondary-shadow: 0 1px 0 rgb(15 23 42 / 0.2), 0 2px 4px rgb(15 23 42 / 0.08);
+  --btn-material-depth: 1;
+  --btn-state-duration: 120ms;
+  --btn-primary-contact-shadow: 0 2px 0 rgb(15 23 42 / 0.26), 0 4px 8px rgb(15 23 42 / 0.1);
+  --btn-secondary-shadow-hover: 0 1px 0 rgb(15 23 42 / 0.2), 0 3px 6px rgb(15 23 42 / 0.1);
+  --btn-secondary-shadow-active: none;
+  --btn-secondary-press-transform: translateY(1px);
   --binary-border: #626f8a;
   --binary-border-hover: #48536b;
   --switch-track-off: #ced6e8;
@@ -713,16 +741,23 @@ textarea {
   --btn-primary-fill: none;
   --btn-primary-fill-hover: none;
   --btn-primary-fill-active: none;
-  --btn-primary-shadow: 2px 2px 0 0 rgb(2 4 6 / 0.878);
-  --btn-primary-shadow-hover: 2px 2px 0 0 rgb(2 4 6 / 0.878);
+  --btn-primary-shadow: none;
+  --btn-primary-shadow-hover: none;
   --btn-primary-shadow-active: none;
-  --btn-primary-press-transform: translate(2px, 2px);
+  --btn-primary-press-transform: none;
   --btn-primary-backlight-color: transparent;
+  --btn-primary-backlight-reach: 0px;
   --btn-secondary-bg: #181e24;
   --btn-secondary-bg-hover: #202830;
   --btn-secondary-border: #41505e;
   --btn-secondary-border-width: 1px;
-  --btn-secondary-shadow: 2px 2px 0 0 rgb(2 4 6 / 0.878);
+  --btn-secondary-shadow: none;
+  --btn-material-depth: 0;
+  --btn-state-duration: 0ms;
+  --btn-primary-contact-shadow: none;
+  --btn-secondary-shadow-hover: none;
+  --btn-secondary-shadow-active: none;
+  --btn-secondary-press-transform: none;
   --binary-border: #7a8e9f;
   --binary-border-hover: #9db0c0;
   --switch-track-off: #1d252d;
@@ -865,16 +900,23 @@ textarea {
   --btn-primary-fill: none;
   --btn-primary-fill-hover: none;
   --btn-primary-fill-active: none;
-  --btn-primary-shadow: 2px 2px 0 0 rgb(15 20 25 / 0.188);
-  --btn-primary-shadow-hover: 2px 2px 0 0 rgb(15 20 25 / 0.188);
+  --btn-primary-shadow: none;
+  --btn-primary-shadow-hover: none;
   --btn-primary-shadow-active: none;
-  --btn-primary-press-transform: translate(2px, 2px);
+  --btn-primary-press-transform: none;
   --btn-primary-backlight-color: transparent;
+  --btn-primary-backlight-reach: 0px;
   --btn-secondary-bg: #f4f7f9;
   --btn-secondary-bg-hover: #e8edf1;
   --btn-secondary-border: #98a7b3;
   --btn-secondary-border-width: 1px;
-  --btn-secondary-shadow: 2px 2px 0 0 rgb(15 20 25 / 0.188);
+  --btn-secondary-shadow: none;
+  --btn-material-depth: 0;
+  --btn-state-duration: 0ms;
+  --btn-primary-contact-shadow: none;
+  --btn-secondary-shadow-hover: none;
+  --btn-secondary-shadow-active: none;
+  --btn-secondary-press-transform: none;
   --binary-border: #546370;
   --binary-border-hover: #3b4854;
   --switch-track-off: #cfd8df;
