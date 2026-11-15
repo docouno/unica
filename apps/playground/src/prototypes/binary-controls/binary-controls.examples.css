@@ -31,6 +31,33 @@
   gap: 8px 24px;
   min-inline-size: 0;
 }
+.binary-demo-external-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
+  gap: var(--space-8);
+}
+.binary-demo-external-row > .binary-control[data-standalone] {
+  min-inline-size: 0;
+}
+.binary-demo-external-label {
+  min-inline-size: 0;
+  padding-block: max(4px, calc((var(--size-m-height) - var(--text-size-body-s-lh)) / 2));
+  color: var(--fg-primary);
+  font-family: var(--font-family-base);
+  font-size: var(--text-size-body-s);
+  line-height: var(--text-size-body-s-lh);
+  overflow-wrap: anywhere;
+  cursor: pointer;
+}
+@media (pointer: coarse) {
+  .binary-demo-external-label {
+    padding-block: max(
+      4px,
+      calc((max(44px, var(--size-m-height)) - var(--text-size-body-s-lh)) / 2)
+    );
+  }
+}
 .binary-demo-size {
   display: grid;
   gap: 8px;

@@ -45,7 +45,7 @@ Validation belongs to the containing field or application. The example reveals �
 
 ### Inspection and handoff
 
-The specimen includes sizes/values, pinned hover/press/focus, availability, validation intersections, live aggregation, horizontal wrapping, long labels, external names, and actual Base/Overlay material plates. Pinned interaction states do not move DOM focus; mixed examples hold a controlled visual mask. All ordinary checkboxes remain live. Existing sign-in, collection, editor, invite, and batch-saved preferences scenes consume this same control/indicator.
+The specimen includes sizes/values, pinned hover/press/focus, availability, validation intersections, live aggregation, horizontal wrapping, long labels, external names, and actual Base/Overlay material plates. The external visible label uses the same first-line alignment and 8px gap as an internal M label, wraps beside the indicator, and activates the checkbox through its native label association, including the same hover and press feedback. Pinned interaction states do not move DOM focus; mixed examples hold a controlled visual mask. All ordinary checkboxes remain live. Existing sign-in, collection, editor, invite, and batch-saved preferences scenes consume this same control/indicator.
 
 `CheckboxIndicator` is decorative and can be composed after a native `.binary-native` input, as demonstrated by CheckboxCard. It adds no second input or focus stop. The card's spacing, selection surface, and secondary actions belong to its own future design task.
 
@@ -57,7 +57,7 @@ Interaction references: [WAI-ARIA Checkbox pattern](https://www.w3.org/WAI/ARIA/
 
 Open `/?item=radio`. Use Radio for a short, visible set of mutually exclusive alternatives. No answer is a valid initial state when a deliberate decision is required; never silently select the first option. A chosen item cannot be cleared by clicking it again. Offer an explicit “No email” / “None” option when declining is meaningful. Use Select for long lists and SegmentedControl for compact peer modes.
 
-Radio shares Checkbox's row sizes, label/description alignment, target expansion, full-contrast read-only treatment, disabled treatment, status edge, and immediate interaction feedback. The indicator is a true circle at every size and in every theme, including Pixel. Its concentric dot occupies 50% of the interior (7/9/11px at S/M/L); the accent fill and `--fg-on-accent` dot share Checkbox's polarity. Hover/press changes fill or edge, without shrinking the circle, moving the row, or animating a dot bounce. Danger keeps the error edge even when hover and keyboard focus coincide.
+Radio shares Checkbox's row sizes, label/description alignment, target expansion, full-contrast read-only treatment, disabled treatment, status edge, and immediate interaction feedback. The indicator is a true circle at every size and in every theme, including Pixel. Its concentric dot occupies 50% of the outer diameter (8/10/12px at S/M/L). Even diameters keep the dot on the same pixel grid as its outer circle, avoiding a half-pixel paint offset. The accent fill and `--fg-on-accent` dot share Checkbox's polarity. Hover/press changes fill or edge, without shrinking the circle, moving the row, or animating a dot bounce. Danger keeps the error edge even when hover and keyboard focus coincide.
 
 ### Group outcomes
 

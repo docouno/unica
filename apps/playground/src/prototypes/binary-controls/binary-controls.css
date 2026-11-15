@@ -99,25 +99,42 @@
   visibility: visible;
 }
 
-.binary-control:not([data-readonly]):not(:has(:disabled)):is(:hover, [data-preview='hover'])
+/* External labels activate the native input without hovering its wrapper. */
+.binary-control:not([data-readonly]):not(:has(:disabled)):is(
+    :hover,
+    :has(:where(.binary-native:hover)),
+    [data-preview='hover']
+  )
   .binary-indicator {
   border-color: var(--binary-error-edge, var(--binary-border-hover));
 }
 
-.binary-control:not([data-readonly]):not(:has(:disabled)):is(:hover, [data-preview='hover'])
+.binary-control:not([data-readonly]):not(:has(:disabled)):is(
+    :hover,
+    :has(:where(.binary-native:hover)),
+    [data-preview='hover']
+  )
   .binary-native:is(:checked, :where([type='checkbox']):indeterminate)
   + .binary-indicator {
   background: var(--accent-solid-hover);
   border-color: var(--binary-error-edge, var(--accent-solid-hover));
 }
 
-.binary-control:not([data-readonly]):not(:has(:disabled)):is(:active, [data-preview='active'])
+.binary-control:not([data-readonly]):not(:has(:disabled)):is(
+    :active,
+    :has(:where(.binary-native:active)),
+    [data-preview='active']
+  )
   .binary-indicator {
   background: var(--bg-surface-raised);
   border-color: var(--binary-error-edge, var(--fg-secondary));
 }
 
-.binary-control:not([data-readonly]):not(:has(:disabled)):is(:active, [data-preview='active'])
+.binary-control:not([data-readonly]):not(:has(:disabled)):is(
+    :active,
+    :has(:where(.binary-native:active)),
+    [data-preview='active']
+  )
   .binary-native:is(:checked, :where([type='checkbox']):indeterminate)
   + .binary-indicator {
   background: var(--accent-solid-active);
@@ -200,7 +217,12 @@
   .binary-control[data-status='danger'] {
     --binary-error-edge: CanvasText;
   }
-  .binary-control:not([data-readonly]):not(:has(:disabled)):is(:hover, :active, [data-preview])
+  .binary-control:not([data-readonly]):not(:has(:disabled)):is(
+      :hover,
+      :active,
+      :has(:where(.binary-native:is(:hover, :active))),
+      [data-preview]
+    )
     .binary-indicator {
     background: Canvas;
     border-color: ButtonText;
@@ -214,7 +236,12 @@
   }
   .binary-native:is(:checked, :where([type='checkbox']):indeterminate) + .binary-indicator,
   .binary-indicator:is([data-checked], [data-mixed]),
-  .binary-control:not([data-readonly]):not(:has(:disabled)):is(:hover, :active, [data-preview])
+  .binary-control:not([data-readonly]):not(:has(:disabled)):is(
+      :hover,
+      :active,
+      :has(:where(.binary-native:is(:hover, :active))),
+      [data-preview]
+    )
     .binary-native:is(:checked, :where([type='checkbox']):indeterminate)
     + .binary-indicator {
     background: Highlight;
@@ -239,8 +266,8 @@
   border-radius: var(--radius-circular);
 }
 .binary-dot {
-  inline-size: 50%;
-  block-size: 50%;
+  inline-size: calc(var(--binary-box) / 2);
+  block-size: calc(var(--binary-box) / 2);
   border-radius: var(--radius-circular);
   background: currentcolor;
   visibility: hidden;

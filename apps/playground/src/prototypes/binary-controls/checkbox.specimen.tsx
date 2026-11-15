@@ -213,11 +213,11 @@ function Overflow(): ReactElement {
         label="Allow contributors to download original attachments and all previous revisions"
       />
       <Checkbox label="Include attachments_from_external_sources_without_short_names" />
-      <div className="binary-demo-row">
-        <Checkbox aria-labelledby={id} />
-        <span className="binary-demo-caption" id={id}>
+      <div className="binary-demo-external-row">
+        <Checkbox id={`${id}-input`} aria-labelledby={id} />
+        <label className="binary-demo-external-label" id={id} htmlFor={`${id}-input`}>
           Select this row · external accessible name
-        </span>
+        </label>
       </div>
     </div>
   );
