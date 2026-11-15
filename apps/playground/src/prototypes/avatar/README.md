@@ -1,6 +1,6 @@
 # Avatar & AvatarGroup design reference
 
-Status: design candidate, awaiting visual acceptance. This is a playground reference, not an exported package API. Inspect `?item=avatar` in all six presets. The component source and this handoff describe the same candidate.
+Status: approved design reference. This is a playground reference, not an exported package API. Inspect `?item=avatar` in all six presets. The component source and this handoff describe the same approved design.
 
 ## Purpose and boundaries
 
