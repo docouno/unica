@@ -213,13 +213,14 @@
 }
 
 .app-shell-document-tabs {
+  --scrollbar-width: thin;
+  --scrollbar-size: 10px;
   display: flex;
   align-items: center;
   gap: var(--space-4);
   max-inline-size: 100%;
   block-size: 100%;
   overflow: auto;
-  scrollbar-width: thin;
 }
 
 .app-shell-document-tab {

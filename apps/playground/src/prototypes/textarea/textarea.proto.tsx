@@ -3,6 +3,7 @@ import type { ComponentPropsWithRef, ReactElement, ReactNode } from 'react';
 import { FormField } from '../input/input.proto.js';
 import type { ControlSize, FieldStatus, FieldVariant } from '../input/input.proto.js';
 import './textarea.css';
+import '../scrollbar/scrollbar.css';
 
 export interface TextareaProps extends ComponentPropsWithRef<'textarea'> {
   readonly size?: ControlSize | undefined;
@@ -44,7 +45,7 @@ export function Textarea({
       id={textareaId}
       required={required}
       hidden={hidden}
-      className={`textarea-proto ${className}`}
+      className={`textarea-proto scrollbar-proto ${className}`}
       data-size={size}
       data-variant={variant}
       data-status={status}

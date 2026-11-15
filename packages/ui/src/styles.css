@@ -81,6 +81,9 @@ textarea {
 [data-theme='soft-dark'] {
   color-scheme: dark;
   --radius-factor: 1;
+  --scrollbar-thumb-opacity: 22%;
+  --scrollbar-thumb-hover-opacity: 36%;
+  --scrollbar-thumb-active-opacity: 48%;
   --neutral-solid: #43505c;
   --neutral-solid-hover: #52616f;
   --neutral-solid-active: #36414b;
@@ -234,6 +237,9 @@ textarea {
 [data-theme='soft-light'] {
   color-scheme: light;
   --radius-factor: 1;
+  --scrollbar-thumb-opacity: 22%;
+  --scrollbar-thumb-hover-opacity: 36%;
+  --scrollbar-thumb-active-opacity: 48%;
   --neutral-solid: #3d3733;
   --neutral-solid-hover: #524a44;
   --neutral-solid-active: #292421;
@@ -390,6 +396,9 @@ textarea {
 [data-theme='frost-dark'] {
   color-scheme: dark;
   --radius-factor: 1;
+  --scrollbar-thumb-opacity: 16%;
+  --scrollbar-thumb-hover-opacity: 30%;
+  --scrollbar-thumb-active-opacity: 42%;
   --neutral-solid: #38435e;
   --neutral-solid-hover: #465373;
   --neutral-solid-active: #2c354c;
@@ -552,6 +561,9 @@ textarea {
 [data-theme='frost-light'] {
   color-scheme: light;
   --radius-factor: 1;
+  --scrollbar-thumb-opacity: 18%;
+  --scrollbar-thumb-hover-opacity: 32%;
+  --scrollbar-thumb-active-opacity: 44%;
   --neutral-solid: #141926;
   --neutral-solid-hover: #20283d;
   --neutral-solid-active: #0c101a;
@@ -719,6 +731,9 @@ textarea {
 [data-theme='pixel-dark'] {
   color-scheme: dark;
   --radius-factor: 0;
+  --scrollbar-thumb-opacity: 40%;
+  --scrollbar-thumb-hover-opacity: 56%;
+  --scrollbar-thumb-active-opacity: 68%;
   --neutral-solid: #29333d;
   --neutral-solid-hover: #35414e;
   --neutral-solid-active: #1f272f;
@@ -880,6 +895,9 @@ textarea {
 [data-theme='pixel-light'] {
   color-scheme: light;
   --radius-factor: 0;
+  --scrollbar-thumb-opacity: 40%;
+  --scrollbar-thumb-hover-opacity: 56%;
+  --scrollbar-thumb-active-opacity: 68%;
   --neutral-solid: #1e262e;
   --neutral-solid-hover: #2c3742;
   --neutral-solid-active: #12171c;

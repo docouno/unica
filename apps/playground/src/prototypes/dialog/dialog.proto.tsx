@@ -5,6 +5,7 @@ import { IconButton } from '../button/button.proto.js';
 import { Title } from '../title/title.proto.js';
 import { Text } from '../text/text.proto.js';
 import './dialog.css';
+import '../scrollbar/scrollbar.css';
 
 export interface DialogPreviewProps {
   readonly open?: boolean;
@@ -72,7 +73,7 @@ function DialogSurface({
             onClick={onClose}
           />
         </header>
-        <div className="dialog-preview-body">{children}</div>
+        <div className="dialog-preview-body scrollbar-proto">{children}</div>
         {footer && <footer className="dialog-preview-footer">{footer}</footer>}
       </section>
     </div>

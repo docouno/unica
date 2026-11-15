@@ -36,22 +36,7 @@ Anchored panels pair native `popover` promotion with a lightweight positioning a
 
 - Computes collision-aware coordinates (`flip`, `shift`, logical `start` / `end` alignment across LTR and RTL) and writes `--anchor-width` and `--overlay-available-height` onto the floating element.
 - Sets `data-surface="overlay"` on every floating container so nested controls automatically bind overlay tokens (see [Themes and Roles](themes-and-roles.md#contextual-surface-adaptation-base-vs-overlay)).
-- Animates entry and exit with `@starting-style` and `transition-behavior: allow-discrete` at the guaranteed browser tier, falling back cleanly to instant show/hide:
-
-```css
-@supports (transition-behavior: allow-discrete) {
-  .popoverPanel {
-    transition: opacity 140ms ease, transform 140ms ease,
-      overlay 140ms allow-discrete, display 140ms allow-discrete;
-  }
-  @starting-style {
-    .popoverPanel:popover-open {
-      opacity: 0;
-      transform: translateY(4px);
-    }
-  }
-}
-```
+- Motion belongs to the family’s design and the active material. Native top-layer positioning does not require a shared slide or fade. The current [Popover design reference](../../apps/playground/src/prototypes/popover/README.md) uses immediate show/hide in every preset. Any future overlay transition must preserve focus and dismissal timing, respect `prefers-reduced-motion`, and fall back to immediate visibility when unsupported.
 
 ## Native `<form>` Participation
 

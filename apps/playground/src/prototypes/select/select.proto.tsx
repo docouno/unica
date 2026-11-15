@@ -7,6 +7,7 @@ import { Icon } from '../icon/icon.proto.js';
 import type { GlyphComponent } from '../icon/icon.proto.js';
 import { PopoverContent } from '../popover/popover.proto.js';
 import './select.css';
+import '../scrollbar/scrollbar.css';
 
 export interface SelectOption {
   readonly value: string;
@@ -121,7 +122,7 @@ export function Listbox({
   return (
     <PopoverContent
       {...props}
-      className={`choice-panel-proto ${className}`}
+      className={`choice-panel-proto scrollbar-proto ${className}`}
       role="group"
       size={size}
     >
