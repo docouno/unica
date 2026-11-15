@@ -9,8 +9,7 @@
   --textarea-edge: var(--control-border);
   --textarea-focus: var(--focus-ring-color);
   --textarea-status: var(--fg-secondary);
-  /* Keep the status away from the native scrollbar, even when it overlays content. */
-  --textarea-rail: 14px;
+  --textarea-status-inset: max(var(--textarea-padding), var(--space-16));
   position: relative;
   display: block;
   inline-size: 100%;
@@ -64,9 +63,7 @@
   min-block-size: calc(1lh + 2 * var(--textarea-padding-y) + 2px);
   padding-block: var(--textarea-padding-y);
   padding-inline: var(--textarea-padding)
-    calc(
-      var(--textarea-padding) + var(--textarea-icon) + var(--textarea-gap) + var(--textarea-rail)
-    );
+    calc(var(--textarea-status-inset) + var(--textarea-icon) + var(--textarea-gap));
   margin: 0;
   border: 1px solid transparent;
   border-radius: var(--textarea-radius);
@@ -85,6 +82,25 @@
    glyph accompanies the feedback below the field instead of covering a line. */
 .textarea-proto[wrap='off'] {
   padding-inline-end: var(--textarea-padding);
+}
+
+@supports selector(::-webkit-resizer) {
+  @media (pointer: fine) and (forced-colors: none), (pointer: none) and (forced-colors: none) {
+    .textarea-proto::-webkit-resizer {
+      background:
+        linear-gradient(135deg, transparent 40%, var(--fg-muted) 40% 52%, transparent 52%) right 3px
+          bottom 3px / 8px 8px no-repeat,
+        linear-gradient(135deg, transparent 40%, var(--fg-muted) 40% 64%, transparent 64%) right 3px
+          bottom 3px / 4px 4px no-repeat;
+    }
+    .textarea-proto:dir(rtl)::-webkit-resizer {
+      background:
+        linear-gradient(225deg, transparent 40%, var(--fg-muted) 40% 52%, transparent 52%) left 3px
+          bottom 3px / 8px 8px no-repeat,
+        linear-gradient(225deg, transparent 40%, var(--fg-muted) 40% 64%, transparent 64%) left 3px
+          bottom 3px / 4px 4px no-repeat;
+    }
+  }
 }
 
 .textarea-proto[data-resize='none'] {
@@ -173,7 +189,7 @@
 .textarea-status-proto {
   position: absolute;
   display: flex;
-  inset-inline-end: calc(1px + var(--textarea-padding) + var(--textarea-rail));
+  inset-inline-end: calc(1px + var(--textarea-status-inset));
   inset-block-start: calc(1px + var(--textarea-padding-y) + (1lh - var(--textarea-icon)) / 2);
   color: var(--textarea-status);
   pointer-events: none;
@@ -273,6 +289,7 @@
 
 @media (forced-colors: active) {
   .textarea-shell-proto {
+    --textarea-status-inset: max(var(--textarea-padding), calc(var(--space-16) + var(--space-4)));
     background: Canvas;
   }
 
