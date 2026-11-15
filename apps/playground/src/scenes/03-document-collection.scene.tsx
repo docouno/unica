@@ -80,6 +80,7 @@ function CollectionScene(): ReactElement {
         actions={
           <div className="folio-row">
             <SegmentedControl
+              aria-label="Collection layout"
               size="s"
               value={view}
               onValueChange={setView}
@@ -156,6 +157,7 @@ function CollectionScene(): ReactElement {
             </div>
             <div className="folio-row folio-wrap">
               <SegmentedControl
+                aria-label="Runbook filter"
                 size="s"
                 value={tab}
                 onValueChange={setTab}

@@ -116,3 +116,13 @@ Components reference only semantic tokens — never raw palette steps or `#hex` 
 Checkbox and Radio use the contextual control well, `--binary-border`, and the accent/on-accent pair for selection. Their state feedback does not translate or scale the control. Radio remains circular in every preset.
 
 Switch keeps a light `--switch-thumb-bg` in both positions. Dedicated off/on track recipes preserve thumb separation; the light presets use a medium neutral off track so the thumb remains readable without a second outline. The track's essential outer edge uses the binary border when off and the accent signal when on. `--switch-travel-duration` owns lateral thumb travel: 160ms in Soft, 140ms in Frost, and 0ms in Pixel. Reduced motion makes travel immediate. This material decision is independent of corner geometry; it is not derived from `--radius-factor`.
+
+### Segmented selection
+
+Segmented controls use a continuous `--segmented-rail-bg` trough and a stationary selected cell with `--segmented-thumb-bg` and `--segmented-thumb-border`. The selected edge separates the cell from both its own fill and the surrounding rail; Soft and Frost use a restrained neutral contour, while Pixel uses its crisp signal edge. The unselected rail boundary is quiet and carries no selection meaning. All labels keep the same weight and geometry when selection changes.
+
+`--segmented-thumb-shadow` supplies Frost's small internal highlight and lower edge; Soft and Pixel have no shadow. No theme translates or scales a pressed segment. `--segmented-state-duration` sets color feedback to 120ms in Soft, 140ms in Frost, and 0ms in Pixel; reduced motion removes interpolation. Selection moves atomically between cells, without a sliding plate. Hover and held press use low-opacity foreground veils over the existing material, with a smaller change on the selected cell.
+
+These recipes remain stable on Base and Overlay surfaces. Floating parents own glass and elevation; an inset control does not add another blur or external shadow. Disabled selection retains a muted frame, read-only selection retains normal readability, and keyboard focus adds a separate 2px contour. Forced colors use a system Highlight/HighlightText selected plate.
+
+Overflowing rails consume the [compact native scrollbar recipe](scrollbars.md) on the rail itself: a 10px gutter with a 4px visible thumb on supported desktop engines, transparent track, and a thin native fallback. Only an overflowing rail reserves one extra pixel at its inline end to protect the outer focus edge from native scroll-extent rounding. Horizontal scrolling is a protective fallback for localized labels; an explicit vertical layout remains the preferred alternative when the row does not fit.

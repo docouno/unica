@@ -145,10 +145,12 @@ textarea {
   --switch-track-on-active: #b35a3e;
   --switch-thumb-bg: #fffaf2;
   --switch-travel-duration: 160ms;
-  --segmented-rail-bg: #21282f;
+  --segmented-rail-bg: #2b343c;
   --segmented-rail-border: transparent;
   --segmented-thumb-bg: #161c21;
-  --segmented-thumb-border: #3e4b57;
+  --segmented-thumb-border: #74828d;
+  --segmented-thumb-shadow: none;
+  --segmented-state-duration: 120ms;
   --chip-bg: #333f48;
   --chip-fg: #e4d8c5;
   --chip-border: transparent;
@@ -313,7 +315,9 @@ textarea {
   --segmented-rail-bg: #efe3cf;
   --segmented-rail-border: #e0d0b8;
   --segmented-thumb-bg: #fffefa;
-  --segmented-thumb-border: #d6c5ac;
+  --segmented-thumb-border: #8f7d66;
+  --segmented-thumb-shadow: none;
+  --segmented-state-duration: 120ms;
   --chip-bg: #e6d7be;
   --chip-fg: #3d3733;
   --chip-border: transparent;
@@ -484,7 +488,9 @@ textarea {
   --segmented-rail-bg: #1b2131;
   --segmented-rail-border: transparent;
   --segmented-thumb-bg: #0a0d16;
-  --segmented-thumb-border: #34405e;
+  --segmented-thumb-border: #687592;
+  --segmented-thumb-shadow: inset 0 1px 0 rgb(255 255 255 / 0.07), inset 0 -1px 0 rgb(0 0 0 / 0.25);
+  --segmented-state-duration: 140ms;
   --chip-bg: #1b2132;
   --chip-fg: #ccd4e6;
   --chip-border: #394460;
@@ -656,7 +662,10 @@ textarea {
   --segmented-rail-bg: #edf1f9;
   --segmented-rail-border: #d8e0f0;
   --segmented-thumb-bg: #ffffff;
-  --segmented-thumb-border: #c3cee4;
+  --segmented-thumb-border: #7c89a1;
+  --segmented-thumb-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.8), inset 0 -1px 0 rgb(25 35 60 / 0.06);
+  --segmented-state-duration: 140ms;
   --chip-bg: #f1f4fb;
   --chip-fg: #232a3b;
   --chip-border: #b8c3d8;
@@ -823,6 +832,8 @@ textarea {
   --segmented-rail-border: #303c47;
   --segmented-thumb-bg: #090c0f;
   --segmented-thumb-border: #22c3dc;
+  --segmented-thumb-shadow: none;
+  --segmented-state-duration: 0ms;
   --chip-bg: #161c22;
   --chip-fg: #cad6e0;
   --chip-border: #41505e;
@@ -993,6 +1004,8 @@ textarea {
   --segmented-rail-border: #b6c2cc;
   --segmented-thumb-bg: #ffffff;
   --segmented-thumb-border: #096c7c;
+  --segmented-thumb-shadow: none;
+  --segmented-state-duration: 0ms;
   --chip-bg: #edf1f4;
   --chip-fg: #222b33;
   --chip-border: #98a7b3;
