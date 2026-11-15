@@ -1,13 +1,13 @@
 # Input & FormField — design reference
 
-Status: draft visual candidate, awaiting visual approval. Open `/?item=input` in the playground. This is a live design reference, not a package export or a final TypeScript API. Application [scenes](../../scenes/) consume the same prototype.
+Status: approved visual reference (2026-11-15). Open `/?item=input` in the playground. This is a live design reference, not a package export or a final TypeScript API. Application [scenes](../../scenes/) consume the same prototype.
 
 ## Purpose and roles
 
 Input is a single-line text field for names, addresses, search, and inline editing. Native text selection, caret movement, and copying remain familiar. Password visibility, numeric steppers, masking, suggestions, and multi-value entry belong to other families or the application. A native password field without a reveal action can still use this shell.
 
 - `default` defines a visible form slot, including empty fields. Prefer it for standalone forms and touch interfaces.
-- `ghost` is an inline editing role in an already recognizable editing context. Its fill is transparent, with a persistent, quiet 1px baseline. Upper corners follow the theme; lower corners are square so the baseline stays straight. Hover and pointer focus change only the baseline, using distinct resting, hovered, and focused edge colors. The fill stays transparent and the other three edges stay absent. A non-neutral status colors the baseline even at rest. Prefer Default for standalone forms; show Ghost in an understandable editing context, such as the specimen’s editable details.
+- `ghost` is an inline editing role in an already recognizable editing context. Its fill is transparent, with a persistent, quiet 1px baseline. The baseline stays straight; the separate full focus contour follows the field's theme radius at all four corners, including square corners in Pixel. Hover and pointer focus change only the baseline, using distinct resting, hovered, and focused edge colors. The fill stays transparent and the other three edges stay absent. A non-neutral status colors the baseline even at rest. Prefer Default for standalone forms; show Ghost in an understandable editing context, such as the specimen’s editable details.
 
 Edge states share one semantic scale across both roles: `--control-border` at rest, `--control-border-hover` on hover, and `--control-border-focus` while editing. The focused edge is neutral and more distinct than hover, separate from the high-visibility keyboard `--focus-ring-color`. Status edges retain their meaning instead of switching to the neutral focus color.
 

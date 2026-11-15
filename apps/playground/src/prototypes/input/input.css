@@ -124,9 +124,17 @@
 
 .input-shell-proto[data-variant='ghost'] {
   border-color: transparent;
-  border-block-end-color: var(--field-edge);
-  border-radius: var(--field-radius) var(--field-radius) 0 0;
   background: transparent;
+}
+
+/* Keep the baseline straight without changing the full focus contour's radius. */
+.input-shell-proto[data-variant='ghost']::after {
+  position: absolute;
+  inset-inline: -1px;
+  inset-block-end: -1px;
+  border-block-end: 1px solid var(--field-edge);
+  content: '';
+  pointer-events: none;
 }
 
 .input-shell-proto:is([data-status='neutral'], :not([data-status])):not(
@@ -311,7 +319,6 @@
 
 .input-shell-proto[data-variant='ghost']:has(.input-native-proto:disabled) {
   border-color: transparent;
-  border-block-end-color: var(--border-subtle);
   background: transparent;
 }
 
@@ -399,8 +406,11 @@
 
   .input-shell-proto[data-variant='ghost'] {
     border-color: transparent !important;
-    border-block-end-color: ButtonText !important;
     background: transparent;
+  }
+
+  .input-shell-proto[data-variant='ghost']::after {
+    border-block-end-color: ButtonText;
   }
 
   .input-shell-proto:has(.input-native-proto:focus),
@@ -423,7 +433,10 @@
 
   .input-shell-proto[data-variant='ghost']:has(.input-native-proto:disabled) {
     border-color: transparent !important;
-    border-block-end-color: GrayText !important;
+  }
+
+  .input-shell-proto[data-variant='ghost']:has(.input-native-proto:disabled)::after {
+    border-block-end-color: GrayText;
   }
 
   .input-native-proto:disabled {
