@@ -65,7 +65,7 @@ function ExtensionsScene(): ReactElement {
         }
         actions={
           <>
-            <Badge status="success" dot>
+            <Badge size="s" status="success" dot>
               4 active
             </Badge>
             <Button
@@ -105,7 +105,7 @@ function ExtensionsScene(): ReactElement {
                         <Icon icon={GithubLogoIcon} />
                       </span>
                     </div>
-                    <Badge status="success" dot>
+                    <Badge size="s" status="success" dot>
                       Active
                     </Badge>
                   </div>
@@ -156,7 +156,7 @@ function ExtensionsScene(): ReactElement {
                         <Icon icon={PhoneCallIcon} />
                       </span>
                     </div>
-                    <Badge status="success" dot>
+                    <Badge size="s" status="success" dot>
                       Active
                     </Badge>
                   </div>
@@ -208,7 +208,7 @@ function ExtensionsScene(): ReactElement {
                       <span className="folio-connector-icon">
                         <Icon icon={SlackLogoIcon} />
                       </span>
-                      <Badge>Installed</Badge>
+                      <Badge size="s">Installed</Badge>
                     </div>
                     <div className="folio-connector-copy">
                       <Title as="h3" size="body-m" className="folio-connector-installed-title">
@@ -239,7 +239,7 @@ function ExtensionsScene(): ReactElement {
                       <span className="folio-connector-icon">
                         <Icon icon={DatabaseIcon} />
                       </span>
-                      <Badge>Installed</Badge>
+                      <Badge size="s">Installed</Badge>
                     </div>
                     <div className="folio-connector-copy">
                       <Title as="h3" size="body-m" className="folio-connector-installed-title">
@@ -276,7 +276,7 @@ function ExtensionsScene(): ReactElement {
                           GitHub ADR Mirror
                         </Title>
                       </div>
-                      <Badge status="info" dot>
+                      <Badge size="s" status="info" dot>
                         Indexing
                       </Badge>
                     </div>

@@ -169,7 +169,7 @@ function WorkspaceAdminScene(): ReactElement {
                     Attach a YAML mapping rule set and choose how matching slugs are reconciled.
                   </Text>
                 </div>
-                <Badge status="success" dot>
+                <Badge size="s" status="success" dot>
                   Schema valid
                 </Badge>
               </div>
@@ -218,7 +218,7 @@ function WorkspaceAdminScene(): ReactElement {
                     Drop Markdown or ZIP archives to verify internal links before publishing.
                   </Text>
                 </div>
-                <Badge>
+                <Badge size="s">
                   {archives.length} staged · {totalSize.toFixed(1)} MB
                 </Badge>
               </div>
