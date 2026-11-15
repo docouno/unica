@@ -102,27 +102,7 @@
 .code-block-proto > code {
   font: inherit;
 }
-.blockquote-proto {
-  display: grid;
-  gap: var(--space-8);
-  margin: 0;
-  padding-inline-start: var(--space-16);
-  border-inline-start: 3px solid var(--border-strong);
-  color: var(--fg-secondary);
-  font-family: var(--font-family-base);
-  font-size: var(--text-size-body-s);
-  line-height: 1.6;
-  overflow-wrap: anywhere;
-}
-.blockquote-proto > p {
-  margin: 0;
-}
-.blockquote-proto > footer {
-  color: var(--fg-muted);
-  font-size: var(--text-size-caption-l);
-  line-height: var(--text-size-caption-l-lh);
-}
-:is(.code-proto, .code-block-frame-proto, .code-block-proto, .blockquote-proto)[hidden] {
+:is(.code-proto, .code-block-frame-proto, .code-block-proto)[hidden] {
   display: none;
 }
 @media (forced-colors: active) {
@@ -139,8 +119,7 @@
     color: inherit;
     background: none;
   }
-  .code-block-frame-proto,
-  .blockquote-proto {
+  .code-block-frame-proto {
     border-color: CanvasText;
     background: Canvas;
     color: CanvasText;

@@ -14,7 +14,8 @@ import {
 import { Subbar } from '../prototypes/app-shell/app-shell.proto.js';
 import { Badge } from '../prototypes/badge/badge.proto.js';
 import { Button, IconButton } from '../prototypes/button/button.proto.js';
-import { Blockquote, Code } from '../prototypes/code/code.proto.js';
+import { Code } from '../prototypes/code/code.proto.js';
+import { Blockquote } from '../prototypes/blockquote/blockquote.proto.js';
 import { Spinner, Toast } from '../prototypes/feedback/feedback.proto.js';
 import { Input } from '../prototypes/input/input.proto.js';
 import { Icon } from '../prototypes/icon/icon.proto.js';
@@ -245,7 +246,7 @@ function EditorScene(): ReactElement {
               <Title as="h2" size="body-m">
                 1. Context & cross-region failover contract
               </Title>
-              <Blockquote cite="Core Networking Charter · §2.4">
+              <Blockquote size="s" attribution="Core Networking Charter · §2.4">
                 Never shed regional ingress faster than downstream connection pools can re-establish
                 TLS sessions in sibling zones.
               </Blockquote>

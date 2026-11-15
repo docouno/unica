@@ -80,6 +80,9 @@ textarea {
 :root,
 [data-theme='soft-dark'] {
   color-scheme: dark;
+  --blockquote-rail-width: 3px;
+  --blockquote-rail-style: solid;
+  --blockquote-rail-radius: var(--radius-full);
   --code-font-scale: 0.9;
   --radius-factor: 1;
   --scrollbar-thumb-opacity: 22%;
@@ -238,6 +241,9 @@ textarea {
 
 [data-theme='soft-light'] {
   color-scheme: light;
+  --blockquote-rail-width: 3px;
+  --blockquote-rail-style: solid;
+  --blockquote-rail-radius: var(--radius-full);
   --code-font-scale: 0.9;
   --radius-factor: 1;
   --scrollbar-thumb-opacity: 22%;
@@ -399,6 +405,9 @@ textarea {
 
 [data-theme='frost-dark'] {
   color-scheme: dark;
+  --blockquote-rail-width: 2px;
+  --blockquote-rail-style: solid;
+  --blockquote-rail-radius: 0px;
   --code-font-scale: 0.9;
   --radius-factor: 1;
   --scrollbar-thumb-opacity: 16%;
@@ -566,6 +575,9 @@ textarea {
 
 [data-theme='frost-light'] {
   color-scheme: light;
+  --blockquote-rail-width: 2px;
+  --blockquote-rail-style: solid;
+  --blockquote-rail-radius: 0px;
   --code-font-scale: 0.9;
   --radius-factor: 1;
   --scrollbar-thumb-opacity: 18%;
@@ -738,6 +750,9 @@ textarea {
 
 [data-theme='pixel-dark'] {
   color-scheme: dark;
+  --blockquote-rail-width: 3px;
+  --blockquote-rail-style: double;
+  --blockquote-rail-radius: 0px;
   --code-font-scale: 1;
   --radius-factor: 0;
   --scrollbar-thumb-opacity: 40%;
@@ -904,6 +919,9 @@ textarea {
 
 [data-theme='pixel-light'] {
   color-scheme: light;
+  --blockquote-rail-width: 3px;
+  --blockquote-rail-style: double;
+  --blockquote-rail-radius: 0px;
   --code-font-scale: 1;
   --radius-factor: 0;
   --scrollbar-thumb-opacity: 40%;

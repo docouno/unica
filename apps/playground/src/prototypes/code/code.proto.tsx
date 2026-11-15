@@ -1,4 +1,4 @@
-import type { ComponentPropsWithRef, ReactElement, ReactNode } from 'react';
+import type { ComponentPropsWithRef, ReactElement } from 'react';
 import './code.css';
 import '../scrollbar/scrollbar.css';
 
@@ -49,23 +49,5 @@ export function CodeBlock({
         <code>{children}</code>
       </pre>
     </div>
-  );
-}
-
-export interface BlockquoteProps extends Omit<ComponentPropsWithRef<'blockquote'>, 'cite'> {
-  readonly cite?: ReactNode;
-}
-
-export function Blockquote({
-  cite,
-  className = '',
-  children,
-  ...props
-}: BlockquoteProps): ReactElement {
-  return (
-    <blockquote {...props} className={`blockquote-proto ${className}`}>
-      {children}
-      {cite && <footer>{cite}</footer>}
-    </blockquote>
   );
 }

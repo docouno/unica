@@ -1,0 +1,161 @@
+.blockquote-proto {
+  --_quote-bg: var(--neutral-soft-bg);
+  --_quote-rail: var(--border-strong);
+  --_quote-glyph: var(--fg-muted);
+  --_quote-py: var(--space-16);
+  --_quote-px: var(--space-24);
+  --_quote-icon: var(--size-m-icon);
+  --_quote-leading: 0px;
+  --_quote-trailing: 0px;
+  position: relative;
+  container: unica-quote / inline-size;
+  min-inline-size: 0;
+  margin: 0;
+  padding: var(--_quote-py) var(--_quote-px);
+  border-radius: var(--radius-xs);
+  background: color-mix(in srgb, var(--_quote-bg) 28%, transparent);
+  color: var(--fg-secondary);
+  font-family: var(--font-family-base);
+  font-size: var(--text-size-body-m);
+  line-height: var(--text-size-body-m-lh);
+  font-weight: 400;
+  font-style: normal;
+  text-align: start;
+  overflow-wrap: anywhere;
+}
+.blockquote-proto::before {
+  content: '';
+  position: absolute;
+  inset-block: var(--space-8);
+  inset-inline-start: 0;
+  border-inline-start: var(--blockquote-rail-width) var(--blockquote-rail-style) var(--_quote-rail);
+  border-radius: var(--blockquote-rail-radius);
+  pointer-events: none;
+}
+.blockquote-proto[data-size='s'] {
+  --_quote-py: var(--space-12);
+  --_quote-px: var(--space-16);
+  --_quote-icon: var(--size-s-icon);
+  font-size: var(--text-size-body-s);
+  line-height: var(--text-size-body-s-lh);
+}
+.blockquote-proto[data-size='l'] {
+  --_quote-py: var(--space-24);
+  --_quote-px: var(--space-32);
+  --_quote-icon: var(--size-l-icon);
+  font-size: var(--text-size-body-l);
+  line-height: var(--text-size-body-l-lh);
+}
+.blockquote-proto[data-tone='info'] {
+  --_quote-bg: var(--status-info-soft-bg);
+  --_quote-rail: var(--status-info-signal);
+  --_quote-glyph: var(--status-info-soft-fg);
+}
+.blockquote-proto[data-tone='success'] {
+  --_quote-bg: var(--status-success-soft-bg);
+  --_quote-rail: var(--status-success-signal);
+  --_quote-glyph: var(--status-success-soft-fg);
+}
+.blockquote-proto[data-tone='warning'] {
+  --_quote-bg: var(--status-warning-soft-bg);
+  --_quote-rail: var(--status-warning-signal);
+  --_quote-glyph: var(--status-warning-soft-fg);
+}
+.blockquote-proto[data-tone='danger'] {
+  --_quote-bg: var(--status-danger-soft-bg);
+  --_quote-rail: var(--status-danger-signal);
+  --_quote-glyph: var(--status-danger-soft-fg);
+}
+.blockquote-body-proto {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-12);
+  min-inline-size: 0;
+}
+.blockquote-body-proto > blockquote {
+  flex: 1;
+  min-inline-size: 0;
+  margin: 0;
+}
+.blockquote-body-proto > blockquote > * {
+  margin-block: 0;
+}
+.blockquote-body-proto > blockquote > * + * {
+  margin-block-start: var(--space-12);
+}
+.blockquote-body-proto > blockquote > :is(ul, ol) {
+  padding-inline-start: var(--space-24);
+}
+.blockquote-body-proto li + li {
+  margin-block-start: var(--space-4);
+}
+.blockquote-glyph-proto {
+  display: inline-flex;
+  flex: none;
+  padding-block-start: calc((1lh - var(--_quote-icon)) / 2);
+  color: var(--_quote-glyph);
+}
+.blockquote-glyph-end-proto {
+  align-self: flex-end;
+  padding-block-start: 0;
+  padding-block-end: calc((1lh - var(--_quote-icon)) / 2);
+}
+.blockquote-proto[data-leading-icon] {
+  --_quote-leading: calc(var(--_quote-icon) + var(--space-12));
+}
+.blockquote-proto[data-trailing-icon] {
+  --_quote-trailing: calc(var(--_quote-icon) + var(--space-12));
+}
+.blockquote-proto > figcaption {
+  margin-block-start: var(--space-8);
+  margin-inline: var(--_quote-leading) var(--_quote-trailing);
+  color: var(--fg-muted);
+  font-size: var(--text-size-body-s);
+  line-height: var(--text-size-body-s-lh);
+}
+.blockquote-proto > figcaption cite {
+  font-style: normal;
+}
+/* A quoted excerpt inside a quotation keeps its rail, without another filled panel. */
+.blockquote-proto .blockquote-proto {
+  padding-block: var(--space-4);
+  padding-inline-end: 0;
+  background: none;
+}
+.blockquote-proto .blockquote-proto::before {
+  inset-block: 0;
+}
+/* Move optional marks out of the text measure when the quote itself is narrow. */
+@container unica-quote (max-width: 20rem) {
+  .blockquote-body-proto {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-8);
+  }
+  .blockquote-glyph-proto {
+    padding-block: 0;
+  }
+  .blockquote-glyph-end-proto {
+    justify-self: end;
+  }
+  .blockquote-proto > figcaption {
+    margin-inline: 0;
+  }
+}
+.blockquote-proto[hidden],
+.blockquote-proto:has(> .blockquote-body-proto > blockquote:empty) {
+  display: none;
+}
+@media (forced-colors: active) {
+  .blockquote-proto {
+    color: CanvasText;
+    background: Canvas;
+  }
+  .blockquote-proto::before {
+    border-color: CanvasText;
+  }
+  .blockquote-proto > figcaption,
+  .blockquote-glyph-proto {
+    color: CanvasText;
+  }
+}

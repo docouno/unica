@@ -37,6 +37,8 @@ Keyboard hints use the neutral `--kbd-cap-bg` and `--kbd-cap-border` tokens. The
 
 Inline code uses `--code-font-scale`: `0.9` in Soft/Frost to balance JetBrains Mono with Inter, and `1` in Pixel to preserve the surrounding monospace size. This typography recipe is independent of corner geometry. Its plate uses existing neutral/status soft colors, `--pill-border-width`, and `--radius-xs`; code in document flow has no blur, shadow, or motion.
 
+Block quotations use `--blockquote-rail-width`, `--blockquote-rail-style`, and `--blockquote-rail-radius` for their logical leading edge: a rounded 3px solid rail in Soft, a straight 2px solid rail in Frost, and a straight 3px double rail in Pixel. The neutral rail uses `--border-strong`; semantic rails use their status signal. A restrained 28% mix of the corresponding soft background keeps the passage distinct from a notification. Quote text and attribution retain neutral foregrounds, without shadows or backdrop filtering in document flow.
+
 The native scrollbar recipe has separate `--scrollbar-thumb-opacity`, `--scrollbar-thumb-hover-opacity`, and `--scrollbar-thumb-active-opacity` values in each preset. Soft stays quiet, Frost gives the glass more space, and Pixel keeps a firmer indicator. Geometry follows `--radius-full` where the browser exposes native scrollbar parts. See [Native Scrollbars](scrollbars.md) for states, dimensions, and platform fallbacks.
 
 Floating surfaces use `--overlay-border` for their perimeter and `--overlay-rim-mask` for the
