@@ -155,6 +155,7 @@ textarea {
   --chip-selected-bg: #4d332b;
   --chip-selected-fg: #ffc0ac;
   --chip-selected-border: transparent;
+  --avatar-group-overlap-factor: 1;
   --pill-border-width: 0px;
   --alert-border-width: 0px;
   --badge-dot-shadow: none;
@@ -320,6 +321,7 @@ textarea {
   --chip-selected-bg: #f2d3c9;
   --chip-selected-fg: #592514;
   --chip-selected-border: transparent;
+  --avatar-group-overlap-factor: 1;
   --pill-border-width: 0px;
   --alert-border-width: 0px;
   --badge-dot-shadow: none;
@@ -491,6 +493,7 @@ textarea {
   --chip-selected-bg: rgb(84 69 229 / 0.2);
   --chip-selected-fg: #b1b9ff;
   --chip-selected-border: rgb(152 161 255 / 0.502);
+  --avatar-group-overlap-factor: 1;
   --pill-border-width: 1px;
   --alert-border-width: 1px;
   --badge-dot-shadow: 0 0 8px currentColor;
@@ -663,6 +666,7 @@ textarea {
   --chip-selected-bg: rgb(72 56 212 / 0.11);
   --chip-selected-fg: #2d2d77;
   --chip-selected-border: rgb(72 56 212 / 0.361);
+  --avatar-group-overlap-factor: 1;
   --pill-border-width: 1px;
   --alert-border-width: 1px;
   --badge-dot-shadow: 0 0 8px currentColor;
@@ -829,6 +833,7 @@ textarea {
   --chip-selected-bg: rgb(34 195 220 / 0.18);
   --chip-selected-fg: #93d4e1;
   --chip-selected-border: #22c3dc;
+  --avatar-group-overlap-factor: 0;
   --pill-border-width: 1px;
   --alert-border-width: 1px;
   --badge-dot-shadow: none;
@@ -999,6 +1004,7 @@ textarea {
   --chip-selected-bg: rgb(9 108 124 / 0.11);
   --chip-selected-fg: #103941;
   --chip-selected-border: #096c7c;
+  --avatar-group-overlap-factor: 0;
   --pill-border-width: 1px;
   --alert-border-width: 1px;
   --badge-dot-shadow: none;

@@ -1,0 +1,17 @@
+Avatar portrait fixtures
+
+Files: avatar-person-light.png and avatar-person-dark.png
+Created: 2026-11-15
+Source: generated with the built-in OpenAI image generation tool.
+Subjects: fictional adults; no reference photographs or named real people were used.
+Purpose: local visual fixtures for evaluating small avatar crops, image boundaries,
+light and dark backgrounds, and overlapping collaborator groups.
+Delivery: square PNG thumbnails, downsampled to 256 x 256 pixels without artistic
+edits. Original generated composition is preserved. These fixtures are included
+with this repository under its MIT license.
+
+Prompt for avatar-person-light.png:
+Use case: photorealistic-natural. Asset type: small profile avatar photograph for an open-source UI design specimen. Create a photorealistic head-and-shoulders portrait of a fictional adult woman in her early thirties, medium brown skin, naturally curly dark hair, a simple cream cotton shirt. Warm cream backdrop, soft natural window light, relaxed warm expression with a subtle smile, direct camera gaze. Square composition, face centered and occupying about 55% of image height, hair and head fully visible, shoulders near lower edge; composition must remain recognizable cropped into a small 20–48px circle. Natural skin texture, understated candid professional photograph, realistic features. No text, no logos, no watermark, no glossy advertising retouching, no accessories obscuring the face. The subject must be fictional and not resemble a named real person.
+
+Prompt for avatar-person-dark.png:
+Use case: photorealistic-natural. Asset type: small profile avatar photograph for an open-source UI design specimen. Create a photorealistic head-and-shoulders portrait of a fictional adult man in his early thirties, East Asian appearance, short dark hair, clean-shaven, wearing a simple charcoal knit sweater. Cool slate grey backdrop, soft natural window light, relaxed friendly expression with a subtle smile, direct camera gaze. Square composition, face centered and occupying about 55% of image height, hair and head fully visible, shoulders near lower edge; composition must remain recognizable cropped into a small 20–48px circle. Natural skin texture, understated candid professional photograph, realistic features. No text, no logos, no watermark, no glossy advertising retouching, no accessories obscuring the face. The subject must be fictional and not resemble a named real person.

@@ -116,3 +116,7 @@ Components reference only semantic tokens — never raw palette steps or `#hex` 
 Checkbox and Radio use the contextual control well, `--binary-border`, and the accent/on-accent pair for selection. Their state feedback does not translate or scale the control. Radio remains circular in every preset.
 
 Switch keeps a light `--switch-thumb-bg` in both positions. Dedicated off/on track recipes preserve thumb separation; the light presets use a medium neutral off track so the thumb remains readable without a second outline. The track's essential outer edge uses the binary border when off and the accent signal when on. `--switch-travel-duration` owns lateral thumb travel: 160ms in Soft, 140ms in Frost, and 0ms in Pixel. Reduced motion makes travel immediate. This material decision is independent of corner geometry; it is not derived from `--radius-factor`.
+
+## Identity group geometry
+
+`--avatar-group-overlap-factor` selects the geometry of compact identity groups. Soft and Frost use `1`: frames overlap with a true transparent 2px cutout that exposes the current surface, including glass. Pixel uses `0`: complete square frames sit 2px apart, retaining all four borders. The factor controls grouping geometry only; Avatar and AvatarGroup have no press motion or status-color axis. The current design reference lives in `apps/playground/src/prototypes/avatar/README.md`.

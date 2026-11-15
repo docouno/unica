@@ -150,12 +150,26 @@ export function FolioWorkspace({
 
 export function TeamMembers({ compact = false }: { readonly compact?: boolean }): ReactElement {
   return (
-    <AvatarGroup>
-      <Avatar initials="PE" size="xs" tone="accent" />
-      <Avatar initials="DB" size="xs" tone="info" />
-      <Avatar initials="NW" size="xs" tone="success" />
-      {!compact && <Avatar initials="+6" size="xs" />}
-    </AvatarGroup>
+    <AvatarGroup
+      label="Document collaborators"
+      size="xs"
+      max={3}
+      members={[
+        { id: 'platform', name: 'Platform engineer' },
+        { id: 'database', name: 'Database reliability' },
+        { id: 'network', name: 'Network engineer' },
+        ...(!compact
+          ? [
+              { id: 'editor', name: 'Content editor' },
+              { id: 'reviewer', name: 'Design reviewer' },
+              { id: 'owner', name: 'Project owner' },
+              { id: 'writer', name: 'Technical writer' },
+              { id: 'security', name: 'Security engineer' },
+              { id: 'release', name: 'Release coordinator' },
+            ]
+          : []),
+      ]}
+    />
   );
 }
 
@@ -223,7 +237,7 @@ export function InspectorSection({
 }
 
 export function Person({
-  initials = 'DB',
+  initials,
   name = 'Database reliability',
   size = '2xs',
 }: {
@@ -233,7 +247,12 @@ export function Person({
 }): ReactElement {
   return (
     <span className="folio-person">
-      <Avatar initials={initials} size={size} />
+      <Avatar
+        name={name}
+        fallback={initials?.slice(0, size === '2xs' ? 1 : 2)}
+        alt=""
+        size={size}
+      />
       <span>{name}</span>
     </span>
   );

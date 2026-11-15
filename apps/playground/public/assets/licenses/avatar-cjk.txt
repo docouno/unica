@@ -1,0 +1,17 @@
+Avatar CJK typography fixture
+
+File: avatar-cjk.ttf (Noto Sans SC, weight 600)
+Retrieved: 2026-11-15
+Characters: U+674E and U+96F7
+Purpose: deterministic rendering of the Chinese name example in the Avatar
+specimen. This is not a component font or general CJK font distribution.
+
+Google Fonts supplied this two-character subset through its text API:
+https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@600&text=%E6%9D%8E%E9%9B%B7
+
+Downloaded font, preserved without further modification:
+https://fonts.gstatic.com/l/font?kit=k3kCo84MPvpLmixcA63oeAL7Iqp5IZJF9bmaGwHCnYxVbhJOcpnSRw&skey=cf0bb10b5602fdc3&v=v41
+
+License: SIL Open Font License 1.1, included as avatar-cjk-OFL.txt.
+Upstream license:
+https://github.com/google/fonts/blob/main/ofl/notosanssc/OFL.txt
