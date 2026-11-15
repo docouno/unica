@@ -1,73 +1,182 @@
-@import '../input/input.css';
-
-.textarea-proto {
+.textarea-shell-proto {
+  --textarea-padding: var(--size-m-padding-x);
+  --textarea-padding-y: var(--space-12);
+  --textarea-radius: var(--size-m-radius);
+  --textarea-font: var(--text-size-body-s);
+  --textarea-line: var(--text-size-body-s-lh);
+  --textarea-icon: var(--size-m-icon);
+  --textarea-gap: var(--size-m-gap);
+  --textarea-edge: var(--control-border);
   --textarea-focus: var(--focus-ring-color);
+  --textarea-status: var(--fg-secondary);
+  /* Keep the status away from the native scrollbar, even when it overlays content. */
+  --textarea-rail: 14px;
+  position: relative;
   display: block;
   inline-size: 100%;
   min-inline-size: 0;
-  min-block-size: 6rem;
-  padding: var(--space-12) var(--size-m-padding-x);
-  border: 1px solid var(--control-border);
-  border-radius: var(--size-m-radius);
+  border-radius: var(--textarea-radius);
   background: var(--control-bg);
-  color: var(--fg-primary);
   font-family: var(--font-family-base);
-  font-size: var(--text-size-body-s);
-  line-height: 1.5;
+  font-size: var(--textarea-font);
+  line-height: var(--textarea-line);
+}
+
+.textarea-shell-proto::before {
+  position: absolute;
+  inset: 0;
+  border: 1px solid var(--textarea-edge);
+  border-radius: inherit;
+  content: '';
+  pointer-events: none;
+}
+
+.textarea-shell-proto[data-size='s'] {
+  --textarea-padding: var(--size-s-padding-x);
+  --textarea-padding-y: var(--space-8);
+  --textarea-radius: var(--size-s-radius);
+  --textarea-font: var(--size-s-control-font);
+  --textarea-icon: var(--size-s-icon);
+  --textarea-gap: var(--size-s-gap);
+}
+
+.textarea-shell-proto[data-size='l'] {
+  --textarea-padding: var(--size-l-padding-x);
+  --textarea-padding-y: var(--space-16);
+  --textarea-radius: var(--size-l-radius);
+  --textarea-font: var(--text-size-body-m);
+  --textarea-line: var(--text-size-body-m-lh);
+  --textarea-icon: var(--size-l-icon);
+  --textarea-gap: var(--size-l-gap);
+}
+
+.textarea-shell-proto[data-width='auto'],
+.textarea-field-proto[data-width='auto'] {
+  inline-size: min(100%, 28rem);
+}
+
+.textarea-proto {
+  box-sizing: border-box;
+  display: block;
+  inline-size: 100%;
+  min-inline-size: 0;
+  block-size: calc(var(--textarea-rows) * 1lh + 2 * var(--textarea-padding-y) + 2px);
+  min-block-size: calc(1lh + 2 * var(--textarea-padding-y) + 2px);
+  padding-block: var(--textarea-padding-y);
+  padding-inline: var(--textarea-padding)
+    calc(
+      var(--textarea-padding) + var(--textarea-icon) + var(--textarea-gap) + var(--textarea-rail)
+    );
+  margin: 0;
+  border: 1px solid transparent;
+  border-radius: var(--textarea-radius);
+  outline: 0;
+  background: transparent;
+  color: var(--fg-primary);
+  font: inherit;
+  text-align: start;
+  overflow: auto;
+  overflow-wrap: anywhere;
+  scrollbar-gutter: stable;
   resize: vertical;
 }
 
-.textarea-proto[data-size='s'] {
-  min-block-size: 72px;
-  padding: var(--space-8) var(--size-s-padding-x);
-  border-radius: var(--size-s-radius);
-  font-size: var(--size-s-control-font);
+/* Unwrapped logs keep one uninterrupted native viewport. Their single status
+   glyph accompanies the feedback below the field instead of covering a line. */
+.textarea-proto[wrap='off'] {
+  padding-inline-end: var(--textarea-padding);
 }
 
-.textarea-proto[data-size='l'] {
-  padding: var(--space-16) var(--size-l-padding-x);
-  border-radius: var(--size-l-radius);
-  font-size: var(--text-size-body-m);
+.textarea-proto[data-resize='none'] {
+  resize: none;
 }
 
-.textarea-proto[data-variant='ghost'] {
-  border-color: transparent;
+.textarea-proto[data-autosize='true'] {
+  block-size: calc(var(--textarea-min-rows) * 1lh + 2 * var(--textarea-padding-y) + 2px);
+  min-block-size: calc(var(--textarea-min-rows) * 1lh + 2 * var(--textarea-padding-y) + 2px);
+}
+
+@supports (field-sizing: content) {
+  .textarea-proto[data-autosize='true'] {
+    field-sizing: content;
+    block-size: auto;
+  }
+
+  .textarea-proto[data-autosize='true'][data-bounded='true'] {
+    max-block-size: calc(var(--textarea-max-rows) * 1lh + 2 * var(--textarea-padding-y) + 2px);
+  }
+}
+
+.textarea-shell-proto[data-variant='ghost'] {
   background: transparent;
 }
 
-.textarea-proto:hover:not(:disabled) {
-  border-color: var(--control-border-hover);
+.textarea-shell-proto[data-variant='ghost']::before {
+  border-color: transparent;
 }
 
-.textarea-proto[data-status='danger'] {
-  border-color: var(--status-danger-border);
-  --textarea-focus: var(--status-danger-signal);
+/* The persistent baseline makes an inline editing region discoverable. */
+.textarea-shell-proto[data-variant='ghost']::after {
+  position: absolute;
+  inset-inline: 0;
+  inset-block-end: 0;
+  border-block-end: 1px solid var(--textarea-edge);
+  content: '';
+  pointer-events: none;
 }
 
-.textarea-proto[data-status='warning'] {
-  border-color: var(--status-warning-border);
-  --textarea-focus: var(--status-warning-signal);
+.textarea-shell-proto[data-status='neutral']:not(:has(textarea:disabled, textarea[readonly])):is(
+    :hover,
+    [data-preview='hover']
+  ) {
+  --textarea-edge: var(--control-border-hover);
 }
 
-.textarea-proto[data-status='info'] {
-  border-color: var(--status-info-border);
+.textarea-shell-proto[data-status='neutral']:not(:has(textarea:disabled)):is(
+    :has(textarea:focus),
+    [data-preview='pointer-focus'],
+    [data-preview='keyboard-focus']
+  ) {
+  --textarea-edge: var(--control-border-focus);
+}
+
+.textarea-shell-proto[data-status='info'] {
+  --textarea-edge: var(--status-info-border);
   --textarea-focus: var(--status-info-signal);
+  --textarea-status: var(--status-info-soft-fg);
 }
 
-.textarea-proto[data-status='success'] {
-  border-color: var(--status-success-border);
+.textarea-shell-proto[data-status='success'] {
+  --textarea-edge: var(--status-success-border);
   --textarea-focus: var(--status-success-signal);
+  --textarea-status: var(--status-success-soft-fg);
 }
 
-.textarea-proto:focus-visible {
+.textarea-shell-proto[data-status='warning'] {
+  --textarea-edge: var(--status-warning-border);
+  --textarea-focus: var(--status-warning-signal);
+  --textarea-status: var(--status-warning-soft-fg);
+}
+
+.textarea-shell-proto[data-status='danger'] {
+  --textarea-edge: var(--status-danger-border);
+  --textarea-focus: var(--status-danger-signal);
+  --textarea-status: var(--status-danger-soft-fg);
+}
+
+.textarea-shell-proto:not([data-focus-origin='pointer']):has(textarea:focus-visible),
+.textarea-shell-proto[data-preview='keyboard-focus'] {
   outline: 2px solid var(--textarea-focus);
   outline-offset: 2px;
 }
 
-.textarea-proto:disabled {
-  color: var(--fg-disabled);
-  opacity: 0.65;
-  cursor: not-allowed;
+.textarea-status-proto {
+  position: absolute;
+  display: flex;
+  inset-inline-end: calc(1px + var(--textarea-padding) + var(--textarea-rail));
+  inset-block-start: calc(1px + var(--textarea-padding-y) + (1lh - var(--textarea-icon)) / 2);
+  color: var(--textarea-status);
+  pointer-events: none;
 }
 
 .textarea-proto::placeholder {
@@ -75,18 +184,126 @@
   opacity: 1;
 }
 
+.textarea-proto::selection {
+  background: var(--accent-soft-bg);
+  color: var(--accent-soft-fg);
+}
+
+.textarea-shell-proto:has(textarea:disabled) {
+  --textarea-edge: var(--border-subtle);
+  background: var(--bg-surface-subtle);
+  outline: none;
+}
+
+.textarea-shell-proto[data-variant='ghost']:has(textarea:disabled) {
+  background: transparent;
+}
+
+.textarea-proto:disabled {
+  color: var(--fg-disabled);
+  -webkit-text-fill-color: var(--fg-disabled);
+  opacity: 1;
+  cursor: not-allowed;
+  resize: none;
+}
+
+.textarea-proto:disabled::placeholder {
+  color: var(--fg-disabled);
+}
+
+.textarea-shell-proto:has(textarea:disabled) .textarea-status-proto,
+.textarea-field-proto:has(textarea:disabled) .textarea-message-proto > .icon-proto {
+  display: none;
+}
+
+.textarea-field-proto:has(textarea:disabled) .form-field-message-proto {
+  color: var(--fg-muted);
+}
+
+.textarea-support-proto {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.textarea-footer-proto {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  column-gap: var(--space-16);
+  row-gap: var(--space-4);
+  min-inline-size: 0;
+}
+
+.textarea-footer-proto > .form-field-message-proto {
+  display: block;
+  flex: 1 1 16rem;
+}
+
+.textarea-footer-proto > .textarea-message-proto[data-status-glyph] {
+  display: flex;
+  align-items: flex-start;
+  gap: calc(var(--space-4) + var(--space-2));
+}
+
+.textarea-message-proto > .icon-proto {
+  flex: none;
+  margin-block-start: calc((1lh - 1em) / 2);
+}
+
+.textarea-message-proto > span {
+  min-inline-size: 0;
+}
+
+.textarea-counter-proto {
+  margin-inline-start: auto;
+  max-inline-size: 100%;
+  color: var(--fg-muted);
+  font-size: var(--text-size-caption-l);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.5;
+  text-align: end;
+  overflow-wrap: anywhere;
+}
+
+.textarea-shell-proto[hidden],
+.textarea-field-proto[hidden],
 .textarea-proto[hidden] {
   display: none;
 }
 
 @media (forced-colors: active) {
-  .textarea-proto {
-    border-color: ButtonText;
+  .textarea-shell-proto {
     background: Canvas;
+  }
+
+  .textarea-shell-proto::before {
+    border-color: ButtonText;
+  }
+
+  .textarea-proto {
     color: CanvasText;
   }
 
-  .textarea-proto:focus-visible {
-    outline-color: Highlight;
+  .textarea-shell-proto[data-variant='ghost']::after {
+    border-color: ButtonText;
+  }
+
+  .textarea-shell-proto:has(textarea:focus),
+  .textarea-shell-proto:is([data-preview='pointer-focus'], [data-preview='keyboard-focus']) {
+    outline: 2px solid Highlight;
+    outline-offset: 2px;
+  }
+
+  .textarea-proto:disabled {
+    -webkit-text-fill-color: GrayText;
+  }
+
+  .textarea-shell-proto:has(textarea:disabled)::before,
+  .textarea-shell-proto:has(textarea:disabled)::after {
+    border-color: GrayText;
+  }
+
+  .textarea-shell-proto[data-variant='ghost']:has(textarea:disabled)::before {
+    border-color: transparent;
   }
 }

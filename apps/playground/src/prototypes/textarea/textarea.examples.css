@@ -1,0 +1,91 @@
+.textarea-demo-stack,
+.textarea-demo-plate {
+  display: grid;
+  align-content: start;
+  gap: var(--space-24);
+  min-inline-size: 0;
+}
+
+.textarea-demo-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 17rem), 1fr));
+  align-items: start;
+  gap: var(--space-24);
+  min-inline-size: 0;
+}
+
+.textarea-demo-wide {
+  grid-column: 1 / -1;
+}
+
+.textarea-demo-note {
+  margin: 0;
+  color: var(--fg-muted);
+  font: var(--text-size-caption-l) / 1.5 var(--font-family-base);
+  overflow-wrap: anywhere;
+}
+
+.textarea-demo-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-8);
+}
+
+.textarea-demo-over-limit {
+  color: var(--status-danger-soft-fg);
+}
+
+.textarea-demo-stage {
+  min-inline-size: 0;
+  padding: var(--space-16);
+  border-radius: var(--surface-l-radius);
+  background: var(--bg-canvas);
+}
+
+.textarea-demo-stage[data-underlay='true'] {
+  background:
+    radial-gradient(ellipse at 10% 0%, var(--accent-soft-bg), transparent 65%),
+    radial-gradient(ellipse at 100% 100%, var(--status-info-soft-bg), transparent 70%),
+    var(--bg-canvas);
+}
+
+.textarea-demo-plate {
+  position: relative;
+  padding: var(--space-24);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--surface-m-radius);
+  background: var(--bg-surface);
+}
+
+.textarea-demo-plate[data-plate='overlay'] {
+  border-color: var(--overlay-border);
+  background: var(--bg-overlay);
+  box-shadow: var(--overlay-shadow-popover);
+  backdrop-filter: var(--overlay-backdrop);
+}
+
+.textarea-demo-plate[data-plate='overlay']::before {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: var(--overlay-rim);
+  mask-image: var(--overlay-rim-mask);
+  content: '';
+  pointer-events: none;
+}
+
+.textarea-demo-eyebrow {
+  margin: 0;
+  color: var(--fg-secondary);
+  font: 500 var(--text-size-body-s) / 1.4 var(--font-family-base);
+}
+
+@media (max-width: 480px) {
+  .textarea-demo-stage {
+    padding: var(--space-8);
+  }
+
+  .textarea-demo-plate {
+    padding: var(--space-16);
+  }
+}
