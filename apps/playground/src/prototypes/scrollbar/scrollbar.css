@@ -46,6 +46,16 @@
       height: var(--scrollbar-size, 14px);
     }
 
+    /* Native scroll controls must not inherit a text or action cursor. */
+    :where(.scrollbar-proto)::-webkit-scrollbar,
+    :where(.scrollbar-proto)::-webkit-scrollbar-track,
+    :where(.scrollbar-proto)::-webkit-scrollbar-track-piece,
+    :where(.scrollbar-proto)::-webkit-scrollbar-thumb,
+    :where(.scrollbar-proto)::-webkit-scrollbar-corner,
+    :where(.scrollbar-proto)::-webkit-scrollbar-button {
+      cursor: default;
+    }
+
     :where(.scrollbar-proto)::-webkit-scrollbar-track,
     :where(.scrollbar-proto)::-webkit-scrollbar-corner {
       background: transparent;

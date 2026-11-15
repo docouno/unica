@@ -23,10 +23,10 @@ The subdued resting indicator deliberately prioritizes visual hierarchy; it is n
 
 Desktop and keyboard-only Chromium/WebKit expose native scrollbar parts through `::-webkit-scrollbar`. The recipe uses those parts to follow `--radius-full`: rounded Soft/Frost, `0px` Pixel. Standard `scrollbar-color` and `scrollbar-width` are reset to `auto` in this path because non-auto values suppress the pseudo-element styles.
 
-| Owner                                                                 | Scrollbar gutter | Visible thumb | Standard fallback |
-| --------------------------------------------------------------------- | ---------------- | ------------- | ----------------- |
-| Page, sidebar, reading region, DialogBody, Table, CodeBlock, Textarea | 14px             | 8px           | `auto` width      |
-| Compact PopoverBody, document tabs, bounded choice list               | 10px             | 4px           | `thin` width      |
+| Owner                                                             | Scrollbar gutter | Visible thumb | Standard fallback |
+| ----------------------------------------------------------------- | ---------------- | ------------- | ----------------- |
+| Page, sidebar, reading region, DialogBody, Table, CodeBlock       | 14px             | 8px           | `auto` width      |
+| Compact PopoverBody, Textarea, document tabs, bounded choice list | 10px             | 4px           | `thin` width      |
 
 A 3px transparent border on each side supplies breathing room while retaining the native thumb's full hit area. The minimum thumb length is 24px; its actual length follows the content ratio. The track has no authored end buttons. The same dimensions apply to both axes. Explicit pseudo-element dimensions reserve a classic gutter on desktop, including systems that normally use overlay scrollbars; this is an intentional cost of controlling the shape. Content that fits still has no scrollbar because the owner uses `overflow: auto`.
 
@@ -36,6 +36,7 @@ Touch-primary browsers keep standard native color/width styling and system geome
 
 - Rest: a quiet position indicator, visible when the platform paints a scrollbar.
 - Thumb hover and drag: the dedicated theme colors become clearer without recoloring the content area. Standard fallback browsers own their native feedback.
+- Pointer: authored scrollbar parts explicitly use `cursor: default`, independent of a text, link, or other cursor on their scroll owner. Native track clicks and thumb dragging keep their scrolling behavior; the content keeps its own cursor. A native resize handle retains its browser-owned directional cursor.
 - Keyboard: focus belongs to the scroll region or its normal controls. A directly focused region retains its visible focus ring and strengthens its thumb.
 - Forced colors: both standard properties return to `auto`; custom pseudo-element styles are inactive, restoring system geometry and colors.
 - Increased contrast: a stronger thumb without additional motion. Reduced motion needs no special animation override.
