@@ -1,0 +1,174 @@
+.binary-demo-stack,
+.binary-demo-sample,
+.binary-demo-plate {
+  display: grid;
+  min-inline-size: 0;
+  align-content: start;
+  gap: var(--space-16);
+}
+.binary-demo-stack {
+  gap: var(--space-24);
+}
+.binary-demo-sample {
+  gap: var(--space-8);
+}
+.binary-demo-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr));
+  gap: var(--space-24);
+  min-inline-size: 0;
+}
+.binary-demo-caption {
+  color: var(--fg-muted);
+  font-size: var(--text-size-caption-l);
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+.binary-demo-row {
+  display: flex;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 8px 24px;
+  min-inline-size: 0;
+}
+.binary-demo-external-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
+  gap: var(--space-8);
+}
+.binary-demo-external-row > .binary-control[data-standalone] {
+  min-inline-size: 0;
+}
+.binary-demo-external-label {
+  min-inline-size: 0;
+  padding-block: max(4px, calc((var(--size-m-height) - var(--text-size-body-s-lh)) / 2));
+  color: var(--fg-primary);
+  font-family: var(--font-family-base);
+  font-size: var(--text-size-body-s);
+  line-height: var(--text-size-body-s-lh);
+  overflow-wrap: anywhere;
+  cursor: pointer;
+}
+@media (pointer: coarse) {
+  .binary-demo-external-label {
+    padding-block: max(
+      4px,
+      calc((max(44px, var(--size-m-height)) - var(--text-size-body-s-lh)) / 2)
+    );
+  }
+}
+.binary-demo-size {
+  display: grid;
+  gap: 8px;
+  padding-block-end: var(--space-16);
+  border-block-end: 1px solid var(--border-subtle);
+}
+.binary-demo-size:last-child {
+  border: 0;
+  padding: 0;
+}
+.binary-demo-state {
+  display: grid;
+  grid-template-columns: minmax(5.5rem, 1fr) repeat(3, minmax(0, 1fr));
+  align-items: center;
+  gap: 8px;
+}
+.binary-demo-state + .binary-demo-state {
+  border-block-start: 1px solid var(--border-subtle);
+}
+.binary-demo-state > .binary-control {
+  justify-self: start;
+}
+.binary-demo-options {
+  display: grid;
+  padding-inline-start: 28px;
+  border-inline-start: 1px solid var(--border-subtle);
+  margin-inline-start: 10px;
+}
+.binary-demo-field {
+  display: grid;
+  gap: 8px;
+  min-inline-size: 0;
+}
+.binary-demo-legend {
+  font-size: var(--text-size-body-s);
+  line-height: 1.5;
+  color: var(--fg-primary);
+  font-weight: 500;
+}
+.binary-demo-message {
+  display: flex;
+  gap: 6px;
+  align-items: start;
+  color: var(--status-danger-soft-fg);
+  font-size: var(--text-size-caption-l);
+  line-height: 1.5;
+}
+.binary-demo-message > svg {
+  flex: 0 0 auto;
+  margin-block-start: 2px;
+}
+.binary-demo-stage {
+  position: relative;
+  isolation: isolate;
+  padding: 16px;
+  min-inline-size: 0;
+  border-radius: var(--surface-l-radius);
+  background: var(--bg-canvas);
+}
+.binary-demo-stage[data-underlay] {
+  background:
+    radial-gradient(ellipse at 80% 20%, var(--accent-soft-bg), transparent 65%),
+    radial-gradient(ellipse at 20% 80%, var(--status-info-soft-bg), transparent 65%),
+    var(--bg-canvas);
+}
+.binary-demo-plate {
+  padding: 16px;
+  gap: 8px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--surface-m-radius);
+  background: var(--bg-surface);
+}
+.binary-demo-plate[data-plate='overlay'] {
+  border-color: var(--overlay-border);
+  background: var(--bg-overlay);
+  backdrop-filter: var(--overlay-backdrop);
+  box-shadow: var(--overlay-shadow-popover);
+}
+.binary-demo-narrow {
+  inline-size: min(100%, 26rem);
+  min-inline-size: 0;
+}
+.binary-demo-action-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+@media (forced-colors: active) {
+  .binary-demo-plate {
+    border-color: CanvasText;
+  }
+}
+
+.binary-demo-state[data-columns='2'] {
+  grid-template-columns: minmax(5.5rem, 1fr) repeat(2, minmax(0, 1fr));
+}
+
+.binary-demo-setting {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-16);
+  min-inline-size: 0;
+}
+.binary-demo-setting > .binary-demo-field {
+  flex: 1;
+  padding-block-start: 10px;
+}
+.binary-demo-setting label[for] {
+  cursor: pointer;
+}
+.binary-demo-setting > .binary-control {
+  flex: 0 0 auto;
+}

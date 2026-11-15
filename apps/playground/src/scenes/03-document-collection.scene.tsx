@@ -11,7 +11,7 @@ import { Link } from '../prototypes/link/link.proto.js';
 import { Pagination } from '../prototypes/pagination/pagination.proto.js';
 import { SegmentedControl } from '../prototypes/segmented-control/segmented-control.proto.js';
 import { Select } from '../prototypes/select/select.proto.js';
-import { Checkbox, Switch } from '../prototypes/selection/selection.proto.js';
+import { Checkbox, Switch } from '../prototypes/binary-controls/binary-controls.proto.js';
 import { Table, TableScroll } from '../prototypes/table/table.proto.js';
 import { Chip } from '../prototypes/tag/tag.proto.js';
 import { Text } from '../prototypes/text/text.proto.js';
@@ -247,6 +247,7 @@ function CollectionScene(): ReactElement {
                           size="s"
                           aria-label="Select all runbooks"
                           checked={selected.length === rows.length}
+                          indeterminate={selected.length > 0 && selected.length < rows.length}
                           onChange={() =>
                             setSelected(
                               selected.length === rows.length ? [] : rows.map((row) => row.title),

@@ -16,7 +16,11 @@ import { Card } from '../prototypes/card/card.proto.js';
 import { Accordion, Collapsible } from '../prototypes/accordion/accordion.proto.js';
 import { Toast } from '../prototypes/feedback/feedback.proto.js';
 import { Kbd, KbdGroup } from '../prototypes/kbd/kbd.proto.js';
-import { Radio, Switch } from '../prototypes/selection/selection.proto.js';
+import {
+  Checkbox,
+  Radio,
+  RadioGroup,
+} from '../prototypes/binary-controls/binary-controls.proto.js';
 import { SegmentedControl } from '../prototypes/segmented-control/segmented-control.proto.js';
 import { Select } from '../prototypes/select/select.proto.js';
 import { NumberInput, RangeSlider, Slider } from '../prototypes/slider/slider.proto.js';
@@ -149,36 +153,22 @@ function PreferencesScene(): ReactElement {
                     postmortems.
                   </Text>
                 </div>
-                <div
+                <RadioGroup
                   className="folio-row folio-wrap folio-preference-radio-row"
-                  role="group"
+                  orientation="horizontal"
+                  name={measureName}
+                  value={preferences.measure}
+                  onValueChange={(value) => {
+                    if (value === 'compact' || value === 'balanced' || value === 'wide') {
+                      update('measure', value);
+                    }
+                  }}
                   aria-label="Editorial prose measure"
                 >
-                  <Radio
-                    name={measureName}
-                    size="s"
-                    value="compact"
-                    checked={preferences.measure === 'compact'}
-                    onChange={() => update('measure', 'compact')}
-                    label="Compact (64ch)"
-                  />
-                  <Radio
-                    name={measureName}
-                    size="s"
-                    value="balanced"
-                    checked={preferences.measure === 'balanced'}
-                    onChange={() => update('measure', 'balanced')}
-                    label="Balanced (72ch)"
-                  />
-                  <Radio
-                    name={measureName}
-                    size="s"
-                    value="wide"
-                    checked={preferences.measure === 'wide'}
-                    onChange={() => update('measure', 'wide')}
-                    label="Wide (84ch)"
-                  />
-                </div>
+                  <Radio size="s" value="compact" label="Compact (64ch)" />
+                  <Radio size="s" value="balanced" label="Balanced (72ch)" />
+                  <Radio size="s" value="wide" label="Wide (84ch)" />
+                </RadioGroup>
               </section>
               <section className="folio-preference-row">
                 <div className="folio-stack folio-preference-label">
@@ -236,7 +226,7 @@ function PreferencesScene(): ReactElement {
                       aria-label="Diff context lines"
                     />
                   </div>
-                  <Switch
+                  <Checkbox
                     size="s"
                     label="Collapse unchanged blocks"
                     checked={preferences.collapse}
@@ -253,7 +243,7 @@ function PreferencesScene(): ReactElement {
                     <Text size="body-s" color="secondary">
                       Notify primary owner 7 days before quarterly Tier-0 verification expires.
                     </Text>
-                    <Switch
+                    <Checkbox
                       size="s"
                       aria-label="Stale runbook reminders"
                       checked={preferences.reminders}
@@ -266,7 +256,7 @@ function PreferencesScene(): ReactElement {
                     <Text size="body-s" color="secondary">
                       Require signed commits before publishing repository-backed changes.
                     </Text>
-                    <Switch
+                    <Checkbox
                       size="s"
                       aria-label="Signed commit verification"
                       checked={preferences.signed}
@@ -279,7 +269,7 @@ function PreferencesScene(): ReactElement {
                     <Text size="body-s" color="secondary">
                       Mark externally shared snapshots with the workspace name.
                     </Text>
-                    <Switch
+                    <Checkbox
                       size="s"
                       aria-label="External share watermarking"
                       checked={preferences.watermark}

@@ -1,5 +1,9 @@
 import type { ComponentPropsWithRef, ReactElement, ReactNode } from 'react';
-import { CheckIcon } from '@phosphor-icons/react';
+import {
+  CheckboxIndicator,
+  RadioIndicator,
+  SwitchIndicator,
+} from '../binary-controls/binary-controls.proto.js';
 import type { ControlSize } from '../input/input.proto.js';
 import './selection.css';
 
@@ -30,7 +34,8 @@ function ChoiceControl({
 }: ChoiceControlProps): ReactElement {
   return (
     <label
-      className={`choice-proto ${card ? 'choice-card-proto' : ''} ${className}`}
+      className={`choice-proto ${card ? 'choice-card-proto' : ''} binary-control ${className}`}
+      data-readonly={readOnly || undefined}
       data-kind={kind}
       data-size={size}
       style={style}
@@ -41,7 +46,7 @@ function ChoiceControl({
           {...props}
           type={kind === 'radio' ? 'radio' : 'checkbox'}
           role={kind === 'switch' ? 'switch' : undefined}
-          className="choice-native-proto"
+          className="choice-native-proto binary-native"
           readOnly={readOnly}
           aria-readonly={readOnly || undefined}
           onClick={(event) => {
@@ -51,9 +56,13 @@ function ChoiceControl({
             onClick?.(event);
           }}
         />
-        <span className="choice-indicator-proto" aria-hidden="true">
-          {kind === 'checkbox' && <CheckIcon weight="bold" size="1em" />}
-        </span>
+        {kind === 'checkbox' ? (
+          <CheckboxIndicator size={size} />
+        ) : kind === 'radio' ? (
+          <RadioIndicator size={size} />
+        ) : (
+          <SwitchIndicator size={size} />
+        )}
       </span>
       {(label || description || children) && (
         <span className="choice-copy-proto">
@@ -63,18 +72,6 @@ function ChoiceControl({
       )}
     </label>
   );
-}
-
-export function Checkbox(props: ChoiceProps): ReactElement {
-  return <ChoiceControl {...props} kind="checkbox" />;
-}
-
-export function Radio(props: ChoiceProps): ReactElement {
-  return <ChoiceControl {...props} kind="radio" />;
-}
-
-export function Switch(props: ChoiceProps): ReactElement {
-  return <ChoiceControl {...props} kind="switch" />;
 }
 
 export function CheckboxCard(props: ChoiceProps): ReactElement {

@@ -22,7 +22,7 @@ import { Kbd } from '../prototypes/kbd/kbd.proto.js';
 import { Link } from '../prototypes/link/link.proto.js';
 import { PopoverContent } from '../prototypes/popover/popover.proto.js';
 import { Listbox } from '../prototypes/select/select.proto.js';
-import { Checkbox } from '../prototypes/selection/selection.proto.js';
+import { Checkbox } from '../prototypes/binary-controls/binary-controls.proto.js';
 import { Tabs } from '../prototypes/tabs/tabs.proto.js';
 import { Text } from '../prototypes/text/text.proto.js';
 import { Title } from '../prototypes/title/title.proto.js';
