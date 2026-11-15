@@ -98,12 +98,10 @@
   white-space: nowrap;
   transition:
     background-color var(--segmented-state-duration),
-    color var(--segmented-state-duration),
-    border-color var(--segmented-state-duration);
+    color var(--segmented-state-duration);
 }
 
 .segment-proto > input:checked + .segment-proto-plate {
-  border-color: var(--segmented-thumb-border);
   background: var(--segmented-thumb-bg);
   box-shadow: var(--segmented-thumb-shadow);
   color: var(--fg-primary);
@@ -162,7 +160,7 @@
 }
 
 .segment-proto > input:checked:disabled + .segment-proto-plate {
-  border-color: var(--border-strong);
+  background: color-mix(in srgb, var(--segmented-thumb-bg) 70%, var(--segmented-rail-bg));
 }
 
 .segmented-control-proto[data-readonly] .segment-proto {
