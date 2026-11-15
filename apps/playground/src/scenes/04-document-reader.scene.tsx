@@ -94,7 +94,7 @@ function ReaderScene(): ReactElement {
                           {owner && (
                             <HoverCard>
                               <div className="folio-owner-profile">
-                                <Avatar initials="DB" size="m" tone="info" />
+                                <Avatar name="Database reliability" alt="" size="m" />
                                 <div>
                                   <Text size="caption-l" weight="semibold">
                                     Database reliability
