@@ -1,6 +1,6 @@
 # Textarea — design reference
 
-Status: design candidate, awaiting visual approval. Open `/?item=textarea` in the playground. This reference specifies appearance and expected interaction; it is not a package export or the final TypeScript API. The existing [page properties drawer](../../scenes/06-page-properties-drawer.scene.tsx) and [invite modal](../../scenes/07-invite-access-modal.scene.tsx) consume this same prototype.
+Status: design approved on 2026-11-15. Open `/?item=textarea` in the playground. This reference specifies appearance and expected interaction; it is not a package export or the final TypeScript API. The existing [page properties drawer](../../scenes/06-page-properties-drawer.scene.tsx) and [invite modal](../../scenes/07-invite-access-modal.scene.tsx) consume this same prototype.
 
 ## Purpose and composition
 
