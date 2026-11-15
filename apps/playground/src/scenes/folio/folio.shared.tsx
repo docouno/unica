@@ -26,7 +26,8 @@ import { Avatar, AvatarGroup } from '../../prototypes/avatar/avatar.proto.js';
 import { Badge } from '../../prototypes/badge/badge.proto.js';
 import { Breadcrumb } from '../../prototypes/breadcrumb/breadcrumb.proto.js';
 import { Button, IconButton } from '../../prototypes/button/button.proto.js';
-import { Blockquote, Code, CodeBlock } from '../../prototypes/code/code.proto.js';
+import { Code, CodeBlock } from '../../prototypes/code/code.proto.js';
+import { Blockquote } from '../../prototypes/blockquote/blockquote.proto.js';
 import { Alert } from '../../prototypes/feedback/feedback.proto.js';
 import { Icon } from '../../prototypes/icon/icon.proto.js';
 import { Table, TableScroll } from '../../prototypes/table/table.proto.js';
@@ -339,7 +340,7 @@ export function RunbookArticle({ compact = false }: { readonly compact?: boolean
         <RecoveryTable />
       </section>
       {!compact && (
-        <Blockquote cite="Database Reliability Playbook · §4.2">
+        <Blockquote size="s" attribution="Database Reliability Playbook · §4.2">
           Never re-attach a fenced former primary to the cluster VIP before running pg_rewind
           against the promoted timeline.
         </Blockquote>

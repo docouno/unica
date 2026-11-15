@@ -1,4 +1,7 @@
 .card-proto {
+  --code-context-bg: color-mix(in srgb, var(--neutral-soft-fg) var(--code-plate-tint), transparent);
+  --code-context-fg: var(--neutral-soft-fg);
+  --code-context-border: var(--neutral-border);
   --card-padding: var(--surface-m-padding);
   --card-gap: var(--surface-m-gap);
   --element-radius: var(--surface-m-radius);

@@ -12,6 +12,9 @@
   overflow-wrap: anywhere;
 }
 .alert-proto {
+  --code-context-bg: color-mix(in srgb, var(--mark-fg) var(--code-plate-tint), transparent);
+  --code-context-fg: var(--mark-fg);
+  --code-context-border: var(--mark-border);
   gap: var(--surface-s-gap);
   padding: var(--surface-s-padding);
   border: var(--alert-border-width) solid var(--mark-border);

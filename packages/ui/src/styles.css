@@ -80,6 +80,11 @@ textarea {
 :root,
 [data-theme='soft-dark'] {
   color-scheme: dark;
+  --blockquote-rail-width: 3px;
+  --blockquote-rail-style: solid;
+  --blockquote-rail-radius: var(--radius-full);
+  --code-plate-tint: 8%;
+  --code-font-scale: 0.9;
   --radius-factor: 1;
   --scrollbar-thumb-opacity: 22%;
   --scrollbar-thumb-hover-opacity: 36%;
@@ -237,6 +242,11 @@ textarea {
 
 [data-theme='soft-light'] {
   color-scheme: light;
+  --blockquote-rail-width: 3px;
+  --blockquote-rail-style: solid;
+  --blockquote-rail-radius: var(--radius-full);
+  --code-plate-tint: 8%;
+  --code-font-scale: 0.9;
   --radius-factor: 1;
   --scrollbar-thumb-opacity: 22%;
   --scrollbar-thumb-hover-opacity: 36%;
@@ -397,6 +407,11 @@ textarea {
 
 [data-theme='frost-dark'] {
   color-scheme: dark;
+  --blockquote-rail-width: 2px;
+  --blockquote-rail-style: solid;
+  --blockquote-rail-radius: 0px;
+  --code-plate-tint: 8%;
+  --code-font-scale: 0.9;
   --radius-factor: 1;
   --scrollbar-thumb-opacity: 16%;
   --scrollbar-thumb-hover-opacity: 30%;
@@ -563,6 +578,11 @@ textarea {
 
 [data-theme='frost-light'] {
   color-scheme: light;
+  --blockquote-rail-width: 2px;
+  --blockquote-rail-style: solid;
+  --blockquote-rail-radius: 0px;
+  --code-plate-tint: 8%;
+  --code-font-scale: 0.9;
   --radius-factor: 1;
   --scrollbar-thumb-opacity: 18%;
   --scrollbar-thumb-hover-opacity: 32%;
@@ -734,6 +754,11 @@ textarea {
 
 [data-theme='pixel-dark'] {
   color-scheme: dark;
+  --blockquote-rail-width: 3px;
+  --blockquote-rail-style: double;
+  --blockquote-rail-radius: 0px;
+  --code-plate-tint: 8%;
+  --code-font-scale: 1;
   --radius-factor: 0;
   --scrollbar-thumb-opacity: 40%;
   --scrollbar-thumb-hover-opacity: 56%;
@@ -899,6 +924,11 @@ textarea {
 
 [data-theme='pixel-light'] {
   color-scheme: light;
+  --blockquote-rail-width: 3px;
+  --blockquote-rail-style: double;
+  --blockquote-rail-radius: 0px;
+  --code-plate-tint: 8%;
+  --code-font-scale: 1;
   --radius-factor: 0;
   --scrollbar-thumb-opacity: 40%;
   --scrollbar-thumb-hover-opacity: 56%;
@@ -1065,6 +1095,9 @@ textarea {
 :root,
 [data-theme],
 [data-surface='base'] {
+  --code-context-bg: initial;
+  --code-context-fg: initial;
+  --code-context-border: initial;
   --choice-card-bg: var(--_base-choice-card-bg);
   --choice-card-bg-selected: var(--_base-choice-card-bg-selected);
   --choice-card-border: var(--_base-choice-card-border);
@@ -1075,6 +1108,9 @@ textarea {
 }
 
 [data-surface='overlay'] {
+  --code-context-bg: color-mix(in srgb, var(--neutral-soft-fg) var(--code-plate-tint), transparent);
+  --code-context-fg: var(--neutral-soft-fg);
+  --code-context-border: var(--neutral-border);
   --choice-card-bg: var(--_overlay-choice-card-bg);
   --choice-card-bg-selected: var(--_overlay-choice-card-bg-selected);
   --choice-card-border: var(--_overlay-choice-card-border);
