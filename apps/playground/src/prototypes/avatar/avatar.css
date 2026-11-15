@@ -124,11 +124,6 @@
 .avatar-group-proto-member:not(:last-child) .avatar-proto {
   mask: var(--avatar-cutout);
 }
-.avatar-group-proto-member:not(:last-child) .avatar-proto-fallback {
-  padding-inline-end: calc(
-    (var(--avatar-effective-overlap) + 2px) * var(--avatar-group-overlap-factor) / 2
-  );
-}
 .avatar-group-proto[data-size='s'],
 .avatar-group-proto[data-size='s'] .avatar-proto {
   --avatar-font: var(--text-size-caption-s);
