@@ -13,7 +13,7 @@ export interface CodeProps extends ComponentPropsWithRef<'code'> {
 // Design reference only; these controls do not freeze the package API.
 export function Code({
   size = 'inherit',
-  tone = 'neutral',
+  tone = 'inherit',
   plate = true,
   dir = 'ltr',
   className = '',

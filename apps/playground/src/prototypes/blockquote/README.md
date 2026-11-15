@@ -30,13 +30,13 @@ S fits dense document prose and source previews. M is the ordinary reading passa
 
 ## Material and color
 
-One quiet surface belongs to the theme. Its background mixes 28% of the neutral or status soft background with transparent. Corners use `--radius-xs`: 4px in Soft/Frost and 0px in Pixel. There is no perimeter frame, elevation, hover glow, or backdrop filter. The source panel's material remains visible beneath the quote on Card and Overlay.
+The quotation has no background fill, perimeter frame, elevation, hover glow, or backdrop filter. Only the logical leading rail marks its boundary. Canvas, Card, colored content, and Overlay remain visible without another tonal panel; the quote also preserves any inherited inline Code context. The rail's own corner treatment belongs to the theme.
 
 A logical leading rail spans the figure, inset 8px at each block edge, grouping the passage and attribution. The theme owns three recipes: `--blockquote-rail-width`, `--blockquote-rail-style`, and `--blockquote-rail-radius`. Soft uses a rounded 3px solid rail, Frost a straight 2px solid rail, and Pixel a straight 3px double rail. The neutral rail uses `--border-strong`, independently of transparent pill borders and corner geometry.
 
 Info/success/warning/danger color the rail with the corresponding status signal and the optional glyph with the status soft foreground. The body remains `--fg-secondary`, the caption `--fg-muted`. Color supports the quoted meaning; explicit source/context wording must carry that meaning when color is absent. The caption stays at full text opacity and readable contrast. Do not make an entire long quotation red or yellow merely because its source includes a caution.
 
-A nested quotation keeps its own rail and a 4px vertical inset, with no additional filled surface or trailing padding. This avoids stacked colored panels and preserves reading width. The specimen shows one useful level, neutral and undecorated; applications should flatten deeply threaded excerpts rather than build a narrow staircase. There is no hidden depth truncation.
+A nested quotation keeps its own rail and a 4px vertical inset, with no trailing padding. Both quotation levels are transparent, preserving reading width and the host material. The specimen shows one useful level, neutral and undecorated; applications should flatten deeply threaded excerpts rather than build a narrow staircase. There is no hidden depth truncation.
 
 ## Overflow, focus, and system modes
 
@@ -44,7 +44,7 @@ The figure has no fixed height, internal scrollbar, ellipsis, or collapse afford
 
 Tab visits embedded links in document order; the figure and glyphs add no stops. Links retain their underline, hover foreground, and 2px keyboard focus contour at 3px offset. There is no clipping or overflow-hidden on the figure, so wrapped links and focus outlines remain visible. Enter follows the source using normal browser navigation, without making the whole quote clickable. Native text selection covers only selected characters, not the figure background.
 
-Forced colors retain a system-text rail, body, caption, and glyphs on Canvas. Links retain their system link color and focus treatment. Tone distinctions collapse to textual context. Reduced motion is identical because the quotation has no animation.
+Forced colors retain a system-text rail, body, caption, and glyphs over the inherited system surface. Links retain their system link color and focus treatment. Tone distinctions collapse to textual context. Reduced motion is identical because the quotation has no animation.
 
 ## Inspection and implementation boundary
 

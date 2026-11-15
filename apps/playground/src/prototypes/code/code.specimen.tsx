@@ -129,7 +129,7 @@ export default defineSpecimen({
     },
     {
       id: 'surfaces',
-      title: 'Canvas · Card · Message',
+      title: 'Canvas · Card · Subtle Card',
       kind: 'states',
       render: () => (
         <div className="code-example-stack">
@@ -141,14 +141,54 @@ export default defineSpecimen({
               Card: set <Code>cache-control</Code> to <Code>no-store</Code> for private data.
             </Text>
           </Card>
-          <Alert status="warning" title="The value has expired">
-            Request a new{' '}
-            <Code tone="inherit" plate={false}>
-              access_token
-            </Code>{' '}
-            before retrying.
-          </Alert>
+          <Card size="s" variant="subtle">
+            <Text size="body-s">
+              Subtle Card: keep <Code>cache-control</Code> distinct from its own surface.
+            </Text>
+          </Card>
         </div>
+      ),
+    },
+    {
+      id: 'messages',
+      title: 'The plate follows its painted context',
+      kind: 'states',
+      render: () => (
+        <div className="code-example-stack code-example-compact">
+          {(['neutral', 'info', 'success', 'warning', 'danger'] as const).map((status) => (
+            <Alert key={status} status={status} title={`${status} · quoted configuration`}>
+              Read <Code>response.status</Code> before retrying. An explicit matching tone{' '}
+              <Code tone={status}>response.code</Code> also keeps its own tonal step.
+            </Alert>
+          ))}
+          <Text size="body-s" color="muted">
+            The nearest painted surface supplies the hue. An explicit tone overrides that context;
+            plain Code inherits the surrounding text.
+          </Text>
+        </div>
+      ),
+    },
+    {
+      id: 'boundaries',
+      title: 'Text passes context through · a Card starts its own',
+      kind: 'context',
+      render: () => (
+        <Alert status="info" title="Reference details">
+          <div className="code-example-stack code-example-compact">
+            <Text size="body-s" color="secondary">
+              A local text color keeps <Code>request_id</Code> on the blue plate. An explicit{' '}
+              <Code tone="neutral">config.json</Code> uses neutral colors.
+            </Text>
+            <Card size="s">
+              <Text size="body-s">
+                This opaque Card gives <Code>request_id</Code> a neutral context.
+              </Text>
+            </Card>
+            <span>
+              Plain <Code plate={false}>request_id</Code> uses the message foreground.
+            </span>
+          </div>
+        </Alert>
       ),
     },
     {
@@ -156,7 +196,7 @@ export default defineSpecimen({
       title: 'Inside a floating surface',
       kind: 'states',
       caption:
-        'Static Popover material study. Code itself stays opaque and has no backdrop filter.',
+        'Static Popover material study. Contextual Code tints the actual surface without another backdrop filter.',
       overlayStage: true,
       surface: 'overlay',
       render: () => (

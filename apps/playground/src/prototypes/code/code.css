@@ -5,7 +5,11 @@
 }
 
 .code-proto {
-  --_code-bg: var(--neutral-soft-bg);
+  --_code-bg: color-mix(
+    in srgb,
+    var(--neutral-soft-fg) var(--code-plate-tint),
+    var(--neutral-soft-bg)
+  );
   --_code-fg: var(--neutral-soft-fg);
   --_code-border: var(--neutral-border);
   padding: 0.08em var(--space-4);
@@ -40,27 +44,48 @@
 }
 
 .code-proto[data-tone='info'] {
-  --_code-bg: var(--status-info-soft-bg);
+  --_code-bg: color-mix(
+    in srgb,
+    var(--status-info-soft-fg) var(--code-plate-tint),
+    var(--status-info-soft-bg)
+  );
   --_code-fg: var(--status-info-soft-fg);
   --_code-border: var(--status-info-border);
 }
 .code-proto[data-tone='success'] {
-  --_code-bg: var(--status-success-soft-bg);
+  --_code-bg: color-mix(
+    in srgb,
+    var(--status-success-soft-fg) var(--code-plate-tint),
+    var(--status-success-soft-bg)
+  );
   --_code-fg: var(--status-success-soft-fg);
   --_code-border: var(--status-success-border);
 }
 .code-proto[data-tone='warning'] {
-  --_code-bg: var(--status-warning-soft-bg);
+  --_code-bg: color-mix(
+    in srgb,
+    var(--status-warning-soft-fg) var(--code-plate-tint),
+    var(--status-warning-soft-bg)
+  );
   --_code-fg: var(--status-warning-soft-fg);
   --_code-border: var(--status-warning-border);
 }
 .code-proto[data-tone='danger'] {
-  --_code-bg: var(--status-danger-soft-bg);
+  --_code-bg: color-mix(
+    in srgb,
+    var(--status-danger-soft-fg) var(--code-plate-tint),
+    var(--status-danger-soft-bg)
+  );
   --_code-fg: var(--status-danger-soft-fg);
   --_code-border: var(--status-danger-border);
 }
 
 .code-proto[data-tone='inherit'] {
+  background: var(--code-context-bg, var(--_code-bg));
+  color: var(--code-context-fg, var(--_code-fg));
+  border-color: var(--code-context-border, var(--_code-border));
+}
+.code-proto[data-tone='inherit'][data-plate='false'] {
   color: inherit;
 }
 .code-proto[data-plate='false'] {
@@ -106,7 +131,8 @@
   display: none;
 }
 @media (forced-colors: active) {
-  .code-proto {
+  .code-proto,
+  .code-proto[data-tone='inherit'] {
     color: CanvasText;
     background: Canvas;
     border-color: CanvasText;
@@ -115,7 +141,8 @@
     outline: 1px solid CanvasText;
     outline-offset: -1px;
   }
-  .code-proto[data-plate='false'] {
+  .code-proto[data-plate='false'],
+  .code-proto[data-tone='inherit'][data-plate='false'] {
     color: inherit;
     background: none;
   }

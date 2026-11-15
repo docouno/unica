@@ -1,5 +1,4 @@
 .blockquote-proto {
-  --_quote-bg: var(--neutral-soft-bg);
   --_quote-rail: var(--border-strong);
   --_quote-glyph: var(--fg-muted);
   --_quote-py: var(--space-16);
@@ -12,8 +11,6 @@
   min-inline-size: 0;
   margin: 0;
   padding: var(--_quote-py) var(--_quote-px);
-  border-radius: var(--radius-xs);
-  background: color-mix(in srgb, var(--_quote-bg) 28%, transparent);
   color: var(--fg-secondary);
   font-family: var(--font-family-base);
   font-size: var(--text-size-body-m);
@@ -47,22 +44,18 @@
   line-height: var(--text-size-body-l-lh);
 }
 .blockquote-proto[data-tone='info'] {
-  --_quote-bg: var(--status-info-soft-bg);
   --_quote-rail: var(--status-info-signal);
   --_quote-glyph: var(--status-info-soft-fg);
 }
 .blockquote-proto[data-tone='success'] {
-  --_quote-bg: var(--status-success-soft-bg);
   --_quote-rail: var(--status-success-signal);
   --_quote-glyph: var(--status-success-soft-fg);
 }
 .blockquote-proto[data-tone='warning'] {
-  --_quote-bg: var(--status-warning-soft-bg);
   --_quote-rail: var(--status-warning-signal);
   --_quote-glyph: var(--status-warning-soft-fg);
 }
 .blockquote-proto[data-tone='danger'] {
-  --_quote-bg: var(--status-danger-soft-bg);
   --_quote-rail: var(--status-danger-signal);
   --_quote-glyph: var(--status-danger-soft-fg);
 }
@@ -116,11 +109,10 @@
 .blockquote-proto > figcaption cite {
   font-style: normal;
 }
-/* A quoted excerpt inside a quotation keeps its rail, without another filled panel. */
+/* A nested excerpt keeps its rail with a smaller vertical inset. */
 .blockquote-proto .blockquote-proto {
   padding-block: var(--space-4);
   padding-inline-end: 0;
-  background: none;
 }
 .blockquote-proto .blockquote-proto::before {
   inset-block: 0;
@@ -149,7 +141,6 @@
 @media (forced-colors: active) {
   .blockquote-proto {
     color: CanvasText;
-    background: Canvas;
   }
   .blockquote-proto::before {
     border-color: CanvasText;
