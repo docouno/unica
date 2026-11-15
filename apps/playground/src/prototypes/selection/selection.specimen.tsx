@@ -1,7 +1,8 @@
 import { useId } from 'react';
 import type { ReactElement } from 'react';
 import { defineSpecimen } from '../../workbench/types.js';
-import { Checkbox, CheckboxCard, Radio, RadioCard, Switch, SwitchCard } from './selection.proto.js';
+import { Checkbox } from '../binary-controls/binary-controls.proto.js';
+import { CheckboxCard, Radio, RadioCard, Switch, SwitchCard } from './selection.proto.js';
 import '../input/input.css';
 
 function SizesPreview(): ReactElement {

@@ -1,0 +1,236 @@
+.binary-control {
+  --binary-row: var(--size-m-height);
+  --binary-font: var(--text-size-body-s);
+  --binary-line: var(--text-size-body-s-lh);
+  --binary-gap: var(--space-8);
+  display: inline-flex;
+  align-items: flex-start;
+  gap: var(--binary-gap);
+  min-inline-size: 0;
+  min-block-size: var(--binary-row);
+  padding-block: max(4px, calc((var(--binary-row) - var(--binary-line)) / 2));
+  color: var(--fg-primary);
+  font-family: var(--font-family-base);
+  font-size: var(--binary-font);
+  line-height: var(--binary-line);
+  cursor: pointer;
+}
+
+.binary-control[data-size='s'] {
+  --binary-row: var(--size-s-height);
+  --binary-font: var(--size-s-control-font);
+  --binary-line: var(--text-size-body-s-lh);
+  --binary-gap: var(--size-s-gap);
+}
+
+.binary-control[data-size='l'] {
+  --binary-row: var(--size-l-height);
+  --binary-font: var(--text-size-body-m);
+  --binary-line: var(--text-size-body-m-lh);
+  --binary-gap: var(--size-l-gap);
+}
+
+.binary-target {
+  position: relative;
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  block-size: var(--binary-line);
+}
+
+.binary-native {
+  position: absolute;
+  inset: 0;
+  inline-size: 100%;
+  block-size: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: inherit;
+}
+
+.binary-indicator {
+  --binary-box: 20px;
+  position: relative;
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  inline-size: var(--binary-box);
+  block-size: var(--binary-box);
+  border: 1px solid var(--binary-error-edge, var(--binary-border));
+  border-radius: min(var(--radius-xs), 25%);
+  background: var(--control-bg);
+  color: var(--fg-on-accent);
+  pointer-events: none;
+}
+
+.binary-indicator[data-size='s'] {
+  --binary-box: 16px;
+}
+.binary-indicator[data-size='l'] {
+  --binary-box: 24px;
+}
+
+.binary-indicator > svg {
+  position: absolute;
+  inline-size: 80%;
+  block-size: 80%;
+  visibility: hidden;
+}
+
+.binary-native:checked + .binary-indicator,
+.binary-native:indeterminate + .binary-indicator,
+.binary-indicator:is([data-checked], [data-mixed]) {
+  background: var(--accent-solid);
+  border-color: var(--binary-error-edge, var(--accent-solid));
+}
+
+.binary-native:checked + .binary-indicator > .binary-check,
+.binary-indicator[data-checked] > .binary-check {
+  visibility: visible;
+}
+.binary-native:indeterminate + .binary-indicator > .binary-check,
+.binary-indicator[data-mixed] > .binary-check {
+  visibility: hidden;
+}
+.binary-native:indeterminate + .binary-indicator > .binary-dash,
+.binary-indicator[data-mixed] > .binary-dash {
+  visibility: visible;
+}
+
+.binary-control:not([data-readonly]):not(:has(:disabled)):is(:hover, [data-preview='hover'])
+  .binary-indicator {
+  border-color: var(--binary-error-edge, var(--binary-border-hover));
+}
+
+.binary-control:not([data-readonly]):not(:has(:disabled)):is(:hover, [data-preview='hover'])
+  .binary-native:is(:checked, :indeterminate)
+  + .binary-indicator {
+  background: var(--accent-solid-hover);
+  border-color: var(--binary-error-edge, var(--accent-solid-hover));
+}
+
+.binary-control:not([data-readonly]):not(:has(:disabled)):is(:active, [data-preview='active'])
+  .binary-indicator {
+  background: var(--bg-surface-raised);
+  border-color: var(--binary-error-edge, var(--fg-secondary));
+}
+
+.binary-control:not([data-readonly]):not(:has(:disabled)):is(:active, [data-preview='active'])
+  .binary-native:is(:checked, :indeterminate)
+  + .binary-indicator {
+  background: var(--accent-solid-active);
+  border-color: var(--binary-error-edge, var(--accent-solid-active));
+}
+
+.binary-control[data-status='danger'] {
+  --binary-error-edge: var(--status-danger-soft-fg);
+}
+
+.binary-control[data-status='danger'] .binary-indicator {
+  outline: 1px solid var(--status-danger-soft-fg);
+  outline-offset: 0;
+  border-color: var(--status-danger-soft-fg);
+}
+
+.binary-native:focus-visible + .binary-indicator,
+.binary-control[data-preview='focus'] .binary-indicator {
+  outline: 2px solid var(--focus-ring-color);
+  outline-offset: 2px;
+}
+
+.binary-copy {
+  display: grid;
+  gap: var(--space-4);
+  min-inline-size: 0;
+  overflow-wrap: anywhere;
+}
+.binary-description {
+  color: var(--fg-muted);
+  font-size: var(--text-size-caption-l);
+  line-height: 1.5;
+}
+.binary-control[data-readonly] {
+  cursor: default;
+}
+.binary-control:has(:disabled) {
+  color: var(--fg-disabled);
+  cursor: not-allowed;
+}
+.binary-native:disabled + .binary-indicator {
+  background: var(--bg-surface-subtle);
+  border-color: var(--border-default);
+  color: var(--fg-disabled);
+  outline: none;
+}
+.binary-control[data-standalone] {
+  min-inline-size: var(--binary-row);
+  justify-content: center;
+}
+.binary-group {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  min-inline-size: 0;
+}
+.binary-group[data-orientation='horizontal'] {
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 4px 24px;
+}
+.binary-control[hidden],
+.binary-group[hidden] {
+  display: none;
+}
+
+@media (pointer: coarse) {
+  .binary-control {
+    --binary-row: max(44px, var(--size-m-height));
+  }
+  .binary-control[data-size='s'] {
+    --binary-row: 44px;
+  }
+  .binary-control[data-size='l'] {
+    --binary-row: 48px;
+  }
+}
+
+@media (forced-colors: active) {
+  .binary-control[data-status='danger'] {
+    --binary-error-edge: CanvasText;
+  }
+  .binary-control:not([data-readonly]):not(:has(:disabled)):is(:hover, :active, [data-preview])
+    .binary-indicator {
+    background: Canvas;
+    border-color: ButtonText;
+  }
+
+  .binary-indicator {
+    forced-color-adjust: none;
+    background: Canvas;
+    border-color: ButtonText;
+    color: HighlightText;
+  }
+  .binary-native:is(:checked, :indeterminate) + .binary-indicator,
+  .binary-indicator:is([data-checked], [data-mixed]),
+  .binary-control:not([data-readonly]):not(:has(:disabled)):is(:hover, :active, [data-preview])
+    .binary-native:is(:checked, :indeterminate)
+    + .binary-indicator {
+    background: Highlight;
+    border-color: Highlight;
+  }
+  .binary-native:disabled + .binary-indicator {
+    background: Canvas;
+    border-color: GrayText;
+    color: GrayText;
+  }
+  .binary-control[data-status='danger'] .binary-indicator {
+    outline: 1px solid CanvasText;
+  }
+  .binary-native:focus-visible + .binary-indicator,
+  .binary-control[data-preview='focus'] .binary-indicator {
+    outline: 2px solid Highlight;
+    outline-offset: 2px;
+  }
+}
