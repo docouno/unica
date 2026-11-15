@@ -178,17 +178,6 @@
   outline: 0;
 }
 
-.app-shell-search kbd {
-  flex: none;
-  padding: 0 var(--space-4);
-  border: 1px solid var(--border-default);
-  border-radius: var(--radius-xs);
-  color: var(--fg-muted);
-  font-family: var(--font-family-mono);
-  font-size: var(--text-size-caption-m);
-  line-height: var(--text-size-caption-m-lh);
-}
-
 .app-shell-workspace-status {
   display: flex;
   align-items: center;
