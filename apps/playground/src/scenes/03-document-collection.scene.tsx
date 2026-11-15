@@ -142,7 +142,9 @@ function CollectionScene(): ReactElement {
                 <Title as="h1" size="heading-l">
                   Runbooks & Playbooks
                 </Title>
-                <Badge status="success">28 verified</Badge>
+                <Badge size="s" status="success">
+                  28 verified
+                </Badge>
               </div>
               <Select
                 className="folio-sort-control"
@@ -294,7 +296,9 @@ function CollectionScene(): ReactElement {
                 {visibleRows.map((row) => (
                   <Card key={row.title}>
                     <DocumentName>{row.title}</DocumentName>
-                    <Badge status="neutral">{row.tier}</Badge>
+                    <Badge size="s" status="neutral">
+                      {row.tier}
+                    </Badge>
                     <Person initials={row.initials} name={row.owner} />
                   </Card>
                 ))}

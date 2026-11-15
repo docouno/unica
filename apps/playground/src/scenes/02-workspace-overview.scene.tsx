@@ -145,7 +145,7 @@ function OverviewScene(): ReactElement {
               </div>
             }
           >
-            <Badge status="success" dot>
+            <Badge size="s" status="success" dot>
               Synced 2m ago
             </Badge>
           </PageIntro>

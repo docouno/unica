@@ -286,7 +286,7 @@ export function RunbookArticle({ compact = false }: { readonly compact?: boolean
   return (
     <article className={`folio-prose folio-runbook ${compact ? 'folio-runbook-compact' : ''}`}>
       <div className="folio-row folio-wrap">
-        <Badge status="success" dot>
+        <Badge size="s" status="success" dot>
           Verified Runbook
         </Badge>
         {!compact && (
