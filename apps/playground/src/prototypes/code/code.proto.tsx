@@ -2,8 +2,33 @@ import type { ComponentPropsWithRef, ReactElement, ReactNode } from 'react';
 import './code.css';
 import '../scrollbar/scrollbar.css';
 
-export function Code({ className = '', ...props }: ComponentPropsWithRef<'code'>): ReactElement {
-  return <code {...props} className={`code-proto ${className}`} dir="ltr" />;
+export type CodeTone = 'neutral' | 'info' | 'success' | 'warning' | 'danger' | 'inherit';
+
+export interface CodeProps extends ComponentPropsWithRef<'code'> {
+  readonly size?: 'inherit' | 's' | 'm' | 'l';
+  readonly tone?: CodeTone;
+  readonly plate?: boolean;
+}
+
+// Design reference only; these controls do not freeze the package API.
+export function Code({
+  size = 'inherit',
+  tone = 'neutral',
+  plate = true,
+  dir = 'ltr',
+  className = '',
+  ...props
+}: CodeProps): ReactElement {
+  return (
+    <code
+      {...props}
+      className={`code-proto ${className}`}
+      dir={dir}
+      data-size={size}
+      data-tone={tone}
+      data-plate={plate}
+    />
+  );
 }
 
 export interface CodeBlockProps extends ComponentPropsWithRef<'pre'> {
