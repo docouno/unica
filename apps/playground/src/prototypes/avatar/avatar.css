@@ -6,6 +6,9 @@
   font-family: var(--font-family-base);
   font-weight: 600;
   line-height: 1;
+  letter-spacing: normal;
+  text-indent: 0;
+  text-transform: none;
 }
 :is(.avatar-proto, .avatar-group-proto)[data-size='2xs'] {
   --avatar-size: 20px;
@@ -63,6 +66,18 @@
   white-space: nowrap;
   overflow: hidden;
 }
+/* A cap-height baseline strut centers letters, not the font's em/line box.
+   Accents and descenders retain their natural extension; glyph slots stay geometric. */
+.avatar-proto-initials {
+  display: block;
+  line-height: 0;
+}
+.avatar-proto-initials::before {
+  content: '';
+  display: inline-block;
+  block-size: 0.73em;
+  block-size: 1cap;
+}
 .avatar-proto-fallback > svg {
   font-size: var(--avatar-icon);
 }
@@ -79,8 +94,14 @@
   visibility: visible;
 }
 .avatar-group-proto {
+  /* Larger text earns space between identities, without shrinking letters or frames. */
+  --avatar-effective-overlap: max(
+    0px,
+    calc(var(--avatar-overlap) - (var(--font-scale) - 1) * 10px)
+  );
   --avatar-step: calc(
-    var(--avatar-size) + 2px - (var(--avatar-overlap) + 2px) * var(--avatar-group-overlap-factor)
+    var(--avatar-size) + 2px - (var(--avatar-effective-overlap) + 2px) *
+      var(--avatar-group-overlap-factor)
   );
   display: inline-flex;
   align-items: center;
@@ -100,11 +121,13 @@
 .avatar-group-proto > li + li {
   margin-inline-start: calc(var(--avatar-step) - var(--avatar-size));
 }
-.avatar-group-proto-member:not(:last-child) > .avatar-proto {
+.avatar-group-proto-member:not(:last-child) .avatar-proto {
   mask: var(--avatar-cutout);
 }
 .avatar-group-proto-member:not(:last-child) .avatar-proto-fallback {
-  padding-inline-end: calc((var(--avatar-overlap) + 2px) * var(--avatar-group-overlap-factor));
+  padding-inline-end: calc(
+    (var(--avatar-effective-overlap) + 2px) * var(--avatar-group-overlap-factor) / 2
+  );
 }
 .avatar-group-proto[data-size='s'],
 .avatar-group-proto[data-size='s'] .avatar-proto {

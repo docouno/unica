@@ -2,6 +2,7 @@ import { useId, useState } from 'react';
 import type { ComponentPropsWithRef, CSSProperties, ReactElement, ReactNode } from 'react';
 import { UserIcon } from '@phosphor-icons/react';
 import { Icon } from '../icon/icon.proto.js';
+import { AvatarNameHint } from './avatar-tooltip.proto.js';
 import './avatar.css';
 
 export type AvatarSize = '2xs' | 'xs' | 's' | 'm' | 'l';
@@ -71,6 +72,7 @@ export function Avatar({
   ...props
 }: AvatarProps): ReactElement {
   const initials = initialsFor(name, size === '2xs');
+  const mark = fallback ?? (initials || <Icon icon={UserIcon} />);
   return (
     <span
       {...props}
@@ -82,7 +84,11 @@ export function Avatar({
       aria-hidden={alt ? undefined : true}
     >
       <span className="avatar-proto-fallback" aria-hidden="true" inert>
-        {fallback ?? (initials || <Icon icon={UserIcon} />)}
+        {typeof mark === 'string' || typeof mark === 'number' ? (
+          <span className="avatar-proto-initials">{mark}</span>
+        ) : (
+          mark
+        )}
       </span>
       {src && !previewStatus && <AvatarImage key={src} src={src} imagePosition={imagePosition} />}
     </span>
@@ -102,11 +108,13 @@ export interface AvatarGroupProps extends Omit<ComponentPropsWithRef<'ul'>, 'chi
   readonly members: readonly AvatarGroupMember[];
   readonly size?: AvatarGroupSize;
   readonly max?: number;
+  /** Opt-in name hints on hover and keyboard focus. */
+  readonly showNames?: boolean;
   readonly getOverflowLabel?: (count: number) => string;
 }
 
 const groupGeometry: Record<AvatarGroupSize, { dimension: number; overlap: number }> = {
-  xs: { dimension: 24, overlap: 2 },
+  xs: { dimension: 24, overlap: 4 },
   s: { dimension: 32, overlap: 4 },
   m: { dimension: 40, overlap: 6 },
   l: { dimension: 48, overlap: 8 },
@@ -119,6 +127,7 @@ export function AvatarGroup({
   members,
   size = 'm',
   max = 4,
+  showNames = false,
   getOverflowLabel = (count) => `${String(count)} more members`,
   className = '',
   style,
@@ -147,44 +156,51 @@ export function AvatarGroup({
         } as CSSProperties
       }
     >
-      {visible.map((member, index) => (
-        <li key={member.id} className="avatar-group-proto-member">
-          {index === 0 && (
-            <svg className="avatar-group-proto-mask" aria-hidden="true" width="0" height="0">
-              <defs>
-                <mask
-                  id={maskId}
-                  maskUnits="userSpaceOnUse"
-                  x="0"
-                  y="0"
-                  width={dimension}
-                  height={dimension}
-                >
-                  <rect width={dimension} height={dimension} fill="white" />
-                  <rect
-                    className="avatar-group-proto-cutout"
-                    y={-gap}
-                    width={dimension + gap * 2}
-                    height={dimension + gap * 2}
-                    fill="black"
-                  />
-                </mask>
-              </defs>
-            </svg>
-          )}
+      {visible.map((member, index) => {
+        const identity = (
           <Avatar
             name={member.name}
-            alt={member.name}
+            alt={showNames ? '' : member.name}
             src={member.src}
             fallback={member.fallback ?? (initialsFor(member.name, size === 'xs') || undefined)}
             imagePosition={member.imagePosition}
             size={size}
           />
-        </li>
-      ))}
+        );
+        return (
+          <li key={member.id} className="avatar-group-proto-member">
+            {index === 0 && (
+              <svg className="avatar-group-proto-mask" aria-hidden="true" width="0" height="0">
+                <defs>
+                  <mask
+                    id={maskId}
+                    maskUnits="userSpaceOnUse"
+                    x="0"
+                    y="0"
+                    width={dimension}
+                    height={dimension}
+                  >
+                    <rect width={dimension} height={dimension} fill="white" />
+                    <rect
+                      className="avatar-group-proto-cutout"
+                      y={-gap}
+                      width={dimension + gap * 2}
+                      height={dimension + gap * 2}
+                      fill="black"
+                    />
+                  </mask>
+                </defs>
+              </svg>
+            )}
+            {showNames ? <AvatarNameHint name={member.name}>{identity}</AvatarNameHint> : identity}
+          </li>
+        );
+      })}
       {remaining > 0 && (
         <li className="avatar-group-proto-overflow" aria-label={getOverflowLabel(remaining)}>
-          <span aria-hidden="true">+{remaining}</span>
+          <span className="avatar-proto-initials" aria-hidden="true">
+            +{remaining}
+          </span>
         </li>
       )}
     </ul>

@@ -4,7 +4,7 @@ Status: design candidate, awaiting visual acceptance. This is a playground refer
 
 ## Purpose and boundaries
 
-Avatar identifies a person through an image or a quiet fallback. AvatarGroup summarizes people attached to an object. Both are passive. Names, profile links, selection, online status, invitations, uploads and account menus belong to surrounding components. There is no material, status-color, random palette, selected or disabled axis on an identity frame. A disabled enclosing action dims its complete content through that action's recipe.
+Avatar identifies a person through an image or a quiet fallback. AvatarGroup summarizes people attached to an object. Both are passive. Names, profile links, selection, online status, invitations, uploads and account menus belong to surrounding components. There is no material, status-color, random palette, selected or disabled axis on an identity frame. The enclosing action owns unavailable feedback: the account composition mutes its label and reduces the identity visual to 45% opacity.
 
 Photos keep their original colors. Fallbacks and remainder counters use `--neutral-soft-bg` / `--neutral-soft-fg`; semantic status colors are reserved for neighboring feedback. Soft has matte borderless fallback plates, Frost a subtle neutral rim, and Pixel a square structural frame. There is no glow, drop shadow, scale or press travel on the avatar itself.
 
@@ -15,12 +15,12 @@ A fixed square frame contains a fallback and a cover-cropped image. The image re
 | Size  | Frame | Initials token         | Glyph | Group overlap    |
 | ----- | ----- | ---------------------- | ----- | ---------------- |
 | `2xs` | 20px  | caption-s, one initial | 12px  | Not a group size |
-| `xs`  | 24px  | caption-s              | 14px  | 2px              |
+| `xs`  | 24px  | caption-s              | 14px  | 4px              |
 | `s`   | 32px  | caption-m              | 18px  | 4px              |
 | `m`   | 40px  | body-s                 | 20px  | 6px              |
 | `l`   | 48px  | body-m                 | 24px  | 8px              |
 
-`m` is the default. Initials use weight 600 and line-height 1. Typography follows the active theme and font scale; frame geometry stays fixed at 120% text. Compact sizes are for bylines, table cells and headers, not standalone touch targets. Do not enlarge or shrink a frame to fit a long name.
+`m` is the default. Initials use weight 600. Center the capital-letter body on the frame, not the font's line box; accents and descenders keep their natural extension. Icons retain geometric centering. The prototype uses a cap-height baseline strut for text and counters, with no font-specific offsets or movement of the glyph slot. Letter spacing and indentation reset at the identity boundary. Typography follows the active theme and font scale; frame geometry stays fixed at 120% text. Compact sizes are for bylines, table cells and headers, not standalone touch targets. Do not enlarge or shrink a frame to fit a long name.
 
 Images default to `object-fit: cover; object-position: 50% 50%`. The host can supply a focal point for an off-center portrait. Images are never mirrored in RTL or tinted by the theme. The portrait fixtures test real faces and light/dark boundaries; the existing wide/tall geometric fixtures separately expose aspect-ratio cropping.
 
@@ -33,7 +33,7 @@ Images default to `object-fit: cover; object-position: 50% 50%`. The host can su
 
 Combining marks remain attached to their letter. Preserve name order; do not infer culturally specific surnames, reorder scripts or derive a color from the name. Hosts can supply a compact mark where word segmentation is inappropriate. Custom fallback content must fit the frame, remain passive and avoid long strings. A full name stays in the accessible label or adjacent text, never inside the frame.
 
-The CJK example uses a local two-glyph Noto Sans SC font fixture so its appearance is reproducible in the capture container. This font belongs to the specimen only; production hosts supply appropriate script coverage through their typography. Font provenance and its Open Font License are included in `public/assets/licenses/avatar-cjk.txt` and `avatar-cjk-OFL.txt`.
+The CJK example uses a local two-glyph Noto Sans SC font fixture so its appearance is reproducible in the capture container. The optional-name section similarly supplies local Noto Sans Arabic text subsets for its Arabic fixture (`public/assets/licenses/avatar-arabic-*.txt`). These fonts belong to the specimen only; production hosts supply appropriate script coverage through their typography. Font provenance and its Open Font License are included in `public/assets/licenses/avatar-cjk.txt` and `avatar-cjk-OFL.txt`.
 
 ## Image states and transitions
 
@@ -55,7 +55,7 @@ The specimen includes real image success/failure/removal/retry, changing identit
 
 The group is an ordered, named list of passive people. It preserves supplied order; later items paint in front. There is no animation on membership or limit changes. `max` defaults to four visible people; the remainder is additional to that limit. Empty groups render nothing, a single person has no offset, and a group at or below the limit has no `+0`.
 
-All member frames keep the full size in the table. A 2px transparent seam is cut out of the preceding frame around the next silhouette. It exposes the actual underlying surface, including translucent glass and patterned underlays; it is not a canvas-colored border and does not require a background-color prop. Pixel uses complete square frames separated by a 2px gap, retaining all four edges; the theme sets `--avatar-group-overlap-factor: 0` instead of the overlapping rounded recipe (`1`). The final member remains complete. Groups calibrate their monograms for the smaller exposed area: `xs` uses one initial with caption-s; `s` uses two with caption-s, `m` with caption-l, and `l` with body-s. This fixed group scale applies to every name, rather than shrinking arbitrary text to fit. Counters use the same group type scale. Initials in covered frames are optically centered in the exposed area by an inline-end inset equal to overlap + 2px; photographs retain their original center crop.
+All member frames keep the full size in the table. A 2px transparent seam is cut out of the preceding frame around the next silhouette. It exposes the actual underlying surface, including translucent glass and patterned underlays; it is not a canvas-colored border and does not require a background-color prop. Pixel uses complete square frames separated by a 2px gap, retaining all four edges; the theme sets `--avatar-group-overlap-factor: 0` instead of the overlapping rounded recipe (`1`). The final member remains complete. Groups calibrate their monograms for the smaller exposed area: `xs` uses one initial with caption-s; `s` uses two with caption-s, `m` with caption-l, and `l` with body-s. This fixed group scale applies to every name, rather than shrinking arbitrary text to fit. Counters use the same group type scale. Covered frames apply a small optical adjustment toward the open side: 1.5px / 1.5px / 2px / 2.5px for xs / s / m / l at 100% text. This follows the remaining rounded silhouette rather than treating it as a narrow rectangle. At 120% text, each overlap relaxes by 2px and the optical adjustment decreases accordingly: wide initials gain space without shrinking the letters or frames. The normal view retains the denser stack. Pixel applies no adjustment. Photographs retain their original center crop. An uncovered final member remains centered in its complete frame.
 
 The remainder is static, neutral and exact (`+1`, `+12`, `+128`, `+1200`). It shares the avatar height and has a minimum width of one frame, with 5px inline padding. Longer numbers expand its width into a capsule in Soft/Frost or a rectangle in Pixel. Do not reduce the type size, abbreviate to `+99+`, pretend that the counter is a person, or make it a small hidden button. A localized accessible label describes the remainder, for example “12 more members”.
 
@@ -63,11 +63,36 @@ The entire stack remains on one line. Hosts choose a visible-member limit that f
 
 RTL mirrors logical overlap and the seam, preserving source order. Faces and letter order remain unchanged. The `+N` text is isolated left-to-right so the plus stays before the number.
 
+## Optional name hints
+
+Name hints are opt-in (`showNames` in this prototype). The default group remains entirely passive and unfocusable. When enabled, each visible identity is a focusable information graphic, not a button or link: Tab / Shift+Tab visits names, and Enter / Space has no activation behavior. The full supplied name is its accessible name whether the tooltip is open or closed; do not announce a duplicate description.
+
+- Fine-pointer hover opens a name after 300ms; keyboard focus opens it immediately. Only one name is visible at a time. A new hover/focus target replaces the previous name; closing it does not resurrect the older bubble.
+- The bubble uses the shared Tooltip material, centered 8px above the full member frame. Flip below when there is insufficient room above, and keep 8px from viewport edges. Long names wrap within 20rem / the available viewport, without truncation or scrollbars. The local native-popover wrapper allows the shared material's decorative rim to paint outside its box; it does not turn that 1px rim into scrollable content. Name text keeps its own direction in LTR and RTL groups.
+- Keep the original stack, masks and member order on hover/focus. Keyboard focus draws one outer group contour; the positioned name identifies the current member. No avatar is raised, enlarged or turned into a selected state.
+- The tooltip is hoverable, remains visible while its trigger or bubble is hovered or the trigger focused, and has a 150ms pointer-transfer grace period. Escape dismisses it without moving focus; it stays dismissed until the trigger is left and revisited.
+- The bubble contains only the name. It is not a profile preview, menu, online-status badge or source of hidden member names. The remainder remains an unfocusable exact count.
+- Touch does not depend on hover or long press. Offer the external full member list when people need to discover identities; the live disclosure demonstrates this route.
+
+The local helper uses native manual popovers and demonstrates hover, focus, Escape, scrolling/resizing and bounded viewport placement. It is not a reusable Tooltip engine. Complete clipping-ancestor and visual-viewport handling, supported-engine coverage and overlay coordination belong to implementation; the above visual and interaction decisions are fixed.
+
+## Avatar inside an action
+
+An identity and label form an explicit flex row, vertically centered with a fixed avatar and a wrapping text slot. Do not put an inline avatar immediately next to bare text or rely on text-baseline alignment. The example is an action composition, not a new AvatarButton component or library API.
+
+| Action size | Avatar | Minimum height | Leading / vertical visual inset | Avatar-to-label gap |
+| ----------- | ------ | -------------- | ------------------------------- | ------------------- |
+| S           | 20px   | 30px           | 5px                             | 6px                 |
+| M           | 24px   | 40px           | 8px                             | 8px                 |
+| L           | 32px   | 48px           | 8px                             | 10px                |
+
+Insets include the action border. The trailing label padding follows Button (S 12px / Pixel 10px, M 16px, L 20px, before its border). At increased text scale or with a wrapped label, the row may increase the action height; avatar and label stay centered together. Keep native coarse-pointer target expansion from Button. Photo, initials and unknown glyph use the same geometry. Loading hides the entire row without changing its dimensions. Disabled keeps the frame in place and subdues its image/fallback to 45% opacity together with Button's muted label. Focus, hover, press and material travel belong to Button.
+
 ## Interaction and accessibility outcomes
 
 - Informative standalone identity: announce the full supplied name once as an image, regardless of whether photo or fallback is visible. Do not read initials as a second label.
 - Decorative identity next to the same person's name, or inside an already named action: `alt=""`; hide the entire visual subtree from accessibility. A loading or failed image must not change this choice.
-- Group: named list, each visible person's full name, then a descriptive remainder. No member or counter creates a Tab stop. Hidden members are not silently presented as though they were visible; an external full-list action provides access when needed.
+- Default group: named list, each visible person's full name, then a descriptive remainder. Without name hints, no member or counter creates a Tab stop. Hidden members are not silently presented as though they were visible; an external full-list action provides access when needed.
 - Custom fallback glyphs are decorative and passive. No focusable descendants belong inside an Avatar.
 - An enclosing Button/Link owns keyboard input, hit area, focus ring, hover, press and unavailable states. The avatar has no separate focus contour. The specimen's account buttons pin those external states for comparison.
 - The live “View all” example is an external inline disclosure: Enter/Space toggles it, `aria-expanded` changes, and focus stays on the button. Closing removes the visible list without a focus jump. The example does not define a built-in AvatarGroup menu or profile picker.
@@ -75,9 +100,9 @@ RTL mirrors logical overlap and the seam, preserving source order. Faces and let
 
 ## Review route and implementation boundary
 
-Specimen sections: `sizes`, `fallback`, `images`, `crop`, `groups`, `surfaces`, `direction`, `usage`. The surface study paints Shell, Canvas, Card and real Overlay material over the workbench underlay. Check the existing overview/editor collaboration bars, collection table, document-owner HoverCard and inspector/member rows in the Folio scenes; these are consumers, not duplicate application screens inside the specimen.
+Specimen sections: `sizes`, `fallback`, `images`, `crop`, `groups`, `surfaces`, `direction`, `names`, `usage`, `actions`. The surface study paints Shell, Canvas, Card and real Overlay material over the workbench underlay. Check the existing overview/editor collaboration bars, collection table, document-owner HoverCard and inspector/member rows in the Folio scenes; these are consumers, not duplicate application screens inside the specimen.
 
-Check 360/768/1280/1440px, 120% text, RTL, keyboard disclosure, image failure/retry, forced colors and reduced motion. Judge face recognition, text fit, edge weight and visual quietness together with numerical contrast. A frame perimeter is not a field boundary and should not be strengthened just to resemble an interactive control.
+Check 360/768/1280/1440px, 120% text, RTL, keyboard disclosure, image failure/retry, forced colors and reduced motion. Inspect capital-body centering and action insets at a readable zoom, including the actual owner HoverCard. Judge face recognition, text fit, edge weight and visual quietness together with numerical contrast. A frame perimeter is not a field boundary and should not be strengthened just to resemble an interactive control.
 
 The prototype's props and SVG mask are inspection tools. Wave 2 designs the exact React 19 API, DOM/image lifecycle, generation-safe responsive sources, localization surface, attribute restrictions and browser compatibility while preserving this experience. It must verify clipping and transparent cutouts on all supported engines, particularly SVG-mask/forced-colors behavior. No package export, production contract or acceptance of those mechanisms is implied here.
 

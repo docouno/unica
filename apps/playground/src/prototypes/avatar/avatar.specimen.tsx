@@ -59,10 +59,22 @@ export default defineSpecimen({
       render: () => <Example section="direction" />,
     },
     {
+      id: 'names',
+      title: 'Optional names on hover and focus',
+      kind: 'states',
+      render: () => <Example section="names" />,
+    },
+    {
       id: 'usage',
-      title: 'Identity next to actions',
+      title: 'Group and full member list',
       kind: 'context',
       render: () => <Example section="usage" />,
+    },
+    {
+      id: 'actions',
+      title: 'Avatar inside an action',
+      kind: 'states',
+      render: () => <Example section="actions" />,
     },
   ],
 });

@@ -4,8 +4,10 @@ import { ArrowClockwiseIcon, UsersIcon } from '@phosphor-icons/react';
 import { Avatar, AvatarGroup } from './avatar.proto.js';
 import type { AvatarGroupMember, AvatarGroupSize, AvatarSize } from './avatar.proto.js';
 import { Button } from '../button/button.proto.js';
+import type { ButtonProps } from '../button/button.proto.js';
 import { Icon } from '../icon/icon.proto.js';
 import { Text } from '../text/text.proto.js';
+import { Tooltip } from '../menu/menu.proto.js';
 import './avatar.examples.css';
 
 const lightPortrait = '/assets/avatar-person-light.png';
@@ -52,6 +54,7 @@ function Scale(): ReactElement {
           >
             <Avatar src={lightPortrait} name="Content editor" alt="Content editor" size={size} />
             <Avatar name="Workspace writer" alt="Workspace writer" size={size} />
+            <Avatar name="Database reliability" alt="Database reliability" size={size} />
             <Avatar alt="Unassigned person" size={size} />
           </Sample>
         ))}
@@ -405,7 +408,7 @@ function Usage(): ReactElement {
     <div className="avatar-example-stack">
       <div className="avatar-example-live">
         <div className="avatar-example-controls">
-          <AvatarGroup label="Contributors" members={members} size="s" max={max} />
+          <AvatarGroup label="Contributors" members={members} size="s" max={max} showNames />
           <Button
             size="s"
             variant="ghost"
@@ -444,34 +447,146 @@ function Usage(): ReactElement {
           </div>
         )}
       </div>
+      <p className="avatar-example-note">
+        Enter / Space toggles the full list; focus stays on the button. The list is also the
+        touch-accessible route to names. Adjacent names own the accessible identity.
+      </p>
+    </div>
+  );
+}
+
+function Names(): ReactElement {
+  const namedMembers: readonly AvatarGroupMember[] = [
+    members[0]!,
+    members[2]!,
+    { id: 'long-name', name: 'Alexandra Montgomery-Wellington' },
+    { id: 'rtl-name', name: 'ندى منصور', src: darkPortrait },
+  ];
+  return (
+    <div className="avatar-example-stack avatar-example-names">
+      <p className="avatar-example-note">
+        Optional names: hover a person or Tab to a visible member. Focus shows the name immediately;
+        hover waits 300ms. Escape dismisses it. The avatar stays in its original stacking order.
+      </p>
       <div className="avatar-example-row">
-        {(['rest', 'hover', 'active', 'focus', 'disabled'] as const).map((state) => (
-          <Sample key={state} label={state}>
-            <Button
-              variant="ghost"
-              tone="neutral"
-              size="m"
-              disabled={state === 'disabled'}
-              previewState={state === 'disabled' ? undefined : state}
-              aria-label="Open account"
-            >
-              <Avatar src={lightPortrait} name="Content editor" alt="" size="xs" />
-              Account
-            </Button>
+        {groupSizes.map((size) => (
+          <Sample key={size} label={`${size} · live names`}>
+            <AvatarGroup
+              label={`${size} named contributors`}
+              members={namedMembers}
+              size={size}
+              showNames
+            />
           </Sample>
         ))}
       </div>
+      <div className="avatar-example-row">
+        <Sample label="Default · no name hints or Tab stops">
+          <AvatarGroup label="Passive contributors" members={members} size="s" max={3} />
+        </Sample>
+        <Sample label="Long name · material reference">
+          <Tooltip className="avatar-example-name-reference">
+            Alexandra Montgomery-Wellington
+          </Tooltip>
+        </Sample>
+      </div>
       <p className="avatar-example-note">
-        Pinned action states belong to the enclosing Button. Avatar itself has no hover, pressed,
-        selected or disabled state. In the live disclosure above, Enter / Space opens the list;
-        focus stays on the button. Adjacent names own the accessible identity.
+        The bubble stays open while hovered and never contains actions. A shared group focus ring
+        leaves the overlap intact. Names keep their own reading direction. The separate full-list
+        example demonstrates the touch route; the count is not a hidden menu trigger.
+      </p>
+    </div>
+  );
+}
+
+// An action composition, not a proposed AvatarButton library component.
+function AccountAction({
+  size = 'm',
+  source = 'photo',
+  children = 'Account',
+  ...props
+}: ButtonProps & { readonly source?: 'photo' | 'initials' | 'unknown' }): ReactElement {
+  return (
+    <Button variant="ghost" tone="neutral" {...props} size={size} className="avatar-example-action">
+      <span className="avatar-example-action-row">
+        <Avatar
+          src={source === 'photo' ? lightPortrait : undefined}
+          name={source === 'unknown' ? '' : 'Content editor'}
+          alt=""
+          size={{ s: '2xs', m: 'xs', l: 's' }[size] as AvatarSize}
+        />
+        <span className="avatar-example-action-label">{children}</span>
+      </span>
+    </Button>
+  );
+}
+
+function Actions(): ReactElement {
+  return (
+    <div className="avatar-example-stack">
+      <p className="avatar-example-note">
+        The enclosing action owns its target, focus and availability. The identity is a fixed
+        leading visual; its label wraps independently.
+      </p>
+      {(['s', 'm', 'l'] as const).map((size) => (
+        <div className="avatar-example-row" key={size}>
+          <Sample label={`${size} · photo`}>
+            <AccountAction size={size} />
+          </Sample>
+          <Sample label={`${size} · initials`}>
+            <AccountAction size={size} source="initials" />
+          </Sample>
+          <Sample label={`${size} · unknown`}>
+            <AccountAction size={size} source="unknown" />
+          </Sample>
+          <Sample label={`${size} · secondary`}>
+            <AccountAction size={size} variant="secondary" />
+          </Sample>
+        </div>
+      ))}
+      <div className="avatar-example-rule" />
+      <div className="avatar-example-row">
+        {(['rest', 'hover', 'active', 'focus', 'disabled', 'loading'] as const).map((state) => (
+          <Sample key={state} label={state}>
+            <AccountAction
+              disabled={state === 'disabled'}
+              loading={state === 'loading'}
+              previewState={state === 'disabled' || state === 'loading' ? undefined : state}
+            />
+          </Sample>
+        ))}
+      </div>
+      <div className="avatar-example-row">
+        <Sample label="Unavailable initials">
+          <AccountAction source="initials" disabled />
+        </Sample>
+        <Sample label="Wrapped label · 176px">
+          <div className="avatar-example-action-narrow">
+            <AccountAction variant="secondary" width="full">
+              Editorial workspace account
+            </AccountAction>
+          </div>
+        </Sample>
+      </div>
+      <p className="avatar-example-note">
+        State previews are pinned. Avatar itself has no hover, pressed, selected or disabled state;
+        this enclosing action subdues its identity together with the label when unavailable.
       </p>
     </div>
   );
 }
 
 export type AvatarExampleSection =
-  'sizes' | 'fallback' | 'images' | 'crop' | 'groups' | 'surfaces' | 'direction' | 'usage';
+  | 'sizes'
+  | 'fallback'
+  | 'images'
+  | 'crop'
+  | 'groups'
+  | 'surfaces'
+  | 'direction'
+  | 'usage'
+  | 'actions'
+  | 'names';
 
 const examples: Record<AvatarExampleSection, () => ReactElement> = {
   sizes: Scale,
@@ -482,6 +597,8 @@ const examples: Record<AvatarExampleSection, () => ReactElement> = {
   surfaces: Surfaces,
   direction: Direction,
   usage: Usage,
+  actions: Actions,
+  names: Names,
 };
 
 export default function AvatarExamples({
