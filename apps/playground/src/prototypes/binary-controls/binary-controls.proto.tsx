@@ -232,3 +232,219 @@ export function CheckboxGroup({
     </CheckboxContext>
   );
 }
+
+export function RadioIndicator({
+  size = 'm',
+  checked,
+}: Omit<BinaryIndicatorProps, 'indeterminate'>): ReactElement {
+  return (
+    <span
+      className="binary-indicator"
+      data-kind="radio"
+      data-size={size}
+      data-checked={checked || undefined}
+      aria-hidden="true"
+    >
+      <span className="binary-dot" />
+    </span>
+  );
+}
+
+interface RadioContextValue {
+  readonly value: string | null;
+  readonly name: string;
+  readonly size?: ControlSize | undefined;
+  readonly status?: BinaryStatus | undefined;
+  readonly readOnly?: boolean | undefined;
+  readonly disabled?: boolean | undefined;
+  readonly onValueChange: (value: string) => void;
+}
+const RadioContext = createContext<RadioContextValue | null>(null);
+
+export type RadioProps = Omit<CheckboxProps, 'readOnly' | 'indeterminate' | 'onCheckedChange'>;
+
+export function Radio({
+  label,
+  description,
+  size,
+  status,
+  previewState,
+  className = '',
+  style,
+  hidden,
+  id,
+  ref,
+  checked,
+  defaultChecked,
+  disabled,
+  name,
+  value,
+  onClick,
+  onChange,
+  onKeyDown,
+  ...props
+}: RadioProps): ReactElement {
+  const group = useContext(RadioContext);
+  const generatedId = useId();
+  const inputId = id ?? generatedId;
+  const unavailable = disabled || group?.disabled;
+  const locked = group?.readOnly;
+  const effectiveSize = size ?? group?.size ?? 'm';
+  const effectiveStatus = unavailable ? 'neutral' : (status ?? group?.status ?? 'neutral');
+  return (
+    <label
+      className={`binary-control ${className}`}
+      data-size={effectiveSize}
+      data-status={effectiveStatus}
+      data-readonly={locked || undefined}
+      data-preview={previewState}
+      data-standalone={(!label && !description) || undefined}
+      style={style}
+      hidden={hidden}
+    >
+      <span className="binary-target">
+        <input
+          {...props}
+          ref={ref}
+          id={inputId}
+          type="radio"
+          className="binary-native"
+          name={name ?? group?.name}
+          value={value}
+          checked={group ? group.value === value : checked}
+          defaultChecked={group ? undefined : defaultChecked}
+          disabled={unavailable}
+          aria-invalid={effectiveStatus === 'danger' || props['aria-invalid']}
+          aria-labelledby={
+            props['aria-labelledby'] ??
+            (label && !props['aria-label'] ? `${inputId}-label` : undefined)
+          }
+          aria-describedby={
+            [props['aria-describedby'], description ? `${inputId}-description` : '']
+              .filter(Boolean)
+              .join(' ') || undefined
+          }
+          onClick={(event) => {
+            onClick?.(event);
+            if (locked) {
+              event.preventDefault();
+            }
+          }}
+          onKeyDown={(event) => {
+            onKeyDown?.(event);
+            if (
+              locked &&
+              [' ', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End'].includes(
+                event.key,
+              )
+            ) {
+              event.preventDefault();
+            }
+          }}
+          onChange={(event) => {
+            if (locked) {
+              return;
+            }
+            group?.onValueChange(event.currentTarget.value);
+            onChange?.(event);
+          }}
+        />
+        <RadioIndicator size={effectiveSize} />
+      </span>
+      {(label || description) && (
+        <span className="binary-copy">
+          {label && (
+            <span className="binary-label" id={`${inputId}-label`}>
+              {label}
+            </span>
+          )}
+          {description && (
+            <span className="binary-description" id={`${inputId}-description`}>
+              {description}
+            </span>
+          )}
+        </span>
+      )}
+    </label>
+  );
+}
+
+export interface RadioGroupProps extends Omit<HTMLAttributes<HTMLDivElement>, 'defaultValue'> {
+  readonly value?: string | null | undefined;
+  readonly defaultValue?: string | null | undefined;
+  readonly onValueChange?: ((value: string) => void) | undefined;
+  readonly name?: string | undefined;
+  readonly size?: ControlSize | undefined;
+  readonly status?: BinaryStatus | undefined;
+  readonly readOnly?: boolean | undefined;
+  readonly disabled?: boolean | undefined;
+  readonly orientation?: 'vertical' | 'horizontal' | undefined;
+}
+
+export function RadioGroup({
+  value,
+  defaultValue = null,
+  onValueChange,
+  name,
+  size,
+  status,
+  disabled,
+  readOnly,
+  orientation = 'vertical',
+  className = '',
+  children,
+  onKeyDown,
+  ...props
+}: RadioGroupProps): ReactElement {
+  const generatedName = useId();
+  const [localValue, setLocalValue] = useState<string | null>(defaultValue);
+  return (
+    <RadioContext
+      value={{
+        value: value === undefined ? localValue : value,
+        name: name ?? generatedName,
+        size,
+        status,
+        disabled,
+        readOnly,
+        onValueChange: (next) => {
+          setLocalValue(next);
+          onValueChange?.(next);
+        },
+      }}
+    >
+      <div
+        {...props}
+        role="radiogroup"
+        aria-orientation={orientation}
+        aria-readonly={readOnly || undefined}
+        aria-disabled={disabled || undefined}
+        aria-invalid={status === 'danger' || undefined}
+        className={`binary-group ${className}`}
+        data-orientation={orientation}
+        onKeyDown={(event) => {
+          onKeyDown?.(event);
+          if (
+            event.defaultPrevented ||
+            readOnly ||
+            disabled ||
+            !['Home', 'End'].includes(event.key)
+          ) {
+            return;
+          }
+          const options = [
+            ...event.currentTarget.querySelectorAll<HTMLInputElement>(
+              'input[type="radio"]:enabled',
+            ),
+          ];
+          const option = event.key === 'Home' ? options[0] : options.at(-1);
+          event.preventDefault();
+          option?.focus();
+          option?.click();
+        }}
+      >
+        {children}
+      </div>
+    </RadioContext>
+  );
+}

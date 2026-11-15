@@ -1,8 +1,8 @@
 import { useId } from 'react';
 import type { ReactElement } from 'react';
 import { defineSpecimen } from '../../workbench/types.js';
-import { Checkbox } from '../binary-controls/binary-controls.proto.js';
-import { CheckboxCard, Radio, RadioCard, Switch, SwitchCard } from './selection.proto.js';
+import { Checkbox, Radio, RadioGroup } from '../binary-controls/binary-controls.proto.js';
+import { CheckboxCard, RadioCard, Switch, SwitchCard } from './selection.proto.js';
 import '../input/input.css';
 
 function SizesPreview(): ReactElement {
@@ -82,7 +82,9 @@ export default defineSpecimen({
       render: () => (
         <div className="control-examples-proto">
           <Checkbox label="This action is unavailable" disabled />
-          <Radio label="Chosen by workspace policy" defaultChecked readOnly />
+          <RadioGroup aria-label="Workspace policy" readOnly defaultValue="policy">
+            <Radio label="Chosen by workspace policy" value="policy" />
+          </RadioGroup>
           <Switch
             label="Notify the primary owner seven days before quarterly verification expires"
             description="Keeps the current reviewer accountable without sending duplicate reminders."

@@ -52,3 +52,28 @@ The specimen includes sizes/values, pinned hover/press/focus, availability, vali
 Production implementation must preserve these decisions and prove controlled refusal, native reset, form association and serialization, fieldset/inert handling, group required validation, and cross-browser accessibility. The current local group state and validation example do not claim those guarantees. See [Overlays and Forms](../../../../../docs/concepts/overlays-and-forms.md) and the [Workbench workflow](../../../../../docs/workbench.md).
 
 Interaction references: [WAI-ARIA Checkbox pattern](https://www.w3.org/WAI/ARIA/apg/patterns/checkbox/) and [React Aria Checkbox](https://react-aria.adobe.com/Checkbox). The visual treatment is specific to Unica.
+
+## Radio
+
+Open `/?item=radio`. Use Radio for a short, visible set of mutually exclusive alternatives. No answer is a valid initial state when a deliberate decision is required; never silently select the first option. A chosen item cannot be cleared by clicking it again. Offer an explicit “No email” / “None” option when declining is meaningful. Use Select for long lists and SegmentedControl for compact peer modes.
+
+Radio shares Checkbox's row sizes, label/description alignment, target expansion, full-contrast read-only treatment, disabled treatment, status edge, and immediate interaction feedback. The indicator is a true circle at every size and in every theme, including Pixel. Its concentric dot occupies 50% of the interior (7/9/11px at S/M/L); the accent fill and `--fg-on-accent` dot share Checkbox's polarity. Hover/press changes fill or edge, without shrinking the circle, moving the row, or animating a dot bounce. Danger keeps the error edge even when hover and keyboard focus coincide.
+
+### Group outcomes
+
+- A group has one answer, a visible heading or accessible name, and optional help/error text. Vertical flow suits descriptive alternatives. Horizontal flow suits short labels; it wraps as complete options and retains reading order. Long descriptions never align the circle to the middle of the whole block.
+- Tab enters the selected available option. With no selection, forward entry starts at the first available option; native reverse entry may start at the last. Arrow keys move focus and selection together, skipping disabled alternatives and wrapping. Home/End choose the first/last available option. Space selects the focused option and does not clear an existing selection. Enter does not select.
+- Horizontal arrows follow the native browser's radio order; labels and physical placement mirror with RTL. Up/Down remain the unambiguous previous/next choices in either layout. A wrapped group remains one sequence, not a two-dimensional grid.
+- Read-only belongs to the entire group: keep the current value and a focus entry, suppress pointer/Space/arrows/Home/End changes, and show the restriction in nearby help. A single read-only item would be contradictory because choosing a peer must clear it.
+- Disabled may apply to the whole group or a single alternative. A selected option becoming disabled remains visibly selected until the user makes a new choice; do not silently replace it. Keep its explanation readable. If other alternatives are available, Tab must still enter an available neighbor without changing the value. The prototype demonstrates the visual state and native Chromium behavior; the cross-browser entry bridge, including WebKit, belongs to library implementation.
+- Danger represents invalid group input, not a dangerous action. Show a single correction message near the group, retain the selected dot if an existing choice is invalid, and clear obsolete errors when the user corrects the choice. The live example begins empty, reveals an error on “Check selection”, then clears it on selection.
+
+`null`/no answer and an explicit empty-string option are different states; unknown values must not cause an implicit first selection. Production required validation checks that an answer exists. Group disabled/read-only, native form ownership/reset, controlled refusal, fieldset handling, and focus entry across browsers must preserve the agreed outcome.
+
+### Inspection and boundary
+
+Sections cover sizes, live pairs with pinned interaction styling, read-only/disabled groups, unavailable selected options, vertical and wrapping horizontal layouts, deliberate empty selection, validation, long labels, and independent Base/Overlay groups. Each group receives an instance-specific native name so the six artboards never affect one another. `RadioIndicator` is the decorative shared primitive in RadioCard; no extra focus stop or interactive element is introduced.
+
+The prototype uses native arrow behavior plus local Home/End handling. Full reusable navigation, assistive announcement timing, reset/form guarantees, and cross-browser selected-disabled entry are not claimed as shipped behavior. The separate technical implementation may change DOM and state architecture while preserving these decisions.
+
+Interaction reference: [WAI-ARIA Radio Group pattern](https://www.w3.org/WAI/ARIA/apg/patterns/radio/).

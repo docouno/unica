@@ -80,7 +80,7 @@
 }
 
 .binary-native:checked + .binary-indicator,
-.binary-native:indeterminate + .binary-indicator,
+.binary-native:where([type='checkbox']):indeterminate + .binary-indicator,
 .binary-indicator:is([data-checked], [data-mixed]) {
   background: var(--accent-solid);
   border-color: var(--binary-error-edge, var(--accent-solid));
@@ -90,11 +90,11 @@
 .binary-indicator[data-checked] > .binary-check {
   visibility: visible;
 }
-.binary-native:indeterminate + .binary-indicator > .binary-check,
+.binary-native:where([type='checkbox']):indeterminate + .binary-indicator > .binary-check,
 .binary-indicator[data-mixed] > .binary-check {
   visibility: hidden;
 }
-.binary-native:indeterminate + .binary-indicator > .binary-dash,
+.binary-native:where([type='checkbox']):indeterminate + .binary-indicator > .binary-dash,
 .binary-indicator[data-mixed] > .binary-dash {
   visibility: visible;
 }
@@ -105,7 +105,7 @@
 }
 
 .binary-control:not([data-readonly]):not(:has(:disabled)):is(:hover, [data-preview='hover'])
-  .binary-native:is(:checked, :indeterminate)
+  .binary-native:is(:checked, :where([type='checkbox']):indeterminate)
   + .binary-indicator {
   background: var(--accent-solid-hover);
   border-color: var(--binary-error-edge, var(--accent-solid-hover));
@@ -118,7 +118,7 @@
 }
 
 .binary-control:not([data-readonly]):not(:has(:disabled)):is(:active, [data-preview='active'])
-  .binary-native:is(:checked, :indeterminate)
+  .binary-native:is(:checked, :where([type='checkbox']):indeterminate)
   + .binary-indicator {
   background: var(--accent-solid-active);
   border-color: var(--binary-error-edge, var(--accent-solid-active));
@@ -212,10 +212,10 @@
     border-color: ButtonText;
     color: HighlightText;
   }
-  .binary-native:is(:checked, :indeterminate) + .binary-indicator,
+  .binary-native:is(:checked, :where([type='checkbox']):indeterminate) + .binary-indicator,
   .binary-indicator:is([data-checked], [data-mixed]),
   .binary-control:not([data-readonly]):not(:has(:disabled)):is(:hover, :active, [data-preview])
-    .binary-native:is(:checked, :indeterminate)
+    .binary-native:is(:checked, :where([type='checkbox']):indeterminate)
     + .binary-indicator {
     background: Highlight;
     border-color: Highlight;
@@ -233,4 +233,19 @@
     outline: 2px solid Highlight;
     outline-offset: 2px;
   }
+}
+
+.binary-indicator[data-kind='radio'] {
+  border-radius: var(--radius-circular);
+}
+.binary-dot {
+  inline-size: 50%;
+  block-size: 50%;
+  border-radius: var(--radius-circular);
+  background: currentcolor;
+  visibility: hidden;
+}
+.binary-native:checked + .binary-indicator > .binary-dot,
+.binary-indicator[data-checked] > .binary-dot {
+  visibility: visible;
 }
