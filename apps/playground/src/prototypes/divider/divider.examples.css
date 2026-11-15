@@ -1,0 +1,102 @@
+.divider-demo-stack,
+.divider-demo-sample {
+  display: grid;
+  min-inline-size: 0;
+  gap: var(--space-24);
+}
+
+.divider-demo-sample {
+  gap: var(--space-12);
+}
+
+/* Example names sit outside the tinted area occupied by the actual divider. */
+.divider-demo-case {
+  display: grid;
+  align-content: start;
+  gap: var(--space-8);
+  min-inline-size: 0;
+  margin: 0;
+}
+
+.divider-demo-case-title {
+  color: var(--fg-primary);
+  font-size: var(--text-size-caption-l);
+  font-weight: 600;
+  line-height: var(--text-size-caption-l-lh);
+}
+
+.divider-demo-stage {
+  display: grid;
+  align-content: center;
+  min-inline-size: 0;
+  min-block-size: 4rem;
+  padding: var(--space-16);
+  border-radius: var(--surface-s-radius);
+  background: var(--bg-surface);
+}
+
+.divider-demo-comparisons {
+  display: grid;
+  gap: var(--space-24);
+  inline-size: min(100%, 18rem);
+  min-inline-size: 0;
+}
+
+.divider-demo-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-12);
+  min-inline-size: 0;
+}
+
+.divider-demo-row > .text-proto {
+  min-inline-size: 0;
+  overflow-wrap: anywhere;
+}
+
+.divider-demo-columns {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 1px minmax(0, 1fr);
+  gap: var(--space-24);
+}
+
+.divider-demo-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr));
+  align-items: start;
+  gap: var(--space-24);
+  min-inline-size: 0;
+}
+
+.divider-demo-canvas {
+  padding: var(--surface-m-padding);
+  background: var(--bg-canvas);
+}
+
+.divider-demo-overlay {
+  inline-size: min(100%, 30rem);
+}
+
+.divider-demo-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-12);
+  align-items: center;
+}
+
+.divider-demo-toolbar-pair {
+  display: flex;
+  align-items: center;
+  gap: var(--space-12);
+  min-inline-size: 0;
+}
+
+.divider-demo-toolbar-group {
+  display: flex;
+  gap: var(--space-4);
+}
+
+/* The host owns the optical inset around a stretched toolbar separator. */
+.divider-demo-toolbar-pair > .divider-proto {
+  margin-block: var(--space-4);
+}

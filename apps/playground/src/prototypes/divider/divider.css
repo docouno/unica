@@ -1,38 +1,79 @@
 .divider-proto {
   display: flex;
+  flex: none;
   align-items: center;
   gap: var(--space-12);
-  min-inline-size: 0;
   inline-size: 100%;
+  min-inline-size: 0;
+  margin: 0;
   color: var(--fg-muted);
   font-family: var(--font-family-base);
   font-size: var(--text-size-caption-l);
+  font-weight: 400;
   line-height: var(--text-size-caption-l-lh);
-}
-.divider-proto::before,
-.divider-proto[data-labeled]::after {
-  content: '';
-  flex: 1;
-  min-inline-size: var(--space-12);
-  block-size: 1px;
-  background: var(--border-default);
-}
-.divider-label-proto {
-  min-inline-size: 0;
-  max-inline-size: 80%;
   text-align: center;
+}
+
+.divider-line-proto {
+  flex: 1 1 0%;
+  min-inline-size: 0;
+  block-size: 0;
+  border-block-start: 1px solid var(--border-subtle);
+}
+
+.divider-proto[data-labeled] > .divider-line-proto {
+  min-inline-size: var(--space-12);
+  border-color: var(--border-default);
+}
+
+.divider-label-proto {
+  flex: 0 1 auto;
+  min-inline-size: 0;
+  max-inline-size: calc(100% - 4 * var(--space-12));
   overflow-wrap: anywhere;
 }
+
+.divider-proto[data-label-position='start'] {
+  text-align: start;
+}
+
+.divider-proto[data-label-position='end'] {
+  text-align: end;
+}
+
+.divider-proto:is([data-label-position='start'], [data-label-position='end'])
+  > .divider-label-proto {
+  max-inline-size: calc(100% - 2 * var(--space-12));
+}
+
 .divider-proto[data-orientation='vertical'] {
-  inline-size: 1px;
   align-self: stretch;
-  min-block-size: 1em;
-  background: var(--border-default);
+  inline-size: 1px;
+  min-block-size: 0;
 }
-.divider-proto[data-orientation='vertical']::before,
-.divider-proto[data-orientation='vertical']::after {
-  display: none;
+
+.divider-proto[data-orientation='vertical'] > .divider-line-proto {
+  align-self: stretch;
+  inline-size: 0;
+  block-size: auto;
+  border-block-start: 0;
+  border-inline-start: 1px solid var(--border-default);
 }
+
+[data-surface='overlay'] .divider-proto > .divider-line-proto {
+  border-color: var(--border-default);
+}
+
 .divider-proto[hidden] {
   display: none;
+}
+
+@media (forced-colors: active) {
+  .divider-proto {
+    color: CanvasText;
+  }
+
+  .divider-proto > .divider-line-proto {
+    border-color: CanvasText;
+  }
 }
