@@ -44,7 +44,29 @@
 }
 
 .input-demo-live-pair {
+  display: grid;
+  gap: var(--space-24);
   padding-block-start: var(--space-8);
+}
+
+.input-demo-inspector {
+  display: grid;
+  gap: var(--space-12);
+  inline-size: min(100%, 32rem);
+  min-inline-size: 0;
+}
+
+.input-demo-inspector-row {
+  display: grid;
+  grid-template-columns: minmax(0, 6rem) minmax(0, 1fr);
+  align-items: center;
+  gap: var(--space-16);
+}
+
+.input-demo-inspector-row > label {
+  color: var(--fg-secondary);
+  font-size: var(--text-size-body-s);
+  overflow-wrap: anywhere;
 }
 
 .input-demo-controls {

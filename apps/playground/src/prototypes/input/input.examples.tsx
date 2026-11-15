@@ -37,6 +37,8 @@ function Sample({
 }
 
 export function InputRoles(): ReactElement {
+  const nameId = useId();
+  const referenceId = useId();
   return (
     <div className="input-demo-stack">
       {(['s', 'm', 'l'] as const).map((size) => (
@@ -72,9 +74,21 @@ export function InputRoles(): ReactElement {
         </div>
       ))}
       <Text size="caption-l" color="muted">
-        Ghost belongs in an established editing context. Use Default for standalone fields and touch
-        forms.
+        Ghost marks an inline editing area with a quiet baseline. Use Default for standalone forms.
       </Text>
+      <div className="input-demo-inspector">
+        <Text size="caption-l" color="secondary" weight="semibold">
+          Editable details
+        </Text>
+        <div className="input-demo-inspector-row">
+          <label htmlFor={nameId}>Name</label>
+          <Input id={nameId} variant="ghost" defaultValue="Research notes" clearable />
+        </div>
+        <div className="input-demo-inspector-row">
+          <label htmlFor={referenceId}>Reference</label>
+          <Input id={referenceId} variant="ghost" placeholder="Add a reference…" />
+        </div>
+      </div>
     </div>
   );
 }
@@ -176,10 +190,15 @@ export function InputInteraction(): ReactElement {
   return (
     <div className="input-demo-stack">
       <div className="input-demo-grid">
-        {(['rest', 'hover', 'focus'] as const).map((state) => (
+        {(['rest', 'hover', 'pointer-focus', 'keyboard-focus'] as const).map((state) => (
           <Sample
             key={state}
-            title={`${state === 'rest' ? 'Rest' : state === 'hover' ? 'Pointer hover' : 'Input focus'} · pinned`}
+            title={`${state === 'rest' ? 'Rest' : state === 'hover' ? 'Pointer hover' : state === 'pointer-focus' ? 'Pointer focus' : 'Keyboard focus'} · pinned`}
+            note={
+              state === 'pointer-focus'
+                ? 'Clicking and typing keep the quiet editing treatment.'
+                : undefined
+            }
           >
             <Input
               aria-label={`Default ${state} preview`}
@@ -234,6 +253,42 @@ export function InputInteraction(): ReactElement {
           clearable
           description="Tab from the input to Clear. Clearing returns focus to the input. Escape keeps its normal page or overlay meaning."
         />
+        <Input
+          label="Try inline editing"
+          variant="ghost"
+          defaultValue="Research notes"
+          clearable
+          description="Hover and focus change only the baseline. Click to edit quietly, or use Tab to see keyboard focus."
+        />
+      </div>
+      <div className="input-demo-grid">
+        {(['s', 'm', 'l'] as const).map((size) => (
+          <Sample
+            key={size}
+            title={`End-slot alignment · ${size.toUpperCase()}`}
+            note="Compare the last icon, Clear at rest, and its pinned hover target."
+          >
+            <Input
+              size={size}
+              aria-label={`Trailing icon alignment ${size}`}
+              iconRight={ArrowUpRightIcon}
+              defaultValue="Research notes"
+            />
+            <Input
+              size={size}
+              aria-label={`Clear alignment ${size}`}
+              clearable
+              defaultValue="Research notes"
+            />
+            <Input
+              size={size}
+              aria-label={`Clear hover alignment ${size}`}
+              clearable
+              defaultValue="Research notes"
+              previewClearState="hover"
+            />
+          </Sample>
+        ))}
       </div>
     </div>
   );
@@ -276,22 +331,41 @@ export function InputFeedback(): ReactElement {
         </div>
       ))}
       <div className="input-demo-grid">
-        <Sample title="Focused danger · pinned">
+        <Sample title="Keyboard focus + danger · pinned">
           <Input
             label="Work email"
             defaultValue="team@"
             status="danger"
-            previewState="focus"
+            previewState="keyboard-focus"
             message="Enter a complete email address."
           />
         </Sample>
-        <Sample title="Focused danger · Ghost · pinned">
+        <Sample title="Keyboard focus + danger · Ghost · pinned">
           <Input
             label="Work email"
             variant="ghost"
             defaultValue="team@"
             status="danger"
-            previewState="focus"
+            previewState="keyboard-focus"
+            message="Enter a complete email address."
+          />
+        </Sample>
+        <Sample title="Pointer focus + danger · pinned">
+          <Input
+            label="Work email"
+            defaultValue="team@"
+            status="danger"
+            previewState="pointer-focus"
+            message="Enter a complete email address."
+          />
+        </Sample>
+        <Sample title="Pointer focus + danger · Ghost · pinned">
+          <Input
+            label="Work email"
+            variant="ghost"
+            defaultValue="team@"
+            status="danger"
+            previewState="pointer-focus"
             message="Enter a complete email address."
           />
         </Sample>

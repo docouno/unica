@@ -22,7 +22,7 @@ export default defineSpecimen({
       title: 'Field roles & sizes',
       kind: 'matrix',
       caption:
-        'Default defines a form slot. Ghost stays transparent at rest. Each size preserves the same anatomy.',
+        'Default defines a form slot. Ghost marks inline editing with a quiet baseline and transparent fill.',
       render: () => <InputRoles />,
     },
     {
@@ -38,7 +38,7 @@ export default defineSpecimen({
       title: 'Hover, focus & clear action',
       kind: 'states',
       caption:
-        'Labelled states are visually pinned for comparison. The final example is live and unpinned.',
+        'Compare pointer and keyboard focus, then try both live. End-slot examples compare icons and clear targets.',
       render: () => <InputInteraction />,
     },
     {
@@ -46,7 +46,7 @@ export default defineSpecimen({
       title: 'Validation & information',
       kind: 'states',
       caption:
-        'Feedback uses a border, a glyph, and readable copy. Focus preserves the active status hue.',
+        'Feedback uses an edge, a glyph, and readable copy. Keyboard focus preserves the status hue; pointer focus stays quiet.',
       render: () => <InputFeedback />,
     },
     {

@@ -77,6 +77,9 @@
   --field-focus: var(--focus-ring-color);
   --field-status: var(--fg-secondary);
   --field-clear-size: 24px;
+  --field-icon-size: var(--size-m-icon);
+  --field-clear-inset: calc((var(--field-clear-size) - var(--field-icon-size)) / 2);
+  --field-clear-bleed: min(var(--field-clear-inset), calc(var(--field-gap) - 2px));
   position: relative;
   box-sizing: border-box;
   display: inline-flex;
@@ -102,6 +105,7 @@
   --field-padding: var(--size-s-padding-x);
   --field-gap: var(--size-s-gap);
   --field-font: var(--size-s-control-font);
+  --field-icon-size: var(--size-s-icon);
 }
 
 .input-shell-proto[data-size='l'] {
@@ -111,6 +115,7 @@
   --field-gap: var(--size-l-gap);
   --field-font: var(--text-size-body-m);
   --field-clear-size: 28px;
+  --field-icon-size: var(--size-l-icon);
 }
 
 .input-shell-proto[data-width='auto'] {
@@ -118,24 +123,26 @@
 }
 
 .input-shell-proto[data-variant='ghost'] {
-  --field-edge: transparent;
+  border-color: transparent;
+  border-block-end-color: var(--field-edge);
+  border-radius: var(--field-radius) var(--field-radius) 0 0;
   background: transparent;
 }
 
 .input-shell-proto:is([data-status='neutral'], :not([data-status])):not(
-    :has(:disabled, [readonly])
+    :has(> :is(input, select):disabled, > input[readonly])
   ):is(:hover, [data-preview='hover']) {
   --field-edge: var(--control-border-hover);
 }
 
-.input-shell-proto[data-variant='ghost']:not(:has(:disabled, [readonly])):is(
-    :hover,
-    :focus-within,
-    [data-preview='hover'],
-    [data-preview='focus'],
-    [data-preview='clear-focus']
+.input-shell-proto:is([data-status='neutral'], :not([data-status])):not(
+    :has(> :is(input, select):disabled, > input[readonly])
+  ):is(
+    :has(> :is(input, select):focus),
+    [data-preview='pointer-focus'],
+    [data-preview='keyboard-focus']
   ) {
-  background: var(--control-bg);
+  --field-edge: var(--control-border-focus);
 }
 
 .input-shell-proto[data-status='info'] {
@@ -163,8 +170,8 @@
 }
 
 /* Focus is immediate, with no press movement or layout change. */
-.input-shell-proto:has(.input-native-proto:focus-visible),
-.input-shell-proto[data-preview='focus'] {
+.input-shell-proto:not([data-focus-origin='pointer']):has(.input-native-proto:focus-visible),
+.input-shell-proto[data-preview='keyboard-focus'] {
   outline: 2px solid var(--field-focus);
   outline-offset: 2px;
 }
@@ -246,6 +253,7 @@
   box-sizing: border-box;
   inline-size: var(--field-clear-size);
   block-size: var(--field-clear-size);
+  margin-inline: calc(-1 * var(--field-clear-bleed));
   padding: 0;
   border: 1px solid transparent;
   border-radius: max(0px, calc(var(--field-radius) - 3px));
@@ -253,6 +261,11 @@
   color: var(--fg-muted);
   cursor: pointer;
   touch-action: manipulation;
+}
+
+/* The last glyph shares the decorative icon's inset without shrinking its target. */
+.input-clear-proto:last-child {
+  margin-inline-end: calc(-1 * var(--field-clear-inset));
 }
 
 .input-clear-proto:enabled:not([aria-disabled='true']):hover,
@@ -298,6 +311,7 @@
 
 .input-shell-proto[data-variant='ghost']:has(.input-native-proto:disabled) {
   border-color: transparent;
+  border-block-end-color: var(--border-subtle);
   background: transparent;
 }
 
@@ -383,26 +397,33 @@
     color: CanvasText;
   }
 
-  .input-shell-proto[data-variant='ghost'][data-status='neutral']:not(
-      :hover,
-      :focus-within,
-      [data-preview='hover'],
-      [data-preview='focus'],
-      [data-preview='clear-focus']
-    ) {
+  .input-shell-proto[data-variant='ghost'] {
     border-color: transparent !important;
+    border-block-end-color: ButtonText !important;
     background: transparent;
   }
 
-  .input-shell-proto:has(.input-native-proto:focus-visible),
-  .input-shell-proto[data-preview='focus'],
+  .input-shell-proto:has(.input-native-proto:focus),
+  .input-shell-proto[data-preview='pointer-focus'],
+  .input-shell-proto[data-preview='keyboard-focus'],
   .input-clear-proto:focus-visible,
   .input-shell-proto[data-preview='clear-focus'] .input-clear-proto {
     outline-color: Highlight;
   }
 
+  .input-shell-proto:has(.input-native-proto:focus),
+  .input-shell-proto[data-preview='pointer-focus'] {
+    outline: 2px solid Highlight;
+    outline-offset: 2px;
+  }
+
   .input-shell-proto:has(.input-native-proto:disabled) {
     border-color: GrayText !important;
+  }
+
+  .input-shell-proto[data-variant='ghost']:has(.input-native-proto:disabled) {
+    border-color: transparent !important;
+    border-block-end-color: GrayText !important;
   }
 
   .input-native-proto:disabled {

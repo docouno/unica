@@ -10,6 +10,7 @@ import {
 } from '@phosphor-icons/react';
 import { Icon } from '../icon/icon.proto.js';
 import type { GlyphComponent } from '../icon/icon.proto.js';
+import { useInputFocus } from './input-focus.proto.js';
 import './input.css';
 
 export type ControlSize = 's' | 'm' | 'l';
@@ -102,7 +103,8 @@ export interface InputProps extends Omit<ComponentPropsWithRef<'input'>, 'size' 
   readonly description?: ReactNode;
   readonly message?: ReactNode;
   /** Pins appearance for specimen comparison; does not move DOM focus. */
-  readonly previewState?: 'rest' | 'hover' | 'focus' | 'clear-focus' | undefined;
+  readonly previewState?:
+    'rest' | 'hover' | 'pointer-focus' | 'keyboard-focus' | 'clear-focus' | undefined;
   readonly previewClearState?: 'hover' | 'active' | undefined;
 }
 
@@ -138,6 +140,7 @@ export function Input({
   ...props
 }: InputProps): ReactElement {
   const generatedId = useId();
+  const focusScope = useInputFocus();
   const composing = useRef(false);
   const inputId = id ?? generatedId;
   const effectiveStatus = disabled ? 'neutral' : status;
@@ -153,6 +156,8 @@ export function Input({
       .join(' ') || undefined;
   const control = (
     <span
+      ref={focusScope}
+      data-input-focus-scope=""
       className={`input-shell-proto ${className}`}
       data-size={size}
       data-variant={variant}
