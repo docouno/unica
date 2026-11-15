@@ -297,7 +297,6 @@ function PreferencesScene(): ReactElement {
                       <td>
                         <KbdGroup>
                           <Kbd>⌘</Kbd>
-                          <span>+</span>
                           <Kbd>K</Kbd>
                         </KbdGroup>
                       </td>
@@ -308,9 +307,7 @@ function PreferencesScene(): ReactElement {
                       <td>
                         <KbdGroup>
                           <Kbd>⌘</Kbd>
-                          <span>+</span>
                           <Kbd>⇧</Kbd>
-                          <span>+</span>
                           <Kbd>I</Kbd>
                         </KbdGroup>
                       </td>
@@ -319,9 +316,8 @@ function PreferencesScene(): ReactElement {
                       <td>Jump to verified runbooks</td>
                       <td>Navigation chord</td>
                       <td>
-                        <KbdGroup>
+                        <KbdGroup separator="then">
                           <Kbd>G</Kbd>
-                          <span>then</span>
                           <Kbd>R</Kbd>
                         </KbdGroup>
                       </td>

@@ -57,11 +57,7 @@
   min-inline-size: 0;
   overflow-wrap: anywhere;
 }
-.menu-item-proto kbd {
-  color: var(--fg-muted);
-  font-size: var(--text-size-caption-m);
-  font-family: var(--font-family-mono);
-}
+
 .menu-item-proto:hover {
   background: var(--neutral-soft-bg);
 }
