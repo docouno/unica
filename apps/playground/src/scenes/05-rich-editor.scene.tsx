@@ -34,6 +34,7 @@ import { Checkbox } from '../prototypes/binary-controls/binary-controls.proto.js
 import { Tabs } from '../prototypes/tabs/tabs.proto.js';
 import { Text } from '../prototypes/text/text.proto.js';
 import { Title } from '../prototypes/title/title.proto.js';
+import { Divider } from '../prototypes/divider/divider.proto.js';
 import { defineScene } from '../workbench/types.js';
 import { FolioScene, FolioWorkspace, Person, TeamMembers } from './folio/folio.shared.js';
 
@@ -158,7 +159,7 @@ function EditorScene(): ReactElement {
                 { value: 'split', label: 'Split' },
               ]}
             />
-            <span className="folio-editor-tool-divider" />
+            <Divider orientation="vertical" className="folio-editor-tool-divider" />
             <div className="folio-row">
               <IconButton
                 size="s"
@@ -231,7 +232,7 @@ function EditorScene(): ReactElement {
                 evacuating an availability zone under elevated p99 latency.
               </Text>
             </div>
-            <hr className="folio-rule" />
+            <Divider decorative={false} />
             {mode === 'diff' && (
               <div className="folio-notice">Draft comparison · 38 additions, 4 removals</div>
             )}

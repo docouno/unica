@@ -95,7 +95,7 @@ function SignInScene(): ReactElement {
               Passkey / SAML
             </Button>
           </div>
-          <Divider>or continue with work email</Divider>
+          <Divider label="or continue with work email" />
           <form
             className="folio-stack"
             onSubmit={(event) => {

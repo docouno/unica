@@ -498,10 +498,8 @@
   min-block-size: 840px;
 }
 .folio-editor-tool-divider {
-  align-self: stretch;
-  inline-size: 1px;
-  background: var(--border-subtle);
   margin-inline: var(--space-8);
+  margin-block: var(--space-4);
 }
 .folio-editor-reference.popover-content-proto {
   position: absolute;
