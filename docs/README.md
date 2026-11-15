@@ -2,6 +2,8 @@
 
 Normative architecture and engineering specifications for `@docouno/unica`. Read these core concept guides before designing, implementing, or reviewing components.
 
+During design, use these constraints to define appearance and the intended accessible experience. The [Workbench workflow](workbench.md#design-outcome-and-prototype-behavior) separates that design result from the complete library API and interaction mechanisms implemented in the next stage. Native behavior may support the preview without making it a production component.
+
 ## Core Concepts
 
 | Document | Scope |

@@ -6,11 +6,18 @@
   color: var(--fg-primary);
 }
 
-.button-study-group {
+.button-study-group,
+.button-study-size-row {
   display: grid;
-  gap: var(--space-12);
+  gap: var(--space-16);
   min-inline-size: 0;
+  inline-size: 100%;
   justify-items: start;
+}
+
+.button-study-size-row + .button-study-size-row {
+  padding-block-start: var(--space-16);
+  border-block-start: 1px solid var(--border-subtle);
 }
 
 .button-study-columns {
@@ -21,7 +28,9 @@
   inline-size: 100%;
 }
 
-.button-study-row {
+.button-study-row,
+.button-study-controls,
+.button-study-pair {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -29,161 +38,77 @@
   min-inline-size: 0;
 }
 
-.button-study-states {
-  gap: var(--space-24) var(--space-16);
+.button-study-pair {
+  flex-wrap: nowrap;
+  max-inline-size: 100%;
 }
+
+.button-study-state-grid,
+.button-study-open-samples {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr));
+  align-items: start;
+  gap: var(--space-24) var(--space-16);
+  inline-size: 100%;
+}
+
 .button-study-sample {
   display: grid;
+  align-content: start;
   gap: var(--space-12);
+  min-inline-size: 0;
   justify-items: start;
+  padding: var(--space-4);
 }
+
+.button-study-state-grid[data-study-size='l'] {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+}
+
+.button-study-controls {
+  padding: var(--space-12) var(--space-16);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--size-m-radius);
+  background: var(--bg-surface-subtle);
+}
+
 .button-study-control {
   display: flex;
   align-items: center;
   gap: var(--space-8);
+  min-inline-size: 0;
   font-size: var(--text-size-body-s);
 }
+
 .button-study-control input {
   accent-color: var(--accent-solid);
+  flex: none;
+  inline-size: 16px;
+  block-size: 16px;
 }
 
-.button-study-auth,
-.button-study-import {
-  padding: var(--surface-l-padding);
-  border: 1px solid var(--border-default);
-  border-radius: var(--surface-l-radius);
-  background: var(--bg-surface);
-  max-inline-size: 520px;
-  margin-inline: auto;
-}
-
-.button-study-auth {
-  background-image: var(--auth-stage-aura);
-}
-
-.button-study-field {
-  display: grid;
-  gap: var(--space-8);
-  font-size: var(--text-size-body-s);
-}
-
-.button-study-field input {
-  inline-size: 100%;
-  min-inline-size: 0;
-  block-size: var(--size-m-height);
-  padding-inline: var(--size-m-padding-x);
-  color: var(--fg-primary);
-  background: var(--control-bg);
+.button-study-control select {
+  min-block-size: var(--size-s-height);
+  padding-inline: var(--space-8);
   border: 1px solid var(--control-border);
-  border-radius: var(--size-m-radius);
+  border-radius: var(--size-s-radius);
+  background: var(--control-bg);
+  color: var(--fg-primary);
 }
 
-.button-study-field input::placeholder {
-  color: var(--fg-muted);
-}
-.button-study-field input:focus-visible {
+.button-study-control :is(input, select):focus-visible {
   outline: 2px solid var(--focus-ring-color);
   outline-offset: 2px;
 }
 
-.button-study-rule {
-  display: flex;
-  align-items: center;
-  gap: var(--space-16);
-  color: var(--fg-muted);
-  font-size: var(--text-size-caption-l);
+.button-study-response {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr));
+  gap: var(--space-24);
+  padding: var(--space-16) var(--space-4);
 }
 
-.button-study-rule::before,
-.button-study-rule::after {
-  content: '';
-  block-size: 1px;
-  flex: 1;
-  background: var(--border-default);
-}
-
-.button-study-editor {
-  display: flex;
+.button-study-narrow {
   inline-size: 100%;
-  min-inline-size: 0;
-  border: 1px solid var(--border-default);
-  border-radius: var(--surface-m-radius);
-  background: var(--bg-canvas);
-  color: var(--fg-primary);
-}
-
-.button-study-rail {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--space-16);
-  padding: var(--space-16) var(--space-8);
-  border-inline-end: 1px solid var(--border-default);
-  background: var(--bg-shell);
-  border-start-start-radius: inherit;
-  border-end-start-radius: inherit;
-}
-
-.button-study-editor-main {
-  min-inline-size: 0;
-  flex: 1;
-}
-.button-study-toolbar {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-12);
-}
-.button-study-editor .button-study-toolbar {
-  padding: var(--space-12);
-  border-block-end: 1px solid var(--border-default);
-}
-.button-study-editor .button-study-row {
-  gap: var(--space-8);
-}
-.button-study-prose {
-  display: grid;
-  gap: var(--space-16);
-  padding: var(--space-24) var(--space-16);
-}
-
-.button-study-overlay {
-  max-inline-size: 520px;
-  margin-inline: auto;
-  padding: var(--surface-l-padding);
-  gap: var(--space-16);
-  border: 1px solid var(--border-default);
-  border-radius: var(--surface-l-radius);
-  background: var(--bg-overlay);
-  backdrop-filter: var(--overlay-backdrop);
-  box-shadow: var(--overlay-shadow-modal);
-}
-
-.button-study-popover {
-  max-inline-size: 360px;
-  border-radius: var(--surface-s-radius);
-  box-shadow: var(--overlay-shadow-popover);
-}
-.button-study-footer {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-  align-items: center;
-  gap: var(--space-12);
-  padding-block-start: var(--space-8);
-}
-.button-study-import-file {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  gap: var(--space-8);
-  padding-block: var(--space-16);
-  border-block: 1px solid var(--border-default);
-}
-.button-study-light {
-  display: grid;
-  min-block-size: 144px;
-  place-items: center;
-  padding: var(--space-24);
+  max-inline-size: 320px;
 }
