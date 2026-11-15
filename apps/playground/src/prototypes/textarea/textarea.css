@@ -9,7 +9,7 @@
   --textarea-edge: var(--control-border);
   --textarea-focus: var(--focus-ring-color);
   --textarea-status: var(--fg-secondary);
-  --textarea-status-inset: max(var(--textarea-padding), var(--space-16));
+  --textarea-status-inset: var(--textarea-padding);
   position: relative;
   display: block;
   inline-size: 100%;
@@ -55,6 +55,8 @@
 }
 
 .textarea-proto {
+  --scrollbar-width: thin;
+  --scrollbar-size: 10px;
   box-sizing: border-box;
   display: block;
   inline-size: 100%;
@@ -74,7 +76,7 @@
   text-align: start;
   overflow: auto;
   overflow-wrap: anywhere;
-  scrollbar-gutter: stable;
+  scrollbar-gutter: auto;
   resize: vertical;
 }
 
@@ -88,17 +90,17 @@
   @media (pointer: fine) and (forced-colors: none), (pointer: none) and (forced-colors: none) {
     .textarea-proto::-webkit-resizer {
       background:
-        linear-gradient(135deg, transparent 40%, var(--fg-muted) 40% 52%, transparent 52%) right 3px
-          bottom 3px / 8px 8px no-repeat,
-        linear-gradient(135deg, transparent 40%, var(--fg-muted) 40% 64%, transparent 64%) right 3px
-          bottom 3px / 4px 4px no-repeat;
+        linear-gradient(135deg, transparent 40%, var(--textarea-edge) 40% 56%, transparent 56%)
+          right 2px bottom 2px / 6px 6px no-repeat,
+        linear-gradient(135deg, transparent 40%, var(--textarea-edge) 40% 72%, transparent 72%)
+          right 2px bottom 2px / 3px 3px no-repeat;
     }
     .textarea-proto:dir(rtl)::-webkit-resizer {
       background:
-        linear-gradient(225deg, transparent 40%, var(--fg-muted) 40% 52%, transparent 52%) left 3px
-          bottom 3px / 8px 8px no-repeat,
-        linear-gradient(225deg, transparent 40%, var(--fg-muted) 40% 64%, transparent 64%) left 3px
-          bottom 3px / 4px 4px no-repeat;
+        linear-gradient(225deg, transparent 40%, var(--textarea-edge) 40% 56%, transparent 56%) left
+          2px bottom 2px / 6px 6px no-repeat,
+        linear-gradient(225deg, transparent 40%, var(--textarea-edge) 40% 72%, transparent 72%) left
+          2px bottom 2px / 3px 3px no-repeat;
     }
   }
 }
