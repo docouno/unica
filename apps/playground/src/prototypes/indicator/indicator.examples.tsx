@@ -107,7 +107,7 @@ export function IndicatorScale(): ReactElement {
           </Sample>
           <Sample label="Presence">
             <Indicator dot size={size} status="success" overlap="circular" placement="bottom-end">
-              <Avatar size={size} initials="AL" aria-label="Sample collaborator, available" />
+              <Avatar size={size} fallback="AL" alt="Sample collaborator, available" />
             </Indicator>
           </Sample>
         </div>
@@ -130,7 +130,7 @@ export function IndicatorStatuses(): ReactElement {
             />
           </Indicator>
           <Indicator dot status={status} overlap="circular" placement="bottom-end">
-            <Avatar size="s" initials="AL" aria-label={`${status} presence example`} />
+            <Avatar size="s" fallback="AL" alt={`${status} presence example`} />
           </Indicator>
         </div>
       ))}
@@ -156,7 +156,7 @@ export function IndicatorCorners(): ReactElement {
               <Sample key={placement} label={placement}>
                 <Indicator dot={dot} count={3} size="s" overlap={overlap} placement={placement}>
                   {overlap === 'circular' ? (
-                    <Avatar initials="AL" aria-label={`Avatar, ${placement} marker`} />
+                    <Avatar fallback="AL" alt={`Avatar, ${placement} marker`} />
                   ) : (
                     <IconButton
                       icon={BellIcon}
@@ -341,7 +341,7 @@ export function IndicatorOverlay(): ReactElement {
       </div>
       <div className="indicator-example-use">
         <Indicator dot status="warning" overlap="circular" placement="bottom-end">
-          <Avatar initials="AL" aria-label="Sample collaborator" />
+          <Avatar fallback="AL" alt="Sample collaborator" />
         </Indicator>
         <div>
           <strong>Away</strong>
@@ -350,7 +350,7 @@ export function IndicatorOverlay(): ReactElement {
       </div>
       <div className="indicator-example-use">
         <Indicator dot visible={false} status="neutral" overlap="circular" placement="bottom-end">
-          <Avatar initials="RK" aria-label="Sample collaborator" />
+          <Avatar fallback="RK" alt="Sample collaborator" />
         </Indicator>
         <div>
           <strong>Offline</strong>
@@ -452,7 +452,7 @@ export function IndicatorBoundaries(): ReactElement {
       </p>
       <div className="indicator-example-contained">
         <span>Incoming requests</span>
-        <Badge>
+        <Badge size="s">
           <bdi dir="ltr">99+</bdi>
         </Badge>
       </div>
