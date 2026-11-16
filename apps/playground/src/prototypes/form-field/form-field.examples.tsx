@@ -13,7 +13,7 @@ import { Input } from '../input/input.proto.js';
 import type { ControlSize, FieldStatus, FieldVariant } from '../input/input.proto.js';
 import { Link } from '../link/link.proto.js';
 import { PopoverContent } from '../popover/popover.proto.js';
-import { CheckboxCard } from '../selection/selection.proto.js';
+import { CheckboxCard } from '../choice-card/choice-card.proto.js';
 import { Textarea } from '../textarea/textarea.proto.js';
 import {
   FormField,
