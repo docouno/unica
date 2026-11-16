@@ -7,7 +7,7 @@ import { Button } from '../button/button.proto.js';
 import type { ButtonProps } from '../button/button.proto.js';
 import { Icon } from '../icon/icon.proto.js';
 import { Text } from '../text/text.proto.js';
-import { Tooltip } from '../menu/menu.proto.js';
+import { Tooltip } from '../tooltip/tooltip.proto.js';
 import './avatar.examples.css';
 
 const lightPortrait = '/assets/avatar-person-light.png';

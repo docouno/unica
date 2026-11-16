@@ -1,0 +1,85 @@
+.hover-demo-identity {
+  display: flex;
+  align-items: start;
+  gap: var(--space-12);
+  min-inline-size: 0;
+}
+.hover-demo-identity > .avatar-proto {
+  flex: none;
+}
+.hover-demo-heading {
+  display: grid;
+  gap: var(--space-2);
+  min-inline-size: 0;
+}
+.hover-demo-kicker {
+  display: flex;
+  align-items: start;
+  gap: var(--space-8);
+  color: var(--fg-secondary);
+  font-size: var(--text-size-caption-l);
+  line-height: var(--text-size-caption-l-lh);
+}
+.hover-demo-kicker > span,
+.hover-demo-kicker > bdi {
+  min-inline-size: 0;
+}
+.hover-demo-kicker > .icon-proto {
+  flex: none;
+}
+.hover-demo-facts {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-8) var(--space-12);
+  min-inline-size: 0;
+}
+.hover-demo-facts > * {
+  min-inline-size: 0;
+  max-inline-size: 100%;
+}
+.hover-demo-separated {
+  border-block-start: 1px solid var(--border-subtle);
+  padding-block-start: var(--space-12);
+}
+.hover-demo-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+}
+.hover-demo-loading {
+  display: grid;
+  gap: var(--space-12);
+  min-block-size: 88px;
+  align-content: start;
+}
+.hover-demo-unavailable {
+  display: grid;
+  gap: var(--space-8);
+  min-block-size: 88px;
+  align-content: center;
+}
+.hover-demo-unavailable > .icon-proto {
+  color: var(--fg-secondary);
+}
+.hover-demo-constrained {
+  --scrollbar-width: thin;
+  --scrollbar-size: 10px;
+  max-block-size: 200px;
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+.hover-demo-stage {
+  block-size: 500px;
+}
+.hover-demo-stage .hint-demo-anchor {
+  max-inline-size: calc(100% - 32px);
+}
+.hover-demo-destination {
+  display: grid;
+  gap: var(--space-4);
+  padding: var(--space-12);
+  border-inline-start: 2px solid var(--border-strong);
+  scroll-margin-block-start: 16px;
+}

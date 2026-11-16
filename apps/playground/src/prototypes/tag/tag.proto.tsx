@@ -5,7 +5,7 @@ import { Icon } from '../icon/icon.proto.js';
 import type { GlyphComponent } from '../icon/icon.proto.js';
 import type { DisplayStatus } from '../badge/badge.styles.js';
 import { statusStyle } from '../badge/badge.styles.js';
-import { Tooltip } from '../menu/menu.proto.js';
+import { Tooltip } from '../tooltip/tooltip.proto.js';
 import { Spinner } from '../progress/progress.proto.js';
 import './tag.css';
 

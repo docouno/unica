@@ -446,6 +446,8 @@
 }
 .folio-owner-preview > .hover-card-proto {
   position: absolute;
+  inline-size: min(22rem, calc(100cqw - 32px));
+  max-inline-size: none;
   inset-block-start: calc(100% + 8px);
   inset-inline-end: 0;
   z-index: 4;

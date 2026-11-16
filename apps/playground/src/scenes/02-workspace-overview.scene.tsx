@@ -14,7 +14,7 @@ import { Card } from '../prototypes/card/card.proto.js';
 import { Toast } from '../prototypes/feedback/feedback.proto.js';
 import { Alert, AlertTitle, AlertDescription } from '../prototypes/alert/alert.proto.js';
 import { Icon } from '../prototypes/icon/icon.proto.js';
-import { Tooltip } from '../prototypes/menu/menu.proto.js';
+import { Tooltip } from '../prototypes/tooltip/tooltip.proto.js';
 import { Link } from '../prototypes/link/link.proto.js';
 import { SegmentedControl } from '../prototypes/segmented-control/segmented-control.proto.js';
 import { Text } from '../prototypes/text/text.proto.js';

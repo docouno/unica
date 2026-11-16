@@ -1,11 +1,10 @@
 import { CopyIcon, DownloadSimpleIcon, GitDiffIcon, TrashIcon } from '@phosphor-icons/react';
 import { defineSpecimen } from '../../workbench/types.js';
-import { Text } from '../text/text.proto.js';
-import { Menu, MenuItem, MenuSeparator, HoverCard, Tooltip } from './menu.proto.js';
+import { Menu, MenuItem, MenuSeparator } from './menu.proto.js';
 
 export default defineSpecimen({
   id: 'menu',
-  title: 'Menu, HoverCard & Tooltip',
+  title: 'Menu',
   group: 'Overlays',
   sections: [
     {
@@ -39,30 +38,6 @@ export default defineSpecimen({
           <MenuItem>Open runbook</MenuItem>
           <MenuItem disabled>Export unavailable revision</MenuItem>
         </Menu>
-      ),
-    },
-    {
-      id: 'hint',
-      title: 'Folio · Preferences hint',
-      kind: 'context',
-      overlayStage: true,
-      render: () => <Tooltip shortcut="⌘,">Preferences & shortcuts</Tooltip>,
-    },
-    {
-      id: 'owner',
-      title: 'Folio · On-call owner',
-      kind: 'context',
-      overlayStage: true,
-      render: () => (
-        <HoverCard>
-          <Text weight="semibold">Database reliability team</Text>
-          <Text size="body-s" color="secondary">
-            Staff SRE · Core Infrastructure
-          </Text>
-          <Text size="caption-l" color="muted">
-            28 Tier-0 runbooks owned · UTC+1
-          </Text>
-        </HoverCard>
       ),
     },
   ],
