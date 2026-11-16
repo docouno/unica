@@ -219,6 +219,7 @@ function PreferencesScene(): ReactElement {
                       </Text>
                     </div>
                     <RangeSlider
+                      size="s"
                       min={0}
                       max={20}
                       value={preferences.context}

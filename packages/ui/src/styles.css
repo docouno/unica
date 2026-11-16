@@ -155,6 +155,8 @@ textarea {
   --switch-track-on-active: #b35a3e;
   --switch-thumb-bg: #fffaf2;
   --switch-travel-duration: 160ms;
+  --slider-fill: var(--accent-solid);
+  --slider-state-duration: 120ms;
   --segmented-rail-bg: #191f25;
   --segmented-thumb-bg: #34414b;
   --segmented-thumb-shadow: none;
@@ -331,6 +333,8 @@ textarea {
   --switch-track-on-active: #b4583b;
   --switch-thumb-bg: #fffefa;
   --switch-travel-duration: 160ms;
+  --slider-fill: var(--accent-solid);
+  --slider-state-duration: 120ms;
   --segmented-rail-bg: #efe3cf;
   --segmented-thumb-bg: #fffefa;
   --segmented-thumb-shadow: none;
@@ -518,6 +522,8 @@ textarea {
   --switch-track-on-active: #3a29e1;
   --switch-thumb-bg: #f4f7ff;
   --switch-travel-duration: 140ms;
+  --slider-fill: var(--accent-signal);
+  --slider-state-duration: 120ms;
   --segmented-rail-bg: #0c1019;
   --segmented-thumb-bg: #28334a;
   --segmented-thumb-shadow: 0 1px 2px rgb(0 0 0 / 0.2);
@@ -706,6 +712,8 @@ textarea {
   --switch-track-on-active: #6053da;
   --switch-thumb-bg: #ffffff;
   --switch-travel-duration: 140ms;
+  --slider-fill: var(--accent-solid);
+  --slider-state-duration: 120ms;
   --segmented-rail-bg: #e8edf6;
   --segmented-thumb-bg: #ffffff;
   --segmented-thumb-shadow: 0 1px 2px rgb(25 35 60 / 0.12);
@@ -883,6 +891,8 @@ textarea {
   --switch-track-on-active: #0a4b57;
   --switch-thumb-bg: #edf3f7;
   --switch-travel-duration: 0ms;
+  --slider-fill: var(--accent-solid);
+  --slider-state-duration: 0ms;
   --segmented-rail-bg: #0b0f13;
   --segmented-thumb-bg: #2b3944;
   --segmented-thumb-shadow: none;
@@ -1064,6 +1074,8 @@ textarea {
   --switch-track-on-active: #0b8093;
   --switch-thumb-bg: #ffffff;
   --switch-travel-duration: 0ms;
+  --slider-fill: var(--accent-solid);
+  --slider-state-duration: 0ms;
   --segmented-rail-bg: #e0e8ed;
   --segmented-thumb-bg: #ffffff;
   --segmented-thumb-shadow: none;
