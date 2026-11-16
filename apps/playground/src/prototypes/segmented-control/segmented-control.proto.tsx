@@ -95,20 +95,24 @@ export function SegmentedControl({
       if (!bounds.width) {
         return;
       }
+      const inset = Number.parseFloat(getComputedStyle(rail).paddingInlineStart);
       const edges = cells.map((cell) => cell.getBoundingClientRect());
       const contentWidth =
         Math.max(...edges.map((edge) => edge.right)) - Math.min(...edges.map((edge) => edge.left));
-      rail.toggleAttribute('data-overflow', contentWidth + 4 > bounds.width + 0.01);
+      rail.toggleAttribute('data-overflow', contentWidth + 2 * inset > bounds.width + 0.01);
       const input = rail.querySelector<HTMLInputElement>('input:checked');
       if (!input) {
         return;
       }
-      const cell = input.getBoundingClientRect();
+      const cell = input.parentElement?.getBoundingClientRect();
+      if (!cell) {
+        return;
+      }
       const delta =
-        cell.left < bounds.left + 2
-          ? cell.left - bounds.left - 2
-          : cell.right > bounds.right - 2
-            ? cell.right - bounds.right + 2
+        cell.left < bounds.left + inset
+          ? cell.left - bounds.left - inset
+          : cell.right > bounds.right - inset
+            ? cell.right - bounds.right + inset
             : 0;
       if (delta) {
         rail.scrollBy({ left: delta, behavior: 'instant' });

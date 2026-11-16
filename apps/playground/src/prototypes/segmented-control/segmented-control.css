@@ -4,7 +4,7 @@
   --segment-padding: var(--size-m-padding-x);
   --segment-font: var(--text-size-body-s);
   --segment-gap: var(--size-m-gap);
-  --thumb-inset: 2px;
+  --thumb-inset: 3px;
   --scrollbar-size: 10px;
   --scrollbar-width: thin;
   display: inline-grid;
@@ -87,7 +87,7 @@
   inline-size: 100%;
   min-inline-size: 0;
   min-block-size: calc(var(--segment-height) - 2 * var(--thumb-inset));
-  padding: 1px var(--segment-padding);
+  padding: 0 var(--segment-padding);
   border: 1px solid transparent;
   border-radius: min(
     var(--segment-radius),
@@ -191,6 +191,13 @@
 @media (pointer: coarse) {
   .segmented-control-proto[data-size] {
     --segment-height: max(48px, var(--size-m-height));
+  }
+
+  .segment-proto > input {
+    /* Keep 44px targets around 42px plates without changing the visual inset. */
+    inset: -1px;
+    inline-size: calc(100% + 2px);
+    block-size: calc(100% + 2px);
   }
 }
 
