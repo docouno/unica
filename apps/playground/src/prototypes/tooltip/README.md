@@ -1,6 +1,6 @@
 # Tooltip and HoverCard design reference
 
-Status: candidate for visual approval. Open `/?item=tooltip` and `/?item=hover-card`. These are design prototypes, not package exports or finalized TypeScript APIs.
+Status: approved design reference. Open `/?item=tooltip` and `/?item=hover-card`. These are design prototypes, not package exports or finalized TypeScript APIs.
 
 ## Purpose and boundaries
 
