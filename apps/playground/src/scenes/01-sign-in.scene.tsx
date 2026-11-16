@@ -59,6 +59,7 @@ function SignInScene(): ReactElement {
             </Text>
           </div>
           <SegmentedControl
+            aria-label="Account access mode"
             size="s"
             value={mode}
             onValueChange={setMode}

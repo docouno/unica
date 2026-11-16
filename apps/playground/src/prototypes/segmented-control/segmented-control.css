@@ -3,21 +3,31 @@
   --segment-radius: var(--size-m-radius);
   --segment-padding: var(--size-m-padding-x);
   --segment-font: var(--text-size-body-s);
-  display: inline-flex;
-  flex: 0 0 auto;
-  flex-wrap: wrap;
+  --segment-gap: var(--size-m-gap);
+  --thumb-inset: 3px;
+  --scrollbar-size: 10px;
+  --scrollbar-width: thin;
+  display: inline-grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(max-content, 1fr);
+  gap: var(--thumb-inset);
+  flex: 0 1 auto;
   align-items: stretch;
   inline-size: fit-content;
   min-inline-size: 0;
   max-inline-size: 100%;
-  min-block-size: var(--segment-height);
-  padding: var(--space-2);
-  border: 1px solid var(--segmented-rail-border);
+  padding: var(--thumb-inset);
   border-radius: var(--segment-radius);
   background: var(--segmented-rail-bg);
+  overflow: auto;
+  overscroll-behavior-inline: contain;
+  scroll-padding-inline: var(--thumb-inset);
   font-family: var(--font-family-base);
   font-size: var(--segment-font);
+  font-weight: 500;
   line-height: 1.4;
+  vertical-align: middle;
+  isolation: isolate;
 }
 
 .segmented-control-proto[data-size='s'] {
@@ -25,6 +35,7 @@
   --segment-radius: var(--size-s-radius);
   --segment-padding: var(--size-s-padding-x);
   --segment-font: var(--size-s-control-font);
+  --segment-gap: var(--size-s-gap);
 }
 
 .segmented-control-proto[data-size='l'] {
@@ -32,14 +43,30 @@
   --segment-radius: var(--size-l-radius);
   --segment-padding: var(--size-l-padding-x);
   --segment-font: var(--text-size-body-m);
+  --segment-gap: var(--size-l-gap);
+}
+
+.segmented-control-proto[data-width='full'] {
+  inline-size: 100%;
+}
+
+.segmented-control-proto[data-overflow] {
+  /* Native scroll extents can round down: keep the outer focus edge intact. */
+  padding-inline-end: calc(var(--thumb-inset) + 1px);
+}
+
+.segmented-control-proto[data-orientation='vertical'] {
+  grid-auto-flow: row;
+  grid-auto-columns: auto;
 }
 
 .segment-proto {
   position: relative;
   display: flex;
-  flex: 1 0 auto;
   min-inline-size: max-content;
   cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
 }
 
 .segment-proto > input {
@@ -52,55 +79,161 @@
   cursor: inherit;
 }
 
-.segment-proto > span {
+.segment-proto-plate {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: var(--space-4);
+  gap: var(--segment-gap);
   inline-size: 100%;
   min-inline-size: 0;
-  min-block-size: calc(var(--segment-height) - 6px);
-  padding: var(--space-2) var(--segment-padding);
+  min-block-size: calc(var(--segment-height) - 2 * var(--thumb-inset));
+  padding: 0 var(--segment-padding);
   border: 1px solid transparent;
-  border-radius: max(0px, calc(var(--segment-radius) - 3px));
+  border-radius: min(
+    var(--segment-radius),
+    max(var(--radius-xs), calc(var(--segment-radius) - var(--thumb-inset)))
+  );
   color: var(--fg-muted);
   text-align: center;
   white-space: nowrap;
+  transition:
+    background-color var(--segmented-state-duration),
+    color var(--segmented-state-duration);
 }
 
-.segment-proto > input:checked + span {
-  border-color: var(--segmented-thumb-border);
+.segment-proto > input:checked + .segment-proto-plate {
   background: var(--segmented-thumb-bg);
-  color: var(--fg-primary);
-  font-weight: 500;
-}
-
-.segment-proto:hover > input:not(:disabled) + span {
+  box-shadow: var(--segmented-thumb-shadow);
   color: var(--fg-primary);
 }
 
-.segment-proto > input:focus-visible + span {
+@media (forced-colors: none) {
+  .segmented-control-proto:not([data-readonly])
+    .segment-proto:is(:hover, [data-preview='hover'])
+    > input:not(:disabled):not(:checked)
+    + .segment-proto-plate {
+    background: color-mix(in srgb, var(--fg-primary) 6%, transparent);
+    color: var(--fg-primary);
+  }
+
+  .segmented-control-proto:not([data-readonly])
+    .segment-proto:is(:hover, [data-preview='hover'])
+    > input:checked:not(:disabled)
+    + .segment-proto-plate {
+    background: color-mix(in srgb, var(--fg-primary) 3%, var(--segmented-thumb-bg));
+  }
+
+  .segmented-control-proto:not([data-readonly])
+    .segment-proto:is(:active, [data-preview='active'])
+    > input:not(:disabled)
+    + .segment-proto-plate {
+    background: color-mix(in srgb, var(--fg-primary) 10%, var(--segmented-rail-bg));
+    color: var(--fg-primary);
+  }
+
+  .segmented-control-proto:not([data-readonly])
+    .segment-proto:is(:active, [data-preview='active'])
+    > input:checked:not(:disabled)
+    + .segment-proto-plate {
+    background: color-mix(in srgb, var(--fg-primary) 6%, var(--segmented-thumb-bg));
+  }
+}
+
+.segment-proto > input:focus-visible + .segment-proto-plate,
+.segment-proto[data-preview-focus] > input:not(:disabled) + .segment-proto-plate {
   outline: 2px solid var(--focus-ring-color);
-  outline-offset: 1px;
+  outline-offset: 0;
 }
 
-.segment-proto > input:disabled + span {
-  color: var(--fg-disabled);
+.segment-proto:has(> input:focus-visible),
+.segment-proto[data-preview-focus] {
+  z-index: 1;
+}
+
+.segment-proto:has(> input:disabled) {
   cursor: not-allowed;
+}
+
+.segment-proto > input:disabled + .segment-proto-plate {
+  color: var(--fg-disabled);
+  box-shadow: none;
+}
+
+.segment-proto > input:checked:disabled + .segment-proto-plate {
+  background: color-mix(in srgb, var(--segmented-thumb-bg) 70%, var(--segmented-rail-bg));
+}
+
+.segmented-control-proto[data-readonly] .segment-proto {
+  cursor: default;
+}
+
+.segmented-control-proto[data-invalid]:not([data-disabled]) {
+  box-shadow: inset 0 0 0 1px var(--status-danger-signal);
+}
+
+.segment-proto[data-icon-only] .segment-proto-plate {
+  min-inline-size: calc(var(--segment-height) - 2 * var(--thumb-inset));
+  padding-inline: var(--segment-gap);
+}
+
+.segment-proto[data-icon-only] .segment-proto-label {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
 }
 
 .segmented-control-proto[hidden] {
   display: none;
 }
 
+@media (pointer: coarse) {
+  .segmented-control-proto[data-size] {
+    --segment-height: max(48px, var(--size-m-height));
+  }
+
+  .segment-proto > input {
+    /* Keep 44px targets around 42px plates without changing the visual inset. */
+    inset: -1px;
+    inline-size: calc(100% + 2px);
+    block-size: calc(100% + 2px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .segment-proto-plate {
+    transition: none;
+  }
+}
+
 @media (forced-colors: active) {
   .segmented-control-proto {
-    border-color: ButtonText;
+    outline: 1px solid ButtonText;
+    outline-offset: -1px;
     background: Canvas;
   }
 
-  .segment-proto > input:checked + span {
+  .segment-proto > input:checked + .segment-proto-plate {
+    forced-color-adjust: none;
     border-color: Highlight;
-    color: CanvasText;
+    background: Highlight;
+    color: HighlightText;
+    box-shadow: none;
+  }
+
+  .segment-proto > input:disabled + .segment-proto-plate {
+    color: GrayText;
+  }
+
+  .segment-proto > input:checked:disabled + .segment-proto-plate {
+    border-color: GrayText;
+    background: Canvas;
+  }
+
+  .segment-proto > input:focus-visible + .segment-proto-plate,
+  .segment-proto[data-preview-focus] > input:not(:disabled) + .segment-proto-plate {
+    outline-color: Highlight;
+    outline-offset: 0;
   }
 }

@@ -190,6 +190,7 @@ function OverviewScene(): ReactElement {
               <SectionHeading
                 action={
                   <SegmentedControl
+                    aria-label="Recent activity filter"
                     size="s"
                     value={filter}
                     onValueChange={setFilter}
