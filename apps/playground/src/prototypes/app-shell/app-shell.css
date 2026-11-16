@@ -315,22 +315,8 @@
   color: var(--fg-primary);
 }
 
-.app-shell-rail-count {
-  position: absolute;
-  inset-block-start: 0;
-  inset-inline-end: -2px;
-  display: grid;
-  place-items: center;
-  min-inline-size: 14px;
-  block-size: 14px;
-  padding-inline: var(--space-2);
-  border: 1px solid var(--bg-shell);
-  border-radius: var(--radius-full);
-  background: var(--accent-solid);
-  color: var(--fg-on-accent);
-  font-family: var(--font-family-base);
-  font-size: var(--text-size-caption-s);
-  line-height: 1;
+.app-shell-rail-indicator {
+  --indicator-separator-color: var(--bg-shell);
 }
 
 .app-shell-rail-brand {
