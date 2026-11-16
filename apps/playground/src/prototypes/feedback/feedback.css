@@ -125,67 +125,6 @@
   inset-inline-end: -1px;
   outline: 2px solid var(--bg-shell);
 }
-.spinner-proto {
-  display: inline-block;
-  flex: none;
-  inline-size: var(--size-m-icon);
-  block-size: var(--size-m-icon);
-  border: 2px solid currentColor;
-  border-inline-end-color: transparent;
-  border-radius: var(--radius-circular);
-  animation: feedback-spin 900ms linear infinite;
-  vertical-align: middle;
-}
-.spinner-proto[data-size='s'] {
-  inline-size: var(--size-s-icon);
-  block-size: var(--size-s-icon);
-}
-.spinner-proto[data-size='l'] {
-  inline-size: var(--size-l-icon);
-  block-size: var(--size-l-icon);
-}
-.spinner-proto[data-size='inherit'] {
-  inline-size: 1em;
-  block-size: 1em;
-}
-.progress-proto {
-  display: grid;
-  gap: var(--space-8);
-  min-inline-size: 0;
-  color: var(--fg-secondary);
-  font-family: var(--font-family-base);
-}
-.progress-label-proto {
-  display: flex;
-  justify-content: space-between;
-  gap: var(--space-8);
-  font-size: var(--text-size-caption-l);
-  line-height: var(--text-size-caption-l-lh);
-}
-.progress-track-proto {
-  appearance: none;
-  display: block;
-  inline-size: 100%;
-  block-size: 6px;
-  overflow: hidden;
-  border: 0;
-  border-radius: var(--radius-full);
-  background: var(--bg-surface-raised);
-  color: var(--mark-signal);
-  accent-color: var(--mark-signal);
-}
-.progress-track-proto::-webkit-progress-bar {
-  background: var(--bg-surface-raised);
-  border-radius: inherit;
-}
-.progress-track-proto::-webkit-progress-value {
-  background: var(--mark-signal);
-  border-radius: inherit;
-}
-.progress-track-proto::-moz-progress-bar {
-  background: var(--mark-signal);
-  border-radius: inherit;
-}
 .skeleton-proto {
   display: block;
   inline-size: var(--skeleton-width, 100%);
@@ -201,26 +140,8 @@
 .skeleton-text-proto > .skeleton-proto:last-child {
   inline-size: 70%;
 }
-:is(
-  .alert-proto,
-  .toast-proto,
-  .indicator-proto,
-  .spinner-proto,
-  .progress-proto,
-  .skeleton-proto,
-  .skeleton-text-proto
-)[hidden] {
+:is(.alert-proto, .toast-proto, .indicator-proto, .skeleton-proto, .skeleton-text-proto)[hidden] {
   display: none;
-}
-@keyframes feedback-spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-  .spinner-proto {
-    animation: none;
-  }
 }
 @media (forced-colors: active) {
   .alert-proto,
@@ -241,16 +162,6 @@
   .indicator-dot-proto {
     background: Highlight;
     box-shadow: none;
-  }
-  .progress-track-proto {
-    forced-color-adjust: none;
-    background: Canvas;
-    color: Highlight;
-    outline: 1px solid CanvasText;
-    --mark-signal: Highlight;
-  }
-  .progress-track-proto::-webkit-progress-bar {
-    background: Canvas;
   }
   .skeleton-proto {
     border: 1px solid GrayText;

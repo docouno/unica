@@ -18,7 +18,8 @@ import { Badge } from '../prototypes/badge/badge.proto.js';
 import { Button } from '../prototypes/button/button.proto.js';
 import { Card } from '../prototypes/card/card.proto.js';
 import { Empty } from '../prototypes/empty/empty.proto.js';
-import { Skeleton, SkeletonText, Spinner, Toast } from '../prototypes/feedback/feedback.proto.js';
+import { Skeleton, SkeletonText, Toast } from '../prototypes/feedback/feedback.proto.js';
+import { Spinner } from '../prototypes/progress/progress.proto.js';
 import { Icon } from '../prototypes/icon/icon.proto.js';
 import { Input } from '../prototypes/input/input.proto.js';
 import { Tag } from '../prototypes/tag/tag.proto.js';
@@ -271,7 +272,7 @@ function ExtensionsScene(): ReactElement {
                   >
                     <div className="folio-row folio-between">
                       <div className="folio-row folio-connector-title">
-                        <Spinner size="s" label="Indexing repository trees" />
+                        <Spinner size="s" tone="muted" />
                         <Title as="h3" size="body-m" className="folio-connector-installed-title">
                           GitHub ADR Mirror
                         </Title>

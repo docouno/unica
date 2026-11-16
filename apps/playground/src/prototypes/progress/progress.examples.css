@@ -1,0 +1,155 @@
+.activity-study {
+  display: grid;
+  gap: var(--space-24);
+  min-inline-size: 0;
+  max-inline-size: 600px;
+  color: var(--fg-primary);
+  font-family: var(--font-family-base);
+  font-size: var(--text-size-body-s);
+  line-height: var(--text-size-body-s-lh);
+}
+
+.activity-stack {
+  display: grid;
+  gap: var(--space-12);
+  min-inline-size: 0;
+}
+
+.activity-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-12);
+  min-inline-size: 0;
+}
+
+.activity-sample {
+  display: grid;
+  gap: var(--space-12);
+  flex: 1;
+  min-inline-size: 64px;
+}
+
+.activity-caption {
+  color: var(--fg-muted);
+  font-size: var(--text-size-caption-l);
+  line-height: var(--text-size-caption-l-lh);
+  overflow-wrap: anywhere;
+}
+
+.activity-label {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-8);
+  min-inline-size: 0;
+  overflow-wrap: anywhere;
+}
+
+.activity-label > .activity-spinner {
+  align-self: flex-start;
+  margin-block-start: calc((var(--text-size-body-s-lh) - var(--spinner-dimension)) / 2);
+}
+
+.activity-divider {
+  border-block-start: 1px solid var(--border-subtle);
+  padding-block-start: var(--space-16);
+}
+
+.activity-muted {
+  color: var(--fg-muted);
+}
+.activity-accent {
+  color: var(--accent-signal);
+}
+.activity-body-large {
+  font-size: var(--text-size-body-l);
+  line-height: var(--text-size-body-l-lh);
+}
+
+.activity-overlay {
+  inline-size: 100%;
+  max-inline-size: 480px;
+  padding: var(--surface-m-padding);
+  border: 1px solid var(--overlay-border);
+  border-radius: var(--surface-m-radius);
+  background: var(--bg-overlay);
+  backdrop-filter: var(--overlay-backdrop);
+  box-shadow: var(--overlay-rim), var(--overlay-shadow-popover);
+}
+
+.activity-control-slot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-8);
+  min-block-size: var(--size-m-height);
+  padding: var(--size-m-padding-y) var(--size-m-padding-x);
+  border: 1px solid var(--control-border);
+  border-radius: var(--size-m-radius);
+  background: var(--control-bg);
+  color: var(--fg-muted);
+}
+
+.activity-reserved {
+  display: inline-flex;
+  flex: none;
+  inline-size: var(--size-m-icon);
+  block-size: var(--size-m-icon);
+  align-items: center;
+  justify-content: center;
+}
+
+.activity-waiting-line {
+  display: flex;
+  gap: var(--space-8);
+  align-items: center;
+  min-block-size: var(--text-size-body-s-lh);
+}
+
+@media (forced-colors: active) {
+  .activity-overlay {
+    background: Canvas;
+    border-color: CanvasText;
+    box-shadow: none;
+  }
+}
+
+.activity-outcome {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-8);
+  color: var(--fg-muted);
+  font-size: var(--text-size-caption-l);
+  line-height: var(--text-size-caption-l-lh);
+}
+
+.activity-outcome > .icon-proto {
+  flex: none;
+}
+
+.activity-preview-controls {
+  display: grid;
+  gap: var(--space-8);
+  font-size: var(--text-size-caption-l);
+  line-height: var(--text-size-caption-l-lh);
+}
+
+.activity-preview-controls > select {
+  min-inline-size: 0;
+  inline-size: 100%;
+  min-block-size: var(--size-s-height);
+  border: 1px solid var(--control-border);
+  border-radius: var(--size-s-radius);
+  background: var(--control-bg);
+  padding: var(--space-4) var(--space-8);
+}
+
+.activity-preview-controls > input {
+  inline-size: 100%;
+  margin: 0;
+  accent-color: var(--accent-solid);
+}
+.activity-preview-controls > :is(input, select):focus-visible {
+  outline: 2px solid var(--focus-ring-color);
+  outline-offset: 2px;
+}

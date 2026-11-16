@@ -8,6 +8,7 @@ import {
   WarningCircleIcon,
   XIcon,
 } from '@phosphor-icons/react';
+import { Progress } from '../progress/progress.proto.js';
 import { FormField } from '../input/input.proto.js';
 import './file-input.css';
 
@@ -208,19 +209,22 @@ export function FileItem({
           <FileIcon size="1.2em" />
         )}
       </span>
-      <span className="file-item-body-proto">
+      <div className="file-item-body-proto">
         <span className="file-item-name-proto">{name}</span>
         {detail && <span className="file-item-detail-proto">{detail}</span>}
         {progress !== undefined && (
-          <progress
+          <Progress
+            size="s"
+            showValue={false}
             className="file-item-progress-proto"
             value={progress}
+            active={status === 'uploading' || status === 'processing'}
             max={100}
             aria-label={`Import progress for ${name}`}
           />
         )}
         {children}
-      </span>
+      </div>
       {(onRetry || onRemove) && (
         <span className="file-item-actions-proto">
           {onRetry && (
