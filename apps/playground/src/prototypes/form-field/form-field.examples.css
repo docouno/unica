@@ -1,0 +1,65 @@
+.ff-example-stack {
+  display: grid;
+  gap: 24px;
+  min-inline-size: 0;
+}
+.ff-example-note {
+  margin: 0;
+  color: var(--fg-muted);
+  font: 400 var(--text-size-caption-l)/1.5 var(--font-family-base);
+  overflow-wrap: anywhere;
+}
+.ff-example-study {
+  display: grid;
+  gap: 20px;
+  min-inline-size: 0;
+  padding-block-end: 24px;
+  border-block-end: 1px solid var(--border-subtle);
+}
+.ff-example-kicker {
+  margin: 0;
+  color: var(--fg-secondary);
+  font: 500 var(--text-size-caption-l)/1.5 var(--font-family-base);
+}
+.ff-example-vertical {
+  inline-size: min(100%, 26rem);
+}
+.ff-example-parts {
+  display: grid;
+  gap: 8px;
+}
+.ff-example-fallbacks {
+  display: grid;
+  gap: 12px;
+}
+.ff-example-card-stack {
+  display: grid;
+  gap: 8px;
+}
+.ff-example-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.ff-example-result {
+  min-block-size: 1.5em;
+  margin: 0;
+  color: var(--fg-secondary);
+  font: 400 var(--text-size-caption-l)/1.5 var(--font-family-base);
+}
+.ff-example-pair {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+.ff-example-narrow {
+  max-inline-size: 22rem;
+}
+.ff-example-title {
+  margin: 0;
+  color: var(--fg-primary);
+  font: 600 var(--text-size-body-m)/1.4 var(--font-family-base);
+}
+.ff-example-overlay {
+  justify-self: center;
+}
