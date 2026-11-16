@@ -16,7 +16,7 @@ function CollectionExample(): ReactElement {
       <Text size="body-s" color="secondary">
         The current page is {page}. Use Previous, Next, or a page number.
       </Text>
-      <CardFooter>
+      <CardFooter withBorder>
         <Text size="caption-l" color="muted">
           {(page - 1) * 20 + 1}–{Math.min(page * 20, 128)} of 128 documents
         </Text>

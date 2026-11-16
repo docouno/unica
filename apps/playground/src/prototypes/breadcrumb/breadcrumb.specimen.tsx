@@ -1,6 +1,6 @@
 import { defineSpecimen } from '../../workbench/types.js';
 import { Breadcrumb } from './breadcrumb.proto.js';
-import { Card, CardHeader } from '../card/card.proto.js';
+import { Card, CardAction, CardHeader } from '../card/card.proto.js';
 import { Badge } from '../badge/badge.proto.js';
 import { Title } from '../title/title.proto.js';
 import '../card/display.examples.css';
@@ -50,9 +50,12 @@ export default defineSpecimen({
         <Card>
           <CardHeader>
             <Breadcrumb items={['Platform Eng', 'Runbooks', 'Zero-Downtime PG Failover']} />
-            <Badge status="success" dot>
-              Verified
-            </Badge>
+            <CardAction>
+              {' '}
+              <Badge status="success" dot>
+                Verified
+              </Badge>
+            </CardAction>
           </CardHeader>
           <Title as="h3" size="heading-s">
             Zero-Downtime PG Failover

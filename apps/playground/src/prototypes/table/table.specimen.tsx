@@ -3,7 +3,7 @@ import type { ReactElement } from 'react';
 import { defineSpecimen } from '../../workbench/types.js';
 import { Badge } from '../badge/badge.proto.js';
 import { Table, TableScroll } from './table.proto.js';
-import { Card, CardHeader } from '../card/card.proto.js';
+import { Card, CardAction, CardHeader } from '../card/card.proto.js';
 import { Text } from '../text/text.proto.js';
 import '../card/display.examples.css';
 
@@ -22,9 +22,12 @@ function DirectoryExample(): ReactElement {
         <Text size="body-s" weight="semibold">
           Recent documents
         </Text>
-        <Text size="caption-l" color="muted">
-          3 documents
-        </Text>
+        <CardAction>
+          {' '}
+          <Text size="caption-l" color="muted">
+            3 documents
+          </Text>
+        </CardAction>
       </CardHeader>
       <TableScroll aria-label="Recent documents">
         <Table>

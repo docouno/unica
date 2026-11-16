@@ -141,7 +141,7 @@ function ReportCard({
 }): ReactElement {
   return (
     <Card className="skeleton-demo-report" aria-busy={loading}>
-      <CardMedia className="skeleton-demo-media">
+      <CardMedia className="skeleton-demo-media" style={{ marginBlock: 0 }}>
         {loading ? (
           <Skeleton className="skeleton-demo-media-fill" />
         ) : (
