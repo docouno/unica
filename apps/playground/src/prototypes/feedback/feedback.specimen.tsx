@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import type { ReactElement } from 'react';
 import { defineSpecimen } from '../../workbench/types.js';
-import { Alert, Toast, Indicator, Skeleton, SkeletonText } from './feedback.proto.js';
+import { Alert, Toast, Indicator } from './feedback.proto.js';
 import { Button } from '../button/button.proto.js';
 import '../card/display.examples.css';
 
@@ -24,9 +24,9 @@ function ToastExample(): ReactElement {
 
 export default defineSpecimen({
   id: 'feedback',
-  title: 'Feedback & Skeleton',
+  title: 'Feedback',
   group: 'Status',
-  summary: 'Status callouts, arrival messages, and content placeholders.',
+  summary: 'Status callouts and arrival messages.',
   sections: [
     {
       id: 'status',
@@ -47,17 +47,6 @@ export default defineSpecimen({
             <Indicator status="success" label="Healthy" />
             <Indicator status="warning" label="Needs attention" />
           </div>
-        </div>
-      ),
-    },
-    {
-      id: 'pending',
-      title: 'Content placeholders',
-      kind: 'states',
-      render: () => (
-        <div className="display-example-stack display-example-measure">
-          <Skeleton style={{ blockSize: 100 }} />
-          <SkeletonText lines={3} />
         </div>
       ),
     },

@@ -1,0 +1,222 @@
+.skeleton-demo-stack,
+.skeleton-demo-case {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-16);
+  min-inline-size: 0;
+}
+
+.skeleton-demo-case {
+  margin: 0;
+  gap: var(--space-12);
+}
+
+.skeleton-demo-case > figcaption {
+  color: var(--fg-muted);
+  font-size: var(--text-size-caption-l);
+  line-height: var(--text-size-caption-l-lh);
+}
+
+.skeleton-demo-pair {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-24);
+}
+
+.skeleton-demo-avatars {
+  display: flex;
+  align-items: center;
+  gap: var(--space-16);
+  min-block-size: 48px;
+  flex-wrap: wrap;
+}
+
+.skeleton-demo-controls,
+.skeleton-demo-checkbox {
+  display: flex;
+  align-items: center;
+  gap: var(--space-12);
+  flex-wrap: wrap;
+}
+
+.skeleton-demo-control {
+  display: grid;
+  gap: var(--space-4);
+  min-inline-size: 0;
+  max-inline-size: 100%;
+  color: var(--fg-muted);
+  font-size: var(--text-size-caption-l);
+  line-height: var(--text-size-caption-l-lh);
+}
+
+.skeleton-demo-control select {
+  min-inline-size: 0;
+  max-inline-size: 100%;
+  padding: 6px 8px;
+  border: 1px solid var(--control-border);
+  border-radius: var(--size-s-radius);
+  background: var(--control-bg);
+  color: var(--fg-primary);
+  font: inherit;
+}
+
+.skeleton-demo-checkbox {
+  gap: var(--space-8);
+  color: var(--fg-secondary);
+  font-size: var(--text-size-caption-l);
+  line-height: var(--text-size-caption-l-lh);
+}
+
+.skeleton-demo-checkbox input {
+  margin: 0;
+  accent-color: var(--accent-solid);
+}
+
+.skeleton-demo-control select:focus-visible,
+.skeleton-demo-checkbox input:focus-visible {
+  outline: 2px solid var(--focus-ring-color);
+  outline-offset: 3px;
+}
+
+.skeleton-demo-metrics {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: var(--space-24);
+}
+
+.skeleton-demo-metric-cell {
+  min-inline-size: 0;
+  border-block: 1px solid var(--border-default);
+}
+
+.skeleton-demo-metric-cell > .type-proto {
+  white-space: nowrap;
+}
+
+.skeleton-demo-report.card-proto {
+  gap: var(--space-16);
+  padding: var(--space-12);
+}
+
+.skeleton-demo-media.card-media-proto {
+  --element-radius: var(--radius-xs);
+  aspect-ratio: 16 / 9;
+  border-radius: var(--radius-xs);
+  background: transparent;
+}
+
+.skeleton-demo-media > .skeleton-demo-media-fill,
+.skeleton-demo-media > img {
+  inline-size: 100%;
+  block-size: 100%;
+  max-block-size: none;
+  object-fit: cover;
+}
+
+.skeleton-demo-copy {
+  display: grid;
+  gap: var(--space-8);
+  min-inline-size: 0;
+}
+
+.skeleton-demo-report-description {
+  block-size: calc(2 * var(--text-size-body-s-lh));
+}
+
+.skeleton-demo-author {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  min-inline-size: 0;
+  min-block-size: 24px;
+}
+
+.skeleton-demo-list {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.skeleton-demo-list-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-12);
+  min-inline-size: 0;
+  padding-block: var(--space-12);
+}
+
+.skeleton-demo-list-row + .skeleton-demo-list-row {
+  border-block-start: 1px solid var(--border-subtle);
+}
+
+.skeleton-demo-row-copy {
+  display: grid;
+  flex: 1;
+  gap: var(--space-4);
+  min-inline-size: 0;
+}
+
+.skeleton-demo-lifecycle {
+  max-inline-size: 560px;
+}
+
+.skeleton-demo-region {
+  min-block-size: calc(
+    3 * (var(--text-size-body-s-lh) + var(--text-size-caption-l-lh) + 28px) + 2px
+  );
+}
+
+.skeleton-demo-terminal {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-8);
+  min-block-size: inherit;
+  color: var(--fg-muted);
+  text-align: center;
+}
+
+.skeleton-demo-status-slot {
+  min-block-size: calc(3 * var(--text-size-caption-l-lh));
+}
+
+.skeleton-demo-footer {
+  display: flex;
+  border-block-start: 1px solid var(--border-subtle);
+  padding-block-start: var(--space-12);
+}
+
+.skeleton-demo-canvas {
+  padding: var(--space-16);
+  border-radius: var(--surface-m-radius);
+  background: var(--bg-canvas);
+}
+
+.skeleton-demo-overlay {
+  inline-size: min(100%, 400px);
+}
+
+.skeleton-demo-motion-sample {
+  gap: var(--space-8);
+}
+
+[data-skeleton-demo-static] .skeleton-proto::after {
+  display: none;
+  animation: none;
+}
+
+@container artboard (max-width: 600px) {
+  .skeleton-demo-pair {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (forced-colors: active) {
+  .skeleton-demo-control select {
+    border-color: ButtonText;
+    background: Canvas;
+    color: CanvasText;
+  }
+}

@@ -61,11 +61,6 @@
   min-inline-size: 0;
 }
 
-.folio-connector-skeleton {
-  inline-size: 100%;
-  block-size: 22px;
-}
-
 .folio-connector-installed {
   min-block-size: 186px;
 }

@@ -18,8 +18,9 @@ import { Badge } from '../prototypes/badge/badge.proto.js';
 import { Button } from '../prototypes/button/button.proto.js';
 import { Card } from '../prototypes/card/card.proto.js';
 import { Empty } from '../prototypes/empty/empty.proto.js';
-import { Skeleton, SkeletonText, Toast } from '../prototypes/feedback/feedback.proto.js';
+import { Toast } from '../prototypes/feedback/feedback.proto.js';
 import { Spinner } from '../prototypes/progress/progress.proto.js';
+import { SkeletonText } from '../prototypes/skeleton/skeleton.proto.js';
 import { Icon } from '../prototypes/icon/icon.proto.js';
 import { Input } from '../prototypes/input/input.proto.js';
 import { Tag } from '../prototypes/tag/tag.proto.js';
@@ -281,8 +282,8 @@ function ExtensionsScene(): ReactElement {
                         Indexing
                       </Badge>
                     </div>
-                    <Skeleton className="folio-connector-skeleton" />
-                    <SkeletonText lines={3} />
+                    <SkeletonText size="body-s" lines={1} width="76%" />
+                    <SkeletonText size="caption-l" lines={2} />
                     <div className="folio-row folio-connector-footer">
                       <Text size="caption-m" color="muted">
                         Scanning 48 repository trees…
