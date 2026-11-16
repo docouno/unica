@@ -95,7 +95,7 @@
   flex-direction: column;
   inline-size: 22rem;
   max-inline-size: 100%;
-  padding: 0;
+  padding: var(--space-4);
   box-shadow: var(--overlay-shadow-hover);
   font-size: var(--text-size-body-s);
   line-height: var(--text-size-body-s-lh);
@@ -106,7 +106,9 @@
   grid-template-columns: minmax(0, 1fr);
   align-content: start;
   gap: var(--space-12);
-  padding: var(--space-16);
+  /* Keep the native scrollbar clear of the outer corners without moving the text. */
+  padding: var(--space-12);
+  border-radius: max(0px, calc(var(--surface-s-radius) - 1px - var(--space-4)));
 }
 
 :is(.tooltip-proto, .hover-card-proto)[hidden],
