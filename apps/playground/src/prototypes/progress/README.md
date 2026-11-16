@@ -1,6 +1,6 @@
 # Spinner, Progress, and ProgressCircle design reference
 
-This is an upfront visual and interaction design, pending visual approval. The prototype is local to the playground; its props and DOM are not the shipped package API. Open `?item=spinner` , `?item=progress`, or `?item=progress-circle` in the workbench.
+This is an approved visual and interaction design reference. The prototype is local to the playground; its props and DOM are not the shipped package API. Open `?item=spinner` , `?item=progress`, or `?item=progress-circle` in the workbench.
 
 ## Purpose and boundaries
 
