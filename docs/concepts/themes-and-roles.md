@@ -35,7 +35,7 @@ Material response can require shared input sampling as well as CSS. Keep input s
 
 Keyboard hints use the neutral `--kbd-cap-bg` and `--kbd-cap-border` tokens. Their `--kbd-cap-shadow` recipe stays inside the keycap: a 1px lower edge in Soft, a 1px lower edge plus a top highlight in Frost, and a 2px lower step in Pixel. Keycaps do not add glass, external elevation, or their own press animation. Nested actions supply contextual foreground and contour over a transparent keycap face while retaining ownership of focus, motion, and availability.
 
-Inline code uses `--code-font-scale`: `0.9` in Soft/Frost to balance JetBrains Mono with Inter, and `1` in Pixel to preserve the surrounding monospace size. This typography recipe is independent of corner geometry. Its plate uses neutral/status soft colors, `--pill-border-width`, and `--radius-xs`. `--code-plate-tint` is an 8% ink step: explicit tones mix their foreground into their soft background, while inherited Code reads the painted surface's ready-made `--code-context-bg/fg/border`. Card publishes a neutral ink veil; Alert publishes its status ink veil; `[data-surface="overlay"]` publishes neutral ink over the actual floating material. Transparent text/quotes preserve context, an opaque Card resets it, and a theme/base boundary clears it. The neutral fallback matches explicit neutral. Code has no blur, shadow, or motion.
+Inline code uses `--code-font-scale`: `0.9` in Soft/Frost to balance JetBrains Mono with Inter, and `1` in Pixel to preserve the surrounding monospace size. This typography recipe is independent of corner geometry. Its plate uses neutral/status soft colors, `--pill-border-width`, and `--radius-xs`. `--code-plate-tint` is an 8% ink step: explicit tones mix their foreground into their soft background, while inherited Code reads the painted surface's ready-made `--code-context-bg/fg/border`. Card publishes a neutral ink veil; Alert publishes its status ink veil; `[data-surface="overlay"]` publishes neutral ink over the actual floating material. Transparent text/quotes preserve context, a Card establishes its own ink veil, and a theme/base boundary clears it. The neutral fallback matches explicit neutral. Code has no blur, shadow, or motion.
 
 Block quotations use `--blockquote-rail-width`, `--blockquote-rail-style`, and `--blockquote-rail-radius` for their logical leading edge: a rounded 3px solid rail in Soft, a straight 2px solid rail in Frost, and a straight 3px double rail in Pixel. The neutral rail uses `--border-strong`; semantic rails use their status signal. The quotation remains transparent in every tone; only the rail and optional glyphs carry semantic color. Quote text and attribution retain neutral foregrounds, without another filled panel, shadows, or backdrop filtering in document flow.
 
@@ -57,7 +57,7 @@ Exposing low-level material switches (`solid`, `soft`, `glass`, `lamp`, `outline
 | **Overlays** (`Modal`, `Drawer`, `Popover`, `Tooltip`, `HoverCard`, `Menu`, `Toast`) | *None (`0` variants)* | Floating panels automatically render as frosted glass in `Frost` and opaque elevated plates in `Soft` and `Pixel`. |
 | **Binary, choice-card & continuous controls** (`Checkbox`, `Radio`, `Switch`, `CheckboxCard`, `RadioCard`, `SwitchCard`, `Slider`, `RangeSlider`, `SegmentedControl`, `Progress`) | *None (`0` variants)* | Track fills, `--choice-card-*` plates, thumb contrast, and edge rules follow theme tokens directly (with automatic `[data-surface="overlay"]` adaptation). |
 | **Fields & pickers** (`Input`, `Textarea`, `NumberInput`, `Select`, `Combobox`, `Autocomplete`, `DatePicker`, `DateRangePicker`, `TagsInput`, `FileInput`) | `variant?: 'default' \| 'ghost'` | Selects framed field chrome (`default`) vs quiet inline/toolbar placement (`ghost`). Minimal field cues are defined by the component family; Ghost does not require every edge to be absent. |
-| **Surface containers** (`Card`) | `variant?: 'default' \| 'subtle'` | Selects primary bounded surfaces (`default`) vs quiet secondary groupings (`subtle`). |
+| **Surface containers** (`Card`) | `variant?: 'default' \| 'subtle'` | Selects primary bounded surfaces (`default`) vs quiet secondary groupings (`subtle`), with automatic contextual material adaptation. |
 | **Action triggers** (`Button`, `IconButton`) | `variant?: 'primary' \| 'secondary' \| 'ghost'` | Expresses action weight. Soft and Pixel use flat plates with color/edge feedback; Frost uses shallow vertical elevation on primary/secondary, with ambient light on primary accent. Ghost stays quiet and stationary. |
 
 ## Activity Material
@@ -68,7 +68,7 @@ Soft keeps a matte capsule. Frost adds restrained vertical light and a short glo
 
 ## Contextual Surface Adaptation (`base` vs `overlay`)
 
-Controls and choice cards (`RadioCard`, `CheckboxCard`, `SwitchCard`) adapt automatically when nested inside floating overlays without extra React props:
+Cards, controls, and choice cards (`RadioCard`, `CheckboxCard`, `SwitchCard`) adapt automatically when nested inside floating overlays without extra React props:
 
 ```css
 [data-theme='frost-dark'] {
@@ -89,6 +89,8 @@ Controls and choice cards (`RadioCard`, `CheckboxCard`, `SwitchCard`) adapt auto
 
 - **Base context:** Recessed plates (`--control-bg`) and borders (`--control-border`) are calibrated against `--bg-canvas` and `--bg-surface`.
 - **Overlay context (`[data-surface="overlay"]`):** Floating containers (`Modal`, `Drawer`, `Popover`, `HoverCard`, `DatePicker`) set `data-surface="overlay"`, switching nested controls to translucent glass veils in `Frost` and stepped opaque plates in `Soft` and `Pixel`.
+
+Card uses `--card-bg`, `--card-bg-subtle`, `--card-bg-hover`, `--card-border`, `--card-border-subtle`, `--card-border-hover`, and `--card-shadow`. Base maps to the ordinary surface/edge/shadow tokens. In Overlay, Frost uses translucent neutral fills and contours; Soft and Pixel retain their opaque surfaces. The floating panel owns blur and elevation, so every overlay card has no external shadow and never adds its own backdrop filter. Navigation hover uses the contextual hover fill/edge; held press uses the contextual subtle fill and hover edge. Text, controls, and the independent keyboard focus ring remain fully opaque. Theme and explicit Base boundaries reset the recipe; ordinary card nesting does not change context. These tokens currently drive the Card design prototype; they do not imply a shipped Card component.
 
 `--control-border-focus` is the neutral active edge for fields, distinct from the resting and hover borders. Its six theme values remain readable on Base and Overlay. It changes the existing frame or baseline; `--focus-ring-color` remains the separate, stronger keyboard-navigation contour. Input consumes this recipe in both Default and Ghost; Ghost keeps a transparent fill throughout rest, hover, and focus. Other field families adopt the recipe as their own contracts are refined.
 

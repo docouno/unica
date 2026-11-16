@@ -5,15 +5,21 @@
   --card-padding: var(--surface-m-padding);
   --card-gap: var(--surface-m-gap);
   --element-radius: var(--surface-m-radius);
+  --card-inner-radius: min(
+    var(--element-radius),
+    max(var(--radius-xs), calc(var(--element-radius) - var(--card-padding)))
+  );
+  --card-edge-radius: max(0px, calc(var(--element-radius) - 1px));
   position: relative;
   min-inline-size: 0;
   display: flex;
   flex-direction: column;
   gap: var(--card-gap);
   padding: var(--card-padding);
-  border: 1px solid var(--border-default);
+  border: 1px solid var(--card-border);
   border-radius: var(--element-radius);
-  background: var(--bg-surface);
+  background: var(--card-bg);
+  box-shadow: var(--card-shadow);
   color: var(--fg-primary);
   font-family: var(--font-family-base);
   overflow-wrap: anywhere;
@@ -27,8 +33,12 @@
   pointer-events: none;
 }
 .card-proto[data-variant='subtle'] {
-  background-color: var(--bg-surface-subtle);
-  border-color: var(--border-subtle);
+  background: var(--card-bg-subtle);
+  border-color: var(--card-border-subtle);
+  box-shadow: none;
+}
+.card-proto[data-variant='subtle']::after {
+  display: none;
 }
 .card-proto[data-size='s'] {
   --card-padding: var(--surface-s-padding);
@@ -40,28 +50,105 @@
   --card-gap: var(--surface-l-gap);
   --element-radius: var(--surface-l-radius);
 }
-.card-header-proto,
+.card-header-proto {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-content: start;
+  align-items: start;
+  gap: var(--space-4) var(--space-12);
+  min-inline-size: 0;
+}
+.card-header-proto:has(> .card-action-proto) {
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+.card-header-proto > :not(.card-action-proto) {
+  grid-column: 1;
+}
+.card-action-proto {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  min-inline-size: 0;
+  max-inline-size: 10rem;
+}
+.card-title-proto,
+.card-description-proto {
+  min-inline-size: 0;
+  margin: 0;
+}
+.card-description-proto {
+  color: var(--fg-secondary);
+  font-size: var(--text-size-body-s);
+  line-height: var(--text-size-body-s-lh);
+}
+.card-body-proto {
+  display: flex;
+  flex-direction: column;
+  gap: var(--card-gap);
+  min-inline-size: 0;
+  flex: 1;
+}
 .card-footer-proto {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
   justify-content: space-between;
-  gap: var(--space-12);
+  gap: var(--space-8) var(--space-12);
   min-inline-size: 0;
+  margin-block-start: auto;
 }
-.card-footer-proto {
-  margin-block-start: var(--space-4);
-  padding-block-start: var(--space-12);
-  border-block-start: 1px solid var(--border-subtle);
+.card-footer-proto[data-justify='start'] {
+  justify-content: flex-start;
+}
+.card-footer-proto[data-justify='end'] {
+  justify-content: flex-end;
+}
+.card-footer-proto[data-bordered] {
+  padding-block-start: var(--card-gap);
+  border-block-start: 1px solid var(--card-border-subtle);
+}
+.card-section-proto {
+  min-inline-size: 0;
+  border-radius: var(--card-inner-radius);
+}
+.card-section-proto[data-placement='flush'] {
+  margin-inline: calc(-1 * var(--card-padding));
+  border-radius: 0;
+}
+.card-section-proto[data-placement='flush']:first-child {
+  margin-block-start: calc(-1 * var(--card-padding));
+  border-start-start-radius: var(--card-edge-radius);
+  border-start-end-radius: var(--card-edge-radius);
+}
+.card-section-proto[data-placement='flush']:last-child {
+  margin-block-end: calc(-1 * var(--card-padding));
+  border-end-start-radius: var(--card-edge-radius);
+  border-end-end-radius: var(--card-edge-radius);
+}
+.card-section-proto[data-bordered] {
+  border-block: 1px solid var(--card-border-subtle);
+}
+.card-section-proto[data-bordered]:first-child {
+  border-block-start: 0;
+}
+.card-section-proto[data-bordered]:last-child {
+  border-block-end: 0;
+}
+.card-section-proto[data-padded] {
+  padding: var(--card-padding);
 }
 .card-media-proto {
   min-inline-size: 0;
   overflow: hidden;
-  border-radius: min(
-    var(--element-radius),
-    max(var(--radius-xs), calc(var(--element-radius) - var(--card-padding)))
-  );
+  border-radius: var(--card-inner-radius);
   background: var(--bg-canvas);
+  display: grid;
+  place-items: center;
+}
+.card-section-proto > .card-media-proto {
+  border-radius: inherit;
 }
 .card-media-proto > :is(img, svg) {
   display: block;
@@ -69,16 +156,169 @@
   max-block-size: 240px;
   object-fit: cover;
 }
-:is(.card-proto, .card-header-proto, .card-footer-proto, .card-media-proto)[hidden] {
+.card-media-proto[data-ratio] {
+  position: relative;
+}
+.card-media-proto[data-ratio] > :is(img, svg) {
+  position: absolute;
+  inset: 0;
+  block-size: 100%;
+  max-block-size: none;
+  min-block-size: 0;
+}
+.card-media-proto[data-fit='contain'] > :is(img, svg) {
+  object-fit: contain;
+}
+/* A media boundary uses the content inset, not the tighter content rhythm. */
+.card-proto[data-orientation='vertical']
+  > :is(.card-media-proto, .card-section-proto:has(> .card-media-proto)):not(:last-child) {
+  margin-block-end: calc(var(--card-padding) - var(--card-gap));
+}
+.card-proto[data-orientation='vertical']
+  > :is(.card-media-proto, .card-section-proto:has(> .card-media-proto)):not(:first-child) {
+  margin-block-start: calc(var(--card-padding) - var(--card-gap));
+}
+/* Adjacent media regions share one interval. */
+.card-proto[data-orientation='vertical']
+  > :is(.card-media-proto, .card-section-proto:has(> .card-media-proto))
+  + :is(.card-media-proto, .card-section-proto:has(> .card-media-proto)) {
+  margin-block-start: 0;
+}
+.card-proto[data-orientation='horizontal'] {
+  container: card / inline-size;
+  display: grid;
+  gap: var(--card-padding);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+  align-items: stretch;
+}
+.card-proto[data-orientation='horizontal']
+  > .card-section-proto[data-placement='flush']:first-child {
+  margin-block: calc(-1 * var(--card-padding));
+  margin-inline-start: calc(-1 * var(--card-padding));
+  margin-inline-end: 0;
+  border-radius: 0;
+  border-start-start-radius: var(--card-edge-radius);
+  border-end-start-radius: var(--card-edge-radius);
+}
+.card-proto[data-orientation='horizontal'] > .card-section-proto:first-child > .card-media-proto {
+  block-size: 100%;
+}
+@container card (inline-size < 28rem) {
+  .card-proto[data-orientation='horizontal'] > :is(.card-section-proto, .card-body-proto) {
+    grid-column: 1 / -1;
+  }
+  .card-proto[data-orientation='horizontal']
+    > .card-section-proto[data-placement='flush']:first-child {
+    margin-block-end: 0;
+    margin-inline: calc(-1 * var(--card-padding));
+    border-end-start-radius: 0;
+    border-start-end-radius: var(--card-edge-radius);
+  }
+}
+/* A real primary anchor opts a surface into interaction. Static cards stay still. */
+.card-proto:has(> .card-header-proto .card-primary-link-proto) {
+  transition:
+    background-color 120ms ease,
+    border-color 120ms ease;
+}
+.card-primary-link-proto {
+  color: inherit;
+  text-decoration: none;
+  outline: none;
+}
+.card-primary-link-proto::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: var(--element-radius);
+}
+.card-action-proto {
+  position: relative;
+  z-index: 1;
+}
+@media (hover: hover) {
+  .card-proto:has(> .card-header-proto .card-primary-link-proto:hover) {
+    background: var(--card-bg-hover);
+    border-color: var(--card-border-hover);
+  }
+  .card-primary-link-proto:hover {
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+  }
+}
+.card-proto[data-preview='hover'] {
+  background: var(--card-bg-hover);
+  border-color: var(--card-border-hover);
+}
+.card-proto:has(> .card-header-proto .card-primary-link-proto:active),
+.card-proto[data-preview='active'] {
+  background: var(--card-bg-subtle);
+  border-color: var(--card-border-hover);
+  box-shadow: none;
+}
+.card-primary-link-proto:focus-visible::after,
+.card-proto[data-preview-focus] {
+  outline: 2px solid var(--focus-ring-color);
+  outline-offset: 2px;
+}
+/* Unavailable entities keep readable content and explain the unavailable action. */
+.card-proto[data-unavailable] {
+  box-shadow: none;
+  border-style: dashed;
+}
+.card-proto[data-unavailable]::after {
   display: none;
+}
+:is(
+  .card-proto,
+  .card-header-proto,
+  .card-action-proto,
+  .card-body-proto,
+  .card-footer-proto,
+  .card-section-proto,
+  .card-media-proto
+)[hidden] {
+  display: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .card-proto:has(> .card-header-proto .card-primary-link-proto) {
+    transition: none;
+  }
 }
 @media (forced-colors: active) {
   .card-proto {
     border-color: CanvasText;
     background: Canvas;
     color: CanvasText;
+    box-shadow: none;
   }
   .card-proto::after {
     display: none;
+  }
+  .card-proto[data-unavailable] {
+    border-color: GrayText;
+  }
+  .card-primary-link-proto {
+    color: LinkText;
+  }
+  .card-primary-link-proto:focus-visible::after,
+  .card-proto[data-preview-focus] {
+    outline: 1px solid ButtonText;
+  }
+}
+
+.card-proto[data-preview='hover'] .card-title-proto,
+.card-proto[data-preview='active'] .card-title-proto {
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+.card-proto[data-orientation='horizontal'] > .card-section-proto[data-bordered]:first-child {
+  border-block: 0;
+  border-inline-end: 1px solid var(--card-border-subtle);
+}
+@container card (inline-size < 28rem) {
+  .card-proto[data-orientation='horizontal'] > .card-section-proto[data-bordered]:first-child {
+    border-inline-end: 0;
+    border-block-end: 1px solid var(--card-border-subtle);
   }
 }

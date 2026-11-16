@@ -1,7 +1,7 @@
 import { useId, useState } from 'react';
 import type { ReactElement } from 'react';
 import { defineSpecimen } from '../../workbench/types.js';
-import { Card, CardHeader } from '../card/card.proto.js';
+import { Card, CardAction, CardHeader } from '../card/card.proto.js';
 import { CodeBlock } from '../code/code.proto.js';
 import {
   PopoverBody,
@@ -58,9 +58,11 @@ function BaseExample(): ReactElement {
           <Title as="h3" size="heading-s" id={id}>
             Workspace guide
           </Title>
-          <Text size="caption-l" color="muted">
-            12 topics
-          </Text>
+          <CardAction>
+            <Text size="caption-l" color="muted">
+              12 topics
+            </Text>
+          </CardAction>
         </CardHeader>
         <div
           className="scrollbar-proto scrollbar-demo-body"
