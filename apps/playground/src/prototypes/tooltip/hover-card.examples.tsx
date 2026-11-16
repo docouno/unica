@@ -277,7 +277,7 @@ export function HoverOverflowExamples(): ReactElement {
         </HoverCard>
       </Study>
       <Study label="Limited height · Scroll escape for pointer reading">
-        <HoverCard className="hover-demo-constrained scrollbar-proto">
+        <HoverCard className="hover-demo-constrained">
           <DocumentPreview long />
         </HoverCard>
       </Study>

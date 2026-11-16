@@ -136,6 +136,8 @@ export function HintPreview({
       if (!anchor || !popup) {
         return;
       }
+      const body = popup.querySelector<HTMLElement>('.tooltip-body-proto, .hover-card-body-proto');
+      const scrollTop = body?.scrollTop ?? 0;
       const target = anchor.getBoundingClientRect();
       const bounds = anchor.closest('[data-hint-bounds]')?.getBoundingClientRect();
       const viewport = window.visualViewport;
@@ -197,6 +199,9 @@ export function HintPreview({
       const actual = popup.getBoundingClientRect();
       // The pointer bridge extends outside the surface; it is not content overflow.
       popup.dataset.constrained = String(natural.height > availableHeight + 1);
+      if (body) {
+        body.scrollTop = scrollTop;
+      }
       const factor = align === 'center' ? 0.5 : align === 'start' ? 0 : 1;
       const x =
         physical === 'left'
@@ -272,12 +277,18 @@ export function HintPreview({
     if (bounds) {
       observer.observe(bounds);
     }
+    function outsideScroll(event: Event): void {
+      if (event.target instanceof Node && popup?.contains(event.target)) {
+        return;
+      }
+      position();
+    }
     doc.addEventListener('keydown', keyboard, true);
     doc.addEventListener('pointerdown', outside, true);
     doc.addEventListener('pointerup', selectionEnded);
     doc.addEventListener('selectionchange', selectionEnded);
     window.addEventListener('resize', position);
-    window.addEventListener('scroll', position, true);
+    window.addEventListener('scroll', outsideScroll, true);
     viewportListener('addEventListener');
     function viewportListener(method: 'addEventListener' | 'removeEventListener'): void {
       window.visualViewport?.[method]('resize', position);
@@ -292,7 +303,7 @@ export function HintPreview({
       doc.removeEventListener('pointerup', selectionEnded);
       doc.removeEventListener('selectionchange', selectionEnded);
       window.removeEventListener('resize', position);
-      window.removeEventListener('scroll', position, true);
+      window.removeEventListener('scroll', outsideScroll, true);
       viewportListener('removeEventListener');
       if (popup.matches(':popover-open')) {
         popup.hidePopover();
@@ -344,7 +355,7 @@ export function HintPreview({
     },
   };
   const shared: HTMLAttributes<HTMLDivElement & HTMLSpanElement> = {
-    className: 'hint-preview-panel scrollbar-proto',
+    className: 'hint-preview-panel',
     'aria-hidden': true,
     onPointerEnter: () => {
       intent.current.panel = true;
@@ -368,13 +379,17 @@ export function HintPreview({
       )}
       {open &&
         (family === 'tooltip' ? (
-          <Tooltip ref={panel} popover="manual" {...shared} shortcut={shortcut}>
-            <PointerBridge />
+          <Tooltip
+            ref={panel}
+            popover="manual"
+            {...shared}
+            shortcut={shortcut}
+            previewBridge={<PointerBridge />}
+          >
             {children}
           </Tooltip>
         ) : (
-          <HoverCard ref={panel} popover="manual" {...shared}>
-            <PointerBridge />
+          <HoverCard ref={panel} popover="manual" {...shared} previewBridge={<PointerBridge />}>
             {children}
           </HoverCard>
         ))}

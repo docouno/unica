@@ -29,7 +29,9 @@ Omit unavailable optional metadata instead of printing blank rows or placeholder
 
 Both families use the same overlay polarity in all six presets, including Light. This keeps keycaps, neutral status markers and typography in the same surface context. Soft is opaque and quietly elevated. Frost uses the existing transparent overlay fill, 20px blur / 125.4% saturation and fading edge highlight; its background is inspected over the workbench's multitone underlay. Pixel is opaque, square and has a crisp offset shadow. HoverCard receives Pixel corner registration marks; the small Tooltip keeps a plain rectangular outline.
 
-Tooltip uses `--overlay-shadow-tooltip`; HoverCard uses `--overlay-shadow-hover`. The hover preview is less elevated than a transactional Popover. No theme selectors, hardcoded palette colors, inverse tooltip theme or extra decorative outline are needed.
+Tooltip uses `--overlay-shadow-tooltip`; HoverCard uses `--overlay-shadow-hover`. These are family-specific theme recipes, not aliases of a large panel's elevation. Dark Soft/Frost tooltips use a short contact shadow with a compact ambient footprint; Dark Pixel uses a 2px hard offset instead of the Light preset's 4px offset. Frost HoverCard uses a shorter, quieter ambient shadow in both color schemes. Its fill and backdrop filter retain the shared glass recipe. Light tooltip shadows and Soft/Pixel HoverCard shadows retain their established treatment. No theme selectors, inverse tooltip theme or extra decorative outline are needed.
+
+The outer surface owns fill, blur, shadow, rim and corner marks. A separate inner reading area owns padding, content layout and native overflow. Scrolling never moves the glass highlight or Pixel corner marks; the pointer bridge remains outside the scroll owner. The inner clipping radius is the outer radius minus the 1px border, clamped to zero. No second material, shadow or backdrop filter is added inside.
 
 Both panels appear and disappear immediately in every preset, including reduced motion. Intent delay is not an entrance animation. There is no slide, scale, bounce, opacity fade or height animation. Content replacement may change height immediately; cached content stays visible during refresh. The source keeps its own material's hover, press and focus treatment.
 
@@ -62,10 +64,10 @@ The default visual label repeats the source's existing accessible name and is hi
 - Defaults: Tooltip top/center, HoverCard bottom/start. Both support top/bottom/start/end crossed with start/center/end. Inline sides and horizontal alignment mirror in RTL.
 - Keep an 8px source gap and at least 16px viewport edge clearance. The implementation also respects safe-area insets and the visual viewport.
 - Try the requested side, flip when the opposite side has more usable room, then shift along the cross-axis. When neither inline side fits, choose a vertical side. Do not overlap the source to force an inline placement.
-- Clamp width first. On limited height, prefer the side with more space. A bounded panel may scroll as a final escape; it never becomes modal. Keep the full details accessible at the source's destination. Do not scale down the type to fit.
+- Clamp width first. On limited height, prefer the side with more space. The inner reading area may scroll as a final escape; the surface and its decoration stay fixed. It never becomes modal. Keep the full details accessible at the source's destination. Do not scale down the type to fit.
 - Reposition on scrolling, resizing, text-scale changes and content changes. Close when the source leaves the visible area.
 
-The live placement frame deliberately acts as a small available viewport, even in Live Focus. It demonstrates flip/shift and an actual native top layer without requiring a full application. The 200px overflow example pins a height constraint; ordinary summaries need no scrollbar. These previews do not claim complete mobile keyboard, zoom, safe-area or clipping-ancestor coverage.
+The live placement frame deliberately acts as a small available viewport, even in Live Focus. HoverCard's 560px frame gives the ordinary team preview room without a default scrollbar; a shared height variable keeps that constraint independent of stylesheet order. Smaller viewports or enlarged text can still require body scrolling. Internal scrolling preserves its offset and does not trigger a placement reset. The separate 200px overflow example pins a height constraint for inspecting top, middle and bottom positions. These previews do not claim complete mobile keyboard, zoom, safe-area or clipping-ancestor coverage.
 
 ## Content states
 

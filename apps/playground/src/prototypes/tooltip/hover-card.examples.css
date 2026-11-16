@@ -64,14 +64,10 @@
   color: var(--fg-secondary);
 }
 .hover-demo-constrained {
-  --scrollbar-width: thin;
-  --scrollbar-size: 10px;
   max-block-size: 200px;
-  overflow: auto;
-  overscroll-behavior: contain;
 }
 .hover-demo-stage {
-  block-size: 500px;
+  --hint-stage-height: 560px;
 }
 .hover-demo-stage .hint-demo-anchor {
   max-inline-size: calc(100% - 32px);
