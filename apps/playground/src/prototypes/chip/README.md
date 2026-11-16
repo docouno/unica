@@ -14,11 +14,13 @@ Use **Badge** for passive metadata, **Tag** for an assigned value with removal, 
 
 | Size       | Painted minimum | Type / line box, Soft & Frost | Icon / check | Base inline inset | Fine target minimum |
 | ---------- | --------------- | ----------------------------- | ------------ | ----------------- | ------------------- |
-| S          | 20 px           | 12 / 16 px                    | 14 px        | 6 px              | 24 × 24 px          |
-| M, default | 24 px           | 14 / 20 px                    | 16 px        | 8 px              | 24 × 24 px          |
-| L          | 28 px           | 16 / 24 px                    | 20 px        | 10 px             | 28 × 28 px          |
+| S          | 20 px           | 12 / 16 px                    | 14 px        | 3 px              | 24 × 24 px          |
+| M, default | 24 px           | 14 / 20 px                    | 16 px        | 4 px              | 24 × 24 px          |
+| L          | 28 px           | 16 / 24 px                    | 20 px        | 6 px              | 28 × 28 px          |
 
 Pixel uses the theme's calibrated 11 / 12 / 14 px mono copy with the same line boxes. Weight is 500. The icon-to-label gap is 4 px. Frost and Pixel add their 1 px rim inside the height and to the intrinsic inline footprint; Soft has no rim. The capsule uses `--radius-full`, which resolves to 0 px in Pixel.
+
+For an unselected text-only chip, the effective inline insets are 12 / 14 / 18 px for S / M / L, excluding the rim. The compact base insets in the table apply to both an option icon and a selected check, keeping the same leading geometry across the family.
 
 Selection must not change outer width, move neighboring options, or create a new wrapped row. With an option icon, the check replaces it in exactly the same frame. Without an icon, reserve the check width plus 4 px in advance: distribute this reserve evenly between the two inline insets while unselected, centering the text. Selection spends that reserve on the leading check and restores the base insets. The label moves locally by half the reserve; the outer geometry stays fixed. There is no empty-looking icon column, animated width, or animated text slide. This rule mirrors in RTL.
 

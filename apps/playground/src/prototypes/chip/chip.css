@@ -2,7 +2,7 @@
   --chip-height: 24px;
   --chip-font: var(--text-size-body-s);
   --chip-line-height: var(--text-size-body-s-lh);
-  --chip-padding: 8px;
+  --chip-padding: 4px;
   --chip-icon: var(--size-m-icon);
   --chip-gap: 4px;
   --chip-target: 24px;
@@ -24,14 +24,14 @@
   --chip-height: 20px;
   --chip-font: var(--text-size-caption-l);
   --chip-line-height: var(--text-size-caption-l-lh);
-  --chip-padding: 6px;
+  --chip-padding: 3px;
   --chip-icon: var(--size-s-icon);
 }
 .chip-proto[data-size='l'] {
   --chip-height: 28px;
   --chip-font: var(--text-size-body-m);
   --chip-line-height: var(--text-size-body-m-lh);
-  --chip-padding: 10px;
+  --chip-padding: 6px;
   --chip-icon: var(--size-l-icon);
 }
 .chip-proto[hidden] {
