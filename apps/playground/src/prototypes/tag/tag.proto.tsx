@@ -1,5 +1,5 @@
 import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import type { ComponentPropsWithRef, ReactElement, ReactNode, Ref, RefObject } from 'react';
+import type { ComponentPropsWithRef, ReactElement, Ref, RefObject } from 'react';
 import { XIcon } from '@phosphor-icons/react';
 import { Icon } from '../icon/icon.proto.js';
 import type { GlyphComponent } from '../icon/icon.proto.js';
@@ -360,75 +360,5 @@ export function TagGroup({
         {announcement}
       </span>
     </div>
-  );
-}
-export interface ChipProps extends ComponentPropsWithRef<'span'> {
-  readonly selected?: boolean;
-  readonly defaultSelected?: boolean;
-  readonly onSelectedChange?: (selected: boolean) => void;
-  readonly onRemove?: () => void;
-  readonly removeLabel?: string;
-  readonly icon?: ReactNode;
-  readonly disabled?: boolean;
-}
-
-export function Chip({
-  selected,
-  defaultSelected = false,
-  onSelectedChange,
-  onRemove,
-  removeLabel,
-  icon,
-  disabled = false,
-  className = '',
-  children,
-  ...props
-}: ChipProps): ReactElement {
-  const [localSelected, setLocalSelected] = useState(defaultSelected);
-  const active = selected ?? localSelected;
-  return (
-    <span
-      {...props}
-      className={`chip-proto ${className}`}
-      data-selected={active || undefined}
-      data-disabled={disabled || undefined}
-    >
-      <button
-        type="button"
-        className="chip-main-proto"
-        disabled={disabled}
-        aria-pressed={active}
-        onClick={() => {
-          if (selected === undefined) {
-            setLocalSelected(!active);
-          }
-          onSelectedChange?.(!active);
-        }}
-      >
-        {icon && (
-          <span className="chip-icon-proto" aria-hidden="true">
-            {icon}
-          </span>
-        )}
-        <span className="chip-label-proto">{children}</span>
-      </button>
-      {onRemove && (
-        <button
-          type="button"
-          className="chip-remove-proto"
-          disabled={disabled}
-          aria-label={
-            removeLabel ??
-            (typeof children === 'string' ? `Remove ${children} filter` : 'Remove filter')
-          }
-          onClick={(event) => {
-            event.stopPropagation();
-            onRemove();
-          }}
-        >
-          <XIcon size="1em" aria-hidden="true" />
-        </button>
-      )}
-    </span>
   );
 }

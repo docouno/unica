@@ -1,0 +1,214 @@
+.chip-proto {
+  --chip-height: 24px;
+  --chip-font: var(--text-size-body-s);
+  --chip-line-height: var(--text-size-body-s-lh);
+  --chip-padding: 8px;
+  --chip-icon: var(--size-m-icon);
+  --chip-gap: 4px;
+  --chip-target: 24px;
+  --chip-paint: max(var(--chip-height), calc(var(--chip-line-height) + 4px));
+  position: relative;
+  display: inline-flex;
+  flex: 0 1 auto;
+  align-items: center;
+  justify-content: center;
+  min-inline-size: var(--chip-target);
+  min-block-size: max(var(--chip-paint), var(--chip-target));
+  max-inline-size: min(100%, var(--chip-max-width, 100%));
+  color: var(--chip-fg);
+  font: 500 var(--chip-font) / var(--chip-line-height) var(--font-family-base);
+  vertical-align: middle;
+  cursor: pointer;
+}
+.chip-proto[data-size='s'] {
+  --chip-height: 20px;
+  --chip-font: var(--text-size-caption-l);
+  --chip-line-height: var(--text-size-caption-l-lh);
+  --chip-padding: 6px;
+  --chip-icon: var(--size-s-icon);
+}
+.chip-proto[data-size='l'] {
+  --chip-height: 28px;
+  --chip-font: var(--text-size-body-m);
+  --chip-line-height: var(--text-size-body-m-lh);
+  --chip-padding: 10px;
+  --chip-icon: var(--size-l-icon);
+}
+.chip-proto[hidden] {
+  display: none;
+}
+.chip-native-proto {
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  inline-size: 100%;
+  block-size: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: inherit;
+}
+.chip-face-proto {
+  display: inline-flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  gap: var(--chip-gap);
+  min-inline-size: 0;
+  min-block-size: var(--chip-paint);
+  padding-inline: var(--chip-padding);
+  border: var(--pill-border-width) solid var(--chip-border);
+  border-radius: var(--radius-full);
+  background: var(--chip-bg);
+  color: inherit;
+  transition:
+    background-color var(--btn-state-duration) ease,
+    border-color var(--btn-state-duration) ease;
+}
+/* Reserve the selected width, while centering text-only resting labels. */
+.chip-proto[data-iconless]:not(:has(.chip-native-proto:checked)) .chip-face-proto {
+  padding-inline: calc(var(--chip-padding) + (var(--chip-icon) + var(--chip-gap)) / 2);
+}
+.chip-leading-proto {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  inline-size: var(--chip-icon);
+  block-size: var(--chip-icon);
+}
+.chip-check-proto {
+  display: none;
+}
+.chip-proto[data-iconless]:not(:has(.chip-native-proto:checked)) .chip-leading-proto {
+  display: none;
+}
+.chip-native-proto:checked + .chip-face-proto {
+  border-color: var(--chip-selected-border);
+  background: var(--chip-selected-bg);
+  color: var(--chip-selected-fg);
+}
+.chip-native-proto:checked + .chip-face-proto .chip-option-icon-proto {
+  display: none;
+}
+.chip-native-proto:checked + .chip-face-proto .chip-check-proto {
+  display: block;
+}
+.chip-label-proto {
+  min-inline-size: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+@media (hover: hover) {
+  .chip-proto:hover:has(.chip-native-proto:not(:disabled)) .chip-face-proto {
+    background: color-mix(in oklab, var(--chip-bg), var(--chip-fg) 8%);
+  }
+  .chip-proto:hover:has(.chip-native-proto:checked:not(:disabled)) .chip-face-proto {
+    background: color-mix(in oklab, var(--chip-selected-bg), var(--chip-selected-fg) 8%);
+  }
+}
+.chip-proto[data-preview='hover']:has(.chip-native-proto:not(:disabled)) .chip-face-proto {
+  background: color-mix(in oklab, var(--chip-bg), var(--chip-fg) 8%);
+}
+.chip-proto[data-preview='hover']:has(.chip-native-proto:checked:not(:disabled)) .chip-face-proto {
+  background: color-mix(in oklab, var(--chip-selected-bg), var(--chip-selected-fg) 8%);
+}
+.chip-proto:has(.chip-native-proto:active:not(:disabled)) .chip-face-proto,
+.chip-proto[data-preview='active']:has(.chip-native-proto:not(:disabled)) .chip-face-proto {
+  background: color-mix(in oklab, var(--chip-bg), var(--chip-fg) 14%);
+}
+.chip-proto:has(.chip-native-proto:active:checked:not(:disabled)) .chip-face-proto,
+.chip-proto[data-preview='active']:has(.chip-native-proto:checked:not(:disabled)) .chip-face-proto {
+  background: color-mix(in oklab, var(--chip-selected-bg), var(--chip-selected-fg) 14%);
+}
+.chip-native-proto:focus-visible + .chip-face-proto,
+.chip-proto[data-preview='focus']:has(.chip-native-proto:not(:disabled)) .chip-face-proto {
+  outline: 2px solid var(--focus-ring-color);
+  outline-offset: 2px;
+}
+.chip-proto:has(.chip-native-proto:disabled) {
+  cursor: default;
+}
+.chip-native-proto:disabled + .chip-face-proto {
+  color: color-mix(in oklab, var(--chip-fg) 58%, var(--chip-bg));
+}
+.chip-native-proto:disabled:checked + .chip-face-proto {
+  color: color-mix(in oklab, var(--chip-selected-fg) 62%, var(--chip-bg));
+}
+.chip-full-label-proto {
+  position: fixed;
+  inset: auto;
+  max-inline-size: min(320px, calc(100vw - 24px));
+  margin: 0;
+  pointer-events: auto;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.chip-full-label-proto:not(:popover-open) {
+  display: none;
+}
+.chip-group-proto {
+  min-inline-size: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.chip-group-label-proto {
+  margin: 0;
+  padding: 0;
+  color: var(--fg-primary);
+  font: 500 var(--text-size-body-s) / var(--text-size-body-s-lh) var(--font-family-base);
+}
+.chip-group-description-proto,
+.chip-group-error-proto {
+  margin: var(--space-4) 0 0;
+  color: var(--fg-secondary);
+  font: 400 var(--text-size-caption-l) / var(--text-size-caption-l-lh) var(--font-family-base);
+}
+.chip-group-options-proto {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-8);
+  min-inline-size: 0;
+  margin-block-start: var(--space-12);
+}
+.chip-group-error-proto {
+  color: var(--status-danger-soft-fg);
+  margin-block-start: var(--space-8);
+}
+@media (pointer: coarse) {
+  .chip-proto {
+    --chip-target: 44px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .chip-face-proto {
+    transition: none;
+  }
+}
+@media (forced-colors: active) {
+  .chip-face-proto {
+    forced-color-adjust: none;
+    border: 1px solid ButtonText;
+    background: Canvas !important;
+    color: ButtonText !important;
+  }
+  .chip-native-proto:checked + .chip-face-proto {
+    border-color: Highlight;
+    background: Highlight !important;
+    color: HighlightText !important;
+  }
+  .chip-native-proto:disabled + .chip-face-proto {
+    border-color: GrayText;
+    color: GrayText !important;
+    background: Canvas !important;
+    opacity: 1;
+  }
+  .chip-native-proto:focus-visible + .chip-face-proto,
+  .chip-proto[data-preview='focus'] .chip-face-proto {
+    outline-color: Highlight;
+  }
+  .chip-group-error-proto {
+    color: CanvasText;
+  }
+}
