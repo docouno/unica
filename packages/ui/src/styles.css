@@ -145,9 +145,8 @@ textarea {
   --switch-track-on-active: #b35a3e;
   --switch-thumb-bg: #fffaf2;
   --switch-travel-duration: 160ms;
-  --segmented-rail-bg: #2b343c;
-  --segmented-rail-border: transparent;
-  --segmented-thumb-bg: #48555f;
+  --segmented-rail-bg: #191f25;
+  --segmented-thumb-bg: #34414b;
   --segmented-thumb-shadow: none;
   --segmented-state-duration: 120ms;
   --chip-bg: #333f48;
@@ -312,7 +311,6 @@ textarea {
   --switch-thumb-bg: #fffefa;
   --switch-travel-duration: 160ms;
   --segmented-rail-bg: #efe3cf;
-  --segmented-rail-border: #e0d0b8;
   --segmented-thumb-bg: #fffefa;
   --segmented-thumb-shadow: none;
   --segmented-state-duration: 120ms;
@@ -483,9 +481,8 @@ textarea {
   --switch-track-on-active: #3a29e1;
   --switch-thumb-bg: #f4f7ff;
   --switch-travel-duration: 140ms;
-  --segmented-rail-bg: #1b2131;
-  --segmented-rail-border: transparent;
-  --segmented-thumb-bg: #38435b;
+  --segmented-rail-bg: #0c1019;
+  --segmented-thumb-bg: #28334a;
   --segmented-thumb-shadow: 0 1px 2px rgb(0 0 0 / 0.2);
   --segmented-state-duration: 140ms;
   --chip-bg: #1b2132;
@@ -657,7 +654,6 @@ textarea {
   --switch-thumb-bg: #ffffff;
   --switch-travel-duration: 140ms;
   --segmented-rail-bg: #e8edf6;
-  --segmented-rail-border: #d8e0f0;
   --segmented-thumb-bg: #ffffff;
   --segmented-thumb-shadow: 0 1px 2px rgb(25 35 60 / 0.12);
   --segmented-state-duration: 140ms;
@@ -823,9 +819,8 @@ textarea {
   --switch-track-on-active: #0a4b57;
   --switch-thumb-bg: #edf3f7;
   --switch-travel-duration: 0ms;
-  --segmented-rail-bg: #12171c;
-  --segmented-rail-border: #303c47;
-  --segmented-thumb-bg: #35434d;
+  --segmented-rail-bg: #0b0f13;
+  --segmented-thumb-bg: #2b3944;
   --segmented-thumb-shadow: none;
   --segmented-state-duration: 0ms;
   --chip-bg: #161c22;
@@ -995,7 +990,6 @@ textarea {
   --switch-thumb-bg: #ffffff;
   --switch-travel-duration: 0ms;
   --segmented-rail-bg: #e0e8ed;
-  --segmented-rail-border: #b6c2cc;
   --segmented-thumb-bg: #ffffff;
   --segmented-thumb-shadow: none;
   --segmented-state-duration: 0ms;

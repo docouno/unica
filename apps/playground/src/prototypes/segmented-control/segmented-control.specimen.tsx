@@ -172,6 +172,7 @@ function StateExamples(): ReactElement {
     target: string;
     state?: 'hover' | 'active';
     focus?: boolean;
+    orientation?: 'vertical';
   }[] = [
     { label: 'Rest', target: 'week' },
     { label: 'Hover · unselected', target: 'month', state: 'hover' },
@@ -181,12 +182,29 @@ function StateExamples(): ReactElement {
     { label: 'Focus · selected', target: 'week', focus: true },
     { label: 'Focus · before selection', target: 'month', focus: true },
     { label: 'Focus + press', target: 'week', state: 'active', focus: true },
+    {
+      label: 'Vertical · adjacent hover',
+      target: 'month',
+      state: 'hover',
+      orientation: 'vertical',
+    },
+    {
+      label: 'Vertical · adjacent press',
+      target: 'month',
+      state: 'active',
+      orientation: 'vertical',
+    },
   ];
   return (
     <div className="segment-state-list">
       {rows.map((row) => (
         <Example key={row.label} label={row.label}>
-          <SegmentedControl value="week" size="s" aria-label={row.label}>
+          <SegmentedControl
+            value="week"
+            size="s"
+            orientation={row.orientation ?? 'horizontal'}
+            aria-label={row.label}
+          >
             {periods.map((item) => (
               <SegmentedControlItem
                 key={item.value}
