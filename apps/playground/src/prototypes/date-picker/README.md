@@ -1,0 +1,85 @@
+# Calendar, DatePicker & DateRangePicker — design reference
+
+Status: design candidate, pending visual approval. Open `/?item=calendar`, `/?item=date-picker`, or `/?item=date-range-picker`. The existing collection and document-properties scenes consume this family. These are visual prototypes; their helper props, state storage and DOM are not a proposed package API.
+
+## Purpose and boundaries
+
+Calendar is a frameless Gregorian date grid for one day or an inclusive continuous period. It embeds in a page, card, drawer or picker panel without adding another surface. DatePicker adds one ordinary editable text input and a compact single-month panel. DateRangePicker keeps both dates in one text input and uses the same panel with a separate Start / End row. Calendar alone supports consecutive months (1–12) and a twelve-month year overview. Picker panels always show one month.
+
+Use a date field for an exact date, a range field for one complete interval, and separate DatePickers for independently meaningful dates in separate form rows. Time, time zones, recurring schedules, non-Gregorian calendars, disconnected selections, booking-specific checkout rules and application shortcut presets are outside this family. The app can compose shortcut actions beside the picker. There is no Apply / Cancel row, decorative panel variant, weekend color, week-number gutter or nested month-selector popover.
+
+## Anatomy and geometry
+
+Calendar contains a previous/next navigation header, separate month and year jump buttons, weekday labels and exactly six week rows. Adjacent-month positions are empty noninteractive placeholders; dates never appear twice in a multi-month view. The root has no border, fill or shadow. Digits use tabular figures. Day buttons have a transparent resting background and a theme-derived control radius. All geometry uses logical inline directions.
+
+| Metric                    | S              | M              | L              |
+| ------------------------- | -------------- | -------------- | -------------- |
+| Calendar cell             | 32px           | 40px           | 44px           |
+| Single-month width        | 224px          | 280px          | 308px          |
+| Day face                  | cell minus 4px | cell minus 4px | cell minus 4px |
+| Date field minimum height | 30px           | 40px           | 48px           |
+| Day type                  | body-s         | body-m         | body-l         |
+
+Week rows are separated by 4px; weekday labels have a 24px minimum row. The header is at least 32px, followed by 12px. Month and year selectors use a three-column, four-row grid occupying the same height as the weekday/day grid. Month selection returns to days; year selection leads to months, or directly to the year overview. Escape goes back one level before dismissing the picker. Navigation preserves the day where possible and clamps to the last valid day of a shorter month.
+
+The standard picker panel is 306px wide, with the medium surface radius, 12px padding and 12px gaps, fitting the 280px month plus its border. It has the containing Popover material: contextual overlay tokens, rim, backdrop and shadow. The compact heading names the task and provides a close action. A separated footer offers Today for an editable single date when today is available; the range footer reports the inclusive duration and the active selection step. During range preview, the duration follows the candidate shown by the ribbon. Calendar-candidate errors belong to this footer; dismissing the panel clears them without changing text-field validation. These are supporting controls, not a confirmation bar. The Start / End row sits above the unchanged calendar header: two equal targets, 8px padding, a small boundary label and a readable formatted date or “Choose date”. The active boundary has a quiet accent fill and a thin accent edge. Month names and labels wrap rather than overlap navigation.
+
+Multi-month layouts wrap columns at the cell-based month width, with a 24px gutter. The year overview uses S density and the same six-week geometry. There is no horizontal month-strip scrolling. At coarse pointers, days and calendar navigation are at least 44 × 44px and the panel expands to 336px. At small viewport heights the panel remains within viewport margins and scrolls vertically; implementation must account for the visual viewport and keep the focused control visible. On a 360px screen the panel can occupy the viewport with 8px margins, independently of a narrow trigger. Opening with the calendar button must not summon the software keyboard.
+
+## Material and state hierarchy
+
+Soft uses warm or cool matte surfaces, rounded day faces, solid selected endpoints and soft ribbons. Frost uses the containing glass surface, with flat high-contrast selected endpoints and translucent ribbons; individual days do not become tiny glass cards. Pixel uses square faces and bands, mono typography and the containing panel's registration corners and crisp shadow. No theme moves or scales calendar cells on press. All state changes are immediate, including month replacement; this avoids simulated motion that would misrepresent a date position. Reduced motion has the same stable geometry.
+
+| State           | Presentation and priority                                                                                                                       |
+| --------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| Rest            | Quiet primary foreground, no individual border or fill.                                                                                         |
+| Hover           | Local neutral soft fill. It does not select or move a date.                                                                                     |
+| Press           | Local accent soft fill, no displacement. A selected endpoint retains solid fill and on-accent text through hover and press.                     |
+| Today           | A short 2px underline beneath the numeral, independent of selection and focus.                                                                  |
+| Selected        | Solid accent with on-accent text; repeat selection keeps the value.                                                                             |
+| Focus           | A 2px focus contour, 1px offset, around the specific date, including unavailable dates.                                                         |
+| Event indicator | Optional 3px current-color dot below the numeral. It conveys information, never availability or selection.                                      |
+| Unavailable     | Muted crossed-out numeral; hover/focus reveals a reason. Selection is blocked. Existing selection remains recognizable if availability changes. |
+| Read only       | Full readable selection and navigable months, no date mutation. A persistent explanation states the restriction.                                |
+| Disabled        | Neutral retained selection, disabled foreground, no navigation or tab stops. No whole-component opacity.                                        |
+
+Range bands run continuously behind intermediate days. The first endpoint's band starts at its centre, the last ends at its centre. Endpoints are separate solid faces over the band. Week-row continuations end at the row boundary; there are no rounded holes between days. A single-day range has one selected face and no extra band. RTL mirrors the inline geometry and navigation arrows. The optional today underline and event dot remain legible on a solid endpoint.
+
+A pending range is differentiated by a quieter fill and dashed top/bottom edges; it never looks like an accepted period. An invalid pending range uses a danger-soft band and a written reason. Date numbers remain readable. An unavailable day is not silently jumped over. Default range selection cannot span unavailable dates; analytical filters may explicitly permit unavailable intermediate dates, while endpoints must remain available. Minimum/maximum duration counts both endpoints.
+
+## Single-date interaction
+
+The field is one plain text input with ordinary selection, copy, paste and caret behavior. There are no spinbutton segments or mandatory character masks. Locale determines numeric day/month ordering and separators; a four-digit year is required. A strict ISO date may be pasted. Normalize a valid local date on blur or Enter, without moving the caret during typing. Never guess a two-digit year or roll February 31 into March.
+
+Tab or pointer focus in the text field does not open the panel. The icon or Alt+ArrowDown opens it at the accepted date, otherwise today. Keyboard opening enters the active day; pointer opening leaves the software keyboard closed. Choosing a valid date commits immediately, closes the panel and returns focus to the calendar trigger. Today follows the same commit path. Escape and outside dismissal preserve typed text. The close action returns focus to its trigger; an outside click keeps focus with the clicked destination.
+
+An incomplete or invalid draft remains visible for correction. Show a concrete message on blur or submission, not for every keystroke. Calendar selection can repair the draft. Availability and min/max violations have a different message from parsing errors. A filled optional field can be cleared; its clear action empties it and restores text-input focus. Read only hides clear but permits calendar inspection; disabled blocks both input and trigger and suppresses semantic status. Loading indicates pending work without silently freezing an otherwise editable field. Application status and internal parse errors share Input's status anatomy; internal input errors take priority.
+
+## Range interaction
+
+The field displays two numeric dates separated by a spaced en dash, preserving chronological reading order even in RTL. The calendar target dates use readable abbreviated month names. Clear empties both endpoints together. A single date is an incomplete draft, never an accepted half-period. Numeric text can scroll within an unusually narrow field; the calendar retains its usable month width and the full period is inspectable in the two boundary targets.
+
+- **Empty field:** first click sets a draft Start and activates End. Pointer or keyboard exploration previews the interval. A second valid click commits the complete period and closes the panel. Reverse calendar clicks are ordered; selecting the same day gives a one-day interval when allowed.
+- **Existing period:** opening by icon activates End and shows its month. Choosing a date adjusts that endpoint while retaining the opposite anchor. The Start / End targets switch the active endpoint, reveal its month and move the date cursor to that boundary without committing. Keyboard opening from Start begins on Start; after the first point of a new period, focus stays on that day so arrows can continue to the end. Crossing the anchor orders the resulting interval visibly.
+- **Opening from text:** Alt+ArrowDown targets the date nearest the caret. The same header target makes the choice visible.
+- **Dismissal halfway through:** discard only the unfinished calendar draft and retain the accepted field period. No Apply action is needed.
+- **Invalid selection:** keep the panel open, preserve the anchor and explain the unavailable date or duration constraint. Correcting the endpoint clears the error.
+- **Typed reversed dates:** keep the typed order and show “The end date must be on or after the start date.” Do not silently sort user text. Accept complete valid pairs only.
+
+The production parser accepts local dates or ISO endpoints, separated by an en/em dash, a spaced hyphen or `..`. Dirty text retains its parsing locale until accepted or cancelled. Changing locale must not reinterpret a half-entered day/month pair.
+
+## Intended keyboard, focus and form contract
+
+Calendar uses a labelled date grid and one day stop across all visible months. Initial active date follows selection, then today, then an available date in the viewed month. Arrows move by one day/week; horizontal direction mirrors in RTL. Home/End move to the week edges. PageUp/Down move a month, Shift+PageUp/Down a year. Enter/Space selects the focused available day. Unavailable dates remain arrow-reachable with their reason announced and cannot be selected. Read only keeps exploration. Month/year replacement moves focus into the new grid, and Escape restores a meaningful focus location before any parent panel closes.
+
+Picker fields keep the visible label attached to their one text input and descriptions/errors programmatically associated. The trigger has an accessible action name, expanded state and panel relationship. Enter in the text field retains ordinary form submission. Focus is never trapped in the nonmodal panel. A valid calendar commit, explicit close and Escape return focus to the trigger; outside dismissal preserves the user's next destination. In forced colors, selected endpoints use Highlight/HighlightText, interval edges remain visible and unavailable dates retain their strike and textual explanation.
+
+The shipped API uses timezone-free `YYYY-MM-DD` values (years 0001–9999), not local `Date` objects. The production range value is a complete pair or empty. Production form transport submits ISO values, never localized display text. Invalid or incomplete text disables the relevant ISO carriers, so stale values cannot leak into FormData; range carriers change atomically. Native reset restores the initial accepted value, draft and errors, respects controlled ownership and cancelled reset, and works under disabled fieldsets. Required belongs to validation; empty optional fields remain neutral. Async availability/loading does not clear a selection; a newly unavailable selected date remains visible with validation feedback so the user can repair it.
+
+## Inspection and prototype boundary
+
+The three specimens separate sizes/roles, pinned visual states, material panels and live anchored interaction. Pinned feedback examples deliberately keep their supplied status/message; they are not live validation examples. Pinned calendar ranges and focus states remain comparative references. The Live sections implement text correction, clearing, day selection, two-point periods, endpoint adjustments, range restrictions and dismissal. Panels marked as in-flow keep every theme visible at once and are otherwise interactive. Their source fields sit on a base plate so transparent labels do not overlap the material underlay. Registration resolves separate example and component chunks before first render, following the existing workbench pattern. The floating form uses native top-layer manual popovers so independent workbench samples can coexist; the production dismissal/positioning adapter is designed separately.
+
+The preview uses a deterministic today (September 16, 2026). This is not the runtime default. The parser demonstrates en-GB, en-US and de-DE; it is not a complete international parser. Full IME coordination, arbitrary year bounds, controlled/external updates, native form serialization/reset/validation, complete assistive-technology announcements, month/year roving focus and viewport lifecycle are library implementation work. Their intended user outcomes above are fixed by this design; their technical mechanisms remain open. Any incomplete preview behavior must not be interpreted as an alternate product decision.
+
+Useful review routes: Calendar → State hierarchy / Range geometry / Jump to month or year / Year overview; DatePicker → Date & calendar / Field states / Live; DateRangePicker → Period & calendar / Range panel / Live. Existing scenes 03 and 06 show the same family as application consumers. Check all six themes, Base/Overlay, 360–1440px, 120% text and RTL.

@@ -4,7 +4,7 @@ import { DownloadSimpleIcon, PlusIcon } from '@phosphor-icons/react';
 import { AsidePanel } from '../prototypes/app-shell/app-shell.proto.js';
 import { Badge } from '../prototypes/badge/badge.proto.js';
 import { Button } from '../prototypes/button/button.proto.js';
-import { DatePicker, DateRangePicker } from '../prototypes/calendar/calendar.proto.js';
+import { DatePicker, DateRangePicker } from '../prototypes/date-picker/date-picker.proto.js';
 import { Card, CardMedia } from '../prototypes/card/card.proto.js';
 import { ChipGroup } from '../prototypes/chip/chip.proto.js';
 import { Progress } from '../prototypes/progress/progress.proto.js';

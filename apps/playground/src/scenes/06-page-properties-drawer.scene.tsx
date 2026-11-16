@@ -2,7 +2,7 @@ import { useId, useState } from 'react';
 import type { ReactElement } from 'react';
 import { SlidersHorizontalIcon } from '@phosphor-icons/react';
 import { Button } from '../prototypes/button/button.proto.js';
-import { Calendar, DatePicker } from '../prototypes/calendar/calendar.proto.js';
+import { Calendar, DatePicker } from '../prototypes/date-picker/date-picker.proto.js';
 import { Drawer } from '../prototypes/dialog/dialog.proto.js';
 import { Toast } from '../prototypes/feedback/feedback.proto.js';
 import { FormField } from '../prototypes/input/input.proto.js';
@@ -106,7 +106,7 @@ function PropertiesScene(): ReactElement {
               value={date}
               onValueChange={setDate}
             />
-            <Calendar month="2027-01" selected={Number(date.slice(8, 10))} onSelect={setDate} />
+            <Calendar key={date.slice(0, 7)} month={date} value={date} onSelect={setDate} />
             <Text size="caption-l" color="muted">
               Review due: {date === '2027-01-15' ? '15 Jan 2027' : date}
             </Text>
