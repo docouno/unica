@@ -16,7 +16,7 @@ import {
   FileList,
 } from '../prototypes/file-input/file-input.proto.js';
 import type { FileItemStatus } from '../prototypes/file-input/file-input.proto.js';
-import { RadioCard } from '../prototypes/selection/selection.proto.js';
+import { RadioCard } from '../prototypes/choice-card/choice-card.proto.js';
 import { Stepper } from '../prototypes/stepper/stepper.proto.js';
 import { Text } from '../prototypes/text/text.proto.js';
 import { Title } from '../prototypes/title/title.proto.js';

@@ -7,7 +7,7 @@ import { Drawer } from '../prototypes/dialog/dialog.proto.js';
 import { Toast } from '../prototypes/feedback/feedback.proto.js';
 import { FormField } from '../prototypes/input/input.proto.js';
 import { Combobox } from '../prototypes/select/select.proto.js';
-import { CheckboxCard, RadioCard } from '../prototypes/selection/selection.proto.js';
+import { CheckboxCard, RadioCard } from '../prototypes/choice-card/choice-card.proto.js';
 import { Textarea } from '../prototypes/textarea/textarea.proto.js';
 import { Text } from '../prototypes/text/text.proto.js';
 import { defineScene } from '../workbench/types.js';

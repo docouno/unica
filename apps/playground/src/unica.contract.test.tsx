@@ -137,8 +137,8 @@ it('navigates between the real scenes and specimen sections without sharing thei
   expect(container.querySelectorAll('.wb-artboard')).toHaveLength(1);
 });
 
-it('keeps native selection examples independent across the six theme artboards', () => {
-  window.history.replaceState(null, '', '/?item=selection&mode=6up&section=cards');
+it('keeps native RadioCard choices independent across the six theme artboards', () => {
+  window.history.replaceState(null, '', '/?item=radio-card&mode=6up&section=overlay');
   const { container } = render(<WorkbenchApp config={unicaWorkbench} />);
   const artboards = [...container.querySelectorAll('.wb-artboard')];
   const chosen = (): number[] =>
