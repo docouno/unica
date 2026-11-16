@@ -23,7 +23,8 @@ import {
 } from '../prototypes/binary-controls/binary-controls.proto.js';
 import { SegmentedControl } from '../prototypes/segmented-control/segmented-control.proto.js';
 import { Select } from '../prototypes/select/select.proto.js';
-import { NumberInput, RangeSlider, Slider } from '../prototypes/slider/slider.proto.js';
+import { RangeSlider, Slider } from '../prototypes/slider/slider.proto.js';
+import { NumberInput } from '../prototypes/number-input/number-input.proto.js';
 import { Table, TableScroll } from '../prototypes/table/table.proto.js';
 import { Text } from '../prototypes/text/text.proto.js';
 import { FolioScene, SectionHeading } from './folio/folio.shared.js';
@@ -192,12 +193,18 @@ function PreferencesScene(): ReactElement {
                   />
                   <NumberInput
                     size="s"
-                    label="Autosave interval (s)"
+                    label="Autosave interval"
+                    aria-label="Autosave interval in seconds"
+                    suffix="s"
                     min={5}
                     max={120}
                     step={5}
                     value={preferences.autosave}
-                    onValueChange={(value) => update('autosave', value)}
+                    onValueChange={(value) => {
+                      if (value !== '') {
+                        update('autosave', value);
+                      }
+                    }}
                   />
                 </div>
               </section>

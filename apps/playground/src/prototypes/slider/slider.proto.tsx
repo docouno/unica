@@ -8,9 +8,8 @@ import type {
   ReactElement,
   ReactNode,
 } from 'react';
-import { CaretDownIcon, CaretUpIcon, WarningCircleIcon } from '@phosphor-icons/react';
-import { Input } from '../input/input.proto.js';
-import type { ControlSize, FieldVariant } from '../input/input.proto.js';
+import { WarningCircleIcon } from '@phosphor-icons/react';
+import type { ControlSize } from '../input/input.proto.js';
 import './slider.css';
 
 export interface SliderMark {
@@ -539,95 +538,5 @@ export function RangeSlider({
         </div>
       )}
     </fieldset>
-  );
-}
-
-export interface NumberInputProps extends Omit<
-  ComponentPropsWithRef<'input'>,
-  'type' | 'size' | 'value' | 'defaultValue' | 'min' | 'max' | 'step' | 'width'
-> {
-  readonly value?: number | undefined;
-  readonly defaultValue?: number | undefined;
-  readonly min?: number | undefined;
-  readonly max?: number | undefined;
-  readonly step?: number | undefined;
-  readonly size?: ControlSize | undefined;
-  readonly variant?: FieldVariant | undefined;
-  readonly label?: ReactNode;
-  readonly onValueChange?: ((value: number) => void) | undefined;
-}
-
-export function NumberInput({
-  value,
-  defaultValue = 0,
-  min,
-  max,
-  step = 1,
-  size = 'm',
-  variant = 'default',
-  label,
-  onValueChange,
-  onChange,
-  disabled,
-  readOnly,
-  className = '',
-  ...props
-}: NumberInputProps): ReactElement {
-  const [localValue, setLocalValue] = useState(String(defaultValue));
-  const current = value === undefined ? localValue : String(value);
-  const increment = (direction: number): void => {
-    const next = Math.min(
-      max ?? Infinity,
-      Math.max(min ?? -Infinity, Number(current || 0) + direction * step),
-    );
-    const rounded = Number(next.toFixed(10));
-    setLocalValue(String(rounded));
-    onValueChange?.(rounded);
-  };
-  return (
-    <Input
-      {...props}
-      type="number"
-      size={size}
-      variant={variant}
-      label={label}
-      min={min}
-      max={max}
-      step={step}
-      disabled={disabled}
-      readOnly={readOnly}
-      value={current}
-      className={`number-input-proto ${className}`}
-      onChange={(event) => {
-        setLocalValue(event.currentTarget.value);
-        if (
-          event.currentTarget.value !== '' &&
-          Number.isFinite(event.currentTarget.valueAsNumber)
-        ) {
-          onValueChange?.(event.currentTarget.valueAsNumber);
-        }
-        onChange?.(event);
-      }}
-      suffix={
-        <span className="number-input-actions-proto">
-          <button
-            type="button"
-            aria-label="Increase value"
-            disabled={disabled || readOnly || (max !== undefined && Number(current) >= max)}
-            onClick={() => increment(1)}
-          >
-            <CaretUpIcon size="1em" />
-          </button>
-          <button
-            type="button"
-            aria-label="Decrease value"
-            disabled={disabled || readOnly || (min !== undefined && Number(current) <= min)}
-            onClick={() => increment(-1)}
-          >
-            <CaretDownIcon size="1em" />
-          </button>
-        </span>
-      }
-    />
   );
 }
