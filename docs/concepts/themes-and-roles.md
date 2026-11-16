@@ -138,3 +138,7 @@ Overflowing rails consume the [compact native scrollbar recipe](scrollbars.md) o
 ## Identity group geometry
 
 `--avatar-group-overlap-factor` selects the geometry of compact identity groups. Soft and Frost use `1`: frames overlap with a true transparent 2px cutout that exposes the current surface, including glass. Pixel uses `0`: complete square frames sit 2px apart, retaining all four borders. The factor controls grouping geometry only; Avatar and AvatarGroup have no press motion or status-color axis. The current design reference lives in `apps/playground/src/prototypes/avatar/README.md`.
+
+## Slider material feedback
+
+Slider and RangeSlider share an open recessed `--control-bg` / `--control-border` track. Their selected interval uses `--slider-fill`: solid accent in Soft, Frost Light and Pixel, and the brighter accent signal in Frost Dark so the narrow fill remains legible on floating glass. The compact cap shares this fill and extends 3px beyond each side of the track. It has no separate highlight, contrasting rest outline, or shadow; Soft/Frost retain a small radius and Pixel stays square. Hover and active add a subtle inner edge without increasing the cap size. `--slider-state-duration` is 120ms in Soft/Frost and 0ms in Pixel. The cap never scales or translates on press, and numeric travel is always immediate. These family-local material recipes do not change other continuous controls. See the [design reference](../../apps/playground/src/prototypes/slider/README.md) for states and interaction.
