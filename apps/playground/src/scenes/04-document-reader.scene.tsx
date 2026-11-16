@@ -9,7 +9,6 @@ import { Progress } from '../prototypes/progress/progress.proto.js';
 import { HoverCard, Menu, MenuItem, MenuSeparator } from '../prototypes/menu/menu.proto.js';
 import { Switch } from '../prototypes/binary-controls/binary-controls.proto.js';
 import { Tabs } from '../prototypes/tabs/tabs.proto.js';
-import { Tag } from '../prototypes/tag/tag.proto.js';
 import { Text } from '../prototypes/text/text.proto.js';
 import { defineScene } from '../workbench/types.js';
 import {
@@ -75,8 +74,8 @@ function ReaderScene(): ReactElement {
                     <div>
                       <dt>Tags</dt>
                       <dd className="folio-row folio-wrap">
-                        <Tag size="s">runbook</Tag>
-                        <Tag size="s">postgres</Tag>
+                        <Badge size="s">runbook</Badge>
+                        <Badge size="s">postgres</Badge>
                       </dd>
                     </div>
                     <div>

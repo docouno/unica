@@ -1,11 +1,12 @@
-import { useId, useState } from 'react';
+import { useId, useRef, useState } from 'react';
 import type { ComponentPropsWithRef, HTMLAttributes, ReactElement, ReactNode } from 'react';
-import { CaretDownIcon, CheckIcon, MagnifyingGlassIcon, XIcon } from '@phosphor-icons/react';
+import { CaretDownIcon, CheckIcon, MagnifyingGlassIcon } from '@phosphor-icons/react';
 import { FormField, Input } from '../input/input.proto.js';
 import type { ControlSize, FieldStatus, FieldVariant } from '../input/input.proto.js';
 import { Icon } from '../icon/icon.proto.js';
 import type { GlyphComponent } from '../icon/icon.proto.js';
 import { PopoverContent } from '../popover/popover.proto.js';
+import { Tag } from '../tag/tag.proto.js';
 import './select.css';
 import '../scrollbar/scrollbar.css';
 
@@ -274,6 +275,7 @@ export function TagsInput({
 }: TagsInputProps): ReactElement {
   const [localValues, setLocalValues] = useState<readonly string[]>(initialValues);
   const [pending, setPending] = useState('');
+  const editorRef = useRef<HTMLInputElement>(null);
   const inputId = useId();
   const tags = values ?? localValues;
   const update = (next: readonly string[]): void => {
@@ -297,19 +299,21 @@ export function TagsInput({
         data-size={size}
       >
         {tags.map((tag) => (
-          <span className="tags-input-tag-proto" key={tag}>
-            <span>{tag}</span>
-            <button
-              type="button"
-              aria-label={`Remove ${tag}`}
-              disabled={disabled}
-              onClick={() => update(tags.filter((item) => item !== tag))}
-            >
-              <XIcon size="1em" />
-            </button>
-          </span>
+          <Tag
+            key={tag}
+            size={size}
+            disabled={disabled === true}
+            removeLabel={`Remove ${tag}`}
+            onRemove={() => {
+              update(tags.filter((item) => item !== tag));
+              editorRef.current?.focus();
+            }}
+          >
+            {tag}
+          </Tag>
         ))}
         <input
+          ref={editorRef}
           id={inputId}
           disabled={disabled}
           value={pending}
@@ -324,6 +328,18 @@ export function TagsInput({
           }}
         />
       </div>
+      {tags.length > 0 && (
+        <details className="tags-input-values-proto">
+          <summary>Full values ({tags.length})</summary>
+          <ul>
+            {tags.map((tag) => (
+              <li key={tag}>
+                <bdi>{tag}</bdi>
+              </li>
+            ))}
+          </ul>
+        </details>
+      )}
     </FormField>
   );
 }
