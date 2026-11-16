@@ -1,6 +1,6 @@
 # Chip & ChipGroup — design reference
 
-Status: visual and interaction candidate, awaiting visual approval. Open `/?item=chip`. These are local playground prototypes; their props and DOM are not the final library API.
+Status: approved visual and interaction design reference. Open `/?item=chip`. These are local playground prototypes; their props and DOM are not the final library API.
 
 ## Purpose and boundaries
 
