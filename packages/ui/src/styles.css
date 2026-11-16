@@ -142,6 +142,11 @@ textarea {
   --btn-secondary-shadow: none;
   --btn-material-depth: 0;
   --btn-state-duration: 120ms;
+  --btn-context-ink-strength: 80%;
+  --btn-context-plate-tint: 8%;
+  --btn-context-hover-tint: 12%;
+  --btn-context-active-tint: 16%;
+  --btn-context-border-tint: 28%;
   --btn-primary-contact-shadow: none;
   --btn-secondary-shadow-hover: none;
   --btn-secondary-shadow-active: none;
@@ -170,6 +175,7 @@ textarea {
   --avatar-group-overlap-factor: 1;
   --pill-border-width: 0px;
   --alert-border-width: 0px;
+  --alert-edge-width: 0px;
   --badge-dot-shadow: none;
   --kbd-cap-bg: #222b33;
   --kbd-cap-border: #3c4954;
@@ -326,6 +332,11 @@ textarea {
   --btn-secondary-shadow: none;
   --btn-material-depth: 0;
   --btn-state-duration: 120ms;
+  --btn-context-ink-strength: 80%;
+  --btn-context-plate-tint: 8%;
+  --btn-context-hover-tint: 12%;
+  --btn-context-active-tint: 16%;
+  --btn-context-border-tint: 28%;
   --btn-primary-contact-shadow: none;
   --btn-secondary-shadow-hover: none;
   --btn-secondary-shadow-active: none;
@@ -354,6 +365,7 @@ textarea {
   --avatar-group-overlap-factor: 1;
   --pill-border-width: 0px;
   --alert-border-width: 0px;
+  --alert-edge-width: 0px;
   --badge-dot-shadow: none;
   --kbd-cap-bg: #f4ead8;
   --kbd-cap-border: #d6c5ac;
@@ -521,6 +533,11 @@ textarea {
   --btn-secondary-shadow: 0 1px 0 rgb(4 7 15 / 0.5), 0 2px 4px rgb(4 7 15 / 0.24);
   --btn-material-depth: 1;
   --btn-state-duration: 120ms;
+  --btn-context-ink-strength: 80%;
+  --btn-context-plate-tint: 8%;
+  --btn-context-hover-tint: 12%;
+  --btn-context-active-tint: 16%;
+  --btn-context-border-tint: 28%;
   --btn-primary-contact-shadow: 0 2px 0 rgb(4 7 15 / 0.55), 0 4px 8px rgb(4 7 15 / 0.24);
   --btn-secondary-shadow-hover: 0 1px 0 rgb(4 7 15 / 0.5), 0 3px 6px rgb(4 7 15 / 0.28);
   --btn-secondary-shadow-active: none;
@@ -549,6 +566,7 @@ textarea {
   --avatar-group-overlap-factor: 1;
   --pill-border-width: 1px;
   --alert-border-width: 1px;
+  --alert-edge-width: 0px;
   --badge-dot-shadow: 0 0 8px currentColor;
   --kbd-cap-bg: #192030;
   --kbd-cap-border: #313b54;
@@ -717,6 +735,11 @@ textarea {
   --btn-secondary-shadow: 0 1px 0 rgb(15 23 42 / 0.2), 0 2px 4px rgb(15 23 42 / 0.08);
   --btn-material-depth: 1;
   --btn-state-duration: 120ms;
+  --btn-context-ink-strength: 80%;
+  --btn-context-plate-tint: 8%;
+  --btn-context-hover-tint: 12%;
+  --btn-context-active-tint: 16%;
+  --btn-context-border-tint: 28%;
   --btn-primary-contact-shadow: 0 2px 0 rgb(15 23 42 / 0.26), 0 4px 8px rgb(15 23 42 / 0.1);
   --btn-secondary-shadow-hover: 0 1px 0 rgb(15 23 42 / 0.2), 0 3px 6px rgb(15 23 42 / 0.1);
   --btn-secondary-shadow-active: none;
@@ -745,6 +768,7 @@ textarea {
   --avatar-group-overlap-factor: 1;
   --pill-border-width: 1px;
   --alert-border-width: 1px;
+  --alert-edge-width: 0px;
   --badge-dot-shadow: 0 0 8px currentColor;
   --kbd-cap-bg: #f0f3fa;
   --kbd-cap-border: #cdd5e5;
@@ -902,6 +926,11 @@ textarea {
   --btn-secondary-shadow: none;
   --btn-material-depth: 0;
   --btn-state-duration: 0ms;
+  --btn-context-ink-strength: 80%;
+  --btn-context-plate-tint: 8%;
+  --btn-context-hover-tint: 12%;
+  --btn-context-active-tint: 16%;
+  --btn-context-border-tint: 44%;
   --btn-primary-contact-shadow: none;
   --btn-secondary-shadow-hover: none;
   --btn-secondary-shadow-active: none;
@@ -930,6 +959,7 @@ textarea {
   --avatar-group-overlap-factor: 0;
   --pill-border-width: 1px;
   --alert-border-width: 1px;
+  --alert-edge-width: 2px;
   --badge-dot-shadow: none;
   --kbd-cap-bg: #0e1318;
   --kbd-cap-border: #41505e;
@@ -1091,6 +1121,11 @@ textarea {
   --btn-secondary-shadow: none;
   --btn-material-depth: 0;
   --btn-state-duration: 0ms;
+  --btn-context-ink-strength: 80%;
+  --btn-context-plate-tint: 8%;
+  --btn-context-hover-tint: 12%;
+  --btn-context-active-tint: 16%;
+  --btn-context-border-tint: 44%;
   --btn-primary-contact-shadow: none;
   --btn-secondary-shadow-hover: none;
   --btn-secondary-shadow-active: none;
@@ -1119,6 +1154,7 @@ textarea {
   --avatar-group-overlap-factor: 0;
   --pill-border-width: 1px;
   --alert-border-width: 1px;
+  --alert-edge-width: 2px;
   --badge-dot-shadow: none;
   --kbd-cap-bg: #eaf0f4;
   --kbd-cap-border: #98a7b3;
@@ -1219,6 +1255,7 @@ textarea {
 :root,
 [data-theme],
 [data-surface='base'] {
+  --action-context-ink: initial;
   --code-context-bg: initial;
   --code-context-fg: initial;
   --code-context-border: initial;
@@ -1239,6 +1276,7 @@ textarea {
 }
 
 [data-surface='overlay'] {
+  --action-context-ink: initial;
   --code-context-bg: color-mix(in srgb, var(--neutral-soft-fg) var(--code-plate-tint), transparent);
   --code-context-fg: var(--neutral-soft-fg);
   --code-context-border: var(--neutral-border);

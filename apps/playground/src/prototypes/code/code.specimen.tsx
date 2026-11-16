@@ -2,7 +2,7 @@ import { defineSpecimen } from '../../workbench/types.js';
 import { Code } from './code.proto.js';
 import { Button } from '../button/button.proto.js';
 import { Card } from '../card/card.proto.js';
-import { Alert } from '../feedback/feedback.proto.js';
+import { Alert, AlertTitle, AlertDescription } from '../alert/alert.proto.js';
 import { Link } from '../link/link.proto.js';
 import { PopoverContent, PopoverBody, PopoverTitle } from '../popover/popover.proto.js';
 import { Text } from '../text/text.proto.js';
@@ -156,9 +156,12 @@ export default defineSpecimen({
       render: () => (
         <div className="code-example-stack code-example-compact">
           {(['neutral', 'info', 'success', 'warning', 'danger'] as const).map((status) => (
-            <Alert key={status} status={status} title={`${status} · quoted configuration`}>
-              Read <Code>response.status</Code> before retrying. An explicit matching tone{' '}
-              <Code tone={status}>response.code</Code> also keeps its own tonal step.
+            <Alert key={status} status={status} size="s">
+              <AlertTitle>{`${status} · quoted configuration`}</AlertTitle>
+              <AlertDescription>
+                Read <Code>response.status</Code> before retrying. An explicit matching tone{' '}
+                <Code tone={status}>response.code</Code> also keeps its own tonal step.
+              </AlertDescription>
             </Alert>
           ))}
           <Text size="body-s" color="muted">
@@ -173,7 +176,8 @@ export default defineSpecimen({
       title: 'Text passes context through · a Card starts its own',
       kind: 'context',
       render: () => (
-        <Alert status="info" title="Reference details">
+        <Alert status="info" size="s">
+          <AlertTitle>Reference details</AlertTitle>
           <div className="code-example-stack code-example-compact">
             <Text size="body-s" color="secondary">
               A local text color keeps <Code>request_id</Code> on the blue plate. An explicit{' '}

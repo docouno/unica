@@ -1,0 +1,90 @@
+import { defineSpecimen } from '../../workbench/types.js';
+const {
+  ActionStateExamples,
+  AnatomyExamples,
+  CloseStates,
+  ContextExamples,
+  ContextStateExamples,
+  ContextBoundaryExamples,
+  ContextOverlayExamples,
+  OverflowExamples,
+  OverlayExample,
+  RecoveryExample,
+  SizeExamples,
+  StatusExamples,
+} = await import('./alert.examples.js');
+
+export default defineSpecimen({
+  id: 'alert',
+  title: 'Alert',
+  group: 'Status',
+  summary: 'Persistent, in-flow feedback. Five meanings, three densities, one calm surface.',
+  sections: [
+    { id: 'status', title: 'Status & material', kind: 'matrix', render: () => <StatusExamples /> },
+    {
+      id: 'context',
+      title: 'Contextual content & actions',
+      kind: 'matrix',
+      render: () => <ContextExamples />,
+    },
+    {
+      id: 'context-states',
+      title: 'Contextual action states',
+      kind: 'states',
+      render: () => <ContextStateExamples />,
+    },
+    {
+      id: 'context-boundaries',
+      title: 'Color boundaries & explicit tones',
+      kind: 'context',
+      render: () => <ContextBoundaryExamples />,
+    },
+    {
+      id: 'context-overlay',
+      title: 'Context inside an overlay',
+      kind: 'context',
+      surface: 'overlay',
+      overlayStage: true,
+      render: () => <ContextOverlayExamples />,
+    },
+    {
+      id: 'sizes',
+      title: 'Five statuses × S / M / L',
+      kind: 'matrix',
+      render: () => <SizeExamples />,
+    },
+    {
+      id: 'anatomy',
+      title: 'Anatomy & content',
+      kind: 'matrix',
+      render: () => <AnatomyExamples />,
+    },
+    { id: 'close', title: 'Close states & focus', kind: 'states', render: () => <CloseStates /> },
+    {
+      id: 'actions',
+      title: 'Action availability & emphasis',
+      kind: 'states',
+      render: () => <ActionStateExamples />,
+    },
+    {
+      id: 'recovery',
+      title: 'Recovery & action states',
+      kind: 'states',
+      render: () => <RecoveryExample />,
+    },
+    {
+      id: 'overflow',
+      title: 'Narrow, rich & long content',
+      kind: 'states',
+      render: () => <OverflowExamples />,
+    },
+    {
+      id: 'overlay',
+      title: 'Inside a floating surface',
+      kind: 'context',
+      surface: 'overlay',
+      overlayStage: true,
+      render: () => <OverlayExample />,
+    },
+  ],
+});

@@ -1,6 +1,6 @@
 # Button & IconButton — visual specification
 
-Status: approved visual reference. This live prototype is the visual reference for the subsequent library implementation; it is not a package export. Open `/?item=button` in the playground. Application [scenes](../../scenes/) consume the same prototype independently. They are integration consumers, not component requirements.
+Status: approved base visual reference; the contextual supporting-action extension was visually approved on 2026-11-16. This live prototype is the visual reference for the subsequent library implementation; it is not a package export. Open `/?item=button` in the playground. Application [scenes](../../scenes/) consume the same prototype independently. They are integration consumers, not component requirements.
 
 ## Action language
 
@@ -13,7 +13,7 @@ Status: approved visual reference. This live prototype is the visual reference f
 | Tone   | `neutral`   | Supporting actions and dense toolbars.                                                     |
 | Tone   | `danger`    | Removal or a harmful consequence; use a named action for irreversible operations.          |
 
-All nine combinations exist on both controls. The role changes visual weight; the tone changes meaning. Do not use success, warning, or info colors on an action. Result and validation feedback live next to it.
+All nine combinations exist on both controls. The role changes visual weight; the tone changes meaning. Do not add success, warning, or info action tones. Result and validation feedback live next to the action. A supporting neutral action can inherit the palette of its enclosing status surface without changing its meaning.
 
 Prefer one primary action per decision group. Use neutral ghost tools in a formatting bar and neutral secondary alternatives beside a main CTA. Avoid a permanent row of filled icon buttons in document lists. A reversible row removal can use a danger IconButton with a specific accessible name, a tooltip, and Undo. Permanent deletion uses a labeled danger Button in a confirmation surface.
 
@@ -41,6 +41,14 @@ Labels use the theme's base font, weight 600, and line height 1.3. Heights are m
 Use S for desktop chrome, table rows, and compact popovers; M for ordinary product actions and dialog footers; L for prominent standalone forms. Keep the same size within an action row. On a coarse primary pointer, S and M grow to a visible minimum 44×44px target, including IconButton. This growth participates in layout, so neighboring hit regions do not overlap. Glyph sizes retain their selected S/M/L scale.
 
 `width="auto"` fits content; `width="full"` fills its available inline width. Long labels wrap naturally without truncation or a line clamp. Unbroken content can break as a defensive fallback. Icons remain at the logical ends of the label and align to its vertical center. Leading and trailing slots follow reading direction; directional navigation arrows mirror in RTL, while a brand glyph, vertical chevron, or external-link symbol retains its meaning.
+
+## Supporting actions on a colored surface
+
+A painted status surface can supply `--action-context-ink`. Only `secondary` and `ghost` with `tone="neutral"` adapt their label, plate, contour, pending/disabled treatment, and state feedback to that ink. The tone remains a supporting action; its local color belongs to the enclosing surface. Explicit accent/danger actions and primary neutral actions retain their own palettes. With no context, all existing theme recipes apply unchanged.
+
+The theme's `--btn-context-ink-strength` blends 80% context ink with primary ink for readable action labels. `--btn-context-plate-tint`, `--btn-context-hover-tint`, and `--btn-context-active-tint` supply 8/12/16% ink veils. `--btn-context-border-tint` is 28% in Soft/Frost and 44% in Pixel. Secondary retains its theme perimeter, shadow, and press travel; ghost stays still. Context never derives physics from color or corner radius. Pending retains geometry and focus. Disabled adapts only the action: 4% veil, 40% action ink, 12% contour, ghost transparent; selected disabled retains its contextual keyline.
+
+Button focus uses the enclosing action-context ink when present, independently of its explicit tone. A neutral Card, a new theme, and a Base/Overlay boundary clear the outer context. Transparent text passes it through. A nested status surface can establish a new context. Use unplated inherited Code in the label. The [Alert reference](../alert/README.md#contextual-color) and its `context`, `context-states`, `context-boundaries`, and `context-overlay` sections demonstrate the approved extension together with the actual colored parent.
 
 ## Materials and response
 

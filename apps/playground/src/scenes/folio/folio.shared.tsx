@@ -28,7 +28,7 @@ import { Breadcrumb } from '../../prototypes/breadcrumb/breadcrumb.proto.js';
 import { Button, IconButton } from '../../prototypes/button/button.proto.js';
 import { Code, CodeBlock } from '../../prototypes/code/code.proto.js';
 import { Blockquote } from '../../prototypes/blockquote/blockquote.proto.js';
-import { Alert } from '../../prototypes/feedback/feedback.proto.js';
+import { Alert, AlertTitle, AlertDescription } from '../../prototypes/alert/alert.proto.js';
 import { Icon } from '../../prototypes/icon/icon.proto.js';
 import { Table, TableScroll } from '../../prototypes/table/table.proto.js';
 import { Text } from '../../prototypes/text/text.proto.js';
@@ -323,9 +323,12 @@ export function RunbookArticle({ compact = false }: { readonly compact?: boolean
           degradation without dropping pooled transactions.
         </Text>
       </div>
-      <Alert status="warning" title="Pre-flight quorum verification required">
-        Confirm synchronous replication lag is 0 B on pg-replica-01 and pause schema migrations
-        before fencing the writer VIP.
+      <Alert status="warning" size="s">
+        <AlertTitle>Pre-flight quorum verification required</AlertTitle>
+        <AlertDescription>
+          Confirm synchronous replication lag is 0 B on pg-replica-01 and pause schema migrations
+          before fencing the writer VIP.
+        </AlertDescription>
       </Alert>
       {!compact && (
         <ul className="folio-checklist">

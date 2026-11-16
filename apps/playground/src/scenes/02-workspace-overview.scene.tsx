@@ -11,7 +11,8 @@ import { Avatar } from '../prototypes/avatar/avatar.proto.js';
 import { Badge } from '../prototypes/badge/badge.proto.js';
 import { Button } from '../prototypes/button/button.proto.js';
 import { Card } from '../prototypes/card/card.proto.js';
-import { Alert, Toast } from '../prototypes/feedback/feedback.proto.js';
+import { Toast } from '../prototypes/feedback/feedback.proto.js';
+import { Alert, AlertTitle, AlertDescription } from '../prototypes/alert/alert.proto.js';
 import { Icon } from '../prototypes/icon/icon.proto.js';
 import { Tooltip } from '../prototypes/menu/menu.proto.js';
 import { Link } from '../prototypes/link/link.proto.js';
@@ -257,9 +258,12 @@ function OverviewScene(): ReactElement {
                   </div>
                 ))}
               </Card>
-              <Alert status="info" title="Scheduled DR game-day">
-                Quarterly failover game-day runs Thu 17 Sep at 10:00 UTC. Verify replica lag
-                thresholds beforehand.
+              <Alert status="info">
+                <AlertTitle>Scheduled DR game-day</AlertTitle>
+                <AlertDescription>
+                  Quarterly failover game-day runs Thu 17 Sep at 10:00 UTC. Verify replica lag
+                  thresholds beforehand.
+                </AlertDescription>
               </Alert>
             </section>
           </div>

@@ -1,0 +1,159 @@
+.alert-demo-stack {
+  display: grid;
+  gap: var(--space-24);
+  min-inline-size: 0;
+}
+.alert-demo-case {
+  display: grid;
+  gap: var(--space-8);
+  min-inline-size: 0;
+}
+.alert-demo-label,
+.alert-demo-note {
+  margin: 0;
+  color: var(--fg-secondary);
+  font-size: var(--text-size-body-s);
+  line-height: var(--text-size-body-s-lh);
+}
+.alert-demo-label {
+  font-weight: 500;
+}
+.alert-demo-note {
+  max-inline-size: 68ch;
+}
+.alert-demo-narrow {
+  inline-size: 360px;
+  max-inline-size: 100%;
+}
+.alert-demo-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-8);
+}
+.alert-demo-overlay {
+  position: relative;
+  display: grid;
+  gap: var(--space-16);
+  inline-size: min(100%, 520px);
+  min-inline-size: 0;
+  padding: var(--surface-m-padding);
+  border: 1px solid var(--overlay-border);
+  border-radius: var(--surface-m-radius);
+  background: var(--bg-overlay);
+  box-shadow: var(--overlay-shadow-popover);
+  backdrop-filter: var(--overlay-backdrop);
+}
+.alert-demo-overlay::before {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: var(--overlay-rim);
+  mask-image: var(--overlay-rim-mask);
+  pointer-events: none;
+  content: '';
+}
+.alert-demo-heading {
+  margin: 0;
+  color: var(--fg-primary);
+  font-size: var(--text-size-body-m);
+  line-height: var(--text-size-body-m-lh);
+  font-weight: 600;
+}
+.alert-demo-input {
+  display: grid;
+  gap: var(--space-4);
+  min-inline-size: 0;
+  color: var(--fg-secondary);
+  font-size: var(--text-size-body-s);
+  line-height: var(--text-size-body-s-lh);
+}
+.alert-demo-input > input {
+  inline-size: 100%;
+  min-inline-size: 0;
+  padding: var(--space-8) var(--space-12);
+  border: 1px solid var(--control-border);
+  border-radius: var(--size-m-radius);
+  background: var(--control-bg);
+  color: var(--fg-primary);
+}
+.alert-demo-input > input:focus-visible {
+  outline: 2px solid var(--focus-ring-color);
+  outline-offset: 2px;
+}
+.alert-demo-input > input[aria-invalid='true'] {
+  border-color: var(--status-danger-signal);
+}
+@media (forced-colors: active) {
+  .alert-demo-overlay {
+    border-color: CanvasText;
+    background: Canvas;
+    box-shadow: none;
+    backdrop-filter: none;
+  }
+  .alert-demo-overlay::before {
+    display: none;
+  }
+}
+
+@font-face {
+  font-family: 'Alert Arabic fixture';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/assets/alert-arabic-400.ttf') format('truetype');
+}
+@font-face {
+  font-family: 'Alert Arabic fixture';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('/assets/alert-arabic-600.ttf') format('truetype');
+}
+.alert-demo-arabic {
+  font-family: 'Alert Arabic fixture', var(--font-family-base);
+}
+
+.alert-context-control {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-8);
+  color: var(--fg-secondary);
+  font-size: var(--text-size-body-s);
+  line-height: var(--text-size-body-s-lh);
+}
+.alert-context-control > select {
+  min-block-size: 30px;
+  max-inline-size: 100%;
+  padding: var(--space-4) var(--space-8);
+  border: 1px solid var(--control-border);
+  border-radius: var(--size-s-radius);
+  background: var(--control-bg);
+  color: var(--fg-primary);
+  font: inherit;
+}
+.alert-context-control > select:focus-visible {
+  outline: 2px solid var(--focus-ring-color);
+  outline-offset: 2px;
+}
+.alert-context-state-list {
+  display: grid;
+  gap: var(--space-16);
+  padding-block-start: var(--space-12);
+  min-inline-size: 0;
+}
+.alert-context-state-row {
+  display: grid;
+  gap: var(--space-4);
+  min-inline-size: 0;
+}
+.alert-context-state-label {
+  font-size: var(--text-size-body-s);
+  line-height: var(--text-size-body-s-lh);
+}
+
+/* Independently pinned focus rings need a visible gap on both axes. */
+.alert-context-state-row .alert-demo-actions {
+  gap: var(--space-12);
+}
