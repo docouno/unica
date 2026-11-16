@@ -31,3 +31,7 @@ Selection uses the browser's native highlight. Forced colors replace plated fore
 `reading` covers headings, body, captions, and multiple tokens. `sizes` covers standalone values. `tones` covers status meanings. `wrapping` covers long paths, punctuation, significant spaces, and zero. `surfaces`, `messages`, `boundaries`, and `overlay` show actual host materials, context inheritance, and an opaque nested reset; the overlay panel is a static material study. `controls` provides real Button/Link hover and keyboard focus, not simulated Code states. Existing document-reader tables, runbook prose, and rich-editor paragraphs consume the same prototype.
 
 Inspect all six presets at 360/768/1280/1440px, 120% text, and RTL. The implementation must preserve baseline rhythm, full text, native selection, and host action contrast. Its exact types, ARIA naming restrictions for the native code role, ref behavior, and cross-engine text-fragment verification belong to the library stage. Do not interpret this prototype as proof of a finished cross-browser package.
+
+## Shared status-surface reference
+
+The [Alert reference](../alert/README.md#contextual-color) shows inherited Code beside contextual supporting actions, links, and close controls on all five status grounds. Its boundary study confirms that transparent text passes the painted context through and a Card or new overlay establishes a neutral context. Explicit Code tones still override inheritance. Unplated Code in a Button inherits the control's readable foreground.

@@ -7,7 +7,8 @@ import { Badge } from '../prototypes/badge/badge.proto.js';
 import { Breadcrumb } from '../prototypes/breadcrumb/breadcrumb.proto.js';
 import { Button } from '../prototypes/button/button.proto.js';
 import { Card } from '../prototypes/card/card.proto.js';
-import { Alert, Toast } from '../prototypes/feedback/feedback.proto.js';
+import { Toast } from '../prototypes/feedback/feedback.proto.js';
+import { Alert, AlertTitle, AlertDescription } from '../prototypes/alert/alert.proto.js';
 import { Progress } from '../prototypes/progress/progress.proto.js';
 import {
   Dropzone,
@@ -154,10 +155,12 @@ function WorkspaceAdminScene(): ReactElement {
             {error && (
               <Alert
                 status="danger"
-                title="Check the selected files"
-                onDismiss={() => setError('')}
+                role="alert"
+                onClose={() => setError('')}
+                closeLabel="Dismiss file validation summary"
               >
-                {error}
+                <AlertTitle>Check the selected files</AlertTitle>
+                <AlertDescription>{error}</AlertDescription>
               </Alert>
             )}
             <Card className="folio-import-card">

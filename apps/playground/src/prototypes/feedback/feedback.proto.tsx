@@ -30,44 +30,6 @@ function StatusGlyph({
   return <Icon icon={glyph} size={size} />;
 }
 
-export function Alert({
-  status = 'info',
-  title,
-  icon,
-  onDismiss,
-  className = '',
-  style,
-  children,
-  ...props
-}: FeedbackProps): ReactElement {
-  return (
-    <div
-      {...props}
-      className={`alert-proto ${className}`}
-      data-status={status}
-      style={{ ...statusStyle(status), ...style }}
-    >
-      <span className="feedback-icon-proto" aria-hidden="true">
-        {icon ?? <StatusGlyph status={status} size="s" />}
-      </span>
-      <div className="feedback-copy-proto">
-        {title && <div className="feedback-title-proto">{title}</div>}
-        {children && <div className="feedback-description-proto">{children}</div>}
-      </div>
-      {onDismiss && (
-        <button
-          type="button"
-          className="feedback-close-proto"
-          onClick={onDismiss}
-          aria-label="Dismiss notification"
-        >
-          <XIcon size="1em" aria-hidden="true" />
-        </button>
-      )}
-    </div>
-  );
-}
-
 export function Toast({
   status = 'success',
   title,

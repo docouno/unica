@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import type { ReactElement } from 'react';
 import { defineSpecimen } from '../../workbench/types.js';
-import { Alert, Toast, Indicator } from './feedback.proto.js';
+import { Toast, Indicator } from './feedback.proto.js';
 import { Button } from '../button/button.proto.js';
 import '../card/display.examples.css';
 
@@ -24,25 +24,16 @@ function ToastExample(): ReactElement {
 
 export default defineSpecimen({
   id: 'feedback',
-  title: 'Feedback',
+  title: 'Toast sketch',
   group: 'Status',
-  summary: 'Status callouts and arrival messages.',
+  summary: 'Early toast sketch. In-flow callouts live in Alert.',
   sections: [
     {
       id: 'status',
-      title: 'Callouts & signals',
+      title: 'Signals',
       kind: 'matrix',
       render: () => (
         <div className="display-example-stack">
-          <Alert status="info" title="Knowledge stays connected">
-            Reference verified revisions from the shared corpus.
-          </Alert>
-          <Alert status="warning" title="Review recommended">
-            This runbook has not been exercised in the last 90 days.
-          </Alert>
-          <Alert status="danger" title="Import validation failed">
-            Two documents contain unresolved parent references.
-          </Alert>
           <div className="display-example-row">
             <Indicator status="success" label="Healthy" />
             <Indicator status="warning" label="Needs attention" />
