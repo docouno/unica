@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import type { ReactElement } from 'react';
 import { DownloadSimpleIcon, PlusIcon } from '@phosphor-icons/react';
 import { AsidePanel } from '../prototypes/app-shell/app-shell.proto.js';
@@ -13,7 +13,8 @@ import { SegmentedControl } from '../prototypes/segmented-control/segmented-cont
 import { Select } from '../prototypes/select/select.proto.js';
 import { Checkbox, Switch } from '../prototypes/binary-controls/binary-controls.proto.js';
 import { Table, TableScroll } from '../prototypes/table/table.proto.js';
-import { Chip } from '../prototypes/tag/tag.proto.js';
+import { TagGroup } from '../prototypes/tag/tag.proto.js';
+import type { TagGroupItem } from '../prototypes/tag/tag.proto.js';
 import { Text } from '../prototypes/text/text.proto.js';
 import { Title } from '../prototypes/title/title.proto.js';
 import { defineScene } from '../workbench/types.js';
@@ -64,6 +65,14 @@ function CollectionScene(): ReactElement {
   const [scope, setScope] = useState(true);
   const [windowFilter, setWindowFilter] = useState(true);
   const [notice, setNotice] = useState('');
+  const resetRef = useRef<HTMLAnchorElement>(null);
+  const filters: TagGroupItem[] = [];
+  if (scope) {
+    filters.push({ id: 'scope', label: 'scope: prod', removeLabel: 'Remove scope: prod filter' });
+  }
+  if (windowFilter) {
+    filters.push({ id: 'date', label: '14–17 Sep', removeLabel: 'Remove 14–17 Sep date filter' });
+  }
   const visibleRows =
     tab === 'tier0' ? rows.filter((row) => row.tier === 'Tier-0') : tab === 'drafts' ? [] : rows;
   const toggle = (title: string): void =>
@@ -170,9 +179,22 @@ function CollectionScene(): ReactElement {
                   { value: 'drafts', label: 'Drafts (4)' },
                 ]}
               />
-              {scope && <Chip onRemove={() => setScope(false)}>scope: prod</Chip>}
-              {windowFilter && <Chip onRemove={() => setWindowFilter(false)}>14–17 Sep</Chip>}
+              <TagGroup
+                size="s"
+                label="Applied document filters"
+                items={filters}
+                onRemove={(id) => {
+                  if (id === 'scope') {
+                    setScope(false);
+                  } else {
+                    setWindowFilter(false);
+                  }
+                }}
+                emptyMessage="No filters applied"
+                emptyFocusRef={resetRef}
+              />
               <Link
+                ref={resetRef}
                 href="#reset"
                 onClick={(event) => {
                   event.preventDefault();

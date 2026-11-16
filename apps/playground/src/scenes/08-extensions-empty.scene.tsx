@@ -23,7 +23,6 @@ import { Spinner } from '../prototypes/progress/progress.proto.js';
 import { SkeletonText } from '../prototypes/skeleton/skeleton.proto.js';
 import { Icon } from '../prototypes/icon/icon.proto.js';
 import { Input } from '../prototypes/input/input.proto.js';
-import { Tag } from '../prototypes/tag/tag.proto.js';
 import { Text } from '../prototypes/text/text.proto.js';
 import { Title } from '../prototypes/title/title.proto.js';
 import { FolioScene, FolioWorkspace, PageIntro, SectionHeading } from './folio/folio.shared.js';
@@ -125,8 +124,8 @@ function ExtensionsScene(): ReactElement {
                     </Text>
                   </div>
                   <div className="folio-row folio-wrap">
-                    <Tag>Bi-directional</Tag>
-                    <Tag>Signed commits</Tag>
+                    <Badge size="s">Bi-directional</Badge>
+                    <Badge size="s">Signed commits</Badge>
                   </div>
                   <div className="folio-row folio-between folio-connector-footer">
                     <div className="folio-row folio-connector-sync">
@@ -177,8 +176,8 @@ function ExtensionsScene(): ReactElement {
                     </Text>
                   </div>
                   <div className="folio-row folio-wrap">
-                    <Tag>Auto-attach</Tag>
-                    <Tag>Escalation</Tag>
+                    <Badge size="s">Auto-attach</Badge>
+                    <Badge size="s">Escalation</Badge>
                   </div>
                   <div className="folio-row folio-between folio-connector-footer">
                     <div className="folio-row folio-connector-sync">
