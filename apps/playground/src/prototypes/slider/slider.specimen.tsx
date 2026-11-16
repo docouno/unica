@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import type { ReactElement, ReactNode } from 'react';
 import { defineSpecimen } from '../../workbench/types.js';
-import { NumberInput, RangeSlider, Slider } from './slider.proto.js';
+import { RangeSlider, Slider } from './slider.proto.js';
+import { NumberInput } from '../number-input/number-input.proto.js';
 
 const percent = (value: number): string => `${value}%`;
 const money = (value: number): string => `$${value.toLocaleString('en-US')}`;
@@ -42,7 +43,12 @@ function ExactValue(): ReactElement {
         <NumberInput
           aria-label="Exact image quality percentage"
           value={value}
-          onValueChange={(next) => setValue(Math.min(100, Math.max(0, next)))}
+          onValueChange={(next) => {
+            if (next !== '' && next >= 0 && next <= 100) {
+              setValue(next);
+            }
+          }}
+          suffix="%"
           min={0}
           max={100}
         />

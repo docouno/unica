@@ -1,0 +1,190 @@
+.input-shell-proto.number-input-proto {
+  --number-action-width: 34px;
+  --number-input-content-width: 8ch;
+  padding-inline: 0;
+}
+
+.number-input-proto[data-size='s'] {
+  --number-action-width: 28px;
+}
+.number-input-proto[data-size='l'] {
+  --number-action-width: 44px;
+}
+
+.input-shell-proto.number-input-proto[data-width='auto'] {
+  inline-size: fit-content;
+  max-inline-size: 100%;
+}
+.form-field-proto.number-field-proto[data-width='auto'] {
+  inline-size: fit-content;
+  max-inline-size: 100%;
+}
+.number-field-proto[data-size='s'] .form-field-label-proto {
+  font-size: var(--size-s-control-font);
+}
+.number-field-proto[data-size='l'] .form-field-label-proto {
+  font-size: var(--text-size-body-m);
+}
+
+.number-input-proto .input-native-proto {
+  appearance: textfield;
+  flex: 0 1 auto;
+  min-inline-size: 3ch;
+  max-inline-size: 100%;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+  text-overflow: clip;
+}
+.number-input-proto .input-native-proto::-webkit-inner-spin-button,
+.number-input-proto .input-native-proto::-webkit-outer-spin-button {
+  display: none;
+  appearance: none;
+  margin: 0;
+}
+.number-input-proto .number-affix-proto {
+  flex: 0 1 auto;
+  max-inline-size: 5ch;
+}
+.number-input-body-proto {
+  --number-feedback-space: calc(var(--field-icon-size) + var(--field-gap));
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  flex: 1 1 auto;
+  align-self: stretch;
+  align-items: center;
+  justify-items: center;
+  box-sizing: content-box;
+  inline-size: max-content;
+  min-inline-size: 0;
+}
+/* Share one grid cell: an intrinsic floor without forcing a narrow value to stretch. */
+.number-input-body-proto::before {
+  grid-area: 1 / 1;
+  inline-size: var(--number-input-content-width);
+  max-inline-size: 100%;
+  content: '';
+}
+.number-input-body-proto:has(.number-feedback-proto) {
+  padding-inline: var(--number-feedback-space);
+}
+.number-input-body-proto:has(.input-status-proto):has(.control-spinner-proto) {
+  --number-feedback-space: calc(var(--field-icon-size) * 2 + var(--space-4) + var(--field-gap));
+}
+.number-input-value-proto {
+  grid-area: 1 / 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-4);
+  min-inline-size: 0;
+  max-inline-size: 100%;
+}
+.number-feedback-proto {
+  position: absolute;
+  inset-inline-end: 0;
+  inset-block-start: 50%;
+  transform: translateY(-50%);
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: var(--space-4);
+}
+.number-feedback-proto .input-status-proto {
+  color: var(--field-status);
+}
+.number-feedback-proto .control-spinner-proto {
+  color: var(--fg-muted);
+}
+.number-input-proto:has(.input-native-proto:disabled) .number-feedback-proto {
+  display: none;
+}
+
+.number-input-action-proto {
+  display: grid;
+  align-self: stretch;
+  flex: none;
+  place-items: center;
+  box-sizing: border-box;
+  inline-size: var(--number-action-width);
+  min-block-size: calc(var(--field-height) - 2px);
+  padding: 0;
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--fg-secondary);
+  cursor: pointer;
+  touch-action: manipulation;
+}
+.number-input-action-proto[data-action='decrement'] {
+  border-start-start-radius: max(0px, calc(var(--field-radius) - 1px));
+  border-end-start-radius: max(0px, calc(var(--field-radius) - 1px));
+}
+.number-input-action-proto[data-action='increment'] {
+  border-start-end-radius: max(0px, calc(var(--field-radius) - 1px));
+  border-end-end-radius: max(0px, calc(var(--field-radius) - 1px));
+}
+.number-input-proto[data-variant='ghost'] .number-input-action-proto {
+  border-radius: 0;
+  border-start-start-radius: max(0px, calc(var(--field-radius) - 3px));
+  border-start-end-radius: max(0px, calc(var(--field-radius) - 3px));
+}
+.number-input-action-proto:enabled:hover,
+.number-input-proto[data-action-preview='decrement-hover']
+  .number-input-action-proto[data-action='decrement']:enabled,
+.number-input-proto[data-action-preview='increment-hover']
+  .number-input-action-proto[data-action='increment']:enabled {
+  background: var(--neutral-soft-bg);
+  color: var(--fg-primary);
+}
+.number-input-action-proto:enabled:active,
+.number-input-proto[data-action-preview='decrement-active']
+  .number-input-action-proto[data-action='decrement']:enabled,
+.number-input-proto[data-action-preview='increment-active']
+  .number-input-action-proto[data-action='increment']:enabled {
+  background: color-mix(in srgb, var(--neutral-soft-bg), var(--fg-primary) 8%);
+  color: var(--fg-primary);
+}
+.number-input-action-proto:focus-visible {
+  outline: 2px solid var(--focus-ring-color);
+  outline-offset: -3px;
+}
+.number-input-action-proto:disabled {
+  color: var(--fg-disabled);
+  cursor: default;
+}
+.number-input-proto:has(.input-native-proto:disabled) .number-input-action-proto {
+  cursor: not-allowed;
+}
+
+/* The numeric editor now sits inside the centered value group. */
+.input-shell-proto.number-input-proto[data-status='neutral']:has(.input-native-proto:focus):not(
+    :has(.input-native-proto[readonly], .input-native-proto:disabled)
+  ) {
+  --field-edge: var(--control-border-focus);
+}
+.input-shell-proto.number-input-proto[data-status='neutral']:has(.input-native-proto[readonly]) {
+  --field-edge: var(--control-border);
+}
+.input-shell-proto.number-input-proto[data-status='neutral']:has(.input-native-proto:disabled) {
+  --field-edge: var(--border-subtle);
+}
+
+/* The field stays still in every material. Only the activated segment changes tone. */
+@media (forced-colors: active) {
+  .number-input-action-proto {
+    color: ButtonText;
+  }
+  .number-input-action-proto:disabled {
+    color: GrayText;
+  }
+  .number-input-action-proto:enabled:is(:hover, :active) {
+    forced-color-adjust: none;
+    background: Highlight;
+    color: HighlightText;
+  }
+  .number-feedback-proto {
+    color: CanvasText;
+  }
+}
