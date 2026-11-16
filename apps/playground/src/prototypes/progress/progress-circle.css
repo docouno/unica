@@ -1,0 +1,38 @@
+.activity-circle {
+  opacity: 1;
+  animation: none;
+}
+
+.activity-circle-fill {
+  stroke-linecap: round;
+  transform: rotate(-90deg);
+  transform-origin: center;
+  transition: stroke-dasharray var(--progress-value-duration) ease-out;
+}
+
+.activity-circle[data-empty] .activity-circle-fill {
+  visibility: hidden;
+  transition: none;
+}
+
+.activity-circle-cell-track {
+  opacity: 0.14;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .activity-circle-fill {
+    transition: none;
+  }
+}
+
+@media (forced-colors: active) {
+  .activity-circle-cell-track {
+    opacity: 1;
+    fill: GrayText;
+  }
+  .activity-circle-fill,
+  .activity-circle-cell-fill {
+    forced-color-adjust: none;
+    color: Highlight;
+  }
+}

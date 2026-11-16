@@ -35,7 +35,7 @@ Corner curvature separates **interactive controls** from **enclosing surfaces**,
 | `--surface-m-radius` | `12px` | `0px` | Standard `Card`, `Alert`, picker panels |
 | `--surface-l-radius` | `16px` | `0px` | `Modal`, hero containers |
 | `--radius-full` | `9999px` | `0px` | Capsule & avatar shapes (`Badge`, `Chip`, `Switch` track, `Avatar`) |
-| `--radius-circular` | `50%` | `50%` | True geometric circles (`Radio` indicator, `Spinner`) |
+| `--radius-circular` | `50%` | `50%` | True geometric circles (`Radio` indicator) |
 
 Size and surface classes assign `--element-radius`, giving child plates and `:focus-visible` outlines one resolved handle.
 
@@ -57,7 +57,7 @@ $$R_{\text{inner}} = \min\!\Big(R_{\text{outer}},\ \max\!\big(\text{var(--radius
 
 - **Segmented rails & inset media:** A `SegmentedControl` thumb inset by `2px` inside an `8px` rail resolves to `6px`; inset `CardMedia` inside a `12px` card with `8px`–`12px` padding resolves to `4px` (`--radius-xs`) rather than collapsing to a sharp `0px` corner inside a rounded card.
 - **Composable `AppShell.Stage` seam:** When both `TopRail` (`46px`) and `LeftRail` (`56px`) frame `AppShell.Stage`, its `1px` top-left seam uses `14px` outer / `13px` inner radii in `Soft` and `Frost`, collapsing cleanly to `0px` / `0px` in `Pixel`.
-- **`Pixel` `0px` degeneration & circular `Radio` invariant:** Under `--radius-factor: 0`, `--radius-xs` and every rectangular or capsule radius resolve to `0px`, so $R_{\text{inner}} = 0\text{px}$ everywhere — buttons, cards, badges, avatars, checkboxes (`[x]`), and rectangular switches (`[ ■]`) snap to orthogonal corners. **`Radio` / `RadioCard` indicators and `Spinner` rings remain circular (`--radius-circular: 50%`, `(•)`)** across every theme so single-select choices stay unmistakably distinct from multi-select checkboxes without relying on color.
+- **`Pixel` `0px` degeneration & circular `Radio` invariant:** Under `--radius-factor: 0`, `--radius-xs` and every rectangular or capsule radius resolve to `0px`, so $R_{\text{inner}} = 0\text{px}$ everywhere — buttons, cards, badges, avatars, checkboxes (`[x]`), and rectangular switches (`[ ■]`) snap to orthogonal corners. **`Radio` / `RadioCard` indicators remain circular (`--radius-circular: 50%`, `(•)`)** across every theme so single-select choices stay unmistakably distinct from multi-select checkboxes without relying on color. `Spinner` and measured `ProgressCircle` share a circular arc in Soft/Frost and eight square cells in Pixel; that theme-owned activity silhouette is not a single-select control. Known progress accumulates in the same cells, with a partially filled leading cell rather than rounding to whole steps.
 
 ## Monotonic Z-Elevation of Surfaces
 

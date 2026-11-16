@@ -16,7 +16,8 @@ import { Badge } from '../prototypes/badge/badge.proto.js';
 import { Button, IconButton } from '../prototypes/button/button.proto.js';
 import { Code } from '../prototypes/code/code.proto.js';
 import { Blockquote } from '../prototypes/blockquote/blockquote.proto.js';
-import { Spinner, Toast } from '../prototypes/feedback/feedback.proto.js';
+import { Toast } from '../prototypes/feedback/feedback.proto.js';
+import { Spinner } from '../prototypes/progress/progress.proto.js';
 import { Input } from '../prototypes/input/input.proto.js';
 import { Icon } from '../prototypes/icon/icon.proto.js';
 import { Kbd } from '../prototypes/kbd/kbd.proto.js';
@@ -118,7 +119,7 @@ function EditorScene(): ReactElement {
         actions={
           <div className="folio-row folio-wrap">
             <span className="folio-row">
-              <Spinner size="s" />
+              <Spinner size="s" tone="muted" />
               <Text size="caption-l" color="muted">
                 Saving draft…
               </Text>

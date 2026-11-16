@@ -4,7 +4,7 @@ import { defineSpecimen } from '../../workbench/types.js';
 import { Stepper } from './stepper.proto.js';
 import { Card } from '../card/card.proto.js';
 import { Text } from '../text/text.proto.js';
-import { Progress } from '../feedback/feedback.proto.js';
+import { Progress } from '../progress/progress.proto.js';
 import '../card/display.examples.css';
 
 const steps = [

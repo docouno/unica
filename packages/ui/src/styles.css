@@ -79,6 +79,16 @@ textarea {
 
 :root,
 [data-theme='soft-dark'] {
+  --spinner-round-display: inline;
+  --spinner-pixel-display: none;
+  --progress-wait-base: var(--accent-signal);
+  --progress-wait-stripe: color-mix(in oklab, var(--accent-signal) 84%, var(--control-bg));
+  --progress-tip-motion: none;
+  --progress-fill-light: none;
+  --progress-fill-shadow: none;
+  --progress-tip-opacity: 0;
+  --progress-tip-light: transparent;
+  --progress-value-duration: 180ms;
   color-scheme: dark;
   --blockquote-rail-width: 3px;
   --blockquote-rail-style: solid;
@@ -242,6 +252,16 @@ textarea {
 }
 
 [data-theme='soft-light'] {
+  --spinner-round-display: inline;
+  --spinner-pixel-display: none;
+  --progress-wait-base: var(--accent-signal);
+  --progress-wait-stripe: color-mix(in oklab, var(--accent-signal) 84%, var(--control-bg));
+  --progress-tip-motion: none;
+  --progress-fill-light: none;
+  --progress-fill-shadow: none;
+  --progress-tip-opacity: 0;
+  --progress-tip-light: transparent;
+  --progress-value-duration: 180ms;
   color-scheme: light;
   --blockquote-rail-width: 3px;
   --blockquote-rail-style: solid;
@@ -408,6 +428,21 @@ textarea {
 }
 
 [data-theme='frost-dark'] {
+  --spinner-round-display: inline;
+  --spinner-pixel-display: none;
+  --progress-wait-base: var(--accent-signal);
+  --progress-wait-stripe: color-mix(in oklab, var(--accent-signal) 84%, var(--control-bg));
+  --progress-tip-motion: activity-tip-breathe 2400ms ease-in-out infinite;
+  --progress-fill-light: linear-gradient(
+    to bottom,
+    rgb(255 255 255 / 0.3),
+    transparent 55%,
+    rgb(0 0 0 / 0.12)
+  );
+  --progress-fill-shadow: inset 0 -1px 1px rgb(0 0 0 / 0.18);
+  --progress-tip-opacity: 0.85;
+  --progress-tip-light: rgb(255 255 255 / 0.9);
+  --progress-value-duration: 180ms;
   color-scheme: dark;
   --blockquote-rail-width: 2px;
   --blockquote-rail-style: solid;
@@ -580,6 +615,21 @@ textarea {
 }
 
 [data-theme='frost-light'] {
+  --spinner-round-display: inline;
+  --spinner-pixel-display: none;
+  --progress-wait-base: var(--accent-signal);
+  --progress-wait-stripe: color-mix(in oklab, var(--accent-signal) 84%, var(--control-bg));
+  --progress-tip-motion: activity-tip-breathe 2400ms ease-in-out infinite;
+  --progress-fill-light: linear-gradient(
+    to bottom,
+    rgb(255 255 255 / 0.12),
+    transparent 55%,
+    rgb(0 0 0 / 0.12)
+  );
+  --progress-fill-shadow: inset 0 -1px 1px rgb(0 0 0 / 0.18);
+  --progress-tip-opacity: 0.45;
+  --progress-tip-light: rgb(255 255 255 / 0.65);
+  --progress-value-duration: 180ms;
   color-scheme: light;
   --blockquote-rail-width: 2px;
   --blockquote-rail-style: solid;
@@ -757,6 +807,16 @@ textarea {
 }
 
 [data-theme='pixel-dark'] {
+  --spinner-round-display: none;
+  --spinner-pixel-display: inline;
+  --progress-wait-base: var(--accent-signal);
+  --progress-wait-stripe: color-mix(in oklab, var(--accent-signal) 84%, var(--control-bg));
+  --progress-tip-motion: none;
+  --progress-fill-light: none;
+  --progress-fill-shadow: none;
+  --progress-tip-opacity: 0;
+  --progress-tip-light: transparent;
+  --progress-value-duration: 0ms;
   color-scheme: dark;
   --blockquote-rail-width: 3px;
   --blockquote-rail-style: double;
@@ -928,6 +988,16 @@ textarea {
 }
 
 [data-theme='pixel-light'] {
+  --spinner-round-display: none;
+  --spinner-pixel-display: inline;
+  --progress-wait-base: var(--accent-signal);
+  --progress-wait-stripe: color-mix(in oklab, var(--accent-signal) 84%, var(--control-bg));
+  --progress-tip-motion: none;
+  --progress-fill-light: none;
+  --progress-fill-shadow: none;
+  --progress-tip-opacity: 0;
+  --progress-tip-light: transparent;
+  --progress-value-duration: 0ms;
   color-scheme: light;
   --blockquote-rail-width: 3px;
   --blockquote-rail-style: double;

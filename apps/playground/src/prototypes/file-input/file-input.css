@@ -232,28 +232,7 @@
 }
 
 .file-item-progress-proto {
-  appearance: none;
-  display: block;
-  inline-size: 100%;
-  block-size: 4px;
   margin-block-start: var(--space-4);
-  border: 0;
-  border-radius: var(--radius-full);
-  overflow: hidden;
-  background: var(--border-subtle);
-  color: var(--accent-solid);
-}
-
-.file-item-progress-proto::-webkit-progress-bar {
-  background: var(--border-subtle);
-}
-
-.file-item-progress-proto::-webkit-progress-value {
-  background: var(--accent-solid);
-}
-
-.file-item-progress-proto::-moz-progress-bar {
-  background: var(--accent-solid);
 }
 
 .dropzone-proto[hidden],
