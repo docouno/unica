@@ -1,0 +1,15 @@
+Avatar Arabic typography fixture
+
+File: avatar-arabic-400.ttf (Noto Sans Arabic, weight 400)
+Retrieved: 2026-11-15
+Characters: the name U+0646 U+062F U+0649 U+0020 U+0645 U+0646 U+0635 U+0648 U+0631
+Purpose: deterministic name rendering in the Avatar specimen only.
+
+Google Fonts supplied this text subset:
+https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic%3Awght%40400&text=%D9%86%D8%AF%D9%89+%D9%85%D9%86%D8%B5%D9%88%D8%B1
+
+Downloaded font, preserved without further modification:
+https://fonts.gstatic.com/l/font?kit=nwpxtLGrOAZMl5nJ_wfgRg3DrWFZWsnVBJ_sS6tlqHHFlhQ5l3sQWIHPqzCfyGyvu2iKPdttU-eOwI5UuBChvaIc&skey=f979c51db865377e&v=v33
+
+License: SIL Open Font License 1.1, included as avatar-arabic-OFL.txt.
+Upstream: https://github.com/google/fonts/blob/main/ofl/notosansarabic/OFL.txt

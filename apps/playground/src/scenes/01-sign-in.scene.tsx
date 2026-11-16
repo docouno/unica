@@ -150,7 +150,7 @@ function SignInScene(): ReactElement {
           )}
         </Card>
         <div className="folio-auth-compliance">
-          <Badge status="success" dot>
+          <Badge size="s" status="success" dot>
             SOC 2 Type II
           </Badge>
           <Text size="caption-l" color="muted">

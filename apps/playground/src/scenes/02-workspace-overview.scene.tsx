@@ -145,7 +145,7 @@ function OverviewScene(): ReactElement {
               </div>
             }
           >
-            <Badge status="success" dot>
+            <Badge size="s" status="success" dot>
               Synced 2m ago
             </Badge>
           </PageIntro>
@@ -213,7 +213,7 @@ function OverviewScene(): ReactElement {
                   )
                   .map((row) => (
                     <div className="folio-activity-row" key={row.title}>
-                      <Avatar initials={row.initials} size="xs" />
+                      <Avatar fallback={row.initials} alt="" size="xs" />
                       <div>
                         <Text size="body-s" weight="medium">
                           {row.title}{' '}

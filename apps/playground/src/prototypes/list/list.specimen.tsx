@@ -42,7 +42,7 @@ export default defineSpecimen({
           <ListItem
             title="A regional ingress handoff procedure with an unusually detailed title"
             description="The description reflows beneath the title while the factual trailing status retains its own capacity."
-            leading={<Avatar initials="PE" size="s" />}
+            leading={<Avatar name="Platform Engineering" alt="" size="s" />}
             trailing={<Badge status="warning">Review</Badge>}
           />
         </List>
@@ -58,17 +58,17 @@ export default defineSpecimen({
             <ListItem
               title="Updated Zero-Downtime PG Failover"
               description="Platform Engineering · 12 minutes ago"
-              leading={<Avatar initials="PE" tone="accent" size="s" />}
+              leading={<Avatar name="Platform Engineering" alt="" size="s" />}
             />
             <ListItem
               title="Approved ADR-014 Traffic Draining"
               description="Networking team · 38 minutes ago"
-              leading={<Avatar initials="NW" tone="success" size="s" />}
+              leading={<Avatar name="Networking team" alt="" size="s" />}
             />
             <ListItem
               title="Linked Redis Eviction Policy"
               description="Reliability team · 1 hour ago"
-              leading={<Avatar initials="RE" tone="info" size="s" />}
+              leading={<Avatar name="Reliability team" alt="" size="s" />}
             />
           </List>
         </Card>

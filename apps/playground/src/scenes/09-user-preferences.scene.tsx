@@ -81,7 +81,7 @@ function PreferencesScene(): ReactElement {
           <Header
             actions={
               <>
-                <Badge status={dirty ? 'warning' : 'neutral'}>
+                <Badge size="s" status={dirty ? 'warning' : 'neutral'}>
                   {dirty ? `${dirty} unsaved changes` : 'All changes saved'}
                 </Badge>
                 <Button

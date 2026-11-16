@@ -6,7 +6,7 @@ import { Badge } from '../prototypes/badge/badge.proto.js';
 import { Button } from '../prototypes/button/button.proto.js';
 import { DatePicker, DateRangePicker } from '../prototypes/calendar/calendar.proto.js';
 import { Card, CardMedia } from '../prototypes/card/card.proto.js';
-import { Progress } from '../prototypes/feedback/feedback.proto.js';
+import { Progress } from '../prototypes/progress/progress.proto.js';
 import { Link } from '../prototypes/link/link.proto.js';
 import { Pagination } from '../prototypes/pagination/pagination.proto.js';
 import { SegmentedControl } from '../prototypes/segmented-control/segmented-control.proto.js';
@@ -143,7 +143,9 @@ function CollectionScene(): ReactElement {
                 <Title as="h1" size="heading-l">
                   Runbooks & Playbooks
                 </Title>
-                <Badge status="success">28 verified</Badge>
+                <Badge size="s" status="success">
+                  28 verified
+                </Badge>
               </div>
               <Select
                 className="folio-sort-control"
@@ -296,7 +298,9 @@ function CollectionScene(): ReactElement {
                 {visibleRows.map((row) => (
                   <Card key={row.title}>
                     <DocumentName>{row.title}</DocumentName>
-                    <Badge status="neutral">{row.tier}</Badge>
+                    <Badge size="s" status="neutral">
+                      {row.tier}
+                    </Badge>
                     <Person initials={row.initials} name={row.owner} />
                   </Card>
                 ))}

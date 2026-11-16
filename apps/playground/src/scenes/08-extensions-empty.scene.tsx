@@ -18,7 +18,8 @@ import { Badge } from '../prototypes/badge/badge.proto.js';
 import { Button } from '../prototypes/button/button.proto.js';
 import { Card } from '../prototypes/card/card.proto.js';
 import { Empty } from '../prototypes/empty/empty.proto.js';
-import { Skeleton, SkeletonText, Spinner, Toast } from '../prototypes/feedback/feedback.proto.js';
+import { Skeleton, SkeletonText, Toast } from '../prototypes/feedback/feedback.proto.js';
+import { Spinner } from '../prototypes/progress/progress.proto.js';
 import { Icon } from '../prototypes/icon/icon.proto.js';
 import { Input } from '../prototypes/input/input.proto.js';
 import { Tag } from '../prototypes/tag/tag.proto.js';
@@ -65,7 +66,7 @@ function ExtensionsScene(): ReactElement {
         }
         actions={
           <>
-            <Badge status="success" dot>
+            <Badge size="s" status="success" dot>
               4 active
             </Badge>
             <Button
@@ -105,7 +106,7 @@ function ExtensionsScene(): ReactElement {
                         <Icon icon={GithubLogoIcon} />
                       </span>
                     </div>
-                    <Badge status="success" dot>
+                    <Badge size="s" status="success" dot>
                       Active
                     </Badge>
                   </div>
@@ -156,7 +157,7 @@ function ExtensionsScene(): ReactElement {
                         <Icon icon={PhoneCallIcon} />
                       </span>
                     </div>
-                    <Badge status="success" dot>
+                    <Badge size="s" status="success" dot>
                       Active
                     </Badge>
                   </div>
@@ -208,7 +209,7 @@ function ExtensionsScene(): ReactElement {
                       <span className="folio-connector-icon">
                         <Icon icon={SlackLogoIcon} />
                       </span>
-                      <Badge>Installed</Badge>
+                      <Badge size="s">Installed</Badge>
                     </div>
                     <div className="folio-connector-copy">
                       <Title as="h3" size="body-m" className="folio-connector-installed-title">
@@ -239,7 +240,7 @@ function ExtensionsScene(): ReactElement {
                       <span className="folio-connector-icon">
                         <Icon icon={DatabaseIcon} />
                       </span>
-                      <Badge>Installed</Badge>
+                      <Badge size="s">Installed</Badge>
                     </div>
                     <div className="folio-connector-copy">
                       <Title as="h3" size="body-m" className="folio-connector-installed-title">
@@ -271,12 +272,12 @@ function ExtensionsScene(): ReactElement {
                   >
                     <div className="folio-row folio-between">
                       <div className="folio-row folio-connector-title">
-                        <Spinner size="s" label="Indexing repository trees" />
+                        <Spinner size="s" tone="muted" />
                         <Title as="h3" size="body-m" className="folio-connector-installed-title">
                           GitHub ADR Mirror
                         </Title>
                       </div>
-                      <Badge status="info" dot>
+                      <Badge size="s" status="info" dot>
                         Indexing
                       </Badge>
                     </div>

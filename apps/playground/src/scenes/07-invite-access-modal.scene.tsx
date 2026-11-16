@@ -103,7 +103,7 @@ function InviteScene(): ReactElement {
             title="Members & role directory"
             description="Manage repository-backed runbook permissions, SAML groups, and hardware-key enforcement."
           >
-            <Badge status="success" dot>
+            <Badge size="s" status="success" dot>
               SAML 2.0 Enforced
             </Badge>
           </PageIntro>

@@ -1,0 +1,350 @@
+.activity-spinner {
+  --spinner-dimension: 1em;
+  display: inline-block;
+  flex: none;
+  inline-size: var(--spinner-dimension);
+  block-size: var(--spinner-dimension);
+  overflow: visible;
+  border-radius: var(--radius-circular);
+  color: inherit;
+  stroke: currentColor;
+  stroke-width: 2.5;
+  vertical-align: -0.125em;
+  opacity: 0;
+  animation: activity-reveal 0s var(--spinner-delay, 0ms) forwards;
+}
+
+.activity-spinner[data-size='s'] {
+  --spinner-dimension: var(--size-s-icon);
+}
+
+.activity-spinner[data-size='m'] {
+  --spinner-dimension: var(--size-m-icon);
+}
+
+.activity-spinner[data-size='l'] {
+  --spinner-dimension: var(--size-l-icon);
+  stroke-width: 2.4;
+}
+
+.activity-spinner[data-tone='neutral'] {
+  color: var(--fg-primary);
+}
+
+.activity-spinner[data-tone='muted'] {
+  color: var(--fg-muted);
+}
+
+.activity-spinner[data-tone='accent'] {
+  color: var(--accent-signal);
+}
+
+.activity-spinner-track {
+  opacity: 0.14;
+}
+
+.activity-spinner-round {
+  display: var(--spinner-round-display);
+}
+.activity-spinner-pixels {
+  display: var(--spinner-pixel-display);
+}
+.activity-spinner-cell {
+  opacity: var(--cell-rest);
+  animation: activity-cell 960ms steps(1, end) infinite;
+  animation-delay: calc(var(--cell) * 120ms - 960ms);
+}
+.activity-spinner-orbit {
+  transform-origin: center;
+  animation: activity-spin 2400ms linear infinite;
+}
+.activity-spinner-arc {
+  stroke-linecap: round;
+  transform: rotate(-90deg);
+  transform-origin: center;
+  animation: activity-arc 1600ms cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+.activity-spinner[data-static] :is(.activity-spinner-orbit, .activity-spinner-arc, rect) {
+  animation: none;
+}
+
+.activity-spinner[hidden] {
+  display: none;
+}
+
+html[data-wb-freeze='1'] .activity-spinner {
+  opacity: 1;
+}
+
+@keyframes activity-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes activity-arc {
+  0% {
+    stroke-dasharray: 16 84;
+    stroke-dashoffset: 0;
+  }
+  50% {
+    stroke-dasharray: 64 36;
+    stroke-dashoffset: -18;
+  }
+  100% {
+    stroke-dasharray: 16 84;
+    stroke-dashoffset: -100;
+  }
+}
+
+@keyframes activity-cell {
+  0% {
+    opacity: 1;
+  }
+  12.5% {
+    opacity: 0.55;
+  }
+  25% {
+    opacity: 0.3;
+  }
+  37.5%,
+  100% {
+    opacity: 0.14;
+  }
+}
+
+@keyframes activity-reveal {
+  to {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .activity-spinner :is(.activity-spinner-orbit, .activity-spinner-arc, rect) {
+    animation: none;
+  }
+}
+
+@media (forced-colors: active) {
+  .activity-spinner {
+    color: CanvasText;
+  }
+  .activity-spinner-track {
+    opacity: 1;
+    stroke: GrayText;
+  }
+}
+
+.activity-progress {
+  --progress-height: 8px;
+  display: grid;
+  gap: var(--space-8);
+  min-inline-size: 0;
+  font-family: var(--font-family-base);
+  font-size: var(--text-size-caption-l);
+  line-height: var(--text-size-caption-l-lh);
+}
+
+.activity-progress[data-size='s'] {
+  --progress-height: 4px;
+}
+.activity-progress[data-size='l'] {
+  --progress-height: 12px;
+}
+
+.activity-progress-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  column-gap: var(--space-16);
+  row-gap: var(--space-4);
+  min-inline-size: 0;
+}
+
+.activity-progress-label {
+  flex: 1 1 0;
+  min-inline-size: min(100%, 16ch);
+  color: var(--fg-secondary);
+  overflow-wrap: anywhere;
+}
+
+.activity-progress-value {
+  max-inline-size: 100%;
+  margin-inline-start: auto;
+  color: var(--fg-muted);
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+  text-align: end;
+}
+
+.activity-progress-track {
+  position: relative;
+  isolation: isolate;
+  clip-path: inset(-16px 0);
+  inline-size: 100%;
+  block-size: var(--progress-height);
+  border-radius: var(--radius-full);
+  background: var(--control-bg);
+  box-shadow: inset 0 0 0 1px var(--control-border);
+  color: var(--progress-color);
+}
+
+.activity-progress-fill {
+  position: relative;
+  display: block;
+  inline-size: var(--progress-fraction);
+  block-size: 100%;
+  border-radius: inherit;
+  background-color: currentColor;
+  background-image: var(--progress-fill-light);
+  box-shadow: var(--progress-fill-shadow);
+  transition: inline-size var(--progress-value-duration) ease-out;
+}
+
+.activity-progress-tip {
+  position: absolute;
+  pointer-events: none;
+  inset-inline-end: 0;
+  inset-block-start: 50%;
+  inline-size: min(48px, 100%);
+  block-size: calc(var(--progress-height) + 12px);
+  opacity: calc(var(--progress-tip-opacity) * var(--progress-tip-strength));
+  transform: translateY(-50%);
+  transition: opacity 600ms ease-out;
+}
+
+.activity-progress-tip::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    ellipse at 100% 50%,
+    var(--progress-tip-light),
+    color-mix(in oklab, currentColor 65%, transparent) 24%,
+    transparent 72%
+  );
+  opacity: 0.75;
+  transform-origin: right center;
+  filter: blur(2px);
+  animation: none;
+}
+
+.activity-progress[data-active] .activity-progress-tip::after {
+  animation: var(--progress-tip-motion);
+}
+
+.activity-progress:dir(rtl) .activity-progress-tip {
+  transform: translateY(-50%) scaleX(-1);
+}
+
+.activity-progress:is([data-full], [data-resting]) .activity-progress-tip {
+  opacity: 0;
+}
+.activity-progress:is([data-full], [data-resting], [data-static]) .activity-progress-tip::after {
+  animation: none;
+}
+
+@keyframes activity-tip-breathe {
+  0%,
+  100% {
+    opacity: 0.55;
+    transform: scaleX(0.78);
+  }
+  50% {
+    opacity: 0.9;
+    transform: scaleX(1);
+  }
+}
+
+.activity-progress[data-empty] .activity-progress-fill {
+  visibility: hidden;
+  transition: none;
+}
+
+.activity-progress-wait {
+  display: block;
+  block-size: 100%;
+  border-radius: inherit;
+  background-color: var(--progress-wait-base);
+  background-image:
+    var(--progress-fill-light),
+    linear-gradient(
+      135deg,
+      var(--progress-wait-stripe) 25%,
+      transparent 25% 50%,
+      var(--progress-wait-stripe) 50% 75%,
+      transparent 75%
+    );
+  background-size:
+    100% 100%,
+    24px 24px;
+  box-shadow: var(--progress-fill-shadow);
+  animation: activity-wait 2200ms linear infinite;
+}
+
+.activity-progress:is([data-static], [data-paused]) .activity-progress-wait {
+  animation: none;
+}
+.activity-progress[hidden] {
+  display: none;
+}
+
+@keyframes activity-wait {
+  to {
+    background-position:
+      0 0,
+      24px 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .activity-progress-fill,
+  .activity-progress-tip {
+    transition: none;
+  }
+  .activity-progress-wait,
+  .activity-progress[data-active] .activity-progress-tip::after {
+    animation: none;
+  }
+}
+
+@media (forced-colors: active) {
+  .activity-progress-track {
+    color: Highlight;
+    background: Canvas;
+    outline: 1px solid CanvasText;
+    outline-offset: -1px;
+    box-shadow: none;
+  }
+  .activity-progress-fill {
+    forced-color-adjust: none;
+    background: Highlight;
+    box-shadow: none;
+  }
+  .activity-progress-tip {
+    display: none;
+  }
+  .activity-progress-wait {
+    opacity: 1;
+    background: none;
+    box-shadow: none;
+    outline: none;
+    animation: none;
+  }
+}
+
+.activity-progress-value:not([data-custom]) {
+  min-inline-size: 4ch;
+}
+.activity-progress-value[data-unknown] {
+  visibility: hidden;
+}
+
+@media (forced-colors: active) {
+  .activity-progress[data-indeterminate] .activity-progress-track {
+    outline: 1px dashed Highlight;
+    outline-offset: -1px;
+  }
+}

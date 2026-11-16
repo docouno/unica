@@ -5,7 +5,7 @@ import { AsidePanel } from '../prototypes/app-shell/app-shell.proto.js';
 import { Badge } from '../prototypes/badge/badge.proto.js';
 import { Avatar } from '../prototypes/avatar/avatar.proto.js';
 import { Collapsible } from '../prototypes/accordion/accordion.proto.js';
-import { Progress } from '../prototypes/feedback/feedback.proto.js';
+import { Progress } from '../prototypes/progress/progress.proto.js';
 import { HoverCard, Menu, MenuItem, MenuSeparator } from '../prototypes/menu/menu.proto.js';
 import { Switch } from '../prototypes/binary-controls/binary-controls.proto.js';
 import { Tabs } from '../prototypes/tabs/tabs.proto.js';
@@ -94,7 +94,7 @@ function ReaderScene(): ReactElement {
                           {owner && (
                             <HoverCard>
                               <div className="folio-owner-profile">
-                                <Avatar initials="DB" size="m" tone="info" />
+                                <Avatar name="Database reliability" alt="" size="m" />
                                 <div>
                                   <Text size="caption-l" weight="semibold">
                                     Database reliability
