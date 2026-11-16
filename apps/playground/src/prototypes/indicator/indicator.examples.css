@@ -1,0 +1,217 @@
+.indicator-example-stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-20, 20px);
+  min-inline-size: 0;
+}
+
+.indicator-example-label,
+.indicator-example-note,
+.indicator-example-use p {
+  margin: 0;
+  color: var(--fg-secondary);
+  font-size: var(--text-size-caption-l);
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.indicator-example-use {
+  display: flex;
+  align-items: center;
+  gap: var(--space-20, 20px);
+  min-inline-size: 0;
+  padding: var(--space-8) var(--space-4);
+}
+
+.indicator-example-use strong,
+.indicator-example-overlay > strong {
+  color: var(--fg-primary);
+  font-size: var(--text-size-body-s);
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.indicator-example-use > :first-child {
+  flex: none;
+}
+
+.indicator-example-use > :last-child {
+  min-inline-size: 0;
+  overflow-wrap: anywhere;
+}
+
+.indicator-example-toolbar,
+.indicator-example-actions,
+.indicator-example-surface-pair {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-24);
+}
+
+.indicator-example-toolbar {
+  padding: var(--space-8);
+}
+
+.indicator-example-sample {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-8);
+  min-inline-size: 0;
+  text-align: center;
+}
+
+.indicator-example-object {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-block-size: 64px;
+  padding-inline: var(--space-8);
+}
+
+.indicator-example-scale {
+  display: grid;
+  grid-template-columns: 16px repeat(3, minmax(0, 1fr));
+  align-items: center;
+  gap: var(--space-8);
+}
+
+.indicator-example-statuses {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-24) var(--space-16);
+  padding-block: var(--space-8);
+}
+
+.indicator-example-status {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: center;
+  justify-items: center;
+  row-gap: var(--space-12);
+}
+
+.indicator-example-status > .indicator-example-label {
+  grid-column: 1 / -1;
+  justify-self: start;
+}
+
+.indicator-example-corners,
+.indicator-example-data-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--space-16) var(--space-8);
+}
+
+.indicator-example-live {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-16);
+  padding-block-start: var(--space-16);
+  border-block-start: 1px solid var(--border-subtle);
+}
+
+.indicator-example-actions {
+  gap: var(--space-12) var(--space-16);
+  padding-block: var(--space-4);
+}
+
+.indicator-example-choice {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-8);
+  color: var(--fg-secondary);
+  font-size: var(--text-size-caption-l);
+  line-height: 1.4;
+}
+
+.indicator-example-choice input {
+  accent-color: var(--accent-solid);
+}
+
+.indicator-example-surface {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-24);
+  padding: var(--space-20, 20px);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--surface-s-radius);
+  background: var(--indicator-separator-color);
+}
+
+.indicator-example-surface[data-ground='shell'] {
+  --indicator-separator-color: var(--bg-shell);
+}
+
+.indicator-example-surface[data-ground='canvas'] {
+  --indicator-separator-color: var(--bg-canvas);
+}
+
+.indicator-example-surface[data-ground='surface'] {
+  --indicator-separator-color: var(--bg-surface);
+}
+
+.indicator-example-surface-row {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-16);
+}
+
+.indicator-example-surface-pair {
+  gap: var(--space-32);
+  padding: var(--space-4);
+}
+
+.indicator-example-overlay {
+  --indicator-separator-color: var(--bg-overlay);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-20, 20px);
+  inline-size: min(100%, 420px);
+  min-inline-size: 0;
+  padding: var(--space-24);
+  border: 1px solid var(--overlay-border);
+  border-radius: var(--surface-m-radius);
+  background: var(--bg-overlay);
+  box-shadow: var(--overlay-shadow-popover);
+  backdrop-filter: var(--overlay-backdrop);
+}
+
+/* A translucent panel needs a solid separating edge over the host's image/fill. */
+@supports (color: rgb(from white r g b / 1)) {
+  .indicator-example-overlay {
+    --indicator-separator-color: rgb(from var(--bg-overlay) r g b / 1);
+  }
+}
+
+.indicator-example-long {
+  padding: var(--space-16) var(--space-20, 20px);
+}
+
+.indicator-example-contained {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-16);
+  padding: var(--space-12);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--size-m-radius);
+  color: var(--fg-primary);
+  font-size: var(--text-size-body-s);
+  overflow: hidden;
+}
+
+.indicator-example-directions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-24);
+}
+
+.indicator-example-direction {
+  display: flex;
+  align-items: flex-start;
+  flex-direction: column;
+  gap: var(--space-16);
+  padding: var(--space-16);
+}

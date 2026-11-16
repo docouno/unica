@@ -26,6 +26,7 @@ import {
 } from '@phosphor-icons/react';
 import { Icon } from '../icon/icon.proto.js';
 import type { GlyphComponent } from '../icon/icon.proto.js';
+import { Indicator } from '../indicator/indicator.proto.js';
 import './app-shell.css';
 import '../scrollbar/scrollbar.css';
 import { Kbd } from '../kbd/kbd.proto.js';
@@ -329,13 +330,20 @@ export function LeftRail({
         key={entry.value}
         type="button"
         className="app-shell-rail-item"
-        aria-label={entry.label}
+        aria-label={
+          entry.count === undefined ? entry.label : `${entry.label}, ${entry.count} unread`
+        }
         aria-current={active === entry.value ? 'page' : undefined}
         title={entry.label}
         onClick={() => onNavigate?.(entry.value)}
       >
-        <Icon icon={entry.icon} />
-        {entry.count !== undefined && <span className="app-shell-rail-count">{entry.count}</span>}
+        {entry.count === undefined ? (
+          <Icon icon={entry.icon} />
+        ) : (
+          <Indicator count={entry.count} max={9} size="s" className="app-shell-rail-indicator">
+            <Icon icon={entry.icon} />
+          </Indicator>
+        )}
       </button>
     );
   }
