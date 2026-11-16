@@ -1,0 +1,143 @@
+.chip-demo-stack {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-24);
+  min-inline-size: 0;
+}
+.chip-demo-flow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-8);
+  min-inline-size: 0;
+}
+.chip-demo-size-row {
+  display: grid;
+  grid-template-columns: 60px minmax(0, 1fr);
+  align-items: center;
+  gap: var(--space-16);
+}
+.chip-demo-size-label {
+  display: grid;
+  gap: var(--space-2);
+  color: var(--fg-secondary);
+  font: 600 var(--text-size-caption-l) / var(--text-size-caption-l-lh) var(--font-family-base);
+}
+.chip-demo-size-label small {
+  color: var(--fg-muted);
+  font: inherit;
+  font-weight: 400;
+}
+.chip-demo-note,
+.chip-demo-caption {
+  margin: 0;
+  color: var(--fg-muted);
+  font: 400 var(--text-size-caption-l) / var(--text-size-caption-l-lh) var(--font-family-base);
+}
+.chip-demo-state-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+  gap: var(--space-24);
+}
+.chip-demo-sample {
+  display: grid;
+  align-content: start;
+  gap: var(--space-12);
+  min-inline-size: 0;
+}
+.chip-demo-fit-row {
+  display: grid;
+  gap: var(--space-12);
+  min-inline-size: 0;
+}
+.chip-demo-rule {
+  padding-block-start: var(--space-16);
+  border-block-start: 1px solid var(--border-subtle);
+}
+.chip-demo-summary {
+  color: var(--fg-secondary);
+  font: 400 var(--text-size-body-s) / var(--text-size-body-s-lh) var(--font-family-base);
+  overflow-wrap: anywhere;
+}
+.chip-demo-capped {
+  min-inline-size: 0;
+  --chip-max-width: 240px;
+}
+.chip-demo-details {
+  color: var(--fg-secondary);
+  font: 400 var(--text-size-body-s) / var(--text-size-body-s-lh) var(--font-family-base);
+}
+.chip-demo-details summary {
+  cursor: pointer;
+  min-block-size: 24px;
+}
+.chip-demo-details summary:focus-visible {
+  outline: 2px solid var(--focus-ring-color);
+  outline-offset: 2px;
+}
+.chip-demo-full-options {
+  display: grid;
+  gap: var(--space-8);
+  margin-block-start: var(--space-12);
+}
+.chip-demo-full-options label,
+.chip-demo-native-toggle {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  min-block-size: 24px;
+  color: var(--fg-secondary);
+  font: 400 var(--text-size-body-s) / var(--text-size-body-s-lh) var(--font-family-base);
+}
+.chip-demo-full-options span {
+  min-inline-size: 0;
+  overflow-wrap: anywhere;
+}
+.chip-demo-full-options input,
+.chip-demo-native-toggle input {
+  accent-color: var(--accent-solid);
+  flex: none;
+}
+.chip-demo-overlay {
+  display: grid;
+  gap: var(--space-24);
+  inline-size: min(100%, 540px);
+  min-inline-size: 0;
+  color: var(--fg-primary);
+  padding: var(--space-24);
+  border: 1px solid var(--overlay-border);
+  border-radius: var(--surface-m-radius);
+  background: var(--bg-overlay);
+  box-shadow: var(--overlay-shadow-popover);
+  backdrop-filter: var(--overlay-backdrop);
+}
+@media (pointer: coarse) {
+  .chip-demo-details summary,
+  .chip-demo-full-options label,
+  .chip-demo-native-toggle {
+    min-block-size: 44px;
+  }
+}
+
+.chip-demo-text-action {
+  min-block-size: 24px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--fg-secondary);
+  font: 400 var(--text-size-caption-l) / var(--text-size-caption-l-lh) var(--font-family-base);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+.chip-demo-text-action:focus-visible {
+  outline: 2px solid var(--focus-ring-color);
+  outline-offset: 2px;
+}
+
+@media (pointer: coarse) {
+  .chip-demo-text-action,
+  .chip-demo-details summary {
+    min-block-size: 44px;
+  }
+}

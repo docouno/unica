@@ -33,7 +33,7 @@ Run `make dev app=playground` and select a scene in the workbench's **Folio** gr
 | --- | --- |
 | `01-sign-in` | Switch sign-in mode, edit credentials, and toggle device trust. |
 | `02-workspace-overview` | Filter activity and dismiss the indexing notification. |
-| `03-document-collection` | Filter tiers, select rows, remove filter chips, and inspect the date range. |
+| `03-document-collection` | Select a wrapping runbook facet, select rows, remove applied filter tags, and inspect the date range. |
 | `04-document-reader` | Open document actions, switch inspector sections, and inspect the owner card. |
 | `05-rich-editor` | Toggle formatting, edit a document reference, and select a slash-command block. |
 | `06-page-properties-drawer` | Change visibility and review cadence, then close and reopen the drawer. |
@@ -76,7 +76,7 @@ Use `make visual item=02-workspace-overview` for a six-preset capture or `make v
 | --- | --- | --- |
 | `01-sign-in` | **Sign In & SSO** (`Standalone`) | Ambient auth stage (`--auth-stage-aura` in `Frost`; matte stage in `Soft`; `--motif-canvas-grid` coordinate matrix in `Pixel`), `Card`, `Title`, `Text`, `SegmentedControl`, SSO secondary `Button`s, labeled `Divider`, `FormField` + `Input`, `Link`, `Checkbox`, primary `Button`, `Badge` |
 | `02-workspace-overview` | **Workspace Overview** (`L-Shaped: TopRail[search] + LeftRail + LeftAside + Main`) | Global search + `Kbd`, `LeftRail` with `Indicator` + anchored `Tooltip`, `TreeView`, `Breadcrumb`, `AvatarGroup`, 3-column summary `Card` grid, activity & pinned document cards, `SegmentedControl`, `info` `Alert`, bottom-right `Toast` |
-| `03-document-collection` | **Document Collection & Date Filter** (`L-Shaped: TopRail[search] + LeftRail + LeftAside + Main + RightAside`) | Filter bar (`SegmentedControl`, `Select`, `Chip`s, `TagGroup`, `Link`), 2-up topology `Card` + `CardMedia`, directory `Table` + `Pagination`, `RightAside` (`Switch`, `DatePicker`, `Progress`, `DateRangePicker` + open calendar popover) |
+| `03-document-collection` | **Document Collection & Date Filter** (`L-Shaped: TopRail[search] + LeftRail + LeftAside + Main + RightAside`) | Filter bar (`ChipGroup`, `Select`, `TagGroup`, `Link`), layout `SegmentedControl`, 2-up topology `Card` + `CardMedia`, directory `Table` + `Pagination`, `RightAside` (`Switch`, `DatePicker`, `Progress`, `DateRangePicker` + open calendar popover) |
 | `04-document-reader` | **Document Reader & Overlays** (`L-Shaped: TopRail[tabs] + LeftRail + LeftAside + Main + RightAside`) | Open document tabs in `TopRail`, editorial runbook (`Badge`, `Title`, `warning` `Alert`, `List`, inline & fenced `Code`, `Table`, `Blockquote`), `RightAside` (`Tabs`, `Switch`, `Tag`, `Collapsible` + `ListItem`, `Progress`), anchored `Menu` and `HoverCard` |
 | `05-rich-editor` | **Rich Editor & Slash Autocomplete** (`L-Shaped: TopRail[tabs] + LeftRail + LeftAside + Main[Header + Subbar]`) | Document tabs, `Breadcrumb` header with autosave `Spinner` & `AvatarGroup`, formatting `Subbar` (`Tabs`, `Icon` tools, `Kbd`), `760px` prose stage, anchored link `Popover` (`data-surface="overlay"`), and slash-command `Autocomplete` |
 | `06-page-properties-drawer` | **Page Properties & Relations Drawer** (`L-Shaped` under `Drawer`) | Workspace under `--scrim-bg`, inline-end `520px` `Drawer` (`data-surface="overlay"`), contextual `RadioCard`s and `SwitchCard`, `DatePicker` + embedded `Calendar`, `Textarea`, and reviewer `Combobox` |

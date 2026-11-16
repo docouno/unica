@@ -6,6 +6,7 @@ import { Badge } from '../prototypes/badge/badge.proto.js';
 import { Button } from '../prototypes/button/button.proto.js';
 import { DatePicker, DateRangePicker } from '../prototypes/calendar/calendar.proto.js';
 import { Card, CardMedia } from '../prototypes/card/card.proto.js';
+import { ChipGroup } from '../prototypes/chip/chip.proto.js';
 import { Progress } from '../prototypes/progress/progress.proto.js';
 import { Link } from '../prototypes/link/link.proto.js';
 import { Pagination } from '../prototypes/pagination/pagination.proto.js';
@@ -167,8 +168,9 @@ function CollectionScene(): ReactElement {
               />
             </div>
             <div className="folio-row folio-wrap">
-              <SegmentedControl
-                aria-label="Runbook filter"
+              <ChipGroup
+                className="folio-collection-facets"
+                label="Runbook filter"
                 size="s"
                 value={tab}
                 onValueChange={setTab}
