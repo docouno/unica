@@ -1,0 +1,106 @@
+.skeleton-proto {
+  position: relative;
+  display: block;
+  flex: none;
+  min-inline-size: 0;
+  max-inline-size: 100%;
+  inline-size: 100%;
+  block-size: var(--space-16);
+  overflow: hidden;
+  border-radius: var(--element-radius, var(--size-m-radius));
+  background: color-mix(in srgb, var(--fg-muted) 16%, transparent);
+  isolation: isolate;
+  user-select: none;
+  cursor: progress;
+}
+
+.skeleton-proto[data-shape='circle'] {
+  inline-size: 40px;
+  block-size: auto;
+  aspect-ratio: 1;
+  border-radius: var(--radius-full);
+}
+
+.skeleton-proto::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 15%,
+    color-mix(in srgb, var(--fg-muted) 9%, transparent) 50%,
+    transparent 85%
+  );
+  transform: translateX(var(--skeleton-sweep-start, -100%));
+  animation: skeleton-sweep 2200ms ease-in-out 2;
+  pointer-events: none;
+}
+
+.skeleton-proto:dir(rtl) {
+  --skeleton-sweep-start: 100%;
+  --skeleton-sweep-end: -100%;
+}
+
+.skeleton-text-proto {
+  display: grid;
+  min-inline-size: 0;
+  max-inline-size: 100%;
+  inline-size: 100%;
+  user-select: none;
+  cursor: progress;
+}
+
+.skeleton-text-line-proto {
+  display: flex;
+  align-items: center;
+  block-size: var(--skeleton-line-height);
+}
+
+.skeleton-text-line-proto > .skeleton-proto {
+  block-size: calc(var(--skeleton-font-size) * 0.72);
+  border-radius: var(--radius-xs);
+}
+
+.skeleton-text-line-proto:last-child:not(:first-child) > .skeleton-proto {
+  inline-size: 60%;
+}
+
+:is(.skeleton-proto, .skeleton-text-proto)[hidden] {
+  display: none;
+}
+
+@keyframes skeleton-sweep {
+  0%,
+  12% {
+    transform: translateX(var(--skeleton-sweep-start, -100%));
+  }
+  78%,
+  100% {
+    transform: translateX(var(--skeleton-sweep-end, 100%));
+  }
+}
+
+html[data-wb-freeze='1'] .skeleton-proto::after {
+  display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton-proto::after {
+    display: none;
+    animation: none;
+  }
+}
+
+@media (forced-colors: active) {
+  .skeleton-proto {
+    forced-color-adjust: none;
+    background: Canvas;
+    outline: 1px solid GrayText;
+    outline-offset: -1px;
+  }
+
+  .skeleton-proto::after {
+    display: none;
+    animation: none;
+  }
+}

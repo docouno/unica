@@ -137,29 +137,3 @@ export function Indicator({
     </span>
   );
 }
-
-export function Skeleton({
-  className = '',
-  ...props
-}: ComponentPropsWithRef<'span'>): ReactElement {
-  return <span {...props} className={`skeleton-proto ${className}`} aria-hidden="true" />;
-}
-
-export interface SkeletonTextProps extends ComponentPropsWithRef<'div'> {
-  readonly lines?: number;
-}
-
-export function SkeletonText({
-  lines = 3,
-  className = '',
-  ...props
-}: SkeletonTextProps): ReactElement {
-  const count = Math.min(8, Math.max(1, Math.floor(Number.isFinite(lines) ? lines : 3)));
-  return (
-    <div {...props} className={`skeleton-text-proto ${className}`} aria-hidden="true">
-      {Array.from({ length: count }, (_, index) => (
-        <Skeleton key={`line-${index}`} />
-      ))}
-    </div>
-  );
-}
