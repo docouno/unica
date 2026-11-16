@@ -1,0 +1,187 @@
+.hint-demo-stack {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-24);
+  inline-size: 100%;
+  min-inline-size: 0;
+}
+.hint-demo-study {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  justify-items: start;
+  gap: var(--space-12);
+  min-inline-size: 0;
+  inline-size: 100%;
+}
+.hint-demo-label {
+  max-inline-size: 100%;
+  padding: var(--space-4) var(--space-8);
+  border-radius: var(--radius-xs);
+  background: var(--bg-canvas);
+  color: var(--fg-muted);
+  font-family: var(--font-family-base);
+  font-size: var(--text-size-caption-l);
+  line-height: var(--text-size-caption-l-lh);
+}
+.hint-demo-pair {
+  display: grid;
+  justify-items: center;
+  gap: var(--space-8);
+  max-inline-size: 100%;
+}
+.hint-demo-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-12);
+  min-inline-size: 0;
+}
+.hint-demo-copy {
+  margin: 0;
+  font-size: var(--text-size-body-s);
+  line-height: var(--text-size-body-s-lh);
+  color: var(--fg-secondary);
+  overflow-wrap: anywhere;
+}
+.hint-demo-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-12);
+  color: var(--fg-secondary);
+  font-size: var(--text-size-caption-l);
+  line-height: var(--text-size-caption-l-lh);
+}
+.hint-demo-options label {
+  display: grid;
+  gap: var(--space-4);
+}
+.hint-demo-options select {
+  min-block-size: 30px;
+  max-inline-size: 100%;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-xs);
+  padding: var(--space-4) var(--space-8);
+  background: var(--bg-surface);
+  color: var(--fg-primary);
+  font: inherit;
+}
+.hint-demo-stage {
+  position: relative;
+  inline-size: 100%;
+  block-size: var(--hint-stage-height, 380px);
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--surface-s-radius);
+}
+.hint-demo-stage-label {
+  position: absolute;
+  inset-block-start: 12px;
+  inset-inline: 16px;
+}
+.hint-demo-anchor {
+  position: absolute;
+  inset-block-start: 50%;
+  inset-inline-start: 50%;
+  translate: -50% -50%;
+}
+.hint-demo-stage:dir(rtl) .hint-demo-anchor {
+  translate: 50% -50%;
+}
+.hint-demo-stage[data-anchor='top-start'] .hint-demo-anchor {
+  inset-block-start: 48px;
+  inset-inline-start: 16px;
+  translate: none;
+}
+.hint-demo-stage[data-anchor='bottom-end'] .hint-demo-anchor {
+  inset-block-start: auto;
+  inset-inline-start: auto;
+  inset-block-end: 48px;
+  inset-inline-end: 16px;
+  translate: none;
+}
+.hint-demo-after {
+  position: absolute;
+  inset-block-end: 12px;
+  inset-inline-start: 16px;
+}
+.hint-preview-panel[popover] {
+  position: fixed;
+  inset: auto;
+  margin: 0;
+  visibility: hidden;
+}
+.hint-preview-panel::backdrop {
+  background: transparent;
+}
+.hint-preview-bridge {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.hint-preview-bridge > span {
+  position: absolute;
+  pointer-events: auto;
+}
+.hint-preview-bridge > :nth-child(1) {
+  inset: -8px -8px auto;
+  block-size: 8px;
+}
+.hint-preview-bridge > :nth-child(2) {
+  inset: auto -8px -8px;
+  block-size: 8px;
+}
+.hint-preview-bridge > :nth-child(3) {
+  inset: 0 auto 0 -8px;
+  inline-size: 8px;
+}
+.hint-preview-bridge > :nth-child(4) {
+  inset: 0 -8px 0 auto;
+  inline-size: 8px;
+}
+.hint-demo-sr {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+.hint-demo-rail {
+  position: relative;
+  display: flex;
+  align-items: start;
+  gap: var(--space-8);
+  min-block-size: 184px;
+}
+.hint-demo-rail-icons {
+  flex: none;
+  display: grid;
+  justify-items: center;
+  gap: var(--space-8);
+  padding: var(--space-8);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--surface-s-radius);
+}
+.hint-demo-rail > .tooltip-proto {
+  margin-block-start: 110px;
+}
+.hint-demo-long {
+  inline-size: min(100%, 15rem);
+}
+.hint-demo-options select:focus-visible {
+  outline: 2px solid var(--focus-ring-color);
+  outline-offset: 2px;
+}
+@media (pointer: coarse) {
+  .hint-demo-options select {
+    min-block-size: 44px;
+  }
+}
+@media (forced-colors: active) {
+  .hint-demo-options select {
+    border-color: ButtonText;
+  }
+}

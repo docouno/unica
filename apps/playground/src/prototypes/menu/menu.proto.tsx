@@ -52,26 +52,3 @@ export function MenuItem({
 export function MenuSeparator(): ReactElement {
   return <hr className="menu-separator-proto" />;
 }
-export interface HoverCardProps extends ComponentPropsWithRef<'div'> {
-  readonly children: ReactNode;
-}
-export function HoverCard({ className = '', ...props }: HoverCardProps): ReactElement {
-  return <div {...props} data-surface="overlay" className={`hover-card-proto ${className}`} />;
-}
-
-export interface TooltipProps extends ComponentPropsWithRef<'div'> {
-  readonly shortcut?: ReactNode;
-}
-export function Tooltip({
-  shortcut,
-  children,
-  className = '',
-  ...props
-}: TooltipProps): ReactElement {
-  return (
-    <div {...props} role="tooltip" data-surface="overlay" className={`tooltip-proto ${className}`}>
-      <span>{children}</span>
-      {shortcut && <Kbd>{shortcut}</Kbd>}
-    </div>
-  );
-}

@@ -1,6 +1,4 @@
-.menu-proto,
-.hover-card-proto,
-.tooltip-proto {
+.menu-proto {
   position: relative;
   min-inline-size: 0;
   border: 1px solid var(--overlay-border);
@@ -10,9 +8,7 @@
   backdrop-filter: var(--overlay-backdrop);
   box-shadow: var(--overlay-shadow-popover);
 }
-.menu-proto::before,
-.hover-card-proto::before,
-.tooltip-proto::before {
+.menu-proto::before {
   content: '';
   position: absolute;
   inset: 0;
@@ -21,9 +17,7 @@
   mask-image: var(--overlay-rim-mask);
   pointer-events: none;
 }
-.menu-proto::after,
-.hover-card-proto::after,
-.tooltip-proto::after {
+.menu-proto::after {
   content: '';
   position: absolute;
   inset: -1px;
@@ -77,53 +71,23 @@
   border-block-start: 1px solid var(--border-subtle);
   margin: var(--space-4);
 }
-.hover-card-proto {
-  inline-size: 332px;
-  max-inline-size: none;
-  padding: var(--space-16);
-  display: grid;
-  gap: var(--space-12);
-  box-shadow: var(--overlay-shadow-hover);
-}
-.tooltip-proto {
-  /* Native popovers must not scroll the decorative rim outside the border. */
-  overflow: visible;
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-12);
-  min-block-size: 30px;
-  padding: var(--space-4) var(--space-8);
-  border-radius: var(--size-s-radius);
-  box-shadow: var(--overlay-shadow-tooltip);
-  font-size: var(--text-size-body-s);
-  line-height: var(--text-size-body-s-lh);
-  white-space: nowrap;
-}
-:is(.menu-proto, .hover-card-proto, .tooltip-proto)[hidden] {
+.menu-proto[hidden] {
   display: none;
 }
 @supports not (backdrop-filter: blur(1px)) {
-  .menu-proto,
-  .hover-card-proto,
-  .tooltip-proto {
+  .menu-proto {
     background: var(--bg-surface);
   }
 }
 @media (forced-colors: active) {
-  .menu-proto,
-  .hover-card-proto,
-  .tooltip-proto {
+  .menu-proto {
     background: Canvas;
     color: CanvasText;
     border-color: CanvasText;
     box-shadow: none;
   }
   .menu-proto::before,
-  .menu-proto::after,
-  .hover-card-proto::before,
-  .hover-card-proto::after,
-  .tooltip-proto::before,
-  .tooltip-proto::after {
+  .menu-proto::after {
     display: none;
   }
 }

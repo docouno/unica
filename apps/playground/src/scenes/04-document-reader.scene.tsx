@@ -3,10 +3,12 @@ import type { ReactElement } from 'react';
 import { CopyIcon, DownloadSimpleIcon, GitDiffIcon, TrashIcon } from '@phosphor-icons/react';
 import { AsidePanel } from '../prototypes/app-shell/app-shell.proto.js';
 import { Badge } from '../prototypes/badge/badge.proto.js';
-import { Avatar } from '../prototypes/avatar/avatar.proto.js';
 import { Collapsible } from '../prototypes/accordion/accordion.proto.js';
 import { Progress } from '../prototypes/progress/progress.proto.js';
-import { HoverCard, Menu, MenuItem, MenuSeparator } from '../prototypes/menu/menu.proto.js';
+import { Menu, MenuItem, MenuSeparator } from '../prototypes/menu/menu.proto.js';
+import { HoverCard } from '../prototypes/tooltip/tooltip.proto.js';
+import { TeamPreview } from '../prototypes/tooltip/hover-card.content.js';
+import { Link } from '../prototypes/link/link.proto.js';
 import { Switch } from '../prototypes/binary-controls/binary-controls.proto.js';
 import { Tabs } from '../prototypes/tabs/tabs.proto.js';
 import { Text } from '../prototypes/text/text.proto.js';
@@ -82,38 +84,26 @@ function ReaderScene(): ReactElement {
                       <dt>Owner</dt>
                       <dd>
                         <div className="folio-owner-preview">
-                          <button
-                            className="folio-minor-action"
-                            type="button"
-                            onClick={() => setOwner(!owner)}
-                            aria-expanded={owner}
+                          <Link
+                            href="?item=03-document-collection"
+                            tone="neutral"
+                            underline="hover"
+                            onPointerEnter={() => setOwner(true)}
+                            onFocus={() => setOwner(true)}
+                            onKeyDown={(event) => {
+                              if (event.key === 'Escape' && owner) {
+                                event.preventDefault();
+                                event.stopPropagation();
+                                setOwner(false);
+                              }
+                            }}
+                            onClick={() => setOwner(false)}
                           >
                             <Person name="Database reliability" />
-                          </button>
+                          </Link>
                           {owner && (
-                            <HoverCard>
-                              <div className="folio-owner-profile">
-                                <Avatar name="Database reliability" alt="" size="m" />
-                                <div>
-                                  <Text size="caption-l" weight="semibold">
-                                    Database reliability
-                                  </Text>
-                                  <Text size="caption-l" color="secondary">
-                                    Staff SRE · Core Infra
-                                  </Text>
-                                </div>
-                                <Badge status="accent" size="s" dot>
-                                  On-call
-                                </Badge>
-                              </div>
-                              <div className="folio-owner-summary">
-                                <Text size="caption-l" color="secondary">
-                                  28 Tier-0 runbooks owned
-                                </Text>
-                                <Text size="caption-m" color="muted">
-                                  UTC+1
-                                </Text>
-                              </div>
+                            <HoverCard aria-hidden="true">
+                              <TeamPreview />
                             </HoverCard>
                           )}
                         </div>

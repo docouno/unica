@@ -51,6 +51,19 @@ upper corners, with a lighter translucent fill and popover shadow. Soft and Pixe
 opaque fills and their existing edge and shadow treatments. Material choices are theme tokens;
 the component specimen presents one current design per preset.
 
+Floating elevation is calibrated per family through `--overlay-shadow-tooltip`,
+`--overlay-shadow-hover`, `--overlay-shadow-popover`, `--overlay-shadow-drawer` and
+`--overlay-shadow-modal`. A small passive preview needs a tighter shadow footprint than a
+large panel. Dark Soft/Frost tooltips use compact contact and ambient shadows; Dark Pixel
+uses a 2px hard tooltip offset while Light Pixel retains 4px. Frost HoverCard uses a short,
+quiet shadow in both color schemes without changing the shared glass fill or blur. These
+recipes belong to the theme, not to component material variants or theme-name selectors.
+
+The floating surface owns its perimeter, glass highlight, corner marks and external shadow.
+When space is limited, an inner reading area owns scrolling. Decorative material layers must
+remain fixed to the surface rather than travel with its content. Pointer hit-area bridges
+also stay outside the scroll owner so they cannot create phantom scrollbars.
+
 ## Role-Based API Over Decorative `appearance`
 
 Exposing low-level material switches (`solid`, `soft`, `glass`, `lamp`, `outline`) on components couples product code to a single visual style and breaks cross-theme portability. Unica replaces decorative `appearance` props with strict role contracts:

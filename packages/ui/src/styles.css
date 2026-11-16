@@ -117,7 +117,7 @@ textarea {
   --overlay-backdrop: none;
   --overlay-rim: inset 0 1px 0 rgb(255 255 255 / 0.05);
   --overlay-shadow: 0 2px 6px rgb(8 11 14 / 0.278), 0px 20px 44px -4px rgb(8 11 14 / 0.42);
-  --overlay-shadow-tooltip: 0 2px 6px rgb(8 11 14 / 0.278), 0px 8px 20px -4px rgb(8 11 14 / 0.42);
+  --overlay-shadow-tooltip: 0 1px 3px rgb(8 11 14 / 0.16), 0 3px 8px -2px rgb(8 11 14 / 0.24);
   --overlay-shadow-popover: 0 2px 6px rgb(8 11 14 / 0.278), 0px 10px 24px -4px rgb(8 11 14 / 0.42);
   --overlay-shadow-hover: 0 2px 6px rgb(8 11 14 / 0.278), 0px 12px 28px -4px rgb(8 11 14 / 0.42);
   --overlay-shadow-drawer: 0 2px 6px rgb(8 11 14 / 0.278), 0px 16px 36px -4px rgb(8 11 14 / 0.42);
@@ -504,9 +504,9 @@ textarea {
   --overlay-backdrop: blur(20px) saturate(125.4%);
   --overlay-rim: inset 0 1px 0 rgb(255 255 255 / 0.108), inset 0 0 0 1px rgb(255 255 255 / 0.036);
   --overlay-shadow: 0 2px 6px rgb(0 0 0 / 0.4), 0px 20px 44px -4px rgb(0 0 0 / 0.561);
-  --overlay-shadow-tooltip: 0 2px 6px rgb(0 0 0 / 0.4), 0px 8px 20px -4px rgb(0 0 0 / 0.561);
+  --overlay-shadow-tooltip: 0 1px 2px rgb(0 0 0 / 0.12), 0 3px 8px -2px rgb(0 0 0 / 0.18);
   --overlay-shadow-popover: 0 2px 6px rgb(0 0 0 / 0.18), 0px 10px 24px -4px rgb(0 0 0 / 0.25245);
-  --overlay-shadow-hover: 0 2px 6px rgb(0 0 0 / 0.4), 0px 12px 28px -4px rgb(0 0 0 / 0.561);
+  --overlay-shadow-hover: 0 1px 3px rgb(0 0 0 / 0.14), 0 6px 16px -4px rgb(0 0 0 / 0.22);
   --overlay-shadow-drawer: 0 2px 6px rgb(0 0 0 / 0.4), 0px 16px 36px -4px rgb(0 0 0 / 0.561);
   --overlay-shadow-modal: 0 2px 6px rgb(0 0 0 / 0.4), 0px 20px 44px -4px rgb(0 0 0 / 0.561);
   --surface-shadow: 0 4px 16px -4px rgb(2 6 20 / 0.42), inset 0 1px 0 rgb(255 255 255 / 0.05);
@@ -708,7 +708,7 @@ textarea {
   --overlay-shadow-tooltip: 0 2px 6px rgb(12 19 38 / 0.09), 0px 8px 20px -4px rgb(12 19 38 / 0.161);
   --overlay-shadow-popover:
     0 2px 6px rgb(12 19 38 / 0.0405), 0px 10px 24px -4px rgb(12 19 38 / 0.07245);
-  --overlay-shadow-hover: 0 2px 6px rgb(12 19 38 / 0.09), 0px 12px 28px -4px rgb(12 19 38 / 0.161);
+  --overlay-shadow-hover: 0 1px 3px rgb(12 19 38 / 0.06), 0 6px 16px -4px rgb(12 19 38 / 0.1);
   --overlay-shadow-drawer: 0 2px 6px rgb(12 19 38 / 0.09), 0px 16px 36px -4px rgb(12 19 38 / 0.161);
   --overlay-shadow-modal: 0 2px 6px rgb(12 19 38 / 0.09), 0px 20px 44px -4px rgb(12 19 38 / 0.161);
   --surface-shadow: 0 2px 10px -2px rgb(15 23 42 / 0.06), inset 0 1px 0 rgb(255 255 255 / 0.8);
@@ -901,7 +901,7 @@ textarea {
   --overlay-backdrop: none;
   --overlay-rim: none;
   --overlay-shadow: 6px 6px 0px 0 rgb(2 4 6 / 0.878);
-  --overlay-shadow-tooltip: 4px 4px 0px 0 rgb(2 4 6 / 0.878);
+  --overlay-shadow-tooltip: 2px 2px 0px 0 rgb(2 4 6 / 0.878);
   --overlay-shadow-popover: 6px 6px 0px 0 rgb(2 4 6 / 0.878);
   --overlay-shadow-hover: 6px 6px 0px 0 rgb(2 4 6 / 0.878);
   --overlay-shadow-drawer: -6px 0px 0px 0 rgb(2 4 6 / 0.878);

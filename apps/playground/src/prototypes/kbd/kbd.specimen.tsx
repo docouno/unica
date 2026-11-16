@@ -8,7 +8,8 @@ import type { ButtonTone, ButtonVariant } from '../button/button.proto.js';
 import { Text } from '../text/text.proto.js';
 import { Title } from '../title/title.proto.js';
 import { GlobalSearch } from '../app-shell/app-shell.proto.js';
-import { Menu, MenuItem, MenuSeparator, Tooltip } from '../menu/menu.proto.js';
+import { Menu, MenuItem, MenuSeparator } from '../menu/menu.proto.js';
+import { Tooltip } from '../tooltip/tooltip.proto.js';
 import './kbd.examples.css';
 
 function ExampleRow({

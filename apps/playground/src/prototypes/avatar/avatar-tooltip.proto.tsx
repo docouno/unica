@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import type { ReactElement, ReactNode } from 'react';
-import { Tooltip } from '../menu/menu.proto.js';
+import { Tooltip } from '../tooltip/tooltip.proto.js';
 import './avatar-tooltip.css';
 
 export interface AvatarNameHintProps {
