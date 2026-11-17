@@ -52,7 +52,8 @@
   display: contents;
 }
 
-.suggestion-save-pair-proto :is(.form-field-label-proto, .form-field-support-proto, .suggestion-recovery-proto),
+.suggestion-save-pair-proto
+  :is(.form-field-label-proto, .form-field-support-proto, .suggestion-recovery-proto),
 .suggestion-saved-proto {
   grid-column: 1 / -1;
 }
