@@ -1,12 +1,6 @@
 import { useState } from 'react';
 import type { ReactElement, ReactNode } from 'react';
-import {
-  CopyIcon,
-  DotsThreeIcon,
-  FileTextIcon,
-  PlusIcon,
-  SidebarSimpleIcon,
-} from '@phosphor-icons/react';
+import { CopyIcon, FileTextIcon, PlusIcon, SidebarSimpleIcon } from '@phosphor-icons/react';
 import {
   AppShell,
   AsidePanel,
@@ -373,18 +367,20 @@ export function RunbookArticle({ compact = false }: { readonly compact?: boolean
 
 export function DocumentActions({
   onEdit,
-  onMenu,
+  onCopy,
+  menu,
 }: {
   readonly onEdit?: () => void;
-  readonly onMenu?: () => void;
+  readonly onCopy?: () => void;
+  readonly menu: ReactNode;
 }): ReactElement {
   return (
     <div className="folio-row">
-      <IconButton size="s" icon={CopyIcon} aria-label="Copy document link" onClick={onMenu} />
+      <IconButton size="s" icon={CopyIcon} aria-label="Copy document link" onClick={onCopy} />
       <Button size="s" variant="secondary" tone="neutral" onClick={onEdit}>
         Edit
       </Button>
-      <IconButton size="s" icon={DotsThreeIcon} aria-label="Document actions" onClick={onMenu} />
+      {menu}
     </div>
   );
 }

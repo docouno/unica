@@ -108,9 +108,6 @@
 .kbd-example-menu {
   inline-size: min(100%, 360px);
 }
-.kbd-example-highlight {
-  background: var(--neutral-soft-bg);
-}
 .kbd-example-reference {
   border-block-start: 1px solid var(--border-subtle);
 }

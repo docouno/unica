@@ -435,12 +435,6 @@
   inset-inline-start: 62px;
   inset-block-end: 68px;
 }
-.folio-floating-actions {
-  position: absolute;
-  z-index: 3;
-  inset-block-start: 92px;
-  inset-inline-end: 363px;
-}
 .folio-owner-preview {
   position: relative;
 }
@@ -582,9 +576,6 @@
   .folio-content-overview {
     padding-inline: var(--space-32);
   }
-  .folio-floating-actions {
-    inset-inline-end: var(--space-24);
-  }
 }
 @container folio-content (max-width: 640px) {
   .folio-grid-3 {
@@ -644,11 +635,6 @@
   }
   .folio-person {
     flex-wrap: wrap;
-  }
-  .folio-floating-actions {
-    position: relative;
-    inset: auto;
-    margin: var(--space-16);
   }
 }
 @container artboard (max-width: 600px) {

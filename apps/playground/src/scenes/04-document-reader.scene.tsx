@@ -1,11 +1,19 @@
 import { useState } from 'react';
 import type { ReactElement } from 'react';
-import { CopyIcon, DownloadSimpleIcon, GitDiffIcon, TrashIcon } from '@phosphor-icons/react';
+import {
+  CopyIcon,
+  DotsThreeIcon,
+  DownloadSimpleIcon,
+  GitDiffIcon,
+  TrashIcon,
+} from '@phosphor-icons/react';
 import { AsidePanel } from '../prototypes/app-shell/app-shell.proto.js';
 import { Badge } from '../prototypes/badge/badge.proto.js';
 import { Collapsible } from '../prototypes/accordion/accordion.proto.js';
 import { Progress } from '../prototypes/progress/progress.proto.js';
-import { Menu, MenuItem, MenuSeparator } from '../prototypes/menu/menu.proto.js';
+import { Menu } from '../prototypes/menu/menu.live.js';
+import type { MenuEntry } from '../prototypes/menu/menu.entries.js';
+import { IconButton } from '../prototypes/button/button.proto.js';
 import { HoverCard } from '../prototypes/tooltip/tooltip.proto.js';
 import { TeamPreview } from '../prototypes/tooltip/hover-card.content.js';
 import { Link } from '../prototypes/link/link.proto.js';
@@ -23,14 +31,39 @@ import {
 } from './folio/folio.shared.js';
 
 function ReaderScene(): ReactElement {
-  const [menu, setMenu] = useState(true);
   const [owner, setOwner] = useState(true);
   const [tab, setTab] = useState('details');
   const [notice, setNotice] = useState('');
-  const action = (message: string): void => {
-    setNotice(message);
-    setMenu(false);
-  };
+  const items: readonly MenuEntry[] = [
+    {
+      id: 'copy',
+      label: 'Copy document link',
+      icon: CopyIcon,
+      shortcut: '⌘L',
+      run: () => setNotice('Document link selected for copying.'),
+    },
+    {
+      id: 'compare',
+      label: 'Compare revisions',
+      icon: GitDiffIcon,
+      shortcut: '⌘D',
+      run: () => setTab('history'),
+    },
+    {
+      id: 'export',
+      label: 'Export Markdown',
+      icon: DownloadSimpleIcon,
+      run: () => setNotice('Markdown export selected for this revision.'),
+    },
+    { id: 'separator', type: 'separator' },
+    {
+      id: 'trash',
+      label: 'Move to trash',
+      icon: TrashIcon,
+      tone: 'danger',
+      run: () => setNotice('Move to trash requires workspace confirmation.'),
+    },
+  ];
   return (
     <FolioScene className="folio-reader">
       <FolioWorkspace
@@ -40,7 +73,23 @@ function ReaderScene(): ReactElement {
         minHeight={1120}
         actions={
           <DocumentActions
-            onMenu={() => setMenu(!menu)}
+            onCopy={() => setNotice('Document link selected for copying.')}
+            menu={
+              <Menu
+                label="Document actions"
+                size="s"
+                align="end"
+                items={items}
+                trigger={(props) => (
+                  <IconButton
+                    {...props}
+                    size="s"
+                    icon={DotsThreeIcon}
+                    aria-label="Document actions"
+                  />
+                )}
+              />
+            }
             onEdit={() => setNotice('The current verified revision is ready to edit.')}
           />
         }
@@ -156,43 +205,6 @@ function ReaderScene(): ReactElement {
           )}
         </div>
       </FolioWorkspace>
-      {menu && (
-        <div className="folio-floating-actions">
-          <Menu>
-            <MenuItem
-              icon={CopyIcon}
-              shortcut="⌘L"
-              onClick={() => action('Document link selected for copying.')}
-            >
-              Copy document link
-            </MenuItem>
-            <MenuItem
-              icon={GitDiffIcon}
-              shortcut="⌘D"
-              onClick={() => {
-                setTab('history');
-                setMenu(false);
-              }}
-            >
-              Compare revisions
-            </MenuItem>
-            <MenuItem
-              icon={DownloadSimpleIcon}
-              onClick={() => action('Markdown export selected for this revision.')}
-            >
-              Export Markdown
-            </MenuItem>
-            <MenuSeparator />
-            <MenuItem
-              icon={TrashIcon}
-              danger
-              onClick={() => action('Move to trash requires workspace confirmation.')}
-            >
-              Move to trash
-            </MenuItem>
-          </Menu>
-        </div>
-      )}
     </FolioScene>
   );
 }

@@ -8,7 +8,7 @@ import type { ButtonTone, ButtonVariant } from '../button/button.proto.js';
 import { Text } from '../text/text.proto.js';
 import { Title } from '../title/title.proto.js';
 import { GlobalSearch } from '../app-shell/app-shell.proto.js';
-import { Menu, MenuItem, MenuSeparator } from '../menu/menu.proto.js';
+import { MenuPreview } from '../menu/menu.proto.js';
 import { Tooltip } from '../tooltip/tooltip.proto.js';
 import './kbd.examples.css';
 
@@ -295,16 +295,16 @@ function OverlayContext(): ReactElement {
   return (
     <div className="kbd-example-overlay">
       <Tooltip shortcut="⌘B">Bold</Tooltip>
-      <Menu label="Shortcut appearance samples" className="kbd-example-menu">
-        <MenuItem shortcut="⌘K">Find a command</MenuItem>
-        <MenuItem shortcut="⇧⌘P" className="kbd-example-highlight">
-          Open command palette
-        </MenuItem>
-        <MenuSeparator />
-        <MenuItem shortcut="⌘D" disabled>
-          Duplicate selection
-        </MenuItem>
-      </Menu>
+      <MenuPreview
+        label="Shortcut appearance samples"
+        className="kbd-example-menu"
+        items={[
+          { id: 'find', label: 'Find a command', shortcut: '⌘K' },
+          { id: 'palette', label: 'Open command palette', shortcut: '⇧⌘P', preview: 'hover' },
+          { id: 'separator', type: 'separator' },
+          { id: 'diff', label: 'Compare revisions', shortcut: '⌘D', disabled: true },
+        ]}
+      />
       <Text size="caption-l" color="muted">
         Static tooltip and menu surfaces; the highlighted row is pinned for comparison. The disabled
         command keeps a quiet, readable hint.
