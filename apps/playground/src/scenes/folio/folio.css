@@ -699,3 +699,37 @@
 .folio-collection-facets > .chip-group-options-proto {
   margin-block-start: 0;
 }
+
+.folio-content-collection .table-proto :is(th, td).folio-runbook-menu-cell {
+  width: 1%;
+  padding-inline: var(--space-4) var(--space-8);
+}
+
+@container folio-content (max-width: 640px) {
+  .folio-content-collection .table-proto .folio-runbook-menu-cell {
+    position: sticky;
+    inset-inline-end: 0;
+    z-index: 1;
+    border-inline-start: 1px solid var(--border-subtle);
+    background-color: var(--bg-canvas);
+  }
+
+  .folio-content-collection .table-proto tr[data-selected] > .folio-runbook-menu-cell {
+    background-image: linear-gradient(var(--table-row-selected-bg), var(--table-row-selected-bg));
+  }
+}
+
+.folio-content-collection .table-proto tr[data-context-open='point']:not([data-selected]) > td {
+  background: var(--bg-surface-raised);
+}
+
+.folio-runbook-menu-card[data-context-open='point'] {
+  border-color: var(--border-strong);
+}
+
+@media (pointer: coarse) {
+  .folio-runbook-menu-button {
+    min-inline-size: 44px;
+    min-block-size: 44px;
+  }
+}

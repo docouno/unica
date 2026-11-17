@@ -5,7 +5,7 @@ import { MenuBack, MenuRows, MenuSurface } from './menu.proto.js';
 import { menuRows } from './menu.entries.js';
 import type { MenuBranch, MenuEntry, MenuSize } from './menu.entries.js';
 
-type TriggerProps = Required<
+export type TriggerProps = Required<
   Pick<
     ButtonProps,
     | 'ref'
@@ -16,7 +16,8 @@ type TriggerProps = Required<
     | 'aria-controls'
     | 'aria-expanded'
   >
->;
+> &
+  Pick<ButtonProps, 'onPointerDown'>;
 
 export interface LiveMenuProps {
   readonly label: string;
@@ -29,12 +30,15 @@ export interface LiveMenuProps {
 export interface MenuInvocation {
   readonly anchor: HTMLElement;
   readonly restore: HTMLElement;
+  readonly align?: 'start' | 'end';
+  readonly capturePointerId?: number;
   readonly position?: { readonly x: number; readonly y: number };
   readonly focus: 'panel' | 'first' | 'last';
 }
 
 interface LiveMenuBindings {
   readonly triggerProps: TriggerProps;
+  readonly invocation: MenuInvocation | null;
   readonly panel: ReactElement;
   readonly triggerElement: () => HTMLButtonElement | null;
   readonly open: (invocation: MenuInvocation) => void;
@@ -77,6 +81,7 @@ function rootPlacement(
 ): void {
   const bounds = boundsFor(invocation.anchor);
   const anchor = invocation.anchor.getBoundingClientRect();
+  const alignment = invocation.align ?? align;
   const point = invocation.position;
   if (!point && (anchor.bottom < bounds.top - EDGE || anchor.top > bounds.bottom + EDGE)) {
     panel.hidePopover();
@@ -105,7 +110,7 @@ function rootPlacement(
     scroller.scrollTop = scrollTop;
   }
 
-  let x = (align === 'start') !== rtl ? anchor.left : anchor.right - natural.width;
+  let x = (alignment === 'start') !== rtl ? anchor.left : anchor.right - natural.width;
   if (point) {
     const after = point.x + gap;
     const before = point.x - gap - natural.width;
@@ -206,6 +211,13 @@ export function useLiveMenu({
     }
     if (!panel.matches(':popover-open')) {
       panel.showPopover({ source: invocation.anchor });
+    }
+    if (invocation.capturePointerId !== undefined) {
+      try {
+        panel.setPointerCapture(invocation.capturePointerId);
+      } catch {
+        // The releasing pointer may have already left the active pointer set.
+      }
     }
     const position = (): void => rootPlacement(panel, invocation, align);
     position();
@@ -505,6 +517,7 @@ export function useLiveMenu({
 
   return {
     triggerElement: () => triggerRef.current,
+    invocation,
     open,
     triggerProps: {
       ref: bindTrigger,
