@@ -11,6 +11,7 @@ import { Icon } from '../icon/icon.proto.js';
 import type { GlyphComponent } from '../icon/icon.proto.js';
 import { Input } from '../input/input.proto.js';
 import type { InputProps } from '../input/input.proto.js';
+import { Kbd } from '../kbd/kbd.proto.js';
 import { ListboxGroup, ListboxOption } from '../select/listbox.proto.js';
 import type { SelectOption } from '../select/listbox.proto.js';
 import { SelectPanel } from '../select/select-control.proto.js';
@@ -40,7 +41,7 @@ interface FieldProps extends Pick<
   | 'aria-label'
 > {
   readonly options: readonly Suggestion[];
-  readonly iconLeft?: GlyphComponent;
+  readonly iconLeft?: GlyphComponent | null | undefined;
   readonly minimumQueryLength?: number;
   readonly searchState?: 'loading' | 'error';
   readonly listMessage?: ReactNode;
@@ -57,13 +58,23 @@ export interface ComboboxProps extends FieldProps {
   readonly onQueryChange?: (text: string) => void;
 }
 
-interface SuggestionFieldProps extends FieldProps {
+export interface AutocompleteProps
+  extends FieldProps, Pick<InputProps, 'name' | 'minLength' | 'maxLength' | 'pattern'> {
+  readonly defaultValue?: string | undefined;
+  readonly browsable?: boolean;
+  readonly onTextChange?: ((text: string) => void) | undefined;
+  readonly onSuggestion?: ((suggestion: Suggestion) => void) | undefined;
+}
+
+interface SuggestionFieldProps
+  extends FieldProps, Pick<InputProps, 'name' | 'minLength' | 'maxLength' | 'pattern'> {
+  readonly disclosure?: boolean;
   readonly kind: 'catalog' | 'text';
   readonly initialText?: string | undefined;
   readonly initialSelection?: Suggestion | undefined;
   readonly onSelectionChange?: (selection: Suggestion | null) => void;
   readonly onTextChange?: ((text: string) => void) | undefined;
-  readonly onSuggestion?: (suggestion: Suggestion) => void;
+  readonly onSuggestion?: ((suggestion: Suggestion) => void) | undefined;
 }
 
 const searchOption = (option: Suggestion, query: string): boolean =>
@@ -261,11 +272,7 @@ function SuggestionRows({
             </span>
           )}
         </span>
-        {option.shortcut && (
-          <kbd dir="ltr" className="suggestion-shortcut-proto">
-            {option.shortcut}
-          </kbd>
-        )}
+        {option.shortcut && <Kbd className="suggestion-shortcut-proto">{option.shortcut}</Kbd>}
       </div>
     );
   };
@@ -324,6 +331,7 @@ function SuggestionMessage({
 function SuggestionField({
   kind,
   options,
+  disclosure,
   initialSelection,
   initialText,
   onSelectionChange,
@@ -490,7 +498,12 @@ function SuggestionField({
         icon={WarningCircleIcon}
         warning
         title="Couldn’t load results"
-        detail={listMessage ?? 'Your text is still here. Edit the query to search again.'}
+        detail={
+          listMessage ??
+          (catalog
+            ? 'Your text is still here. Edit the query to search again.'
+            : 'Keep your text or edit it to search again.')
+        }
       />
     );
   } else if (belowMinimum) {
@@ -505,8 +518,13 @@ function SuggestionField({
     notice = query.trim() ? (
       <SuggestionMessage
         icon={MagnifyingGlassIcon}
-        title="No matches"
-        detail={listMessage ?? 'Try a different spelling or a shorter search.'}
+        title={catalog ? 'No matches' : 'No matching suggestions'}
+        detail={
+          listMessage ??
+          (catalog
+            ? 'Try a different spelling or a shorter search.'
+            : 'You can use your text as entered.')
+        }
       />
     ) : (
       <SuggestionMessage
@@ -586,7 +604,7 @@ function SuggestionField({
         clearLabel={catalog ? 'Clear selection and search text' : 'Clear text'}
         onClear={clear}
         message={message}
-        iconLeft={iconLeft}
+        iconLeft={iconLeft ?? undefined}
         value={text}
         role="combobox"
         autoComplete="off"
@@ -598,16 +616,16 @@ function SuggestionField({
           (shown ? browsingCopy : unconfirmed && recoveryCopy) ? recoveryId : undefined
         }
         suffix={
-          <>
-            {pending && (
-              <Icon
-                icon={CircleNotchIcon}
-                size={size}
-                className="suggestion-spinner-proto control-spinner-proto"
-              />
-            )}
-            {catalog &&
-              (readOnly && !disabled ? (
+          pending || readOnly || disclosure ? (
+            <>
+              {pending && (
+                <Icon
+                  icon={CircleNotchIcon}
+                  size={size}
+                  className="suggestion-spinner-proto control-spinner-proto"
+                />
+              )}
+              {readOnly && !disabled ? (
                 <Icon
                   icon={LockSimpleIcon}
                   size={size}
@@ -615,48 +633,61 @@ function SuggestionField({
                   className="suggestion-lock-proto"
                 />
               ) : (
-                <button
-                  type="button"
-                  className="suggestion-disclosure-proto"
-                  aria-label={shown ? 'Hide options' : 'Show options'}
-                  aria-expanded={shown}
-                  aria-controls={shown ? listId : undefined}
-                  tabIndex={-1}
-                  disabled={disabled}
-                  onMouseDown={(event) => event.preventDefault()}
-                  onClick={() => {
-                    focusInput();
-                    if (shown) {
-                      close();
-                    } else {
-                      setOpen(true);
+                disclosure && (
+                  <button
+                    type="button"
+                    className="suggestion-disclosure-proto"
+                    aria-label={
+                      catalog
+                        ? shown
+                          ? 'Hide options'
+                          : 'Show options'
+                        : shown
+                          ? 'Hide suggestions'
+                          : 'Show suggestions'
                     }
-                  }}
-                >
-                  <CaretDownIcon size="1em" aria-hidden="true" />
-                </button>
-              ))}
-          </>
+                    aria-expanded={shown}
+                    aria-controls={shown ? listId : undefined}
+                    tabIndex={-1}
+                    disabled={disabled}
+                    onMouseDown={(event) => event.preventDefault()}
+                    onClick={() => {
+                      focusInput();
+                      if (shown) {
+                        close();
+                      } else {
+                        setOpen(true);
+                      }
+                    }}
+                  >
+                    <CaretDownIcon size="1em" aria-hidden="true" />
+                  </button>
+                )
+              )}
+            </>
+          ) : undefined
         }
         onKeyDown={onKeyDown}
         onBlur={close}
         onCompositionStart={() => {
           composing.current = true;
         }}
-        onCompositionEnd={() => {
+        onCompositionEnd={(event) => {
           composing.current = false;
-          setOpen(true);
+          setOpen(catalog || event.currentTarget.value.trim().length > 0);
         }}
         onChange={(event) => {
           const next = event.currentTarget.value;
           changeText(next);
-          setEditing(true);
+          if (catalog) {
+            setEditing(true);
+          }
           if (confirmed) {
             onSelectionChange?.(null);
           }
           setRequested(undefined);
           if (!composing.current) {
-            setOpen(true);
+            setOpen(catalog || next.trim().length > 0);
           }
         }}
       />
@@ -681,10 +712,28 @@ export function Combobox({
     <SuggestionField
       {...props}
       kind="catalog"
+      disclosure
       initialSelection={defaultSelection}
       initialText={previewDraft}
       onTextChange={onQueryChange}
-      iconLeft={props.iconLeft ?? MagnifyingGlassIcon}
+      iconLeft={props.iconLeft === null ? undefined : (props.iconLeft ?? MagnifyingGlassIcon)}
+    />
+  );
+}
+
+export function Autocomplete({
+  defaultValue,
+  browsable = false,
+  placeholder = 'Enter text…',
+  ...props
+}: AutocompleteProps): ReactElement {
+  return (
+    <SuggestionField
+      {...props}
+      kind="text"
+      disclosure={browsable}
+      initialText={defaultValue}
+      placeholder={placeholder}
     />
   );
 }

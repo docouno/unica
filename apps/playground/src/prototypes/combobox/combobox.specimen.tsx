@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import type { ReactElement, ReactNode } from 'react';
+import type { ReactElement } from 'react';
 import {
   BuildingOfficeIcon,
   CloudIcon,
@@ -12,7 +12,7 @@ import { Text } from '../text/text.proto.js';
 import { defineSpecimen } from '../../workbench/types.js';
 import { Combobox } from './combobox.proto.js';
 import type { Suggestion } from './combobox.proto.js';
-import './combobox.examples.css';
+import { Study } from './combobox.study.js';
 
 const teams = [
   {
@@ -60,23 +60,6 @@ const longTeam: Suggestion = {
   group: 'Operations',
   icon: CloudIcon,
 };
-
-function Study({
-  title,
-  children,
-}: {
-  readonly title: string;
-  readonly children: ReactNode;
-}): ReactElement {
-  return (
-    <div className="suggestion-study-proto">
-      <Text size="caption-l" color="secondary">
-        {title}
-      </Text>
-      <div inert>{children}</div>
-    </div>
-  );
-}
 
 function Roles(): ReactElement {
   return (
@@ -310,7 +293,7 @@ function Assignment(): ReactElement {
   const invalid = attempted && committed === null;
   return (
     <form
-      className="suggestion-usage-proto"
+      className="suggestion-usage-proto suggestion-save-pair-proto"
       noValidate
       onSubmit={(event) => {
         event.preventDefault();
@@ -323,6 +306,7 @@ function Assignment(): ReactElement {
     >
       <Combobox
         label="Escalation team"
+        iconLeft={null}
         options={[
           ...teams,
           longTeam,
@@ -343,14 +327,14 @@ function Assignment(): ReactElement {
           setSaved(false);
         }}
       />
-      <div className="suggestion-usage-actions-proto">
-        <Button type="submit">Save assignment</Button>
-        {saved && (
-          <Text size="caption-l" color="secondary" role="status">
-            Assigned to {committed?.label}.
-          </Text>
-        )}
-      </div>
+      <Button type="submit" aria-label="Save assignment" className="suggestion-save-proto">
+        Save
+      </Button>
+      {saved && (
+        <Text size="caption-l" color="secondary" role="status" className="suggestion-saved-proto">
+          Assigned to {committed?.label}.
+        </Text>
+      )}
     </form>
   );
 }
