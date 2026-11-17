@@ -1,14 +1,22 @@
 import { useRef, useState } from 'react';
-import type { ReactElement } from 'react';
-import { DownloadSimpleIcon, PlusIcon } from '@phosphor-icons/react';
+import type { ComponentProps, ReactElement } from 'react';
+import {
+  CopyIcon,
+  DotsThreeIcon,
+  DownloadSimpleIcon,
+  PencilSimpleIcon,
+  PlusIcon,
+} from '@phosphor-icons/react';
 import { AsidePanel } from '../prototypes/app-shell/app-shell.proto.js';
 import { Badge } from '../prototypes/badge/badge.proto.js';
-import { Button } from '../prototypes/button/button.proto.js';
+import { Button, IconButton } from '../prototypes/button/button.proto.js';
 import { DatePicker, DateRangePicker } from '../prototypes/calendar/calendar.proto.js';
 import { Card, CardMedia } from '../prototypes/card/card.proto.js';
 import { ChipGroup } from '../prototypes/chip/chip.proto.js';
 import { Progress } from '../prototypes/progress/progress.proto.js';
 import { Link } from '../prototypes/link/link.proto.js';
+import { ContextMenu } from '../prototypes/menu/context-menu.proto.js';
+import type { MenuEntry } from '../prototypes/menu/menu.entries.js';
 import { Pagination } from '../prototypes/pagination/pagination.proto.js';
 import { SegmentedControl } from '../prototypes/segmented-control/segmented-control.proto.js';
 import { Select } from '../prototypes/select/select.proto.js';
@@ -58,6 +66,56 @@ const rows = [
     owner: 'Platform',
   },
 ] as const;
+
+function RunbookMenu<T extends HTMLElement>({
+  title,
+  onAction,
+  target,
+}: {
+  readonly title: string;
+  readonly onAction: (message: string) => void;
+  readonly target: ComponentProps<typeof ContextMenu<T>>['target'];
+}): ReactElement {
+  const items: readonly MenuEntry[] = [
+    {
+      id: 'rename',
+      label: 'Rename',
+      icon: PencilSimpleIcon,
+      run: () => onAction(`Rename requested for ${title}.`),
+    },
+    {
+      id: 'copy',
+      label: 'Copy runbook link',
+      icon: CopyIcon,
+      run: () => onAction(`Link selected for ${title}.`),
+    },
+    {
+      id: 'export',
+      label: 'Export Markdown',
+      icon: DownloadSimpleIcon,
+      run: () => onAction(`Markdown export requested for ${title}.`),
+    },
+  ];
+  return (
+    <ContextMenu<T>
+      label={`${title} actions`}
+      items={items}
+      size="s"
+      align="end"
+      trigger={(props) => (
+        <IconButton
+          {...props}
+          size="s"
+          variant="ghost"
+          icon={DotsThreeIcon}
+          className="folio-runbook-menu-button"
+          aria-label={`Actions for ${title}`}
+        />
+      )}
+      target={target}
+    />
+  );
+}
 
 function CollectionScene(): ReactElement {
   const [tab, setTab] = useState('all');
@@ -288,32 +346,50 @@ function CollectionScene(): ReactElement {
                       <th>Tier</th>
                       <th>Last drill</th>
                       <th>Owner</th>
+                      <th aria-label="Actions" className="folio-runbook-menu-cell" />
                     </tr>
                   </thead>
                   <tbody>
                     {visibleRows.map((row) => (
-                      <tr key={row.title} data-selected={selected.includes(row.title) || undefined}>
-                        <td>
-                          <Checkbox
-                            size="s"
-                            aria-label={`Select ${row.title}`}
-                            checked={selected.includes(row.title)}
-                            onChange={() => toggle(row.title)}
-                          />
-                        </td>
-                        <td>
-                          <DocumentName>{row.title}</DocumentName>
-                        </td>
-                        <td>
-                          <Badge size="s" status={row.tier === 'Tier-0' ? 'warning' : 'neutral'}>
-                            {row.tier}
-                          </Badge>
-                        </td>
-                        <td>{row.date}</td>
-                        <td>
-                          <Person initials={row.initials} name={row.owner} />
-                        </td>
-                      </tr>
+                      <RunbookMenu<HTMLTableRowElement>
+                        key={row.title}
+                        title={row.title}
+                        onAction={setNotice}
+                        target={(bindings, trigger, panel) => (
+                          <tr
+                            {...bindings}
+                            data-selected={selected.includes(row.title) || undefined}
+                          >
+                            <td>
+                              <Checkbox
+                                size="s"
+                                aria-label={`Select ${row.title}`}
+                                checked={selected.includes(row.title)}
+                                onChange={() => toggle(row.title)}
+                              />
+                            </td>
+                            <td>
+                              <DocumentName>{row.title}</DocumentName>
+                            </td>
+                            <td>
+                              <Badge
+                                size="s"
+                                status={row.tier === 'Tier-0' ? 'warning' : 'neutral'}
+                              >
+                                {row.tier}
+                              </Badge>
+                            </td>
+                            <td>{row.date}</td>
+                            <td>
+                              <Person initials={row.initials} name={row.owner} />
+                            </td>
+                            <td className="folio-runbook-menu-cell">
+                              {trigger}
+                              {panel}
+                            </td>
+                          </tr>
+                        )}
+                      />
                     ))}
                   </tbody>
                 </Table>
@@ -321,13 +397,24 @@ function CollectionScene(): ReactElement {
             ) : (
               <div className="folio-grid-2">
                 {visibleRows.map((row) => (
-                  <Card key={row.title}>
-                    <DocumentName>{row.title}</DocumentName>
-                    <Badge size="s" status="neutral">
-                      {row.tier}
-                    </Badge>
-                    <Person initials={row.initials} name={row.owner} />
-                  </Card>
+                  <RunbookMenu<HTMLDivElement>
+                    key={row.title}
+                    title={row.title}
+                    onAction={setNotice}
+                    target={(bindings, trigger, panel) => (
+                      <Card {...bindings} className="folio-runbook-menu-card">
+                        <div className="folio-row folio-between">
+                          <DocumentName>{row.title}</DocumentName>
+                          {trigger}
+                        </div>
+                        <Badge size="s" status="neutral">
+                          {row.tier}
+                        </Badge>
+                        <Person initials={row.initials} name={row.owner} />
+                        {panel}
+                      </Card>
+                    )}
+                  />
                 ))}
               </div>
             )}

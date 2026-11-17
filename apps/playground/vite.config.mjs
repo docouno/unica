@@ -41,6 +41,11 @@ export default defineConfig({
               test: /\/src\/prototypes\/select\//,
               includeDependenciesRecursively: false,
             },
+            {
+              name: 'menu',
+              test: /\/src\/prototypes\/menu\//,
+              includeDependenciesRecursively: false,
+            },
           ],
         },
       },
