@@ -31,7 +31,7 @@ import {
   PopoverHeader,
   PopoverTitle,
 } from '../prototypes/popover/popover.proto.js';
-import { Listbox } from '../prototypes/select/select.proto.js';
+import { Listbox, SelectPanel } from '../prototypes/select/select.proto.js';
 import { Checkbox } from '../prototypes/binary-controls/binary-controls.proto.js';
 import { Tabs } from '../prototypes/tabs/tabs.proto.js';
 import { Text } from '../prototypes/text/text.proto.js';
@@ -305,23 +305,28 @@ function EditorScene(): ReactElement {
                   onFocus={() => setSlashOpen(true)}
                 />
                 {slashOpen && (
-                  <Listbox
-                    title="Editorial blocks"
-                    value="warning"
-                    options={
-                      query === '/callout'
-                        ? blocks
-                        : blocks.filter((block) =>
-                            `${block.label} ${block.description}`
-                              .toLowerCase()
-                              .includes(query.replace(/^\//, '').toLowerCase()),
-                          )
-                    }
-                    onValueChange={(value) => {
-                      setInsertedBlock(blocks.find((block) => block.value === value)?.label ?? '');
-                      setSlashOpen(false);
-                    }}
-                  />
+                  <SelectPanel className="choice-panel-proto" size="s">
+                    <Listbox
+                      size="s"
+                      title="Editorial blocks"
+                      value={null}
+                      options={
+                        query === '/callout'
+                          ? blocks
+                          : blocks.filter((block) =>
+                              `${block.label} ${block.description}`
+                                .toLowerCase()
+                                .includes(query.replace(/^\//, '').toLowerCase()),
+                            )
+                      }
+                      onValueChange={(value) => {
+                        setInsertedBlock(
+                          blocks.find((block) => block.value === value)?.label ?? '',
+                        );
+                        setSlashOpen(false);
+                      }}
+                    />
+                  </SelectPanel>
                 )}
               </div>
               {insertedBlock && (

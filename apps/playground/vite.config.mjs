@@ -30,6 +30,12 @@ export default defineConfig({
           groups: [
             { name: 'react', test: /\/node_modules\/(?:react|react-dom|scheduler)\// },
             { name: 'icons', test: /\/node_modules\/@phosphor-icons\/react\// },
+            { name: 'workbench-definitions', test: /\/src\/workbench\/types\.ts$/ },
+            {
+              name: 'select',
+              test: /\/src\/prototypes\/select\//,
+              includeDependenciesRecursively: false,
+            },
           ],
         },
       },
