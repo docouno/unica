@@ -203,7 +203,7 @@
   --text-size-body-m: var(--text-size-body-s);
   --text-size-body-m-lh: var(--text-size-body-s-lh);
 }
-.folio-sort-control.input-shell-proto {
+.folio-sort-control.select-proto {
   inline-size: 226px;
   max-inline-size: 100%;
 }

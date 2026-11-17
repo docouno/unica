@@ -230,7 +230,7 @@
   background: color-mix(in oklab, var(--control-bg) 92%, var(--fg-primary) 4%);
 }
 .select-trigger-proto:disabled {
-  --field-edge: var(--border-subtle);
+  border-color: var(--border-subtle);
   background: var(--bg-surface-subtle);
   color: var(--fg-disabled);
   cursor: not-allowed;
