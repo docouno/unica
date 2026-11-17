@@ -203,7 +203,7 @@
   --text-size-body-m: var(--text-size-body-s);
   --text-size-body-m-lh: var(--text-size-body-s-lh);
 }
-.folio-sort-control.input-shell-proto {
+.folio-sort-control.select-proto {
   inline-size: 226px;
   max-inline-size: 100%;
 }
@@ -553,14 +553,6 @@
   position: relative;
   min-inline-size: 0;
 }
-.folio-invite-role-panel.popover-content-proto {
-  position: absolute;
-  z-index: 3;
-  inset-block-start: calc(100% + 4px);
-  inset-inline-start: 0;
-  inline-size: 300px;
-  max-inline-size: 100%;
-}
 .folio-invite-dialog .dialog-preview-body {
   overflow: visible;
 }
@@ -697,12 +689,6 @@
   }
   .folio-invite-dialog .folio-grid-2 {
     grid-template-columns: minmax(0, 1fr);
-  }
-  .folio-invite-role-panel.popover-content-proto {
-    position: relative;
-    inset: auto;
-    margin-block-start: var(--space-4);
-    inline-size: 100%;
   }
 }
 @media (forced-colors: active) {

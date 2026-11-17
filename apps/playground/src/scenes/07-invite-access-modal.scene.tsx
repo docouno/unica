@@ -8,7 +8,7 @@ import { Card } from '../prototypes/card/card.proto.js';
 import { Modal } from '../prototypes/dialog/dialog.proto.js';
 import { Toast } from '../prototypes/feedback/feedback.proto.js';
 import { FormField, Input } from '../prototypes/input/input.proto.js';
-import { Listbox, Select, TagsInput } from '../prototypes/select/select.proto.js';
+import { Select, TagsInput } from '../prototypes/select/select.proto.js';
 import { CheckboxCard } from '../prototypes/choice-card/choice-card.proto.js';
 import { Table, TableScroll } from '../prototypes/table/table.proto.js';
 import { Textarea } from '../prototypes/textarea/textarea.proto.js';
@@ -60,16 +60,15 @@ const members = [
   },
 ] as const;
 const roles = [
-  { value: 'editor', label: 'Editor — Edit & publish' },
-  { value: 'commenter', label: 'Commenter — Review & comment' },
-  { value: 'viewer', label: 'Viewer — Read-only access' },
+  { value: 'editor', label: 'Editor', description: 'Edit and publish pages' },
+  { value: 'commenter', label: 'Commenter', description: 'Review and leave feedback' },
+  { value: 'viewer', label: 'Viewer', description: 'Read shared pages' },
 ] as const;
 
 function InviteScene(): ReactElement {
   const formId = useId();
   const welcomeId = useId();
   const [open, setOpen] = useState(true);
-  const [rolePanel, setRolePanel] = useState(true);
   const [role, setRole] = useState('editor');
   const [invites, setInvites] = useState<readonly string[]>([
     'platform@example.com',
@@ -246,28 +245,13 @@ function InviteScene(): ReactElement {
                 label="Default workspace role"
                 options={roles}
                 value={role}
-                onChange={(event) => {
-                  setRole(event.currentTarget.value);
-                  setRolePanel(false);
-                }}
-                onFocus={() => setRolePanel(true)}
+                onValueChange={(value) => setRole(value ?? 'editor')}
               />
-              {rolePanel && (
-                <Listbox
-                  className="folio-invite-role-panel"
-                  title="Workspace roles"
-                  options={roles}
-                  value={role}
-                  onValueChange={(value) => {
-                    setRole(value);
-                    setRolePanel(false);
-                  }}
-                />
-              )}
             </div>
             <Select
               size="s"
               label="Invite link expiry"
+              defaultValue="7"
               options={[
                 { value: '7', label: '7 days' },
                 { value: '14', label: '14 days' },

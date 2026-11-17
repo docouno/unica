@@ -137,7 +137,11 @@ function PreferencesScene(): ReactElement {
                   size="s"
                   aria-label="Code and terminal typeface"
                   value={preferences.typeface}
-                  onChange={(event) => update('typeface', event.currentTarget.value)}
+                  onValueChange={(value) => {
+                    if (value) {
+                      update('typeface', value);
+                    }
+                  }}
                   options={[
                     { value: 'jetbrains', label: 'JetBrains Mono (13px)' },
                     { value: 'system', label: 'System monospace (13px)' },

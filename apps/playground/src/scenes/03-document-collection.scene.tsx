@@ -161,6 +161,7 @@ function CollectionScene(): ReactElement {
                 className="folio-sort-control"
                 size="s"
                 aria-label="Sort runbooks"
+                defaultValue="verified"
                 options={[
                   { value: 'verified', label: 'Sort: Recently verified' },
                   { value: 'name', label: 'Sort: Name' },
