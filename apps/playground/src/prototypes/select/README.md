@@ -8,7 +8,7 @@ Open `?item=listbox` and `?item=select`. Use the **Live** section of Select for 
 
 Listbox keeps a finite set of choices visible on the parent surface. Select puts the same rows in a compact, anchored panel. Both support single and multiple selection. They share labels, optional descriptions, decorative icons, one-level groups, unavailable options and the same selection indicator.
 
-Use RadioGroup or SegmentedControl for a few short alternatives that should be visible at once. Use Combobox or Autocomplete when the closed field itself accepts typed text. Commands, navigation, interactive row actions and hierarchical trees belong to other families. Combobox and TagsInput in `select.proto.tsx` remain adjacent composition stand-ins; they are outside this design.
+Use RadioGroup or SegmentedControl for a few short alternatives that should be visible at once. Use Combobox or Autocomplete when the closed field itself accepts typed text. Commands, navigation, interactive row actions and hierarchical trees belong to other families. Combobox in `select.proto.tsx` remains an adjacent composition stand-in outside this design. Free-form string sets use the separate [TagsInput design reference](../tags-input/README.md).
 
 ## Anatomy and geometry
 

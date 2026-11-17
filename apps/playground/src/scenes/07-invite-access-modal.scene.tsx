@@ -8,7 +8,7 @@ import { Card } from '../prototypes/card/card.proto.js';
 import { Modal } from '../prototypes/dialog/dialog.proto.js';
 import { Toast } from '../prototypes/feedback/feedback.proto.js';
 import { FormField, Input } from '../prototypes/input/input.proto.js';
-import { Select, TagsInput } from '../prototypes/select/select.proto.js';
+import { Select } from '../prototypes/select/select.proto.js';
 import { CheckboxCard } from '../prototypes/choice-card/choice-card.proto.js';
 import { Table, TableScroll } from '../prototypes/table/table.proto.js';
 import { Textarea } from '../prototypes/textarea/textarea.proto.js';
@@ -16,6 +16,8 @@ import { Text } from '../prototypes/text/text.proto.js';
 import { Title } from '../prototypes/title/title.proto.js';
 import { defineScene } from '../workbench/types.js';
 import { FolioScene, FolioWorkspace, PageIntro, Person } from './folio/folio.shared.js';
+
+const { TagsInput } = await import('../prototypes/tags-input/tags-input.proto.js');
 
 const members = [
   {
