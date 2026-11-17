@@ -44,7 +44,8 @@ interface Hold {
   readonly timer: ReturnType<typeof setTimeout>;
 }
 
-const nativeSelector = 'a[href], input, select, textarea, audio[controls], video[controls], img';
+const nativeSelector =
+  'a[href], input, select, textarea, [data-input-focus-scope], audio[controls], video[controls], img';
 const HOLD_DURATION = 500;
 const HOLD_DRIFT = 10;
 

@@ -158,10 +158,10 @@ function focusRow(panel: HTMLElement, option: HTMLElement | undefined): void {
   }
   const row = option.getBoundingClientRect();
   const frame = scroller.getBoundingClientRect();
-  if (row.bottom > frame.bottom - 4) {
-    scroller.scrollTop += row.bottom - frame.bottom + 4;
-  } else if (row.top < frame.top + 4) {
-    scroller.scrollTop -= frame.top + 4 - row.top;
+  if (row.bottom > frame.bottom) {
+    scroller.scrollTop += row.bottom - frame.bottom;
+  } else if (row.top < frame.top) {
+    scroller.scrollTop -= frame.top - row.top;
   }
 }
 

@@ -14,6 +14,7 @@ import { Checkbox } from '../binary-controls/binary-controls.proto.js';
 import { IconButton } from '../button/button.proto.js';
 import { Card } from '../card/card.proto.js';
 import { Icon } from '../icon/icon.proto.js';
+import { Input } from '../input/input.proto.js';
 import { Link } from '../link/link.proto.js';
 import { Text } from '../text/text.proto.js';
 import { ContextMenu } from './context-menu.proto.js';
@@ -200,13 +201,10 @@ function NativeBehavior(): ReactElement {
             data-surface="base"
           >
             <FileIdentity name="Release notes">{trigger}</FileIdentity>
-            <p className="context-study-selection" dir="auto">
+            <Text className="context-study-selection" size="body-s" color="secondary" dir="auto">
               Select part of this sentence and right-click it.
-            </p>
-            <label className="context-study-field">
-              Revision note
-              <input defaultValue="Fixes in this release" />
-            </label>
+            </Text>
+            <Input size="s" label="Revision note" defaultValue="Fixes in this release" />
             <Link href="?item=04-document-reader">Open the source document</Link>
             {panel}
           </Card>

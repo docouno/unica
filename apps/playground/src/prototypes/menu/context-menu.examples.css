@@ -132,35 +132,6 @@
   gap: var(--space-12);
 }
 
-.context-study-note > p {
-  margin: 0;
-  color: var(--fg-secondary);
-  font-size: var(--text-size-body-s);
-}
-
-.context-study-field {
-  display: grid;
-  gap: var(--space-4);
-  max-inline-size: 100%;
-  font-size: var(--text-size-caption-l);
-  color: var(--fg-secondary);
-}
-
-.context-study-field > input {
-  font: inherit;
-  color: var(--fg-primary);
-  background: var(--control-bg);
-  border: 1px solid var(--control-border);
-  border-radius: var(--size-s-radius);
-  min-inline-size: 0;
-  padding: var(--space-8);
-}
-
-.context-study-field > input:focus-visible {
-  outline: 2px solid var(--focus-ring-color);
-  outline-offset: 2px;
-}
-
 @media (pointer: coarse) {
   .context-study-trigger {
     min-inline-size: 44px;
