@@ -1,0 +1,44 @@
+.suggestion-study-grid-proto {
+  display: grid;
+  inline-size: 100%;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr));
+  align-items: start;
+  gap: var(--space-24);
+}
+
+.suggestion-study-proto {
+  display: grid;
+  align-content: start;
+  gap: var(--space-12);
+  min-inline-size: 0;
+}
+
+.suggestion-usage-proto {
+  display: grid;
+  gap: var(--space-16);
+  inline-size: min(100%, 26rem);
+}
+
+.suggestion-usage-actions-proto {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-12);
+}
+
+[data-surface='overlay'] > .suggestion-study-grid-proto .suggestion-study-proto,
+[data-surface='overlay'] > .suggestion-live-stage-proto .suggestion-usage-proto {
+  box-sizing: border-box;
+  padding: var(--space-16);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--surface-s-radius);
+  background: color-mix(in oklab, var(--bg-surface) 94%, transparent);
+}
+
+.suggestion-live-stage-proto {
+  display: grid;
+  align-items: start;
+  justify-items: center;
+  inline-size: 100%;
+  min-block-size: 27rem;
+}
