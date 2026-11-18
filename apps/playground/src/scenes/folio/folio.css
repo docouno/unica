@@ -108,6 +108,20 @@
   gap: 14px;
   min-inline-size: 0;
 }
+.folio-collection-results {
+  container: collection-results / inline-size;
+}
+.folio-collection-footer {
+  display: grid;
+  align-items: center;
+  gap: var(--space-8) var(--space-16);
+}
+@container collection-results (inline-size >= 580px) {
+  .folio-collection-footer:has(nav) {
+    grid-template-columns: minmax(0, 1fr) minmax(360px, 1fr);
+    --pagination-align: end;
+  }
+}
 .folio-page-intro,
 .folio-section-heading {
   display: flex;
