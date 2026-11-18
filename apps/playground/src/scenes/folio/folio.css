@@ -9,6 +9,20 @@
   font-size: var(--text-size-body-s);
   line-height: var(--text-size-body-s-lh);
 }
+.folio-workspace-header {
+  flex-wrap: wrap;
+  row-gap: var(--space-8);
+}
+
+.folio-workspace-header .app-shell-header-content {
+  flex-basis: min(100%, 16rem);
+}
+
+.folio-workspace-header .app-shell-header-actions {
+  max-inline-size: 100%;
+  margin-inline-start: auto;
+}
+
 .folio-auth {
   min-block-size: 920px;
   display: flex;

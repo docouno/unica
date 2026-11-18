@@ -12,6 +12,11 @@ import {
   PlusIcon,
   SlackLogoIcon,
 } from '@phosphor-icons/react';
+import {
+  Breadcrumb,
+  BreadcrumbLink,
+  BreadcrumbPage,
+} from '../prototypes/breadcrumb/breadcrumb.proto.js';
 import { defineScene } from '../workbench/types.js';
 import { AsidePanel, WorkspaceNavigation } from '../prototypes/app-shell/app-shell.proto.js';
 import { Badge } from '../prototypes/badge/badge.proto.js';
@@ -50,7 +55,13 @@ function ExtensionsScene(): ReactElement {
         classic
         activeRail="extensions"
         minHeight={1160}
-        crumbs={['Platform Eng', 'Extensions', 'Connector catalog']}
+        breadcrumb={
+          <Breadcrumb size="s">
+            <BreadcrumbLink href="?item=02-workspace-overview">Platform Eng</BreadcrumbLink>
+            <span>Extensions</span>
+            <BreadcrumbPage>Connector catalog</BreadcrumbPage>
+          </Breadcrumb>
+        }
         leftAside={
           <AsidePanel title="Extensions">
             <Input

@@ -37,6 +37,11 @@ import { Tabs } from '../prototypes/tabs/tabs.proto.js';
 import { Text } from '../prototypes/text/text.proto.js';
 import { Title } from '../prototypes/title/title.proto.js';
 import { Divider } from '../prototypes/divider/divider.proto.js';
+import {
+  Breadcrumb,
+  BreadcrumbLink,
+  BreadcrumbPage,
+} from '../prototypes/breadcrumb/breadcrumb.proto.js';
 import { defineScene } from '../workbench/types.js';
 import { FolioScene, FolioWorkspace, Person, TeamMembers } from './folio/folio.shared.js';
 
@@ -113,7 +118,13 @@ function EditorScene(): ReactElement {
   return (
     <FolioScene>
       <FolioWorkspace
-        crumbs={['Platform Eng', 'Architecture', 'ADR-014 Traffic Draining']}
+        breadcrumb={
+          <Breadcrumb size="s">
+            <BreadcrumbLink href="?item=02-workspace-overview">Platform Eng</BreadcrumbLink>
+            <span>Architecture</span>
+            <BreadcrumbPage>ADR-014 Traffic Draining</BreadcrumbPage>
+          </Breadcrumb>
+        }
         documentTabs
         minHeight={1040}
         actions={

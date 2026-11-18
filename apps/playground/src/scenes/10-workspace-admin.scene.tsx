@@ -4,7 +4,11 @@ import { ArrowLeftIcon } from '@phosphor-icons/react';
 import { defineScene } from '../workbench/types.js';
 import { AppShell, Header, LeftRail } from '../prototypes/app-shell/app-shell.proto.js';
 import { Badge } from '../prototypes/badge/badge.proto.js';
-import { Breadcrumb } from '../prototypes/breadcrumb/breadcrumb.proto.js';
+import {
+  Breadcrumb,
+  BreadcrumbLink,
+  BreadcrumbPage,
+} from '../prototypes/breadcrumb/breadcrumb.proto.js';
 import { Button } from '../prototypes/button/button.proto.js';
 import { Card } from '../prototypes/card/card.proto.js';
 import { Toast } from '../prototypes/feedback/feedback.proto.js';
@@ -133,7 +137,11 @@ function WorkspaceAdminScene(): ReactElement {
               </>
             }
           >
-            <Breadcrumb items={['Platform Eng', 'Administration', 'Batch archive import']} />
+            <Breadcrumb size="s">
+              <BreadcrumbLink href="?item=02-workspace-overview">Platform Eng</BreadcrumbLink>
+              <span>Administration</span>
+              <BreadcrumbPage>Batch archive import</BreadcrumbPage>
+            </Breadcrumb>
           </Header>
         }
       >

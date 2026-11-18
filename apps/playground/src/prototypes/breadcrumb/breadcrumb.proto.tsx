@@ -1,44 +1,106 @@
-import type { ComponentPropsWithRef, ReactElement } from 'react';
+import { Children } from 'react';
+import type { ComponentPropsWithRef, ReactElement, ReactNode } from 'react';
 import './breadcrumb.css';
 
-export interface BreadcrumbItem {
-  readonly label: string;
-  readonly href?: string;
-}
+type BreadcrumbUnderline = 'always' | 'hover' | 'none';
+
 export interface BreadcrumbProps extends ComponentPropsWithRef<'nav'> {
-  readonly items: readonly (string | BreadcrumbItem)[];
+  readonly size?: 's' | 'm' | 'l';
+  readonly underline?: BreadcrumbUnderline;
+  readonly separator?: ReactNode;
 }
 
 export function Breadcrumb({
-  items,
+  size = 'm',
+  underline = 'always',
+  separator = '/',
+  children,
   className = '',
   ...props
 }: BreadcrumbProps): ReactElement | null {
-  if (!items.length) {
+  const items = Children.toArray(children).filter((item) => item !== '');
+  if (items.length === 0) {
     return null;
   }
+
   return (
-    <nav aria-label="Breadcrumb" {...props} className={`breadcrumb-proto ${className}`}>
-      <ol>
-        {items.map((item, index) => {
-          const entry = typeof item === 'string' ? { label: item } : item;
-          const current = index === items.length - 1;
-          return (
-            <li key={`${entry.label}-${index}`}>
-              {index > 0 && (
-                <span className="breadcrumb-separator-proto" aria-hidden="true">
-                  /
-                </span>
-              )}
-              {entry.href && !current ? (
-                <a href={entry.href}>{entry.label}</a>
-              ) : (
-                <span aria-current={current ? 'page' : undefined}>{entry.label}</span>
-              )}
-            </li>
-          );
-        })}
+    <nav
+      aria-label="Breadcrumb"
+      {...props}
+      className={`breadcrumb-proto ${className}`}
+      data-size={size}
+      data-underline={underline}
+    >
+      <ol
+        className="breadcrumb-proto-list"
+        role="list"
+        data-spacing-only={separator === null || undefined}
+      >
+        {Children.map(items, (item, index) => (
+          <li className="breadcrumb-proto-item">
+            {index > 0 && separator !== null && (
+              <span className="breadcrumb-proto-separator" aria-hidden="true">
+                {separator}
+              </span>
+            )}
+            <span className="breadcrumb-proto-value">{item}</span>
+          </li>
+        ))}
       </ol>
     </nav>
   );
+}
+
+export interface BreadcrumbLinkProps extends ComponentPropsWithRef<'a'> {
+  readonly href: string;
+  readonly underline?: BreadcrumbUnderline;
+  readonly disabled?: boolean;
+  readonly iconOnly?: boolean;
+  /** Workbench pins for the comparison rows. */
+  readonly previewState?: 'hover' | 'active';
+  readonly previewFocus?: boolean;
+}
+
+export function BreadcrumbLink({
+  href,
+  disabled = false,
+  underline,
+  iconOnly = false,
+  previewState,
+  previewFocus,
+  className = '',
+  ref,
+  ...props
+}: BreadcrumbLinkProps): ReactElement {
+  const nativeProps = disabled
+    ? {
+        children: props.children,
+        id: props.id,
+        'aria-label': props['aria-label'],
+        'aria-labelledby': props['aria-labelledby'],
+        'aria-describedby': props['aria-describedby'],
+        'aria-current': props['aria-current'],
+        'aria-disabled': true as const,
+        role: 'link',
+      }
+    : { ...props, href };
+
+  return (
+    <a
+      {...nativeProps}
+      className={`breadcrumb-proto-link ${className}`}
+      data-underline={underline}
+      data-icon-only={iconOnly || undefined}
+      data-preview-state={previewState}
+      data-preview-focus={previewFocus || undefined}
+      ref={ref}
+    />
+  );
+}
+
+export function BreadcrumbPage({
+  className = '',
+  ...props
+}: ComponentPropsWithRef<'span'>): ReactElement {
+  return <span {...props} aria-current="page" className={`breadcrumb-proto-page ${className}`} />;
 }

@@ -19,6 +19,7 @@ import { Link } from '../prototypes/link/link.proto.js';
 import { SegmentedControl } from '../prototypes/segmented-control/segmented-control.proto.js';
 import { Text } from '../prototypes/text/text.proto.js';
 import { Title } from '../prototypes/title/title.proto.js';
+import { Breadcrumb, BreadcrumbPage } from '../prototypes/breadcrumb/breadcrumb.proto.js';
 import { defineScene } from '../workbench/types.js';
 import {
   FolioScene,
@@ -117,7 +118,12 @@ function OverviewScene(): ReactElement {
     <FolioScene>
       <FolioWorkspace
         activeRail="overview"
-        crumbs={['Platform Eng', 'Overview']}
+        breadcrumb={
+          <Breadcrumb size="s">
+            <span>Platform Eng</span>
+            <BreadcrumbPage>Overview</BreadcrumbPage>
+          </Breadcrumb>
+        }
         minHeight={1060}
         actions={
           <div className="folio-row">

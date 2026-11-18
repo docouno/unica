@@ -10,6 +10,11 @@ import { Combobox } from '../prototypes/select/select.proto.js';
 import { CheckboxCard, RadioCard } from '../prototypes/choice-card/choice-card.proto.js';
 import { Textarea } from '../prototypes/textarea/textarea.proto.js';
 import { Text } from '../prototypes/text/text.proto.js';
+import {
+  Breadcrumb,
+  BreadcrumbLink,
+  BreadcrumbPage,
+} from '../prototypes/breadcrumb/breadcrumb.proto.js';
 import { defineScene } from '../workbench/types.js';
 import { FolioScene, FolioWorkspace, RunbookArticle } from './folio/folio.shared.js';
 
@@ -27,7 +32,13 @@ function PropertiesScene(): ReactElement {
   return (
     <FolioScene>
       <FolioWorkspace
-        crumbs={['Platform Eng', 'Runbooks', 'Zero-Downtime PG Failover']}
+        breadcrumb={
+          <Breadcrumb size="s">
+            <BreadcrumbLink href="?item=02-workspace-overview">Platform Eng</BreadcrumbLink>
+            <BreadcrumbLink href="?item=03-document-collection">Runbooks</BreadcrumbLink>
+            <BreadcrumbPage>Zero-Downtime PG Failover</BreadcrumbPage>
+          </Breadcrumb>
+        }
         documentTabs
         activeDocument="runbook"
         minHeight={1200}

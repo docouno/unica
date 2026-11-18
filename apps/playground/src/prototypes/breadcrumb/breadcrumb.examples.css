@@ -1,0 +1,14 @@
+.breadcrumb-example {
+  display: grid;
+  gap: var(--space-4);
+  min-inline-size: 0;
+}
+
+.breadcrumb-example-narrow {
+  max-inline-size: 320px;
+}
+
+.breadcrumb-example-overlay {
+  gap: var(--space-4);
+  margin: var(--space-8);
+}
