@@ -1,6 +1,6 @@
 # Toast design reference
 
-Status: visual candidate for review. This playground prototype defines the intended experience; it is not a library component or the final TypeScript API.
+Status: approved visual and interaction design (2026-11-18). Open `/?item=toast` in the playground. This prototype and handoff define the intended experience for the library implementation.
 
 ## Purpose and boundaries
 
