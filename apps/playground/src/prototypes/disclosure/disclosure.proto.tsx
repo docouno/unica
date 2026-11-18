@@ -9,6 +9,7 @@ import {
 } from 'react';
 import type { ComponentPropsWithRef, MouseEvent, ReactElement, ReactNode, RefObject } from 'react';
 import { CaretDownIcon } from '@phosphor-icons/react';
+import { Button } from '../button/button.proto.js';
 import './disclosure.css';
 
 export type DisclosureSize = 's' | 'm' | 'l';
@@ -17,6 +18,7 @@ type PreviewState = 'rest' | 'hover' | 'active' | 'focus';
 
 interface DisclosureState {
   readonly panelId: string;
+  readonly size: DisclosureSize;
   readonly open: boolean;
   readonly disabled: boolean;
   readonly toggle: (trigger: HTMLButtonElement) => void;
@@ -67,7 +69,9 @@ export function Collapsible({
   }
 
   return (
-    <DisclosureContext value={{ panelId, open: expanded, disabled, toggle, root, lastTrigger }}>
+    <DisclosureContext
+      value={{ panelId, size, open: expanded, disabled, toggle, root, lastTrigger }}
+    >
       <div
         {...props}
         className={`collapsible-proto ${className}`}
@@ -92,6 +96,7 @@ interface DisclosureTriggerProps extends TriggerProps {
 }
 
 function DisclosureTrigger({
+  ref,
   children,
   className = '',
   disabled = false,
@@ -126,18 +131,23 @@ function DisclosureTrigger({
     <CaretDownIcon className="disclosure-caret-proto" weight="bold" aria-hidden="true" />
   );
   return (
-    <button
+    <Button
       {...props}
       {...triggerProps}
+      {...(ref === undefined ? {} : { ref })}
       type="button"
+      variant="ghost"
+      tone="neutral"
+      size={disclosure.size}
+      width="full"
       className={`disclosure-trigger-proto ${className}`}
       data-indicator={indicator}
-      data-preview={previewState}
+      previewState={previewState}
     >
       {indicator === 'start' && caret}
       <span className="disclosure-label-proto">{children}</span>
       {indicator === 'end' && caret}
-    </button>
+    </Button>
   );
 }
 

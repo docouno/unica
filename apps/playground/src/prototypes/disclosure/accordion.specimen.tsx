@@ -1,9 +1,12 @@
 import { useEffect, useState } from 'react';
 import type { ReactElement } from 'react';
+import { StarIcon } from '@phosphor-icons/react';
 import { defineSpecimen } from '../../workbench/types.js';
-import { Button } from '../button/button.proto.js';
+import { Checkbox } from '../binary-controls/binary-controls.proto.js';
+import { Button, IconButton } from '../button/button.proto.js';
 import { Card } from '../card/card.proto.js';
-import { Code } from '../code/code.proto.js';
+import { Code, CodeBlock } from '../code/code.proto.js';
+import type { GlyphProps } from '../icon/icon.proto.js';
 import {
   PopoverBody,
   PopoverContent,
@@ -140,7 +143,7 @@ function ReleasePreview(): ReactElement {
   }
 
   return (
-    <Card className="disclosure-study-preview">
+    <Card>
       <Title as="h2" size="heading-s">
         Release preview
       </Title>
@@ -198,6 +201,129 @@ function OnOverlay(): ReactElement {
   );
 }
 
+const changedFiles = [
+  {
+    name: 'pricing.ts',
+    diff: '- return net + tax;\n+ return round(net + tax);',
+  },
+  {
+    name: 'pricing.test.ts',
+    diff: '- expect(total).toBe(218.9);\n+ expect(total).toBe(219);',
+  },
+] as const;
+
+function FileReview(): ReactElement {
+  const [expanded, setExpanded] = useState<readonly string[]>(['pricing.ts']);
+  const [reviewed, setReviewed] = useState<readonly string[]>(['pricing.test.ts']);
+
+  function reviewFile(name: string, checked: boolean): void {
+    setReviewed((current) =>
+      checked ? [...current, name] : current.filter((file) => file !== name),
+    );
+    if (checked) {
+      setExpanded((current) => current.filter((file) => file !== name));
+    }
+  }
+
+  return (
+    <Card>
+      <div className="disclosure-study-summary">
+        <Title as="h2" size="heading-s">
+          Changed files
+        </Title>
+        <Text size="caption-l" color="muted" role="status" dir="auto">
+          {reviewed.length} of {changedFiles.length} reviewed
+        </Text>
+      </div>
+      <Accordion headingLevel={3} size="s" value={expanded} onValueChange={setExpanded}>
+        {changedFiles.map(({ name, diff }) => (
+          <AccordionItem value={name} key={name}>
+            <AccordionTrigger
+              action={
+                <Checkbox
+                  size="s"
+                  label="Reviewed"
+                  aria-label={`Reviewed ${name}`}
+                  checked={reviewed.includes(name)}
+                  onCheckedChange={(checked) => reviewFile(name, checked)}
+                />
+              }
+            >
+              <Code plate={false}>{name}</Code>
+            </AccordionTrigger>
+            <AccordionContent>
+              <CodeBlock aria-label={`Changes to ${name}`}>{diff}</CodeBlock>
+            </AccordionContent>
+          </AccordionItem>
+        ))}
+      </Accordion>
+    </Card>
+  );
+}
+
+const queries = [
+  { name: 'Open incidents', description: 'Unresolved incidents from the last 24 hours.' },
+  { name: 'Slow requests', description: 'Requests taking longer than 500 ms in the last hour.' },
+] as const;
+
+function FilledStarIcon(props: GlyphProps): ReactElement {
+  return <StarIcon {...props} weight="fill" />;
+}
+
+function QueryLibrary(): ReactElement {
+  const [favorites, setFavorites] = useState<readonly string[]>(['Slow requests']);
+
+  return (
+    <Card>
+      <Title as="h2" size="heading-s">
+        Query library
+      </Title>
+      <Accordion headingLevel={3} size="s" defaultValue={['Slow requests']}>
+        {queries.map(({ name, description }) => {
+          const favorite = favorites.includes(name);
+          return (
+            <AccordionItem value={name} key={name}>
+              <AccordionTrigger
+                action={
+                  <IconButton
+                    size="s"
+                    variant="ghost"
+                    tone="neutral"
+                    icon={favorite ? FilledStarIcon : StarIcon}
+                    aria-label={`Favorite ${name}`}
+                    title={favorite ? 'Remove from favorites' : 'Add to favorites'}
+                    pressed={favorite}
+                    onPressedChange={(pressed) =>
+                      setFavorites((current) =>
+                        pressed ? [...current, name] : current.filter((query) => query !== name),
+                      )
+                    }
+                  />
+                }
+              >
+                {name}
+              </AccordionTrigger>
+              <AccordionContent>
+                <span dir="auto">{description}</span>
+              </AccordionContent>
+            </AccordionItem>
+          );
+        })}
+      </Accordion>
+    </Card>
+  );
+}
+
+function HeaderActions(): ReactElement {
+  return (
+    <div className="disclosure-study-actions">
+      <ReleasePreview />
+      <FileReview />
+      <QueryLibrary />
+    </div>
+  );
+}
+
 export default defineSpecimen({
   id: 'accordion',
   title: 'Accordion',
@@ -249,8 +375,7 @@ export default defineSpecimen({
       id: 'actions',
       title: 'Independent header actions',
       kind: 'context',
-      caption: 'Copy link works while the section is closed.',
-      render: () => <ReleasePreview />,
+      render: () => <HeaderActions />,
     },
   ],
 });

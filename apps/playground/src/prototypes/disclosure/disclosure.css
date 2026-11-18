@@ -87,29 +87,35 @@
   padding-inline-end: var(--disclosure-inset);
 }
 
-.disclosure-trigger-proto {
+.disclosure-trigger-proto.button-proto[data-variant='ghost'] {
+  --button-border-width: 0px;
+
+  min-block-size: var(--disclosure-target);
+  padding: var(--disclosure-block-pad) var(--disclosure-inset);
+  border-radius: var(--disclosure-radius);
+  font-size: var(--disclosure-label-size);
+  line-height: var(--disclosure-label-line);
+  text-align: start;
+}
+
+.disclosure-trigger-proto.button-proto[data-variant='ghost'][aria-expanded='true'] {
+  --button-bg: transparent;
+  --button-hover-bg: var(--button-ghost-hover-bg);
+}
+
+.disclosure-trigger-proto > .button-proto-content,
+.disclosure-trigger-proto .button-proto-label {
+  inline-size: 100%;
+}
+
+.disclosure-trigger-proto .button-proto-label {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
   align-items: start;
-  align-content: center;
   gap: var(--disclosure-gap);
-  inline-size: 100%;
-  min-block-size: var(--disclosure-target);
-  padding: var(--disclosure-block-pad) var(--disclosure-inset);
-  border: 0;
-  border-radius: var(--disclosure-radius);
-  background: transparent;
-  color: var(--fg-primary);
-  font-family: inherit;
-  font-size: var(--disclosure-label-size);
-  font-weight: 600;
-  line-height: var(--disclosure-label-line);
-  text-align: start;
-  cursor: pointer;
-  transition: background-color min(var(--disclosure-duration), 100ms) ease-out;
 }
 
-.disclosure-trigger-proto[data-indicator='end'] {
+.disclosure-trigger-proto[data-indicator='end'] .button-proto-label {
   grid-template-columns: minmax(0, 1fr) auto;
 }
 
@@ -117,7 +123,11 @@
   > .collapsible-proto {
   --disclosure-start: var(--disclosure-label-inset);
 
-  & > .accordion-header-proto > .accordion-heading-proto > .disclosure-trigger-proto {
+  &
+    > .accordion-header-proto
+    > .accordion-heading-proto
+    > .disclosure-trigger-proto
+    .button-proto-label {
     grid-template-columns: auto minmax(0, 1fr);
 
     & > .disclosure-caret-proto {
@@ -158,28 +168,8 @@
   color: var(--fg-secondary);
 }
 
-.disclosure-trigger-proto:not(:disabled)[data-preview='hover'] {
-  background-color: color-mix(in srgb, var(--fg-primary) 8%, transparent);
-}
-
-@media (hover: hover) {
-  .disclosure-trigger-proto:not(:disabled, [data-preview]):hover {
-    background-color: color-mix(in srgb, var(--fg-primary) 8%, transparent);
-  }
-}
-
-.disclosure-trigger-proto:not(:disabled):is(:active:not([data-preview]), [data-preview='active']) {
-  background-color: color-mix(in srgb, var(--fg-primary) 14%, transparent);
-}
-
-.disclosure-trigger-proto:not(:disabled):is(:focus-visible, [data-preview='focus']) {
-  outline: 2px solid var(--focus-ring-color);
+.disclosure-trigger-proto.button-proto:not(:disabled):is(:focus-visible, [data-preview='focus']) {
   outline-offset: -2px;
-}
-
-.disclosure-trigger-proto:disabled {
-  color: color-mix(in srgb, var(--fg-disabled) 74%, var(--fg-primary));
-  cursor: default;
 }
 
 .disclosure-trigger-proto:disabled .disclosure-caret-proto {
@@ -223,7 +213,6 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .disclosure-trigger-proto,
   .disclosure-caret-proto {
     transition: none;
   }
@@ -239,25 +228,5 @@
   .disclosure-caret-proto,
   .disclosure-trigger-proto[aria-expanded='true']:not(:disabled) .disclosure-caret-proto {
     color: inherit;
-  }
-
-  .disclosure-trigger-proto:disabled {
-    color: GrayText;
-  }
-
-  .disclosure-trigger-proto:not(:disabled):is(
-      :hover,
-      :active,
-      [data-preview='hover'],
-      [data-preview='active']
-    ) {
-    forced-color-adjust: none;
-    background-color: Highlight;
-    color: HighlightText;
-    --disclosure-focused-ink: HighlightText;
-  }
-
-  .disclosure-trigger-proto:not(:disabled):is(:focus-visible, [data-preview='focus']) {
-    outline-color: var(--disclosure-focused-ink, CanvasText);
   }
 }
