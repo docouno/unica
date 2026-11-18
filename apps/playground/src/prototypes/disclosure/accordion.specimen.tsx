@@ -121,28 +121,54 @@ function TriggerStudy(): ReactElement {
 
 function Settings(): ReactElement {
   return (
-    <Card className="disclosure-study-card">
+    <Card className="disclosure-study-settings">
       <Title as="h2" size="heading-s">
         Notifications
       </Title>
       <Accordion headingLevel={3} size="s" defaultValue={['digest']}>
         <AccordionItem value="digest">
-          <AccordionTrigger action={<Switch size="s" aria-label="Weekly digest" defaultChecked />}>
-            Weekly digest for subscribed workspace owners
+          <AccordionTrigger
+            action={
+              <Switch
+                className="disclosure-study-channel"
+                size="s"
+                label="Email"
+                aria-label="Email weekly digest"
+                defaultChecked
+              />
+            }
+          >
+            Weekly digest
           </AccordionTrigger>
           <AccordionContent>
-            <Checkbox size="s" label="Include unresolved reviews" defaultChecked />
+            <div className="disclosure-study-notification">
+              <span dir="auto">Every Monday at 09:00 UTC.</span>
+              <Checkbox size="s" label="Include unresolved reviews" defaultChecked />
+            </div>
           </AccordionContent>
         </AccordionItem>
-        <AccordionItem value="activity">
-          <AccordionTrigger action={<Switch size="s" aria-label="Activity alerts" />}>
-            Activity alerts
+        <AccordionItem value="reminders">
+          <AccordionTrigger
+            action={
+              <Switch
+                className="disclosure-study-channel"
+                size="s"
+                label="Email"
+                aria-label="Email upcoming review reminders"
+              />
+            }
+          >
+            Upcoming review reminders
           </AccordionTrigger>
-          <AccordionContent>Send a notification when someone mentions you.</AccordionContent>
+          <AccordionContent>
+            <span dir="auto">Remind reviewers two days before a review is due.</span>
+          </AccordionContent>
         </AccordionItem>
         <AccordionItem value="deliveries">
           <AccordionTrigger>Delivery history</AccordionTrigger>
-          <AccordionContent>Last digest sent on Monday at 09:00 UTC.</AccordionContent>
+          <AccordionContent>
+            <span dir="auto">Last digest sent on Monday at 09:00 UTC.</span>
+          </AccordionContent>
         </AccordionItem>
       </Accordion>
     </Card>
@@ -214,7 +240,7 @@ export default defineSpecimen({
       title: 'Independent header actions',
       kind: 'context',
       caption:
-        'Switches control notifications. Headings open details, with the same chevron column on every row.',
+        'Email switches turn delivery on or off. Open a heading to see its schedule or options.',
       render: () => <Settings />,
     },
   ],

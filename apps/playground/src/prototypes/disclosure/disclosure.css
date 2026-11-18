@@ -6,7 +6,13 @@
 .accordion-proto[data-dividers='true']
   > .collapsible-proto:not([hidden])
   ~ .collapsible-proto:not([hidden]) {
+  padding-block-start: var(--space-4);
   border-block-start: 1px solid var(--disclosure-divider-color);
+}
+
+.accordion-proto[data-dividers='true']
+  > .collapsible-proto:not([hidden]):has(~ .collapsible-proto:not([hidden])) {
+  padding-block-end: var(--space-4);
 }
 
 .collapsible-proto {

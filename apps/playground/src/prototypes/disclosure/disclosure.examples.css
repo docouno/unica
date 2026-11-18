@@ -29,6 +29,20 @@
   inline-size: min(100%, 34rem);
 }
 
+.disclosure-study-settings.card-proto {
+  inline-size: min(100%, 27rem);
+}
+
+.disclosure-study-channel.binary-control {
+  flex-direction: row-reverse;
+  color: var(--fg-secondary);
+}
+
+.disclosure-study-notification {
+  display: grid;
+  justify-items: start;
+}
+
 .disclosure-study-overlay.popover-content-proto {
   inline-size: min(100%, 25rem);
 }
