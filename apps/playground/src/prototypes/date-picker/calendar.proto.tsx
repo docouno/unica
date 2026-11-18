@@ -42,7 +42,8 @@ export interface CalendarProps extends Omit<
   readonly disabled?: boolean | undefined;
   readonly onViewAvailability?: ((empty: boolean) => void) | undefined;
   readonly showFeedback?: boolean | undefined;
-  readonly onPreview?: ((date: string) => void) | undefined;
+  readonly onFeedback?: ((issue: string, preview: string) => void) | undefined;
+  readonly editingDate?: string | undefined;
   readonly previewAnchor?: string | undefined;
   readonly previewCandidate?: string | undefined;
   readonly previewRange?: DateRange | undefined;
@@ -54,6 +55,10 @@ export interface CalendarProps extends Omit<
 function dayInMonth(day: string, month: string): string {
   const last = Number(addDays(addMonths(month, 1), -1).slice(8));
   return `${month.slice(0, 7)}-${String(Math.min(Number(day.slice(8)), last)).padStart(2, '0')}`;
+}
+
+function orderedRange(first: string, second: string): DateRange {
+  return first <= second ? [first, second] : [second, first];
 }
 
 export function Calendar({
@@ -79,7 +84,8 @@ export function Calendar({
   indicators = [],
   readOnly,
   disabled,
-  onPreview,
+  onFeedback,
+  editingDate,
   showFeedback = true,
   onViewAvailability,
   previewRange,
@@ -107,19 +113,22 @@ export function Calendar({
       defaultValue ||
       (today.startsWith(month.slice(0, 7)) ? today : `${month.slice(0, 7)}-01`),
   );
-  const [reason, setReason] = useState('');
+  const [rejectedDate, setRejectedDate] = useState('');
   const selected = value ?? localValue;
-  const currentRange = anchor ? undefined : (range ?? localRange);
-  const pending =
-    previewRange ??
-    (anchor
-      ? ([
-          anchor < hovered ? anchor : hovered || anchor,
-          anchor < hovered ? hovered : anchor,
-        ] as DateRange)
-      : undefined);
+  const currentRange = range ?? localRange;
   const fixedPoint = previewAnchor || anchor;
-  const candidate = previewCandidate || (anchor && hovered !== anchor ? hovered : '');
+  const inspectedDate = previewCandidate || rejectedDate || hovered;
+  const replacingIncompleteStart = Boolean(onSelect && editingDate && !range);
+  const canPreview =
+    !replacingIncompleteStart &&
+    fixedPoint &&
+    inspectedDate &&
+    (inspectedDate === rejectedDate ||
+      (inspectedDate !== editingDate && (inspectedDate !== fixedPoint || Boolean(range))));
+  const pending =
+    readOnly || disabled
+      ? undefined
+      : (previewRange ?? (canPreview ? orderedRange(fixedPoint, inspectedDate) : undefined));
   const date = dateObject(viewMonth);
   const year = date.getUTCFullYear();
   const monthIndex = date.getUTCMonth();
@@ -163,28 +172,31 @@ export function Calendar({
   useEffect(() => {
     onViewAvailability?.(noAvailability);
   }, [noAvailability, onViewAvailability]);
-  const rangeReason = (candidate: DateRange): string => rangeIssue(candidate, constraints);
-  const pendingIssue =
-    pending && (previewRange || (hovered && hovered !== anchor) || reason)
-      ? rangeReason(pending)
-      : '';
-  const proposedRange = pending && !pendingIssue && !disabled && !readOnly ? pending : undefined;
-  const ribbon = proposedRange ?? currentRange;
+  const feedbackIssue = disabled
+    ? ''
+    : blockedReason(inspectedDate) || (pending ? rangeIssue(pending, constraints) : '');
+  const proposedRange = pending && !feedbackIssue ? pending : undefined;
+  const previewLabel = proposedRange ? `Preview · ${rangeDurationLabel(proposedRange)}` : '';
+  useEffect(() => {
+    onFeedback?.(feedbackIssue, previewLabel);
+  }, [onFeedback, feedbackIssue, previewLabel]);
   const pick = (day: string): void => {
-    if (disabled || readOnly || blockedReason(day)) {
+    if (disabled || readOnly) {
       return;
     }
+    const selectionAnchor = onSelect && !replacingIncompleteStart ? previewAnchor : anchor;
+    const next = selectionAnchor ? orderedRange(selectionAnchor, day) : undefined;
+    if (blockedReason(day) || (next && rangeIssue(next, constraints))) {
+      setHovered(day);
+      setRejectedDate(day);
+      return;
+    }
+    setRejectedDate('');
     if (mode === 'range' && !onSelect) {
-      if (!anchor) {
+      if (!next) {
         setAnchor(day);
         setHovered(day);
       } else {
-        const next: DateRange = day < anchor ? [day, anchor] : [anchor, day];
-        const error = rangeReason(next);
-        if (error) {
-          setReason(error);
-          return;
-        }
         setLocalRange(next);
         onRangeChange?.(next);
         setAnchor('');
@@ -201,8 +213,6 @@ export function Calendar({
     }
     setView(next);
     setHovered('');
-    setReason('');
-    onPreview?.('');
     requestAnimationFrame(() => {
       const calendar = root.current;
       const selector = returnTo
@@ -235,6 +245,7 @@ export function Calendar({
     if (Number(next.slice(0, 4)) < 1 || Number(next.slice(0, 4)) > 9999) {
       return;
     }
+    setHovered('');
     setViewMonth(next);
   };
   const focusDate = (day: string): void => {
@@ -327,20 +338,25 @@ export function Calendar({
               {Array.from({ length: 7 }, (_, col) => {
                 const day = addDays(base, row * 7 + col - offset);
                 const outside = day.slice(0, 7) !== base.slice(0, 7);
-                const inRange = !outside && ribbon && day >= ribbon[0] && day <= ribbon[1];
-                const start = inRange && day === ribbon?.[0];
-                const end = inRange && day === ribbon?.[1];
-                const proposedDay = Boolean(
-                  proposedRange && candidate && day === candidate && day !== fixedPoint,
-                );
+                const acceptedDay =
+                  currentRange && day >= currentRange[0] && day <= currentRange[1];
+                const acceptedEdge = day === currentRange?.[0] || day === currentRange?.[1];
+                const coveredByPreview =
+                  proposedRange && day >= proposedRange[0] && day <= proposedRange[1];
+                const band = acceptedDay ? currentRange : proposedRange;
+                const inRange = !outside && (acceptedDay || coveredByPreview);
+                const start =
+                  inRange && day === band?.[0] && !(coveredByPreview && proposedRange[0] < day);
+                const end =
+                  inRange && day === band?.[1] && !(coveredByPreview && proposedRange[1] > day);
+                const proposedDay =
+                  coveredByPreview && day === inspectedDate && day !== fixedPoint && !acceptedEdge;
+                const isFixed = fixedPoint === day;
+                const draftAnchor = isFixed && currentRange && !acceptedEdge;
+                const rejected = !readOnly && !disabled && day === inspectedDate && feedbackIssue;
                 const edge =
-                  mode === 'range'
-                    ? Boolean(fixedPoint && day === fixedPoint) || (!proposedDay && (start || end))
-                    : day === selected;
-                const committed =
-                  mode === 'range'
-                    ? Boolean(currentRange && day >= currentRange[0] && day <= currentRange[1])
-                    : day === selected;
+                  mode === 'range' ? acceptedEdge || (isFixed && !currentRange) : day === selected;
+                const committed = mode === 'range' ? Boolean(acceptedDay) : day === selected;
                 const unavailableReason = blockedReason(day);
                 return (
                   <div
@@ -350,7 +366,7 @@ export function Calendar({
                     data-range={inRange || undefined}
                     data-start={start || undefined}
                     data-end={end || undefined}
-                    data-preview-range={Boolean(proposedRange && inRange) || undefined}
+                    data-preview-range={Boolean(inRange && !acceptedDay) || undefined}
                     aria-selected={!outside && committed}
                   >
                     {!outside && (
@@ -360,6 +376,8 @@ export function Calendar({
                         data-date={day}
                         data-edge={edge || undefined}
                         data-candidate={proposedDay || undefined}
+                        data-draft-anchor={Boolean(draftAnchor) || undefined}
+                        data-rejected={Boolean(rejected) || undefined}
                         data-actionable={
                           (!readOnly && !disabled && !unavailableReason) || undefined
                         }
@@ -368,7 +386,7 @@ export function Calendar({
                         disabled={disabled}
                         aria-disabled={Boolean(unavailableReason) || undefined}
                         aria-current={day === today ? 'date' : undefined}
-                        aria-label={`${dateLabel(day, locale, { weekday: 'long' })}${unavailableReason ? `, ${unavailableReason}` : ''}${indicators.includes(day) ? ', has events' : ''}`}
+                        aria-label={`${dateLabel(day, locale, { weekday: 'long' })}${isFixed && (anchor || !currentRange) ? ', start date' : ''}${unavailableReason ? `, ${unavailableReason}` : ''}${indicators.includes(day) ? ', has events' : ''}`}
                         tabIndex={
                           day === active ||
                           (!(active >= visibleStart && active < visibleEnd) &&
@@ -382,14 +400,8 @@ export function Calendar({
                         onFocus={() => {
                           setActive(day);
                           setHovered(day);
-                          setReason(unavailableReason);
-                          onPreview?.(day);
                         }}
-                        onMouseEnter={() => {
-                          setHovered(day);
-                          setReason(unavailableReason);
-                          onPreview?.(day);
-                        }}
+                        onMouseEnter={() => setHovered(day)}
                       >
                         <span>{Number(day.slice(8))}</span>
                         {indicators.includes(day) && (
@@ -483,13 +495,7 @@ export function Calendar({
         <div
           className="calendar-months-proto"
           data-year={layout === 'year' || undefined}
-          onMouseLeave={() => {
-            if (!previewRange) {
-              setHovered('');
-            }
-            onPreview?.('');
-            setReason('');
-          }}
+          onMouseLeave={() => setHovered('')}
         >
           {Array.from({ length: count }, (_, index) =>
             renderMonth(addMonths(layout === 'year' ? `${year}-01-01` : viewMonth, index), index),
@@ -552,24 +558,32 @@ export function Calendar({
       )}
       {showFeedback &&
         view === 'days' &&
-        (mode === 'range' || unavailable.length > 0 || readOnly || noAvailability) && (
+        (mode === 'range' ||
+          min ||
+          max ||
+          unavailable.length > 0 ||
+          readOnly ||
+          noAvailability) && (
           <div
             className="calendar-feedback-proto"
             aria-live="polite"
-            data-error={Boolean(reason || pendingIssue) || undefined}
+            data-error={Boolean(feedbackIssue) || undefined}
           >
-            {reason ||
-              pendingIssue ||
-              (noAvailability ? 'No available dates in this view. Try another month.' : '') ||
-              (readOnly
-                ? 'Read only · browse without changing dates'
-                : proposedRange && candidate
-                  ? `Preview · ${rangeDurationLabel(proposedRange)}`
-                  : anchor
-                    ? 'Choose an end date'
-                    : mode === 'range'
-                      ? 'Choose a start and end date'
-                      : 'Unavailable dates cannot be selected')}
+            <bdi>
+              {feedbackIssue ||
+                (noAvailability ? 'No available dates in this view. Try another month.' : '') ||
+                (readOnly
+                  ? 'Read only · browse without changing dates'
+                  : previewLabel
+                    ? previewLabel
+                    : anchor
+                      ? `Start: ${dateLabel(anchor, locale)}. Choose an end date.`
+                      : currentRange
+                        ? rangeDurationLabel(currentRange)
+                        : mode === 'range'
+                          ? 'Choose a start and end date'
+                          : 'Unavailable dates cannot be selected')}
+            </bdi>
           </div>
         )}
     </div>

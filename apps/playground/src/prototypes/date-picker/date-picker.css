@@ -223,11 +223,12 @@
   cursor: pointer;
 }
 /* Interactions shade the role beneath the day. The ribbon remains continuous. */
-.calendar-cell-proto[data-range] .calendar-day-proto:not([data-edge], [data-candidate]) {
+.calendar-cell-proto[data-range]
+  .calendar-day-proto:not([data-edge], [data-candidate], [data-draft-anchor], [data-rejected]) {
   --date-state-hover: color-mix(in oklab, var(--accent-solid) 15%, transparent);
   --date-state-press: color-mix(in oklab, var(--accent-solid) 25%, transparent);
 }
-.calendar-day-proto[data-candidate] {
+.calendar-day-proto:is([data-candidate], [data-draft-anchor]) {
   --date-state-rest: var(--accent-soft-bg);
   --date-state-hover: color-mix(in oklab, var(--date-state-rest) 88%, var(--accent-solid));
   --date-state-press: color-mix(in oklab, var(--date-state-rest) 82%, var(--accent-solid));
@@ -259,6 +260,19 @@
   cursor: not-allowed;
   text-decoration: line-through;
   text-decoration-thickness: 1px;
+}
+.calendar-day-proto[data-rejected]:not([data-edge], [data-draft-anchor]) {
+  --date-state-rest: var(--status-danger-soft-bg);
+  --date-state-hover: color-mix(in oklab, var(--date-state-rest) 94%, var(--status-danger-solid));
+  --date-state-press: color-mix(in oklab, var(--date-state-rest) 88%, var(--status-danger-solid));
+  color: var(--status-danger-soft-fg);
+}
+.calendar-day-proto[data-rejected][data-edge] {
+  box-shadow: inset 0 0 0 2px
+    color-mix(in oklab, var(--fg-on-accent) 80%, var(--status-danger-soft-fg));
+}
+.calendar-day-proto[data-rejected][data-draft-anchor] {
+  box-shadow: inset 0 0 0 2px var(--status-danger-soft-fg);
 }
 .calendar-day-proto:disabled {
   color: var(--fg-disabled);
@@ -574,7 +588,7 @@
   text-align: start;
   unicode-bidi: isolate;
 }
-.date-range-summary-proto[data-error] {
+:is(.date-range-summary-proto, .date-picker-feedback-proto)[data-error] {
   color: var(--status-danger-soft-fg);
 }
 
@@ -595,12 +609,18 @@
     --date-state-press: Highlight;
     color: HighlightText;
   }
-  .calendar-day-proto[data-candidate] {
+  .calendar-day-proto:is([data-candidate], [data-draft-anchor], [data-rejected]:not([data-edge])) {
     forced-color-adjust: none;
     --date-state-rest: Canvas;
     --date-state-hover: Canvas;
     --date-state-press: Canvas;
     border-color: Highlight;
     color: CanvasText;
+  }
+  .calendar-day-proto[data-rejected][data-edge] {
+    border-color: HighlightText;
+  }
+  .calendar-day-proto[data-rejected][data-draft-anchor] {
+    border-color: CanvasText;
   }
 }

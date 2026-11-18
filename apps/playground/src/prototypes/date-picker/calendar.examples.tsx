@@ -69,7 +69,7 @@ export default defineSpecimen({
       title: 'Range geometry',
       kind: 'states',
       caption:
-        'Accepted dates have solid accent ends. While choosing, the fixed date stays solid and the proposed date and interval use softer fills.',
+        'Accepted dates keep their fills while you choose. Softer accents show the proposed changes and the feedback line gives the proposed duration.',
       surface: 'overlay',
       overlayStage: true,
       render: () => (
@@ -133,10 +133,11 @@ export default defineSpecimen({
           </DateStudy>
           <DateStudy
             label="Blocked end date · pinned"
-            note="September 22 is available on its own. From the 14th, that range would cross unavailable days."
+            note="The accepted period stays visible. The new start is September 14. Ending on the 22nd would cross unavailable days."
           >
             <Calendar
               mode="range"
+              range={['2026-09-08', '2026-09-11']}
               previewAnchor="2026-09-14"
               previewCandidate="2026-09-22"
               previewRange={['2026-09-14', '2026-09-22']}
