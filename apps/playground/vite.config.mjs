@@ -46,6 +46,11 @@ export default defineConfig({
               test: /\/src\/prototypes\/menu\//,
               includeDependenciesRecursively: false,
             },
+            {
+              name: 'pagination',
+              test: /\/src\/prototypes\/pagination\//,
+              includeDependenciesRecursively: false,
+            },
           ],
         },
       },
