@@ -48,6 +48,7 @@ const rows = [
     date: '17 Sep 2026',
     initials: 'DB',
     owner: 'DB team',
+    verified: true,
   },
   {
     title: 'Edge TLS Certificate Rotation',
@@ -55,6 +56,7 @@ const rows = [
     date: '16 Sep 2026',
     initials: 'ED',
     owner: 'Edge SRE',
+    verified: true,
   },
   {
     title: 'Redis Cluster Eviction Policy',
@@ -62,6 +64,7 @@ const rows = [
     date: '15 Sep 2026',
     initials: 'NW',
     owner: 'Core team',
+    verified: true,
   },
   {
     title: 'Kafka Partition Rebalance Drill',
@@ -69,8 +72,77 @@ const rows = [
     date: '14 Sep 2026',
     initials: 'PE',
     owner: 'Platform',
+    verified: true,
+  },
+  {
+    title: 'Regional Ingress Failback',
+    tier: 'Tier-0',
+    date: '17 Sep 2026',
+    initials: 'ED',
+    owner: 'Edge SRE',
+    verified: true,
+  },
+  {
+    title: 'Restore the Artifact Registry',
+    tier: 'Tier-1',
+    date: '16 Sep 2026',
+    initials: 'PE',
+    owner: 'Platform',
+    verified: true,
+  },
+  {
+    title: 'Rotate the Secrets Signing Key',
+    tier: 'Tier-0',
+    date: '16 Sep 2026',
+    initials: 'SE',
+    owner: 'Security',
+    verified: true,
+  },
+  {
+    title: 'Replay the Billing Event Stream',
+    tier: 'Tier-1',
+    date: '15 Sep 2026',
+    initials: 'NW',
+    owner: 'Core team',
+    verified: true,
+  },
+  {
+    title: 'Restore a Database Snapshot',
+    tier: 'Tier-0',
+    date: '17 Sep 2026',
+    initials: 'DB',
+    owner: 'DB team',
+    verified: false,
+  },
+  {
+    title: 'Drain the CI Worker Pool',
+    tier: 'Tier-1',
+    date: '16 Sep 2026',
+    initials: 'PE',
+    owner: 'Platform',
+    verified: false,
+  },
+  {
+    title: 'Recover a Stalled Release',
+    tier: 'Tier-1',
+    date: '15 Sep 2026',
+    initials: 'PE',
+    owner: 'Platform',
+    verified: false,
+  },
+  {
+    title: 'Quarantine a Compromised Runner',
+    tier: 'Tier-1',
+    date: '14 Sep 2026',
+    initials: 'SE',
+    owner: 'Security',
+    verified: false,
   },
 ] as const;
+
+const tierZeroRows = rows.filter((row) => row.tier === 'Tier-0');
+const verifiedRows = rows.filter((row) => row.verified);
+const pageSize = 4;
 
 function RunbookMenu<T extends HTMLElement>({
   title,
@@ -124,6 +196,7 @@ function RunbookMenu<T extends HTMLElement>({
 
 function CollectionScene(): ReactElement {
   const [tab, setTab] = useState('all');
+  const [page, setPage] = useState(1);
   const [view, setView] = useState('list');
   const [selected, setSelected] = useState<readonly string[]>([rows[0].title, rows[1].title]);
   const [scope, setScope] = useState(true);
@@ -137,8 +210,28 @@ function CollectionScene(): ReactElement {
   if (windowFilter) {
     filters.push({ id: 'date', label: '14–17 Sep', removeLabel: 'Remove 14–17 Sep date filter' });
   }
-  const visibleRows =
-    tab === 'tier0' ? rows.filter((row) => row.tier === 'Tier-0') : tab === 'drafts' ? [] : rows;
+  const filteredRows =
+    tab === 'tier0'
+      ? tierZeroRows
+      : tab === 'verified'
+        ? verifiedRows
+        : tab === 'drafts'
+          ? []
+          : rows;
+  const pageStart = (page - 1) * pageSize;
+  const visibleRows = filteredRows.slice(pageStart, pageStart + pageSize);
+  const resultSummary =
+    visibleRows.length === 0
+      ? 'Showing 0 runbooks'
+      : visibleRows.length === 1
+        ? `Showing runbook ${pageStart + 1} of ${filteredRows.length}`
+        : `Showing ${pageStart + 1}–${pageStart + visibleRows.length} of ${filteredRows.length} runbooks`;
+  const pageTitles: readonly string[] = visibleRows.map((row) => row.title);
+  const selectedOnPage = pageTitles.filter((title) => selected.includes(title)).length;
+  function changeTab(value: string): void {
+    setTab(value);
+    setPage(1);
+  }
   const toggle = (title: string): void =>
     setSelected((current) =>
       current.includes(title) ? current.filter((item) => item !== title) : [...current, title],
@@ -222,7 +315,7 @@ function CollectionScene(): ReactElement {
                   Runbooks & Playbooks
                 </Title>
                 <Badge size="s" status="success">
-                  28 verified
+                  {verifiedRows.length} verified
                 </Badge>
               </div>
               <Select
@@ -242,12 +335,12 @@ function CollectionScene(): ReactElement {
                 label="Runbook filter"
                 size="s"
                 value={tab}
-                onValueChange={setTab}
+                onValueChange={changeTab}
                 items={[
-                  { value: 'all', label: 'All (42)' },
-                  { value: 'tier0', label: 'Tier-0 (14)' },
-                  { value: 'verified', label: 'Verified (28)' },
-                  { value: 'drafts', label: 'Drafts (4)' },
+                  { value: 'all', label: `All (${rows.length})` },
+                  { value: 'tier0', label: `Tier-0 (${tierZeroRows.length})` },
+                  { value: 'verified', label: `Verified (${verifiedRows.length})` },
+                  { value: 'drafts', label: 'Drafts (0)' },
                 ]}
               />
               <TagGroup
@@ -271,7 +364,7 @@ function CollectionScene(): ReactElement {
                   event.preventDefault();
                   setScope(true);
                   setWindowFilter(true);
-                  setTab('all');
+                  changeTab('all');
                 }}
               >
                 Reset
@@ -329,12 +422,16 @@ function CollectionScene(): ReactElement {
               </Card>
             </div>
           </section>
-          <section className="folio-stack">
+          <section className="folio-stack folio-collection-results">
             <Text size="caption-l" color="muted">
-              Filtered to {visibleRows.length} operational runbooks modified between 14 Sep and 17
+              Filtered to {filteredRows.length} operational runbooks modified between 14 Sep and 17
               Sep 2026
             </Text>
-            {view === 'list' ? (
+            {visibleRows.length === 0 ? (
+              <Card variant="subtle">
+                <Text size="body-s">No drafts match this drill window.</Text>
+              </Card>
+            ) : view === 'list' ? (
               <TableScroll>
                 <Table>
                   <thead>
@@ -342,12 +439,14 @@ function CollectionScene(): ReactElement {
                       <th>
                         <Checkbox
                           size="s"
-                          aria-label="Select all runbooks"
-                          checked={selected.length === rows.length}
-                          indeterminate={selected.length > 0 && selected.length < rows.length}
+                          aria-label="Select all runbooks on this page"
+                          checked={selectedOnPage === pageTitles.length}
+                          indeterminate={selectedOnPage > 0 && selectedOnPage < pageTitles.length}
                           onChange={() =>
-                            setSelected(
-                              selected.length === rows.length ? [] : rows.map((row) => row.title),
+                            setSelected((current) =>
+                              selectedOnPage === pageTitles.length
+                                ? current.filter((title) => !pageTitles.includes(title))
+                                : [...new Set([...current, ...pageTitles])],
                             )
                           }
                         />
@@ -428,24 +527,28 @@ function CollectionScene(): ReactElement {
                 ))}
               </div>
             )}
-            {visibleRows.length === 0 && (
-              <Card variant="subtle">
-                <Text size="body-s">No drafts match this drill window.</Text>
-              </Card>
-            )}
             <div className="folio-row folio-between folio-wrap">
               <Text size="caption-l" color="muted">
-                {selected.length} selected · 28 verified runbooks in Platform Eng
+                <bdi>
+                  {selected.length} selected · {verifiedRows.length} verified runbooks in Platform
+                  Eng
+                </bdi>
               </Text>
               <Badge status="success" size="s">
                 99.4% SLA
               </Badge>
             </div>
-            <div className="folio-row folio-between folio-wrap">
-              <Text size="caption-l" color="muted">
-                Showing 1–{visibleRows.length} of 28 runbooks
+            <div className="folio-collection-footer">
+              <Text size="caption-l" color="muted" role="status">
+                <bdi>{resultSummary}</bdi>
               </Text>
-              <Pagination pageCount={5} />
+              <Pagination
+                size="s"
+                label="Runbook pages"
+                pageCount={Math.ceil(filteredRows.length / pageSize)}
+                page={page}
+                onPageChange={setPage}
+              />
             </div>
           </section>
           {notice && (
