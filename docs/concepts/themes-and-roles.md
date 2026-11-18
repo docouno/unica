@@ -51,6 +51,8 @@ upper corners, with a lighter translucent fill and popover shadow. Soft and Pixe
 opaque fills and their existing edge and shadow treatments. Material choices are theme tokens;
 the component specimen presents one current design per preset.
 
+Full-height side drawers can use `--overlay-rim-drawer-inline`. Frost places its highlight along the free vertical edge, which mirrors with the docked placement in RTL. The default rim supplies the treatment in the other presets.
+
 Floating elevation is calibrated per family through `--overlay-shadow-tooltip`,
 `--overlay-shadow-hover`, `--overlay-shadow-popover`, `--overlay-shadow-drawer` and
 `--overlay-shadow-modal`. A small passive preview needs a tighter shadow footprint than a

@@ -257,6 +257,17 @@
   border-inline-end: 0;
   padding-inline-end: var(--dialog-safe-end);
 }
+.dialog-layer:is([data-dialog-side='start'], [data-dialog-side='end'])
+  > .dialog-placement
+  > .dialog-surface::before {
+  box-shadow: var(--overlay-rim-drawer-inline, var(--overlay-rim));
+  mask-image: none;
+}
+.dialog-layer:is([data-dialog-side='start']:dir(ltr), [data-dialog-side='end']:dir(rtl))
+  > .dialog-placement
+  > .dialog-surface::before {
+  scale: -1 1;
+}
 .dialog-layer[data-dialog-side='top'] > .dialog-placement,
 .dialog-layer[data-dialog-side='bottom'] > .dialog-placement {
   padding-inline: 0;
