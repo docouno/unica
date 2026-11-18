@@ -1,0 +1,138 @@
+.wb-overlay-stage:has(> .unica-stage-content > .dialog-study) {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  align-content: start;
+  padding: 0;
+}
+.wb-overlay-stage:has(> .unica-stage-content > .dialog-study) > [data-unica-underlay] {
+  grid-area: 2 / 1;
+}
+.wb-overlay-stage:has(> .unica-stage-content > .dialog-study) > [data-unica-stage-scrim] {
+  display: none;
+}
+.unica-stage-content:has(> .dialog-study),
+.unica-stage-content > .dialog-study {
+  display: contents;
+}
+.dialog-study {
+  inline-size: 100%;
+  min-inline-size: 0;
+  isolation: isolate;
+}
+.dialog-study-controls {
+  grid-area: 1 / 1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-8) var(--space-16);
+  padding: var(--space-12) var(--space-16);
+  background: var(--bg-surface);
+  border-block-end: 1px solid var(--border-subtle);
+}
+.dialog-study-select {
+  display: flex;
+  min-inline-size: 0;
+  max-inline-size: 100%;
+  align-items: center;
+  gap: var(--space-8);
+  font-size: var(--text-size-caption-l);
+  font-weight: 600;
+}
+.dialog-study-select select {
+  flex: 1;
+  min-inline-size: 0;
+  min-block-size: 32px;
+  max-inline-size: 100%;
+  padding-inline: var(--space-8);
+  color: var(--fg-primary);
+  background: var(--bg-surface-subtle);
+  border: 1px solid var(--border-default);
+  border-radius: var(--size-s-radius);
+  font: inherit;
+}
+.dialog-study-select select:focus-visible {
+  outline: 2px solid var(--focus-ring-color);
+  outline-offset: 2px;
+}
+.dialog-study-stage {
+  grid-area: 2 / 1;
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  place-items: center;
+  block-size: var(--study-height);
+  min-inline-size: 0;
+  overflow: clip;
+}
+.dialog-study-form {
+  display: grid;
+  gap: var(--dialog-gap);
+  min-inline-size: 0;
+}
+.dialog-study-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-12);
+}
+.dialog-study-form-section {
+  display: grid;
+  gap: var(--space-12);
+}
+.dialog-study-form-section h3 {
+  margin: 0;
+  font: 600 var(--text-size-body-s) / var(--text-size-body-s-lh) var(--font-family-base);
+}
+.dialog-study-form-section + .dialog-study-form-section {
+  padding-block-start: var(--space-16);
+  border-block-start: 1px solid color-mix(in srgb, var(--fg-primary) 12%, transparent);
+}
+.dialog-study-form .textarea-shell-proto {
+  inline-size: 100%;
+}
+.dialog-study-stage .dialog-surface {
+  container: dialog-surface / inline-size;
+}
+@container dialog-surface (max-width: 410px) {
+  .dialog-study-fields {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+.dialog-study-notice {
+  position: absolute;
+  inset-inline: var(--space-12);
+  inset-block-end: var(--space-12);
+  display: flex;
+  justify-content: end;
+}
+.dialog-study-facts {
+  display: grid;
+  gap: var(--space-12);
+  margin: 0;
+}
+.dialog-study-facts > div {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  column-gap: var(--space-16);
+}
+.dialog-study-facts dt {
+  color: var(--fg-secondary);
+}
+.dialog-study-facts dd {
+  margin: 0;
+  font-weight: 500;
+}
+.dialog-drawer-launch {
+  display: grid;
+  justify-items: center;
+  gap: var(--space-8);
+}
+.dialog-drawer-launch[inert] {
+  visibility: hidden;
+}
+.dialog-drawer-launch > p {
+  margin: 0;
+  padding: var(--space-4) var(--space-8);
+  color: var(--fg-primary);
+  background: var(--bg-surface);
+}

@@ -51,6 +51,8 @@ upper corners, with a lighter translucent fill and popover shadow. Soft and Pixe
 opaque fills and their existing edge and shadow treatments. Material choices are theme tokens;
 the component specimen presents one current design per preset.
 
+Full-height side drawers can use `--overlay-rim-drawer-inline`. Frost places its highlight along the free vertical edge, which mirrors with the docked placement in RTL. The default rim supplies the treatment in the other presets.
+
 Floating elevation is calibrated per family through `--overlay-shadow-tooltip`,
 `--overlay-shadow-hover`, `--overlay-shadow-popover`, `--overlay-shadow-drawer` and
 `--overlay-shadow-modal`. A small passive preview needs a tighter shadow footprint than a
@@ -58,6 +60,10 @@ large panel. Dark Soft/Frost tooltips use compact contact and ambient shadows; D
 uses a 2px hard tooltip offset while Light Pixel retains 4px. Frost HoverCard uses a short,
 quiet shadow in both color schemes without changing the shared glass fill or blur. These
 recipes belong to the theme, not to component material variants or theme-name selectors.
+Drawer can use the theme's optional `--overlay-shadow-drawer-right`,
+`--overlay-shadow-drawer-down` and `--overlay-shadow-drawer-up` casts where the
+attachment edge changes. Pixel defines these so the hard shadow extends into the
+workspace. The diffuse presets reuse `--overlay-shadow-drawer` on all four sides.
 
 The floating surface owns its perimeter, glass highlight, corner marks and external shadow.
 When space is limited, an inner reading area owns scrolling. Decorative material layers must

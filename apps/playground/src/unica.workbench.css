@@ -19,3 +19,11 @@
 .wb-artboard:has(> .folio-scene) {
   padding: 0;
 }
+
+.unica-stage-content {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
