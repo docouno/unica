@@ -84,7 +84,6 @@
   display: grid;
   align-items: center;
   min-block-size: calc(var(--disclosure-label-line) + 2 * var(--disclosure-block-pad));
-  padding-inline-end: var(--disclosure-inset);
 }
 
 .disclosure-trigger-proto.button-proto[data-variant='ghost'] {
