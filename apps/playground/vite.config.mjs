@@ -61,6 +61,11 @@ export default defineConfig({
               test: /\/src\/prototypes\/tabs\//,
               includeDependenciesRecursively: false,
             },
+            {
+              name: 'table',
+              test: /\/src\/prototypes\/table\//,
+              includeDependenciesRecursively: false,
+            },
           ],
         },
       },

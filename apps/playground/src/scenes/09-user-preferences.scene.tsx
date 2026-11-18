@@ -30,7 +30,16 @@ import { SegmentedControl } from '../prototypes/segmented-control/segmented-cont
 import { Select } from '../prototypes/select/select.proto.js';
 import { RangeSlider, Slider } from '../prototypes/slider/slider.proto.js';
 import { NumberInput } from '../prototypes/number-input/number-input.proto.js';
-import { Table, TableScroll } from '../prototypes/table/table.proto.js';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableColumnHeader,
+  TableHeader,
+  TableRow,
+  TableRowHeader,
+  TableScroll,
+} from '../prototypes/table/table.proto.js';
 import { Text } from '../prototypes/text/text.proto.js';
 import { FolioScene, SectionHeading } from './folio/folio.shared.js';
 import './folio/folio.settings.css';
@@ -307,48 +316,48 @@ function PreferencesScene(): ReactElement {
             </Card>
             <section className="folio-stack">
               <SectionHeading>Keyboard shortcuts</SectionHeading>
-              <TableScroll>
-                <Table className="folio-shortcuts-table">
-                  <thead>
-                    <tr>
-                      <th>Command</th>
-                      <th>Scope</th>
-                      <th>Shortcut</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <td>Search documents &amp; runbooks</td>
-                      <td>Global workspace</td>
-                      <td>
+              <TableScroll aria-label="Keyboard shortcuts">
+                <Table aria-label="Keyboard shortcuts" className="folio-shortcuts-table">
+                  <TableHeader>
+                    <TableRow>
+                      <TableColumnHeader>Command</TableColumnHeader>
+                      <TableColumnHeader>Scope</TableColumnHeader>
+                      <TableColumnHeader>Shortcut</TableColumnHeader>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    <TableRow>
+                      <TableRowHeader>Search documents &amp; runbooks</TableRowHeader>
+                      <TableCell>Global workspace</TableCell>
+                      <TableCell>
                         <KbdGroup>
                           <Kbd>⌘</Kbd>
                           <Kbd>K</Kbd>
                         </KbdGroup>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>Toggle metadata inspector</td>
-                      <td>Document reader</td>
-                      <td>
+                      </TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableRowHeader>Toggle metadata inspector</TableRowHeader>
+                      <TableCell>Document reader</TableCell>
+                      <TableCell>
                         <KbdGroup>
                           <Kbd>⌘</Kbd>
                           <Kbd>⇧</Kbd>
                           <Kbd>I</Kbd>
                         </KbdGroup>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>Jump to verified runbooks</td>
-                      <td>Navigation chord</td>
-                      <td>
+                      </TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableRowHeader>Jump to verified runbooks</TableRowHeader>
+                      <TableCell>Navigation chord</TableCell>
+                      <TableCell>
                         <KbdGroup separator="then">
                           <Kbd>G</Kbd>
                           <Kbd>R</Kbd>
                         </KbdGroup>
-                      </td>
-                    </tr>
-                  </tbody>
+                      </TableCell>
+                    </TableRow>
+                  </TableBody>
                 </Table>
               </TableScroll>
             </section>

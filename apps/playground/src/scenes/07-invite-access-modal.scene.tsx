@@ -20,7 +20,16 @@ import { ToastCard } from '../prototypes/toast/toast.proto.js';
 import { FormField, Input } from '../prototypes/input/input.proto.js';
 import { Select } from '../prototypes/select/select.proto.js';
 import { CheckboxCard } from '../prototypes/choice-card/choice-card.proto.js';
-import { Table, TableScroll } from '../prototypes/table/table.proto.js';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableColumnHeader,
+  TableHeader,
+  TableRow,
+  TableRowHeader,
+  TableScroll,
+} from '../prototypes/table/table.proto.js';
 import { Textarea } from '../prototypes/textarea/textarea.proto.js';
 import { Text } from '../prototypes/text/text.proto.js';
 import { Title } from '../prototypes/title/title.proto.js';
@@ -170,34 +179,34 @@ function InviteScene(): ReactElement {
                   </Card>
                 ))}
               </div>
-              <TableScroll>
-                <Table>
-                  <thead>
-                    <tr>
-                      <th>Member</th>
-                      <th>Work email</th>
-                      <th>Role</th>
-                      <th>Security</th>
-                      <th>Last active</th>
-                    </tr>
-                  </thead>
-                  <tbody>
+              <TableScroll aria-label="Workspace members">
+                <Table aria-label="Workspace members">
+                  <TableHeader>
+                    <TableRow>
+                      <TableColumnHeader>Member</TableColumnHeader>
+                      <TableColumnHeader>Work email</TableColumnHeader>
+                      <TableColumnHeader>Role</TableColumnHeader>
+                      <TableColumnHeader>Security</TableColumnHeader>
+                      <TableColumnHeader>Last active</TableColumnHeader>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
                     {members.map((member) => (
-                      <tr key={member.email}>
-                        <td>
+                      <TableRow key={member.email}>
+                        <TableRowHeader>
                           <Person initials={member.initials} name={member.name} />
-                        </td>
-                        <td>{member.email}</td>
-                        <td>
+                        </TableRowHeader>
+                        <TableCell>{member.email}</TableCell>
+                        <TableCell>
                           <Badge status="neutral" size="s">
                             {member.role}
                           </Badge>
-                        </td>
-                        <td>{member.security}</td>
-                        <td>{member.time}</td>
-                      </tr>
+                        </TableCell>
+                        <TableCell>{member.security}</TableCell>
+                        <TableCell>{member.time}</TableCell>
+                      </TableRow>
                     ))}
-                  </tbody>
+                  </TableBody>
                 </Table>
               </TableScroll>
             </div>

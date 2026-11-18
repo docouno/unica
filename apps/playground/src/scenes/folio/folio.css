@@ -394,18 +394,6 @@
 .folio-runbook-compact {
   gap: 20px;
 }
-.folio-runbook .table-proto thead th,
-.folio-content-collection .table-proto thead th,
-.folio-members-content .table-proto thead th {
-  block-size: 36px;
-}
-.folio-runbook .table-proto tbody td,
-.folio-content-collection .table-proto tbody td {
-  block-size: 42px;
-}
-.folio-members-content .table-proto tbody td {
-  block-size: 44px;
-}
 .folio-runbook .table-proto,
 .folio-content-collection .table-proto {
   min-inline-size: 640px;
@@ -750,13 +738,19 @@
     background-color: var(--bg-canvas);
   }
 
+  .folio-content-collection
+    .table-proto
+    tr[data-context-open='point']:not([data-selected])
+    > .folio-runbook-menu-cell {
+    background-image: linear-gradient(
+      color-mix(in srgb, var(--fg-primary) 7%, transparent),
+      color-mix(in srgb, var(--fg-primary) 7%, transparent)
+    );
+  }
+
   .folio-content-collection .table-proto tr[data-selected] > .folio-runbook-menu-cell {
     background-image: linear-gradient(var(--table-row-selected-bg), var(--table-row-selected-bg));
   }
-}
-
-.folio-content-collection .table-proto tr[data-context-open='point']:not([data-selected]) > td {
-  background: var(--bg-surface-raised);
 }
 
 .folio-runbook-menu-card[data-context-open='point'] {

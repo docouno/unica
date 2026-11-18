@@ -242,12 +242,8 @@
   background: var(--status-warning-signal);
 }
 
-.folio-shortcuts-table thead tr {
-  block-size: 36px;
-}
-
-.folio-shortcuts-table tbody tr {
-  block-size: 40px;
+.folio-shortcuts-table {
+  min-inline-size: 600px;
 }
 
 .folio-shortcuts-table :is(th, td):nth-child(2) {

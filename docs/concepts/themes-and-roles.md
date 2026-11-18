@@ -177,3 +177,18 @@ Overflowing rails consume the [compact native scrollbar recipe](scrollbars.md) o
 ## Slider material feedback
 
 Slider and RangeSlider share an open recessed `--control-bg` / `--control-border` track. Their selected interval uses `--slider-fill`: solid accent in Soft, Frost Light and Pixel, and the brighter accent signal in Frost Dark so the narrow fill remains legible on floating glass. The compact cap shares this fill and extends 3px beyond each side of the track. It has no separate highlight, contrasting rest outline, or shadow; Soft/Frost retain a small radius and Pixel stays square. Hover and active add a subtle inner edge without increasing the cap size. `--slider-state-duration` is 120ms in Soft/Frost and 0ms in Pixel. The cap never scales or translates on press, and numeric travel is always immediate. These family-local material recipes do not change other continuous controls. See the [design reference](../../apps/playground/src/prototypes/slider/README.md) for states and interaction.
+
+## Table rules and selection
+
+Table uses a single layer of horizontal lines. The theme supplies `--table-row-rule`
+for body separators and `--table-row-selected-bg` for the wash behind checked
+rows. Soft and Frost refer to `--border-subtle` for body rules, while Pixel uses
+`--border-default`. The header and totals use `--border-default` in all six
+presets. An optional stripe mixes 3.5% primary foreground over the owning
+surface. Selection replaces that stripe and pairs with the checked control.
+The surface cascade assigns `--table-sticky-header-bg` from the theme’s
+`--table-overlay-header-bg` on a floating surface. Soft and
+Pixel use the opaque overlay paint. Frost uses a solid tone matched to its
+glass panel, covering the scrolling content at the header seam.
+
+See the [Table design reference](../../apps/playground/src/prototypes/table/README.md).
