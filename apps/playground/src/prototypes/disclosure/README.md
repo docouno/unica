@@ -1,6 +1,6 @@
 # Accordion and Collapsible design reference
 
-Draft for visual approval. Open `/?item=accordion` and `/?item=collapsible` in the playground. The shared prototype establishes the intended experience for the library implementation.
+Open `/?item=accordion` and `/?item=collapsible` in the playground. The shared prototype is the approved visual and interaction reference for the library implementation.
 
 ## Use and anatomy
 
