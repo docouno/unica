@@ -1,7 +1,9 @@
+import { useEffect, useState } from 'react';
 import type { ReactElement } from 'react';
 import { defineSpecimen } from '../../workbench/types.js';
-import { Checkbox, Switch } from '../binary-controls/binary-controls.proto.js';
+import { Button } from '../button/button.proto.js';
 import { Card } from '../card/card.proto.js';
+import { Code } from '../code/code.proto.js';
 import {
   PopoverBody,
   PopoverContent,
@@ -119,55 +121,63 @@ function TriggerStudy(): ReactElement {
   );
 }
 
-function Settings(): ReactElement {
+const previewUrl = 'https://preview.example.com/releases/2.4';
+
+function ReleasePreview(): ReactElement {
+  const [copyLabel, setCopyLabel] = useState('Copy link');
+
+  useEffect(() => {
+    if (copyLabel !== 'Copied') {
+      return;
+    }
+    const reset = window.setTimeout(() => setCopyLabel('Copy link'), 2000);
+    return () => window.clearTimeout(reset);
+  }, [copyLabel]);
+
+  async function copyLink(): Promise<void> {
+    await navigator.clipboard.writeText(previewUrl);
+    setCopyLabel('Copied');
+  }
+
   return (
-    <Card className="disclosure-study-settings">
+    <Card className="disclosure-study-preview">
       <Title as="h2" size="heading-s">
-        Notifications
+        Release preview
       </Title>
-      <Accordion headingLevel={3} size="s" defaultValue={['digest']}>
-        <AccordionItem value="digest">
+      <Accordion headingLevel={3} size="s" defaultValue={['access']}>
+        <AccordionItem value="link">
           <AccordionTrigger
             action={
-              <Switch
-                className="disclosure-study-channel"
+              <Button
+                variant="ghost"
+                tone="neutral"
                 size="s"
-                label="Email"
-                aria-label="Email weekly digest"
-                defaultChecked
-              />
+                className="disclosure-study-copy"
+                onClick={() => {
+                  copyLink().catch(() => setCopyLabel('Retry copy'));
+                }}
+              >
+                <span aria-live="polite">{copyLabel}</span>
+              </Button>
             }
           >
-            Weekly digest
+            Preview link
           </AccordionTrigger>
           <AccordionContent>
-            <div className="disclosure-study-notification">
-              <span dir="auto">Every Monday at 09:00 UTC.</span>
-              <Checkbox size="s" label="Include unresolved reviews" defaultChecked />
+            <div className="disclosure-study-link">
+              <span>
+                <Code plate={false}>{previewUrl}</Code>
+              </span>
+              <span>
+                <bdi>Available until Friday at 18:00 UTC.</bdi>
+              </span>
             </div>
           </AccordionContent>
         </AccordionItem>
-        <AccordionItem value="reminders">
-          <AccordionTrigger
-            action={
-              <Switch
-                className="disclosure-study-channel"
-                size="s"
-                label="Email"
-                aria-label="Email upcoming review reminders"
-              />
-            }
-          >
-            Upcoming review reminders
-          </AccordionTrigger>
+        <AccordionItem value="access">
+          <AccordionTrigger>Who can open it</AccordionTrigger>
           <AccordionContent>
-            <span dir="auto">Remind reviewers two days before a review is due.</span>
-          </AccordionContent>
-        </AccordionItem>
-        <AccordionItem value="deliveries">
-          <AccordionTrigger>Delivery history</AccordionTrigger>
-          <AccordionContent>
-            <span dir="auto">Last digest sent on Monday at 09:00 UTC.</span>
+            <span dir="auto">Anyone with the link can view this preview.</span>
           </AccordionContent>
         </AccordionItem>
       </Accordion>
@@ -239,9 +249,8 @@ export default defineSpecimen({
       id: 'actions',
       title: 'Independent header actions',
       kind: 'context',
-      caption:
-        'Email switches turn delivery on or off. Open a heading to see its schedule or options.',
-      render: () => <Settings />,
+      caption: 'Copy link works while the section is closed.',
+      render: () => <ReleasePreview />,
     },
   ],
 });

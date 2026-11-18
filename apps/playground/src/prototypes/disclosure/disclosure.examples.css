@@ -29,18 +29,17 @@
   inline-size: min(100%, 34rem);
 }
 
-.disclosure-study-settings.card-proto {
+.disclosure-study-preview.card-proto {
   inline-size: min(100%, 27rem);
 }
 
-.disclosure-study-channel.binary-control {
-  flex-direction: row-reverse;
-  color: var(--fg-secondary);
+.disclosure-study-copy.button-proto {
+  min-inline-size: 8.25em;
 }
 
-.disclosure-study-notification {
+.disclosure-study-link {
   display: grid;
-  justify-items: start;
+  gap: var(--space-4);
 }
 
 .disclosure-study-overlay.popover-content-proto {
