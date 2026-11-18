@@ -47,6 +47,8 @@ Block quotations use `--blockquote-rail-width`, `--blockquote-rail-style`, and `
 
 In-flow disclosure uses a clear resting row and neutral pointer feedback across Base and Overlay. `--disclosure-divider-color` supplies the single-pixel boundary between Accordion sections. Soft uses a subtle edge, Frost uses a translucent neutral edge, and Pixel uses the default structural edge. `--disclosure-duration` sets the reveal and indicator duration to 180ms in Soft, 140ms in Frost, and immediate state changes in Pixel. Reduced motion also switches instantly. The surrounding surface owns glass and elevation, and the row stays stationary during a press.
 
+The Stepper prototype uses `--stepper-current-shadow` for a small static accent glow on the valid current marker in Frost, stronger in Dark than in Light. Soft and Pixel use a matte marker. The current contour and focus outline supply their own visibility in every material. The glow adds no elevation, motion, or backdrop filter. See the [Stepper design reference](../../apps/playground/src/prototypes/stepper/README.md).
+
 The native scrollbar recipe has separate `--scrollbar-thumb-opacity`, `--scrollbar-thumb-hover-opacity`, and `--scrollbar-thumb-active-opacity` values in each preset. Soft stays quiet, Frost gives the glass more space, and Pixel keeps a firmer indicator. Geometry follows `--radius-full` where the browser exposes native scrollbar parts. See [Native Scrollbars](scrollbars.md) for states, dimensions, and platform fallbacks.
 
 Floating surfaces use `--overlay-border` for their perimeter and `--overlay-rim-mask` for the

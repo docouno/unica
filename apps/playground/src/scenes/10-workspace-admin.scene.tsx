@@ -22,7 +22,7 @@ import {
 } from '../prototypes/file-input/file-input.proto.js';
 import type { FileItemStatus } from '../prototypes/file-input/file-input.proto.js';
 import { RadioCard } from '../prototypes/choice-card/choice-card.proto.js';
-import { Stepper } from '../prototypes/stepper/stepper.proto.js';
+import { Stepper, StepperStep } from '../prototypes/stepper/stepper.proto.js';
 import { Text } from '../prototypes/text/text.proto.js';
 import { Title } from '../prototypes/title/title.proto.js';
 import { FolioScene, PageIntro } from './folio/folio.shared.js';
@@ -60,7 +60,8 @@ function WorkspaceAdminScene(): ReactElement {
   const [schemaSize, setSchemaSize] = useState('18.4 KB');
   const [policy, setPolicy] = useState('revision');
   const [archives, setArchives] = useState<readonly StagedArchive[]>(initialArchives);
-  const [currentStep, setCurrentStep] = useState(1);
+  const [currentStep, setCurrentStep] = useState<'source' | 'verify' | 'commit'>('verify');
+  const [validation, setValidation] = useState<'checking' | 'required' | 'verified'>('checking');
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
   const [showActivityToast, setShowActivityToast] = useState(true);
@@ -86,8 +87,38 @@ function WorkspaceAdminScene(): ReactElement {
     update();
     return () => observer.disconnect();
   }, [archives, notice, showActivityToast, showValidationToast]);
+  const readyToCommit = validation === 'verified';
   const totalSize = archives.reduce((sum, archive) => sum + archive.megabytes, 0);
   const uploadingArchive = archives.find((archive) => archive.status === 'uploading');
+
+  function invalidateVerification(): void {
+    setValidation('required');
+    setCurrentStep((step) => (step === 'commit' ? 'verify' : step));
+    setShowValidationToast(false);
+    if (readyToCommit) {
+      setNotice('The import inputs changed. Run another dry-run check.');
+    }
+  }
+
+  function runDryRun(): void {
+    setArchives((current) =>
+      current.map((archive) =>
+        archive.status === 'success'
+          ? archive
+          : {
+              id: archive.id,
+              name: archive.name,
+              megabytes: archive.megabytes,
+              detail: 'Archive validated',
+              status: 'success',
+            },
+      ),
+    );
+    setValidation('verified');
+    setCurrentStep('verify');
+    setShowValidationToast(false);
+    setNotice(`Dry-run check complete: ${archives.length} staged archives passed validation.`);
+  }
 
   function chooseSchema(files: readonly File[]): void {
     const file = files[0];
@@ -99,6 +130,7 @@ function WorkspaceAdminScene(): ReactElement {
       return;
     }
     setSchema(file.name);
+    invalidateVerification();
     setSchemaSize(`${(file.size / 1024).toFixed(1)} KB`);
     setError('');
   }
@@ -112,18 +144,19 @@ function WorkspaceAdminScene(): ReactElement {
         ? ''
         : 'Choose UTF-8 Markdown or ZIP archives up to 50 MB each. Unsupported files were not added.',
     );
-    setArchives((current) => [
-      ...current,
-      ...accepted
-        .filter((file) => !current.some((archive) => archive.name === file.name))
-        .map((file) => ({
-          id: `${file.name}-${file.size}-${file.lastModified}`,
-          name: file.name,
-          megabytes: file.size / 1024 / 1024,
-          detail: 'Queued for validation',
-          status: 'neutral' as const,
-        })),
-    ]);
+    const additions = accepted
+      .filter((file) => !archives.some((archive) => archive.name === file.name))
+      .map((file) => ({
+        id: `${file.name}-${file.size}-${file.lastModified}`,
+        name: file.name,
+        megabytes: file.size / 1024 / 1024,
+        detail: 'Queued for validation',
+        status: 'neutral' as const,
+      }));
+    if (additions.length > 0) {
+      setArchives((current) => [...current, ...additions]);
+      invalidateVerification();
+    }
   }
 
   return (
@@ -143,16 +176,7 @@ function WorkspaceAdminScene(): ReactElement {
                 >
                   Import history
                 </Button>
-                <Button
-                  size="s"
-                  disabled={archives.length === 0}
-                  onClick={() => {
-                    setNotice(
-                      `Dry-run check complete: ${archives.length} archives are staged for validation.`,
-                    );
-                    setCurrentStep(1);
-                  }}
-                >
+                <Button size="s" disabled={archives.length === 0} onClick={runDryRun}>
                   Run dry-run check
                 </Button>
               </>
@@ -172,15 +196,21 @@ function WorkspaceAdminScene(): ReactElement {
               title="Import Markdown & ADR archives"
               description="Migrate repository-backed Markdown bundles while validating YAML frontmatter, internal links, and owner mappings."
             />
-            <Stepper
-              current={currentStep}
-              onStepChange={setCurrentStep}
-              steps={[
-                { label: 'Source & schema', description: 'Frontmatter rules mapped' },
-                { label: 'Upload & verify', description: `${archives.length} bundles staged` },
-                { label: 'Commit to space', description: 'Publish & index' },
-              ]}
-            />
+            <Stepper value={currentStep} label="Batch import stages">
+              <StepperStep
+                value="source"
+                label="Source & schema"
+                description={schema ? 'Frontmatter rules mapped' : 'Default frontmatter rules'}
+                completed
+              />
+              <StepperStep
+                value="verify"
+                label="Upload & verify"
+                description={`${archives.length} bundles staged`}
+                completed={readyToCommit}
+              />
+              <StepperStep value="commit" label="Commit to space" description="Publish & index" />
+            </Stepper>
             {error && (
               <Alert
                 status="danger"
@@ -215,6 +245,7 @@ function WorkspaceAdminScene(): ReactElement {
                 onClear={() => {
                   setSchema('');
                   setSchemaSize('');
+                  invalidateVerification();
                 }}
                 description="Optional YAML mapping for custom status and service tags."
               />
@@ -230,14 +261,20 @@ function WorkspaceAdminScene(): ReactElement {
                   <RadioCard
                     name={policyName}
                     checked={policy === 'revision'}
-                    onChange={() => setPolicy('revision')}
+                    onChange={() => {
+                      setPolicy('revision');
+                      invalidateVerification();
+                    }}
                     label="Create draft revision on slug match"
                     description="Preserves existing verified runbook until reviewed."
                   />
                   <RadioCard
                     name={policyName}
                     checked={policy === 'skip'}
-                    onChange={() => setPolicy('skip')}
+                    onChange={() => {
+                      setPolicy('skip');
+                      invalidateVerification();
+                    }}
                     label="Skip duplicate document slugs"
                     description="Imports only net-new architecture records."
                   />
@@ -264,7 +301,14 @@ function WorkspaceAdminScene(): ReactElement {
                 accept=".md,.mdx,.zip"
                 onFilesChange={addArchives}
               />
-              <Progress value={archives.length ? 84 : 0} label="Schema & cross-link validation" />
+              <Progress
+                value={readyToCommit ? 100 : validation === 'checking' ? 84 : 0}
+                label={
+                  validation === 'required'
+                    ? 'Dry-run validation required'
+                    : 'Schema & cross-link validation'
+                }
+              />
               <FileList>
                 {archives.map((archive) => (
                   <FileItem
@@ -274,9 +318,10 @@ function WorkspaceAdminScene(): ReactElement {
                     progress={archive.progress}
                     fileSize={`${archive.megabytes.toFixed(1)} MB`}
                     detail={archive.detail}
-                    onRemove={() =>
-                      setArchives((current) => current.filter((file) => file.id !== archive.id))
-                    }
+                    onRemove={() => {
+                      setArchives((current) => current.filter((file) => file.id !== archive.id));
+                      invalidateVerification();
+                    }}
                   />
                 ))}
               </FileList>
@@ -288,7 +333,9 @@ function WorkspaceAdminScene(): ReactElement {
                   disabled={archives.length === 0}
                   onClick={() => {
                     setArchives([]);
-                    setCurrentStep(0);
+                    setCurrentStep('source');
+                    setValidation('required');
+                    setShowValidationToast(false);
                     setNotice('The staged import was cleared.');
                   }}
                 >
@@ -300,20 +347,23 @@ function WorkspaceAdminScene(): ReactElement {
                     variant="secondary"
                     tone="neutral"
                     iconLeft={ArrowLeftIcon}
-                    onClick={() => setCurrentStep(Math.max(0, currentStep - 1))}
+                    disabled={currentStep === 'source'}
+                    onClick={() => setCurrentStep(currentStep === 'commit' ? 'verify' : 'source')}
                   >
                     Back
                   </Button>
                   <Button
                     size="s"
-                    disabled={archives.length === 0}
+                    disabled={!readyToCommit || currentStep !== 'verify'}
                     onClick={() => {
-                      setCurrentStep(2);
+                      setCurrentStep('commit');
                       setShowValidationToast(false);
-                      setNotice('28 documents prepared for import.');
+                      setNotice(
+                        `${archives.length} validated ${archives.length === 1 ? 'archive is' : 'archives are'} ready to import.`,
+                      );
                     }}
                   >
-                    Commit 28 documents
+                    Continue to commit
                   </Button>
                 </div>
               </div>
