@@ -43,6 +43,8 @@ Inline code uses `--code-font-scale`: `0.9` in Soft/Frost to balance JetBrains M
 
 Block quotations use `--blockquote-rail-width`, `--blockquote-rail-style`, and `--blockquote-rail-radius` for their logical leading edge: a rounded 3px solid rail in Soft, a straight 2px solid rail in Frost, and a straight 3px double rail in Pixel. The neutral rail uses `--border-strong`; semantic rails use their status signal. The quotation remains transparent in every tone; only the rail and optional glyphs carry semantic color. Quote text and attribution retain neutral foregrounds, without another filled panel, shadows, or backdrop filtering in document flow.
 
+In-flow disclosure uses a clear resting row and neutral pointer feedback across Base and Overlay. `--disclosure-divider-color` supplies the single-pixel boundary between Accordion sections. Soft uses a subtle edge, Frost uses a translucent neutral edge, and Pixel uses the default structural edge. `--disclosure-duration` sets the reveal and indicator duration to 180ms in Soft, 140ms in Frost, and immediate state changes in Pixel. Reduced motion also switches instantly. The surrounding surface owns glass and elevation, and the row stays stationary during a press.
+
 The native scrollbar recipe has separate `--scrollbar-thumb-opacity`, `--scrollbar-thumb-hover-opacity`, and `--scrollbar-thumb-active-opacity` values in each preset. Soft stays quiet, Frost gives the glass more space, and Pixel keeps a firmer indicator. Geometry follows `--radius-full` where the browser exposes native scrollbar parts. See [Native Scrollbars](scrollbars.md) for states, dimensions, and platform fallbacks.
 
 Floating surfaces use `--overlay-border` for their perimeter and `--overlay-rim-mask` for the
