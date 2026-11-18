@@ -16,7 +16,7 @@ import {
   ModalTitle,
   ModalTrigger,
 } from '../prototypes/dialog/dialog.proto.js';
-import { Toast } from '../prototypes/feedback/feedback.proto.js';
+import { ToastCard } from '../prototypes/toast/toast.proto.js';
 import { FormField, Input } from '../prototypes/input/input.proto.js';
 import { Select } from '../prototypes/select/select.proto.js';
 import { CheckboxCard } from '../prototypes/choice-card/choice-card.proto.js';
@@ -288,9 +288,13 @@ function InviteScene(): ReactElement {
       </Modal>
       {sent && (
         <div className="folio-toast-dock">
-          <Toast title={`${invites.length} invitations prepared`} onDismiss={() => setSent(false)}>
+          <ToastCard
+            status="success"
+            title={`${invites.length} invitations prepared`}
+            onDismiss={() => setSent(false)}
+          >
             Workspace roles and capabilities are ready for review.
-          </Toast>
+          </ToastCard>
         </div>
       )}
     </FolioScene>

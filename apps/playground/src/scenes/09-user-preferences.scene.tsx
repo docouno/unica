@@ -19,7 +19,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '../prototypes/disclosure/disclosure.proto.js';
-import { Toast } from '../prototypes/feedback/feedback.proto.js';
+import { ToastCard } from '../prototypes/toast/toast.proto.js';
 import { Kbd, KbdGroup } from '../prototypes/kbd/kbd.proto.js';
 import {
   Checkbox,
@@ -353,9 +353,9 @@ function PreferencesScene(): ReactElement {
               </TableScroll>
             </section>
             {notice && (
-              <Toast status="success" title="Preferences saved" onDismiss={() => setNotice('')}>
+              <ToastCard status="success" title="Preferences saved" onDismiss={() => setNotice('')}>
                 {notice}
-              </Toast>
+              </ToastCard>
             )}
             <StickyActionBar
               className="folio-preferences-actions"

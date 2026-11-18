@@ -223,7 +223,7 @@
 }
 
 .folio-import-stage {
-  padding-block-end: 152px;
+  padding-block-end: max(var(--space-64), var(--folio-toast-clearance, 152px));
 }
 
 .folio-import-card.card-proto {
@@ -318,6 +318,12 @@
   }
 
   .folio-import-stage {
-    padding-block-end: var(--space-64);
+    padding-block-end: max(var(--space-64), var(--folio-toast-clearance, 152px));
   }
+}
+
+.folio-import-toast-region {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
 }

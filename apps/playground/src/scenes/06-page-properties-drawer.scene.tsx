@@ -14,7 +14,7 @@ import {
   DrawerTitle,
   DrawerTrigger,
 } from '../prototypes/dialog/dialog.proto.js';
-import { Toast } from '../prototypes/feedback/feedback.proto.js';
+import { ToastCard } from '../prototypes/toast/toast.proto.js';
 import { FormField } from '../prototypes/input/input.proto.js';
 import { Combobox } from '../prototypes/combobox/combobox.proto.js';
 import type { Suggestion } from '../prototypes/combobox/combobox.proto.js';
@@ -175,9 +175,13 @@ function PropertiesScene(): ReactElement {
       </Drawer>
       {saved && (
         <div className="folio-toast-dock">
-          <Toast title="Document properties saved" onDismiss={() => setSaved(false)}>
+          <ToastCard
+            status="success"
+            title="Document properties saved"
+            onDismiss={() => setSaved(false)}
+          >
             Visibility and review cadence updated for this document.
-          </Toast>
+          </ToastCard>
         </div>
       )}
     </FolioScene>

@@ -1,18 +1,12 @@
 import { useState } from 'react';
 import type { ReactElement } from 'react';
-import {
-  ArrowRightIcon,
-  ClockIcon,
-  FileTextIcon,
-  GitBranchIcon,
-  PushPinIcon,
-} from '@phosphor-icons/react';
+import { ArrowRightIcon, FileTextIcon, PushPinIcon } from '@phosphor-icons/react';
 import { Avatar } from '../prototypes/avatar/avatar.proto.js';
 import { Badge } from '../prototypes/badge/badge.proto.js';
 import { Button } from '../prototypes/button/button.proto.js';
 import { Card } from '../prototypes/card/card.proto.js';
-import { Toast } from '../prototypes/feedback/feedback.proto.js';
 import { Alert, AlertTitle, AlertDescription } from '../prototypes/alert/alert.proto.js';
+import { ToastCard } from '../prototypes/toast/toast.proto.js';
 import { Icon } from '../prototypes/icon/icon.proto.js';
 import { Tooltip } from '../prototypes/tooltip/tooltip.proto.js';
 import { Link } from '../prototypes/link/link.proto.js';
@@ -280,25 +274,16 @@ function OverviewScene(): ReactElement {
       </Tooltip>
       {toast && (
         <div className="folio-toast-dock">
-          <Toast
+          <ToastCard
             status="success"
             title={created ? 'New document ready' : 'Synced 3 runbooks'}
             onDismiss={() => setToast(false)}
-            icon={<Icon icon={created ? GitBranchIcon : ClockIcon} size="m" />}
+            action={{ label: 'View', onClick: () => setToast(false) }}
           >
             {created
               ? 'Your draft is ready in Architecture.'
-              : 'Core Infrastructure repository indexed 2m ago.'}{' '}
-            <Link
-              href="#activity"
-              onClick={(event) => {
-                event.preventDefault();
-                setToast(false);
-              }}
-            >
-              View
-            </Link>
-          </Toast>
+              : 'Core Infrastructure repository indexed 2m ago.'}
+          </ToastCard>
         </div>
       )}
     </FolioScene>
