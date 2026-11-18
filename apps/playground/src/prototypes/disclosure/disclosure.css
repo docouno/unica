@@ -151,17 +151,17 @@
   transition: transform var(--disclosure-duration) cubic-bezier(0.2, 0, 0, 1);
 }
 
-.disclosure-trigger-proto[data-indicator='start'][aria-expanded='false'] .disclosure-caret-proto {
-  --disclosure-caret-angle: -90deg;
+/* Use explicit direction boundaries so the CSS build preserves local overrides. */
+[dir='rtl'] {
+  --disclosure-closed-caret-angle: 90deg;
 }
 
-.disclosure-trigger-proto[data-indicator='start'][aria-expanded='false']:dir(rtl)
-  .disclosure-caret-proto {
-  --disclosure-caret-angle: 90deg;
+[dir='ltr'] {
+  --disclosure-closed-caret-angle: -90deg;
 }
 
-.disclosure-trigger-proto[data-indicator='end'][aria-expanded='true'] .disclosure-caret-proto {
-  --disclosure-caret-angle: 180deg;
+.disclosure-trigger-proto[aria-expanded='false'] .disclosure-caret-proto {
+  --disclosure-caret-angle: var(--disclosure-closed-caret-angle, -90deg);
 }
 
 .disclosure-trigger-proto[aria-expanded='true']:not(:disabled) .disclosure-caret-proto {

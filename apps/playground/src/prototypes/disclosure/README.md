@@ -32,7 +32,7 @@ Labels use weight 600 and the primary foreground. Bodies default to the secondar
 
 The padded body starts 4px below the row and lines up with the label. Accordion groups with leading chevrons use the same label inset as Collapsible. Full-width bodies have zero automatic spacing on all edges and let the consumer lay out a table, list, or form. Empty bodies have zero height. Supply a meaningful empty message when the person needs to distinguish an empty result from missing content. The closed panel occupies zero space. At rest the open panel allows overflow so descendant focus outlines and floating content have clearance.
 
-RTL mirrors indentation and header action placement. Collapsible points toward the label when closed, then down when open. Accordion points down when closed and up when open in both directions. Neither glyph flips along the block axis in RTL.
+RTL mirrors indentation and header action placement. A closed chevron points toward the logical inline end, to the right in LTR and to the left in RTL. An open chevron points down toward the visible panel. This applies to Collapsible and Accordion in both chevron positions.
 
 ## Material, states, and motion
 
