@@ -18,7 +18,6 @@ import {
 import type { RailDestination } from '../../prototypes/app-shell/app-shell.proto.js';
 import { Avatar, AvatarGroup } from '../../prototypes/avatar/avatar.proto.js';
 import { Badge } from '../../prototypes/badge/badge.proto.js';
-import { Breadcrumb } from '../../prototypes/breadcrumb/breadcrumb.proto.js';
 import { Button, IconButton } from '../../prototypes/button/button.proto.js';
 import { Code, CodeBlock } from '../../prototypes/code/code.proto.js';
 import { Blockquote } from '../../prototypes/blockquote/blockquote.proto.js';
@@ -39,7 +38,7 @@ export function FolioScene({ children, className = '' }: FolioSceneProps): React
 
 export interface WorkspaceProps {
   readonly children: ReactNode;
-  readonly crumbs: readonly string[];
+  readonly breadcrumb: ReactNode;
   readonly actions?: ReactNode;
   readonly rightAside?: ReactNode;
   readonly leftAside?: ReactNode;
@@ -56,7 +55,7 @@ export interface WorkspaceProps {
 
 export function FolioWorkspace({
   children,
-  crumbs,
+  breadcrumb,
   actions,
   rightAside,
   leftAside,
@@ -109,6 +108,7 @@ export function FolioWorkspace({
       rightAside={rightAside}
       header={
         <Header
+          className="folio-workspace-header"
           actions={
             actions ?? (
               <Button size="s" iconLeft={PlusIcon}>
@@ -132,7 +132,7 @@ export function FolioWorkspace({
               <span className="app-shell-navigation-seam" />
             </>
           )}
-          <Breadcrumb items={crumbs} />
+          {breadcrumb}
         </Header>
       }
       subbar={subbar}

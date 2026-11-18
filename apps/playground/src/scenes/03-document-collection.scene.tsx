@@ -26,6 +26,11 @@ import { TagGroup } from '../prototypes/tag/tag.proto.js';
 import type { TagGroupItem } from '../prototypes/tag/tag.proto.js';
 import { Text } from '../prototypes/text/text.proto.js';
 import { Title } from '../prototypes/title/title.proto.js';
+import {
+  Breadcrumb,
+  BreadcrumbLink,
+  BreadcrumbPage,
+} from '../prototypes/breadcrumb/breadcrumb.proto.js';
 import { defineScene } from '../workbench/types.js';
 import { DatabaseTopology, IngressTopology } from './folio/folio.diagrams.js';
 import {
@@ -143,7 +148,12 @@ function CollectionScene(): ReactElement {
       <FolioWorkspace
         activeNavigation="runbooks"
         expandedNavigation={['architecture', 'runbooks']}
-        crumbs={['Platform Eng', 'Runbooks']}
+        breadcrumb={
+          <Breadcrumb size="s">
+            <BreadcrumbLink href="?item=02-workspace-overview">Platform Eng</BreadcrumbLink>
+            <BreadcrumbPage>Runbooks</BreadcrumbPage>
+          </Breadcrumb>
+        }
         minHeight={960}
         actions={
           <div className="folio-row">

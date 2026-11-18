@@ -14,6 +14,11 @@ import { Table, TableScroll } from '../prototypes/table/table.proto.js';
 import { Textarea } from '../prototypes/textarea/textarea.proto.js';
 import { Text } from '../prototypes/text/text.proto.js';
 import { Title } from '../prototypes/title/title.proto.js';
+import {
+  Breadcrumb,
+  BreadcrumbLink,
+  BreadcrumbPage,
+} from '../prototypes/breadcrumb/breadcrumb.proto.js';
 import { defineScene } from '../workbench/types.js';
 import { FolioScene, FolioWorkspace, PageIntro, Person } from './folio/folio.shared.js';
 
@@ -81,7 +86,13 @@ function InviteScene(): ReactElement {
     <FolioScene>
       <FolioWorkspace
         classic
-        crumbs={['Platform Eng', 'Administration', 'Members & roles']}
+        breadcrumb={
+          <Breadcrumb size="s">
+            <BreadcrumbLink href="?item=02-workspace-overview">Platform Eng</BreadcrumbLink>
+            <span>Administration</span>
+            <BreadcrumbPage>Members & roles</BreadcrumbPage>
+          </Breadcrumb>
+        }
         minHeight={1020}
         leftAside={
           <AsidePanel title="Platform Eng">

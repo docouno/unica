@@ -20,6 +20,11 @@ import { Link } from '../prototypes/link/link.proto.js';
 import { Switch } from '../prototypes/binary-controls/binary-controls.proto.js';
 import { Tabs } from '../prototypes/tabs/tabs.proto.js';
 import { Text } from '../prototypes/text/text.proto.js';
+import {
+  Breadcrumb,
+  BreadcrumbLink,
+  BreadcrumbPage,
+} from '../prototypes/breadcrumb/breadcrumb.proto.js';
 import { defineScene } from '../workbench/types.js';
 import {
   DocumentActions,
@@ -67,7 +72,13 @@ function ReaderScene(): ReactElement {
   return (
     <FolioScene className="folio-reader">
       <FolioWorkspace
-        crumbs={['Platform Eng', 'Runbooks', 'Zero-Downtime PG Failover']}
+        breadcrumb={
+          <Breadcrumb size="s">
+            <BreadcrumbLink href="?item=02-workspace-overview">Platform Eng</BreadcrumbLink>
+            <BreadcrumbLink href="?item=03-document-collection">Runbooks</BreadcrumbLink>
+            <BreadcrumbPage>Zero-Downtime PG Failover</BreadcrumbPage>
+          </Breadcrumb>
+        }
         documentTabs
         activeDocument="runbook"
         minHeight={1120}

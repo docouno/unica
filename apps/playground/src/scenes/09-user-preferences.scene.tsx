@@ -10,7 +10,7 @@ import {
   StickyActionBar,
 } from '../prototypes/app-shell/app-shell.proto.js';
 import { Badge } from '../prototypes/badge/badge.proto.js';
-import { Breadcrumb } from '../prototypes/breadcrumb/breadcrumb.proto.js';
+import { Breadcrumb, BreadcrumbPage } from '../prototypes/breadcrumb/breadcrumb.proto.js';
 import { Button } from '../prototypes/button/button.proto.js';
 import { Card } from '../prototypes/card/card.proto.js';
 import { Accordion, Collapsible } from '../prototypes/accordion/accordion.proto.js';
@@ -96,7 +96,11 @@ function PreferencesScene(): ReactElement {
               </>
             }
           >
-            <Breadcrumb items={['Platform engineer', 'Preferences', 'Appearance & editor']} />
+            <Breadcrumb size="s">
+              <span>Platform engineer</span>
+              <span>Preferences</span>
+              <BreadcrumbPage>Appearance & editor</BreadcrumbPage>
+            </Breadcrumb>
           </Header>
         }
       >

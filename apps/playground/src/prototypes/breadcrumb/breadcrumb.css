@@ -1,47 +1,201 @@
 .breadcrumb-proto {
+  --breadcrumb-line: var(--text-size-body-s-lh);
+  --breadcrumb-gap: var(--space-8);
+  --breadcrumb-icon: 15px;
+  --breadcrumb-target: var(--space-24);
+  --breadcrumb-inset: max(0px, calc((var(--breadcrumb-target) - var(--breadcrumb-line)) / 2));
+  --breadcrumb-underline: underline;
+  --breadcrumb-hover-underline: underline;
   min-inline-size: 0;
   color: var(--fg-muted);
-  font-family: var(--font-family-base);
-  font-size: var(--text-size-caption-l);
-  line-height: var(--text-size-caption-l-lh);
+  font: 400 var(--text-size-body-s) / var(--breadcrumb-line) var(--font-family-base);
 }
-.breadcrumb-proto ol {
+
+.breadcrumb-proto[data-size='s'] {
+  --breadcrumb-line: var(--text-size-caption-l-lh);
+  --breadcrumb-icon: 14px;
+  font-size: var(--text-size-caption-l);
+}
+
+.breadcrumb-proto[data-size='l'] {
+  --breadcrumb-line: var(--text-size-body-m-lh);
+  --breadcrumb-gap: var(--space-12);
+  --breadcrumb-icon: 16px;
+  font-size: var(--text-size-body-m);
+}
+
+.breadcrumb-proto-list {
   display: flex;
-  align-items: center;
   flex-wrap: wrap;
-  gap: var(--space-8);
-  min-inline-size: 0;
+  align-items: flex-start;
+  gap: var(--space-4) var(--breadcrumb-gap);
   margin: 0;
   padding: 0;
   list-style: none;
 }
-.breadcrumb-proto li {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-8);
+
+.breadcrumb-proto-list[data-spacing-only] {
+  column-gap: calc(var(--breadcrumb-gap) * 2);
+}
+
+.breadcrumb-proto-item {
+  display: flex;
+  gap: var(--breadcrumb-gap);
+  align-items: flex-start;
   min-inline-size: 0;
+  max-inline-size: 100%;
+}
+
+.breadcrumb-proto-value,
+.breadcrumb-proto-separator {
+  min-inline-size: 0;
+  padding-block: var(--breadcrumb-inset);
+}
+
+.breadcrumb-proto-value {
   overflow-wrap: anywhere;
 }
-.breadcrumb-proto a {
-  color: inherit;
-  text-decoration: none;
-  text-underline-offset: 3px;
+
+.breadcrumb-proto-separator {
+  flex: none;
+  color: color-mix(in srgb, var(--fg-muted) 82%, transparent);
+  user-select: none;
+  pointer-events: none;
 }
-.breadcrumb-proto a:hover {
-  color: var(--fg-primary);
-  text-decoration: underline;
+
+:is(.breadcrumb-proto, .breadcrumb-proto-link)[data-underline='always'] {
+  --breadcrumb-underline: underline;
+  --breadcrumb-hover-underline: underline;
 }
-.breadcrumb-proto a:focus-visible {
-  outline: 2px solid var(--focus-ring-color);
-  outline-offset: 3px;
+
+:is(.breadcrumb-proto, .breadcrumb-proto-link)[data-underline='hover'] {
+  --breadcrumb-underline: none;
+  --breadcrumb-hover-underline: underline;
+}
+
+:is(.breadcrumb-proto, .breadcrumb-proto-link)[data-underline='none'] {
+  --breadcrumb-underline: none;
+  --breadcrumb-hover-underline: none;
+}
+
+@media (hover: none) and (pointer: coarse) {
+  :is(.breadcrumb-proto, .breadcrumb-proto-link)[data-underline='hover'] {
+    --breadcrumb-underline: underline;
+  }
+}
+
+/* Match the static labels' first baseline while the anchor owns its full hit area. */
+.breadcrumb-proto-link {
+  display: block;
+  box-sizing: border-box;
+  min-inline-size: var(--breadcrumb-target);
+  min-block-size: var(--breadcrumb-target);
+  margin-block: calc(-1 * var(--breadcrumb-inset));
+  padding-block: var(--breadcrumb-inset);
   border-radius: var(--radius-xs);
+  color: var(--fg-secondary);
+  text-decoration-line: var(--breadcrumb-underline);
+  text-decoration-color: color-mix(in srgb, currentColor 58%, transparent);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.2em;
+  text-decoration-skip-ink: auto;
+  transition:
+    color var(--btn-state-duration),
+    text-decoration-color var(--btn-state-duration);
 }
-.breadcrumb-proto [aria-current] {
+
+.breadcrumb-proto-link[data-icon-only] {
+  display: grid;
+  place-items: center;
+  padding-block: 0;
+  min-block-size: max(var(--breadcrumb-target), var(--breadcrumb-line));
+  font-size: calc(var(--breadcrumb-icon) * var(--font-scale, 1));
+}
+
+.breadcrumb-proto-page,
+.breadcrumb-proto-link[aria-current='page'] {
+  color: var(--fg-primary);
+  font-weight: 600;
+}
+
+.breadcrumb-proto-link[aria-current='page'] {
+  --breadcrumb-underline: underline;
+  --breadcrumb-hover-underline: underline;
+  text-decoration-color: color-mix(in srgb, currentColor 76%, transparent);
+}
+
+@media (hover: hover) {
+  .breadcrumb-proto-link[href]:not([data-preview-state]):hover {
+    color: var(--fg-primary);
+    text-decoration-line: var(--breadcrumb-hover-underline);
+    text-decoration-color: currentColor;
+  }
+}
+
+.breadcrumb-proto-link[href][data-preview-state='hover'] {
+  color: var(--fg-primary);
+  text-decoration-line: var(--breadcrumb-hover-underline);
+  text-decoration-color: currentColor;
+}
+
+.breadcrumb-proto-link[href]:is(:focus-visible, [data-preview-focus]) {
+  outline: 2px solid var(--focus-ring-color);
+  outline-offset: 2px;
+  text-decoration-line: var(--breadcrumb-hover-underline);
+  text-decoration-color: currentColor;
+}
+
+.breadcrumb-proto-link[href]:is(:not([data-preview-state]):active, [data-preview-state='active']) {
+  color: var(--accent-soft-fg);
+  text-decoration-line: var(--breadcrumb-hover-underline);
+  text-decoration-color: currentColor;
+  transition-duration: 0ms;
+}
+
+.breadcrumb-proto-link[aria-disabled='true'] {
+  color: color-mix(in srgb, var(--fg-muted) 56%, var(--fg-disabled));
+  cursor: not-allowed;
+}
+
+.breadcrumb-proto-link[aria-disabled='true'][aria-current='page'] {
   color: var(--fg-primary);
 }
-.breadcrumb-separator-proto {
-  color: var(--fg-subtle);
+
+.breadcrumb-proto-link:is([data-icon-only], [aria-disabled='true']) {
+  --breadcrumb-underline: none;
+  --breadcrumb-hover-underline: none;
 }
-.breadcrumb-proto[hidden] {
-  display: none;
+
+@media (pointer: coarse) {
+  .breadcrumb-proto {
+    --breadcrumb-target: var(--space-48);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .breadcrumb-proto-link {
+    transition: none;
+  }
+}
+
+@media (forced-colors: active) {
+  .breadcrumb-proto-item,
+  .breadcrumb-proto-separator,
+  .breadcrumb-proto-page {
+    color: CanvasText;
+  }
+
+  .breadcrumb-proto
+    .breadcrumb-proto-link[href]:is(:any-link, :hover, :active, [data-preview-state]) {
+    color: LinkText;
+    text-decoration-color: currentColor;
+  }
+
+  .breadcrumb-proto-link[href]:is(:focus-visible, [data-preview-focus]) {
+    outline-color: Highlight;
+  }
+
+  .breadcrumb-proto .breadcrumb-proto-link[aria-disabled='true'] {
+    color: GrayText;
+  }
 }
