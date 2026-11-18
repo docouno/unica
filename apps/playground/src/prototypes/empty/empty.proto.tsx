@@ -1,37 +1,109 @@
+import { Children, createElement } from 'react';
 import type { ComponentPropsWithRef, ReactElement, ReactNode } from 'react';
-import { PlugsConnectedIcon } from '@phosphor-icons/react';
+import { Icon } from '../icon/icon.proto.js';
+import type { GlyphComponent } from '../icon/icon.proto.js';
+import type { HeadingTag } from '../title/title.proto.js';
 import './empty.css';
 
-export interface EmptyProps extends Omit<ComponentPropsWithRef<'section'>, 'title'> {
-  readonly title: ReactNode;
-  readonly description?: ReactNode;
-  readonly icon?: ReactNode;
-  readonly media?: ReactNode;
+export interface EmptyProps extends ComponentPropsWithRef<'div'> {
+  readonly size?: 's' | 'm' | 'l';
+  readonly align?: 'start' | 'center';
+}
+
+export type EmptyMediaColor = 'muted' | 'accent' | 'info' | 'success' | 'warning' | 'danger';
+
+export interface EmptyMediaProps extends Omit<ComponentPropsWithRef<'div'>, 'color'> {
+  readonly icon?: GlyphComponent;
+  readonly color?: EmptyMediaColor;
+}
+
+export interface EmptyTitleProps extends ComponentPropsWithRef<'h3'> {
+  readonly as?: HeadingTag;
+}
+
+function hasContent(children: ReactNode): boolean {
+  return Children.toArray(children).some((child) => child !== '');
 }
 
 export function Empty({
-  title,
-  description,
-  icon,
-  media,
+  size = 'm',
+  align = 'center',
   className = '',
-  children,
   ...props
 }: EmptyProps): ReactElement {
   return (
-    <section {...props} className={`empty-proto ${className}`}>
-      {media ? (
-        <div className="empty-media-proto">{media}</div>
-      ) : (
-        <div className="empty-icon-proto" aria-hidden="true">
-          {icon ?? <PlugsConnectedIcon size="1em" />}
-        </div>
-      )}
-      <div className="empty-copy-proto">
-        <h3>{title}</h3>
-        {description && <div className="empty-description-proto">{description}</div>}
+    <div {...props} className={`empty-proto ${className}`} data-size={size} data-align={align} />
+  );
+}
+
+export function EmptyMedia({
+  icon,
+  color = 'muted',
+  children,
+  className = '',
+  ...props
+}: EmptyMediaProps): ReactElement | null {
+  if (hasContent(children)) {
+    return (
+      <div {...props} className={`empty-media-proto ${className}`} data-kind="illustration">
+        {children}
       </div>
-      {children && <div className="empty-actions-proto">{children}</div>}
-    </section>
+    );
+  }
+  if (!icon) {
+    return null;
+  }
+  return (
+    <div
+      {...props}
+      className={`empty-media-proto ${className}`}
+      data-kind="medallion"
+      data-color={color}
+      aria-hidden="true"
+    >
+      <Icon icon={icon} />
+    </div>
+  );
+}
+
+export function EmptyTitle({
+  as = 'h3',
+  children,
+  className = '',
+  ...props
+}: EmptyTitleProps): ReactElement | null {
+  if (!hasContent(children)) {
+    return null;
+  }
+  return createElement(as, { ...props, className: `empty-title-proto ${className}` }, children);
+}
+
+export function EmptyDescription({
+  children,
+  className = '',
+  ...props
+}: ComponentPropsWithRef<'p'>): ReactElement | null {
+  if (!hasContent(children)) {
+    return null;
+  }
+  return (
+    <p {...props} className={`empty-description-proto ${className}`}>
+      {children}
+    </p>
+  );
+}
+
+export function EmptyActions({
+  children,
+  className = '',
+  ...props
+}: ComponentPropsWithRef<'div'>): ReactElement | null {
+  if (!hasContent(children)) {
+    return null;
+  }
+  return (
+    <div {...props} className={`empty-actions-proto ${className}`}>
+      {children}
+    </div>
   );
 }

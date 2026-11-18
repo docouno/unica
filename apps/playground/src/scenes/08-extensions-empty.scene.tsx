@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useLayoutEffect, useRef, useState } from 'react';
 import type { ReactElement } from 'react';
 import {
   ArrowsLeftRightIcon,
@@ -22,7 +22,13 @@ import { AsidePanel, WorkspaceNavigation } from '../prototypes/app-shell/app-she
 import { Badge } from '../prototypes/badge/badge.proto.js';
 import { Button } from '../prototypes/button/button.proto.js';
 import { Card } from '../prototypes/card/card.proto.js';
-import { Empty } from '../prototypes/empty/empty.proto.js';
+import {
+  Empty,
+  EmptyActions,
+  EmptyDescription,
+  EmptyMedia,
+  EmptyTitle,
+} from '../prototypes/empty/empty.proto.js';
 import { ToastCard } from '../prototypes/toast/toast.proto.js';
 import { Spinner } from '../prototypes/progress/progress.proto.js';
 import { SkeletonText } from '../prototypes/skeleton/skeleton.proto.js';
@@ -38,16 +44,30 @@ function ExtensionsScene(): ReactElement {
   const [category, setCategory] = useState('all');
   const [notice, setNotice] = useState('');
   const [sandboxCreated, setSandboxCreated] = useState(false);
+  const sandboxHeading = useRef<HTMLHeadingElement>(null);
+  const sandboxChanged = useRef(false);
+
+  useLayoutEffect(() => {
+    if (sandboxChanged.current) {
+      sandboxHeading.current?.focus();
+      sandboxChanged.current = false;
+    }
+  }, [sandboxCreated]);
+
+  function changeSandbox(created: boolean): void {
+    sandboxChanged.current = true;
+    setSandboxCreated(created);
+  }
+
   const show = (name: string, group: string): boolean =>
     (!query || name.toLowerCase().includes(query.toLowerCase())) &&
     (category === 'all' || category === group || category === 'schedules' || category === 'keys');
-  const featuredVisible =
-    show('GitHub Enterprise', 'source-control') ||
-    show('PagerDuty Incident Sync', 'incident-response');
-  const installedVisible =
-    show('Slack Triage Bridge', 'incident-response') ||
-    show('S3 Cold Snapshot', 'source-control') ||
-    show('GitHub ADR Mirror', 'source-control');
+  const github = show('GitHub Enterprise', 'source-control');
+  const pagerDuty = show('PagerDuty Incident Sync', 'incident-response');
+  const slack = show('Slack Triage Bridge', 'incident-response');
+  const snapshot = show('S3 Cold Snapshot', 'source-control');
+  const mirror = show('GitHub ADR Mirror', 'source-control');
+  const visibleCount = [github, pagerDuty, slack, snapshot, mirror].filter(Boolean).length;
 
   return (
     <FolioScene>
@@ -72,6 +92,9 @@ function ExtensionsScene(): ReactElement {
               value={query}
               onChange={(event) => setQuery(event.currentTarget.value)}
             />
+            <span className="folio-connector-result-status" role="status">
+              {visibleCount === 1 ? '1 connector shown' : `${visibleCount} connectors shown`}
+            </span>
             <WorkspaceNavigation kind="extensions" defaultActive="all" onNavigate={setCategory} />
           </AsidePanel>
         }
@@ -103,9 +126,9 @@ function ExtensionsScene(): ReactElement {
             title="Repository & incident connectors"
             description="Bi-directional sync between Git-backed architecture records, alert routing, and runbook drills."
           />
-          {featuredVisible && (
+          {(github || pagerDuty) && (
             <div className="folio-grid-2">
-              {show('GitHub Enterprise', 'source-control') && (
+              {github && (
                 <Card className="folio-connector-card folio-connector-featured">
                   <div className="folio-row folio-between">
                     <div className="folio-row folio-connector-link">
@@ -156,7 +179,7 @@ function ExtensionsScene(): ReactElement {
                   </div>
                 </Card>
               )}
-              {show('PagerDuty Incident Sync', 'incident-response') && (
+              {pagerDuty && (
                 <Card className="folio-connector-card folio-connector-featured">
                   <div className="folio-row folio-between">
                     <div className="folio-row folio-connector-link">
@@ -212,9 +235,9 @@ function ExtensionsScene(): ReactElement {
           )}
           <section className="folio-stack">
             <SectionHeading>Installed &amp; indexing</SectionHeading>
-            {installedVisible ? (
+            {slack || snapshot || mirror ? (
               <div className="folio-grid-3">
-                {show('Slack Triage Bridge', 'incident-response') && (
+                {slack && (
                   <Card className="folio-connector-card folio-connector-installed">
                     <div className="folio-row folio-between">
                       <span className="folio-connector-icon">
@@ -245,7 +268,7 @@ function ExtensionsScene(): ReactElement {
                     </div>
                   </Card>
                 )}
-                {show('S3 Cold Snapshot', 'source-control') && (
+                {snapshot && (
                   <Card className="folio-connector-card folio-connector-installed">
                     <div className="folio-row folio-between">
                       <span className="folio-connector-icon">
@@ -276,7 +299,7 @@ function ExtensionsScene(): ReactElement {
                     </div>
                   </Card>
                 )}
-                {show('GitHub ADR Mirror', 'source-control') && (
+                {mirror && (
                   <Card
                     className="folio-connector-card folio-connector-installed folio-connector-indexing"
                     aria-busy="true"
@@ -303,45 +326,66 @@ function ExtensionsScene(): ReactElement {
                 )}
               </div>
             ) : (
-              <Text size="body-s" color="muted">
-                No installed connectors match this filter.
-              </Text>
+              <Empty size="s" align="start">
+                <EmptyDescription>
+                  <bdi>No installed connectors match this filter.</bdi>
+                </EmptyDescription>
+              </Empty>
             )}
           </section>
           <section className="folio-stack">
             <SectionHeading>Custom webhook sandboxes</SectionHeading>
-            <Card className="folio-webhook-card">
-              {sandboxCreated ? (
-                <Empty
-                  icon={<PlugsConnectedIcon size="1em" />}
-                  title="Webhook sandbox ready"
-                  description="Inspect signed event payloads before routing production alerts."
-                >
-                  <Button
-                    size="s"
-                    variant="secondary"
-                    tone="neutral"
-                    onClick={() => setSandboxCreated(false)}
-                  >
-                    Remove sandbox
-                  </Button>
-                </Empty>
-              ) : (
-                <Empty
-                  icon={<PlugsConnectedIcon size="1em" />}
-                  title="No custom webhook sandboxes yet"
-                  description="Deploy an isolated dry-run endpoint to inspect signed event payloads before routing production alerts."
-                >
-                  <Button
-                    size="s"
-                    variant="secondary"
-                    tone="neutral"
-                    onClick={() => setSandboxCreated(true)}
-                  >
-                    Create webhook sandbox
-                  </Button>
-                </Empty>
-              )}
+            <Card size="l" className="folio-webhook-card">
+              <div className="folio-webhook-stage">
+                {sandboxCreated ? (
+                  <div className="folio-webhook-sandbox">
+                    <div className="folio-webhook-sandbox-copy">
+                      <Title
+                        ref={sandboxHeading}
+                        className="folio-webhook-sandbox-title"
+                        as="h3"
+                        size="heading-s"
+                        tabIndex={-1}
+                      >
+                        Webhook sandbox
+                      </Title>
+                      <Text size="body-s" color="muted">
+                        <bdi>Waiting for the first signed event.</bdi>
+                      </Text>
+                    </div>
+                    <Button
+                      size="s"
+                      variant="secondary"
+                      tone="neutral"
+                      onClick={() => changeSandbox(false)}
+                    >
+                      Remove sandbox
+                    </Button>
+                  </div>
+                ) : (
+                  <Empty>
+                    <EmptyMedia icon={PlugsConnectedIcon} />
+                    <EmptyTitle ref={sandboxHeading} tabIndex={-1}>
+                      No webhook sandboxes yet
+                    </EmptyTitle>
+                    <EmptyDescription>
+                      <bdi>
+                        Test signed events in an isolated endpoint before sending them to
+                        production.
+                      </bdi>
+                    </EmptyDescription>
+                    <EmptyActions>
+                      <Button
+                        variant="secondary"
+                        tone="neutral"
+                        onClick={() => changeSandbox(true)}
+                      >
+                        Create webhook sandbox
+                      </Button>
+                    </EmptyActions>
+                  </Empty>
+                )}
+              </div>
             </Card>
           </section>
         </div>

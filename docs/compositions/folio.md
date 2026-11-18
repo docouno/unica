@@ -38,7 +38,7 @@ Run `make dev app=playground` and select a scene in the workbench's **Folio** gr
 | `05-rich-editor` | Toggle formatting, edit a document reference, and select a slash-command block. |
 | `06-page-properties-drawer` | Change visibility and review cadence, then close and reopen the drawer. |
 | `07-invite-access-modal` | Add or remove invitation addresses, select capabilities, and choose a role. |
-| `08-extensions-empty` | Filter connectors and transition the webhook empty state. |
+| `08-extensions-empty` | Filter connectors to see the no-results message. Create and remove a webhook sandbox to inspect how the card replaces the empty message and transfers focus. |
 | `09-user-preferences` | Adjust local preferences, numeric values, and save or discard changes. |
 | `10-workspace-admin` | Inspect staged archives, choose local files, and try validation feedback. |
 
