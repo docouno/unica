@@ -117,18 +117,18 @@ export function Calendar({
   const selected = value ?? localValue;
   const currentRange = range ?? localRange;
   const fixedPoint = previewAnchor || anchor;
-  const inspectedDate = previewCandidate || rejectedDate || hovered;
+  const inspectedDate = previewCandidate || hovered;
   const replacingIncompleteStart = Boolean(onSelect && editingDate && !range);
+  const rangeStart = replacingIncompleteStart ? '' : fixedPoint;
   const canPreview =
-    !replacingIncompleteStart &&
-    fixedPoint &&
+    rangeStart &&
     inspectedDate &&
-    (inspectedDate === rejectedDate ||
-      (inspectedDate !== editingDate && (inspectedDate !== fixedPoint || Boolean(range))));
+    inspectedDate !== editingDate &&
+    (inspectedDate !== fixedPoint || Boolean(range));
   const pending =
     readOnly || disabled
       ? undefined
-      : (previewRange ?? (canPreview ? orderedRange(fixedPoint, inspectedDate) : undefined));
+      : (previewRange ?? (canPreview ? orderedRange(rangeStart, inspectedDate) : undefined));
   const date = dateObject(viewMonth);
   const year = date.getUTCFullYear();
   const monthIndex = date.getUTCMonth();
@@ -161,6 +161,8 @@ export function Calendar({
     allowUnavailableInRange,
   };
   const blockedReason = (day: string): string => dateAvailability(day, constraints);
+  const issueFor = (day: string, candidate?: DateRange): string =>
+    blockedReason(day) || (candidate ? rangeIssue(candidate, constraints) : '');
   const visibleStart = layout === 'year' ? `${year}-01-01` : viewMonth;
   const visibleEnd = addMonths(visibleStart, count);
   const visibleDays = Math.round(
@@ -172,10 +174,14 @@ export function Calendar({
   useEffect(() => {
     onViewAvailability?.(noAvailability);
   }, [noAvailability, onViewAvailability]);
-  const feedbackIssue = disabled
-    ? ''
-    : blockedReason(inspectedDate) || (pending ? rangeIssue(pending, constraints) : '');
-  const proposedRange = pending && !feedbackIssue ? pending : undefined;
+  const inspectedIssue = disabled ? '' : issueFor(inspectedDate, pending);
+  const rejectedIssue =
+    !readOnly && !disabled && rejectedDate
+      ? issueFor(rejectedDate, rangeStart ? orderedRange(rangeStart, rejectedDate) : undefined)
+      : '';
+  const feedbackIssue = rejectedIssue || inspectedIssue;
+  const feedbackDate = rejectedIssue ? rejectedDate : inspectedDate;
+  const proposedRange = pending && !inspectedIssue ? pending : undefined;
   const previewLabel = proposedRange ? `Preview · ${rangeDurationLabel(proposedRange)}` : '';
   useEffect(() => {
     onFeedback?.(feedbackIssue, previewLabel);
@@ -186,7 +192,7 @@ export function Calendar({
     }
     const selectionAnchor = onSelect && !replacingIncompleteStart ? previewAnchor : anchor;
     const next = selectionAnchor ? orderedRange(selectionAnchor, day) : undefined;
-    if (blockedReason(day) || (next && rangeIssue(next, constraints))) {
+    if (issueFor(day, next)) {
       setHovered(day);
       setRejectedDate(day);
       return;
@@ -353,7 +359,7 @@ export function Calendar({
                   coveredByPreview && day === inspectedDate && day !== fixedPoint && !acceptedEdge;
                 const isFixed = fixedPoint === day;
                 const draftAnchor = isFixed && currentRange && !acceptedEdge;
-                const rejected = !readOnly && !disabled && day === inspectedDate && feedbackIssue;
+                const rejected = !readOnly && !disabled && day === feedbackDate && feedbackIssue;
                 const edge =
                   mode === 'range' ? acceptedEdge || (isFixed && !currentRange) : day === selected;
                 const committed = mode === 'range' ? Boolean(acceptedDay) : day === selected;
