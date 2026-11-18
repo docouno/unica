@@ -56,6 +56,11 @@ export default defineConfig({
               test: /\/src\/prototypes\/pagination\//,
               includeDependenciesRecursively: false,
             },
+            {
+              name: 'tabs',
+              test: /\/src\/prototypes\/tabs\//,
+              includeDependenciesRecursively: false,
+            },
           ],
         },
       },

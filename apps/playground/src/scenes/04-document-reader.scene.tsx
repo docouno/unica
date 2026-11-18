@@ -23,7 +23,7 @@ import { HoverCard } from '../prototypes/tooltip/tooltip.proto.js';
 import { TeamPreview } from '../prototypes/tooltip/hover-card.content.js';
 import { Link } from '../prototypes/link/link.proto.js';
 import { Switch } from '../prototypes/binary-controls/binary-controls.proto.js';
-import { Tabs } from '../prototypes/tabs/tabs.proto.js';
+import { Tabs, TabsContent, TabsList, TabsTab } from '../prototypes/tabs/tabs.proto.js';
 import { Text } from '../prototypes/text/text.proto.js';
 import {
   Breadcrumb,
@@ -74,6 +74,22 @@ function ReaderScene(): ReactElement {
       run: () => setNotice('Move to trash requires workspace confirmation.'),
     },
   ];
+  const revisions = (
+    <InspectorSection title="Recent revisions">
+      {[
+        { label: 'v14 · 2h ago', team: 'DB team', diff: '+42 −6' },
+        { label: 'v13 · 4d ago', team: 'Core team', diff: '+118 −14' },
+        { label: 'v12 · 28 Aug', team: 'Platform', diff: '+94' },
+      ].map((revision) => (
+        <div key={revision.label} className="folio-row folio-between">
+          <Text size="caption-l">
+            {revision.label} · {revision.team}
+          </Text>
+          <bdi className="folio-revision-diff">{revision.diff}</bdi>
+        </div>
+      ))}
+    </InspectorSection>
+  );
   return (
     <FolioScene className="folio-reader">
       <FolioWorkspace
@@ -111,17 +127,15 @@ function ReaderScene(): ReactElement {
         }
         rightAside={
           <AsidePanel aria-label="Document inspector" side="right" width={296}>
-            <Tabs
-              value={tab}
-              onValueChange={setTab}
-              items={[
-                { value: 'details', label: 'Details' },
-                { value: 'history', label: 'History' },
-                { value: 'links', label: 'Links' },
-              ]}
-            />
-            {tab === 'details' && (
-              <>
+            <Tabs size="s" value={tab} onValueChange={setTab}>
+              <TabsList aria-label="Document inspector panels">
+                <TabsTab value="details">Details</TabsTab>
+                <TabsTab value="history" count={3} countLabel="3 revisions">
+                  History
+                </TabsTab>
+                <TabsTab value="links">Links</TabsTab>
+              </TabsList>
+              <TabsContent value="details">
                 <InspectorSection title="Properties">
                   <dl className="folio-inspector-properties">
                     <div>
@@ -195,31 +209,17 @@ function ReaderScene(): ReactElement {
                     </CollapsibleContent>
                   </Collapsible>
                 </InspectorSection>
-              </>
-            )}
-            {tab !== 'links' && (
-              <InspectorSection title="Recent revisions">
-                {[
-                  { label: 'v14 · 2h ago', team: 'DB team', diff: '+42 −6' },
-                  { label: 'v13 · 4d ago', team: 'Core team', diff: '+118 −14' },
-                  { label: 'v12 · 28 Aug', team: 'Platform', diff: '+94' },
-                ].map((revision) => (
-                  <div key={revision.label} className="folio-row folio-between">
-                    <Text size="caption-l">
-                      {revision.label} · {revision.team}
-                    </Text>
-                    <span className="folio-revision-diff">{revision.diff}</span>
-                  </div>
-                ))}
-              </InspectorSection>
-            )}
-            {tab === 'links' && (
-              <InspectorSection title="Linked documents">
-                <Text size="body-s">ADR-014 Traffic Draining</Text>
-                <Text size="body-s">Core Networking Charter</Text>
-                <Text size="body-s">Database Reliability Playbook</Text>
-              </InspectorSection>
-            )}
+                {revisions}
+              </TabsContent>
+              <TabsContent value="history">{revisions}</TabsContent>
+              <TabsContent value="links">
+                <InspectorSection title="Linked documents">
+                  <Text size="body-s">ADR-014 Traffic Draining</Text>
+                  <Text size="body-s">Core Networking Charter</Text>
+                  <Text size="body-s">Database Reliability Playbook</Text>
+                </InspectorSection>
+              </TabsContent>
+            </Tabs>
           </AsidePanel>
         }
       >

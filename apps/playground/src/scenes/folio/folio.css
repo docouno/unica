@@ -521,6 +521,14 @@
   position: relative;
   min-block-size: 840px;
 }
+.folio-editor-mode-tabs {
+  flex: 0 1 220px;
+}
+.folio-editor-revisions {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 13rem), 1fr));
+  gap: var(--space-16);
+}
 .folio-editor-tool-divider {
   margin-inline: var(--space-8);
   margin-block: var(--space-4);

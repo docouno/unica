@@ -14,6 +14,7 @@ export interface HintPreviewProps {
   readonly align?: HintAlign;
   readonly shortcut?: ReactNode;
   readonly description?: string;
+  readonly canShow?: (anchor: HTMLElement) => boolean;
   readonly children: ReactNode;
   readonly trigger: (bindings: HintTriggerBindings) => ReactElement;
 }
@@ -51,6 +52,7 @@ export function HintPreview({
   align = family === 'tooltip' ? 'center' : 'start',
   shortcut,
   description,
+  canShow,
   children,
   trigger,
 }: HintPreviewProps): ReactElement {
@@ -86,7 +88,8 @@ export function HintPreview({
     if (
       !anchor ||
       anchor.matches(':disabled, [aria-disabled="true"]') ||
-      intent.current.dismissed
+      intent.current.dismissed ||
+      canShow?.(anchor) === false
     ) {
       return;
     }
@@ -152,6 +155,7 @@ export function HintPreview({
       const bottom = Math.min(viewportBottom - 16, bounds ? bounds.bottom - 16 : Infinity);
       if (
         !anchor.isConnected ||
+        canShow?.(anchor) === false ||
         target.bottom < top ||
         target.top > bottom ||
         target.right < left ||
@@ -309,7 +313,7 @@ export function HintPreview({
         popup.hidePopover();
       }
     };
-  }, [open, side, align, family]);
+  }, [open, side, align, family, canShow]);
 
   const bindings: HintTriggerBindings = {
     ref: (element) => {

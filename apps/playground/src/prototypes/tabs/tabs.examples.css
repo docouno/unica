@@ -1,0 +1,85 @@
+.tabs-examples {
+  display: grid;
+  gap: var(--space-16);
+}
+
+.tabs-example,
+.tabs-example-layout {
+  display: grid;
+  min-inline-size: 0;
+}
+
+.tabs-example {
+  gap: var(--space-4);
+  max-inline-size: 34rem;
+}
+
+.tabs-example:has(> .tabs-example-fluid) {
+  max-inline-size: none;
+}
+
+.tabs-example-layout {
+  gap: var(--space-8);
+}
+
+.tabs-example-panels {
+  min-inline-size: 0;
+  padding: var(--space-4);
+}
+
+.tabs-example-side {
+  --tabs-example-rail: 7.5rem;
+  --tabs-example-panel-gap: var(--space-12);
+  grid-template-columns: min(56%, var(--tabs-example-rail)) minmax(0, 1fr);
+  align-items: start;
+  gap: var(--tabs-example-panel-gap);
+}
+
+.tabs-example-side-medium {
+  --tabs-example-rail: 10rem;
+  --tabs-example-panel-gap: var(--space-16);
+}
+
+.tabs-example-side-wide {
+  --tabs-example-rail: 12rem;
+  --tabs-example-panel-gap: var(--space-24);
+}
+
+.tabs-example-side .tabs-example-panels {
+  padding-inline: 0;
+}
+
+.tabs-example-panel:where(:not([hidden])) {
+  display: grid;
+  gap: var(--space-4);
+}
+
+@container artboard (max-width: 420px) {
+  .tabs-example-side-wide {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-8);
+  }
+
+  .tabs-example-side-wide > .tabs-list-frame-proto {
+    inline-size: min(100%, var(--tabs-example-rail));
+  }
+}
+
+.tabs-manual-card {
+  max-inline-size: 24rem;
+}
+
+.tabs-overlay-stage {
+  display: grid;
+  min-block-size: 168px;
+  place-items: center;
+  padding: var(--space-8);
+}
+
+.tabs-overlay-example.popover-content-proto {
+  display: grid;
+  inline-size: min(100%, 22rem);
+  max-inline-size: 100%;
+  gap: var(--space-8);
+  padding: var(--surface-m-padding);
+}
