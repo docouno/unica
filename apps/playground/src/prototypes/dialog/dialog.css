@@ -25,7 +25,8 @@
   position: absolute;
   inset: 0;
   background: var(--scrim-bg);
-  animation: dialog-scrim-enter 150ms ease-out both;
+  opacity: var(--drawer-drag-scrim, 1);
+  animation: dialog-scrim-enter 150ms ease-out;
 }
 
 .dialog-surface {
@@ -50,7 +51,7 @@
   backdrop-filter: var(--overlay-backdrop);
   box-shadow: var(--dialog-shadow);
   font: var(--text-size-body-s) / var(--text-size-body-s-lh) var(--font-family-base);
-  animation: dialog-surface-enter var(--dialog-duration) cubic-bezier(0.2, 0.7, 0.25, 1) both;
+  animation: dialog-surface-enter var(--dialog-duration) cubic-bezier(0.2, 0.7, 0.25, 1);
 }
 .dialog-surface:focus {
   outline: none;
@@ -113,8 +114,7 @@
 .dialog-description {
   margin: 0;
   overflow-wrap: anywhere;
-  unicode-bidi: plaintext;
-  text-align: match-parent;
+  text-align: start;
 }
 .dialog-title {
   font: 600 var(--text-size-heading-s) / var(--text-size-heading-s-lh) var(--font-family-base);
@@ -219,22 +219,41 @@
 }
 .dialog-layer:not([data-dialog-side='center']) > .dialog-placement > .dialog-surface {
   --dialog-shadow: var(--overlay-shadow-drawer);
+  --dialog-safe-start: env(safe-area-inset-left);
+  --dialog-safe-end: env(safe-area-inset-right);
+}
+.dialog-layer:dir(rtl) > .dialog-placement > .dialog-surface {
+  --dialog-safe-start: env(safe-area-inset-right);
+  --dialog-safe-end: env(safe-area-inset-left);
+}
+.dialog-layer[data-dialog-side='start']:dir(ltr) > .dialog-placement > .dialog-surface,
+.dialog-layer[data-dialog-side='end']:dir(rtl) > .dialog-placement > .dialog-surface {
+  --dialog-shadow: var(--overlay-shadow-drawer-right, var(--overlay-shadow-drawer));
+}
+.dialog-layer[data-dialog-side='top'] > .dialog-placement > .dialog-surface {
+  --dialog-shadow: var(--overlay-shadow-drawer-down, var(--overlay-shadow-drawer));
+}
+.dialog-layer[data-dialog-side='bottom'] > .dialog-placement > .dialog-surface {
+  --dialog-shadow: var(--overlay-shadow-drawer-up, var(--overlay-shadow-drawer));
 }
 .dialog-layer[data-dialog-side='start'] > .dialog-placement > .dialog-surface,
 .dialog-layer[data-dialog-side='end'] > .dialog-placement > .dialog-surface {
   border-block: 0;
+  padding-block: env(safe-area-inset-top) env(safe-area-inset-bottom);
 }
 .dialog-layer[data-dialog-side='start'] > .dialog-placement > .dialog-surface {
   border-inline-start: 0;
+  padding-inline-start: var(--dialog-safe-start);
   border-start-start-radius: 0;
   border-end-start-radius: 0;
 }
 .dialog-layer[data-dialog-side='end'] > .dialog-placement > .dialog-surface {
   border-inline-end: 0;
+  padding-inline-end: var(--dialog-safe-end);
   border-start-end-radius: 0;
   border-end-end-radius: 0;
 }
-.dialog-layer[data-dialog-side='top'],
+.dialog-layer[data-dialog-side='top'] > .dialog-placement,
 .dialog-layer[data-dialog-side='bottom'] > .dialog-placement {
   padding-inline: 0;
   --dialog-duration: 200ms;
@@ -251,16 +270,59 @@
 }
 .dialog-layer[data-dialog-side='top'] > .dialog-placement > .dialog-surface {
   border-block-start: 0;
+  padding-block-start: env(safe-area-inset-top);
+  padding-inline: var(--dialog-safe-start) var(--dialog-safe-end);
   border-start-start-radius: 0;
   border-start-end-radius: 0;
 }
 .dialog-layer[data-dialog-side='bottom'] > .dialog-placement > .dialog-surface {
   border-block-end: 0;
+  padding-block-end: env(safe-area-inset-bottom);
+  padding-inline: var(--dialog-safe-start) var(--dialog-safe-end);
+  translate: 0 var(--drawer-drag-distance, 0px);
+  transition: translate 160ms cubic-bezier(0.2, 0.7, 0.25, 1);
   border-end-start-radius: 0;
   border-end-end-radius: 0;
 }
-.dialog-layer:not([data-dialog-side='center']) .dialog-body {
+.dialog-layer:not([data-dialog-side='center'])
+  .dialog-surface:not([data-whole-scroll])
+  > .dialog-body {
   flex: 1;
+}
+.dialog-layer[data-dialog-side='bottom'] > .dialog-scrim {
+  transition: opacity 160ms ease-out;
+}
+.dialog-layer[data-dragging] > .dialog-placement > .dialog-surface,
+.dialog-layer[data-dragging] > .dialog-scrim {
+  animation: none;
+  transition: none;
+}
+.dialog-handle {
+  display: grid;
+  place-items: center;
+  align-self: center;
+  flex: none;
+  inline-size: 96px;
+  min-block-size: 44px;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+.dialog-handle > span {
+  inline-size: 32px;
+  block-size: 4px;
+  border-radius: var(--radius-full);
+  background: color-mix(in srgb, var(--fg-secondary) 54%, transparent);
+}
+.dialog-handle:hover > span,
+.dialog-layer[data-dragging] .dialog-handle > span {
+  background: var(--fg-secondary);
+}
+.dialog-layer[data-dragging] .dialog-handle {
+  cursor: grabbing;
+}
+.dialog-handle + .dialog-header {
+  padding-block-start: var(--space-4);
 }
 
 @container artboard (max-width: 600px) {
@@ -293,6 +355,11 @@
   .dialog-surface,
   .dialog-scrim {
     animation: none;
+    transition-duration: 0ms;
+  }
+  .dialog-layer[data-dialog-side='bottom'] > .dialog-placement > .dialog-surface,
+  .dialog-layer[data-dialog-side='bottom'] > .dialog-scrim {
+    transition: none;
   }
 }
 @media (forced-colors: active) {
@@ -307,6 +374,9 @@
   .dialog-surface::before,
   .dialog-surface::after {
     display: none;
+  }
+  .dialog-handle > span {
+    background: ButtonText;
   }
   .dialog-scrim {
     background: Canvas;

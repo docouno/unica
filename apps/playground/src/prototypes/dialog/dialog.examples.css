@@ -1,8 +1,19 @@
-.wb-overlay-stage:has(.dialog-study) {
+.wb-overlay-stage:has(> .unica-stage-content > .dialog-study) {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  align-content: start;
   padding: 0;
 }
-.wb-overlay-stage:has(.dialog-study) > [data-unica-stage-scrim] {
+.wb-overlay-stage:has(> .unica-stage-content > .dialog-study) > [data-unica-underlay] {
+  grid-area: 2 / 1;
+}
+.wb-overlay-stage:has(> .unica-stage-content > .dialog-study) > [data-unica-stage-scrim] {
   display: none;
+}
+.unica-stage-content:has(> .dialog-study),
+.unica-stage-content > .dialog-study {
+  display: contents;
 }
 .dialog-study {
   inline-size: 100%;
@@ -10,6 +21,7 @@
   isolation: isolate;
 }
 .dialog-study-controls {
+  grid-area: 1 / 1;
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-8) var(--space-16);
@@ -19,12 +31,16 @@
 }
 .dialog-study-select {
   display: flex;
+  min-inline-size: 0;
+  max-inline-size: 100%;
   align-items: center;
   gap: var(--space-8);
   font-size: var(--text-size-caption-l);
   font-weight: 600;
 }
 .dialog-study-select select {
+  flex: 1;
+  min-inline-size: 0;
   min-block-size: 32px;
   max-inline-size: 100%;
   padding-inline: var(--space-8);
@@ -39,7 +55,9 @@
   outline-offset: 2px;
 }
 .dialog-study-stage {
+  grid-area: 2 / 1;
   position: relative;
+  isolation: isolate;
   display: grid;
   place-items: center;
   block-size: var(--study-height);
@@ -103,4 +121,18 @@
 .dialog-study-facts dd {
   margin: 0;
   font-weight: 500;
+}
+.dialog-drawer-launch {
+  display: grid;
+  justify-items: center;
+  gap: var(--space-8);
+}
+.dialog-drawer-launch[inert] {
+  visibility: hidden;
+}
+.dialog-drawer-launch > p {
+  margin: 0;
+  padding: var(--space-4) var(--space-8);
+  color: var(--fg-primary);
+  background: var(--bg-surface);
 }

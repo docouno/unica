@@ -16,7 +16,8 @@ import {
 } from '../prototypes/dialog/dialog.proto.js';
 import { Toast } from '../prototypes/feedback/feedback.proto.js';
 import { FormField } from '../prototypes/input/input.proto.js';
-import { Combobox } from '../prototypes/select/select.proto.js';
+import { Combobox } from '../prototypes/combobox/combobox.proto.js';
+import type { Suggestion } from '../prototypes/combobox/combobox.proto.js';
 import { CheckboxCard, RadioCard } from '../prototypes/choice-card/choice-card.proto.js';
 import { Textarea } from '../prototypes/textarea/textarea.proto.js';
 import { Text } from '../prototypes/text/text.proto.js';
@@ -28,6 +29,21 @@ import {
 import { defineScene } from '../workbench/types.js';
 import { FolioScene, FolioWorkspace, RunbookArticle } from './folio/folio.shared.js';
 
+const reviewers = [
+  {
+    value: 'network',
+    label: 'Core networking',
+    description: 'Staff Engineer',
+    group: 'Core Infrastructure',
+  },
+  {
+    value: 'edge',
+    label: 'Edge reliability',
+    description: 'Edge SRE',
+    group: 'Core Infrastructure',
+  },
+] as const satisfies readonly Suggestion[];
+
 function PropertiesScene(): ReactElement {
   const formId = useId();
   const scopeId = useId();
@@ -37,7 +53,7 @@ function PropertiesScene(): ReactElement {
   const [paging, setPaging] = useState(true);
   const [date, setDate] = useState('2027-01-15');
   const [scope, setScope] = useState('Verify synchronous standby lag and VIP fencing script.');
-  const [reviewer, setReviewer] = useState('Core');
+  const [reviewer, setReviewer] = useState<Suggestion | null>(reviewers[0]);
   const [saved, setSaved] = useState(false);
   return (
     <FolioScene>
@@ -70,7 +86,11 @@ function PropertiesScene(): ReactElement {
             </div>
           </FolioWorkspace>
         </div>
-        <DrawerContent className="folio-properties-dialog" described>
+        <DrawerContent
+          className="folio-properties-dialog"
+          side={{ wide: 'end', narrow: 'bottom' }}
+          described
+        >
           <DrawerHeader closeLabel="Close document properties">
             <DrawerTitle>Document properties & review</DrawerTitle>
             <DrawerDescription>
@@ -112,7 +132,7 @@ function PropertiesScene(): ReactElement {
                 checked={paging}
                 onChange={(event) => setPaging(event.currentTarget.checked)}
                 label="Page on-call when verification expires"
-                description="Opens a low-urgency PagerDuty review note if overdue."
+                description={<bdi>Opens a low-urgency PagerDuty review note if overdue.</bdi>}
               />
               <div className="folio-stack">
                 <DatePicker
@@ -139,23 +159,10 @@ function PropertiesScene(): ReactElement {
               <Combobox
                 label="Backup reviewer"
                 size="s"
-                defaultOpen
-                value={reviewer}
-                onValueChange={setReviewer}
-                options={[
-                  {
-                    value: 'network',
-                    label: 'Core networking — Staff Engineer',
-                    group: 'Core Infrastructure',
-                  },
-                  {
-                    value: 'edge',
-                    label: 'Edge reliability — Edge SRE',
-                    group: 'Core Infrastructure',
-                  },
-                ]}
+                defaultSelection={reviewer ?? undefined}
+                onSelectionChange={setReviewer}
+                options={reviewers}
               />
-              <div className="folio-combobox-reserve" aria-hidden="true" />
             </form>
           </DrawerBody>
           <DrawerFooter>

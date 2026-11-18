@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import type { HTMLAttributes, ReactElement, ReactNode } from 'react';
 import { CalendarBlankIcon, CaretLeftIcon, CaretRightIcon, XIcon } from '@phosphor-icons/react';
 import { Input } from '../input/input.proto.js';
@@ -166,17 +166,31 @@ export function DatePicker({
   variant = 'default',
   clearable,
   className = '',
+  onKeyDown,
   ...props
 }: DatePickerProps): ReactElement {
   const [localValue, setLocalValue] = useState(defaultValue);
   const [open, setOpen] = useState(defaultOpen);
+  const toggleRef = useRef<HTMLButtonElement>(null);
   const current = value ?? localValue;
   const update = (next: string): void => {
     setLocalValue(next);
     onValueChange?.(next);
   };
   return (
-    <div {...props} className={`date-picker-proto ${className}`}>
+    <div
+      {...props}
+      className={`date-picker-proto ${className}`}
+      onKeyDown={(event) => {
+        onKeyDown?.(event);
+        if (open && !disabled && event.key === 'Escape' && !event.defaultPrevented) {
+          event.preventDefault();
+          event.stopPropagation();
+          setOpen(false);
+          toggleRef.current?.focus({ preventScroll: true });
+        }
+      }}
+    >
       <Input
         label={label}
         disabled={disabled}
@@ -199,6 +213,7 @@ export function DatePicker({
               </button>
             )}
             <button
+              ref={toggleRef}
               type="button"
               className="field-icon-button-proto"
               aria-label={open ? 'Hide calendar' : 'Choose date'}

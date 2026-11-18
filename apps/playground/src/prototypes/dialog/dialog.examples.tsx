@@ -1,3 +1,4 @@
+import { useId } from 'react';
 import type { CSSProperties, ReactElement, ReactNode } from 'react';
 import type { DialogSize } from './dialog.proto.js';
 import './dialog.examples.css';
@@ -35,10 +36,12 @@ export function StudySelect<Value extends string>({
   readonly options: readonly (readonly [Value, string])[];
   readonly onChange: (value: Value) => void;
 }): ReactElement {
+  const id = useId();
   return (
-    <label className="dialog-study-select">
-      {label}
+    <div className="dialog-study-select">
+      <label htmlFor={id}>{label}</label>
       <select
+        id={id}
         value={value}
         onChange={(event) => {
           const option = options.find(([key]) => key === event.currentTarget.value);
@@ -53,7 +56,7 @@ export function StudySelect<Value extends string>({
           </option>
         ))}
       </select>
-    </label>
+    </div>
   );
 }
 

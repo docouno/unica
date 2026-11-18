@@ -1,4 +1,12 @@
-import { createContext, useContext, useId, useLayoutEffect, useRef } from 'react';
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useId,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from 'react';
 import type {
   ComponentPropsWithRef,
   HTMLAttributes,
@@ -89,6 +97,7 @@ export interface ModalContentProps extends DialogContentProps {
 interface DialogSurfaceProps extends ModalContentProps {
   readonly side: 'center' | DrawerSide;
   readonly dragHandle?: ReactNode;
+  readonly layerRef?: RefObject<HTMLDivElement | null>;
 }
 
 function observeOverflow(panel: HTMLElement): () => void {
@@ -103,7 +112,12 @@ function observeOverflow(panel: HTMLElement): () => void {
       (height, part) => height + (part?.getBoundingClientRect().height ?? 0),
       0,
     );
-    const available = panel.clientHeight - chromeHeight;
+    const padding = getComputedStyle(panel);
+    const available =
+      panel.clientHeight -
+      chromeHeight -
+      parseFloat(padding.paddingBlockStart) -
+      parseFloat(padding.paddingBlockEnd);
     const natural = content?.getBoundingClientRect().height ?? 0;
     const whole = available < Math.min(96, natural) - 1;
     panel.toggleAttribute('data-whole-scroll', whole);
@@ -118,7 +132,26 @@ function observeOverflow(panel: HTMLElement): () => void {
       );
     }
   };
-  const observer = new ResizeObserver(update);
+  const keepFocusVisible = (): void => {
+    const active = panel.ownerDocument.activeElement;
+    if (!body || !(active instanceof HTMLElement) || !body.contains(active)) {
+      return;
+    }
+    const scrollOwner = panel.hasAttribute('data-whole-scroll') ? panel : body;
+    const visible = scrollOwner.getBoundingClientRect();
+    const target = active.getBoundingClientRect();
+    if (target.top < visible.top) {
+      scrollOwner.scrollTop += target.top - visible.top - 4;
+    } else if (target.bottom > visible.bottom) {
+      scrollOwner.scrollTop += target.bottom - visible.bottom + 4;
+    }
+  };
+  const observer = new ResizeObserver((entries) => {
+    update();
+    if (entries.some(({ target }) => target === panel || target === body)) {
+      keepFocusVisible();
+    }
+  });
   for (const element of [panel, body, content, header, footer, handle]) {
     if (element) {
       observer.observe(element);
@@ -126,6 +159,7 @@ function observeOverflow(panel: HTMLElement): () => void {
   }
   body?.addEventListener('scroll', update, { passive: true });
   update();
+  keepFocusVisible();
   return () => {
     observer.disconnect();
     body?.removeEventListener('scroll', update);
@@ -171,6 +205,7 @@ function DialogSurface({
   className = '',
   role = 'dialog',
   dragHandle,
+  layerRef,
   children,
 }: DialogSurfaceProps): ReactElement | null {
   const { id, open, onOpenChange, trigger, launchedRef } = useDialog();
@@ -197,7 +232,7 @@ function DialogSurface({
     if (open && panel.current) {
       return observeOverflow(panel.current);
     }
-  }, [open]);
+  }, [open, side]);
 
   if (!open) {
     return null;
@@ -205,6 +240,7 @@ function DialogSurface({
 
   return (
     <div
+      ref={layerRef}
       className={`dialog-layer ${className}`}
       data-dialog-side={side}
       inert={inactive}
@@ -295,17 +331,30 @@ function DialogHeader({
   );
 }
 
-function DialogTitle({ className = '', ...props }: ComponentPropsWithRef<'h2'>): ReactElement {
+function DialogTitle({
+  className = '',
+  children,
+  ...props
+}: ComponentPropsWithRef<'h2'>): ReactElement {
   const { id } = useDialog();
-  return <h2 {...props} id={`${id}-title`} className={`dialog-title ${className}`} />;
+  return (
+    <h2 {...props} id={`${id}-title`} className={`dialog-title ${className}`}>
+      <bdi>{children}</bdi>
+    </h2>
+  );
 }
 
 function DialogDescription({
   className = '',
+  children,
   ...props
 }: HTMLAttributes<HTMLParagraphElement>): ReactElement {
   const { id } = useDialog();
-  return <p {...props} id={`${id}-description`} className={`dialog-description ${className}`} />;
+  return (
+    <p {...props} id={`${id}-description`} className={`dialog-description ${className}`}>
+      <bdi>{children}</bdi>
+    </p>
+  );
 }
 
 function DialogBody({ children }: { readonly children: ReactNode }): ReactElement {
@@ -341,13 +390,121 @@ export function ModalContent(props: ModalContentProps): ReactElement {
   return <DialogSurface {...props} side="center" />;
 }
 
-// The initial side placement is shared with the Folio preview.
-export interface DrawerContentProps extends DialogContentProps {
-  readonly side?: DrawerSide;
+interface DragSession {
+  readonly pointerId: number;
+  readonly start: number;
+  readonly time: number;
+  readonly panel: HTMLElement;
+  readonly layer: HTMLElement;
 }
 
-export function DrawerContent({ side = 'end', ...props }: DrawerContentProps): ReactElement {
-  return <DialogSurface {...props} side={side} />;
+function DrawerHandle(): ReactElement {
+  const { onOpenChange } = useDialog();
+  const sessionRef = useRef<DragSession | null>(null);
+  const reset = useCallback((): void => {
+    const session = sessionRef.current;
+    if (session) {
+      session.layer.removeAttribute('data-dragging');
+      session.layer.style.removeProperty('--drawer-drag-distance');
+      session.layer.style.removeProperty('--drawer-drag-scrim');
+      sessionRef.current = null;
+    }
+  }, []);
+  useLayoutEffect(() => reset, [reset]);
+
+  return (
+    <div
+      className="dialog-handle"
+      aria-hidden="true"
+      onPointerDown={(event) => {
+        if (!event.isPrimary || event.button !== 0) {
+          return;
+        }
+        const panel = event.currentTarget.closest<HTMLElement>('.dialog-surface');
+        const layer = panel?.closest<HTMLElement>('.dialog-layer');
+        if (!panel || !layer) {
+          return;
+        }
+        event.preventDefault();
+        event.currentTarget.setPointerCapture(event.pointerId);
+        sessionRef.current = {
+          pointerId: event.pointerId,
+          start: event.clientY,
+          time: event.timeStamp,
+          panel,
+          layer,
+        };
+        layer.setAttribute('data-dragging', '');
+      }}
+      onPointerMove={(event) => {
+        const session = sessionRef.current;
+        if (!session || session.pointerId !== event.pointerId) {
+          return;
+        }
+        const distance = Math.max(0, event.clientY - session.start);
+        const minimumOpacity = 0.45;
+        const opacity = Math.max(minimumOpacity, 1 - distance / session.panel.offsetHeight);
+        session.layer.style.setProperty('--drawer-drag-distance', `${distance}px`);
+        session.layer.style.setProperty('--drawer-drag-scrim', String(opacity));
+      }}
+      onPointerUp={(event) => {
+        const session = sessionRef.current;
+        if (!session || session.pointerId !== event.pointerId) {
+          return;
+        }
+        const distance = event.clientY - session.start;
+        const threshold = Math.min(120, session.panel.offsetHeight * 0.3);
+        const velocity = distance / Math.max(1, event.timeStamp - session.time);
+        reset();
+        if (distance >= threshold || (distance >= 32 && velocity >= 0.55)) {
+          onOpenChange?.(false);
+        }
+      }}
+      onPointerCancel={reset}
+      onLostPointerCapture={reset}
+    >
+      <span />
+    </div>
+  );
+}
+
+export interface DrawerContentProps extends DialogContentProps {
+  readonly side?: DrawerSide | { readonly narrow: DrawerSide; readonly wide: DrawerSide };
+  readonly swipeToClose?: boolean;
+}
+
+export function DrawerContent({
+  side = 'end',
+  swipeToClose = true,
+  ...props
+}: DrawerContentProps): ReactElement {
+  const { open, onOpenChange } = useDialog();
+  const layerRef = useRef<HTMLDivElement>(null);
+  const [narrow, setNarrow] = useState(false);
+  const adaptive = typeof side !== 'string';
+  useLayoutEffect(() => {
+    const canvas = layerRef.current?.parentElement;
+    if (!open || !adaptive || !canvas) {
+      return;
+    }
+    const observer = new ResizeObserver(([entry]) => {
+      if (entry) {
+        setNarrow(entry.contentRect.width <= 600);
+      }
+    });
+    observer.observe(canvas);
+    return () => observer.disconnect();
+  }, [adaptive, open]);
+
+  const edge = typeof side === 'string' ? side : narrow ? side.narrow : side.wide;
+  return (
+    <DialogSurface
+      {...props}
+      side={edge}
+      layerRef={layerRef}
+      dragHandle={edge === 'bottom' && swipeToClose && onOpenChange && <DrawerHandle />}
+    />
+  );
 }
 
 export {

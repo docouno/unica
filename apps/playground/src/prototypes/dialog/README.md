@@ -1,8 +1,10 @@
-# Modal design reference
+# Modal and Drawer design reference
+
+## Modal
 
 Open **Modal** in the Workbench. The editor combines independent width and density controls with ready, field error, pending and retry previews. The other sections show a destructive confirmation, scrolling and short-window fallback, a live draft guard, and an inspection dialog with a dismissible Toast while the panel is open. Edit the project name or description before requesting close in the draft guard. **Folio → Invite & Access Modal** shows the same parts in a larger workspace form.
 
-## Surface and anatomy
+### Surface and anatomy
 
 - Use a centered Modal for a focused task that blocks the current workspace. Use it for a bounded editor, a read-only inspection, or a decision that needs an answer. A destructive confirmation uses the same anatomy with alert-dialog semantics.
 - The outer surface owns the theme border, rim, corner motif, fill and modal shadow. Soft is matte and rounded. Frost keeps readable text on glass over an immediately dimmed background. Pixel uses a sharp opaque frame and offset shadow. Put the overlay context on the surface so fields and cards acquire their contextual recipes. A nested picker keeps its own restrained floating shadow and draws above the body scroll clip.
@@ -11,7 +13,7 @@ Open **Modal** in the Workbench. The editor combines independent width and densi
 - Align a short footer at inline end. The safe action comes first in reading and tab order. Keep the most consequential action visually clear and use danger for destructive commits. Actions wrap in order, with their full labels available. No empty body or footer spacer is needed when a slot is absent.
 - The body scrolls when it overflows. Keep the header and footer visible and reveal a thin inset seam only at a boundary concealing additional content. At the top only the lower seam is visible, in the middle both are visible, and at the end only the upper seam is visible. When the available reading region drops below 96px and the content needs more space, scroll the entire panel with the seams removed. A scrollable region is keyboard reachable and keeps focus targets visible.
 
-## Interaction
+### Interaction
 
 - On entry, give the dialog an accessible name and an optional short description. For long or structured content, announce the heading and let the user read the body in order. Give a short editor a meaningful field focus on keyboard/desktop launch. On touch, or for an inspection or a long editor, focus the static start and leave the software keyboard closed. A destructive confirmation starts on the safe action.
 - A close request comes from the close button, Cancel or Escape. Default to a protected backdrop. A read-only inspection can opt in, accepting a primary press and release on the backdrop only. A picker handles its own Escape before the parent. Escape in a destructive confirmation takes the safe action.
@@ -20,3 +22,25 @@ Open **Modal** in the Workbench. The editor combines independent width and densi
 - Entry uses a short opacity transition, with no scale or travel. The scrim fades over 150ms and the surface over 160ms. Close releases modality and returns focus immediately. Exit decoration is optional platform polish. Reduced motion switches visibility immediately. In forced colors, keep a system-colored boundary, clear focus and readable text.
 
 The Workbench renders bounded panels with isolated local controls so six themes remain visible side by side. Save states are selected previews. Modal lifecycle, background inertness and document scroll lock, native top-layer coordination, and portable focus and form behavior are supplied by the library implementation.
+
+## Drawer
+
+Open **Drawer** in the Workbench. Activity filters compare all four placements and the two size axes. Edit delivery settings before closing to inspect the draft guard. Drag a short distance and release to inspect settling, then drag farther to request close. The presentation control can show a button-only sheet or switch to adaptive placement. The long form includes a simulated keyboard inset. **Folio → Page Properties & Relations Drawer** shows the same parts with a denser product form and a reviewer picker.
+
+### Surface and placement
+
+- Use a Drawer for a supporting task tied to the workspace beneath it. A filter panel, settings editor or details view uses the same structure. Keep permanent or simultaneously interactive inspectors in the application layout.
+- Start and end panels fill the available block dimension and mirror in RTL. Top and bottom panels are centered on the inline axis and grow with content, leaving at least 16px at the opposite edge. All four sides use the same independent width and density scales as Modal. A narrow viewport may use the full inline width. Only the corners on the attached edge are square in Soft and Frost. Pixel keeps square geometry throughout.
+- Leave the attached edge flush. The theme supplies the free-edge outline, rim and shadow. Soft and Frost preserve their diffuse shadow. The Pixel shadow casts 6px toward the exposed workspace, including when inline placement mirrors. Keep the scrim over the full workspace even when the panel is shorter. The sheet respects visual viewport bounds and device safe areas while the material itself meets the edge.
+- Use the same header, content and actions hierarchy as Modal. The body grows to fill a side panel. A short sheet grows to fit its content. As content overflows, the header and footer stay visible, with a seam on each side where content is concealed. The whole-panel scroll fallback applies at the same 96px reading-space threshold. Keep the close control reachable in a sheet without drag and on a short viewport.
+- A given edge stays stable by default. The consumer can explicitly choose an adaptive pair. Folio changes from inline end to bottom when 600px or less is available, retaining the same form and panel, the focused control and the draft. Keep the reading position when the same scroll owner survives, and bring the focused control into view if the scroll owner must change. The layout change itself is immediate.
+
+### Gesture and dismissal
+
+- On entry, focus the static start so the user can orient to the panel before interacting with the form. Preserve the current focus when the edge adapts. Escape, Cancel and the visible close button request the same dismissal. A picker handles Escape first. The backdrop is protected by default and a read-only view can explicitly opt in to background dismissal.
+- The bottom sheet has a centered 96 × 44px grab zone and a 32 × 4px bar. The bar uses the theme's capsule radius including square Pixel ends. The full target sits above the title with a 4px gap to the start of the header. The quiet × is visible alongside the title and offers equivalent dismissal without dragging. Top and side panels have no grip. A bottom sheet with swipe disabled removes the entire grab row.
+- The grab zone is the sole drag origin. The body keeps ordinary scrolling, selection and control interaction. While dragging down, the sheet follows the pointer and the scrim eases proportionally down to 45% of its resting opacity. An upward move stops at the resting position. The grip darkens or brightens to full secondary foreground while held.
+- Release requests close after travel of 30% of the panel height capped at 120px, or after at least 32px with average speed of 0.55px/ms or more. A shorter release, pointer cancellation or a refused request returns the sheet to its original position in 160ms. The parent may show the shared discard confirmation and preserve all fields. Keep editing returns to the previous control. Confirmed discard closes both layers and restores the trigger.
+- Drawer enters over 200ms using opacity and 20px of travel from its attached edge. The scrim follows the shared 150ms fade. Close and focus return happen immediately. Reduced motion removes entry and settling animations, while a directly dragged panel still follows the pointer. Forced colors retain the grip and a system-colored free-edge boundary.
+
+The specimen exercises geometry changes, local drafts, drag and dismissal. The library supplies native modal ownership, coordination with pickers and notifications, device viewport and safe-area integration, and production keyboard, focus and form guarantees.

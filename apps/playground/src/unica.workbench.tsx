@@ -40,6 +40,7 @@ const scenes: readonly SceneDefinition[] = Object.values(sceneModules)
 export function UnicaUnderlay(): ReactElement {
   return (
     <div
+      data-unica-underlay=""
       aria-hidden="true"
       style={{
         position: 'absolute',
@@ -351,16 +352,7 @@ function renderUnicaStage({
           pointerEvents: 'none',
         }}
       />
-      <div
-        data-surface="overlay"
-        style={{
-          position: 'relative',
-          zIndex: 2,
-          width: '100%',
-          display: 'flex',
-          justifyContent: 'center',
-        }}
-      >
+      <div className="unica-stage-content" data-surface="overlay">
         {children}
       </div>
     </OverlayStage>
