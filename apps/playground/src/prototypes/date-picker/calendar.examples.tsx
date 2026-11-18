@@ -69,14 +69,22 @@ export default defineSpecimen({
       title: 'Range geometry',
       kind: 'states',
       caption:
-        'Solid endpoints, quiet week-row ribbons, and a dashed draft. Reverse selection is ordered; a single-day range has one cap.',
+        'Solid accepted endpoints, a same-tone hover inside the ribbon, and an outlined proposed endpoint. Reverse selection is ordered; a single-day range has one cap.',
       surface: 'overlay',
       overlayStage: true,
       render: () => (
-        <div className="date-study-stack-proto">
-          <DateStudy label="Across a week boundary">
+        <div className="date-study-stack-proto date-study-overlay-stack-proto">
+          <DateStudy label="Accepted period · hover and press">
             <DatePickerPanel>
-              <Calendar mode="range" range={['2026-09-11', '2026-09-23']} />
+              <Calendar
+                mode="range"
+                range={['2026-09-11', '2026-09-23']}
+                previewDates={{
+                  '2026-09-15': 'hover',
+                  '2026-09-16': 'active',
+                  '2026-09-23': 'hover',
+                }}
+              />
             </DatePickerPanel>
           </DateStudy>
           <DateStudy
@@ -124,7 +132,7 @@ export default defineSpecimen({
           </DateStudy>
           <DateStudy
             label="Blocked draft · pinned"
-            note="The date stays readable, the range gains an error tint, and the reason is stated below the grid."
+            note="A dashed, unfilled path keeps the fixed date visible. The reason appears below the grid."
           >
             <Calendar
               mode="range"

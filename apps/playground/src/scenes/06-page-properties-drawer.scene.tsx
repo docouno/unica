@@ -2,14 +2,13 @@ import { useId, useState } from 'react';
 import type { ReactElement } from 'react';
 import { SlidersHorizontalIcon } from '@phosphor-icons/react';
 import { Button } from '../prototypes/button/button.proto.js';
-import { Calendar, DatePicker } from '../prototypes/date-picker/date-picker.proto.js';
+import { DatePicker } from '../prototypes/date-picker/date-picker.proto.js';
 import { Drawer } from '../prototypes/dialog/dialog.proto.js';
 import { Toast } from '../prototypes/feedback/feedback.proto.js';
 import { FormField } from '../prototypes/input/input.proto.js';
 import { Combobox } from '../prototypes/select/select.proto.js';
 import { CheckboxCard, RadioCard } from '../prototypes/choice-card/choice-card.proto.js';
 import { Textarea } from '../prototypes/textarea/textarea.proto.js';
-import { Text } from '../prototypes/text/text.proto.js';
 import { defineScene } from '../workbench/types.js';
 import { FolioScene, FolioWorkspace, RunbookArticle } from './folio/folio.shared.js';
 
@@ -18,12 +17,19 @@ function PropertiesScene(): ReactElement {
   const scopeId = useId();
   const visibilityName = useId();
   const [open, setOpen] = useState(true);
-  const [visibility, setVisibility] = useState('workspace');
-  const [paging, setPaging] = useState(true);
-  const [date, setDate] = useState('2027-01-15');
-  const [scope, setScope] = useState('Verify synchronous standby lag and VIP fencing script.');
-  const [reviewer, setReviewer] = useState('Core');
+  const [properties, setProperties] = useState({
+    visibility: 'workspace',
+    paging: true,
+    date: '2027-01-15',
+    scope: 'Verify synchronous standby lag and VIP fencing script.',
+    reviewer: 'network',
+  });
+  const [draft, setDraft] = useState(properties);
   const [saved, setSaved] = useState(false);
+  const openProperties = (): void => {
+    setDraft(properties);
+    setOpen(true);
+  };
   return (
     <FolioScene>
       <FolioWorkspace
@@ -37,7 +43,7 @@ function PropertiesScene(): ReactElement {
             variant="secondary"
             tone="neutral"
             iconLeft={SlidersHorizontalIcon}
-            onClick={() => setOpen(true)}
+            onClick={openProperties}
           >
             Properties
           </Button>
@@ -68,6 +74,7 @@ function PropertiesScene(): ReactElement {
           className="folio-stack-lg"
           onSubmit={(event) => {
             event.preventDefault();
+            setProperties(draft);
             setOpen(false);
             setSaved(true);
           }}
@@ -78,55 +85,51 @@ function PropertiesScene(): ReactElement {
               <RadioCard
                 name={visibilityName}
                 value="workspace"
-                checked={visibility === 'workspace'}
-                onChange={() => setVisibility('workspace')}
+                checked={draft.visibility === 'workspace'}
+                onChange={() => setDraft({ ...draft, visibility: 'workspace' })}
                 label="Workspace internal"
                 description="All 14 engineers"
               />
               <RadioCard
                 name={visibilityName}
                 value="responders"
-                checked={visibility === 'responders'}
-                onChange={() => setVisibility('responders')}
+                checked={draft.visibility === 'responders'}
+                onChange={() => setDraft({ ...draft, visibility: 'responders' })}
                 label="Incident responders"
                 description="SRE on-call only"
               />
             </div>
           </fieldset>
           <CheckboxCard
-            checked={paging}
-            onChange={(event) => setPaging(event.currentTarget.checked)}
+            checked={draft.paging}
+            onChange={(event) => setDraft({ ...draft, paging: event.currentTarget.checked })}
             label="Page on-call when verification expires"
             description="Opens a low-urgency PagerDuty review note if overdue."
           />
-          <div className="folio-stack">
-            <DatePicker
-              label="Next verification date"
-              size="s"
-              value={date}
-              onValueChange={setDate}
-            />
-            <Calendar key={date.slice(0, 7)} month={date} value={date} onSelect={setDate} />
-            <Text size="caption-l" color="muted">
-              Review due: {date === '2027-01-15' ? '15 Jan 2027' : date}
-            </Text>
-          </div>
+          <DatePicker
+            label="Next verification date"
+            size="s"
+            value={draft.date}
+            onValueChange={(date) => setDraft({ ...draft, date })}
+            today="2027-01-05"
+            min="2027-01-05"
+            clearable
+          />
           <FormField label="Verification scope" htmlFor={scopeId}>
             <Textarea
               id={scopeId}
               size="s"
               rows={2}
-              value={scope}
-              onChange={(event) => setScope(event.currentTarget.value)}
+              value={draft.scope}
+              onChange={(event) => setDraft({ ...draft, scope: event.currentTarget.value })}
               aria-label="Verification scope"
             />
           </FormField>
           <Combobox
             label="Backup reviewer"
             size="s"
-            defaultOpen
-            value={reviewer}
-            onValueChange={setReviewer}
+            value={draft.reviewer}
+            onValueChange={(reviewer) => setDraft({ ...draft, reviewer })}
             options={[
               {
                 value: 'network',
@@ -136,7 +139,6 @@ function PropertiesScene(): ReactElement {
               { value: 'edge', label: 'Edge reliability — Edge SRE', group: 'Core Infrastructure' },
             ]}
           />
-          <div className="folio-combobox-reserve" aria-hidden="true" />
         </form>
       </Drawer>
       {saved && (

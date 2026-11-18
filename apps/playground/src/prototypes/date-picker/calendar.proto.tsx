@@ -1,4 +1,4 @@
-import { useId, useRef, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import type { HTMLAttributes, KeyboardEvent, ReactElement } from 'react';
 import { CaretDownIcon, CaretLeftIcon, CaretRightIcon } from '@phosphor-icons/react';
 import type { ControlSize } from '../input/input.proto.js';
@@ -39,12 +39,16 @@ export interface CalendarProps extends Omit<
   readonly indicators?: readonly string[] | undefined;
   readonly readOnly?: boolean | undefined;
   readonly disabled?: boolean | undefined;
+  readonly onViewAvailability?: ((empty: boolean) => void) | undefined;
   readonly showFeedback?: boolean | undefined;
   readonly onPreview?: ((date: string) => void) | undefined;
   /** Pinned design studies; neither moves focus nor changes the actual selection. */
+  readonly previewAnchor?: string | undefined;
+  readonly previewCandidate?: string | undefined;
   readonly previewRange?: DateRange | undefined;
   readonly previewDates?: Readonly<Record<string, 'hover' | 'active' | 'focus'>> | undefined;
   readonly initialView?: 'days' | 'months' | 'years' | undefined;
+  readonly initialActiveDate?: string | undefined;
 }
 
 export function Calendar({
@@ -72,9 +76,13 @@ export function Calendar({
   disabled,
   onPreview,
   showFeedback = true,
+  onViewAvailability,
   previewRange,
+  previewAnchor,
+  previewCandidate,
   previewDates,
   initialView = 'days',
+  initialActiveDate,
   className = '',
   ...props
 }: CalendarProps): ReactElement {
@@ -87,7 +95,8 @@ export function Calendar({
   const [anchor, setAnchor] = useState('');
   const [hovered, setHovered] = useState('');
   const [active, setActive] = useState(
-    value ||
+    initialActiveDate ||
+      value ||
       range?.[1] ||
       defaultValue ||
       (today.startsWith(month.slice(0, 7)) ? today : `${month.slice(0, 7)}-01`),
@@ -103,12 +112,34 @@ export function Calendar({
           anchor < hovered ? hovered : anchor,
         ] as DateRange)
       : undefined);
+  const fixedPoint = previewAnchor || anchor;
+  const candidate =
+    previewCandidate ||
+    (anchor && hovered !== anchor ? hovered : '') ||
+    (previewRange && !previewAnchor ? previewRange[1] : '');
+  const proposedRange = pending && pending[0] !== pending[1] ? pending : undefined;
   const ribbon = pending ?? currentRange;
   const date = dateObject(viewMonth);
   const year = date.getUTCFullYear();
   const monthIndex = date.getUTCMonth();
   const yearStart = Math.floor(year / 12) * 12;
   const count = layout === 'year' ? 12 : Math.min(12, Math.max(1, numberOfMonths));
+  const navigation =
+    view === 'years'
+      ? { step: 144, label: '12 years' }
+      : view === 'months' || layout === 'year'
+        ? { step: 12, label: 'year' }
+        : { step: 1, label: 'month' };
+  const firstPeriod = view === 'years' ? yearStart : year;
+  const lastPeriod = view === 'years' ? yearStart + 11 : year;
+  const hasEarlierPeriod =
+    navigation.step === 1
+      ? viewMonth.slice(0, 7) > (min?.slice(0, 7) ?? '0001-01')
+      : firstPeriod > Number(min?.slice(0, 4) ?? '0001');
+  const hasLaterPeriod =
+    navigation.step === 1
+      ? viewMonth.slice(0, 7) < (max?.slice(0, 7) ?? '9999-12')
+      : lastPeriod < Number(max?.slice(0, 4) ?? '9999');
   const constraints = {
     min,
     max,
@@ -127,6 +158,9 @@ export function Calendar({
   const noAvailability = Array.from({ length: visibleDays }, (_, index) =>
     addDays(visibleStart, index),
   ).every((day) => Boolean(blockedReason(day)));
+  useEffect(() => {
+    onViewAvailability?.(noAvailability);
+  }, [noAvailability, onViewAvailability]);
   const rangeReason = (candidate: DateRange): string => rangeIssue(candidate, constraints);
   const pendingIssue =
     pending && (previewRange || (hovered && hovered !== anchor) || reason)
@@ -178,7 +212,7 @@ export function Calendar({
   };
   const focusDate = (day: string): void => {
     setActive(day);
-    if (day < viewMonth || day >= addMonths(viewMonth, count)) {
+    if (day < visibleStart || day >= visibleEnd) {
       setViewMonth(`${day.slice(0, 7)}-01`);
     }
     requestAnimationFrame(() =>
@@ -270,7 +304,17 @@ export function Calendar({
                 const inRange = !outside && ribbon && day >= ribbon[0] && day <= ribbon[1];
                 const start = inRange && day === ribbon?.[0];
                 const end = inRange && day === ribbon?.[1];
-                const edge = mode === 'range' ? start || end : day === selected;
+                const proposedDay = Boolean(
+                  pending && candidate && day === candidate && day !== fixedPoint,
+                );
+                const edge =
+                  mode === 'range'
+                    ? Boolean(fixedPoint && day === fixedPoint) || (!proposedDay && (start || end))
+                    : day === selected;
+                const committed =
+                  mode === 'range'
+                    ? Boolean(currentRange && day >= currentRange[0] && day <= currentRange[1])
+                    : day === selected;
                 const unavailableReason = blockedReason(day);
                 const invalidPreview = pendingIssue;
                 return (
@@ -281,9 +325,9 @@ export function Calendar({
                     data-range={inRange || undefined}
                     data-start={start || undefined}
                     data-end={end || undefined}
-                    data-preview-range={Boolean(pending && inRange) || undefined}
+                    data-preview-range={Boolean(proposedRange && inRange) || undefined}
                     data-invalid-range={Boolean(invalidPreview && inRange) || undefined}
-                    aria-selected={Boolean(edge)}
+                    aria-selected={!outside && committed}
                   >
                     {!outside && (
                       <button
@@ -291,6 +335,10 @@ export function Calendar({
                         className="calendar-day-proto"
                         data-date={day}
                         data-edge={edge || undefined}
+                        data-candidate={proposedDay || undefined}
+                        data-actionable={
+                          (!readOnly && !disabled && !unavailableReason) || undefined
+                        }
                         data-today={day === today || undefined}
                         data-preview={previewDates?.[day]}
                         disabled={disabled}
@@ -347,7 +395,7 @@ export function Calendar({
         if (event.key === 'Escape' && view !== 'days') {
           event.preventDefault();
           event.stopPropagation();
-          switchView(view === 'years' ? 'months' : 'days');
+          switchView(view === 'years' && layout !== 'year' ? 'months' : 'days');
         }
       }}
     >
@@ -355,18 +403,9 @@ export function Calendar({
         <button
           type="button"
           className="calendar-nav-proto"
-          aria-label={`Previous ${view === 'years' ? '12 years' : view === 'months' || layout === 'year' ? 'year' : 'month'}`}
-          disabled={
-            disabled ||
-            Boolean(
-              min &&
-              addMonths(viewMonth, view === 'days' && layout !== 'year' ? -1 : -12).slice(0, 7) <
-                min.slice(0, 7),
-            )
-          }
-          onClick={() =>
-            move(view === 'years' ? -144 : view === 'months' || layout === 'year' ? -12 : -1)
-          }
+          aria-label={`Previous ${navigation.label}`}
+          disabled={disabled || !hasEarlierPeriod}
+          onClick={() => move(-navigation.step)}
         >
           <CaretLeftIcon className="calendar-arrow-proto" size="1em" />
         </button>
@@ -403,18 +442,9 @@ export function Calendar({
         <button
           type="button"
           className="calendar-nav-proto"
-          aria-label={`Next ${view === 'years' ? '12 years' : view === 'months' || layout === 'year' ? 'year' : 'month'}`}
-          disabled={
-            disabled ||
-            Boolean(
-              max &&
-              addMonths(viewMonth, view === 'days' && layout !== 'year' ? 1 : 12).slice(0, 7) >
-                max.slice(0, 7),
-            )
-          }
-          onClick={() =>
-            move(view === 'years' ? 144 : view === 'months' || layout === 'year' ? 12 : 1)
-          }
+          aria-label={`Next ${navigation.label}`}
+          disabled={disabled || !hasLaterPeriod}
+          onClick={() => move(navigation.step)}
         >
           <CaretRightIcon className="calendar-arrow-proto" size="1em" />
         </button>
@@ -469,7 +499,19 @@ export function Calendar({
                 aria-pressed={isSelected}
                 disabled={periodDisabled}
                 onClick={() => {
-                  setViewMonth(period);
+                  const periodDate =
+                    view === 'years' &&
+                    min &&
+                    period < min &&
+                    period.slice(0, 4) === min.slice(0, 4)
+                      ? min
+                      : view === 'years' &&
+                          max &&
+                          period > max &&
+                          period.slice(0, 4) === max.slice(0, 4)
+                        ? max
+                        : period;
+                  setViewMonth(`${periodDate.slice(0, 7)}-01`);
                   switchView(view === 'years' && layout !== 'year' ? 'months' : 'days');
                 }}
               >

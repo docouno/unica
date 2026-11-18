@@ -541,9 +541,6 @@
   padding: 0;
   margin-block-end: var(--space-8);
 }
-.folio-combobox-reserve {
-  min-block-size: 120px;
-}
 .folio-members-content {
   padding-inline: 88px;
 }

@@ -6,7 +6,6 @@ import type { ControlSize, FieldStatus, FieldVariant, InputProps } from '../inpu
 import { PopoverContent } from '../popover/popover.proto.js';
 import { Calendar } from './calendar.proto.js';
 import {
-  addDays,
   dateLabel,
   numericDate,
   parseDate,
@@ -16,6 +15,23 @@ import {
 } from './date-utils.proto.js';
 import type { DateRange } from './date-utils.proto.js';
 import './date-picker.css';
+function datePlaceholder(locale: string): string {
+  return new Intl.DateTimeFormat(locale, {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    timeZone: 'UTC',
+  })
+    .formatToParts(new Date('2026-09-16T12:00:00Z'))
+    .map(({ type, value }) =>
+      type === 'day' ? 'DD' : type === 'month' ? 'MM' : type === 'year' ? 'YYYY' : value,
+    )
+    .join('');
+}
+
+function defaultViewDate(today: string, min?: string, max?: string): string {
+  return min && today < min ? min : max && today > max ? max : today;
+}
 function durationLabel(range: DateRange): string {
   if (!range[0] || !range[1]) {
     return 'No period';
@@ -52,12 +68,13 @@ export function DatePickerPanel({
       className={`date-picker-panel-proto ${className}`}
       aria-label={title || 'Choose dates'}
     >
-      {(title || onClose) && (
-        <div className="date-picker-panel-header-proto">
-          <strong>{title}</strong>
+      {children}
+      {(footer || onClose) && (
+        <div className="date-picker-panel-footer-proto">
+          {footer}
           {onClose && (
             <button
-              className="date-action-proto"
+              className="date-action-proto date-picker-dismiss-proto"
               type="button"
               aria-label="Close calendar"
               onClick={onClose}
@@ -67,8 +84,6 @@ export function DatePickerPanel({
           )}
         </div>
       )}
-      {children}
-      {footer && <div className="date-picker-panel-footer-proto">{footer}</div>}
     </PopoverContent>
   );
 }
@@ -100,9 +115,10 @@ function useDatePanel(
       const width = viewport?.width ?? window.innerWidth;
       const height = viewport?.height ?? window.innerHeight;
       const topOffset = viewport?.offsetTop ?? 0;
+      const leftOffset = viewport?.offsetLeft ?? 0;
       const start =
         getComputedStyle(button).direction === 'rtl' ? bounds.right - size.width : bounds.left;
-      element.style.left = `${Math.max(8, Math.min(start, width - size.width - 8))}px`;
+      element.style.left = `${Math.max(leftOffset + 8, Math.min(start, leftOffset + width - size.width - 8))}px`;
       const above = Math.max(0, bounds.top - topOffset - 16);
       const below = Math.max(0, height + topOffset - bounds.bottom - 16);
       const desiredHeight = element.scrollHeight + 2;
@@ -116,6 +132,8 @@ function useDatePanel(
     const observer = new ResizeObserver(position);
     observer.observe(element);
     window.addEventListener('resize', position);
+    window.visualViewport?.addEventListener('resize', position);
+    window.visualViewport?.addEventListener('scroll', position);
     window.addEventListener('scroll', position, true);
     const outside = (event: PointerEvent): void => {
       if (
@@ -126,7 +144,13 @@ function useDatePanel(
       }
     };
     const escape = (event: globalThis.KeyboardEvent): void => {
-      if (event.key === 'Escape' && !event.defaultPrevented) {
+      const target = event.target as Node;
+      if (
+        event.key === 'Escape' &&
+        !event.defaultPrevented &&
+        (element.contains(target) || field.current?.contains(target))
+      ) {
+        event.preventDefault();
         onClose();
         button.focus();
       }
@@ -136,6 +160,8 @@ function useDatePanel(
     return () => {
       observer.disconnect();
       window.removeEventListener('resize', position);
+      window.visualViewport?.removeEventListener('resize', position);
+      window.visualViewport?.removeEventListener('scroll', position);
       window.removeEventListener('scroll', position, true);
       document.removeEventListener('pointerdown', outside);
       document.removeEventListener('keydown', escape);
@@ -218,6 +244,7 @@ export function DatePicker({
   const id = useId();
   const [localValue, setLocalValue] = useState(defaultValue);
   const current = value ?? localValue;
+  const viewDate = defaultViewDate(current || today, min, max);
   const textSource = (next: string): string => `${locale}|${next}`;
   const [text, setText] = useDraftText(
     textSource(current),
@@ -225,6 +252,7 @@ export function DatePicker({
   );
   const [error, setError] = useState('');
   const [previewDate, setPreviewDate] = useState('');
+  const [noAvailableDays, setNoAvailableDays] = useState(false);
   const [open, setOpen] = useState(defaultOpen);
   const close = useCallback((): void => {
     setOpen(false);
@@ -256,6 +284,10 @@ export function DatePicker({
     }
     return '';
   };
+  const validity = !readOnly && !disabled ? validate(text) : '';
+  useLayoutEffect(() => {
+    field.current?.querySelector('input')?.setCustomValidity(validity);
+  }, [field, validity]);
   const pick = (next: string): void => {
     update(next);
     setOpen(false);
@@ -282,9 +314,10 @@ export function DatePicker({
         size={size}
         variant={variant}
         value={text}
-        placeholder={numericDate(today, locale)}
+        placeholder={datePlaceholder(locale)}
         previewState={previewState}
         aria-label={label ? undefined : props['aria-label'] || 'Date'}
+        onInvalid={() => setError(validity)}
         onChange={(event) => {
           const draft = event.currentTarget.value;
           setText(draft);
@@ -345,7 +378,7 @@ export function DatePicker({
               ref={trigger}
               className="date-action-proto"
               type="button"
-              aria-label={readOnly ? 'View calendar' : 'Choose date'}
+              aria-label={readOnly ? 'View calendar' : 'Select date'}
               aria-expanded={open && !disabled}
               aria-controls={`${id}-panel`}
               disabled={disabled}
@@ -379,12 +412,18 @@ export function DatePicker({
             close();
             trigger.current?.focus();
           }}
-          title={readOnly ? 'View date' : 'Choose date'}
+          title={readOnly ? 'View date' : 'Select date'}
           footer={
             <>
-              <span aria-live="polite" dir="auto">
-                {dateAvailability(previewDate, { min, max, unavailable, locale }) ||
-                  (readOnly ? 'Read only' : 'Select a day to confirm')}
+              <span aria-live="polite">
+                <bdi>
+                  {dateAvailability(previewDate, { min, max, unavailable, locale }) ||
+                    (noAvailableDays
+                      ? 'No dates available this month'
+                      : readOnly
+                        ? 'Read only'
+                        : '')}
+                </bdi>
               </span>
               {!readOnly &&
                 !((min && today < min) || (max && today > max) || unavailable.includes(today)) && (
@@ -400,10 +439,11 @@ export function DatePicker({
           }
         >
           <Calendar
-            key={(parseDate(text, locale) || current || today).slice(0, 7)}
-            month={parseDate(text, locale) || current || today}
+            key={viewDate.slice(0, 7)}
+            month={viewDate}
             value={current}
             onPreview={setPreviewDate}
+            onViewAvailability={setNoAvailableDays}
             today={today}
             locale={locale}
             min={min}
@@ -473,11 +513,25 @@ export function DateRangePicker({
   const [text, setText] = useDraftText(textSource(current), previewText ?? format(current));
   const [error, setError] = useState('');
   const [panelError, setPanelError] = useState('');
+  const [noAvailableDays, setNoAvailableDays] = useState(false);
   const [open, setOpen] = useState(defaultOpen);
   const [draft, setDraft] = useState<DateRange>(current);
   const [target, setTarget] = useState<0 | 1>(current[0] ? 1 : 0);
   const [hovered, setHovered] = useState('');
-  const [viewMonth, setViewMonth] = useState(current[1] || today);
+  const [calendarPage, setCalendarPage] = useState({
+    date: defaultViewDate(current[1] || today, min, max),
+    revision: 0,
+  });
+  const jumpToDate = (date: string): void => {
+    setCalendarPage((page) => ({
+      date: defaultViewDate(date || today, min, max),
+      revision: page.revision + 1,
+    }));
+  };
+  const focusCalendar = (): number =>
+    requestAnimationFrame(() =>
+      panel.current?.querySelector<HTMLButtonElement>('.calendar-day-proto[tabindex="0"]')?.focus(),
+    );
   const close = useCallback((): void => {
     setOpen(false);
     setHovered('');
@@ -513,6 +567,20 @@ export function DateRangePicker({
     const to = parseDate(parts[1] || '', locale);
     return from && to ? [from, to] : null;
   };
+  const parsedText = parse(text);
+  const validity =
+    readOnly || disabled
+      ? ''
+      : !text.trim()
+        ? required
+          ? 'Enter a start and end date.'
+          : ''
+        : parsedText
+          ? validate(parsedText)
+          : 'Enter both dates with a four-digit year, separated by a dash.';
+  useLayoutEffect(() => {
+    field.current?.querySelector('input')?.setCustomValidity(validity);
+  }, [field, validity]);
   const pick = (next: string): void => {
     if (readOnly) {
       return;
@@ -544,17 +612,39 @@ export function DateRangePicker({
   const openPanel = (boundary?: 0 | 1): void => {
     setDraft(current);
     setTarget(boundary ?? (current[0] ? 1 : 0));
-    setViewMonth(current[boundary ?? 1] || current[0] || today);
+    jumpToDate(current[boundary ?? 1] || current[0]);
     setPanelError('');
     setOpen(true);
   };
-  const preview: DateRange | undefined =
-    hovered && draft[0] && !readOnly
-      ? ((target === 0 && draft[1]
-          ? [hovered, draft[1]]
-          : [draft[0], hovered]
-        ).sort() as unknown as DateRange)
-      : undefined;
+  const fixedPoint = draft[target === 0 && draft[1] ? 1 : 0];
+  const editingDate = draft[target];
+  const hasCandidate =
+    hovered &&
+    fixedPoint &&
+    !readOnly &&
+    hovered !== editingDate &&
+    (hovered !== fixedPoint || draft[1]);
+  const preview: DateRange | undefined = hasCandidate
+    ? hovered < fixedPoint
+      ? [hovered, fixedPoint]
+      : [fixedPoint, hovered]
+    : undefined;
+  const candidateIssue = preview ? validate(preview) : '';
+  const hoveredIssue = dateAvailability(hovered, { min, max, unavailable, locale });
+  const feedbackIssue = panelError || hoveredIssue || candidateIssue;
+  const panelMessage =
+    feedbackIssue ||
+    (noAvailableDays
+      ? 'No dates available this month'
+      : readOnly
+        ? `${durationLabel(current)} · Read only`
+        : preview
+          ? `${durationLabel(preview)} · Preview`
+          : !draft[0]
+            ? 'Choose a start date'
+            : !draft[1]
+              ? 'Choose an end date'
+              : durationLabel(draft));
   return (
     <div
       {...props}
@@ -577,8 +667,9 @@ export function DateRangePicker({
         variant={variant}
         value={text}
         previewState={previewState}
-        placeholder={`${numericDate(today, locale)} – ${numericDate(addDays(today, 6), locale)}`}
+        placeholder={`${datePlaceholder(locale)} – ${datePlaceholder(locale)}`}
         aria-label={label ? undefined : props['aria-label'] || 'Date range'}
+        onInvalid={() => setError(validity)}
         onChange={(event) => {
           const draftText = event.currentTarget.value;
           setText(draftText);
@@ -622,10 +713,7 @@ export function DateRangePicker({
             const boundary =
               split < 0 || (event.currentTarget.selectionStart ?? 0) <= split ? 0 : 1;
             openPanel(boundary);
-            const focusDay = current[boundary] || current[0] || today;
-            requestAnimationFrame(() =>
-              panel.current?.querySelector<HTMLButtonElement>(`[data-date="${focusDay}"]`)?.focus(),
-            );
+            focusCalendar();
           }
         }}
         suffix={
@@ -660,11 +748,7 @@ export function DateRangePicker({
                 }
                 openPanel();
                 if (event.detail === 0) {
-                  requestAnimationFrame(() =>
-                    panel.current
-                      ?.querySelector<HTMLButtonElement>('.calendar-day-proto[tabindex="0"]')
-                      ?.focus(),
-                  );
+                  focusCalendar();
                 }
               }}
             >
@@ -686,22 +770,10 @@ export function DateRangePicker({
           footer={
             <span
               className="date-range-summary-proto"
-              dir="auto"
-              data-error={Boolean(panelError || (preview && validate(preview))) || undefined}
+              data-error={Boolean(feedbackIssue) || undefined}
               aria-live="polite"
             >
-              {panelError ||
-                dateAvailability(hovered, { min, max, unavailable, locale }) ||
-                (preview && validate(preview)) ||
-                (readOnly
-                  ? `${durationLabel(current)} · read only`
-                  : !draft[0]
-                    ? 'Choose a start date'
-                    : !draft[1]
-                      ? preview
-                        ? `${durationLabel(preview)} · choose an end date`
-                        : 'Choose an end date'
-                      : `${durationLabel(preview ?? draft)} · select ${target === 0 ? 'start' : 'end'} to confirm`)}
+              <bdi>{panelMessage}</bdi>
             </span>
           }
         >
@@ -712,31 +784,31 @@ export function DateRangePicker({
                 type="button"
                 className="date-range-target-proto"
                 aria-pressed={target === index}
+                disabled={index === 1 && !draft[0]}
                 onClick={() => {
                   setTarget(index as 0 | 1);
                   setHovered('');
-                  const focusDay = draft[index] || draft[0] || today;
-                  setViewMonth(focusDay);
-                  requestAnimationFrame(() =>
-                    panel.current
-                      ?.querySelector<HTMLButtonElement>(`[data-date="${focusDay}"]`)
-                      ?.focus(),
-                  );
+                  jumpToDate(draft[index] || draft[0]);
+                  focusCalendar();
                 }}
               >
-                <small>{name}</small>
-                <strong dir="auto">
-                  {draft[index] ? dateLabel(draft[index] || '', locale) : 'Choose date'}
+                <small>{name} date</small>
+                <strong>
+                  <bdi>{draft[index] ? dateLabel(draft[index] || '', locale) : 'Select date'}</bdi>
                 </strong>
               </button>
             ))}
           </div>
           <Calendar
-            key={viewMonth.slice(0, 7)}
-            month={viewMonth}
+            key={calendarPage.revision}
+            month={calendarPage.date}
+            initialActiveDate={calendarPage.date}
             mode="range"
-            range={draft[0] ? [draft[0], draft[1] || draft[0]] : undefined}
+            range={draft[0] && draft[1] ? draft : undefined}
+            previewAnchor={!draft[1] || preview ? fixedPoint : undefined}
+            previewCandidate={preview ? hovered : undefined}
             previewRange={preview}
+            onViewAvailability={setNoAvailableDays}
             onPreview={(day) => {
               setHovered(day);
               if (day) {
