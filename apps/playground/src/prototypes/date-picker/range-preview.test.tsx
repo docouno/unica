@@ -1,5 +1,5 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
-import { afterEach, expect, it } from 'vitest';
+import { afterEach, expect, it, vi } from 'vitest';
 import { Calendar } from './calendar.proto.js';
 import { DateRangePicker } from './date-picker.components.proto.js';
 
@@ -38,7 +38,7 @@ it('previews a corrected range while retaining the prior selection and error', (
   expect(first.getAttribute('data-draft-anchor')).toBe('true');
   expect(day(container, 8).getAttribute('data-edge')).toBe('true');
   expect(day(container, 11).getAttribute('data-edge')).toBe('true');
-  expect(screen.getByText('This range includes an unavailable date.')).toBeTruthy();
+  expect(screen.getByText('First 14 Sept · This range includes an unavailable date.')).toBeTruthy();
 
   fireEvent.click(suggested);
 
@@ -63,11 +63,12 @@ it('shows the range in the picker before the second date is confirmed', () => {
   const blocked = day(container, 19);
 
   fireEvent.click(first);
+  expect(screen.queryByRole('button', { name: /^(start|end) date/i })).toBeNull();
   fireEvent.mouseEnter(suggested);
 
   expect(suggested.getAttribute('data-candidate')).toBe('true');
   expect(day(container, 15).parentElement?.getAttribute('data-preview-range')).toBe('true');
-  expect(screen.getByText('Preview · 3 days')).toBeTruthy();
+  expect(screen.getByText('First 14 Sept · Preview · 3 days')).toBeTruthy();
   expect(input.value).toBe('');
 
   fireEvent.click(blocked);
@@ -82,5 +83,41 @@ it('shows the range in the picker before the second date is confirmed', () => {
   fireEvent.click(suggested);
 
   expect(input.value).toBe('14/09/2026 – 16/09/2026');
+  expect(container.querySelector('.date-picker-panel-proto')).toBeNull();
+});
+
+it('replaces a filled range with two day choices in the same panel', () => {
+  const onValueChange = vi.fn();
+  const { container } = render(
+    <DateRangePicker
+      label="Date window"
+      defaultValue={['2026-09-11', '2026-09-15']}
+      defaultOpen
+      previewInline
+      onValueChange={onValueChange}
+    />,
+  );
+  const input = screen.getByRole<HTMLInputElement>('textbox', { name: 'Date window' });
+  const panel = container.querySelector('.date-picker-panel-proto');
+  const first = day(container, 15);
+  const second = day(container, 8);
+
+  expect(screen.queryByRole('button', { name: /^(start|end) date/i })).toBeNull();
+  fireEvent.click(first);
+  expect(screen.getByText('First 15 Sept · Choose a second date')).toBeTruthy();
+  fireEvent.mouseEnter(second);
+
+  expect(panel).toBeTruthy();
+  expect(container.querySelector('.date-picker-panel-proto')).toBe(panel);
+  expect(first.getAttribute('data-edge')).toBe('true');
+  expect(second.getAttribute('data-candidate')).toBe('true');
+  expect(screen.getByText('First 15 Sept · Preview · 8 days')).toBeTruthy();
+  expect(input.value).toBe('11/09/2026 – 15/09/2026');
+  expect(onValueChange).not.toHaveBeenCalled();
+
+  fireEvent.click(second);
+
+  expect(onValueChange).toHaveBeenCalledExactlyOnceWith(['2026-09-08', '2026-09-15']);
+  expect(input.value).toBe('08/09/2026 – 15/09/2026');
   expect(container.querySelector('.date-picker-panel-proto')).toBeNull();
 });

@@ -72,7 +72,6 @@
   .calendar-title-button-proto,
   .calendar-period-proto,
   .date-action-proto,
-  .date-range-target-proto,
   .calendar-day-proto
 ) {
   --date-state-rest: transparent;
@@ -85,7 +84,6 @@
     .calendar-title-button-proto,
     .calendar-period-proto,
     .date-action-proto,
-    .date-range-target-proto,
     .calendar-day-proto
   ):is(:hover, [data-preview='hover']):not(
     :disabled,
@@ -99,7 +97,6 @@
     .calendar-title-button-proto,
     .calendar-period-proto,
     .date-action-proto,
-    .date-range-target-proto,
     .calendar-day-proto
   ):is(:active, [data-preview='active']):not(
     :disabled,
@@ -118,7 +115,6 @@
 .calendar-nav-proto:disabled,
 .calendar-title-button-proto:disabled,
 .calendar-period-proto:disabled,
-.date-range-target-proto:disabled,
 .date-action-proto:disabled {
   color: var(--fg-disabled);
   cursor: default;
@@ -307,8 +303,7 @@
   min-block-size: 44px;
 }
 .calendar-period-proto[aria-pressed='true']:not(:disabled),
-.date-action-proto[aria-expanded='true'],
-.date-range-target-proto[aria-pressed='true']:not(:disabled) {
+.date-action-proto[aria-expanded='true'] {
   --date-state-rest: var(--accent-soft-bg);
   --date-state-hover: color-mix(in oklab, var(--date-state-rest) 88%, var(--accent-solid));
   --date-state-press: color-mix(in oklab, var(--date-state-rest) 78%, var(--accent-solid));
@@ -411,49 +406,6 @@
   background: color-mix(in oklab, var(--accent-solid) 22%, transparent);
 }
 .date-picker-today-proto:focus-visible {
-  outline: 2px solid var(--focus-ring-color);
-  outline-offset: 1px;
-}
-.date-range-targets-proto {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--space-4);
-  padding: var(--space-4);
-  background: var(--control-bg);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--size-m-radius);
-}
-.date-range-target-proto {
-  display: flex;
-  flex-direction: column;
-  align-items: start;
-  gap: var(--space-2);
-  min-inline-size: 0;
-  padding: var(--space-4) var(--space-8);
-  border: 1px solid transparent;
-  border-radius: var(--size-s-radius);
-  color: var(--fg-secondary);
-  font: inherit;
-  text-align: start;
-  cursor: pointer;
-}
-.date-range-target-proto small {
-  color: var(--fg-muted);
-  font-size: var(--text-size-caption-l);
-}
-.date-range-target-proto strong {
-  font-size: var(--text-size-body-s);
-  font-weight: 500;
-  font-variant-numeric: tabular-nums;
-  overflow-wrap: anywhere;
-}
-.date-range-target-proto[aria-pressed='true']:not(:disabled) {
-  border-color: var(--accent-border);
-}
-.date-range-target-proto small {
-  color: inherit;
-}
-.date-range-target-proto:focus-visible {
   outline: 2px solid var(--focus-ring-color);
   outline-offset: 1px;
 }
@@ -562,9 +514,6 @@
   }
   .calendar-day-proto:is(:focus-visible, [data-preview='focus']) {
     outline-color: CanvasText;
-  }
-  .date-range-target-proto[aria-pressed='true'] {
-    border-color: Highlight;
   }
 }
 .date-study-grid-proto {

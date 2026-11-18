@@ -6,8 +6,7 @@ export default defineSpecimen({
   id: 'date-range-picker',
   title: 'DateRangePicker',
   group: 'Forms',
-  summary:
-    'One text field for a complete period. An explicit Start / End target makes small adjustments quick and predictable.',
+  summary: 'Enter a period in one field or select two days in one calendar.',
   sections: [
     {
       id: 'anatomy',
@@ -128,11 +127,11 @@ export default defineSpecimen({
     },
     {
       id: 'panels',
-      title: 'Range panel · target & draft',
+      title: 'Range panels',
       kind: 'context',
       overlayStage: true,
       caption:
-        'Panels are kept in flow for comparison. Start / End is a dedicated row above month navigation. Click an endpoint target to adjust only that boundary. The second valid date commits immediately.',
+        'Panels are kept in flow for comparison. The first day starts a new selection. The second valid day commits the period.',
       render: () => (
         <div className="date-study-stack-proto">
           <DateRangePicker
@@ -142,7 +141,7 @@ export default defineSpecimen({
             clearable
           />
           <DateRangePicker
-            label="Adjust an existing end date"
+            label="Replace an existing period"
             defaultValue={['2026-09-11', '2026-09-23']}
             defaultOpen
             previewInline
@@ -211,12 +210,12 @@ export default defineSpecimen({
     },
     {
       id: 'live',
-      title: 'Live · select, adjust, dismiss',
+      title: 'Live · select, replace, dismiss',
       kind: 'context',
       surface: 'overlay',
       overlayStage: true,
       caption:
-        'Open the empty field, choose a start, hover an end, then confirm. Dismiss halfway through to keep the original period. In a filled field, Start / End selects the boundary to edit. Alt+↓ targets the date nearest the text caret.',
+        'Open either calendar and choose two dates. The first choice stays in the panel. The second valid choice saves the new period and closes it. Dismiss halfway through to keep the original value.',
       render: () => (
         <div className="date-live-stage-proto">
           <DateRangePicker

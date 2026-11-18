@@ -5,13 +5,7 @@ import { Input } from '../input/input.proto.js';
 import type { ControlSize, FieldStatus, FieldVariant, InputProps } from '../input/input.proto.js';
 import { PopoverContent } from '../popover/popover.proto.js';
 import { Calendar } from './calendar.proto.js';
-import {
-  dateLabel,
-  numericDate,
-  parseDate,
-  rangeDurationLabel,
-  rangeIssue,
-} from './date-utils.proto.js';
+import { dateLabel, numericDate, parseDate, rangeIssue } from './date-utils.proto.js';
 import type { DateRange } from './date-utils.proto.js';
 import './date-picker.css';
 function datePlaceholder(locale: string): string {
@@ -508,42 +502,26 @@ export function DateRangePicker({
   const textSource = (next: DateRange): string => `${locale}|${next[0]}|${next[1]}`;
   const [text, setText] = useDraftText(textSource(current), previewText ?? format(current));
   const [error, setError] = useState('');
-  const [calendarFeedback, setCalendarFeedback] = useState({ issue: '', preview: '' });
-  const reportCalendarFeedback = useCallback((issue: string, preview: string): void => {
-    setCalendarFeedback({ issue, preview });
+  const [calendarFeedback, setCalendarFeedback] = useState({ issue: '', message: '' });
+  const reportCalendarFeedback = useCallback((issue: string, message: string): void => {
+    setCalendarFeedback({ issue, message });
   }, []);
-  const [noAvailableDays, setNoAvailableDays] = useState(false);
   const [open, setOpen] = useState(defaultOpen);
-  const [draft, setDraft] = useState<DateRange>(current);
-  const [target, setTarget] = useState<0 | 1>(current[0] ? 1 : 0);
-  const [calendarPage, setCalendarPage] = useState({
-    date: defaultViewDate(current[1] || today, min, max),
-    revision: 0,
-  });
-  const jumpToDate = (date: string): void => {
-    setCalendarPage((page) => ({
-      date: defaultViewDate(date || today, min, max),
-      revision: page.revision + 1,
-    }));
-  };
+  const viewDate = defaultViewDate(current[0] || today, min, max);
   const focusCalendar = (): number =>
     requestAnimationFrame(() =>
       panel.current?.querySelector<HTMLButtonElement>('.calendar-day-proto[tabindex="0"]')?.focus(),
     );
   const close = useCallback((): void => {
     setOpen(false);
-    setDraft(current);
-    setCalendarFeedback({ issue: '', preview: '' });
-  }, [current]);
+    setCalendarFeedback({ issue: '', message: '' });
+  }, []);
   const { panel, trigger, field } = useDatePanel(open && !disabled && !previewInline, close);
   const update = (next: DateRange): void => {
     setLocalValue(next);
     onValueChange?.(next);
     setText(format(next), textSource(next));
-    setDraft(next);
-    setTarget(next[0] ? 1 : 0);
     setError('');
-    setCalendarFeedback({ issue: '', preview: '' });
   };
   const validate = (range: DateRange): string =>
     rangeIssue(range, {
@@ -578,48 +556,11 @@ export function DateRangePicker({
   useLayoutEffect(() => {
     field.current?.querySelector('input')?.setCustomValidity(validity);
   }, [field, validity]);
-  const pick = (next: string): void => {
-    if (readOnly) {
-      return;
-    }
-    if (!draft[0]) {
-      setDraft([next, '']);
-      setTarget(1);
-      return;
-    }
-    const nextRange: DateRange = target === 0 ? [next, draft[1]] : [draft[0], next];
-    const sorted: DateRange =
-      nextRange[1] && nextRange[0] > nextRange[1] ? [nextRange[1], nextRange[0]] : nextRange;
-    if (!sorted[1]) {
-      setDraft(sorted);
-      setTarget(1);
-      return;
-    }
-    update(sorted);
-    setOpen(false);
+  const pick = (next: DateRange): void => {
+    update(next);
+    close();
     trigger.current?.focus();
   };
-  const openPanel = (boundary?: 0 | 1): void => {
-    setDraft(current);
-    setTarget(boundary ?? (current[0] ? 1 : 0));
-    jumpToDate(current[boundary ?? 1] || current[0]);
-    setCalendarFeedback({ issue: '', preview: '' });
-    setOpen(true);
-  };
-  const fixedPoint = draft[target === 0 && draft[1] ? 1 : 0];
-  const { issue, preview } = calendarFeedback;
-  const panelMessage =
-    issue ||
-    (noAvailableDays
-      ? 'No dates available this month'
-      : readOnly
-        ? `${rangeDurationLabel(current)} · Read only`
-        : preview ||
-          (!draft[0]
-            ? 'Choose a start date'
-            : !draft[1]
-              ? 'Choose an end date'
-              : rangeDurationLabel(draft)));
   return (
     <div
       {...props}
@@ -653,12 +594,10 @@ export function DateRangePicker({
           if (parsed && !validate(parsed)) {
             setLocalValue(parsed);
             onValueChange?.(parsed);
-            setDraft(parsed);
             setText(draftText, textSource(parsed));
           } else if (!draftText) {
             setLocalValue(['', '']);
             onValueChange?.(['', '']);
-            setDraft(['', '']);
             setText('', textSource(['', '']));
           }
         }}
@@ -684,10 +623,7 @@ export function DateRangePicker({
         onKeyDown={(event) => {
           if (event.altKey && event.key === 'ArrowDown') {
             event.preventDefault();
-            const split = text.search(/[–—]/);
-            const boundary =
-              split < 0 || (event.currentTarget.selectionStart ?? 0) <= split ? 0 : 1;
-            openPanel(boundary);
+            setOpen(true);
             focusCalendar();
           }
         }}
@@ -721,7 +657,7 @@ export function DateRangePicker({
                   close();
                   return;
                 }
-                openPanel();
+                setOpen(true);
                 if (event.detail === 0) {
                   focusCalendar();
                 }
@@ -745,44 +681,19 @@ export function DateRangePicker({
           footer={
             <span
               className="date-range-summary-proto"
-              data-error={Boolean(issue) || undefined}
+              data-error={Boolean(calendarFeedback.issue) || undefined}
               aria-live="polite"
             >
-              <bdi>{panelMessage}</bdi>
+              <bdi>{calendarFeedback.message}</bdi>
             </span>
           }
         >
-          <div className="date-range-targets-proto">
-            {(['Start', 'End'] as const).map((name, index) => (
-              <button
-                key={name}
-                type="button"
-                className="date-range-target-proto"
-                aria-pressed={target === index}
-                disabled={index === 1 && !draft[0]}
-                onClick={() => {
-                  setTarget(index as 0 | 1);
-                  setCalendarFeedback({ issue: '', preview: '' });
-                  jumpToDate(draft[index] || draft[0]);
-                  focusCalendar();
-                }}
-              >
-                <small>{name} date</small>
-                <strong>
-                  <bdi>{draft[index] ? dateLabel(draft[index] || '', locale) : 'Select date'}</bdi>
-                </strong>
-              </button>
-            ))}
-          </div>
           <Calendar
-            key={calendarPage.revision}
-            month={calendarPage.date}
-            initialActiveDate={calendarPage.date}
+            key={textSource(current)}
+            month={viewDate}
+            initialActiveDate={viewDate}
             mode="range"
-            range={draft[0] && draft[1] ? draft : undefined}
-            previewAnchor={fixedPoint}
-            editingDate={draft[target]}
-            onViewAvailability={setNoAvailableDays}
+            range={current[0] && current[1] ? current : undefined}
             onFeedback={reportCalendarFeedback}
             today={today}
             locale={locale}
@@ -794,7 +705,7 @@ export function DateRangePicker({
             maxRangeDays={maxRangeDays}
             readOnly={readOnly}
             showFeedback={false}
-            onSelect={pick}
+            onRangeChange={pick}
           />
         </DatePickerPanel>
       )}

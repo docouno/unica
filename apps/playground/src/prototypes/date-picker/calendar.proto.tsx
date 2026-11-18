@@ -42,8 +42,7 @@ export interface CalendarProps extends Omit<
   readonly disabled?: boolean | undefined;
   readonly onViewAvailability?: ((empty: boolean) => void) | undefined;
   readonly showFeedback?: boolean | undefined;
-  readonly onFeedback?: ((issue: string, preview: string) => void) | undefined;
-  readonly editingDate?: string | undefined;
+  readonly onFeedback?: ((issue: string, message: string) => void) | undefined;
   readonly previewAnchor?: string | undefined;
   readonly previewCandidate?: string | undefined;
   readonly previewRange?: DateRange | undefined;
@@ -85,7 +84,6 @@ export function Calendar({
   readOnly,
   disabled,
   onFeedback,
-  editingDate,
   showFeedback = true,
   onViewAvailability,
   previewRange,
@@ -118,17 +116,11 @@ export function Calendar({
   const currentRange = range ?? localRange;
   const fixedPoint = previewAnchor || anchor;
   const inspectedDate = previewCandidate || hovered;
-  const replacingIncompleteStart = Boolean(onSelect && editingDate && !range);
-  const rangeStart = replacingIncompleteStart ? '' : fixedPoint;
-  const canPreview =
-    rangeStart &&
-    inspectedDate &&
-    inspectedDate !== editingDate &&
-    (inspectedDate !== fixedPoint || Boolean(range));
+  const canPreview = fixedPoint && inspectedDate && inspectedDate !== fixedPoint;
   const pending =
     readOnly || disabled
       ? undefined
-      : (previewRange ?? (canPreview ? orderedRange(rangeStart, inspectedDate) : undefined));
+      : (previewRange ?? (canPreview ? orderedRange(fixedPoint, inspectedDate) : undefined));
   const date = dateObject(viewMonth);
   const year = date.getUTCFullYear();
   const monthIndex = date.getUTCMonth();
@@ -177,28 +169,43 @@ export function Calendar({
   const inspectedIssue = disabled ? '' : issueFor(inspectedDate, pending);
   const rejectedIssue =
     !readOnly && !disabled && rejectedDate
-      ? issueFor(rejectedDate, rangeStart ? orderedRange(rangeStart, rejectedDate) : undefined)
+      ? issueFor(rejectedDate, fixedPoint ? orderedRange(fixedPoint, rejectedDate) : undefined)
       : '';
   const feedbackIssue = rejectedIssue || inspectedIssue;
   const feedbackDate = rejectedIssue ? rejectedDate : inspectedDate;
   const proposedRange = pending && !inspectedIssue ? pending : undefined;
   const previewLabel = proposedRange ? `Preview · ${rangeDurationLabel(proposedRange)}` : '';
+  const rangePrompt = anchor ? 'Choose a second date' : 'Choose a first date';
+  const feedback =
+    feedbackIssue ||
+    (noAvailability
+      ? 'No dates available in this view'
+      : readOnly
+        ? currentRange
+          ? `${rangeDurationLabel(currentRange)} · Read only`
+          : 'Read only'
+        : mode === 'range'
+          ? previewLabel || rangePrompt
+          : 'Unavailable dates cannot be selected');
+  const firstDateLabel = dateLabel(anchor, locale, {
+    year: Number(anchor.slice(0, 4)) === year ? undefined : 'numeric',
+  });
+  const feedbackMessage = firstDateLabel ? `First ${firstDateLabel} · ${feedback}` : feedback;
   useEffect(() => {
-    onFeedback?.(feedbackIssue, previewLabel);
-  }, [onFeedback, feedbackIssue, previewLabel]);
+    onFeedback?.(feedbackIssue, feedbackMessage);
+  }, [onFeedback, feedbackIssue, feedbackMessage]);
   const pick = (day: string): void => {
     if (disabled || readOnly) {
       return;
     }
-    const selectionAnchor = onSelect && !replacingIncompleteStart ? previewAnchor : anchor;
-    const next = selectionAnchor ? orderedRange(selectionAnchor, day) : undefined;
+    const next = mode === 'range' && anchor ? orderedRange(anchor, day) : undefined;
     if (issueFor(day, next)) {
       setHovered(day);
       setRejectedDate(day);
       return;
     }
     setRejectedDate('');
-    if (mode === 'range' && !onSelect) {
+    if (mode === 'range') {
       if (!next) {
         setAnchor(day);
         setHovered(day);
@@ -575,21 +582,7 @@ export function Calendar({
             aria-live="polite"
             data-error={Boolean(feedbackIssue) || undefined}
           >
-            <bdi>
-              {feedbackIssue ||
-                (noAvailability ? 'No available dates in this view. Try another month.' : '') ||
-                (readOnly
-                  ? 'Read only · browse without changing dates'
-                  : previewLabel
-                    ? previewLabel
-                    : anchor
-                      ? `Start: ${dateLabel(anchor, locale)}. Choose an end date.`
-                      : currentRange
-                        ? rangeDurationLabel(currentRange)
-                        : mode === 'range'
-                          ? 'Choose a start and end date'
-                          : 'Unavailable dates cannot be selected')}
-            </bdi>
+            <bdi>{feedbackMessage}</bdi>
           </div>
         )}
     </div>
