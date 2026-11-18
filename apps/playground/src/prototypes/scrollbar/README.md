@@ -25,8 +25,8 @@ Desktop and keyboard-only Chromium/WebKit expose native scrollbar parts through 
 
 | Owner                                                             | Scrollbar gutter | Visible thumb | Standard fallback |
 | ----------------------------------------------------------------- | ---------------- | ------------- | ----------------- |
-| Page, sidebar, reading region, DialogBody, Table, CodeBlock       | 14px             | 8px           | `auto` width      |
-| Compact PopoverBody, Textarea, document tabs, bounded choice list | 10px             | 4px           | `thin` width      |
+| Page, sidebar, reading region, Table, CodeBlock                   | 14px             | 8px           | `auto` width      |
+| PopoverBody, DialogBody, Textarea, document tabs, bounded choices | 10px             | 4px           | `thin` width      |
 
 A 3px transparent border on each side supplies breathing room while retaining the native thumb's full hit area. The minimum thumb length is 24px; its actual length follows the content ratio. The track has no authored end buttons. The same dimensions apply to both axes. Explicit pseudo-element dimensions reserve a classic gutter on desktop, including systems that normally use overlay scrollbars; this is an intentional cost of controlling the shape. Content that fits still has no scrollbar because the owner uses `overflow: auto`.
 
@@ -41,6 +41,7 @@ Touch-primary browsers keep standard native color/width styling and system geome
 - Forced colors: both standard properties return to `auto`; custom pseudo-element styles are inactive, restoring system geometry and colors.
 - Increased contrast: a stronger thumb without additional motion. Reduced motion needs no special animation override.
 - Popover: Body is the scroll owner inside the panel padding. Header, Close and footer stay outside it. The outer native `[popover]` must not introduce a second scrollbar, and decorations must not enlarge scroll bounds.
+- Modal and Drawer: Body owns the compact scrollbar and sits 4px inside the surface and adjacent header and footer. When the entire panel scrolls on a short viewport, it takes over the compact scrollbar.
 - Keep a useful gap between text and thumb. The examples reserve 4px for inner focus rings; list rows add 8px inline. Textareas retain their own native internal scroll area.
 - Let the browser place the scrollbar in RTL; code remains LTR inside an RTL layout. Do not draw a separate physical-right rail.
 - Do not set `scrollbar-gutter: stable` globally. A consumer may reserve stable space when it needs width stability. Extreme-height fallbacks belong to the containing component.

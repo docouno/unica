@@ -31,6 +31,7 @@
 
 .dialog-surface {
   pointer-events: auto;
+  --dialog-scroll-inset: var(--space-4);
   --dialog-inset: var(--space-24);
   --dialog-gap: var(--space-16);
   --dialog-width: 36rem;
@@ -89,8 +90,7 @@
 }
 
 .dialog-header,
-.dialog-footer,
-.dialog-body-content {
+.dialog-footer {
   padding-inline: var(--dialog-inset);
 }
 .dialog-header {
@@ -130,8 +130,14 @@
   min-block-size: 44px;
 }
 
+.dialog-body,
+.dialog-surface[data-whole-scroll] {
+  --scrollbar-size: 10px;
+  --scrollbar-width: thin;
+}
 .dialog-body {
   min-block-size: 0;
+  margin: var(--dialog-scroll-inset);
   overflow: auto;
   overscroll-behavior: contain;
 }
@@ -146,6 +152,7 @@
   gap: var(--dialog-gap);
   min-inline-size: 0;
   padding-block: var(--space-4);
+  padding-inline: calc(var(--dialog-inset) - var(--dialog-scroll-inset));
   overflow-wrap: anywhere;
 }
 .dialog-body:last-child .dialog-body-content {
@@ -238,20 +245,17 @@
 }
 .dialog-layer[data-dialog-side='start'] > .dialog-placement > .dialog-surface,
 .dialog-layer[data-dialog-side='end'] > .dialog-placement > .dialog-surface {
+  --dialog-radius: 0px;
   border-block: 0;
   padding-block: env(safe-area-inset-top) env(safe-area-inset-bottom);
 }
 .dialog-layer[data-dialog-side='start'] > .dialog-placement > .dialog-surface {
   border-inline-start: 0;
   padding-inline-start: var(--dialog-safe-start);
-  border-start-start-radius: 0;
-  border-end-start-radius: 0;
 }
 .dialog-layer[data-dialog-side='end'] > .dialog-placement > .dialog-surface {
   border-inline-end: 0;
   padding-inline-end: var(--dialog-safe-end);
-  border-start-end-radius: 0;
-  border-end-end-radius: 0;
 }
 .dialog-layer[data-dialog-side='top'] > .dialog-placement,
 .dialog-layer[data-dialog-side='bottom'] > .dialog-placement {

@@ -113,11 +113,16 @@ function observeOverflow(panel: HTMLElement): () => void {
       0,
     );
     const padding = getComputedStyle(panel);
+    const bodyMargins = body ? getComputedStyle(body) : null;
+    const bodyInset = bodyMargins
+      ? parseFloat(bodyMargins.marginBlockStart) + parseFloat(bodyMargins.marginBlockEnd)
+      : 0;
     const available =
       panel.clientHeight -
       chromeHeight -
       parseFloat(padding.paddingBlockStart) -
-      parseFloat(padding.paddingBlockEnd);
+      parseFloat(padding.paddingBlockEnd) -
+      bodyInset;
     const natural = content?.getBoundingClientRect().height ?? 0;
     const whole = available < Math.min(96, natural) - 1;
     panel.toggleAttribute('data-whole-scroll', whole);

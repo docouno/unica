@@ -44,7 +44,7 @@ Run `make dev app=playground` and select a scene in the workbench's **Folio** gr
 
 These are visual compositions with local state. Authentication, publishing, invitations, uploads, and integrations do not contact external services. Full editor behavior and production accessibility, focus, and form coordination belong to the library implementation phase.
 
-The invitation and properties scenes use the shared [Modal and Drawer design reference](../../apps/playground/src/prototypes/dialog/README.md). The invitation stays centered at narrow widths. The properties panel uses inline end on wide screens and becomes a bottom sheet at 600px or less without remounting the form.
+The invitation and properties scenes use the shared [Modal and Drawer design reference](../../apps/playground/src/prototypes/dialog/README.md). The invitation stays centered at narrow widths. The properties panel docks to inline end on wide screens, with square corners and the full available height. At 600px or less, it becomes a bottom sheet without remounting the form.
 
 Scenes import shared families from `src/prototypes/`; their `folio/` helpers contain product content and layout rather than duplicate controls. The shell owns the rail and aside topologies, while the theme owns all materials. The product scenes stay in place as individual prototype imports are replaced by package components later.
 
