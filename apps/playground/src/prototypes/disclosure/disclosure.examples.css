@@ -1,0 +1,81 @@
+.disclosure-study {
+  display: grid;
+  gap: var(--space-16);
+  inline-size: min(100%, 42rem);
+}
+
+.disclosure-study-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr));
+  gap: var(--space-16) var(--space-24);
+}
+
+.disclosure-study-grid[data-study='sizes'] {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 11rem), 1fr));
+}
+
+.disclosure-study-sample {
+  display: grid;
+  align-content: start;
+  gap: var(--space-4);
+  min-inline-size: 0;
+}
+
+.disclosure-study-label.text-proto {
+  margin: 0;
+}
+
+.disclosure-study-card.card-proto {
+  inline-size: min(100%, 34rem);
+}
+
+.disclosure-study-actions {
+  display: grid;
+  gap: var(--space-16);
+  inline-size: min(100%, 27rem);
+}
+
+.disclosure-study-copy.button-proto {
+  min-inline-size: 8.25em;
+}
+
+.disclosure-study-link {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.disclosure-study-summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-4) var(--space-12);
+}
+
+.disclosure-study-summary > .text-proto {
+  margin: 0;
+}
+
+.disclosure-study-overlay.popover-content-proto {
+  inline-size: min(100%, 25rem);
+}
+
+.disclosure-study-narrow {
+  inline-size: min(100%, 24rem);
+}
+
+.disclosure-study-body {
+  display: grid;
+  gap: var(--space-8);
+  padding-block-start: var(--space-12);
+  max-inline-size: 23rem;
+}
+
+.disclosure-study-dismiss {
+  justify-self: start;
+}
+
+.disclosure-study-reason.text-proto {
+  margin: 0;
+  padding-inline: var(--disclosure-start) var(--disclosure-inset);
+}

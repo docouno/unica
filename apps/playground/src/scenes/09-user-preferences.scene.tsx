@@ -13,7 +13,12 @@ import { Badge } from '../prototypes/badge/badge.proto.js';
 import { Breadcrumb, BreadcrumbPage } from '../prototypes/breadcrumb/breadcrumb.proto.js';
 import { Button } from '../prototypes/button/button.proto.js';
 import { Card } from '../prototypes/card/card.proto.js';
-import { Accordion, Collapsible } from '../prototypes/accordion/accordion.proto.js';
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from '../prototypes/disclosure/disclosure.proto.js';
 import { Toast } from '../prototypes/feedback/feedback.proto.js';
 import { Kbd, KbdGroup } from '../prototypes/kbd/kbd.proto.js';
 import {
@@ -253,46 +258,51 @@ function PreferencesScene(): ReactElement {
             </Card>
             <Card className="folio-governance-card">
               <SectionHeading>Review &amp; governance policies</SectionHeading>
-              <Accordion>
-                <Collapsible title="Stale runbook reminders" defaultOpen>
-                  <div className="folio-row folio-between folio-preference-policy">
-                    <Text size="body-s" color="secondary">
-                      Notify primary owner 7 days before quarterly Tier-0 verification expires.
-                    </Text>
-                    <Checkbox
-                      size="s"
-                      aria-label="Stale runbook reminders"
-                      checked={preferences.reminders}
-                      onChange={(event) => update('reminders', event.currentTarget.checked)}
-                    />
-                  </div>
-                </Collapsible>
-                <Collapsible title="Signed commit verification">
-                  <div className="folio-row folio-between">
-                    <Text size="body-s" color="secondary">
-                      Require signed commits before publishing repository-backed changes.
-                    </Text>
-                    <Checkbox
-                      size="s"
-                      aria-label="Signed commit verification"
-                      checked={preferences.signed}
-                      onChange={(event) => update('signed', event.currentTarget.checked)}
-                    />
-                  </div>
-                </Collapsible>
-                <Collapsible title="External share watermarking">
-                  <div className="folio-row folio-between">
-                    <Text size="body-s" color="secondary">
-                      Mark externally shared snapshots with the workspace name.
-                    </Text>
-                    <Checkbox
-                      size="s"
-                      aria-label="External share watermarking"
-                      checked={preferences.watermark}
-                      onChange={(event) => update('watermark', event.currentTarget.checked)}
-                    />
-                  </div>
-                </Collapsible>
+              <Accordion headingLevel={3} size="s" defaultValue={['reminders']}>
+                <AccordionItem value="reminders">
+                  <AccordionTrigger>Stale runbook reminders</AccordionTrigger>
+                  <AccordionContent>
+                    <div className="folio-row folio-between folio-preference-policy">
+                      <p>
+                        Notify primary owner 7 days before quarterly Tier-0 verification expires.
+                      </p>
+                      <Checkbox
+                        size="s"
+                        aria-label="Stale runbook reminders"
+                        checked={preferences.reminders}
+                        onChange={(event) => update('reminders', event.currentTarget.checked)}
+                      />
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+                <AccordionItem value="signed">
+                  <AccordionTrigger>Signed commit verification</AccordionTrigger>
+                  <AccordionContent>
+                    <div className="folio-row folio-between folio-preference-policy">
+                      <p>Require signed commits before publishing repository-backed changes.</p>
+                      <Checkbox
+                        size="s"
+                        aria-label="Signed commit verification"
+                        checked={preferences.signed}
+                        onChange={(event) => update('signed', event.currentTarget.checked)}
+                      />
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+                <AccordionItem value="watermark">
+                  <AccordionTrigger>External share watermarking</AccordionTrigger>
+                  <AccordionContent>
+                    <div className="folio-row folio-between folio-preference-policy">
+                      <p>Mark externally shared snapshots with the workspace name.</p>
+                      <Checkbox
+                        size="s"
+                        aria-label="External share watermarking"
+                        checked={preferences.watermark}
+                        onChange={(event) => update('watermark', event.currentTarget.checked)}
+                      />
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
               </Accordion>
             </Card>
             <section className="folio-stack">

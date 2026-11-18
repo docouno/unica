@@ -32,6 +32,11 @@ export default defineConfig({
             { name: 'icons', test: /\/node_modules\/@phosphor-icons\/react\// },
             { name: 'workbench-definitions', test: /\/src\/workbench\/types\.ts$/ },
             {
+              name: 'disclosure',
+              test: /\/src\/prototypes\/disclosure\//,
+              includeDependenciesRecursively: false,
+            },
+            {
               name: 'combobox',
               test: /\/src\/prototypes\/combobox\//,
               includeDependenciesRecursively: false,

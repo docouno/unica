@@ -9,7 +9,12 @@ import {
 } from '@phosphor-icons/react';
 import { AsidePanel } from '../prototypes/app-shell/app-shell.proto.js';
 import { Badge } from '../prototypes/badge/badge.proto.js';
-import { Collapsible } from '../prototypes/accordion/accordion.proto.js';
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '../prototypes/disclosure/disclosure.proto.js';
+import { List, ListItem } from '../prototypes/list/list.proto.js';
 import { Progress } from '../prototypes/progress/progress.proto.js';
 import { Menu } from '../prototypes/menu/menu.live.js';
 import type { MenuEntry } from '../prototypes/menu/menu.entries.js';
@@ -172,11 +177,22 @@ function ReaderScene(): ReactElement {
                   </dl>
                 </InspectorSection>
                 <InspectorSection title="Quorum health">
-                  <Collapsible title="Replication & WAL checks" defaultOpen>
-                    <Text size="caption-l" color="secondary">
-                      pg-replica-01 · sync_state = sync (0 B)
-                    </Text>
-                    <Progress value={100} label="WAL catch-up" />
+                  <Collapsible size="s" defaultOpen>
+                    <CollapsibleTrigger>Replication &amp; WAL checks</CollapsibleTrigger>
+                    <CollapsibleContent>
+                      <List aria-label="Replica checks">
+                        <ListItem
+                          title={
+                            <Text as="span" size="caption-l">
+                              pg-replica-01
+                            </Text>
+                          }
+                          description="sync_state = sync (0 B)"
+                        >
+                          <Progress value={100} label="WAL catch-up" />
+                        </ListItem>
+                      </List>
+                    </CollapsibleContent>
                   </Collapsible>
                 </InspectorSection>
               </>

@@ -179,26 +179,13 @@
   padding: 18px 20px;
 }
 
-.folio-governance-card .collapsible-proto > summary {
-  min-block-size: 32px;
-  padding: 6px var(--space-8);
-}
-
-.folio-governance-card .collapsible-body-proto {
-  padding: var(--space-4) var(--space-8) var(--space-12);
-}
-
-.folio-governance-card .collapsible-body-proto .text-proto {
-  --text-size-body-s: var(--text-size-body-xs);
-  --text-size-body-s-lh: var(--text-size-body-xs-lh);
-}
-
 .folio-preference-policy {
   align-items: start;
 }
 
-.folio-preference-policy .text-proto {
+.folio-preference-policy > p {
   max-inline-size: 610px;
+  margin: 0;
 }
 
 .folio-preferences-actions.app-shell-sticky-bar {
