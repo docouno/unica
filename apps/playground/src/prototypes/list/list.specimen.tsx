@@ -1,78 +1,55 @@
 import { defineSpecimen } from '../../workbench/types.js';
-import { CheckCircleIcon, FileTextIcon } from '@phosphor-icons/react';
-import { List, ListItem } from './list.proto.js';
-import { Card } from '../card/card.proto.js';
-import { Badge } from '../badge/badge.proto.js';
-import { Avatar } from '../avatar/avatar.proto.js';
-import '../card/display.examples.css';
+
+const { LiveRows, OverflowExamples, ProseExamples, SizeExamples, StateExamples } =
+  await import('./list.examples.js');
 
 export default defineSpecimen({
   id: 'list',
   title: 'List & ListItem',
   group: 'Data',
-  summary: 'A text column, an optional leading object, and independent trailing content.',
+  summary: 'Native lists for running text and structured rows with independent actions.',
   sections: [
     {
-      id: 'anatomy',
-      title: 'List anatomy',
+      id: 'prose',
+      title: 'Prose and numbering',
       kind: 'matrix',
-      render: () => (
-        <List>
-          <ListItem title="Plain item" />
-          <ListItem
-            title="Document with supporting context"
-            description="Platform Engineering · Updated today"
-            leading={<FileTextIcon size="1em" />}
-          />
-          <ListItem
-            title="Verification complete"
-            description="All replication checks passed."
-            leading={<CheckCircleIcon size="1em" />}
-            trailing={<Badge status="success">Verified</Badge>}
-          />
-        </List>
-      ),
+      caption: 'Nested markers, continued and reversed numbering, and a markerless text list.',
+      render: () => <ProseExamples />,
     },
     {
-      id: 'wrapping',
-      title: 'Long copy & independent trailing slot',
+      id: 'sizes',
+      title: 'Row sizes',
+      kind: 'matrix',
+      render: () => <SizeExamples />,
+    },
+    {
+      id: 'states',
+      title: 'Action states',
       kind: 'states',
-      render: () => (
-        <List>
-          <ListItem
-            title="A regional ingress handoff procedure with an unusually detailed title"
-            description="The description reflows beneath the title while the factual trailing status retains its own capacity."
-            leading={<Avatar name="Platform Engineering" alt="" size="s" />}
-            trailing={<Badge status="warning">Review</Badge>}
-          />
-        </List>
-      ),
+      caption: 'Hover, press, and focus appearances are pinned here for comparison.',
+      render: () => <StateExamples />,
     },
     {
-      id: 'context',
-      title: 'Folio · Recent activity',
+      id: 'overflow',
+      title: 'Long labels and trailing content',
+      kind: 'states',
+      render: () => <OverflowExamples />,
+    },
+    {
+      id: 'controls',
+      title: 'Independent row actions',
       kind: 'context',
-      render: () => (
-        <Card>
-          <List>
-            <ListItem
-              title="Updated Zero-Downtime PG Failover"
-              description="Platform Engineering · 12 minutes ago"
-              leading={<Avatar name="Platform Engineering" alt="" size="s" />}
-            />
-            <ListItem
-              title="Approved ADR-014 Traffic Draining"
-              description="Networking team · 38 minutes ago"
-              leading={<Avatar name="Networking team" alt="" size="s" />}
-            />
-            <ListItem
-              title="Linked Redis Eviction Policy"
-              description="Reliability team · 1 hour ago"
-              leading={<Avatar name="Reliability team" alt="" size="s" />}
-            />
-          </List>
-        </Card>
-      ),
+      caption:
+        'Tab from the primary action to the menu. Only the switch changes export notifications.',
+      render: () => <LiveRows />,
+    },
+    {
+      id: 'overlay',
+      title: 'Rows on a floating surface',
+      kind: 'context',
+      surface: 'overlay',
+      overlayStage: true,
+      render: () => <LiveRows overlay />,
     },
   ],
 });

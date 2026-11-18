@@ -76,18 +76,23 @@ function ReaderScene(): ReactElement {
   ];
   const revisions = (
     <InspectorSection title="Recent revisions">
-      {[
-        { label: 'v14 · 2h ago', team: 'DB team', diff: '+42 −6' },
-        { label: 'v13 · 4d ago', team: 'Core team', diff: '+118 −14' },
-        { label: 'v12 · 28 Aug', team: 'Platform', diff: '+94' },
-      ].map((revision) => (
-        <div key={revision.label} className="folio-row folio-between">
-          <Text size="caption-l">
-            {revision.label} · {revision.team}
-          </Text>
-          <bdi className="folio-revision-diff">{revision.diff}</bdi>
-        </div>
-      ))}
+      <List size="s" markers={false} dividers aria-label="Recent revisions">
+        {[
+          { version: 'v14', time: '2h ago', team: 'DB team', diff: '+42 −6' },
+          { version: 'v13', time: '4d ago', team: 'Core team', diff: '+118 −14' },
+          { version: 'v12', time: '28 Aug', team: 'Platform', diff: '+94' },
+        ].map((revision) => (
+          <ListItem
+            key={revision.version}
+            title={`Compare ${revision.version}`}
+            description={`${revision.time} · ${revision.team}`}
+            action={{
+              onClick: () => setNotice(`Revision ${revision.version} selected for comparison.`),
+            }}
+            trailing={<bdi className="folio-revision-diff">{revision.diff}</bdi>}
+          />
+        ))}
+      </List>
     </InspectorSection>
   );
   return (
@@ -194,15 +199,8 @@ function ReaderScene(): ReactElement {
                   <Collapsible size="s" defaultOpen>
                     <CollapsibleTrigger>Replication &amp; WAL checks</CollapsibleTrigger>
                     <CollapsibleContent>
-                      <List aria-label="Replica checks">
-                        <ListItem
-                          title={
-                            <Text as="span" size="caption-l">
-                              pg-replica-01
-                            </Text>
-                          }
-                          description="sync_state = sync (0 B)"
-                        >
+                      <List markers={false} size="s" aria-label="Replica checks">
+                        <ListItem title="pg-replica-01" description="sync_state = sync (0 B)">
                           <Progress value={100} label="WAL catch-up" />
                         </ListItem>
                       </List>

@@ -31,9 +31,9 @@ import {
 } from '../prototypes/empty/empty.proto.js';
 import { ToastCard } from '../prototypes/toast/toast.proto.js';
 import { Spinner } from '../prototypes/progress/progress.proto.js';
-import { SkeletonText } from '../prototypes/skeleton/skeleton.proto.js';
 import { Icon } from '../prototypes/icon/icon.proto.js';
 import { Input } from '../prototypes/input/input.proto.js';
+import { List, ListItem } from '../prototypes/list/list.proto.js';
 import { Text } from '../prototypes/text/text.proto.js';
 import { Title } from '../prototypes/title/title.proto.js';
 import { FolioScene, FolioWorkspace, PageIntro, SectionHeading } from './folio/folio.shared.js';
@@ -236,95 +236,65 @@ function ExtensionsScene(): ReactElement {
           <section className="folio-stack">
             <SectionHeading>Installed &amp; indexing</SectionHeading>
             {slack || snapshot || mirror ? (
-              <div className="folio-grid-3">
-                {slack && (
-                  <Card className="folio-connector-card folio-connector-installed">
-                    <div className="folio-row folio-between">
-                      <span className="folio-connector-icon">
-                        <Icon icon={SlackLogoIcon} />
-                      </span>
-                      <Badge size="s">Installed</Badge>
-                    </div>
-                    <div className="folio-connector-copy">
-                      <Title as="h3" size="body-m" className="folio-connector-installed-title">
-                        Slack Triage Bridge
-                      </Title>
-                      <Text size="body-s" color="secondary">
-                        Posts runbook verification reminders and drill summaries to #infra-drills.
-                      </Text>
-                    </div>
-                    <div className="folio-row folio-between folio-connector-footer">
-                      <Text size="caption-l" color="muted">
-                        Channel #infra-drills
-                      </Text>
-                      <Button
-                        size="s"
-                        variant="ghost"
-                        tone="neutral"
-                        onClick={() => setNotice('Slack Triage Bridge management selected.')}
-                      >
-                        Manage
-                      </Button>
-                    </div>
-                  </Card>
-                )}
-                {snapshot && (
-                  <Card className="folio-connector-card folio-connector-installed">
-                    <div className="folio-row folio-between">
-                      <span className="folio-connector-icon">
-                        <Icon icon={DatabaseIcon} />
-                      </span>
-                      <Badge size="s">Installed</Badge>
-                    </div>
-                    <div className="folio-connector-copy">
-                      <Title as="h3" size="body-m" className="folio-connector-installed-title">
-                        S3 Cold Snapshot
-                      </Title>
-                      <Text size="body-s" color="secondary">
-                        Writes immutable nightly Parquet &amp; Markdown bundles to eu-central-1.
-                      </Text>
-                    </div>
-                    <div className="folio-row folio-between folio-connector-footer">
-                      <Text size="caption-l" color="muted">
-                        Nightly 02:00 UTC
-                      </Text>
-                      <Button
-                        size="s"
-                        variant="ghost"
-                        tone="neutral"
-                        onClick={() => setNotice('S3 Cold Snapshot management selected.')}
-                      >
-                        Manage
-                      </Button>
-                    </div>
-                  </Card>
-                )}
-                {mirror && (
-                  <Card
-                    className="folio-connector-card folio-connector-installed folio-connector-indexing"
-                    aria-busy="true"
-                  >
-                    <div className="folio-row folio-between">
-                      <div className="folio-row folio-connector-title">
-                        <Spinner size="s" tone="muted" />
-                        <Title as="h3" size="body-m" className="folio-connector-installed-title">
-                          GitHub ADR Mirror
-                        </Title>
-                      </div>
-                      <Badge size="s" status="info" dot>
-                        Indexing
-                      </Badge>
-                    </div>
-                    <SkeletonText size="body-s" lines={1} width="76%" />
-                    <SkeletonText size="caption-l" lines={2} />
-                    <div className="folio-row folio-connector-footer">
-                      <Text size="caption-m" color="muted">
-                        Scanning 48 repository trees…
-                      </Text>
-                    </div>
-                  </Card>
-                )}
-              </div>
+              <Card>
+                <List
+                  size="m"
+                  markers={false}
+                  dividers
+                  aria-label="Installed and indexing connectors"
+                >
+                  {[
+                    {
+                      title: 'Slack Triage Bridge',
+                      visible: slack,
+                      icon: SlackLogoIcon,
+                      description:
+                        'Posts verification reminders and drill summaries in #infra-drills.',
+                    },
+                    {
+                      title: 'S3 Cold Snapshot',
+                      visible: snapshot,
+                      icon: DatabaseIcon,
+                      description:
+                        'Exports immutable Parquet and Markdown to eu-central-1 at 02:00 UTC.',
+                    },
+                  ]
+                    .filter((connector) => connector.visible)
+                    .map((connector) => (
+                      <ListItem
+                        key={connector.title}
+                        title={connector.title}
+                        description={connector.description}
+                        leading={<Icon icon={connector.icon} />}
+                        trailing={
+                          <>
+                            <Badge>Installed</Badge>
+                            <Button
+                              variant="ghost"
+                              tone="neutral"
+                              aria-label={`Manage ${connector.title}`}
+                              onClick={() => setNotice(`${connector.title} management selected.`)}
+                            >
+                              Manage
+                            </Button>
+                          </>
+                        }
+                      />
+                    ))}
+                  {mirror && (
+                    <ListItem
+                      title="GitHub ADR Mirror"
+                      description="Scanning 48 repository trees…"
+                      leading={<Spinner size="s" tone="muted" />}
+                      trailing={
+                        <Badge status="info" dot>
+                          Indexing
+                        </Badge>
+                      }
+                    />
+                  )}
+                </List>
+              </Card>
             ) : (
               <Empty size="s" align="start">
                 <EmptyDescription>
