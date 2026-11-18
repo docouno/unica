@@ -81,6 +81,9 @@ textarea {
 [data-theme='soft-dark'] {
   --disclosure-duration: 180ms;
   --disclosure-divider-color: var(--border-subtle);
+  --tabs-feedback-duration: 110ms;
+  --tabs-overflow-fade: 12px;
+  --tabs-overflow-mask: initial;
   --spinner-round-display: inline;
   --spinner-pixel-display: none;
   --progress-wait-base: var(--accent-signal);
@@ -275,6 +278,9 @@ textarea {
 [data-theme='soft-light'] {
   --disclosure-duration: 180ms;
   --disclosure-divider-color: var(--border-subtle);
+  --tabs-feedback-duration: 110ms;
+  --tabs-overflow-fade: 12px;
+  --tabs-overflow-mask: initial;
   --spinner-round-display: inline;
   --spinner-pixel-display: none;
   --progress-wait-base: var(--accent-signal);
@@ -472,6 +478,9 @@ textarea {
 [data-theme='frost-dark'] {
   --disclosure-duration: 140ms;
   --disclosure-divider-color: color-mix(in srgb, var(--fg-primary) 12%, transparent);
+  --tabs-feedback-duration: 130ms;
+  --tabs-overflow-fade: 12px;
+  --tabs-overflow-mask: initial;
   --spinner-round-display: inline;
   --spinner-pixel-display: none;
   --progress-wait-base: var(--accent-signal);
@@ -680,6 +689,9 @@ textarea {
 [data-theme='frost-light'] {
   --disclosure-duration: 140ms;
   --disclosure-divider-color: color-mix(in srgb, var(--fg-primary) 12%, transparent);
+  --tabs-feedback-duration: 130ms;
+  --tabs-overflow-fade: 12px;
+  --tabs-overflow-mask: initial;
   --spinner-round-display: inline;
   --spinner-pixel-display: none;
   --progress-wait-base: var(--accent-signal);
@@ -893,6 +905,9 @@ textarea {
 [data-theme='pixel-dark'] {
   --disclosure-duration: 0ms;
   --disclosure-divider-color: var(--border-default);
+  --tabs-feedback-duration: 0ms;
+  --tabs-overflow-fade: 0px;
+  --tabs-overflow-mask: none;
   --spinner-round-display: none;
   --spinner-pixel-display: inline;
   --progress-wait-base: var(--accent-signal);
@@ -1095,6 +1110,9 @@ textarea {
 [data-theme='pixel-light'] {
   --disclosure-duration: 0ms;
   --disclosure-divider-color: var(--border-default);
+  --tabs-feedback-duration: 0ms;
+  --tabs-overflow-fade: 0px;
+  --tabs-overflow-mask: none;
   --spinner-round-display: none;
   --spinner-pixel-display: inline;
   --progress-wait-base: var(--accent-signal);

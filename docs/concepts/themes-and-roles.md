@@ -91,6 +91,14 @@ Progress reuses the contextual `--control-bg` and `--control-border` track recip
 
 Soft keeps a matte capsule. Frost adds restrained vertical light and a short glow trailing the measured leading edge, with a quieter treatment on light surfaces. Pixel keeps a flat rectangle and immediate value changes. The tip is absent at zero and in the indeterminate phase; unknown work uses a full-width waiting texture with the same vertical light and inset shading as the measured fill, without a measured endpoint. The tip moves only when the owner explicitly marks work active; a stored fraction alone does not imply activity. A completed range fades the tip over 600ms without changing its status. Reduced motion removes travel while retaining the distinct waiting texture. Spinner uses a gathering/releasing arc in Soft/Frost and eight sequential square cells in Pixel, selected through `--spinner-round-display` and `--spinner-pixel-display`. Neither borrows button depth or glow. `ProgressCircle` shares Spinner’s geometry, icon sizes and foreground tones. Known values fill the arc or accumulate in the Pixel cells, including a partial leading cell; they have no looping animation.
 
+### Tab selection
+
+Tabs use primary ink and a single 2px accent rule. Horizontally the rule is inset from each selected button edge by half its used inline padding, and follows the width of the button as it stretches. Vertically it stays at logical inline-start. The enclosing toolbar or panel supplies any structural divider. Soft uses a warm accent, Frost uses violet, and Pixel pairs cyan with square ends and monospaced labels. The same treatment reads over the canvas and inherited Overlay surfaces.
+
+In an overflowing horizontal list, `--tabs-overflow-fade` sets the fade depth beside an available scroll chevron. Soft and Frost use 12px. Pixel sets it to 0px and sets `--tabs-overflow-mask` to `none`, leaving a straight cut at the edge of the chevron's clear area. Forced colors and increased contrast use the same straight edge.
+
+Selection and panel changes are immediate. `--tabs-feedback-duration` applies to the neutral peer hover and held press only. Pixel uses 0ms and reduced motion removes interpolation in every preset. See the [Tabs design reference](../../apps/playground/src/prototypes/tabs/README.md).
+
 ## Contextual Surface Adaptation (`base` vs `overlay`)
 
 Cards, controls, and choice cards (`RadioCard`, `CheckboxCard`, `SwitchCard`) adapt automatically when nested inside floating overlays without extra React props:

@@ -33,7 +33,7 @@ import {
 } from '../prototypes/popover/popover.proto.js';
 import { Listbox, SelectPanel } from '../prototypes/select/select.proto.js';
 import { Checkbox } from '../prototypes/binary-controls/binary-controls.proto.js';
-import { Tabs } from '../prototypes/tabs/tabs.proto.js';
+import { Tabs, TabsContent, TabsList, TabsTab } from '../prototypes/tabs/tabs.proto.js';
 import { Text } from '../prototypes/text/text.proto.js';
 import { Title } from '../prototypes/title/title.proto.js';
 import { Divider } from '../prototypes/divider/divider.proto.js';
@@ -74,6 +74,8 @@ function EditorScene(): ReactElement {
   const referenceInputRef = useRef<HTMLInputElement>(null);
   const referenceTouchRef = useRef(false);
   const [mode, setMode] = useState('write');
+  const [preview, setPreview] = useState(false);
+  const editing = mode === 'write' && !preview;
   const [bold, setBold] = useState(false);
   const [italic, setItalic] = useState(false);
   const [underline, setUnderline] = useState(false);
@@ -115,145 +117,189 @@ function EditorScene(): ReactElement {
       }
     });
   };
-  return (
-    <FolioScene>
-      <FolioWorkspace
-        breadcrumb={
-          <Breadcrumb size="s">
-            <BreadcrumbLink href="?item=02-workspace-overview">Platform Eng</BreadcrumbLink>
-            <span>Architecture</span>
-            <BreadcrumbPage>ADR-014 Traffic Draining</BreadcrumbPage>
-          </Breadcrumb>
-        }
-        documentTabs
-        minHeight={1040}
-        actions={
-          <div className="folio-row folio-wrap">
-            <span className="folio-row">
-              <Spinner size="s" tone="muted" />
-              <Text size="caption-l" color="muted">
-                Saving draft…
-              </Text>
-            </span>
-            <TeamMembers compact />
-            <Button
-              size="s"
-              variant="secondary"
-              tone="neutral"
-              onClick={() => setMode(mode === 'preview' ? 'write' : 'preview')}
-            >
-              Preview
-            </Button>
-            <Button
-              size="s"
-              onClick={() => setNotice('Revision prepared for your workspace’s publishing review.')}
-            >
-              Publish changes
-            </Button>
-          </div>
-        }
-        subbar={
-          <Subbar
-            actions={
+  const workspace = (
+    <FolioWorkspace
+      breadcrumb={
+        <Breadcrumb size="s">
+          <BreadcrumbLink href="?item=02-workspace-overview">Platform Eng</BreadcrumbLink>
+          <span>Architecture</span>
+          <BreadcrumbPage>ADR-014 Traffic Draining</BreadcrumbPage>
+        </Breadcrumb>
+      }
+      documentTabs
+      minHeight={1040}
+      actions={
+        <div className="folio-row folio-wrap">
+          <span className="folio-row">
+            <Spinner size="s" tone="muted" />
+            <Text size="caption-l" color="muted">
+              Saving draft…
+            </Text>
+          </span>
+          <TeamMembers compact />
+          <Button
+            size="s"
+            variant="secondary"
+            tone="neutral"
+            onClick={() => {
+              setPreview(mode === 'write' ? !preview : true);
+              setMode('write');
+            }}
+          >
+            {mode === 'write' && preview ? 'Exit preview' : 'Preview'}
+          </Button>
+          <Button
+            size="s"
+            onClick={() => setNotice('Revision prepared for your workspace’s publishing review.')}
+          >
+            Publish changes
+          </Button>
+        </div>
+      }
+      subbar={
+        <Subbar
+          actions={
+            editing && (
               <div className="folio-row">
                 <Text size="caption-l" color="muted">
                   Insert block
                 </Text>
                 <Kbd>⌘/</Kbd>
               </div>
-            }
-          >
-            <Tabs
-              value={mode}
-              onValueChange={setMode}
-              items={[
-                { value: 'write', label: 'Write' },
-                { value: 'diff', label: 'Diff (+38 −4)' },
-                { value: 'split', label: 'Split' },
-              ]}
-            />
-            <Divider orientation="vertical" className="folio-editor-tool-divider" />
-            <div className="folio-row">
-              <IconButton
-                size="s"
-                variant="ghost"
-                icon={TextBIcon}
-                aria-label="Bold"
-                pressed={bold}
-                onPressedChange={setBold}
-              />
-              <IconButton
-                size="s"
-                variant="ghost"
-                icon={TextItalicIcon}
-                aria-label="Italic"
-                pressed={italic}
-                onPressedChange={setItalic}
-              />
-              <IconButton
-                size="s"
-                variant="ghost"
-                icon={TextUnderlineIcon}
-                aria-label="Underline"
-                pressed={underline}
-                onPressedChange={setUnderline}
-              />
-              <IconButton
-                ref={referenceButtonRef}
-                size="s"
-                variant="ghost"
-                icon={LinkIcon}
-                aria-label={reference ? 'Edit document reference' : 'Add document reference'}
-                aria-haspopup="dialog"
-                aria-expanded={referenceOpen}
-                aria-controls={`${referenceId}-panel`}
-                onPointerDown={(event) => {
-                  referenceTouchRef.current = event.pointerType === 'touch';
-                }}
-                onClick={(event) => toggleReference(event.currentTarget, event.detail === 0)}
-              />
-              <IconButton
-                size="s"
-                variant="ghost"
-                icon={ListBulletsIcon}
-                aria-label="Insert block"
-                onClick={() => setSlashOpen(!slashOpen)}
-              />
-            </div>
-          </Subbar>
-        }
-      >
-        <div className="folio-prose-stage folio-editor-stage">
-          <article className="folio-prose">
-            <div className="folio-row folio-between folio-wrap">
-              <div className="folio-row folio-wrap">
-                <Badge status="accent" size="s" dot>
-                  Draft · v3.3
-                </Badge>
-                <Text size="caption-l" color="muted">
-                  Architecture Decision Record · Target: Q4 Edge Rollout
-                </Text>
+            )
+          }
+        >
+          <TabsList aria-label="Editor views" className="folio-editor-mode-tabs">
+            <TabsTab value="write">Write</TabsTab>
+            <TabsTab value="diff" count={42} countLabel="42 changed lines">
+              Diff
+            </TabsTab>
+            <TabsTab value="split">Split</TabsTab>
+          </TabsList>
+          {editing && (
+            <>
+              <Divider orientation="vertical" className="folio-editor-tool-divider" />
+              <div className="folio-row">
+                <IconButton
+                  size="s"
+                  variant="ghost"
+                  icon={TextBIcon}
+                  aria-label="Bold"
+                  pressed={bold}
+                  onPressedChange={setBold}
+                />
+                <IconButton
+                  size="s"
+                  variant="ghost"
+                  icon={TextItalicIcon}
+                  aria-label="Italic"
+                  pressed={italic}
+                  onPressedChange={setItalic}
+                />
+                <IconButton
+                  size="s"
+                  variant="ghost"
+                  icon={TextUnderlineIcon}
+                  aria-label="Underline"
+                  pressed={underline}
+                  onPressedChange={setUnderline}
+                />
+                <IconButton
+                  ref={referenceButtonRef}
+                  size="s"
+                  variant="ghost"
+                  icon={LinkIcon}
+                  aria-label={reference ? 'Edit document reference' : 'Add document reference'}
+                  aria-haspopup="dialog"
+                  aria-expanded={referenceOpen}
+                  aria-controls={`${referenceId}-panel`}
+                  onPointerDown={(event) => {
+                    referenceTouchRef.current = event.pointerType === 'touch';
+                  }}
+                  onClick={(event) => toggleReference(event.currentTarget, event.detail === 0)}
+                />
+                <IconButton
+                  size="s"
+                  variant="ghost"
+                  icon={ListBulletsIcon}
+                  aria-label="Insert block"
+                  onClick={() => setSlashOpen(!slashOpen)}
+                />
               </div>
-              <Person initials="NW" name="Core networking · Editing" />
-            </div>
-            <div className="folio-stack">
-              <Title as="h1" size="heading-xl">
-                ADR-014: Regional Envoy Traffic Draining
-              </Title>
-              <Text size="body-m" color="secondary">
-                Defines deterministic connection-draining budgets and healthcheck shedding when
-                evacuating an availability zone under elevated p99 latency.
+            </>
+          )}
+        </Subbar>
+      }
+    >
+      <div className="folio-prose-stage folio-editor-stage">
+        <article className="folio-prose">
+          <div className="folio-row folio-between folio-wrap">
+            <div className="folio-row folio-wrap">
+              <Badge status="accent" size="s" dot>
+                Draft · v3.3
+              </Badge>
+              <Text size="caption-l" color="muted">
+                Architecture Decision Record · Target: Q4 Edge Rollout
               </Text>
             </div>
-            <Divider decorative={false} />
-            {mode === 'diff' && (
-              <div className="folio-notice">Draft comparison · 38 additions, 4 removals</div>
-            )}
-            {mode === 'split' && (
-              <div className="folio-notice">
-                Verified revision and draft share this comparison context.
-              </div>
-            )}
+            <Person initials="NW" name="Core networking · Editing" />
+          </div>
+          <div className="folio-stack">
+            <Title as="h1" size="heading-xl">
+              ADR-014: Regional Envoy Traffic Draining
+            </Title>
+            <Text size="body-m" color="secondary">
+              Defines deterministic connection-draining budgets and healthcheck shedding when
+              evacuating an availability zone under elevated p99 latency.
+            </Text>
+          </div>
+          <Divider decorative={false} />
+          <TabsContent value="diff" className="folio-stack">
+            <Title as="h2" size="body-m">
+              Draft comparison
+            </Title>
+            <Text size="body-s" color="secondary">
+              <bdi>38 additions · 4 removals</bdi>
+            </Text>
+            <Text size="body-s">
+              <del>
+                <bdi>Drain healthchecks for 30 seconds.</bdi>
+              </del>
+            </Text>
+            <Text size="body-s">
+              <ins>
+                <bdi>
+                  Drain healthchecks for 45 seconds while sibling zones absorb pooled connections.
+                </bdi>
+              </ins>
+            </Text>
+          </TabsContent>
+          <TabsContent value="split" className="folio-stack">
+            <Title as="h2" size="body-m">
+              Compare revisions
+            </Title>
+            <div className="folio-editor-revisions">
+              <section className="folio-stack">
+                <Title as="h3" size="body-m">
+                  Verified revision
+                </Title>
+                <Text size="body-s">
+                  <bdi>Drain healthchecks for 30 seconds.</bdi>
+                </Text>
+              </section>
+              <section className="folio-stack">
+                <Title as="h3" size="body-m">
+                  Current draft
+                </Title>
+                <Text size="body-s">
+                  <bdi>
+                    Drain healthchecks for 45 seconds while sibling zones absorb pooled connections.
+                  </bdi>
+                </Text>
+              </section>
+            </div>
+          </TabsContent>
+          <TabsContent value="write" className="folio-stack">
             <section className="folio-stack">
               <Title as="h2" size="body-m">
                 1. Context & cross-region failover contract
@@ -264,7 +310,7 @@ function EditorScene(): ReactElement {
               </Blockquote>
               <Text size="body-s">
                 Regional drain budgets signal <Code>x-envoy-drain: 1</Code> and inherit quorum from{' '}
-                {reference ? (
+                {reference && !preview ? (
                   <Link
                     href={reference}
                     aria-haspopup="dialog"
@@ -296,141 +342,150 @@ function EditorScene(): ReactElement {
                 sibling availability zones absorb pooled TLS connections.
               </Text>
             </section>
-            <section className="folio-stack">
-              <Title as="h2" size="body-m">
-                2. Rollout slash-command
-              </Title>
-              <Text size="body-s" color="secondary">
-                Type / to insert a live callout, SQL verification check, or runbook embed:
-              </Text>
-              <div className="folio-slash-command">
-                <Input
-                  size="s"
-                  aria-label="Insert an editorial block"
-                  iconLeft={MagnifyingGlassIcon}
-                  value={query}
-                  onChange={(event) => {
-                    setQuery(event.currentTarget.value);
-                    setSlashOpen(true);
-                  }}
-                  onFocus={() => setSlashOpen(true)}
-                />
-                {slashOpen && (
-                  <SelectPanel className="choice-panel-proto" size="s">
-                    <Listbox
-                      size="s"
-                      title="Editorial blocks"
-                      value={null}
-                      options={
-                        query === '/callout'
-                          ? blocks
-                          : blocks.filter((block) =>
-                              `${block.label} ${block.description}`
-                                .toLowerCase()
-                                .includes(query.replace(/^\//, '').toLowerCase()),
-                            )
-                      }
-                      onValueChange={(value) => {
-                        setInsertedBlock(
-                          blocks.find((block) => block.value === value)?.label ?? '',
-                        );
-                        setSlashOpen(false);
-                      }}
-                    />
-                  </SelectPanel>
-                )}
-              </div>
-              {insertedBlock && (
-                <div className="folio-notice" role="status">
-                  {insertedBlock} inserted in the draft.
-                </div>
-              )}
-            </section>
-          </article>
-          {referenceOpen && (
-            <PopoverContent
-              ref={referencePanelRef}
-              id={`${referenceId}-panel`}
-              className="folio-editor-reference"
-              aria-labelledby={`${referenceId}-title`}
-              aria-describedby={`${referenceId}-description`}
-              tabIndex={-1}
-              onKeyDown={(event) => {
-                if (event.key === 'Escape') {
-                  event.preventDefault();
-                  event.stopPropagation();
-                  cancelReference();
-                }
-              }}
-            >
-              <PopoverHeader>
-                <PopoverTitle id={`${referenceId}-title`}>
-                  {reference ? 'Edit document reference' : 'Add document reference'}
-                </PopoverTitle>
-                <PopoverDescription id={`${referenceId}-description`}>
-                  Keep the supporting runbook close to the decision.
-                </PopoverDescription>
-              </PopoverHeader>
-              <PopoverClose aria-label="Close reference editor" onClick={cancelReference} />
-              <PopoverBody>
-                <form
-                  id={`${referenceId}-form`}
-                  className="folio-stack"
-                  onSubmit={(event) => {
-                    event.preventDefault();
-                    setReference(draftReference.trim());
-                    setPinned(draftPinned);
-                    closeReference();
-                    setNotice('Document reference updated.');
-                  }}
-                >
+            {!preview && (
+              <section className="folio-stack">
+                <Title as="h2" size="body-m">
+                  2. Rollout slash-command
+                </Title>
+                <Text size="body-s" color="secondary">
+                  Type / to insert a live callout, SQL verification check, or runbook embed:
+                </Text>
+                <div className="folio-slash-command">
                   <Input
-                    ref={referenceInputRef}
                     size="s"
-                    label="Document path"
-                    name="reference"
-                    value={draftReference}
-                    onChange={(event) => setDraftReference(event.currentTarget.value)}
-                    required
-                    pattern={'.*\\S.*'}
-                    dir="ltr"
-                    placeholder="/runbooks/document-name"
+                    aria-label="Insert an editorial block"
+                    iconLeft={MagnifyingGlassIcon}
+                    value={query}
+                    onChange={(event) => {
+                      setQuery(event.currentTarget.value);
+                      setSlashOpen(true);
+                    }}
+                    onFocus={() => setSlashOpen(true)}
                   />
-                  <Checkbox
-                    size="s"
-                    checked={draftPinned}
-                    onChange={(event) => setDraftPinned(event.currentTarget.checked)}
-                    label="Pin to verified revision (v14)"
-                  />
-                </form>
-              </PopoverBody>
-              <PopoverFooter className="folio-editor-reference-actions">
-                <Button
-                  size="s"
-                  variant="ghost"
-                  tone="danger"
-                  disabled={!reference}
-                  onClick={() => {
-                    setReference(null);
-                    closeReference();
-                    setNotice('Document reference unlinked.');
-                  }}
-                >
-                  Unlink
-                </Button>
-                <div className="folio-row folio-wrap">
-                  <Button size="s" variant="secondary" tone="neutral" onClick={cancelReference}>
-                    Cancel
-                  </Button>
-                  <Button size="s" type="submit" form={`${referenceId}-form`}>
-                    Apply
-                  </Button>
+                  {slashOpen && (
+                    <SelectPanel className="choice-panel-proto" size="s">
+                      <Listbox
+                        size="s"
+                        title="Editorial blocks"
+                        value={null}
+                        options={
+                          query === '/callout'
+                            ? blocks
+                            : blocks.filter((block) =>
+                                `${block.label} ${block.description}`
+                                  .toLowerCase()
+                                  .includes(query.replace(/^\//, '').toLowerCase()),
+                              )
+                        }
+                        onValueChange={(value) => {
+                          setInsertedBlock(
+                            blocks.find((block) => block.value === value)?.label ?? '',
+                          );
+                          setSlashOpen(false);
+                        }}
+                      />
+                    </SelectPanel>
+                  )}
                 </div>
-              </PopoverFooter>
-            </PopoverContent>
-          )}
-        </div>
-      </FolioWorkspace>
+                {insertedBlock && (
+                  <div className="folio-notice" role="status">
+                    {insertedBlock} inserted in the draft.
+                  </div>
+                )}
+              </section>
+            )}
+          </TabsContent>
+        </article>
+        {editing && referenceOpen && (
+          <PopoverContent
+            ref={referencePanelRef}
+            id={`${referenceId}-panel`}
+            className="folio-editor-reference"
+            aria-labelledby={`${referenceId}-title`}
+            aria-describedby={`${referenceId}-description`}
+            tabIndex={-1}
+            onKeyDown={(event) => {
+              if (event.key === 'Escape') {
+                event.preventDefault();
+                event.stopPropagation();
+                cancelReference();
+              }
+            }}
+          >
+            <PopoverHeader>
+              <PopoverTitle id={`${referenceId}-title`}>
+                {reference ? 'Edit document reference' : 'Add document reference'}
+              </PopoverTitle>
+              <PopoverDescription id={`${referenceId}-description`}>
+                Keep the supporting runbook close to the decision.
+              </PopoverDescription>
+            </PopoverHeader>
+            <PopoverClose aria-label="Close reference editor" onClick={cancelReference} />
+            <PopoverBody>
+              <form
+                id={`${referenceId}-form`}
+                className="folio-stack"
+                onSubmit={(event) => {
+                  event.preventDefault();
+                  setReference(draftReference.trim());
+                  setPinned(draftPinned);
+                  closeReference();
+                  setNotice('Document reference updated.');
+                }}
+              >
+                <Input
+                  ref={referenceInputRef}
+                  size="s"
+                  label="Document path"
+                  name="reference"
+                  value={draftReference}
+                  onChange={(event) => setDraftReference(event.currentTarget.value)}
+                  required
+                  pattern={'.*\\S.*'}
+                  dir="ltr"
+                  placeholder="/runbooks/document-name"
+                />
+                <Checkbox
+                  size="s"
+                  checked={draftPinned}
+                  onChange={(event) => setDraftPinned(event.currentTarget.checked)}
+                  label="Pin to verified revision (v14)"
+                />
+              </form>
+            </PopoverBody>
+            <PopoverFooter className="folio-editor-reference-actions">
+              <Button
+                size="s"
+                variant="ghost"
+                tone="danger"
+                disabled={!reference}
+                onClick={() => {
+                  setReference(null);
+                  closeReference();
+                  setNotice('Document reference unlinked.');
+                }}
+              >
+                Unlink
+              </Button>
+              <div className="folio-row folio-wrap">
+                <Button size="s" variant="secondary" tone="neutral" onClick={cancelReference}>
+                  Cancel
+                </Button>
+                <Button size="s" type="submit" form={`${referenceId}-form`}>
+                  Apply
+                </Button>
+              </div>
+            </PopoverFooter>
+          </PopoverContent>
+        )}
+      </div>
+    </FolioWorkspace>
+  );
+  return (
+    <FolioScene>
+      <Tabs size="s" value={mode} onValueChange={setMode}>
+        {workspace}
+      </Tabs>
       {notice && (
         <div className="folio-toast-dock">
           <Toast title={notice} onDismiss={() => setNotice('')} />
