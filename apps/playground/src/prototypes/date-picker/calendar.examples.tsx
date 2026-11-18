@@ -69,7 +69,7 @@ export default defineSpecimen({
       title: 'Range geometry',
       kind: 'states',
       caption:
-        'Solid accepted endpoints, a same-tone hover inside the ribbon, and an outlined proposed endpoint. Reverse selection is ordered; a single-day range has one cap.',
+        'Accepted dates have solid accent ends. While choosing, the fixed date stays solid and the proposed date and interval use softer fills.',
       surface: 'overlay',
       overlayStage: true,
       render: () => (
@@ -88,13 +88,14 @@ export default defineSpecimen({
             </DatePickerPanel>
           </DateStudy>
           <DateStudy
-            label="Draft · start set, end under pointer"
-            note="Pinned preview. Hover and click an empty range below to try the live two-step selection."
+            label="Preview · start chosen, end under pointer"
+            note="Pinned. Use the live calendar below to choose a range."
           >
             <DatePickerPanel>
               <Calendar
                 mode="range"
-                range={['2026-09-14', '2026-09-14']}
+                previewAnchor="2026-09-14"
+                previewCandidate="2026-09-19"
                 previewRange={['2026-09-14', '2026-09-19']}
               />
             </DatePickerPanel>
@@ -131,14 +132,16 @@ export default defineSpecimen({
             />
           </DateStudy>
           <DateStudy
-            label="Blocked draft · pinned"
-            note="A dashed, unfilled path keeps the fixed date visible. The reason appears below the grid."
+            label="Blocked end date · pinned"
+            note="September 22 is available on its own. From the 14th, that range would cross unavailable days."
           >
             <Calendar
               mode="range"
-              range={['2026-09-14', '2026-09-14']}
+              previewAnchor="2026-09-14"
+              previewCandidate="2026-09-22"
               previewRange={['2026-09-14', '2026-09-22']}
               unavailable={['2026-09-18', '2026-09-19', '2026-09-20']}
+              previewDates={{ '2026-09-22': 'hover' }}
             />
           </DateStudy>
           <DateStudy
@@ -169,10 +172,10 @@ export default defineSpecimen({
     },
     {
       id: 'navigation',
-      title: 'Jump to month or year',
+      title: 'Choose a month or year',
       kind: 'context',
       caption:
-        'Click the month or year in any live calendar. Both selectors replace the day grid in place; Escape goes back one level.',
+        'Select the month to change it within the current year. Select the year to change it while keeping the current month. Either choice returns directly to the days.',
       render: () => (
         <div className="date-study-stack-proto">
           <DateStudy label="Month selector · 3 columns">

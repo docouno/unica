@@ -9,7 +9,7 @@ import {
   dateLabel,
   numericDate,
   parseDate,
-  rangeDays,
+  rangeDurationLabel,
   dateAvailability,
   rangeIssue,
 } from './date-utils.proto.js';
@@ -31,13 +31,6 @@ function datePlaceholder(locale: string): string {
 
 function defaultViewDate(today: string, min?: string, max?: string): string {
   return min && today < min ? min : max && today > max ? max : today;
-}
-function durationLabel(range: DateRange): string {
-  if (!range[0] || !range[1]) {
-    return 'No period';
-  }
-  const count = rangeDays(range);
-  return `${count} ${count === 1 ? 'day' : 'days'}`;
 }
 export { Calendar } from './calendar.proto.js';
 export type { CalendarProps } from './calendar.proto.js';
@@ -637,14 +630,14 @@ export function DateRangePicker({
     (noAvailableDays
       ? 'No dates available this month'
       : readOnly
-        ? `${durationLabel(current)} · Read only`
+        ? `${rangeDurationLabel(current)} · Read only`
         : preview
-          ? `${durationLabel(preview)} · Preview`
+          ? `Preview · ${rangeDurationLabel(preview)}`
           : !draft[0]
             ? 'Choose a start date'
             : !draft[1]
               ? 'Choose an end date'
-              : durationLabel(draft));
+              : rangeDurationLabel(draft));
   return (
     <div
       {...props}

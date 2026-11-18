@@ -63,6 +63,14 @@ export function rangeDays(range: DateRange): number {
   );
 }
 
+export function rangeDurationLabel(range: DateRange): string {
+  if (!range[0] || !range[1]) {
+    return 'No period';
+  }
+  const days = rangeDays(range);
+  return `${days} ${days === 1 ? 'day' : 'days'}`;
+}
+
 export interface DateConstraints {
   readonly min?: string | undefined;
   readonly max?: string | undefined;

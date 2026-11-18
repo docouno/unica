@@ -33,6 +33,7 @@
   min-block-size: 32px;
 }
 .calendar-heading-label-proto {
+  grid-area: 1 / 2;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -65,9 +66,6 @@
 .calendar-title-button-proto {
   min-block-size: 32px;
   font-weight: 500;
-}
-.calendar-title-button-proto > svg {
-  color: var(--fg-muted);
 }
 :is(
   .calendar-nav-proto,
@@ -208,12 +206,7 @@
   display: none;
 }
 .calendar-cell-proto[data-preview-range]::before {
-  background: color-mix(in oklab, var(--accent-solid) 9%, transparent);
-  border-block: 1px dashed var(--accent-border);
-}
-.calendar-cell-proto[data-invalid-range]::before {
-  background: transparent;
-  border-color: var(--control-border);
+  background: color-mix(in oklab, var(--accent-solid) 10%, transparent);
 }
 .calendar-day-proto {
   position: relative;
@@ -230,17 +223,16 @@
   cursor: pointer;
 }
 /* Interactions shade the role beneath the day. The ribbon remains continuous. */
-.calendar-cell-proto[data-range]:not([data-invalid-range]) .calendar-day-proto:not([data-edge]) {
+.calendar-cell-proto[data-range] .calendar-day-proto:not([data-edge], [data-candidate]) {
   --date-state-hover: color-mix(in oklab, var(--accent-solid) 15%, transparent);
   --date-state-press: color-mix(in oklab, var(--accent-solid) 25%, transparent);
 }
 .calendar-day-proto[data-candidate] {
-  border-color: var(--accent-solid);
+  --date-state-rest: var(--accent-soft-bg);
+  --date-state-hover: color-mix(in oklab, var(--date-state-rest) 88%, var(--accent-solid));
+  --date-state-press: color-mix(in oklab, var(--date-state-rest) 82%, var(--accent-solid));
+  color: var(--accent-soft-fg);
   font-weight: 600;
-}
-.calendar-cell-proto[data-invalid-range] .calendar-day-proto[data-candidate] {
-  border-style: dashed;
-  border-color: var(--fg-muted);
 }
 .calendar-day-proto[data-edge] {
   --date-state-rest: var(--accent-solid);
@@ -604,6 +596,11 @@
     color: HighlightText;
   }
   .calendar-day-proto[data-candidate] {
+    forced-color-adjust: none;
+    --date-state-rest: Canvas;
+    --date-state-hover: Canvas;
+    --date-state-press: Canvas;
     border-color: Highlight;
+    color: CanvasText;
   }
 }
