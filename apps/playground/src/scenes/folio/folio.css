@@ -575,13 +575,19 @@
   position: relative;
   min-inline-size: 0;
 }
-.folio-invite-dialog .dialog-preview-body {
-  overflow: visible;
+.folio-scene > .dialog-layer {
+  --dialog-frame-max: 100svh;
 }
-.folio-invite-dialog .dialog-preview-body > form {
+.folio-invite-dialog .dialog-surface {
+  --dialog-width: 548px;
+}
+.folio-properties-dialog .dialog-surface {
+  --dialog-width: 520px;
+}
+.folio-invite-dialog .dialog-body-content > form {
   gap: 14px;
 }
-.folio-invite-dialog .dialog-preview-body > form > .folio-grid-2 {
+.folio-invite-dialog .dialog-body-content > form > .folio-grid-2 {
   grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
 }
 .folio-minor-action {
@@ -618,7 +624,7 @@
 }
 @container artboard (max-width: 700px) {
   .folio-fieldset > .folio-grid-2,
-  .folio-invite-dialog .dialog-preview-body > form > .folio-grid-2 {
+  .folio-invite-dialog .dialog-body-content > form > .folio-grid-2 {
     grid-template-columns: minmax(0, 1fr);
   }
   .folio-toast-dock {
@@ -698,9 +704,6 @@
   }
 }
 @container artboard (max-width: 700px) {
-  .folio-invite-dialog .dialog-preview-body {
-    overflow: auto;
-  }
   .folio-invite-dialog .folio-grid-2 {
     grid-template-columns: minmax(0, 1fr);
   }

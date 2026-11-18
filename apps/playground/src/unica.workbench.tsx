@@ -342,6 +342,7 @@ function renderUnicaStage({
   return (
     <OverlayStage underlay={<UnicaUnderlay />} minHeight={320}>
       <div
+        data-unica-stage-scrim=""
         aria-hidden="true"
         style={{
           position: 'absolute',

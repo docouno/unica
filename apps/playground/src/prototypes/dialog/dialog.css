@@ -1,133 +1,338 @@
-.dialog-preview-layer {
+.dialog-layer {
   position: absolute;
   inset: 0;
   z-index: 5;
+  --dialog-enter-x: 0px;
+  --dialog-enter-y: 0px;
+  --dialog-duration: 160ms;
+}
+.dialog-placement {
+  position: sticky;
+  inset-block-start: 0;
+  block-size: 100%;
+  max-block-size: var(--dialog-frame-max, none);
+  pointer-events: none;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: var(--space-32);
+  min-inline-size: 0;
+  padding-block: max(var(--space-16), env(safe-area-inset-top))
+    max(var(--space-16), env(safe-area-inset-bottom));
+  padding-inline: max(var(--space-16), env(safe-area-inset-left), env(safe-area-inset-right));
 }
-.dialog-preview-scrim {
+
+.dialog-scrim {
   position: absolute;
   inset: 0;
-  inline-size: 100%;
-  block-size: 100%;
-  border: 0;
-  padding: 0;
   background: var(--scrim-bg);
-  cursor: default;
+  animation: dialog-scrim-enter 150ms ease-out both;
 }
-.dialog-preview-surface {
+
+.dialog-surface {
+  pointer-events: auto;
+  --dialog-inset: var(--space-24);
+  --dialog-gap: var(--space-16);
+  --dialog-width: 36rem;
+  --dialog-radius: var(--surface-l-radius);
+  --dialog-shadow: var(--overlay-shadow-modal);
+  --dialog-rule: color-mix(in srgb, var(--fg-primary) 15%, transparent);
   position: relative;
-  min-inline-size: 0;
-  inline-size: min(548px, 100%);
-  max-block-size: 100%;
   display: flex;
   flex-direction: column;
+  min-inline-size: 0;
+  min-block-size: 0;
+  inline-size: min(var(--dialog-width), 100%);
+  max-block-size: 100%;
   border: 1px solid var(--overlay-border);
-  border-radius: var(--surface-l-radius);
+  border-radius: var(--dialog-radius);
   background: var(--bg-overlay);
   color: var(--fg-primary);
   backdrop-filter: var(--overlay-backdrop);
-  box-shadow: var(--overlay-shadow-modal);
+  box-shadow: var(--dialog-shadow);
+  font: var(--text-size-body-s) / var(--text-size-body-s-lh) var(--font-family-base);
+  animation: dialog-surface-enter var(--dialog-duration) cubic-bezier(0.2, 0.7, 0.25, 1) both;
 }
-.dialog-preview-surface::before {
+.dialog-surface:focus {
+  outline: none;
+}
+.dialog-surface::before,
+.dialog-surface::after {
   content: '';
   position: absolute;
-  inset: 0;
   border-radius: inherit;
   pointer-events: none;
+}
+.dialog-surface::before {
+  inset: 0;
   box-shadow: var(--overlay-rim);
   mask-image: var(--overlay-rim-mask);
 }
-.dialog-preview-surface::after {
-  content: '';
-  position: absolute;
-  inset: -1px;
-  border-radius: inherit;
-  pointer-events: none;
+.dialog-surface::after {
+  inset: 0;
   background: var(--motif-corner-ticks);
 }
-.dialog-preview-header {
-  display: flex;
+
+.dialog-surface[data-dialog-size='s'] {
+  --dialog-inset: var(--space-16);
+  --dialog-gap: var(--space-12);
+}
+.dialog-surface[data-dialog-size='l'] {
+  --dialog-inset: var(--space-32);
+  --dialog-gap: var(--space-24);
+}
+.dialog-surface[data-dialog-width='s'] {
+  --dialog-width: 24rem;
+}
+.dialog-surface[data-dialog-width='l'] {
+  --dialog-width: 52rem;
+}
+
+.dialog-header,
+.dialog-footer,
+.dialog-body-content {
+  padding-inline: var(--dialog-inset);
+}
+.dialog-header {
+  position: relative;
+  flex: none;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: start;
-  justify-content: space-between;
-  gap: var(--space-12);
-  padding: var(--space-16) var(--space-16) var(--space-12);
-}
-.dialog-preview-header > div {
-  display: grid;
   gap: var(--space-8);
-  min-inline-size: 0;
+  padding-block: var(--dialog-inset) var(--dialog-gap);
 }
-.dialog-preview-body {
+.dialog-header:last-child {
+  padding-block-end: var(--dialog-inset);
+}
+.dialog-heading {
+  min-inline-size: 0;
   display: grid;
-  gap: var(--space-16);
-  padding: 0 var(--space-16) var(--space-12);
+  gap: var(--space-4);
+}
+.dialog-title,
+.dialog-description {
+  margin: 0;
+  overflow-wrap: anywhere;
+  unicode-bidi: plaintext;
+  text-align: match-parent;
+}
+.dialog-title {
+  font: 600 var(--text-size-heading-s) / var(--text-size-heading-s-lh) var(--font-family-base);
+  letter-spacing: -0.02em;
+}
+.dialog-description {
+  color: var(--fg-secondary);
+}
+.dialog-dismiss.button-proto {
+  margin-block-start: -8px;
+  margin-inline-end: -8px;
+  min-inline-size: 44px;
+  min-block-size: 44px;
+}
+
+.dialog-body {
   min-block-size: 0;
   overflow: auto;
   overscroll-behavior: contain;
 }
-.dialog-preview-footer {
+.dialog-body:focus-visible,
+.dialog-surface[data-whole-scroll]:focus-visible {
+  outline: 2px solid var(--focus-ring-color);
+  outline-offset: -2px;
+}
+.dialog-body-content {
+  display: grid;
+  align-content: start;
+  gap: var(--dialog-gap);
+  min-inline-size: 0;
+  padding-block: var(--space-4);
+  overflow-wrap: anywhere;
+}
+.dialog-body:last-child .dialog-body-content {
+  padding-block-end: var(--dialog-inset);
+}
+.dialog-footer {
+  position: relative;
+  flex: none;
   display: flex;
-  align-items: center;
   justify-content: end;
+  align-items: center;
   flex-wrap: wrap;
   gap: var(--space-8);
-  padding: var(--space-4) var(--space-16) var(--space-16);
+  padding-block: var(--dialog-gap) var(--dialog-inset);
 }
-.dialog-preview-layer[data-side='end'] {
-  padding: 0;
+.dialog-footer > .button-proto {
+  max-inline-size: 100%;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.dialog-header::after,
+.dialog-footer::before {
+  content: '';
+  position: absolute;
+  inset-inline: var(--dialog-inset);
+  block-size: 1px;
+  background: transparent;
+  pointer-events: none;
+}
+.dialog-header::after {
+  inset-block-end: 0;
+}
+.dialog-footer::before {
+  inset-block-start: 0;
+}
+.dialog-surface[data-before-content] > .dialog-header::after,
+.dialog-surface[data-after-content] > .dialog-footer::before {
+  background: var(--dialog-rule);
+}
+.dialog-surface[data-whole-scroll] {
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+.dialog-surface[data-whole-scroll] > .dialog-body {
+  flex: none;
+  overflow: visible;
+}
+
+.dialog-layer[data-dialog-side='start'] > .dialog-placement,
+.dialog-layer[data-dialog-side='end'] > .dialog-placement {
   align-items: stretch;
+  padding: 0;
+}
+.dialog-layer[data-dialog-side='start'] > .dialog-placement {
+  justify-content: start;
+  --dialog-enter-x: -20px;
+}
+.dialog-layer[data-dialog-side='end'] > .dialog-placement {
   justify-content: end;
+  --dialog-enter-x: 20px;
 }
-.dialog-preview-layer[data-side='end'] .dialog-preview-surface {
-  inline-size: min(520px, 100%);
-  border-radius: 0;
-  box-shadow: var(--overlay-shadow-drawer);
+.dialog-layer[data-dialog-side='start']:dir(rtl) > .dialog-placement {
+  --dialog-enter-x: 20px;
 }
-.dialog-preview-layer[data-side='end'] .dialog-preview-body {
+.dialog-layer[data-dialog-side='end']:dir(rtl) > .dialog-placement {
+  --dialog-enter-x: -20px;
+}
+.dialog-layer:not([data-dialog-side='center']) > .dialog-placement {
+  --dialog-duration: 200ms;
+}
+.dialog-layer:not([data-dialog-side='center']) > .dialog-placement > .dialog-surface {
+  --dialog-shadow: var(--overlay-shadow-drawer);
+}
+.dialog-layer[data-dialog-side='start'] > .dialog-placement > .dialog-surface,
+.dialog-layer[data-dialog-side='end'] > .dialog-placement > .dialog-surface {
+  border-block: 0;
+}
+.dialog-layer[data-dialog-side='start'] > .dialog-placement > .dialog-surface {
+  border-inline-start: 0;
+  border-start-start-radius: 0;
+  border-end-start-radius: 0;
+}
+.dialog-layer[data-dialog-side='end'] > .dialog-placement > .dialog-surface {
+  border-inline-end: 0;
+  border-start-end-radius: 0;
+  border-end-end-radius: 0;
+}
+.dialog-layer[data-dialog-side='top'],
+.dialog-layer[data-dialog-side='bottom'] > .dialog-placement {
+  padding-inline: 0;
+  --dialog-duration: 200ms;
+}
+.dialog-layer[data-dialog-side='top'] > .dialog-placement {
+  align-items: start;
+  padding-block-start: 0;
+  --dialog-enter-y: -20px;
+}
+.dialog-layer[data-dialog-side='bottom'] > .dialog-placement {
+  align-items: end;
+  padding-block-end: 0;
+  --dialog-enter-y: 20px;
+}
+.dialog-layer[data-dialog-side='top'] > .dialog-placement > .dialog-surface {
+  border-block-start: 0;
+  border-start-start-radius: 0;
+  border-start-end-radius: 0;
+}
+.dialog-layer[data-dialog-side='bottom'] > .dialog-placement > .dialog-surface {
+  border-block-end: 0;
+  border-end-start-radius: 0;
+  border-end-end-radius: 0;
+}
+.dialog-layer:not([data-dialog-side='center']) .dialog-body {
   flex: 1;
-  align-content: start;
 }
-.dialog-preview-study {
-  position: relative;
-  min-block-size: 680px;
-  background: var(--bg-canvas);
-  isolation: isolate;
-}
+
 @container artboard (max-width: 600px) {
-  .dialog-preview-layer {
-    padding: var(--space-12);
+  .dialog-layer[data-dialog-side='center'] > .dialog-placement {
+    padding-inline: max(var(--space-12), env(safe-area-inset-left), env(safe-area-inset-right));
   }
-  .dialog-preview-header {
-    padding: var(--space-16);
+  .dialog-surface[data-dialog-size='m'],
+  .dialog-surface[data-dialog-size='l'] {
+    --dialog-inset: var(--space-16);
   }
-  .dialog-preview-body {
-    padding: 0 var(--space-16) var(--space-16);
+  .dialog-surface[data-dialog-size='l'] {
+    --dialog-gap: var(--space-16);
   }
-  .dialog-preview-footer {
-    padding: var(--space-12) var(--space-16);
+}
+@container artboard (max-width: 420px) {
+  .dialog-layer.dialog-discard-confirmation > .dialog-placement {
+    padding-inline: max(
+      calc(var(--space-12) + var(--space-8)),
+      env(safe-area-inset-left),
+      env(safe-area-inset-right)
+    );
   }
 }
 @supports not (backdrop-filter: blur(1px)) {
-  .dialog-preview-surface {
-    background: var(--bg-surface);
+  .dialog-surface {
+    background: var(--bg-surface-raised);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .dialog-surface,
+  .dialog-scrim {
+    animation: none;
   }
 }
 @media (forced-colors: active) {
-  .dialog-preview-surface {
+  .dialog-surface {
+    --dialog-rule: CanvasText;
     background: Canvas;
     color: CanvasText;
     border-color: CanvasText;
     box-shadow: none;
+    backdrop-filter: none;
   }
-  .dialog-preview-surface::before,
-  .dialog-preview-surface::after {
+  .dialog-surface::before,
+  .dialog-surface::after {
     display: none;
   }
-  .dialog-preview-scrim {
+  .dialog-scrim {
     background: Canvas;
-    opacity: 0.6;
+    forced-color-adjust: none;
+    opacity: 0.7;
   }
+}
+@keyframes dialog-scrim-enter {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes dialog-surface-enter {
+  from {
+    opacity: 0.65;
+    translate: var(--dialog-enter-x) var(--dialog-enter-y);
+  }
+}
+
+.dialog-notification {
+  position: absolute;
+  inset-inline: var(--space-12);
+  inset-block-end: var(--space-12);
+  display: flex;
+  justify-content: end;
+}
+.dialog-notification > * {
+  pointer-events: auto;
 }
