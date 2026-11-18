@@ -23,7 +23,7 @@ import { Badge } from '../prototypes/badge/badge.proto.js';
 import { Button } from '../prototypes/button/button.proto.js';
 import { Card } from '../prototypes/card/card.proto.js';
 import { Empty } from '../prototypes/empty/empty.proto.js';
-import { Toast } from '../prototypes/feedback/feedback.proto.js';
+import { ToastCard } from '../prototypes/toast/toast.proto.js';
 import { Spinner } from '../prototypes/progress/progress.proto.js';
 import { SkeletonText } from '../prototypes/skeleton/skeleton.proto.js';
 import { Icon } from '../prototypes/icon/icon.proto.js';
@@ -348,9 +348,9 @@ function ExtensionsScene(): ReactElement {
       </FolioWorkspace>
       {notice && (
         <div className="folio-toast-dock">
-          <Toast status="info" title="Connectors" onDismiss={() => setNotice('')}>
+          <ToastCard status="info" title="Connectors" onDismiss={() => setNotice('')}>
             {notice}
-          </Toast>
+          </ToastCard>
         </div>
       )}
     </FolioScene>

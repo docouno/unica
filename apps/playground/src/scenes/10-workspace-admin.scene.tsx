@@ -1,4 +1,4 @@
-import { useId, useState } from 'react';
+import { useId, useLayoutEffect, useRef, useState } from 'react';
 import type { ReactElement } from 'react';
 import { ArrowLeftIcon } from '@phosphor-icons/react';
 import { defineScene } from '../workbench/types.js';
@@ -11,8 +11,8 @@ import {
 } from '../prototypes/breadcrumb/breadcrumb.proto.js';
 import { Button } from '../prototypes/button/button.proto.js';
 import { Card } from '../prototypes/card/card.proto.js';
-import { Toast } from '../prototypes/feedback/feedback.proto.js';
 import { Alert, AlertTitle, AlertDescription } from '../prototypes/alert/alert.proto.js';
+import { ToastViewport } from '../prototypes/toast/toast.proto.js';
 import { Progress } from '../prototypes/progress/progress.proto.js';
 import {
   Dropzone,
@@ -63,8 +63,29 @@ function WorkspaceAdminScene(): ReactElement {
   const [currentStep, setCurrentStep] = useState(1);
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
+  const [showActivityToast, setShowActivityToast] = useState(true);
   const [showValidationToast, setShowValidationToast] = useState(true);
   const policyName = useId();
+  const feedbackRegion = useRef<HTMLDivElement>(null);
+  useLayoutEffect(() => {
+    const region = feedbackRegion.current;
+    const scene = region?.closest<HTMLElement>('.folio-scene');
+    if (!scene) {
+      return;
+    }
+    const viewport = region?.querySelector<HTMLElement>('.toast-viewport');
+    const update = (): void =>
+      scene.style.setProperty(
+        '--folio-toast-clearance',
+        `${viewport ? Math.ceil(viewport.getBoundingClientRect().height) + 48 : 64}px`,
+      );
+    const observer = new ResizeObserver(update);
+    if (viewport) {
+      observer.observe(viewport);
+    }
+    update();
+    return () => observer.disconnect();
+  }, [archives, notice, showActivityToast, showValidationToast]);
   const totalSize = archives.reduce((sum, archive) => sum + archive.megabytes, 0);
   const stagedLabel = `${archives.length} ${archives.length === 1 ? 'archive' : 'archives'} staged · ${totalSize.toFixed(1)} MB`;
 
@@ -285,7 +306,6 @@ function WorkspaceAdminScene(): ReactElement {
                   onClick={() => {
                     setArchives([]);
                     setCurrentStep(0);
-                    setShowValidationToast(false);
                     setNotice('The staged import was cleared.');
                   }}
                 >
@@ -318,24 +338,56 @@ function WorkspaceAdminScene(): ReactElement {
           </div>
         </div>
       </AppShell>
-      {showValidationToast && !notice && (
-        <div className="folio-toast-dock">
-          <Toast
-            status="success"
-            title="28 runbook slugs validated"
-            onDismiss={() => setShowValidationToast(false)}
-          >
-            Zero broken cross-references in core-infra-runbooks-2026-q3.zip.
-          </Toast>
-        </div>
-      )}
-      {notice && (
-        <div className="folio-toast-dock">
-          <Toast status="info" title="Archive import" onDismiss={() => setNotice('')}>
-            {notice}
-          </Toast>
-        </div>
-      )}
+      <div className="folio-import-toast-region" ref={feedbackRegion}>
+        <ToastViewport
+          items={[
+            ...(showActivityToast && archives.some((archive) => archive.status === 'uploading')
+              ? [
+                  {
+                    id: 'activity',
+                    loading: true,
+                    title: 'Indexing archive',
+                    children: 'legacy-envoy-rfcs.tar.gz · You can keep reviewing the import.',
+                  },
+                ]
+              : []),
+            ...(showValidationToast
+              ? [
+                  {
+                    id: 'validation',
+                    status: 'success' as const,
+                    title: '28 runbook slugs validated',
+                    children: 'Zero broken cross-references in core-infra-runbooks-2026-q3.zip.',
+                  },
+                ]
+              : []),
+            ...(notice
+              ? [
+                  {
+                    id: 'import-notice',
+                    status: 'info' as const,
+                    title: 'Archive import',
+                    children: notice,
+                  },
+                ]
+              : []),
+          ]}
+          onDismiss={(id) => {
+            if (id === 'activity') {
+              setShowActivityToast(false);
+            } else if (id === 'validation') {
+              setShowValidationToast(false);
+            } else {
+              setNotice('');
+            }
+          }}
+          onDismissAll={() => {
+            setShowActivityToast(false);
+            setShowValidationToast(false);
+            setNotice('');
+          }}
+        />
+      </div>
     </FolioScene>
   );
 }

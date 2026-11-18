@@ -4,10 +4,10 @@ import { defineSpecimen } from '../../workbench/types.js';
 import { Alert, AlertDescription, AlertTitle } from '../alert/alert.proto.js';
 import { Button } from '../button/button.proto.js';
 import { CheckboxCard } from '../choice-card/choice-card.proto.js';
-import { Toast } from '../feedback/feedback.proto.js';
 import { Input } from '../input/input.proto.js';
 import { Select } from '../select/select.proto.js';
 import { Textarea } from '../textarea/textarea.proto.js';
+import { ToastCard } from '../toast/toast.proto.js';
 import { DialogSizeControls, DialogStudy, StudySelect } from './dialog.examples.js';
 import {
   Modal,
@@ -262,9 +262,12 @@ function EditProject({
           </ModalFooter>
         </ModalContent>
       </Modal>
+      <span className="dialog-study-announcement" role="status">
+        {saved ? 'Project updated' : ''}
+      </span>
       {saved && (
         <div className="dialog-study-notice">
-          <Toast title="Project updated" onDismiss={() => setSaved(false)} />
+          <ToastCard status="success" title="Project updated" onDismiss={() => setSaved(false)} />
         </div>
       )}
     </DialogStudy>
@@ -319,9 +322,12 @@ function DeleteExport(): ReactElement {
           </ModalFooter>
         </ModalContent>
       </Modal>
+      <span className="dialog-study-announcement" role="status">
+        {deleted ? 'Export deleted' : ''}
+      </span>
       {deleted && (
         <div className="dialog-study-notice">
-          <Toast title="Export deleted" onDismiss={() => setDeleted(false)} />
+          <ToastCard status="success" title="Export deleted" onDismiss={() => setDeleted(false)} />
         </div>
       )}
     </DialogStudy>
@@ -346,7 +352,8 @@ function ReadOnly(): ReactElement {
           dismissOnBackdrop
           notification={
             notified && (
-              <Toast
+              <ToastCard
+                status="success"
                 title="Export ready"
                 onDismiss={() => {
                   setNotified(false);
@@ -354,7 +361,7 @@ function ReadOnly(): ReactElement {
                 }}
               >
                 October report
-              </Toast>
+              </ToastCard>
             )
           }
         >

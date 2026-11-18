@@ -16,7 +16,7 @@ import { Badge } from '../prototypes/badge/badge.proto.js';
 import { Button, IconButton } from '../prototypes/button/button.proto.js';
 import { Code } from '../prototypes/code/code.proto.js';
 import { Blockquote } from '../prototypes/blockquote/blockquote.proto.js';
-import { Toast } from '../prototypes/feedback/feedback.proto.js';
+import { ToastCard } from '../prototypes/toast/toast.proto.js';
 import { Spinner } from '../prototypes/progress/progress.proto.js';
 import { Input } from '../prototypes/input/input.proto.js';
 import { Icon } from '../prototypes/icon/icon.proto.js';
@@ -488,7 +488,7 @@ function EditorScene(): ReactElement {
       </Tabs>
       {notice && (
         <div className="folio-toast-dock">
-          <Toast title={notice} onDismiss={() => setNotice('')} />
+          <ToastCard status="success" title={notice} onDismiss={() => setNotice('')} />
         </div>
       )}
     </FolioScene>
