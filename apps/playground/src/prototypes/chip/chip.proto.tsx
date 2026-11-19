@@ -3,7 +3,7 @@ import type { ComponentPropsWithRef, ReactElement, ReactNode } from 'react';
 import { CheckIcon } from '@phosphor-icons/react';
 import { Icon } from '../icon/icon.proto.js';
 import type { GlyphComponent } from '../icon/icon.proto.js';
-import { Tooltip } from '../menu/menu.proto.js';
+import { Tooltip } from '../tooltip/tooltip.proto.js';
 import './chip.css';
 
 export type ChipSize = 's' | 'm' | 'l';

@@ -1,12 +1,6 @@
 import { useState } from 'react';
 import type { ReactElement, ReactNode } from 'react';
-import {
-  CopyIcon,
-  DotsThreeIcon,
-  FileTextIcon,
-  PlusIcon,
-  SidebarSimpleIcon,
-} from '@phosphor-icons/react';
+import { CopyIcon, FileTextIcon, PlusIcon, SidebarSimpleIcon } from '@phosphor-icons/react';
 import {
   AppShell,
   AsidePanel,
@@ -24,13 +18,22 @@ import {
 import type { RailDestination } from '../../prototypes/app-shell/app-shell.proto.js';
 import { Avatar, AvatarGroup } from '../../prototypes/avatar/avatar.proto.js';
 import { Badge } from '../../prototypes/badge/badge.proto.js';
-import { Breadcrumb } from '../../prototypes/breadcrumb/breadcrumb.proto.js';
 import { Button, IconButton } from '../../prototypes/button/button.proto.js';
 import { Code, CodeBlock } from '../../prototypes/code/code.proto.js';
 import { Blockquote } from '../../prototypes/blockquote/blockquote.proto.js';
-import { Alert } from '../../prototypes/feedback/feedback.proto.js';
+import { Alert, AlertTitle, AlertDescription } from '../../prototypes/alert/alert.proto.js';
 import { Icon } from '../../prototypes/icon/icon.proto.js';
-import { Table, TableScroll } from '../../prototypes/table/table.proto.js';
+import { List, ListItem } from '../../prototypes/list/list.proto.js';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableColumnHeader,
+  TableHeader,
+  TableRow,
+  TableRowHeader,
+  TableScroll,
+} from '../../prototypes/table/table.proto.js';
 import { Text } from '../../prototypes/text/text.proto.js';
 import { Title } from '../../prototypes/title/title.proto.js';
 import './folio.css';
@@ -45,7 +48,7 @@ export function FolioScene({ children, className = '' }: FolioSceneProps): React
 
 export interface WorkspaceProps {
   readonly children: ReactNode;
-  readonly crumbs: readonly string[];
+  readonly breadcrumb: ReactNode;
   readonly actions?: ReactNode;
   readonly rightAside?: ReactNode;
   readonly leftAside?: ReactNode;
@@ -62,7 +65,7 @@ export interface WorkspaceProps {
 
 export function FolioWorkspace({
   children,
-  crumbs,
+  breadcrumb,
   actions,
   rightAside,
   leftAside,
@@ -115,6 +118,7 @@ export function FolioWorkspace({
       rightAside={rightAside}
       header={
         <Header
+          className="folio-workspace-header"
           actions={
             actions ?? (
               <Button size="s" iconLeft={PlusIcon}>
@@ -138,7 +142,7 @@ export function FolioWorkspace({
               <span className="app-shell-navigation-seam" />
             </>
           )}
-          <Breadcrumb items={crumbs} />
+          {breadcrumb}
         </Header>
       }
       subbar={subbar}
@@ -260,42 +264,48 @@ export function Person({
 
 export function RecoveryTable(): ReactElement {
   return (
-    <TableScroll>
-      <Table>
-        <thead>
-          <tr>
-            <th>Cluster tier</th>
-            <th>Target RTO</th>
-            <th>WAL mode</th>
-            <th>Verification probe</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>Tier-0 Ledger</td>
-            <td>&lt; 30 sec</td>
-            <td>Synchronous</td>
-            <td>
+    <TableScroll aria-label="Recovery targets by cluster tier">
+      <Table aria-label="Recovery targets by cluster tier">
+        <TableHeader>
+          <TableRow>
+            <TableColumnHeader>Cluster tier</TableColumnHeader>
+            <TableColumnHeader align="end">Target RTO</TableColumnHeader>
+            <TableColumnHeader>WAL mode</TableColumnHeader>
+            <TableColumnHeader>Verification probe</TableColumnHeader>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          <TableRow>
+            <TableRowHeader>Tier-0 Ledger</TableRowHeader>
+            <TableCell align="end">
+              <bdi>&lt; 30 sec</bdi>
+            </TableCell>
+            <TableCell>Synchronous</TableCell>
+            <TableCell>
               <Code>SELECT pg_is_in_recovery() = false</Code>
-            </td>
-          </tr>
-          <tr>
-            <td>Tier-1 Product</td>
-            <td>&lt; 2 min</td>
-            <td>Quorum sync</td>
-            <td>
+            </TableCell>
+          </TableRow>
+          <TableRow>
+            <TableRowHeader>Tier-1 Product</TableRowHeader>
+            <TableCell align="end">
+              <bdi>&lt; 2 min</bdi>
+            </TableCell>
+            <TableCell>Quorum sync</TableCell>
+            <TableCell>
               <Code>pg_stat_replication lag &lt; 1 MB</Code>
-            </td>
-          </tr>
-          <tr>
-            <td>Tier-2 Analytics</td>
-            <td>&lt; 15 min</td>
-            <td>Async stream</td>
-            <td>
+            </TableCell>
+          </TableRow>
+          <TableRow>
+            <TableRowHeader>Tier-2 Analytics</TableRowHeader>
+            <TableCell align="end">
+              <bdi>&lt; 15 min</bdi>
+            </TableCell>
+            <TableCell>Async stream</TableCell>
+            <TableCell>
               <Code>replay_delay_seconds &lt; 30</Code>
-            </td>
-          </tr>
-        </tbody>
+            </TableCell>
+          </TableRow>
+        </TableBody>
       </Table>
     </TableScroll>
   );
@@ -323,18 +333,21 @@ export function RunbookArticle({ compact = false }: { readonly compact?: boolean
           degradation without dropping pooled transactions.
         </Text>
       </div>
-      <Alert status="warning" title="Pre-flight quorum verification required">
-        Confirm synchronous replication lag is 0 B on pg-replica-01 and pause schema migrations
-        before fencing the writer VIP.
+      <Alert status="warning" size="s">
+        <AlertTitle>Pre-flight quorum verification required</AlertTitle>
+        <AlertDescription>
+          Confirm synchronous replication lag is 0 B on pg-replica-01 and pause schema migrations
+          before fencing the writer VIP.
+        </AlertDescription>
       </Alert>
       {!compact && (
-        <ul className="folio-checklist">
-          <li>
+        <List className="folio-checklist">
+          <ListItem>
             Verify <Code>pg_stat_replication</Code> reports <Code>sync_state = sync</Code> on
             standby
-          </li>
-          <li>Pause PgBouncer writer pools and confirm zero active DDL locks</li>
-        </ul>
+          </ListItem>
+          <ListItem>Pause PgBouncer writer pools and confirm zero active DDL locks</ListItem>
+        </List>
       )}
       {!compact && (
         <section className="folio-stack">
@@ -370,18 +383,20 @@ export function RunbookArticle({ compact = false }: { readonly compact?: boolean
 
 export function DocumentActions({
   onEdit,
-  onMenu,
+  onCopy,
+  menu,
 }: {
   readonly onEdit?: () => void;
-  readonly onMenu?: () => void;
+  readonly onCopy?: () => void;
+  readonly menu: ReactNode;
 }): ReactElement {
   return (
     <div className="folio-row">
-      <IconButton size="s" icon={CopyIcon} aria-label="Copy document link" onClick={onMenu} />
+      <IconButton size="s" icon={CopyIcon} aria-label="Copy document link" onClick={onCopy} />
       <Button size="s" variant="secondary" tone="neutral" onClick={onEdit}>
         Edit
       </Button>
-      <IconButton size="s" icon={DotsThreeIcon} aria-label="Document actions" onClick={onMenu} />
+      {menu}
     </div>
   );
 }

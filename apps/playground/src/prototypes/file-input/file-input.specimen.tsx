@@ -1,88 +1,82 @@
-import { useState } from 'react';
-import type { ReactElement } from 'react';
 import { defineSpecimen } from '../../workbench/types.js';
-import { Dropzone, FileInput, FileItem, FileList } from './file-input.proto.js';
-
-function ImportExample(): ReactElement {
-  const [names, setNames] = useState<readonly string[]>([
-    'platform-runbooks-2026-q3.zip',
-    'architecture-decisions.zip',
-  ]);
-  return (
-    <div className="control-stack-proto">
-      <Dropzone
-        onFilesChange={(files) =>
-          setNames([...new Set([...names, ...files.map((file) => file.name)])])
-        }
-      />
-      <FileList>
-        {names.map((name, index) => (
-          <FileItem
-            key={name}
-            name={name}
-            detail={
-              index === 0 ? '18.2 MB · Uploading & indexing archive…' : '6.4 MB · Ready to validate'
-            }
-            status={index === 0 ? 'uploading' : 'neutral'}
-            progress={index === 0 ? 65 : undefined}
-            onRemove={() => setNames(names.filter((item) => item !== name))}
-          />
-        ))}
-      </FileList>
-    </div>
-  );
-}
+const {
+  FileAvailability,
+  FileFeedback,
+  FileInteraction,
+  FileLive,
+  FileOverflow,
+  FileRoles,
+  FileSurfaces,
+  MultipleField,
+} = await import('./file-input.examples.js');
 
 export default defineSpecimen({
   id: 'file-input',
-  title: 'FileInput & Dropzone',
+  title: 'FileInput',
   group: 'Forms',
-  summary:
-    'Local file selection and a visible import queue. Files never leave the browser preview.',
+  summary: 'A compact picker for local files, with the current selection beside it.',
   sections: [
     {
-      id: 'receiving',
-      title: 'Compact field & drop surface',
+      id: 'roles',
+      title: 'Roles & sizes',
       kind: 'matrix',
-      render: () => (
-        <div className="control-examples-proto">
-          <FileInput
-            label="Schema mapping"
-            initialFileName="frontmatter-schema.json"
-            accept=".json,.yaml,.yml"
-            description="JSON or YAML schema · 18.4 KB sample"
-          />
-          <Dropzone />
-        </div>
-      ),
+      caption:
+        'Secondary and ghost buttons at S/M/L. The picker keeps its label when a file is selected.',
+      render: () => <FileRoles />,
     },
     {
-      id: 'states',
-      title: 'Availability & validation',
+      id: 'interaction',
+      title: 'Hover, press, focus & drop',
       kind: 'states',
-      render: () => (
-        <div className="control-examples-proto">
-          <FileInput label="Workspace policy" initialFileName="managed-schema.json" disabled />
-          <FileList>
-            <FileItem
-              name="verified-runbooks.zip"
-              detail="Zero broken cross-references."
-              status="success"
-            />
-            <FileItem
-              name="unmapped-pages.zip"
-              detail="3 pages need an owner mapping."
-              status="danger"
-            />
-          </FileList>
-        </div>
-      ),
+      caption:
+        'Compare the two button roles, then try Choose file and Remove. A keyboard focus outline surrounds the button.',
+      render: () => <FileInteraction />,
     },
     {
-      id: 'import',
-      title: 'Folio · Archive import',
+      id: 'feedback',
+      title: 'Validation & checking',
+      kind: 'states',
+      caption:
+        'Selection is not upload success. Feedback stays local and explains the next action. Checking blocks replacement until the result.',
+      render: () => <FileFeedback />,
+    },
+    {
+      id: 'availability',
+      title: 'Read-only & disabled',
+      kind: 'states',
+      caption:
+        'Read-only keeps filenames readable and selectable. Disabled removes interaction and suppresses status paint.',
+      render: () => <FileAvailability />,
+    },
+    {
+      id: 'multiple',
+      title: 'Multiple selection',
       kind: 'context',
-      render: () => <ImportExample />,
+      caption:
+        'A compact count in the picker, with a separate file list. Choose real local files; no transfer takes place.',
+      render: () => <MultipleField />,
+    },
+    {
+      id: 'live',
+      title: 'Select, reject, replace & clear',
+      kind: 'context',
+      caption:
+        'A local selection study: valid replacement, rejected attempts, and removal. A rejected choice preserves the previous reference.',
+      render: () => <FileLive />,
+    },
+    {
+      id: 'overflow',
+      title: 'Long names & direction',
+      kind: 'states',
+      caption: 'Names wrap instead of hiding their extension. Try 360px, 120% text, and RTL.',
+      render: () => <FileOverflow />,
+    },
+    {
+      id: 'surfaces',
+      title: 'Base & overlay materials',
+      kind: 'context',
+      caption: 'Static material plates, with identical fields and no dialog behavior.',
+      render: () => <FileSurfaces compact />,
     },
   ],
 });

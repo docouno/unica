@@ -1,0 +1,140 @@
+.context-study-matrix,
+.context-study-live {
+  position: relative;
+  min-inline-size: 0;
+  inline-size: 100%;
+}
+
+.context-study-matrix {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: start;
+  justify-content: center;
+  gap: var(--space-24);
+}
+
+.context-study-pin {
+  --context-card-inset: calc(var(--surface-s-padding) + 1px);
+  --context-point-inline: 26px;
+
+  position: relative;
+  inline-size: 17rem;
+  max-inline-size: 100%;
+}
+
+.context-study-pin > .text-proto,
+.context-study-live > .text-proto {
+  display: inline-block;
+  max-inline-size: 100%;
+  padding: var(--space-2) var(--space-4);
+  background: var(--bg-canvas);
+  border-radius: var(--radius-xs);
+}
+
+.context-study-pin > .context-study-target {
+  margin-block-start: var(--space-8);
+}
+
+.context-study-pin-menu {
+  position: relative;
+}
+
+.context-study-pin-menu > .menu-proto {
+  max-inline-size: calc(100% - 28px);
+}
+
+.context-study-pin[data-origin='point'] > .context-study-pin-menu {
+  margin-block-start: -6px;
+}
+
+.context-study-pin[data-origin='point'] .menu-proto {
+  margin-inline-start: var(--context-point-inline);
+}
+
+.context-study-pin[data-origin='button'] > .context-study-pin-menu {
+  margin-block-start: calc(6px - var(--context-card-inset));
+}
+
+.context-study-pin[data-origin='button'] .menu-proto {
+  margin-inline-start: auto;
+  margin-inline-end: var(--context-card-inset);
+}
+
+.context-study-cursor {
+  position: absolute;
+  inset-block-start: -6px;
+  inset-inline-start: calc(var(--context-point-inline) - 8px);
+  z-index: 1;
+  font-size: 16px;
+}
+
+.context-study-target {
+  min-inline-size: 0;
+  inline-size: 100%;
+}
+
+.context-study-live-target {
+  inline-size: min(25rem, 100%);
+}
+
+.context-study-target[data-context-open='point'] {
+  border-color: var(--border-strong);
+}
+
+.context-study-target[data-touch-hold] {
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+.context-study-target:focus-visible {
+  outline: 2px solid var(--focus-ring-color);
+  outline-offset: 2px;
+}
+
+.context-study-file {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  min-inline-size: 0;
+}
+
+.context-study-file-icon {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  inline-size: 28px;
+  block-size: 28px;
+  border-radius: var(--radius-xs);
+  background: var(--neutral-soft-bg);
+  color: var(--fg-secondary);
+}
+
+.context-study-file-name {
+  flex: 1;
+  min-inline-size: 0;
+  overflow-wrap: anywhere;
+  font-weight: 600;
+  font-size: var(--text-size-body-s);
+  line-height: var(--text-size-body-s-lh);
+}
+
+.context-study-live {
+  display: grid;
+  justify-items: start;
+  align-content: start;
+  min-block-size: 414px;
+  gap: var(--space-12);
+  padding-block-start: var(--space-64);
+  padding-inline: min(8%, var(--space-32));
+}
+
+.context-study-note {
+  gap: var(--space-12);
+}
+
+@media (pointer: coarse) {
+  .context-study-trigger {
+    min-inline-size: 44px;
+    min-block-size: 44px;
+  }
+}

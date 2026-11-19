@@ -9,6 +9,20 @@
   font-size: var(--text-size-body-s);
   line-height: var(--text-size-body-s-lh);
 }
+.folio-workspace-header {
+  flex-wrap: wrap;
+  row-gap: var(--space-8);
+}
+
+.folio-workspace-header .app-shell-header-content {
+  flex-basis: min(100%, 16rem);
+}
+
+.folio-workspace-header .app-shell-header-actions {
+  max-inline-size: 100%;
+  margin-inline-start: auto;
+}
+
 .folio-auth {
   min-block-size: 920px;
   display: flex;
@@ -93,6 +107,20 @@
   display: grid;
   gap: 14px;
   min-inline-size: 0;
+}
+.folio-collection-results {
+  container: collection-results / inline-size;
+}
+.folio-collection-footer {
+  display: grid;
+  align-items: center;
+  gap: var(--space-8) var(--space-16);
+}
+@container collection-results (inline-size >= 580px) {
+  .folio-collection-footer:has(nav) {
+    grid-template-columns: minmax(0, 1fr) minmax(360px, 1fr);
+    --pagination-align: end;
+  }
 }
 .folio-page-intro,
 .folio-section-heading {
@@ -203,7 +231,7 @@
   --text-size-body-m: var(--text-size-body-s);
   --text-size-body-m-lh: var(--text-size-body-s-lh);
 }
-.folio-sort-control.input-shell-proto {
+.folio-sort-control.select-proto {
   inline-size: 226px;
   max-inline-size: 100%;
 }
@@ -312,7 +340,6 @@
 }
 .folio-activity-meta {
   text-align: end;
-  align-content: start;
 }
 .folio-revision-diff {
   color: var(--status-success-soft-fg);
@@ -366,18 +393,6 @@
 .folio-runbook-compact {
   gap: 20px;
 }
-.folio-runbook .table-proto thead th,
-.folio-content-collection .table-proto thead th,
-.folio-members-content .table-proto thead th {
-  block-size: 36px;
-}
-.folio-runbook .table-proto tbody td,
-.folio-content-collection .table-proto tbody td {
-  block-size: 42px;
-}
-.folio-members-content .table-proto tbody td {
-  block-size: 44px;
-}
 .folio-runbook .table-proto,
 .folio-content-collection .table-proto {
   min-inline-size: 640px;
@@ -410,14 +425,8 @@
   border-block-start: 1px solid var(--border-subtle);
 }
 .folio-checklist {
-  display: grid;
-  gap: var(--space-8);
-  padding-inline-start: var(--space-24);
-  margin: 0;
   font-size: var(--text-size-body-s);
-}
-.folio-checklist li::marker {
-  color: var(--status-success-signal);
+  line-height: var(--text-size-body-s-lh);
 }
 .folio-toast-dock {
   position: absolute;
@@ -435,17 +444,13 @@
   inset-inline-start: 62px;
   inset-block-end: 68px;
 }
-.folio-floating-actions {
-  position: absolute;
-  z-index: 3;
-  inset-block-start: 92px;
-  inset-inline-end: 363px;
-}
 .folio-owner-preview {
   position: relative;
 }
 .folio-owner-preview > .hover-card-proto {
   position: absolute;
+  inline-size: min(22rem, calc(100cqw - 32px));
+  max-inline-size: none;
   inset-block-start: calc(100% + 8px);
   inset-inline-end: 0;
   z-index: 4;
@@ -496,6 +501,14 @@
 .folio-editor-stage {
   position: relative;
   min-block-size: 840px;
+}
+.folio-editor-mode-tabs {
+  flex: 0 1 220px;
+}
+.folio-editor-revisions {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 13rem), 1fr));
+  gap: var(--space-16);
 }
 .folio-editor-tool-divider {
   margin-inline: var(--space-8);
@@ -548,21 +561,19 @@
   position: relative;
   min-inline-size: 0;
 }
-.folio-invite-role-panel.popover-content-proto {
-  position: absolute;
-  z-index: 3;
-  inset-block-start: calc(100% + 4px);
-  inset-inline-start: 0;
-  inline-size: 300px;
-  max-inline-size: 100%;
+.folio-scene > .dialog-layer {
+  --dialog-frame-max: 100svh;
 }
-.folio-invite-dialog .dialog-preview-body {
-  overflow: visible;
+.folio-invite-dialog .dialog-surface {
+  --dialog-width: 548px;
 }
-.folio-invite-dialog .dialog-preview-body > form {
+.folio-properties-dialog .dialog-surface {
+  --dialog-width: 520px;
+}
+.folio-invite-dialog .dialog-body-content > form {
   gap: 14px;
 }
-.folio-invite-dialog .dialog-preview-body > form > .folio-grid-2 {
+.folio-invite-dialog .dialog-body-content > form > .folio-grid-2 {
   grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
 }
 .folio-minor-action {
@@ -585,9 +596,6 @@
   .folio-content-overview {
     padding-inline: var(--space-32);
   }
-  .folio-floating-actions {
-    inset-inline-end: var(--space-24);
-  }
 }
 @container folio-content (max-width: 640px) {
   .folio-grid-3 {
@@ -602,7 +610,7 @@
 }
 @container artboard (max-width: 700px) {
   .folio-fieldset > .folio-grid-2,
-  .folio-invite-dialog .dialog-preview-body > form > .folio-grid-2 {
+  .folio-invite-dialog .dialog-body-content > form > .folio-grid-2 {
     grid-template-columns: minmax(0, 1fr);
   }
   .folio-toast-dock {
@@ -642,16 +650,8 @@
   .folio-activity-row {
     gap: var(--space-8);
   }
-  .folio-activity-meta {
-    max-inline-size: 75px;
-  }
   .folio-person {
     flex-wrap: wrap;
-  }
-  .folio-floating-actions {
-    position: relative;
-    inset: auto;
-    margin: var(--space-16);
   }
 }
 @container artboard (max-width: 600px) {
@@ -687,17 +687,8 @@
   }
 }
 @container artboard (max-width: 700px) {
-  .folio-invite-dialog .dialog-preview-body {
-    overflow: auto;
-  }
   .folio-invite-dialog .folio-grid-2 {
     grid-template-columns: minmax(0, 1fr);
-  }
-  .folio-invite-role-panel.popover-content-proto {
-    position: relative;
-    inset: auto;
-    margin-block-start: var(--space-4);
-    inline-size: 100%;
   }
 }
 @media (forced-colors: active) {
@@ -721,4 +712,43 @@
 }
 .folio-collection-facets > .chip-group-options-proto {
   margin-block-start: 0;
+}
+
+.folio-content-collection .table-proto :is(th, td).folio-runbook-menu-cell {
+  inline-size: 1%;
+}
+
+@container folio-content (max-width: 640px) {
+  .folio-content-collection .table-proto .folio-runbook-menu-cell {
+    position: sticky;
+    inset-inline-end: 0;
+    z-index: 1;
+    border-inline-start: 1px solid var(--border-subtle);
+    background-color: var(--bg-canvas);
+  }
+
+  .folio-content-collection
+    .table-proto
+    tr[data-context-open='point']:not([data-selected])
+    > .folio-runbook-menu-cell {
+    background-image: linear-gradient(
+      color-mix(in srgb, var(--fg-primary) 7%, transparent),
+      color-mix(in srgb, var(--fg-primary) 7%, transparent)
+    );
+  }
+
+  .folio-content-collection .table-proto tr[data-selected] > .folio-runbook-menu-cell {
+    background-image: linear-gradient(var(--table-row-selected-bg), var(--table-row-selected-bg));
+  }
+}
+
+.folio-runbook-menu-card[data-context-open='point'] {
+  border-color: var(--border-strong);
+}
+
+@media (pointer: coarse) {
+  .folio-runbook-menu-button {
+    min-inline-size: 44px;
+    min-block-size: 44px;
+  }
 }

@@ -61,50 +61,67 @@
   min-inline-size: 0;
 }
 
-.folio-connector-installed {
-  min-block-size: 186px;
-}
-
-.folio-connector-installed .folio-connector-icon {
-  inline-size: 32px;
-  block-size: 32px;
-}
-
-.folio-connector-installed-title {
-  --text-size-body-m: var(--text-size-body-s);
-  --text-size-body-m-lh: var(--text-size-body-s-lh);
-}
-
-.folio-connector-installed .folio-connector-footer {
-  padding-block-start: var(--space-8);
-  border-block-start: 0;
+.folio-connector-result-status {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
 
 .folio-webhook-card.card-proto {
-  min-block-size: 356px;
-  padding: 0;
+  min-block-size: 320px;
+}
+
+.folio-webhook-card.card-proto::before {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
   background-image: var(--motif-canvas-grid);
   background-size: 24px 24px;
+  opacity: 0.45;
+  pointer-events: none;
+  content: '';
 }
 
-.folio-webhook-card .empty-proto {
+.folio-webhook-stage {
+  position: relative;
+  display: grid;
   flex: 1;
-  justify-content: center;
-  padding: 28px 32px;
+  align-content: center;
+  min-inline-size: 0;
 }
 
-.folio-webhook-card .empty-copy-proto > h3 {
-  font-size: var(--text-size-heading-m);
-  line-height: var(--text-size-heading-m-lh);
+.folio-webhook-sandbox {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-12) var(--space-24);
 }
 
-.folio-webhook-card .empty-copy-proto {
-  max-inline-size: 520px;
+.folio-webhook-sandbox-copy {
+  display: grid;
+  gap: var(--space-4);
 }
 
-.folio-webhook-card .empty-description-proto {
-  font-size: var(--text-size-body-m);
-  line-height: var(--text-size-body-m-lh);
+.folio-webhook-sandbox-title:focus-visible {
+  border-radius: var(--radius-xs);
+  outline: 2px solid var(--focus-ring-color);
+  outline-offset: 3px;
+}
+
+@media (forced-colors: active) {
+  .folio-webhook-sandbox-title:focus-visible {
+    outline-color: Highlight;
+  }
+}
+
+@container artboard (max-width: 480px) {
+  .folio-webhook-card.card-proto {
+    min-block-size: max(320px, calc(280px * var(--font-scale)));
+  }
 }
 
 .folio-preferences-column {
@@ -151,7 +168,7 @@
   inline-size: fit-content;
 }
 
-.folio-preference-row > .select-shell-proto {
+.folio-preference-row > .select-proto {
   inline-size: 224px;
   max-inline-size: 100%;
 }
@@ -179,26 +196,13 @@
   padding: 18px 20px;
 }
 
-.folio-governance-card .collapsible-proto > summary {
-  min-block-size: 32px;
-  padding: 6px var(--space-8);
-}
-
-.folio-governance-card .collapsible-body-proto {
-  padding: var(--space-4) var(--space-8) var(--space-12);
-}
-
-.folio-governance-card .collapsible-body-proto .text-proto {
-  --text-size-body-s: var(--text-size-body-xs);
-  --text-size-body-s-lh: var(--text-size-body-xs-lh);
-}
-
 .folio-preference-policy {
   align-items: start;
 }
 
-.folio-preference-policy .text-proto {
+.folio-preference-policy > p {
   max-inline-size: 610px;
+  margin: 0;
 }
 
 .folio-preferences-actions.app-shell-sticky-bar {
@@ -219,12 +223,8 @@
   background: var(--status-warning-signal);
 }
 
-.folio-shortcuts-table thead tr {
-  block-size: 36px;
-}
-
-.folio-shortcuts-table tbody tr {
-  block-size: 40px;
+.folio-shortcuts-table {
+  min-inline-size: 600px;
 }
 
 .folio-shortcuts-table :is(th, td):nth-child(2) {
@@ -236,7 +236,7 @@
 }
 
 .folio-import-stage {
-  padding-block-end: 152px;
+  padding-block-end: max(var(--space-64), var(--folio-toast-clearance, 152px));
 }
 
 .folio-import-card.card-proto {
@@ -257,11 +257,6 @@
   min-inline-size: 0;
 }
 
-.folio-import-queue-label {
-  color: var(--fg-muted);
-  font-size: var(--text-size-caption-l);
-}
-
 .folio-import-footer {
   display: flex;
   align-items: center;
@@ -273,21 +268,6 @@
 
 .folio-import-footer .folio-row {
   flex-wrap: wrap;
-}
-
-.folio-import-dropzone .dropzone-surface-proto {
-  min-block-size: 114px;
-  gap: var(--space-8);
-  padding: var(--space-12);
-  background: var(--bg-canvas);
-}
-
-.folio-import-dropzone .dropzone-surface-proto > svg {
-  font-size: 24px;
-}
-
-.folio-import-file-status {
-  margin-inline-start: var(--space-12);
 }
 
 @container artboard (max-width: 900px) {
@@ -318,7 +298,7 @@
     flex-wrap: wrap;
   }
 
-  .folio-webhook-card .empty-proto {
+  .folio-webhook-card.card-proto {
     padding: var(--space-24) var(--space-16);
   }
 
@@ -331,6 +311,12 @@
   }
 
   .folio-import-stage {
-    padding-block-end: var(--space-64);
+    padding-block-end: max(var(--space-64), var(--folio-toast-clearance, 152px));
   }
+}
+
+.folio-import-toast-region {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
 }

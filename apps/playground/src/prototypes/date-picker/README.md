@@ -1,6 +1,6 @@
 # Calendar, DatePicker & DateRangePicker — design reference
 
-Status: design candidate, pending visual approval. Open `/?item=calendar`, `/?item=date-picker`, or `/?item=date-range-picker`. The existing collection and document-properties scenes consume this family. These are visual prototypes; their helper props, state storage and DOM are not a proposed package API.
+This reference records the approved design. Open `/?item=calendar`, `/?item=date-picker`, or `/?item=date-range-picker`. The collection and document-properties scenes consume this family. The prototype's helper props, state storage and DOM can change during library implementation.
 
 ## Purpose and boundaries
 

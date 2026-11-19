@@ -1,23 +1,20 @@
 import { useState } from 'react';
 import type { ReactElement } from 'react';
-import {
-  ArrowRightIcon,
-  ClockIcon,
-  FileTextIcon,
-  GitBranchIcon,
-  PushPinIcon,
-} from '@phosphor-icons/react';
+import { ArrowRightIcon, FileTextIcon, PushPinIcon } from '@phosphor-icons/react';
 import { Avatar } from '../prototypes/avatar/avatar.proto.js';
 import { Badge } from '../prototypes/badge/badge.proto.js';
 import { Button } from '../prototypes/button/button.proto.js';
 import { Card } from '../prototypes/card/card.proto.js';
-import { Alert, Toast } from '../prototypes/feedback/feedback.proto.js';
+import { Alert, AlertTitle, AlertDescription } from '../prototypes/alert/alert.proto.js';
+import { ToastCard } from '../prototypes/toast/toast.proto.js';
 import { Icon } from '../prototypes/icon/icon.proto.js';
-import { Tooltip } from '../prototypes/menu/menu.proto.js';
+import { Tooltip } from '../prototypes/tooltip/tooltip.proto.js';
 import { Link } from '../prototypes/link/link.proto.js';
+import { List, ListItem } from '../prototypes/list/list.proto.js';
 import { SegmentedControl } from '../prototypes/segmented-control/segmented-control.proto.js';
 import { Text } from '../prototypes/text/text.proto.js';
 import { Title } from '../prototypes/title/title.proto.js';
+import { Breadcrumb, BreadcrumbPage } from '../prototypes/breadcrumb/breadcrumb.proto.js';
 import { defineScene } from '../workbench/types.js';
 import {
   FolioScene,
@@ -116,7 +113,12 @@ function OverviewScene(): ReactElement {
     <FolioScene>
       <FolioWorkspace
         activeRail="overview"
-        crumbs={['Platform Eng', 'Overview']}
+        breadcrumb={
+          <Breadcrumb size="s">
+            <span>Platform Eng</span>
+            <BreadcrumbPage>Overview</BreadcrumbPage>
+          </Breadcrumb>
+        }
         minHeight={1060}
         actions={
           <div className="folio-row">
@@ -204,35 +206,38 @@ function OverviewScene(): ReactElement {
               >
                 Recent activity
               </SectionHeading>
-              <Card className="folio-activity-card">
-                {activity
-                  .filter(
-                    (row) =>
-                      filter === 'all' ||
-                      (filter === 'created' ? row.verb === 'created' : row.verb === 'updated'),
-                  )
-                  .map((row) => (
-                    <div className="folio-activity-row" key={row.title}>
-                      <Avatar fallback={row.initials} alt="" size="xs" />
-                      <div>
-                        <Text size="body-s" weight="medium">
-                          {row.title}{' '}
-                          <Text as="span" size="caption-l" color="muted">
-                            in {row.category}
-                          </Text>
-                        </Text>
-                        <Text size="caption-l" color="muted">
-                          {row.owner} {row.verb} revision
-                        </Text>
-                      </div>
-                      <div className="folio-activity-meta">
-                        <span className="folio-revision-diff">{row.diff}</span>
-                        <Text size="caption-m" color="muted">
-                          {row.time}
-                        </Text>
-                      </div>
-                    </div>
-                  ))}
+              <Card>
+                <List size="m" markers={false} dividers aria-label="Recent activity">
+                  {activity
+                    .filter(
+                      (row) =>
+                        filter === 'all' ||
+                        (filter === 'created' ? row.verb === 'created' : row.verb === 'updated'),
+                    )
+                    .map((row) => (
+                      <ListItem
+                        key={row.title}
+                        leading={<Avatar fallback={row.initials} alt="" size="xs" />}
+                        title={
+                          <>
+                            {row.title}{' '}
+                            <Text as="span" size="caption-l" color="muted">
+                              in {row.category}
+                            </Text>
+                          </>
+                        }
+                        description={`${row.owner} ${row.verb} revision`}
+                        trailing={
+                          <div className="folio-activity-meta">
+                            <bdi className="folio-revision-diff">{row.diff}</bdi>
+                            <Text size="caption-m" color="muted">
+                              {row.time}
+                            </Text>
+                          </div>
+                        }
+                      />
+                    ))}
+                </List>
               </Card>
             </section>
             <section className="folio-stack">
@@ -257,9 +262,12 @@ function OverviewScene(): ReactElement {
                   </div>
                 ))}
               </Card>
-              <Alert status="info" title="Scheduled DR game-day">
-                Quarterly failover game-day runs Thu 17 Sep at 10:00 UTC. Verify replica lag
-                thresholds beforehand.
+              <Alert status="info">
+                <AlertTitle>Scheduled DR game-day</AlertTitle>
+                <AlertDescription>
+                  Quarterly failover game-day runs Thu 17 Sep at 10:00 UTC. Verify replica lag
+                  thresholds beforehand.
+                </AlertDescription>
               </Alert>
             </section>
           </div>
@@ -270,25 +278,16 @@ function OverviewScene(): ReactElement {
       </Tooltip>
       {toast && (
         <div className="folio-toast-dock">
-          <Toast
+          <ToastCard
             status="success"
             title={created ? 'New document ready' : 'Synced 3 runbooks'}
             onDismiss={() => setToast(false)}
-            icon={<Icon icon={created ? GitBranchIcon : ClockIcon} size="m" />}
+            action={{ label: 'View', onClick: () => setToast(false) }}
           >
             {created
               ? 'Your draft is ready in Architecture.'
-              : 'Core Infrastructure repository indexed 2m ago.'}{' '}
-            <Link
-              href="#activity"
-              onClick={(event) => {
-                event.preventDefault();
-                setToast(false);
-              }}
-            >
-              View
-            </Link>
-          </Toast>
+              : 'Core Infrastructure repository indexed 2m ago.'}
+          </ToastCard>
         </div>
       )}
     </FolioScene>

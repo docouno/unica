@@ -1,0 +1,136 @@
+.table-example-stack {
+  display: grid;
+  align-content: start;
+  gap: var(--space-24);
+  min-inline-size: 0;
+  inline-size: 100%;
+  max-inline-size: 47rem;
+}
+.table-example-stack .table-scroll-proto {
+  margin: 4px;
+}
+.table-example-card {
+  gap: var(--space-12);
+}
+.table-example-card .table-scroll-proto {
+  margin: 0;
+}
+.table-example-budgets caption span,
+.table-example-routes caption span {
+  margin-inline-start: var(--space-4);
+  color: var(--fg-muted);
+  font-size: var(--text-size-caption-l);
+  font-weight: 500;
+}
+.table-example-budgets :is(td, th):last-child,
+.table-example-token,
+.table-example-queue :is(th, td):nth-last-child(2) {
+  white-space: nowrap;
+}
+.table-example-routes,
+.table-example-results {
+  table-layout: fixed;
+}
+.table-example-route-case {
+  min-inline-size: 0;
+  max-inline-size: 34rem;
+}
+.table-example-policy-column {
+  width: 9rem;
+}
+.table-example-actions-column {
+  width: calc(var(--table-control-height) + 2 * var(--table-control-inset-inline));
+}
+.table-example-route-notice {
+  display: block;
+  padding-inline: var(--space-16);
+}
+.table-example-results th:first-child {
+  inline-size: 65%;
+}
+.table-example-bounded {
+  max-block-size: 18rem;
+}
+.table-example-queue {
+  min-inline-size: 28rem;
+}
+.table-example-queue .table-example-choice,
+.table-example-queue .table-example-actions {
+  inline-size: 1%;
+}
+.table-example-queue .table-example-choice,
+.table-proto > thead > tr > th:is(.table-example-actions, .table-example-action-heading) {
+  padding-block: 0;
+  padding-inline: var(--space-4);
+}
+.table-example-entity {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+}
+.table-example-entity svg {
+  flex: none;
+  color: var(--fg-muted);
+}
+.table-example-secondary {
+  display: block;
+  color: var(--fg-muted);
+  font-size: var(--text-size-caption-l);
+  font-weight: 400;
+  line-height: var(--text-size-caption-l-lh);
+}
+.table-example-tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4) var(--space-16);
+}
+.table-example-tools > .pagination-proto {
+  inline-size: min(100%, 12rem);
+  --pagination-align: end;
+}
+.table-example-drawer-stage {
+  min-block-size: 19rem;
+  padding: var(--space-16);
+}
+.table-example-drawer .dialog-surface {
+  --dialog-width: 520px;
+}
+.table-example-relations-scroll {
+  max-block-size: 10rem;
+  margin-block: 4px;
+  margin-inline: -8px;
+}
+.table-example-relations {
+  min-inline-size: 19rem;
+}
+.table-example-index {
+  min-inline-size: 18rem;
+}
+:is(.table-example-relations, .table-example-index) :is(th, td):nth-child(2) {
+  inline-size: 25%;
+  white-space: nowrap;
+}
+:is(.table-example-relations, .table-example-index) :is(th, td):nth-child(3) {
+  inline-size: 16%;
+  white-space: nowrap;
+}
+.table-example-number-placeholder {
+  margin-inline-start: auto;
+}
+.table-proto > tbody > tr > .table-example-feedback {
+  padding-block: var(--space-16);
+}
+.table-example-feedback .button-proto {
+  margin-block-start: var(--space-8);
+}
+.table-example-visually-hidden {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  padding: 0 !important;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}

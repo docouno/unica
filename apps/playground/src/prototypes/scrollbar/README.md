@@ -23,10 +23,10 @@ The subdued resting indicator deliberately prioritizes visual hierarchy; it is n
 
 Desktop and keyboard-only Chromium/WebKit expose native scrollbar parts through `::-webkit-scrollbar`. The recipe uses those parts to follow `--radius-full`: rounded Soft/Frost, `0px` Pixel. Standard `scrollbar-color` and `scrollbar-width` are reset to `auto` in this path because non-auto values suppress the pseudo-element styles.
 
-| Owner                                                             | Scrollbar gutter | Visible thumb | Standard fallback |
-| ----------------------------------------------------------------- | ---------------- | ------------- | ----------------- |
-| Page, sidebar, reading region, DialogBody, Table, CodeBlock       | 14px             | 8px           | `auto` width      |
-| Compact PopoverBody, Textarea, document tabs, bounded choice list | 10px             | 4px           | `thin` width      |
+| Owner                                                                    | Scrollbar gutter | Visible thumb | Standard fallback |
+| ------------------------------------------------------------------------ | ---------------- | ------------- | ----------------- |
+| Page, sidebar, reading region, CodeBlock                                 | 14px             | 8px           | `auto` width      |
+| Table, PopoverBody, DialogBody, Textarea, document tabs, bounded choices | 10px             | 4px           | `thin` width      |
 
 A 3px transparent border on each side supplies breathing room while retaining the native thumb's full hit area. The minimum thumb length is 24px; its actual length follows the content ratio. The track has no authored end buttons. The same dimensions apply to both axes. Explicit pseudo-element dimensions reserve a classic gutter on desktop, including systems that normally use overlay scrollbars; this is an intentional cost of controlling the shape. Content that fits still has no scrollbar because the owner uses `overflow: auto`.
 
@@ -41,6 +41,7 @@ Touch-primary browsers keep standard native color/width styling and system geome
 - Forced colors: both standard properties return to `auto`; custom pseudo-element styles are inactive, restoring system geometry and colors.
 - Increased contrast: a stronger thumb without additional motion. Reduced motion needs no special animation override.
 - Popover: Body is the scroll owner inside the panel padding. Header, Close and footer stay outside it. The outer native `[popover]` must not introduce a second scrollbar, and decorations must not enlarge scroll bounds.
+- Modal and Drawer: Body owns the compact scrollbar and sits 4px inside the surface and adjacent header and footer. When the entire panel scrolls on a short viewport, it takes over the compact scrollbar.
 - Keep a useful gap between text and thumb. The examples reserve 4px for inner focus rings; list rows add 8px inline. Textareas retain their own native internal scroll area.
 - Let the browser place the scrollbar in RTL; code remains LTR inside an RTL layout. Do not draw a separate physical-right rail.
 - Do not set `scrollbar-gutter: stable` globally. A consumer may reserve stable space when it needs width stability. Extreme-height fallbacks belong to the containing component.
@@ -49,7 +50,7 @@ Touch-primary browsers keep standard native color/width styling and system geome
 
 Sections: `base`, `overlay`, `states`, `axes`. They show ordinary and compact density, body-only scrolling in a pinned Popover, content that fits, keyboard focus and both axes. The checkbox changes real content length. The browser renders and operates every thumb; no simulated drag handle is used.
 
-The shared `.scrollbar-proto` class in `scrollbar.css` is connected to PopoverBody, DialogBody, AppShell document tabs, TableScroll, CodeBlock, Textarea and choice panels. Compact owners set both `--scrollbar-size: 10px` and `--scrollbar-width: thin` for the two platform paths. Ordinary owners use the defaults. AppShell asides remain normal document flow and do not gain a scroll container. `--scrollbar-thumb` can locally override the resting color; it is not a decorative component prop. The portable workbench shell is separate from these product surfaces.
+The shared `.scrollbar-proto` class in `scrollbar.css` is connected to PopoverBody, DialogBody, AppShell document tabs, TableScroll, CodeBlock, Textarea, TagsInput and choice panels. Compact owners set both `--scrollbar-size: 10px` and `--scrollbar-width: thin` for the two platform paths. These are shared density settings; a consumer adjusts the scroll viewport's placement through its own layout rather than copying thumb rules. TagsInput keeps a real compact track 4px from its inner field edge by extending the viewport into its content padding, while keeping the draft and Add in place. This placement uses the same 10px gutter, 4px thumb, and 3px transparent thumb border; it does not introduce another scrollbar style. Ordinary owners use the defaults. AppShell asides remain normal document flow and do not gain a scroll container. `--scrollbar-thumb` can locally override the resting color; it is not a decorative component prop. The portable workbench shell is separate from these product surfaces.
 
 A standalone reading region needs an accessible name and `tabIndex={0}` for cross-browser keyboard access; an area containing normal focusable controls does not automatically need an extra tab stop. An application's page scrollbar belongs to `<html>`, not `<body>`. The recipe does not style the workbench document scrollbar.
 

@@ -1,24 +1,47 @@
 import { useRef, useState } from 'react';
-import type { ReactElement } from 'react';
-import { DownloadSimpleIcon, PlusIcon } from '@phosphor-icons/react';
+import type { ComponentProps, ReactElement } from 'react';
+import {
+  CopyIcon,
+  DotsThreeIcon,
+  DownloadSimpleIcon,
+  PencilSimpleIcon,
+  PlusIcon,
+} from '@phosphor-icons/react';
 import { AsidePanel } from '../prototypes/app-shell/app-shell.proto.js';
 import { Badge } from '../prototypes/badge/badge.proto.js';
-import { Button } from '../prototypes/button/button.proto.js';
+import { Button, IconButton } from '../prototypes/button/button.proto.js';
 import { DatePicker, DateRangePicker } from '../prototypes/date-picker/date-picker.proto.js';
+import { dateLabel, dateObject } from '../prototypes/date-picker/date-utils.proto.js';
 import type { DateRange } from '../prototypes/date-picker/date-utils.proto.js';
-import { dateObject } from '../prototypes/date-picker/date-utils.proto.js';
 import { Card, CardMedia } from '../prototypes/card/card.proto.js';
 import { ChipGroup } from '../prototypes/chip/chip.proto.js';
 import { Progress } from '../prototypes/progress/progress.proto.js';
 import { Link } from '../prototypes/link/link.proto.js';
+import { ContextMenu } from '../prototypes/menu/context-menu.proto.js';
+import type { MenuEntry } from '../prototypes/menu/menu.entries.js';
+import { Pagination } from '../prototypes/pagination/pagination.proto.js';
 import { SegmentedControl } from '../prototypes/segmented-control/segmented-control.proto.js';
 import { Select } from '../prototypes/select/select.proto.js';
 import { Checkbox, Switch } from '../prototypes/binary-controls/binary-controls.proto.js';
-import { Table, TableScroll } from '../prototypes/table/table.proto.js';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableColumnHeader,
+  TableHeader,
+  TableRow,
+  TableRowHeader,
+  TableScroll,
+} from '../prototypes/table/table.proto.js';
 import { TagGroup } from '../prototypes/tag/tag.proto.js';
 import type { TagGroupItem } from '../prototypes/tag/tag.proto.js';
 import { Text } from '../prototypes/text/text.proto.js';
 import { Title } from '../prototypes/title/title.proto.js';
+import {
+  Breadcrumb,
+  BreadcrumbLink,
+  BreadcrumbPage,
+} from '../prototypes/breadcrumb/breadcrumb.proto.js';
 import { defineScene } from '../workbench/types.js';
 import { DatabaseTopology, IngressTopology } from './folio/folio.diagrams.js';
 import {
@@ -63,23 +86,74 @@ const rows = [
     owner: 'Platform',
   },
   {
-    title: 'Certificate Issuer Recovery',
+    title: 'Regional Ingress Failback',
+    tier: 'Tier-0',
+    modified: '2026-09-17',
+    verifiedOn: '2026-09-11',
+    initials: 'ED',
+    owner: 'Edge SRE',
+  },
+  {
+    title: 'Restore the Artifact Registry',
     tier: 'Tier-1',
-    modified: '2026-09-11',
+    modified: '2026-09-16',
     verifiedOn: '2026-09-10',
+    initials: 'PE',
+    owner: 'Platform',
+  },
+  {
+    title: 'Rotate the Secrets Signing Key',
+    tier: 'Tier-0',
+    modified: '2026-09-22',
+    verifiedOn: '2026-09-19',
     initials: 'SE',
     owner: 'Security',
   },
   {
-    title: 'Queue Drain Procedure',
+    title: 'Replay the Billing Event Stream',
     tier: 'Tier-1',
-    modified: '2026-09-22',
-    verifiedOn: '2026-09-19',
+    modified: '2026-09-11',
+    verifiedOn: '2026-09-10',
+    initials: 'NW',
+    owner: 'Core team',
+  },
+  {
+    title: 'Restore a Database Snapshot',
+    tier: 'Tier-0',
+    modified: '2026-09-17',
+    verifiedOn: '',
+    initials: 'DB',
+    owner: 'DB team',
+  },
+  {
+    title: 'Drain the CI Worker Pool',
+    tier: 'Tier-1',
+    modified: '2026-09-16',
+    verifiedOn: '',
     initials: 'PE',
     owner: 'Platform',
   },
+  {
+    title: 'Recover a Stalled Release',
+    tier: 'Tier-1',
+    modified: '2026-09-15',
+    verifiedOn: '',
+    initials: 'PE',
+    owner: 'Platform',
+  },
+  {
+    title: 'Quarantine a Compromised Runner',
+    tier: 'Tier-1',
+    modified: '2026-09-14',
+    verifiedOn: '',
+    initials: 'SE',
+    owner: 'Security',
+  },
 ] as const;
 
+const tierZeroRows = rows.filter((row) => row.tier === 'Tier-0');
+const verifiedRows = rows.filter((row) => row.verifiedOn);
+const pageSize = 4;
 const initialWindow: DateRange = ['2026-09-14', '2026-09-17'];
 const emptyWindow: DateRange = ['', ''];
 
@@ -92,14 +166,65 @@ function modifiedLabel(range: DateRange): string {
   }).formatRange(dateObject(range[0]), dateObject(range[1]));
 }
 
+function RunbookMenu<T extends HTMLElement>({
+  title,
+  onAction,
+  target,
+}: {
+  readonly title: string;
+  readonly onAction: (message: string) => void;
+  readonly target: ComponentProps<typeof ContextMenu<T>>['target'];
+}): ReactElement {
+  const items: readonly MenuEntry[] = [
+    {
+      id: 'rename',
+      label: 'Rename',
+      icon: PencilSimpleIcon,
+      run: () => onAction(`Rename requested for ${title}.`),
+    },
+    {
+      id: 'copy',
+      label: 'Copy runbook link',
+      icon: CopyIcon,
+      run: () => onAction(`Link selected for ${title}.`),
+    },
+    {
+      id: 'export',
+      label: 'Export Markdown',
+      icon: DownloadSimpleIcon,
+      run: () => onAction(`Markdown export requested for ${title}.`),
+    },
+  ];
+  return (
+    <ContextMenu<T>
+      label={`${title} actions`}
+      items={items}
+      size="s"
+      align="end"
+      trigger={(props) => (
+        <IconButton
+          {...props}
+          size="s"
+          variant="ghost"
+          icon={DotsThreeIcon}
+          className="folio-runbook-menu-button"
+          aria-label={`Actions for ${title}`}
+        />
+      )}
+      target={target}
+    />
+  );
+}
+
 function CollectionScene(): ReactElement {
   const [tab, setTab] = useState('all');
+  const [page, setPage] = useState(1);
   const [view, setView] = useState('list');
-  const [sort, setSort] = useState('verified');
   const [selected, setSelected] = useState<readonly string[]>([rows[0].title, rows[1].title]);
   const [scope, setScope] = useState(true);
   const [dateWindow, setDateWindow] = useState<DateRange>(initialWindow);
   const [verificationBaseline, setVerificationBaseline] = useState('');
+  const [sort, setSort] = useState('verified');
   const [notice, setNotice] = useState('');
   const resetRef = useRef<HTMLAnchorElement>(null);
   const filters: TagGroupItem[] = [];
@@ -117,15 +242,16 @@ function CollectionScene(): ReactElement {
   if (verificationBaseline) {
     filters.push({
       id: 'verification',
-      label: `Verified since ${modifiedLabel([verificationBaseline, verificationBaseline])}`,
+      label: `Verified since ${dateLabel(verificationBaseline)}`,
       removeLabel: 'Remove verification date filter',
     });
   }
-  const visibleRows = rows
+  const filteredRows = rows
     .filter(
       (row) =>
         tab !== 'drafts' &&
         (tab !== 'tier0' || row.tier === 'Tier-0') &&
+        (tab !== 'verified' || row.verifiedOn) &&
         (!verificationBaseline || row.verifiedOn >= verificationBaseline) &&
         (!hasWindow || (row.modified >= dateWindow[0] && row.modified <= dateWindow[1])),
     )
@@ -134,7 +260,20 @@ function CollectionScene(): ReactElement {
         ? first.title.localeCompare(second.title)
         : second.verifiedOn.localeCompare(first.verifiedOn),
     );
-  const visibleSelected = visibleRows.filter((row) => selected.includes(row.title)).length;
+  const pageStart = (page - 1) * pageSize;
+  const visibleRows = filteredRows.slice(pageStart, pageStart + pageSize);
+  const resultSummary =
+    visibleRows.length === 0
+      ? 'Showing 0 runbooks'
+      : visibleRows.length === 1
+        ? `Showing runbook ${pageStart + 1} of ${filteredRows.length}`
+        : `Showing ${pageStart + 1}–${pageStart + visibleRows.length} of ${filteredRows.length} runbooks`;
+  const pageTitles: readonly string[] = visibleRows.map((row) => row.title);
+  const selectedOnPage = pageTitles.filter((title) => selected.includes(title)).length;
+  function changeTab(value: string): void {
+    setTab(value);
+    setPage(1);
+  }
   const toggle = (title: string): void =>
     setSelected((current) =>
       current.includes(title) ? current.filter((item) => item !== title) : [...current, title],
@@ -144,7 +283,12 @@ function CollectionScene(): ReactElement {
       <FolioWorkspace
         activeNavigation="runbooks"
         expandedNavigation={['architecture', 'runbooks']}
-        crumbs={['Platform Eng', 'Runbooks']}
+        breadcrumb={
+          <Breadcrumb size="s">
+            <BreadcrumbLink href="?item=02-workspace-overview">Platform Eng</BreadcrumbLink>
+            <BreadcrumbPage>Runbooks</BreadcrumbPage>
+          </Breadcrumb>
+        }
         minHeight={960}
         actions={
           <div className="folio-row">
@@ -185,7 +329,10 @@ function CollectionScene(): ReactElement {
                 size="s"
                 label="Verified on or after"
                 value={verificationBaseline}
-                onValueChange={setVerificationBaseline}
+                onValueChange={(value) => {
+                  setVerificationBaseline(value);
+                  setPage(1);
+                }}
                 clearable
               />
             </InspectorSection>
@@ -198,7 +345,10 @@ function CollectionScene(): ReactElement {
                 label="Last modified"
                 panelTitle="Modified date range"
                 value={dateWindow}
-                onValueChange={setDateWindow}
+                onValueChange={(value) => {
+                  setDateWindow(value);
+                  setPage(1);
+                }}
                 clearable
               />
             </InspectorSection>
@@ -213,7 +363,7 @@ function CollectionScene(): ReactElement {
                   Runbooks & Playbooks
                 </Title>
                 <Badge size="s" status="success">
-                  28 verified
+                  {verifiedRows.length} verified
                 </Badge>
               </div>
               <Select
@@ -221,7 +371,10 @@ function CollectionScene(): ReactElement {
                 size="s"
                 aria-label="Sort runbooks"
                 value={sort}
-                onChange={(event) => setSort(event.currentTarget.value)}
+                onValueChange={(value) => {
+                  setSort(value ?? 'verified');
+                  setPage(1);
+                }}
                 options={[
                   { value: 'verified', label: 'Sort: Recently verified' },
                   { value: 'name', label: 'Sort: Name' },
@@ -234,12 +387,12 @@ function CollectionScene(): ReactElement {
                 label="Runbook filter"
                 size="s"
                 value={tab}
-                onValueChange={setTab}
+                onValueChange={changeTab}
                 items={[
-                  { value: 'all', label: 'All (42)' },
-                  { value: 'tier0', label: 'Tier-0 (14)' },
-                  { value: 'verified', label: 'Verified (28)' },
-                  { value: 'drafts', label: 'Drafts (4)' },
+                  { value: 'all', label: `All (${rows.length})` },
+                  { value: 'tier0', label: `Tier-0 (${tierZeroRows.length})` },
+                  { value: 'verified', label: `Verified (${verifiedRows.length})` },
+                  { value: 'drafts', label: 'Drafts (0)' },
                 ]}
               />
               <TagGroup
@@ -251,8 +404,10 @@ function CollectionScene(): ReactElement {
                     setScope(false);
                   } else if (id === 'date') {
                     setDateWindow(emptyWindow);
+                    setPage(1);
                   } else {
                     setVerificationBaseline('');
+                    setPage(1);
                   }
                 }}
                 emptyMessage="No filters applied"
@@ -266,7 +421,7 @@ function CollectionScene(): ReactElement {
                   setScope(true);
                   setDateWindow(emptyWindow);
                   setVerificationBaseline('');
-                  setTab('all');
+                  changeTab('all');
                 }}
               >
                 Reset
@@ -324,107 +479,134 @@ function CollectionScene(): ReactElement {
               </Card>
             </div>
           </section>
-          <section className="folio-stack">
-            <Text size="caption-l" color="muted" role="status">
-              {visibleRows.length} matching {visibleRows.length === 1 ? 'runbook' : 'runbooks'}
-            </Text>
-            {visibleRows.length > 0 &&
-              (view === 'list' ? (
-                <TableScroll>
-                  <Table>
-                    <thead>
-                      <tr>
-                        <th>
-                          <Checkbox
-                            size="s"
-                            aria-label="Select all runbooks"
-                            checked={visibleSelected === visibleRows.length}
-                            indeterminate={
-                              visibleSelected > 0 && visibleSelected < visibleRows.length
-                            }
-                            onChange={() => {
-                              const visible = visibleRows.map((row) => row.title);
-                              setSelected((current) => {
-                                const other = current.filter(
-                                  (title) => !visibleRows.some((row) => row.title === title),
-                                );
-                                return visibleSelected === visibleRows.length
-                                  ? other
-                                  : [...other, ...visible];
-                              });
-                            }}
-                          />
-                        </th>
-                        <th>Runbook</th>
-                        <th>Tier</th>
-                        <th>Last modified</th>
-                        <th>Last verified</th>
-                        <th>Owner</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {visibleRows.map((row) => (
-                        <tr
-                          key={row.title}
-                          data-selected={selected.includes(row.title) || undefined}
-                        >
-                          <td>
-                            <Checkbox
-                              size="s"
-                              aria-label={`Select ${row.title}`}
-                              checked={selected.includes(row.title)}
-                              onChange={() => toggle(row.title)}
-                            />
-                          </td>
-                          <td>
-                            <DocumentName>{row.title}</DocumentName>
-                          </td>
-                          <td>
-                            <Badge size="s" status={row.tier === 'Tier-0' ? 'warning' : 'neutral'}>
-                              {row.tier}
-                            </Badge>
-                          </td>
-                          <td>{modifiedLabel([row.modified, row.modified])}</td>
-                          <td>{modifiedLabel([row.verifiedOn, row.verifiedOn])}</td>
-                          <td>
-                            <Person initials={row.initials} name={row.owner} />
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </Table>
-                </TableScroll>
-              ) : (
-                <div className="folio-grid-2">
-                  {visibleRows.map((row) => (
-                    <Card key={row.title}>
-                      <DocumentName>{row.title}</DocumentName>
-                      <Badge size="s" status="neutral">
-                        {row.tier}
-                      </Badge>
-                      <Text size="caption-l" color="muted">
-                        Modified {modifiedLabel([row.modified, row.modified])}
-                      </Text>
-                      <Text size="caption-l" color="muted">
-                        Verified {modifiedLabel([row.verifiedOn, row.verifiedOn])}
-                      </Text>
-                      <Person initials={row.initials} name={row.owner} />
-                    </Card>
-                  ))}
-                </div>
-              ))}
-            {visibleRows.length === 0 && (
+          <section className="folio-stack folio-collection-results">
+            {visibleRows.length === 0 ? (
               <Card variant="subtle">
-                <Text size="body-s">No runbooks match these filters.</Text>
+                <Text size="body-s">No runbooks match the current filters.</Text>
               </Card>
+            ) : view === 'list' ? (
+              <TableScroll aria-label="Runbook directory">
+                <Table aria-label="Runbook directory">
+                  <TableHeader>
+                    <TableRow>
+                      <TableCell align="center">
+                        <Checkbox
+                          size="s"
+                          aria-label="Select all runbooks on this page"
+                          checked={selectedOnPage === pageTitles.length}
+                          indeterminate={selectedOnPage > 0 && selectedOnPage < pageTitles.length}
+                          onChange={() =>
+                            setSelected((current) =>
+                              selectedOnPage === pageTitles.length
+                                ? current.filter((title) => !pageTitles.includes(title))
+                                : [...new Set([...current, ...pageTitles])],
+                            )
+                          }
+                        />
+                      </TableCell>
+                      <TableColumnHeader>Runbook</TableColumnHeader>
+                      <TableColumnHeader>Tier</TableColumnHeader>
+                      <TableColumnHeader>Last modified</TableColumnHeader>
+                      <TableColumnHeader>Last verified</TableColumnHeader>
+                      <TableColumnHeader>Owner</TableColumnHeader>
+                      <TableColumnHeader aria-label="Actions" className="folio-runbook-menu-cell" />
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {visibleRows.map((row) => (
+                      <RunbookMenu<HTMLTableRowElement>
+                        key={row.title}
+                        title={row.title}
+                        onAction={setNotice}
+                        target={(bindings, trigger, panel) => (
+                          <TableRow {...bindings} selected={selected.includes(row.title)}>
+                            <TableCell align="center">
+                              <Checkbox
+                                size="s"
+                                aria-label={`Select ${row.title}`}
+                                checked={selected.includes(row.title)}
+                                onChange={() => toggle(row.title)}
+                              />
+                            </TableCell>
+                            <TableRowHeader>
+                              <DocumentName>{row.title}</DocumentName>
+                            </TableRowHeader>
+                            <TableCell>
+                              <Badge
+                                size="s"
+                                status={row.tier === 'Tier-0' ? 'warning' : 'neutral'}
+                              >
+                                {row.tier}
+                              </Badge>
+                            </TableCell>
+                            <TableCell>{dateLabel(row.modified)}</TableCell>
+                            <TableCell>
+                              {row.verifiedOn ? dateLabel(row.verifiedOn) : '—'}
+                            </TableCell>
+                            <TableCell>
+                              <Person initials={row.initials} name={row.owner} />
+                            </TableCell>
+                            <TableCell
+                              align="center"
+                              control="action"
+                              className="folio-runbook-menu-cell"
+                            >
+                              {trigger}
+                              {panel}
+                            </TableCell>
+                          </TableRow>
+                        )}
+                      />
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableScroll>
+            ) : (
+              <div className="folio-grid-2">
+                {visibleRows.map((row) => (
+                  <RunbookMenu<HTMLDivElement>
+                    key={row.title}
+                    title={row.title}
+                    onAction={setNotice}
+                    target={(bindings, trigger, panel) => (
+                      <Card {...bindings} className="folio-runbook-menu-card">
+                        <div className="folio-row folio-between">
+                          <DocumentName>{row.title}</DocumentName>
+                          {trigger}
+                        </div>
+                        <Badge size="s" status="neutral">
+                          {row.tier}
+                        </Badge>
+                        <Person initials={row.initials} name={row.owner} />
+                        {panel}
+                      </Card>
+                    )}
+                  />
+                ))}
+              </div>
             )}
             <div className="folio-row folio-between folio-wrap">
               <Text size="caption-l" color="muted">
-                {visibleSelected} selected · Platform Eng
+                <bdi>
+                  {selected.length} selected · {verifiedRows.length} verified runbooks in Platform
+                  Eng
+                </bdi>
               </Text>
               <Badge status="success" size="s">
                 99.4% SLA
               </Badge>
+            </div>
+            <div className="folio-collection-footer">
+              <Text size="caption-l" color="muted" role="status">
+                <bdi>{resultSummary}</bdi>
+              </Text>
+              <Pagination
+                size="s"
+                label="Runbook pages"
+                pageCount={Math.ceil(filteredRows.length / pageSize)}
+                page={page}
+                onPageChange={setPage}
+              />
             </div>
           </section>
           {notice && (

@@ -2,7 +2,7 @@ import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from
 import type { HTMLAttributes, KeyboardEvent, ReactElement } from 'react';
 import { CaretLeftIcon, CaretRightIcon } from '@phosphor-icons/react';
 import type { ControlSize } from '../input/input.proto.js';
-import { Tooltip } from '../menu/menu.proto.js';
+import { Tooltip } from '../tooltip/tooltip.proto.js';
 import {
   addDays,
   addMonths,
@@ -70,7 +70,7 @@ function orderedRange(first: string, second: string): DateRange {
 }
 
 function positionIssueTooltip(
-  tooltip: HTMLDivElement,
+  tooltip: HTMLSpanElement,
   anchor: HTMLButtonElement,
   calendar: HTMLDivElement,
   persistent: boolean,
@@ -159,7 +159,7 @@ export function Calendar({
 }: CalendarProps): ReactElement {
   const id = useId();
   const root = useRef<HTMLDivElement>(null);
-  const issueTooltip = useRef<HTMLDivElement>(null);
+  const issueTooltip = useRef<HTMLSpanElement>(null);
   const hoverExit = useRef<number | undefined>(undefined);
   const [viewMonth, setViewMonth] = useState(`${month.slice(0, 7)}-01`);
   const [view, setView] = useState(initialView);

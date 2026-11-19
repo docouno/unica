@@ -1,13 +1,18 @@
-import { useId, useState } from 'react';
+import { useId, useLayoutEffect, useRef, useState } from 'react';
 import type { ReactElement } from 'react';
 import { ArrowLeftIcon } from '@phosphor-icons/react';
 import { defineScene } from '../workbench/types.js';
 import { AppShell, Header, LeftRail } from '../prototypes/app-shell/app-shell.proto.js';
 import { Badge } from '../prototypes/badge/badge.proto.js';
-import { Breadcrumb } from '../prototypes/breadcrumb/breadcrumb.proto.js';
+import {
+  Breadcrumb,
+  BreadcrumbLink,
+  BreadcrumbPage,
+} from '../prototypes/breadcrumb/breadcrumb.proto.js';
 import { Button } from '../prototypes/button/button.proto.js';
 import { Card } from '../prototypes/card/card.proto.js';
-import { Alert, Toast } from '../prototypes/feedback/feedback.proto.js';
+import { Alert, AlertTitle, AlertDescription } from '../prototypes/alert/alert.proto.js';
+import { ToastViewport } from '../prototypes/toast/toast.proto.js';
 import { Progress } from '../prototypes/progress/progress.proto.js';
 import {
   Dropzone,
@@ -17,7 +22,7 @@ import {
 } from '../prototypes/file-input/file-input.proto.js';
 import type { FileItemStatus } from '../prototypes/file-input/file-input.proto.js';
 import { RadioCard } from '../prototypes/choice-card/choice-card.proto.js';
-import { Stepper } from '../prototypes/stepper/stepper.proto.js';
+import { Stepper, StepperStep } from '../prototypes/stepper/stepper.proto.js';
 import { Text } from '../prototypes/text/text.proto.js';
 import { Title } from '../prototypes/title/title.proto.js';
 import { FolioScene, PageIntro } from './folio/folio.shared.js';
@@ -42,9 +47,9 @@ const initialArchives: readonly StagedArchive[] = [
   },
   {
     id: 'rfcs',
-    name: 'legacy-envoy-rfcs.tar.gz',
+    name: 'legacy-envoy-rfcs.zip',
     megabytes: 6.4,
-    detail: 'Uploading & indexing archive…',
+    detail: 'Uploading archive…',
     status: 'uploading',
     progress: 65,
   },
@@ -55,13 +60,74 @@ function WorkspaceAdminScene(): ReactElement {
   const [schemaSize, setSchemaSize] = useState('18.4 KB');
   const [policy, setPolicy] = useState('revision');
   const [archives, setArchives] = useState<readonly StagedArchive[]>(initialArchives);
-  const [currentStep, setCurrentStep] = useState(1);
+  const [currentStep, setCurrentStep] = useState<'source' | 'verify' | 'commit'>('verify');
+  const [validation, setValidation] = useState<'checking' | 'required' | 'verified'>('checking');
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
+  const [showActivityToast, setShowActivityToast] = useState(true);
   const [showValidationToast, setShowValidationToast] = useState(true);
   const policyName = useId();
+  const feedbackRegion = useRef<HTMLDivElement>(null);
+  const sourceHeading = useRef<HTMLHeadingElement>(null);
+  const verificationHeading = useRef<HTMLHeadingElement>(null);
+  const commitStatus = useRef<HTMLElement>(null);
+  useLayoutEffect(() => {
+    if (currentStep === 'commit') {
+      commitStatus.current?.focus();
+    }
+  }, [currentStep]);
+
+  useLayoutEffect(() => {
+    const region = feedbackRegion.current;
+    const scene = region?.closest<HTMLElement>('.folio-scene');
+    if (!scene) {
+      return;
+    }
+    const viewport = region?.querySelector<HTMLElement>('.toast-viewport');
+    const update = (): void =>
+      scene.style.setProperty(
+        '--folio-toast-clearance',
+        `${viewport ? Math.ceil(viewport.getBoundingClientRect().height) + 48 : 64}px`,
+      );
+    const observer = new ResizeObserver(update);
+    if (viewport) {
+      observer.observe(viewport);
+    }
+    update();
+    return () => observer.disconnect();
+  }, [archives, notice, showActivityToast, showValidationToast]);
+  const readyToCommit = validation === 'verified';
   const totalSize = archives.reduce((sum, archive) => sum + archive.megabytes, 0);
-  const stagedLabel = `${archives.length} ${archives.length === 1 ? 'archive' : 'archives'} staged · ${totalSize.toFixed(1)} MB`;
+  const uploadingArchive = archives.find((archive) => archive.status === 'uploading');
+
+  function invalidateVerification(): void {
+    setValidation('required');
+    setCurrentStep((step) => (step === 'commit' ? 'verify' : step));
+    setShowValidationToast(false);
+    if (readyToCommit) {
+      setNotice('The import inputs changed. Run another dry-run check.');
+    }
+  }
+
+  function runDryRun(): void {
+    setArchives((current) =>
+      current.map((archive) =>
+        archive.status === 'success'
+          ? archive
+          : {
+              id: archive.id,
+              name: archive.name,
+              megabytes: archive.megabytes,
+              detail: 'Archive validated',
+              status: 'success',
+            },
+      ),
+    );
+    setValidation('verified');
+    setCurrentStep('verify');
+    setShowValidationToast(false);
+    setNotice(`Dry-run check complete: ${archives.length} staged archives passed validation.`);
+  }
 
   function chooseSchema(files: readonly File[]): void {
     const file = files[0];
@@ -73,6 +139,7 @@ function WorkspaceAdminScene(): ReactElement {
       return;
     }
     setSchema(file.name);
+    invalidateVerification();
     setSchemaSize(`${(file.size / 1024).toFixed(1)} KB`);
     setError('');
   }
@@ -86,18 +153,19 @@ function WorkspaceAdminScene(): ReactElement {
         ? ''
         : 'Choose UTF-8 Markdown or ZIP archives up to 50 MB each. Unsupported files were not added.',
     );
-    setArchives((current) => [
-      ...current,
-      ...accepted
-        .filter((file) => !current.some((archive) => archive.name === file.name))
-        .map((file) => ({
-          id: `${file.name}-${file.size}-${file.lastModified}`,
-          name: file.name,
-          megabytes: file.size / 1024 / 1024,
-          detail: 'Queued for validation',
-          status: 'neutral' as const,
-        })),
-    ]);
+    const additions = accepted
+      .filter((file) => !archives.some((archive) => archive.name === file.name))
+      .map((file) => ({
+        id: `${file.name}-${file.size}-${file.lastModified}`,
+        name: file.name,
+        megabytes: file.size / 1024 / 1024,
+        detail: 'Queued for validation',
+        status: 'neutral' as const,
+      }));
+    if (additions.length > 0) {
+      setArchives((current) => [...current, ...additions]);
+      invalidateVerification();
+    }
   }
 
   return (
@@ -117,22 +185,17 @@ function WorkspaceAdminScene(): ReactElement {
                 >
                   Import history
                 </Button>
-                <Button
-                  size="s"
-                  disabled={archives.length === 0}
-                  onClick={() => {
-                    setNotice(
-                      `Dry-run check complete: ${archives.length} archives are staged for validation.`,
-                    );
-                    setCurrentStep(1);
-                  }}
-                >
+                <Button size="s" disabled={archives.length === 0} onClick={runDryRun}>
                   Run dry-run check
                 </Button>
               </>
             }
           >
-            <Breadcrumb items={['Platform Eng', 'Administration', 'Batch archive import']} />
+            <Breadcrumb size="s">
+              <BreadcrumbLink href="?item=02-workspace-overview">Platform Eng</BreadcrumbLink>
+              <span>Administration</span>
+              <BreadcrumbPage>Batch archive import</BreadcrumbPage>
+            </Breadcrumb>
           </Header>
         }
       >
@@ -142,36 +205,44 @@ function WorkspaceAdminScene(): ReactElement {
               title="Import Markdown & ADR archives"
               description="Migrate repository-backed Markdown bundles while validating YAML frontmatter, internal links, and owner mappings."
             />
-            <Stepper
-              current={currentStep}
-              onStepChange={setCurrentStep}
-              steps={[
-                { label: 'Source & schema', description: 'Frontmatter rules mapped' },
-                { label: 'Upload & verify', description: `${archives.length} bundles staged` },
-                { label: 'Commit to space', description: 'Publish & index' },
-              ]}
-            />
+            <Stepper value={currentStep} label="Batch import stages">
+              <StepperStep
+                value="source"
+                label="Source & schema"
+                description={schema ? 'Frontmatter rules mapped' : 'Default frontmatter rules'}
+                completed
+              />
+              <StepperStep
+                value="verify"
+                label="Upload & verify"
+                description={`${archives.length} bundles staged`}
+                completed={readyToCommit}
+              />
+              <StepperStep value="commit" label="Commit to space" />
+            </Stepper>
             {error && (
               <Alert
                 status="danger"
-                title="Check the selected files"
-                onDismiss={() => setError('')}
+                role="alert"
+                onClose={() => setError('')}
+                closeLabel="Dismiss file validation summary"
               >
-                {error}
+                <AlertTitle>Check the selected files</AlertTitle>
+                <AlertDescription>{error}</AlertDescription>
               </Alert>
             )}
             <Card className="folio-import-card">
               <div className="folio-row folio-between folio-import-card-heading">
                 <div className="folio-stack">
-                  <Title as="h2" size="body-m">
+                  <Title as="h2" size="body-m" ref={sourceHeading} tabIndex={-1}>
                     1. Schema &amp; duplicate slug policy
                   </Title>
                   <Text size="body-s" color="secondary">
                     Attach a YAML mapping rule set and choose how matching slugs are reconciled.
                   </Text>
                 </div>
-                <Badge size="s" status="success" dot>
-                  Schema valid
+                <Badge size="s" status={schema ? 'success' : 'neutral'} dot={Boolean(schema)}>
+                  {schema ? 'Schema valid' : 'Default rules'}
                 </Badge>
               </div>
               <FileInput
@@ -179,8 +250,12 @@ function WorkspaceAdminScene(): ReactElement {
                 label="Frontmatter mapping schema"
                 fileName={schema}
                 fileDetail={schemaSize}
-                browseLabel="Replace file"
                 onFilesChange={chooseSchema}
+                onClear={() => {
+                  setSchema('');
+                  setSchemaSize('');
+                  invalidateVerification();
+                }}
                 description="Optional YAML mapping for custom status and service tags."
               />
               <div
@@ -195,14 +270,20 @@ function WorkspaceAdminScene(): ReactElement {
                   <RadioCard
                     name={policyName}
                     checked={policy === 'revision'}
-                    onChange={() => setPolicy('revision')}
+                    onChange={() => {
+                      setPolicy('revision');
+                      invalidateVerification();
+                    }}
                     label="Create draft revision on slug match"
                     description="Preserves existing verified runbook until reviewed."
                   />
                   <RadioCard
                     name={policyName}
                     checked={policy === 'skip'}
-                    onChange={() => setPolicy('skip')}
+                    onChange={() => {
+                      setPolicy('skip');
+                      invalidateVerification();
+                    }}
                     label="Skip duplicate document slugs"
                     description="Imports only net-new architecture records."
                   />
@@ -212,34 +293,31 @@ function WorkspaceAdminScene(): ReactElement {
             <Card className="folio-import-card">
               <div className="folio-row folio-between folio-import-card-heading">
                 <div className="folio-stack">
-                  <Title as="h2" size="body-m">
+                  <Title as="h2" size="body-m" ref={verificationHeading} tabIndex={-1}>
                     2. Archive bundles &amp; validation queue
                   </Title>
                   <Text size="body-s" color="secondary">
-                    Drop Markdown or ZIP archives to verify internal links before publishing.
+                    Verify links and frontmatter before publishing.
                   </Text>
                 </div>
                 <Badge size="s">
                   {archives.length} staged · {totalSize.toFixed(1)} MB
                 </Badge>
               </div>
-              <div className="folio-stack folio-import-dropzone">
-                <Dropzone
-                  title="Drop Markdown or ZIP archives here"
-                  browseLabel="Browse bundles"
-                  accept=".md,.mdx,.zip"
-                  onFilesChange={addArchives}
-                />
-                <div className="folio-row folio-between folio-wrap">
-                  <Text size="caption-l" color="muted">
-                    UTF-8 .md, .mdx, or .zip up to 50 MB per archive
-                  </Text>
-                  <Text size="caption-l" color="muted" className="folio-import-queue-label">
-                    {stagedLabel}
-                  </Text>
-                </div>
-              </div>
-              <Progress value={archives.length ? 84 : 0} label="Schema & cross-link validation" />
+              <Dropzone
+                size="m"
+                description=".md and .mdx (UTF-8), or .zip · 50 MB max per file"
+                accept=".md,.mdx,.zip"
+                onFilesChange={addArchives}
+              />
+              <Progress
+                value={readyToCommit ? 100 : validation === 'checking' ? 84 : 0}
+                label={
+                  validation === 'required'
+                    ? 'Dry-run validation required'
+                    : 'Schema & cross-link validation'
+                }
+              />
               <FileList>
                 {archives.map((archive) => (
                   <FileItem
@@ -247,22 +325,13 @@ function WorkspaceAdminScene(): ReactElement {
                     name={archive.name}
                     status={archive.status}
                     progress={archive.progress}
-                    detail={
-                      <>
-                        {archive.megabytes.toFixed(1)} MB{' '}
-                        <span className="folio-import-file-status">{archive.detail}</span>
-                      </>
-                    }
-                    onRemove={() =>
-                      setArchives((current) => current.filter((file) => file.id !== archive.id))
-                    }
-                  >
-                    {archive.progress !== undefined && (
-                      <Text size="caption-l" color="muted">
-                        {archive.progress}%
-                      </Text>
-                    )}
-                  </FileItem>
+                    fileSize={`${archive.megabytes.toFixed(1)} MB`}
+                    detail={archive.detail}
+                    onRemove={() => {
+                      setArchives((current) => current.filter((file) => file.id !== archive.id));
+                      invalidateVerification();
+                    }}
+                  />
                 ))}
               </FileList>
               <div className="folio-import-footer">
@@ -273,9 +342,11 @@ function WorkspaceAdminScene(): ReactElement {
                   disabled={archives.length === 0}
                   onClick={() => {
                     setArchives([]);
-                    setCurrentStep(0);
+                    setCurrentStep('source');
+                    setValidation('required');
                     setShowValidationToast(false);
                     setNotice('The staged import was cleared.');
+                    sourceHeading.current?.focus();
                   }}
                 >
                   Abort import
@@ -286,45 +357,93 @@ function WorkspaceAdminScene(): ReactElement {
                     variant="secondary"
                     tone="neutral"
                     iconLeft={ArrowLeftIcon}
-                    onClick={() => setCurrentStep(Math.max(0, currentStep - 1))}
+                    disabled={currentStep === 'source'}
+                    onClick={() => {
+                      if (currentStep === 'commit') {
+                        setCurrentStep('verify');
+                        verificationHeading.current?.focus();
+                      } else {
+                        setCurrentStep('source');
+                        sourceHeading.current?.focus();
+                      }
+                    }}
                   >
                     Back
                   </Button>
-                  <Button
-                    size="s"
-                    disabled={archives.length === 0}
-                    onClick={() => {
-                      setCurrentStep(2);
-                      setShowValidationToast(false);
-                      setNotice('28 documents prepared for import.');
-                    }}
-                  >
-                    Commit 28 documents
-                  </Button>
+                  {currentStep === 'commit' ? (
+                    <Text ref={commitStatus} tabIndex={-1} size="body-s" color="secondary">
+                      {archives.length} validated{' '}
+                      {archives.length === 1 ? 'archive is' : 'archives are'} ready to import.
+                    </Text>
+                  ) : (
+                    <Button
+                      size="s"
+                      disabled={!readyToCommit || currentStep !== 'verify'}
+                      onClick={() => {
+                        setCurrentStep('commit');
+                        setShowValidationToast(false);
+                        setNotice('');
+                      }}
+                    >
+                      Continue to commit
+                    </Button>
+                  )}
                 </div>
               </div>
             </Card>
           </div>
         </div>
       </AppShell>
-      {showValidationToast && !notice && (
-        <div className="folio-toast-dock">
-          <Toast
-            status="success"
-            title="28 runbook slugs validated"
-            onDismiss={() => setShowValidationToast(false)}
-          >
-            Zero broken cross-references in core-infra-runbooks-2026-q3.zip.
-          </Toast>
-        </div>
-      )}
-      {notice && (
-        <div className="folio-toast-dock">
-          <Toast status="info" title="Archive import" onDismiss={() => setNotice('')}>
-            {notice}
-          </Toast>
-        </div>
-      )}
+      <div className="folio-import-toast-region" ref={feedbackRegion}>
+        <ToastViewport
+          items={[
+            ...(showActivityToast && uploadingArchive
+              ? [
+                  {
+                    id: 'activity',
+                    loading: true,
+                    title: 'Uploading archive',
+                    children: `${uploadingArchive.name} · You can keep reviewing the import.`,
+                  },
+                ]
+              : []),
+            ...(showValidationToast
+              ? [
+                  {
+                    id: 'validation',
+                    status: 'success' as const,
+                    title: '28 runbook slugs validated',
+                    children: 'Zero broken cross-references in core-infra-runbooks-2026-q3.zip.',
+                  },
+                ]
+              : []),
+            ...(notice
+              ? [
+                  {
+                    id: 'import-notice',
+                    status: 'info' as const,
+                    title: 'Archive import',
+                    children: notice,
+                  },
+                ]
+              : []),
+          ]}
+          onDismiss={(id) => {
+            if (id === 'activity') {
+              setShowActivityToast(false);
+            } else if (id === 'validation') {
+              setShowValidationToast(false);
+            } else {
+              setNotice('');
+            }
+          }}
+          onDismissAll={() => {
+            setShowActivityToast(false);
+            setShowValidationToast(false);
+            setNotice('');
+          }}
+        />
+      </div>
     </FolioScene>
   );
 }

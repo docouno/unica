@@ -1,0 +1,231 @@
+.accordion-proto,
+.collapsible-proto {
+  min-inline-size: 0;
+}
+
+.accordion-proto[data-dividers='true']
+  > .collapsible-proto:not([hidden])
+  ~ .collapsible-proto:not([hidden]) {
+  padding-block-start: var(--space-4);
+  border-block-start: 1px solid var(--disclosure-divider-color);
+}
+
+.accordion-proto[data-dividers='true']
+  > .collapsible-proto:not([hidden]):has(~ .collapsible-proto:not([hidden])) {
+  padding-block-end: var(--space-4);
+}
+
+.collapsible-proto {
+  --disclosure-height: var(--size-m-height);
+  --disclosure-icon: var(--size-m-icon);
+  --disclosure-radius: var(--size-m-radius);
+  --disclosure-gap: var(--size-m-gap);
+  --disclosure-inset: var(--space-12);
+  --disclosure-row-pad: var(--size-m-padding-y);
+  --disclosure-label-size: var(--text-size-body-s);
+  --disclosure-label-line: var(--text-size-body-s-lh);
+  --disclosure-body-end: var(--space-12);
+  --disclosure-target: var(--disclosure-height);
+  --disclosure-block-pad: max(
+    var(--disclosure-row-pad),
+    calc((var(--disclosure-target) - var(--disclosure-label-line)) / 2)
+  );
+  --disclosure-label-inset: calc(
+    var(--disclosure-inset) + var(--disclosure-icon) + var(--disclosure-gap)
+  );
+  --disclosure-start: var(--disclosure-label-inset);
+
+  color: var(--fg-primary);
+  font-family: var(--font-family-base);
+}
+
+.collapsible-proto[data-size='s'] {
+  --disclosure-height: var(--size-s-height);
+  --disclosure-icon: var(--size-s-icon);
+  --disclosure-radius: var(--size-s-radius);
+  --disclosure-gap: var(--size-s-gap);
+  --disclosure-inset: var(--space-8);
+  --disclosure-row-pad: var(--size-s-padding-y);
+  --disclosure-label-size: var(--text-size-body-xs);
+  --disclosure-label-line: var(--text-size-body-xs-lh);
+  --disclosure-body-end: var(--space-8);
+}
+
+.collapsible-proto[data-size='l'] {
+  --disclosure-height: var(--size-l-height);
+  --disclosure-icon: var(--size-l-icon);
+  --disclosure-radius: var(--size-l-radius);
+  --disclosure-gap: var(--size-l-gap);
+  --disclosure-inset: var(--space-16);
+  --disclosure-row-pad: var(--size-l-padding-y);
+  --disclosure-label-size: var(--text-size-body-m);
+  --disclosure-label-line: var(--text-size-body-m-lh);
+  --disclosure-body-end: var(--space-16);
+}
+
+.collapsible-proto[data-accordion-item] {
+  --disclosure-start: var(--disclosure-inset);
+}
+
+.accordion-header-proto {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-8);
+}
+
+.accordion-heading-proto {
+  flex: 1;
+  min-inline-size: 0;
+  margin: 0;
+}
+
+.accordion-action-proto {
+  flex: none;
+  display: grid;
+  align-items: center;
+  min-block-size: calc(var(--disclosure-label-line) + 2 * var(--disclosure-block-pad));
+}
+
+.disclosure-trigger-proto.button-proto[data-variant='ghost'] {
+  --button-border-width: 0px;
+
+  min-block-size: var(--disclosure-target);
+  padding: var(--disclosure-block-pad) var(--disclosure-inset);
+  border-radius: var(--disclosure-radius);
+  font-size: var(--disclosure-label-size);
+  line-height: var(--disclosure-label-line);
+  text-align: start;
+}
+
+.disclosure-trigger-proto.button-proto[data-variant='ghost'][aria-expanded='true'] {
+  --button-bg: transparent;
+  --button-hover-bg: var(--button-ghost-hover-bg);
+}
+
+.disclosure-trigger-proto > .button-proto-content,
+.disclosure-trigger-proto .button-proto-label {
+  inline-size: 100%;
+}
+
+.disclosure-trigger-proto .button-proto-label {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
+  gap: var(--disclosure-gap);
+}
+
+.disclosure-trigger-proto[data-indicator='end'] .button-proto-label {
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.accordion-proto:has(> .collapsible-proto > .accordion-header-proto > .accordion-action-proto)
+  > .collapsible-proto {
+  --disclosure-start: var(--disclosure-label-inset);
+
+  &
+    > .accordion-header-proto
+    > .accordion-heading-proto
+    > .disclosure-trigger-proto
+    .button-proto-label {
+    grid-template-columns: auto minmax(0, 1fr);
+
+    & > .disclosure-caret-proto {
+      grid-area: 1 / 1;
+    }
+  }
+}
+
+.disclosure-label-proto {
+  overflow-wrap: anywhere;
+}
+
+.disclosure-caret-proto {
+  --disclosure-caret-angle: 0deg;
+
+  inline-size: var(--disclosure-icon);
+  block-size: var(--disclosure-icon);
+  margin-block-start: calc((var(--disclosure-label-line) - var(--disclosure-icon)) / 2);
+  color: var(--fg-muted);
+  transform: rotate(var(--disclosure-caret-angle));
+  transition: transform var(--disclosure-duration) cubic-bezier(0.2, 0, 0, 1);
+}
+
+/* Use explicit direction boundaries so the CSS build preserves local overrides. */
+[dir='rtl'] {
+  --disclosure-closed-caret-angle: 90deg;
+}
+
+[dir='ltr'] {
+  --disclosure-closed-caret-angle: -90deg;
+}
+
+.disclosure-trigger-proto[aria-expanded='false'] .disclosure-caret-proto {
+  --disclosure-caret-angle: var(--disclosure-closed-caret-angle, -90deg);
+}
+
+.disclosure-trigger-proto[aria-expanded='true']:not(:disabled) .disclosure-caret-proto {
+  color: var(--fg-secondary);
+}
+
+.disclosure-trigger-proto.button-proto:not(:disabled):is(:focus-visible, [data-preview='focus']) {
+  outline-offset: -2px;
+}
+
+.disclosure-trigger-proto:disabled .disclosure-caret-proto {
+  color: inherit;
+}
+
+.disclosure-panel-proto {
+  min-inline-size: 0;
+}
+
+.disclosure-panel-proto[data-moving] {
+  overflow: clip;
+}
+
+.disclosure-body-proto {
+  display: flow-root;
+  min-inline-size: 0;
+  color: var(--fg-secondary);
+  font-size: var(--disclosure-label-size);
+  line-height: var(--disclosure-label-line);
+  overflow-wrap: anywhere;
+}
+
+.disclosure-body-proto[data-padded='true']:not(:empty) {
+  padding-block: var(--space-4) var(--disclosure-body-end);
+  padding-inline: var(--disclosure-start) var(--disclosure-inset);
+}
+
+.disclosure-body-proto > :first-child {
+  margin-block-start: 0;
+}
+
+.disclosure-body-proto > :last-child {
+  margin-block-end: 0;
+}
+
+@media (any-pointer: coarse) {
+  .collapsible-proto {
+    --disclosure-target: max(44px, var(--disclosure-height));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .disclosure-caret-proto {
+    transition: none;
+  }
+}
+
+@media (forced-colors: active) {
+  .accordion-proto[data-dividers='true']
+    > .collapsible-proto:not([hidden])
+    ~ .collapsible-proto:not([hidden]) {
+    border-color: GrayText;
+  }
+
+  .disclosure-caret-proto,
+  .disclosure-trigger-proto[aria-expanded='true']:not(:disabled) .disclosure-caret-proto {
+    color: inherit;
+  }
+}

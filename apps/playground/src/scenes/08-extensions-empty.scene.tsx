@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useLayoutEffect, useRef, useState } from 'react';
 import type { ReactElement } from 'react';
 import {
   ArrowsLeftRightIcon,
@@ -12,17 +12,28 @@ import {
   PlusIcon,
   SlackLogoIcon,
 } from '@phosphor-icons/react';
+import {
+  Breadcrumb,
+  BreadcrumbLink,
+  BreadcrumbPage,
+} from '../prototypes/breadcrumb/breadcrumb.proto.js';
 import { defineScene } from '../workbench/types.js';
 import { AsidePanel, WorkspaceNavigation } from '../prototypes/app-shell/app-shell.proto.js';
 import { Badge } from '../prototypes/badge/badge.proto.js';
 import { Button } from '../prototypes/button/button.proto.js';
 import { Card } from '../prototypes/card/card.proto.js';
-import { Empty } from '../prototypes/empty/empty.proto.js';
-import { Toast } from '../prototypes/feedback/feedback.proto.js';
+import {
+  Empty,
+  EmptyActions,
+  EmptyDescription,
+  EmptyMedia,
+  EmptyTitle,
+} from '../prototypes/empty/empty.proto.js';
+import { ToastCard } from '../prototypes/toast/toast.proto.js';
 import { Spinner } from '../prototypes/progress/progress.proto.js';
-import { SkeletonText } from '../prototypes/skeleton/skeleton.proto.js';
 import { Icon } from '../prototypes/icon/icon.proto.js';
 import { Input } from '../prototypes/input/input.proto.js';
+import { List, ListItem } from '../prototypes/list/list.proto.js';
 import { Text } from '../prototypes/text/text.proto.js';
 import { Title } from '../prototypes/title/title.proto.js';
 import { FolioScene, FolioWorkspace, PageIntro, SectionHeading } from './folio/folio.shared.js';
@@ -33,16 +44,30 @@ function ExtensionsScene(): ReactElement {
   const [category, setCategory] = useState('all');
   const [notice, setNotice] = useState('');
   const [sandboxCreated, setSandboxCreated] = useState(false);
+  const sandboxHeading = useRef<HTMLHeadingElement>(null);
+  const sandboxChanged = useRef(false);
+
+  useLayoutEffect(() => {
+    if (sandboxChanged.current) {
+      sandboxHeading.current?.focus();
+      sandboxChanged.current = false;
+    }
+  }, [sandboxCreated]);
+
+  function changeSandbox(created: boolean): void {
+    sandboxChanged.current = true;
+    setSandboxCreated(created);
+  }
+
   const show = (name: string, group: string): boolean =>
     (!query || name.toLowerCase().includes(query.toLowerCase())) &&
     (category === 'all' || category === group || category === 'schedules' || category === 'keys');
-  const featuredVisible =
-    show('GitHub Enterprise', 'source-control') ||
-    show('PagerDuty Incident Sync', 'incident-response');
-  const installedVisible =
-    show('Slack Triage Bridge', 'incident-response') ||
-    show('S3 Cold Snapshot', 'source-control') ||
-    show('GitHub ADR Mirror', 'source-control');
+  const github = show('GitHub Enterprise', 'source-control');
+  const pagerDuty = show('PagerDuty Incident Sync', 'incident-response');
+  const slack = show('Slack Triage Bridge', 'incident-response');
+  const snapshot = show('S3 Cold Snapshot', 'source-control');
+  const mirror = show('GitHub ADR Mirror', 'source-control');
+  const visibleCount = [github, pagerDuty, slack, snapshot, mirror].filter(Boolean).length;
 
   return (
     <FolioScene>
@@ -50,7 +75,13 @@ function ExtensionsScene(): ReactElement {
         classic
         activeRail="extensions"
         minHeight={1160}
-        crumbs={['Platform Eng', 'Extensions', 'Connector catalog']}
+        breadcrumb={
+          <Breadcrumb size="s">
+            <BreadcrumbLink href="?item=02-workspace-overview">Platform Eng</BreadcrumbLink>
+            <span>Extensions</span>
+            <BreadcrumbPage>Connector catalog</BreadcrumbPage>
+          </Breadcrumb>
+        }
         leftAside={
           <AsidePanel title="Extensions">
             <Input
@@ -61,6 +92,9 @@ function ExtensionsScene(): ReactElement {
               value={query}
               onChange={(event) => setQuery(event.currentTarget.value)}
             />
+            <span className="folio-connector-result-status" role="status">
+              {visibleCount === 1 ? '1 connector shown' : `${visibleCount} connectors shown`}
+            </span>
             <WorkspaceNavigation kind="extensions" defaultActive="all" onNavigate={setCategory} />
           </AsidePanel>
         }
@@ -92,9 +126,9 @@ function ExtensionsScene(): ReactElement {
             title="Repository & incident connectors"
             description="Bi-directional sync between Git-backed architecture records, alert routing, and runbook drills."
           />
-          {featuredVisible && (
+          {(github || pagerDuty) && (
             <div className="folio-grid-2">
-              {show('GitHub Enterprise', 'source-control') && (
+              {github && (
                 <Card className="folio-connector-card folio-connector-featured">
                   <div className="folio-row folio-between">
                     <div className="folio-row folio-connector-link">
@@ -145,7 +179,7 @@ function ExtensionsScene(): ReactElement {
                   </div>
                 </Card>
               )}
-              {show('PagerDuty Incident Sync', 'incident-response') && (
+              {pagerDuty && (
                 <Card className="folio-connector-card folio-connector-featured">
                   <div className="folio-row folio-between">
                     <div className="folio-row folio-connector-link">
@@ -201,145 +235,133 @@ function ExtensionsScene(): ReactElement {
           )}
           <section className="folio-stack">
             <SectionHeading>Installed &amp; indexing</SectionHeading>
-            {installedVisible ? (
-              <div className="folio-grid-3">
-                {show('Slack Triage Bridge', 'incident-response') && (
-                  <Card className="folio-connector-card folio-connector-installed">
-                    <div className="folio-row folio-between">
-                      <span className="folio-connector-icon">
-                        <Icon icon={SlackLogoIcon} />
-                      </span>
-                      <Badge size="s">Installed</Badge>
-                    </div>
-                    <div className="folio-connector-copy">
-                      <Title as="h3" size="body-m" className="folio-connector-installed-title">
-                        Slack Triage Bridge
-                      </Title>
-                      <Text size="body-s" color="secondary">
-                        Posts runbook verification reminders and drill summaries to #infra-drills.
-                      </Text>
-                    </div>
-                    <div className="folio-row folio-between folio-connector-footer">
-                      <Text size="caption-l" color="muted">
-                        Channel #infra-drills
-                      </Text>
-                      <Button
-                        size="s"
-                        variant="ghost"
-                        tone="neutral"
-                        onClick={() => setNotice('Slack Triage Bridge management selected.')}
-                      >
-                        Manage
-                      </Button>
-                    </div>
-                  </Card>
-                )}
-                {show('S3 Cold Snapshot', 'source-control') && (
-                  <Card className="folio-connector-card folio-connector-installed">
-                    <div className="folio-row folio-between">
-                      <span className="folio-connector-icon">
-                        <Icon icon={DatabaseIcon} />
-                      </span>
-                      <Badge size="s">Installed</Badge>
-                    </div>
-                    <div className="folio-connector-copy">
-                      <Title as="h3" size="body-m" className="folio-connector-installed-title">
-                        S3 Cold Snapshot
-                      </Title>
-                      <Text size="body-s" color="secondary">
-                        Writes immutable nightly Parquet &amp; Markdown bundles to eu-central-1.
-                      </Text>
-                    </div>
-                    <div className="folio-row folio-between folio-connector-footer">
-                      <Text size="caption-l" color="muted">
-                        Nightly 02:00 UTC
-                      </Text>
-                      <Button
-                        size="s"
-                        variant="ghost"
-                        tone="neutral"
-                        onClick={() => setNotice('S3 Cold Snapshot management selected.')}
-                      >
-                        Manage
-                      </Button>
-                    </div>
-                  </Card>
-                )}
-                {show('GitHub ADR Mirror', 'source-control') && (
-                  <Card
-                    className="folio-connector-card folio-connector-installed folio-connector-indexing"
-                    aria-busy="true"
-                  >
-                    <div className="folio-row folio-between">
-                      <div className="folio-row folio-connector-title">
-                        <Spinner size="s" tone="muted" />
-                        <Title as="h3" size="body-m" className="folio-connector-installed-title">
-                          GitHub ADR Mirror
-                        </Title>
-                      </div>
-                      <Badge size="s" status="info" dot>
-                        Indexing
-                      </Badge>
-                    </div>
-                    <SkeletonText size="body-s" lines={1} width="76%" />
-                    <SkeletonText size="caption-l" lines={2} />
-                    <div className="folio-row folio-connector-footer">
-                      <Text size="caption-m" color="muted">
-                        Scanning 48 repository trees…
-                      </Text>
-                    </div>
-                  </Card>
-                )}
-              </div>
+            {slack || snapshot || mirror ? (
+              <Card>
+                <List
+                  size="m"
+                  markers={false}
+                  dividers
+                  aria-label="Installed and indexing connectors"
+                >
+                  {[
+                    {
+                      title: 'Slack Triage Bridge',
+                      visible: slack,
+                      icon: SlackLogoIcon,
+                      description:
+                        'Posts verification reminders and drill summaries in #infra-drills.',
+                    },
+                    {
+                      title: 'S3 Cold Snapshot',
+                      visible: snapshot,
+                      icon: DatabaseIcon,
+                      description:
+                        'Exports immutable Parquet and Markdown to eu-central-1 at 02:00 UTC.',
+                    },
+                  ]
+                    .filter((connector) => connector.visible)
+                    .map((connector) => (
+                      <ListItem
+                        key={connector.title}
+                        title={connector.title}
+                        description={connector.description}
+                        leading={<Icon icon={connector.icon} />}
+                        trailing={
+                          <>
+                            <Badge>Installed</Badge>
+                            <Button
+                              variant="ghost"
+                              tone="neutral"
+                              aria-label={`Manage ${connector.title}`}
+                              onClick={() => setNotice(`${connector.title} management selected.`)}
+                            >
+                              Manage
+                            </Button>
+                          </>
+                        }
+                      />
+                    ))}
+                  {mirror && (
+                    <ListItem
+                      title="GitHub ADR Mirror"
+                      description="Scanning 48 repository trees…"
+                      leading={<Spinner size="s" tone="muted" />}
+                      trailing={
+                        <Badge status="info" dot>
+                          Indexing
+                        </Badge>
+                      }
+                    />
+                  )}
+                </List>
+              </Card>
             ) : (
-              <Text size="body-s" color="muted">
-                No installed connectors match this filter.
-              </Text>
+              <Empty size="s" align="start">
+                <EmptyDescription>
+                  <bdi>No installed connectors match this filter.</bdi>
+                </EmptyDescription>
+              </Empty>
             )}
           </section>
           <section className="folio-stack">
             <SectionHeading>Custom webhook sandboxes</SectionHeading>
-            <Card className="folio-webhook-card">
-              {sandboxCreated ? (
-                <Empty
-                  icon={<PlugsConnectedIcon size="1em" />}
-                  title="Webhook sandbox ready"
-                  description="Inspect signed event payloads before routing production alerts."
-                >
-                  <Button
-                    size="s"
-                    variant="secondary"
-                    tone="neutral"
-                    onClick={() => setSandboxCreated(false)}
-                  >
-                    Remove sandbox
-                  </Button>
-                </Empty>
-              ) : (
-                <Empty
-                  icon={<PlugsConnectedIcon size="1em" />}
-                  title="No custom webhook sandboxes yet"
-                  description="Deploy an isolated dry-run endpoint to inspect signed event payloads before routing production alerts."
-                >
-                  <Button
-                    size="s"
-                    variant="secondary"
-                    tone="neutral"
-                    onClick={() => setSandboxCreated(true)}
-                  >
-                    Create webhook sandbox
-                  </Button>
-                </Empty>
-              )}
+            <Card size="l" className="folio-webhook-card">
+              <div className="folio-webhook-stage">
+                {sandboxCreated ? (
+                  <div className="folio-webhook-sandbox">
+                    <div className="folio-webhook-sandbox-copy">
+                      <Title
+                        ref={sandboxHeading}
+                        className="folio-webhook-sandbox-title"
+                        as="h3"
+                        size="heading-s"
+                        tabIndex={-1}
+                      >
+                        Webhook sandbox
+                      </Title>
+                      <Text size="body-s" color="muted">
+                        <bdi>Waiting for the first signed event.</bdi>
+                      </Text>
+                    </div>
+                    <Button
+                      size="s"
+                      variant="secondary"
+                      tone="neutral"
+                      onClick={() => changeSandbox(false)}
+                    >
+                      Remove sandbox
+                    </Button>
+                  </div>
+                ) : (
+                  <Empty>
+                    <EmptyMedia icon={PlugsConnectedIcon} />
+                    <EmptyTitle ref={sandboxHeading} tabIndex={-1}>
+                      No webhook sandboxes yet
+                    </EmptyTitle>
+                    <EmptyDescription>
+                      <bdi>Test signed events before routing them to production.</bdi>
+                    </EmptyDescription>
+                    <EmptyActions>
+                      <Button
+                        variant="secondary"
+                        tone="neutral"
+                        onClick={() => changeSandbox(true)}
+                      >
+                        Create webhook sandbox
+                      </Button>
+                    </EmptyActions>
+                  </Empty>
+                )}
+              </div>
             </Card>
           </section>
         </div>
       </FolioWorkspace>
       {notice && (
         <div className="folio-toast-dock">
-          <Toast status="info" title="Connectors" onDismiss={() => setNotice('')}>
+          <ToastCard status="info" title="Connectors" onDismiss={() => setNotice('')}>
             {notice}
-          </Toast>
+          </ToastCard>
         </div>
       )}
     </FolioScene>

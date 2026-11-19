@@ -1,0 +1,84 @@
+.suggestion-study-grid-proto {
+  display: grid;
+  inline-size: 100%;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr));
+  align-items: start;
+  gap: var(--space-24);
+}
+
+.suggestion-study-proto {
+  display: grid;
+  align-content: start;
+  gap: var(--space-12);
+  min-inline-size: 0;
+}
+
+.suggestion-usage-proto {
+  display: grid;
+  gap: var(--space-16);
+  inline-size: min(100%, 26rem);
+}
+
+[data-surface='overlay'] > .suggestion-study-grid-proto .suggestion-study-proto,
+[data-surface='overlay'] > .suggestion-live-stage-proto .suggestion-usage-proto {
+  box-sizing: border-box;
+  padding: var(--space-16);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--surface-s-radius);
+  background: color-mix(in oklab, var(--bg-surface) 94%, transparent);
+}
+
+.suggestion-live-stage-proto {
+  display: grid;
+  align-items: start;
+  justify-items: center;
+  inline-size: 100%;
+  min-block-size: 27rem;
+}
+
+.suggestion-editor-fragment-proto {
+  inline-size: min(100%, 34rem);
+}
+
+.suggestion-save-pair-proto {
+  inline-size: min(100%, 32rem);
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  gap: var(--space-8) var(--space-12);
+}
+
+/* The action shares the shell's row even when the field label wraps. */
+.suggestion-save-pair-proto :is(.suggestion-field-proto, .form-field-proto) {
+  display: contents;
+}
+
+.suggestion-save-pair-proto
+  :is(.form-field-label-proto, .form-field-support-proto, .suggestion-recovery-proto),
+.suggestion-saved-proto {
+  grid-column: 1 / -1;
+}
+
+.suggestion-save-pair-proto .form-field-label-proto {
+  grid-row: 1;
+}
+
+.suggestion-save-pair-proto .suggestion-input-proto {
+  grid-row: 2;
+  grid-column: 1;
+}
+
+.suggestion-save-proto {
+  grid-row: 2;
+  grid-column: 2;
+}
+
+.suggestion-save-pair-proto .form-field-support-proto {
+  grid-row: 3;
+}
+
+.suggestion-save-pair-proto .suggestion-recovery-proto,
+.suggestion-saved-proto {
+  grid-row: 4;
+  min-inline-size: 0;
+  overflow-wrap: anywhere;
+}

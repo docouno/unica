@@ -89,13 +89,14 @@ function useDatePanel(
   useLayoutEffect(() => {
     const element = panel.current;
     const button = trigger.current;
-    if (!open || !element || !button || typeof element.showPopover !== 'function') {
+    const boundary = field.current;
+    if (!open || !element || !button || !boundary || typeof element.showPopover !== 'function') {
       return;
     }
     element.showPopover();
     const position = (): void => {
       const bounds =
-        field.current?.querySelector('.input-shell-proto')?.getBoundingClientRect() ??
+        boundary.querySelector('.input-shell-proto')?.getBoundingClientRect() ??
         button.getBoundingClientRect();
       const size = element.getBoundingClientRect();
       const viewport = window.visualViewport;
@@ -123,27 +124,19 @@ function useDatePanel(
     window.visualViewport?.addEventListener('scroll', position);
     window.addEventListener('scroll', position, true);
     const outside = (event: PointerEvent): void => {
-      if (
-        !element.contains(event.target as Node) &&
-        !field.current?.contains(event.target as Node)
-      ) {
+      if (!element.contains(event.target as Node) && !boundary.contains(event.target as Node)) {
         onClose();
       }
     };
     const escape = (event: globalThis.KeyboardEvent): void => {
-      const target = event.target as Node;
-      if (
-        event.key === 'Escape' &&
-        !event.defaultPrevented &&
-        (element.contains(target) || field.current?.contains(target))
-      ) {
+      if (event.key === 'Escape' && !event.defaultPrevented) {
         event.preventDefault();
         onClose();
         button.focus();
       }
     };
     document.addEventListener('pointerdown', outside);
-    document.addEventListener('keydown', escape);
+    boundary.addEventListener('keydown', escape);
     return () => {
       observer.disconnect();
       window.removeEventListener('resize', position);
@@ -151,7 +144,7 @@ function useDatePanel(
       window.visualViewport?.removeEventListener('scroll', position);
       window.removeEventListener('scroll', position, true);
       document.removeEventListener('pointerdown', outside);
-      document.removeEventListener('keydown', escape);
+      boundary.removeEventListener('keydown', escape);
       if (element.matches(':popover-open')) {
         element.hidePopover();
       }

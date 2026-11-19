@@ -1,0 +1,71 @@
+.tags-examples-proto {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+  align-items: start;
+  gap: 24px;
+  min-inline-size: 0;
+}
+.tags-example-proto,
+.tags-demo-stack-proto {
+  display: grid;
+  align-content: start;
+  gap: 16px;
+  min-inline-size: 0;
+}
+.tags-example-title-proto,
+.tags-demo-note-proto {
+  margin: 0;
+  color: var(--fg-muted);
+  font: 400 var(--text-size-caption-l)/1.6 var(--font-family-base);
+  overflow-wrap: anywhere;
+}
+.tags-demo-actions-proto {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.tags-material-proto {
+  display: grid;
+  gap: 20px;
+  min-inline-size: 0;
+  padding: 24px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--surface-m-radius);
+  background: var(--bg-surface);
+}
+.tags-overlay-stage-proto {
+  position: relative;
+  isolation: isolate;
+  padding: 12px;
+  min-inline-size: 0;
+}
+.tags-material-proto[data-surface='overlay'] {
+  background: var(--bg-overlay);
+  border-color: var(--overlay-border);
+  box-shadow: var(--overlay-shadow-popover);
+  backdrop-filter: var(--overlay-backdrop);
+}
+.tags-material-underlay-proto {
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  display: grid;
+  gap: 16px;
+  padding: 24px;
+  background: var(--bg-canvas);
+}
+.tags-material-underlay-proto > span {
+  block-size: 28px;
+  inline-size: 65%;
+  border-radius: var(--size-s-radius);
+  background: var(--accent-soft-bg);
+}
+.tags-material-underlay-proto > span:nth-child(2) {
+  inline-size: 90%;
+  background: var(--bg-surface);
+}
+@container artboard (max-width: 440px) {
+  .tags-material-proto {
+    padding: 16px;
+  }
+}

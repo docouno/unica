@@ -1,6 +1,6 @@
 # Button & IconButton — visual specification
 
-Status: approved visual reference. This live prototype is the visual reference for the subsequent library implementation; it is not a package export. Open `/?item=button` in the playground. Application [scenes](../../scenes/) consume the same prototype independently. They are integration consumers, not component requirements.
+Status: approved base visual reference; the contextual supporting-action extension was visually approved on 2026-11-16. This live prototype is the visual reference for the subsequent library implementation; it is not a package export. Open `/?item=button` in the playground. Application [scenes](../../scenes/) consume the same prototype independently. They are integration consumers, not component requirements.
 
 ## Action language
 
@@ -13,7 +13,7 @@ Status: approved visual reference. This live prototype is the visual reference f
 | Tone   | `neutral`   | Supporting actions and dense toolbars.                                                     |
 | Tone   | `danger`    | Removal or a harmful consequence; use a named action for irreversible operations.          |
 
-All nine combinations exist on both controls. The role changes visual weight; the tone changes meaning. Do not use success, warning, or info colors on an action. Result and validation feedback live next to it.
+All nine combinations exist on both controls. The role changes visual weight; the tone changes meaning. Do not add success, warning, or info action tones. Result and validation feedback live next to the action. A supporting neutral action can inherit the palette of its enclosing status surface without changing its meaning.
 
 Prefer one primary action per decision group. Use neutral ghost tools in a formatting bar and neutral secondary alternatives beside a main CTA. Avoid a permanent row of filled icon buttons in document lists. A reversible row removal can use a danger IconButton with a specific accessible name, a tooltip, and Undo. Permanent deletion uses a labeled danger Button in a confirmation surface.
 
@@ -42,6 +42,14 @@ Use S for desktop chrome, table rows, and compact popovers; M for ordinary produ
 
 `width="auto"` fits content; `width="full"` fills its available inline width. Long labels wrap naturally without truncation or a line clamp. Unbroken content can break as a defensive fallback. Icons remain at the logical ends of the label and align to its vertical center. Leading and trailing slots follow reading direction; directional navigation arrows mirror in RTL, while a brand glyph, vertical chevron, or external-link symbol retains its meaning.
 
+## Supporting actions on a colored surface
+
+A painted status surface can supply `--action-context-ink`. Only `secondary` and `ghost` with `tone="neutral"` adapt their label, plate, contour, pending/disabled treatment, and state feedback to that ink. The tone remains a supporting action; its local color belongs to the enclosing surface. Explicit accent/danger actions and primary neutral actions retain their own palettes. With no context, all existing theme recipes apply unchanged.
+
+The theme's `--btn-context-ink-strength` blends 80% context ink with primary ink for readable action labels. `--btn-context-plate-tint`, `--btn-context-hover-tint`, and `--btn-context-active-tint` supply 8/12/16% ink veils. `--btn-context-border-tint` is 28% in Soft/Frost and 44% in Pixel. Secondary retains its theme perimeter, shadow, and press travel; ghost stays still. Context never derives physics from color or corner radius. Pending retains geometry and focus. Disabled adapts only the action: 4% veil, 40% action ink, 12% contour, ghost transparent; selected disabled retains its contextual keyline.
+
+Button focus uses the enclosing action-context ink when present, independently of its explicit tone. A neutral Card, a new theme, and a Base/Overlay boundary clear the outer context. Transparent text passes it through. A nested status surface can establish a new context. Use unplated inherited Code in the label. The [Alert reference](../alert/README.md#contextual-color) and its `context`, `context-states`, `context-boundaries`, and `context-overlay` sections demonstrate the approved extension together with the actual colored parent.
+
 ## Materials and response
 
 All colors and materials come from the existing semantic theme tokens. There are no theme-name selectors or consumer material switches in this family.
@@ -55,6 +63,8 @@ All colors and materials come from the existing semantic theme tokens. There are
 Tone changes palette, not press distance. Every Frost primary tone presses 2px; secondary presses 1px. Neutral and danger primary use a neutral contact shadow without violet light. Selected commands remain in place; Frost may express inset depth, while Soft/Pixel use fill and a structural keyline.
 
 The theme owns press transforms, elevation, inset depth, and transition duration. Corner geometry never determines material physics. Soft/Frost transitions take 120ms; Pixel changes immediately. The spinner makes one linear turn in 800ms. Reduced motion removes transitions and pointer light and leaves a static progress indicator.
+
+Ordinary neutral Ghost actions use `--btn-ghost-neutral-bg-hover`, a 10% layer of primary foreground over their current surface. Press adds weight to that layer. The same layer marks an expanded trigger at rest, and hover strengthens it. Selected commands keep their structural keyline and existing tint. Supporting actions on tinted surfaces use their contextual recipe.
 
 Fine-pointer light belongs to primary accent and is emitted outside its opaque fill. It responds to proximity before the pointer enters the hit box. The theme owns `--btn-primary-backlight-reach`: `100px` in Frost, `0px` in Soft/Pixel. Distance is measured from the nearest edge in local CSS pixels; intensity follows `max(0, 1 - distance / reach)`. The existing `72px` radial spot and `10px` blur make the approach most visible close to the edge; the sampling reach is not a promise of a painted 100px halo.
 

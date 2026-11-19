@@ -10,11 +10,16 @@ import {
   StickyActionBar,
 } from '../prototypes/app-shell/app-shell.proto.js';
 import { Badge } from '../prototypes/badge/badge.proto.js';
-import { Breadcrumb } from '../prototypes/breadcrumb/breadcrumb.proto.js';
+import { Breadcrumb, BreadcrumbPage } from '../prototypes/breadcrumb/breadcrumb.proto.js';
 import { Button } from '../prototypes/button/button.proto.js';
 import { Card } from '../prototypes/card/card.proto.js';
-import { Accordion, Collapsible } from '../prototypes/accordion/accordion.proto.js';
-import { Toast } from '../prototypes/feedback/feedback.proto.js';
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from '../prototypes/disclosure/disclosure.proto.js';
+import { ToastCard } from '../prototypes/toast/toast.proto.js';
 import { Kbd, KbdGroup } from '../prototypes/kbd/kbd.proto.js';
 import {
   Checkbox,
@@ -25,7 +30,16 @@ import { SegmentedControl } from '../prototypes/segmented-control/segmented-cont
 import { Select } from '../prototypes/select/select.proto.js';
 import { RangeSlider, Slider } from '../prototypes/slider/slider.proto.js';
 import { NumberInput } from '../prototypes/number-input/number-input.proto.js';
-import { Table, TableScroll } from '../prototypes/table/table.proto.js';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableColumnHeader,
+  TableHeader,
+  TableRow,
+  TableRowHeader,
+  TableScroll,
+} from '../prototypes/table/table.proto.js';
 import { Text } from '../prototypes/text/text.proto.js';
 import { FolioScene, SectionHeading } from './folio/folio.shared.js';
 import './folio/folio.settings.css';
@@ -96,7 +110,11 @@ function PreferencesScene(): ReactElement {
               </>
             }
           >
-            <Breadcrumb items={['Platform engineer', 'Preferences', 'Appearance & editor']} />
+            <Breadcrumb size="s">
+              <span>Platform engineer</span>
+              <span>Preferences</span>
+              <BreadcrumbPage>Appearance & editor</BreadcrumbPage>
+            </Breadcrumb>
           </Header>
         }
       >
@@ -137,7 +155,11 @@ function PreferencesScene(): ReactElement {
                   size="s"
                   aria-label="Code and terminal typeface"
                   value={preferences.typeface}
-                  onChange={(event) => update('typeface', event.currentTarget.value)}
+                  onValueChange={(value) => {
+                    if (value) {
+                      update('typeface', value);
+                    }
+                  }}
                   options={[
                     { value: 'jetbrains', label: 'JetBrains Mono (13px)' },
                     { value: 'system', label: 'System monospace (13px)' },
@@ -245,99 +267,104 @@ function PreferencesScene(): ReactElement {
             </Card>
             <Card className="folio-governance-card">
               <SectionHeading>Review &amp; governance policies</SectionHeading>
-              <Accordion>
-                <Collapsible title="Stale runbook reminders" defaultOpen>
-                  <div className="folio-row folio-between folio-preference-policy">
-                    <Text size="body-s" color="secondary">
-                      Notify primary owner 7 days before quarterly Tier-0 verification expires.
-                    </Text>
-                    <Checkbox
-                      size="s"
-                      aria-label="Stale runbook reminders"
-                      checked={preferences.reminders}
-                      onChange={(event) => update('reminders', event.currentTarget.checked)}
-                    />
-                  </div>
-                </Collapsible>
-                <Collapsible title="Signed commit verification">
-                  <div className="folio-row folio-between">
-                    <Text size="body-s" color="secondary">
-                      Require signed commits before publishing repository-backed changes.
-                    </Text>
-                    <Checkbox
-                      size="s"
-                      aria-label="Signed commit verification"
-                      checked={preferences.signed}
-                      onChange={(event) => update('signed', event.currentTarget.checked)}
-                    />
-                  </div>
-                </Collapsible>
-                <Collapsible title="External share watermarking">
-                  <div className="folio-row folio-between">
-                    <Text size="body-s" color="secondary">
-                      Mark externally shared snapshots with the workspace name.
-                    </Text>
-                    <Checkbox
-                      size="s"
-                      aria-label="External share watermarking"
-                      checked={preferences.watermark}
-                      onChange={(event) => update('watermark', event.currentTarget.checked)}
-                    />
-                  </div>
-                </Collapsible>
+              <Accordion headingLevel={3} size="s" defaultValue={['reminders']}>
+                <AccordionItem value="reminders">
+                  <AccordionTrigger>Stale runbook reminders</AccordionTrigger>
+                  <AccordionContent>
+                    <div className="folio-row folio-between folio-preference-policy">
+                      <p>
+                        Notify primary owner 7 days before quarterly Tier-0 verification expires.
+                      </p>
+                      <Checkbox
+                        size="s"
+                        aria-label="Stale runbook reminders"
+                        checked={preferences.reminders}
+                        onChange={(event) => update('reminders', event.currentTarget.checked)}
+                      />
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+                <AccordionItem value="signed">
+                  <AccordionTrigger>Signed commit verification</AccordionTrigger>
+                  <AccordionContent>
+                    <div className="folio-row folio-between folio-preference-policy">
+                      <p>Require signed commits before publishing repository-backed changes.</p>
+                      <Checkbox
+                        size="s"
+                        aria-label="Signed commit verification"
+                        checked={preferences.signed}
+                        onChange={(event) => update('signed', event.currentTarget.checked)}
+                      />
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+                <AccordionItem value="watermark">
+                  <AccordionTrigger>External share watermarking</AccordionTrigger>
+                  <AccordionContent>
+                    <div className="folio-row folio-between folio-preference-policy">
+                      <p>Mark externally shared snapshots with the workspace name.</p>
+                      <Checkbox
+                        size="s"
+                        aria-label="External share watermarking"
+                        checked={preferences.watermark}
+                        onChange={(event) => update('watermark', event.currentTarget.checked)}
+                      />
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
               </Accordion>
             </Card>
             <section className="folio-stack">
               <SectionHeading>Keyboard shortcuts</SectionHeading>
-              <TableScroll>
-                <Table className="folio-shortcuts-table">
-                  <thead>
-                    <tr>
-                      <th>Command</th>
-                      <th>Scope</th>
-                      <th>Shortcut</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <td>Search documents &amp; runbooks</td>
-                      <td>Global workspace</td>
-                      <td>
+              <TableScroll aria-label="Keyboard shortcuts">
+                <Table aria-label="Keyboard shortcuts" className="folio-shortcuts-table">
+                  <TableHeader>
+                    <TableRow>
+                      <TableColumnHeader>Command</TableColumnHeader>
+                      <TableColumnHeader>Scope</TableColumnHeader>
+                      <TableColumnHeader>Shortcut</TableColumnHeader>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    <TableRow>
+                      <TableRowHeader>Search documents &amp; runbooks</TableRowHeader>
+                      <TableCell>Global workspace</TableCell>
+                      <TableCell>
                         <KbdGroup>
                           <Kbd>⌘</Kbd>
                           <Kbd>K</Kbd>
                         </KbdGroup>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>Toggle metadata inspector</td>
-                      <td>Document reader</td>
-                      <td>
+                      </TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableRowHeader>Toggle metadata inspector</TableRowHeader>
+                      <TableCell>Document reader</TableCell>
+                      <TableCell>
                         <KbdGroup>
                           <Kbd>⌘</Kbd>
                           <Kbd>⇧</Kbd>
                           <Kbd>I</Kbd>
                         </KbdGroup>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>Jump to verified runbooks</td>
-                      <td>Navigation chord</td>
-                      <td>
+                      </TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableRowHeader>Jump to verified runbooks</TableRowHeader>
+                      <TableCell>Navigation chord</TableCell>
+                      <TableCell>
                         <KbdGroup separator="then">
                           <Kbd>G</Kbd>
                           <Kbd>R</Kbd>
                         </KbdGroup>
-                      </td>
-                    </tr>
-                  </tbody>
+                      </TableCell>
+                    </TableRow>
+                  </TableBody>
                 </Table>
               </TableScroll>
             </section>
             {notice && (
-              <Toast status="success" title="Preferences saved" onDismiss={() => setNotice('')}>
+              <ToastCard status="success" title="Preferences saved" onDismiss={() => setNotice('')}>
                 {notice}
-              </Toast>
+              </ToastCard>
             )}
             <StickyActionBar
               className="folio-preferences-actions"

@@ -17,10 +17,11 @@ import type { DisplayStatus } from '../badge/badge.styles.js';
 import { Badge } from '../badge/badge.proto.js';
 import { Button } from '../button/button.proto.js';
 import { Input } from '../input/input.proto.js';
-import { TagsInput } from '../select/select.proto.js';
 import { Tag, TagGroup } from './tag.proto.js';
 import type { TagGroupItem, TagProps, TagSize } from './tag.proto.js';
 import './tag.examples.css';
+
+const { TagsInput } = await import('../tags-input/tags-input.proto.js');
 
 const sizes: readonly TagSize[] = ['s', 'm', 'l'];
 const heights = { s: 22, m: 26, l: 30 } as const;

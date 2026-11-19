@@ -79,6 +79,11 @@ textarea {
 
 :root,
 [data-theme='soft-dark'] {
+  --disclosure-duration: 180ms;
+  --disclosure-divider-color: var(--border-subtle);
+  --tabs-feedback-duration: 110ms;
+  --tabs-overflow-fade: 12px;
+  --tabs-overflow-mask: initial;
   --spinner-round-display: inline;
   --spinner-pixel-display: none;
   --progress-wait-base: var(--accent-signal);
@@ -89,6 +94,7 @@ textarea {
   --progress-tip-opacity: 0;
   --progress-tip-light: transparent;
   --progress-value-duration: 180ms;
+  --stepper-current-shadow: none;
   color-scheme: dark;
   --blockquote-rail-width: 3px;
   --blockquote-rail-style: solid;
@@ -116,11 +122,16 @@ textarea {
   --overlay-rim-mask: none;
   --overlay-backdrop: none;
   --overlay-rim: inset 0 1px 0 rgb(255 255 255 / 0.05);
+  --overlay-rim-drawer-inline: initial;
   --overlay-shadow: 0 2px 6px rgb(8 11 14 / 0.278), 0px 20px 44px -4px rgb(8 11 14 / 0.42);
-  --overlay-shadow-tooltip: 0 2px 6px rgb(8 11 14 / 0.278), 0px 8px 20px -4px rgb(8 11 14 / 0.42);
+  --overlay-shadow-tooltip: 0 1px 3px rgb(8 11 14 / 0.16), 0 3px 8px -2px rgb(8 11 14 / 0.24);
   --overlay-shadow-popover: 0 2px 6px rgb(8 11 14 / 0.278), 0px 10px 24px -4px rgb(8 11 14 / 0.42);
   --overlay-shadow-hover: 0 2px 6px rgb(8 11 14 / 0.278), 0px 12px 28px -4px rgb(8 11 14 / 0.42);
+  --overlay-drawer-shadow-color: initial;
   --overlay-shadow-drawer: 0 2px 6px rgb(8 11 14 / 0.278), 0px 16px 36px -4px rgb(8 11 14 / 0.42);
+  --overlay-shadow-drawer-right: initial;
+  --overlay-shadow-drawer-down: initial;
+  --overlay-shadow-drawer-up: initial;
   --overlay-shadow-modal: 0 2px 6px rgb(8 11 14 / 0.278), 0px 20px 44px -4px rgb(8 11 14 / 0.42);
   --surface-shadow: 0 2px 8px rgb(0 0 0 / 0.22);
   --button-s-padding-x: 12px;
@@ -142,6 +153,11 @@ textarea {
   --btn-secondary-shadow: none;
   --btn-material-depth: 0;
   --btn-state-duration: 120ms;
+  --btn-context-ink-strength: 80%;
+  --btn-context-plate-tint: 8%;
+  --btn-context-hover-tint: 12%;
+  --btn-context-active-tint: 16%;
+  --btn-context-border-tint: 28%;
   --btn-primary-contact-shadow: none;
   --btn-secondary-shadow-hover: none;
   --btn-secondary-shadow-active: none;
@@ -170,10 +186,13 @@ textarea {
   --avatar-group-overlap-factor: 1;
   --pill-border-width: 0px;
   --alert-border-width: 0px;
+  --alert-edge-width: 0px;
   --badge-dot-shadow: none;
   --kbd-cap-bg: #222b33;
   --kbd-cap-border: #3c4954;
   --kbd-cap-shadow: inset 0 -1px 0 var(--kbd-cap-border);
+  --table-overlay-header-bg: var(--bg-overlay);
+  --table-row-rule: var(--border-subtle);
   --table-row-selected-bg: rgb(226 131 101 / 0.161);
   --auth-stage-aura: none;
   --motif-canvas-grid: none;
@@ -260,6 +279,11 @@ textarea {
 }
 
 [data-theme='soft-light'] {
+  --disclosure-duration: 180ms;
+  --disclosure-divider-color: var(--border-subtle);
+  --tabs-feedback-duration: 110ms;
+  --tabs-overflow-fade: 12px;
+  --tabs-overflow-mask: initial;
   --spinner-round-display: inline;
   --spinner-pixel-display: none;
   --progress-wait-base: var(--accent-signal);
@@ -270,6 +294,7 @@ textarea {
   --progress-tip-opacity: 0;
   --progress-tip-light: transparent;
   --progress-value-duration: 180ms;
+  --stepper-current-shadow: none;
   color-scheme: light;
   --blockquote-rail-width: 3px;
   --blockquote-rail-style: solid;
@@ -297,14 +322,19 @@ textarea {
   --overlay-rim-mask: none;
   --overlay-backdrop: none;
   --overlay-rim: inset 0 1px 0 rgb(255 255 255 / 0.72);
+  --overlay-rim-drawer-inline: initial;
   --overlay-shadow: 0 2px 6px rgb(41 36 33 / 0.071), 0px 20px 44px -4px rgb(41 36 33 / 0.129);
   --overlay-shadow-tooltip:
     0 2px 6px rgb(41 36 33 / 0.071), 0px 8px 20px -4px rgb(41 36 33 / 0.129);
   --overlay-shadow-popover:
     0 2px 6px rgb(41 36 33 / 0.071), 0px 10px 24px -4px rgb(41 36 33 / 0.129);
   --overlay-shadow-hover: 0 2px 6px rgb(41 36 33 / 0.071), 0px 12px 28px -4px rgb(41 36 33 / 0.129);
+  --overlay-drawer-shadow-color: initial;
   --overlay-shadow-drawer:
     0 2px 6px rgb(41 36 33 / 0.071), 0px 16px 36px -4px rgb(41 36 33 / 0.129);
+  --overlay-shadow-drawer-right: initial;
+  --overlay-shadow-drawer-down: initial;
+  --overlay-shadow-drawer-up: initial;
   --overlay-shadow-modal: 0 2px 6px rgb(41 36 33 / 0.071), 0px 20px 44px -4px rgb(41 36 33 / 0.129);
   --surface-shadow: 0 1px 4px rgb(42 32 24 / 0.06);
   --button-s-padding-x: 12px;
@@ -326,6 +356,11 @@ textarea {
   --btn-secondary-shadow: none;
   --btn-material-depth: 0;
   --btn-state-duration: 120ms;
+  --btn-context-ink-strength: 80%;
+  --btn-context-plate-tint: 8%;
+  --btn-context-hover-tint: 12%;
+  --btn-context-active-tint: 16%;
+  --btn-context-border-tint: 28%;
   --btn-primary-contact-shadow: none;
   --btn-secondary-shadow-hover: none;
   --btn-secondary-shadow-active: none;
@@ -354,10 +389,13 @@ textarea {
   --avatar-group-overlap-factor: 1;
   --pill-border-width: 0px;
   --alert-border-width: 0px;
+  --alert-edge-width: 0px;
   --badge-dot-shadow: none;
   --kbd-cap-bg: #f4ead8;
   --kbd-cap-border: #d6c5ac;
   --kbd-cap-shadow: inset 0 -1px 0 var(--kbd-cap-border);
+  --table-overlay-header-bg: var(--bg-overlay);
+  --table-row-rule: var(--border-subtle);
   --table-row-selected-bg: rgb(179 88 59 / 0.102);
   --auth-stage-aura: none;
   --motif-canvas-grid: none;
@@ -444,6 +482,11 @@ textarea {
 }
 
 [data-theme='frost-dark'] {
+  --disclosure-duration: 140ms;
+  --disclosure-divider-color: color-mix(in srgb, var(--fg-primary) 12%, transparent);
+  --tabs-feedback-duration: 130ms;
+  --tabs-overflow-fade: 12px;
+  --tabs-overflow-mask: initial;
   --spinner-round-display: inline;
   --spinner-pixel-display: none;
   --progress-wait-base: var(--accent-signal);
@@ -459,6 +502,7 @@ textarea {
   --progress-tip-opacity: 0.85;
   --progress-tip-light: rgb(255 255 255 / 0.9);
   --progress-value-duration: 180ms;
+  --stepper-current-shadow: 0 0 10px color-mix(in srgb, var(--accent-signal) 42%, transparent);
   color-scheme: dark;
   --blockquote-rail-width: 2px;
   --blockquote-rail-style: solid;
@@ -491,11 +535,16 @@ textarea {
   );
   --overlay-backdrop: blur(20px) saturate(125.4%);
   --overlay-rim: inset 0 1px 0 rgb(255 255 255 / 0.108), inset 0 0 0 1px rgb(255 255 255 / 0.036);
+  --overlay-rim-drawer-inline: inset 1px 0 0 rgb(255 255 255 / 0.08);
   --overlay-shadow: 0 2px 6px rgb(0 0 0 / 0.4), 0px 20px 44px -4px rgb(0 0 0 / 0.561);
-  --overlay-shadow-tooltip: 0 2px 6px rgb(0 0 0 / 0.4), 0px 8px 20px -4px rgb(0 0 0 / 0.561);
+  --overlay-shadow-tooltip: 0 1px 2px rgb(0 0 0 / 0.12), 0 3px 8px -2px rgb(0 0 0 / 0.18);
   --overlay-shadow-popover: 0 2px 6px rgb(0 0 0 / 0.18), 0px 10px 24px -4px rgb(0 0 0 / 0.25245);
-  --overlay-shadow-hover: 0 2px 6px rgb(0 0 0 / 0.4), 0px 12px 28px -4px rgb(0 0 0 / 0.561);
+  --overlay-shadow-hover: 0 1px 3px rgb(0 0 0 / 0.14), 0 6px 16px -4px rgb(0 0 0 / 0.22);
+  --overlay-drawer-shadow-color: initial;
   --overlay-shadow-drawer: 0 2px 6px rgb(0 0 0 / 0.4), 0px 16px 36px -4px rgb(0 0 0 / 0.561);
+  --overlay-shadow-drawer-right: initial;
+  --overlay-shadow-drawer-down: initial;
+  --overlay-shadow-drawer-up: initial;
   --overlay-shadow-modal: 0 2px 6px rgb(0 0 0 / 0.4), 0px 20px 44px -4px rgb(0 0 0 / 0.561);
   --surface-shadow: 0 4px 16px -4px rgb(2 6 20 / 0.42), inset 0 1px 0 rgb(255 255 255 / 0.05);
   --button-s-padding-x: 12px;
@@ -521,6 +570,11 @@ textarea {
   --btn-secondary-shadow: 0 1px 0 rgb(4 7 15 / 0.5), 0 2px 4px rgb(4 7 15 / 0.24);
   --btn-material-depth: 1;
   --btn-state-duration: 120ms;
+  --btn-context-ink-strength: 80%;
+  --btn-context-plate-tint: 8%;
+  --btn-context-hover-tint: 12%;
+  --btn-context-active-tint: 16%;
+  --btn-context-border-tint: 28%;
   --btn-primary-contact-shadow: 0 2px 0 rgb(4 7 15 / 0.55), 0 4px 8px rgb(4 7 15 / 0.24);
   --btn-secondary-shadow-hover: 0 1px 0 rgb(4 7 15 / 0.5), 0 3px 6px rgb(4 7 15 / 0.28);
   --btn-secondary-shadow-active: none;
@@ -549,10 +603,13 @@ textarea {
   --avatar-group-overlap-factor: 1;
   --pill-border-width: 1px;
   --alert-border-width: 1px;
+  --alert-edge-width: 0px;
   --badge-dot-shadow: 0 0 8px currentColor;
   --kbd-cap-bg: #192030;
   --kbd-cap-border: #313b54;
   --kbd-cap-shadow: inset 0 -1px 0 var(--kbd-cap-border), inset 0 1px 0 rgb(255 255 255 / 0.08);
+  --table-overlay-header-bg: #101522;
+  --table-row-rule: var(--border-subtle);
   --table-row-selected-bg: rgb(84 69 229 / 0.18);
   --auth-stage-aura: radial-gradient(60% 50% at 50% 0%, rgb(84 69 229 / 0.22) 0%, transparent 100%);
   --motif-canvas-grid: none;
@@ -639,6 +696,11 @@ textarea {
 }
 
 [data-theme='frost-light'] {
+  --disclosure-duration: 140ms;
+  --disclosure-divider-color: color-mix(in srgb, var(--fg-primary) 12%, transparent);
+  --tabs-feedback-duration: 130ms;
+  --tabs-overflow-fade: 12px;
+  --tabs-overflow-mask: initial;
   --spinner-round-display: inline;
   --spinner-pixel-display: none;
   --progress-wait-base: var(--accent-signal);
@@ -654,6 +716,7 @@ textarea {
   --progress-tip-opacity: 0.45;
   --progress-tip-light: rgb(255 255 255 / 0.65);
   --progress-value-duration: 180ms;
+  --stepper-current-shadow: 0 0 8px color-mix(in srgb, var(--accent-signal) 25%, transparent);
   color-scheme: light;
   --blockquote-rail-width: 2px;
   --blockquote-rail-style: solid;
@@ -686,12 +749,17 @@ textarea {
   );
   --overlay-backdrop: blur(20px) saturate(125.4%);
   --overlay-rim: inset 0 1px 0 rgb(255 255 255 / 0.54), inset 0 0 0 1px rgb(255 255 255 / 0.3);
+  --overlay-rim-drawer-inline: inset 1px 0 0 rgb(255 255 255 / 0.2);
   --overlay-shadow: 0 2px 6px rgb(12 19 38 / 0.09), 0px 20px 44px -4px rgb(12 19 38 / 0.161);
   --overlay-shadow-tooltip: 0 2px 6px rgb(12 19 38 / 0.09), 0px 8px 20px -4px rgb(12 19 38 / 0.161);
   --overlay-shadow-popover:
     0 2px 6px rgb(12 19 38 / 0.0405), 0px 10px 24px -4px rgb(12 19 38 / 0.07245);
-  --overlay-shadow-hover: 0 2px 6px rgb(12 19 38 / 0.09), 0px 12px 28px -4px rgb(12 19 38 / 0.161);
+  --overlay-shadow-hover: 0 1px 3px rgb(12 19 38 / 0.06), 0 6px 16px -4px rgb(12 19 38 / 0.1);
+  --overlay-drawer-shadow-color: initial;
   --overlay-shadow-drawer: 0 2px 6px rgb(12 19 38 / 0.09), 0px 16px 36px -4px rgb(12 19 38 / 0.161);
+  --overlay-shadow-drawer-right: initial;
+  --overlay-shadow-drawer-down: initial;
+  --overlay-shadow-drawer-up: initial;
   --overlay-shadow-modal: 0 2px 6px rgb(12 19 38 / 0.09), 0px 20px 44px -4px rgb(12 19 38 / 0.161);
   --surface-shadow: 0 2px 10px -2px rgb(15 23 42 / 0.06), inset 0 1px 0 rgb(255 255 255 / 0.8);
   --button-s-padding-x: 12px;
@@ -717,6 +785,11 @@ textarea {
   --btn-secondary-shadow: 0 1px 0 rgb(15 23 42 / 0.2), 0 2px 4px rgb(15 23 42 / 0.08);
   --btn-material-depth: 1;
   --btn-state-duration: 120ms;
+  --btn-context-ink-strength: 80%;
+  --btn-context-plate-tint: 8%;
+  --btn-context-hover-tint: 12%;
+  --btn-context-active-tint: 16%;
+  --btn-context-border-tint: 28%;
   --btn-primary-contact-shadow: 0 2px 0 rgb(15 23 42 / 0.26), 0 4px 8px rgb(15 23 42 / 0.1);
   --btn-secondary-shadow-hover: 0 1px 0 rgb(15 23 42 / 0.2), 0 3px 6px rgb(15 23 42 / 0.1);
   --btn-secondary-shadow-active: none;
@@ -745,10 +818,13 @@ textarea {
   --avatar-group-overlap-factor: 1;
   --pill-border-width: 1px;
   --alert-border-width: 1px;
+  --alert-edge-width: 0px;
   --badge-dot-shadow: 0 0 8px currentColor;
   --kbd-cap-bg: #f0f3fa;
   --kbd-cap-border: #cdd5e5;
   --kbd-cap-shadow: inset 0 -1px 0 var(--kbd-cap-border), inset 0 1px 0 rgb(255 255 255 / 0.8);
+  --table-overlay-header-bg: #dfe3eb;
+  --table-row-rule: var(--border-subtle);
   --table-row-selected-bg: rgb(72 56 212 / 0.09);
   --auth-stage-aura: radial-gradient(
     60% 50% at 50% 0%,
@@ -839,6 +915,11 @@ textarea {
 }
 
 [data-theme='pixel-dark'] {
+  --disclosure-duration: 0ms;
+  --disclosure-divider-color: var(--border-default);
+  --tabs-feedback-duration: 0ms;
+  --tabs-overflow-fade: 0px;
+  --tabs-overflow-mask: none;
   --spinner-round-display: none;
   --spinner-pixel-display: inline;
   --progress-wait-base: var(--accent-signal);
@@ -849,6 +930,7 @@ textarea {
   --progress-tip-opacity: 0;
   --progress-tip-light: transparent;
   --progress-value-duration: 0ms;
+  --stepper-current-shadow: none;
   color-scheme: dark;
   --blockquote-rail-width: 3px;
   --blockquote-rail-style: double;
@@ -876,11 +958,16 @@ textarea {
   --overlay-rim-mask: none;
   --overlay-backdrop: none;
   --overlay-rim: none;
+  --overlay-rim-drawer-inline: initial;
   --overlay-shadow: 6px 6px 0px 0 rgb(2 4 6 / 0.878);
-  --overlay-shadow-tooltip: 4px 4px 0px 0 rgb(2 4 6 / 0.878);
+  --overlay-shadow-tooltip: 2px 2px 0px 0 rgb(2 4 6 / 0.878);
   --overlay-shadow-popover: 6px 6px 0px 0 rgb(2 4 6 / 0.878);
   --overlay-shadow-hover: 6px 6px 0px 0 rgb(2 4 6 / 0.878);
-  --overlay-shadow-drawer: -6px 0px 0px 0 rgb(2 4 6 / 0.878);
+  --overlay-drawer-shadow-color: rgb(2 4 6 / 0.878);
+  --overlay-shadow-drawer: -6px 0 0 0 var(--overlay-drawer-shadow-color);
+  --overlay-shadow-drawer-right: 6px 0 0 0 var(--overlay-drawer-shadow-color);
+  --overlay-shadow-drawer-down: 0 6px 0 0 var(--overlay-drawer-shadow-color);
+  --overlay-shadow-drawer-up: 0 -6px 0 0 var(--overlay-drawer-shadow-color);
   --overlay-shadow-modal: 6px 6px 0px 0 rgb(2 4 6 / 0.878);
   --surface-shadow: none;
   --button-s-padding-x: 10px;
@@ -902,6 +989,11 @@ textarea {
   --btn-secondary-shadow: none;
   --btn-material-depth: 0;
   --btn-state-duration: 0ms;
+  --btn-context-ink-strength: 80%;
+  --btn-context-plate-tint: 8%;
+  --btn-context-hover-tint: 12%;
+  --btn-context-active-tint: 16%;
+  --btn-context-border-tint: 44%;
   --btn-primary-contact-shadow: none;
   --btn-secondary-shadow-hover: none;
   --btn-secondary-shadow-active: none;
@@ -930,10 +1022,13 @@ textarea {
   --avatar-group-overlap-factor: 0;
   --pill-border-width: 1px;
   --alert-border-width: 1px;
+  --alert-edge-width: 2px;
   --badge-dot-shadow: none;
   --kbd-cap-bg: #0e1318;
   --kbd-cap-border: #41505e;
   --kbd-cap-shadow: inset 0 -2px 0 var(--kbd-cap-border);
+  --table-overlay-header-bg: var(--bg-overlay);
+  --table-row-rule: var(--border-default);
   --table-row-selected-bg: rgb(34 195 220 / 0.141);
   --auth-stage-aura: none;
   --motif-canvas-grid: radial-gradient(circle, rgb(255 255 255 / 0.06) 1px, transparent 1px);
@@ -1028,6 +1123,11 @@ textarea {
 }
 
 [data-theme='pixel-light'] {
+  --disclosure-duration: 0ms;
+  --disclosure-divider-color: var(--border-default);
+  --tabs-feedback-duration: 0ms;
+  --tabs-overflow-fade: 0px;
+  --tabs-overflow-mask: none;
   --spinner-round-display: none;
   --spinner-pixel-display: inline;
   --progress-wait-base: var(--accent-signal);
@@ -1038,6 +1138,7 @@ textarea {
   --progress-tip-opacity: 0;
   --progress-tip-light: transparent;
   --progress-value-duration: 0ms;
+  --stepper-current-shadow: none;
   color-scheme: light;
   --blockquote-rail-width: 3px;
   --blockquote-rail-style: double;
@@ -1065,11 +1166,16 @@ textarea {
   --overlay-rim-mask: none;
   --overlay-backdrop: none;
   --overlay-rim: none;
+  --overlay-rim-drawer-inline: initial;
   --overlay-shadow: 6px 6px 0px 0 rgb(15 20 25 / 0.188);
   --overlay-shadow-tooltip: 4px 4px 0px 0 rgb(15 20 25 / 0.188);
   --overlay-shadow-popover: 6px 6px 0px 0 rgb(15 20 25 / 0.188);
   --overlay-shadow-hover: 6px 6px 0px 0 rgb(15 20 25 / 0.188);
-  --overlay-shadow-drawer: -6px 0px 0px 0 rgb(15 20 25 / 0.188);
+  --overlay-drawer-shadow-color: rgb(15 20 25 / 0.188);
+  --overlay-shadow-drawer: -6px 0 0 0 var(--overlay-drawer-shadow-color);
+  --overlay-shadow-drawer-right: 6px 0 0 0 var(--overlay-drawer-shadow-color);
+  --overlay-shadow-drawer-down: 0 6px 0 0 var(--overlay-drawer-shadow-color);
+  --overlay-shadow-drawer-up: 0 -6px 0 0 var(--overlay-drawer-shadow-color);
   --overlay-shadow-modal: 6px 6px 0px 0 rgb(15 20 25 / 0.188);
   --surface-shadow: none;
   --button-s-padding-x: 10px;
@@ -1091,6 +1197,11 @@ textarea {
   --btn-secondary-shadow: none;
   --btn-material-depth: 0;
   --btn-state-duration: 0ms;
+  --btn-context-ink-strength: 80%;
+  --btn-context-plate-tint: 8%;
+  --btn-context-hover-tint: 12%;
+  --btn-context-active-tint: 16%;
+  --btn-context-border-tint: 44%;
   --btn-primary-contact-shadow: none;
   --btn-secondary-shadow-hover: none;
   --btn-secondary-shadow-active: none;
@@ -1119,10 +1230,13 @@ textarea {
   --avatar-group-overlap-factor: 0;
   --pill-border-width: 1px;
   --alert-border-width: 1px;
+  --alert-edge-width: 2px;
   --badge-dot-shadow: none;
   --kbd-cap-bg: #eaf0f4;
   --kbd-cap-border: #98a7b3;
   --kbd-cap-shadow: inset 0 -2px 0 var(--kbd-cap-border);
+  --table-overlay-header-bg: var(--bg-overlay);
+  --table-row-rule: var(--border-default);
   --table-row-selected-bg: rgb(9 108 124 / 0.09);
   --auth-stage-aura: none;
   --motif-canvas-grid: radial-gradient(circle, rgb(15 20 25 / 0.065) 1px, transparent 1px);
@@ -1217,8 +1331,15 @@ textarea {
 }
 
 :root,
+[data-theme] {
+  --btn-ghost-neutral-bg-hover: color-mix(in srgb, var(--fg-primary) 10%, transparent);
+}
+
+:root,
 [data-theme],
 [data-surface='base'] {
+  --table-sticky-header-bg: initial;
+  --action-context-ink: initial;
   --code-context-bg: initial;
   --code-context-fg: initial;
   --code-context-border: initial;
@@ -1239,6 +1360,8 @@ textarea {
 }
 
 [data-surface='overlay'] {
+  --table-sticky-header-bg: var(--table-overlay-header-bg);
+  --action-context-ink: initial;
   --code-context-bg: color-mix(in srgb, var(--neutral-soft-fg) var(--code-plate-tint), transparent);
   --code-context-fg: var(--neutral-soft-fg);
   --code-context-border: var(--neutral-border);
