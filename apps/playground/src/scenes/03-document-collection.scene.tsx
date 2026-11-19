@@ -222,6 +222,7 @@ function CollectionScene(): ReactElement {
   const [view, setView] = useState('list');
   const [selected, setSelected] = useState<readonly string[]>([rows[0].title, rows[1].title]);
   const [scope, setScope] = useState(true);
+  const [verifiedOnly, setVerifiedOnly] = useState(true);
   const [dateWindow, setDateWindow] = useState<DateRange>(initialWindow);
   const [verificationBaseline, setVerificationBaseline] = useState('');
   const [sort, setSort] = useState('verified');
@@ -251,7 +252,7 @@ function CollectionScene(): ReactElement {
       (row) =>
         tab !== 'drafts' &&
         (tab !== 'tier0' || row.tier === 'Tier-0') &&
-        (tab !== 'verified' || row.verifiedOn) &&
+        (!(verifiedOnly || tab === 'verified') || row.verifiedOn) &&
         (!verificationBaseline || row.verifiedOn >= verificationBaseline) &&
         (!hasWindow || (row.modified >= dateWindow[0] && row.modified <= dateWindow[1])),
     )
@@ -323,7 +324,15 @@ function CollectionScene(): ReactElement {
         rightAside={
           <AsidePanel title="Collection scope" side="right" width={360}>
             <InspectorSection title="Verification gates">
-              <Switch size="s" defaultChecked label="Verified only" />
+              <Switch
+                size="s"
+                checked={verifiedOnly}
+                label="Verified only"
+                onChange={(event) => {
+                  setVerifiedOnly(event.currentTarget.checked);
+                  setPage(1);
+                }}
+              />
               <Switch size="s" label="Include RFCs" />
               <DatePicker
                 size="s"
@@ -419,6 +428,7 @@ function CollectionScene(): ReactElement {
                 onClick={(event) => {
                   event.preventDefault();
                   setScope(true);
+                  setVerifiedOnly(true);
                   setDateWindow(emptyWindow);
                   setVerificationBaseline('');
                   changeTab('all');
