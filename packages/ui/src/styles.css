@@ -190,6 +190,8 @@ textarea {
   --kbd-cap-bg: #222b33;
   --kbd-cap-border: #3c4954;
   --kbd-cap-shadow: inset 0 -1px 0 var(--kbd-cap-border);
+  --table-overlay-header-bg: var(--bg-overlay);
+  --table-row-rule: var(--border-subtle);
   --table-row-selected-bg: rgb(226 131 101 / 0.161);
   --auth-stage-aura: none;
   --motif-canvas-grid: none;
@@ -390,6 +392,8 @@ textarea {
   --kbd-cap-bg: #f4ead8;
   --kbd-cap-border: #d6c5ac;
   --kbd-cap-shadow: inset 0 -1px 0 var(--kbd-cap-border);
+  --table-overlay-header-bg: var(--bg-overlay);
+  --table-row-rule: var(--border-subtle);
   --table-row-selected-bg: rgb(179 88 59 / 0.102);
   --auth-stage-aura: none;
   --motif-canvas-grid: none;
@@ -601,6 +605,8 @@ textarea {
   --kbd-cap-bg: #192030;
   --kbd-cap-border: #313b54;
   --kbd-cap-shadow: inset 0 -1px 0 var(--kbd-cap-border), inset 0 1px 0 rgb(255 255 255 / 0.08);
+  --table-overlay-header-bg: #101522;
+  --table-row-rule: var(--border-subtle);
   --table-row-selected-bg: rgb(84 69 229 / 0.18);
   --auth-stage-aura: radial-gradient(60% 50% at 50% 0%, rgb(84 69 229 / 0.22) 0%, transparent 100%);
   --motif-canvas-grid: none;
@@ -813,6 +819,8 @@ textarea {
   --kbd-cap-bg: #f0f3fa;
   --kbd-cap-border: #cdd5e5;
   --kbd-cap-shadow: inset 0 -1px 0 var(--kbd-cap-border), inset 0 1px 0 rgb(255 255 255 / 0.8);
+  --table-overlay-header-bg: #dfe3eb;
+  --table-row-rule: var(--border-subtle);
   --table-row-selected-bg: rgb(72 56 212 / 0.09);
   --auth-stage-aura: radial-gradient(
     60% 50% at 50% 0%,
@@ -1014,6 +1022,8 @@ textarea {
   --kbd-cap-bg: #0e1318;
   --kbd-cap-border: #41505e;
   --kbd-cap-shadow: inset 0 -2px 0 var(--kbd-cap-border);
+  --table-overlay-header-bg: var(--bg-overlay);
+  --table-row-rule: var(--border-default);
   --table-row-selected-bg: rgb(34 195 220 / 0.141);
   --auth-stage-aura: none;
   --motif-canvas-grid: radial-gradient(circle, rgb(255 255 255 / 0.06) 1px, transparent 1px);
@@ -1219,6 +1229,8 @@ textarea {
   --kbd-cap-bg: #eaf0f4;
   --kbd-cap-border: #98a7b3;
   --kbd-cap-shadow: inset 0 -2px 0 var(--kbd-cap-border);
+  --table-overlay-header-bg: var(--bg-overlay);
+  --table-row-rule: var(--border-default);
   --table-row-selected-bg: rgb(9 108 124 / 0.09);
   --auth-stage-aura: none;
   --motif-canvas-grid: radial-gradient(circle, rgb(15 20 25 / 0.065) 1px, transparent 1px);
@@ -1315,6 +1327,7 @@ textarea {
 :root,
 [data-theme],
 [data-surface='base'] {
+  --table-sticky-header-bg: initial;
   --action-context-ink: initial;
   --code-context-bg: initial;
   --code-context-fg: initial;
@@ -1336,6 +1349,7 @@ textarea {
 }
 
 [data-surface='overlay'] {
+  --table-sticky-header-bg: var(--table-overlay-header-bg);
   --action-context-ink: initial;
   --code-context-bg: color-mix(in srgb, var(--neutral-soft-fg) var(--code-plate-tint), transparent);
   --code-context-fg: var(--neutral-soft-fg);

@@ -21,7 +21,16 @@ import { Pagination } from '../prototypes/pagination/pagination.proto.js';
 import { SegmentedControl } from '../prototypes/segmented-control/segmented-control.proto.js';
 import { Select } from '../prototypes/select/select.proto.js';
 import { Checkbox, Switch } from '../prototypes/binary-controls/binary-controls.proto.js';
-import { Table, TableScroll } from '../prototypes/table/table.proto.js';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableColumnHeader,
+  TableHeader,
+  TableRow,
+  TableRowHeader,
+  TableScroll,
+} from '../prototypes/table/table.proto.js';
 import { TagGroup } from '../prototypes/tag/tag.proto.js';
 import type { TagGroupItem } from '../prototypes/tag/tag.proto.js';
 import { Text } from '../prototypes/text/text.proto.js';
@@ -432,11 +441,11 @@ function CollectionScene(): ReactElement {
                 <Text size="body-s">No drafts match this drill window.</Text>
               </Card>
             ) : view === 'list' ? (
-              <TableScroll>
-                <Table>
-                  <thead>
-                    <tr>
-                      <th>
+              <TableScroll aria-label="Runbook directory">
+                <Table aria-label="Runbook directory">
+                  <TableHeader>
+                    <TableRow>
+                      <TableCell align="center">
                         <Checkbox
                           size="s"
                           aria-label="Select all runbooks on this page"
@@ -450,57 +459,58 @@ function CollectionScene(): ReactElement {
                             )
                           }
                         />
-                      </th>
-                      <th>Runbook</th>
-                      <th>Tier</th>
-                      <th>Last drill</th>
-                      <th>Owner</th>
-                      <th aria-label="Actions" className="folio-runbook-menu-cell" />
-                    </tr>
-                  </thead>
-                  <tbody>
+                      </TableCell>
+                      <TableColumnHeader>Runbook</TableColumnHeader>
+                      <TableColumnHeader>Tier</TableColumnHeader>
+                      <TableColumnHeader>Last drill</TableColumnHeader>
+                      <TableColumnHeader>Owner</TableColumnHeader>
+                      <TableColumnHeader aria-label="Actions" className="folio-runbook-menu-cell" />
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
                     {visibleRows.map((row) => (
                       <RunbookMenu<HTMLTableRowElement>
                         key={row.title}
                         title={row.title}
                         onAction={setNotice}
                         target={(bindings, trigger, panel) => (
-                          <tr
-                            {...bindings}
-                            data-selected={selected.includes(row.title) || undefined}
-                          >
-                            <td>
+                          <TableRow {...bindings} selected={selected.includes(row.title)}>
+                            <TableCell align="center">
                               <Checkbox
                                 size="s"
                                 aria-label={`Select ${row.title}`}
                                 checked={selected.includes(row.title)}
                                 onChange={() => toggle(row.title)}
                               />
-                            </td>
-                            <td>
+                            </TableCell>
+                            <TableRowHeader>
                               <DocumentName>{row.title}</DocumentName>
-                            </td>
-                            <td>
+                            </TableRowHeader>
+                            <TableCell>
                               <Badge
                                 size="s"
                                 status={row.tier === 'Tier-0' ? 'warning' : 'neutral'}
                               >
                                 {row.tier}
                               </Badge>
-                            </td>
-                            <td>{row.date}</td>
-                            <td>
+                            </TableCell>
+                            <TableCell>{row.date}</TableCell>
+                            <TableCell>
                               <Person initials={row.initials} name={row.owner} />
-                            </td>
-                            <td className="folio-runbook-menu-cell">
+                            </TableCell>
+                            <TableCell
+                              align="center"
+                              control="action"
+                              className="folio-runbook-menu-cell"
+                            >
                               {trigger}
                               {panel}
-                            </td>
-                          </tr>
+                            </TableCell>
+                          </TableRow>
                         )}
                       />
                     ))}
-                  </tbody>
+                  </TableBody>
                 </Table>
               </TableScroll>
             ) : (
