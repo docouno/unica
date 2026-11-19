@@ -1,6 +1,8 @@
 # Table design reference
 
-Open `/?item=table` in the Workbench. The Table family compares records along two axes in plain documents, bounded registries, cards, and overlays. The prototype provides nine native parts for captions, row groups, rows, and cells. The scroll viewport is a companion.
+The visual and interaction design was approved on 2026-11-19. Open `/?item=table` in the Workbench for the prototype and implementation reference.
+
+The Table family compares records along two axes in plain documents, bounded registries, cards, and overlays. The prototype provides nine native parts for captions, row groups, rows, and cells. The scroll viewport is a companion.
 
 | Section                   | What to inspect                                                                                                                                                                                                           |
 | ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |

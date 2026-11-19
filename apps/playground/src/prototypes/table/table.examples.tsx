@@ -21,7 +21,7 @@ import {
   DrawerTitle,
   DrawerTrigger,
 } from '../dialog/dialog.proto.js';
-import { Empty } from '../empty/empty.proto.js';
+import { Empty, EmptyDescription, EmptyMedia, EmptyTitle } from '../empty/empty.proto.js';
 import { Input } from '../input/input.proto.js';
 import { Link } from '../link/link.proto.js';
 import { ContextMenu } from '../menu/context-menu.proto.js';
@@ -635,11 +635,13 @@ export function ResultExamples(): ReactElement {
               <TableRow>
                 <TableCell colSpan={2} className="table-example-feedback">
                   {state === 'empty' ? (
-                    <Empty
-                      title="No branches match"
-                      description="There are no open checks under the current filter."
-                      icon={<GitBranchIcon />}
-                    />
+                    <Empty size="s">
+                      <EmptyMedia icon={GitBranchIcon} />
+                      <EmptyTitle>No branches match</EmptyTitle>
+                      <EmptyDescription>
+                        There are no open checks under the current filter.
+                      </EmptyDescription>
+                    </Empty>
                   ) : (
                     <Alert status="danger" size="s">
                       <AlertTitle>Branch checks could not load</AlertTitle>
