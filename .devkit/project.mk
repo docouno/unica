@@ -10,3 +10,4 @@ build-playground: build/packages/ui
 dev-playground: build/packages/ui
 setup/packages/ui: setup-node-workspace
 package/packages/ui: build/packages/ui
+DEVKIT_EXPECTED_PLAN := a898df36b9d7b437a63fa78a886596577e2f891e427fd26ee97afd840b55d788

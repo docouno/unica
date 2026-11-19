@@ -3,15 +3,33 @@ include .devkit/runtime/toolchains.env
 
 VISUAL_IMAGE := devkit-visual-desktop:$(DEVKIT_DESKTOP_RECIPE_HASH)
 PLAYWRIGHT_CACHE := $(or $(XDG_CACHE_HOME),$(HOME)/.cache)/ms-playwright
+VISUAL_MAKE = env -u MAKEFLAGS -u MFLAGS -u MAKEOVERRIDES -u GNUMAKEFLAGS $(MAKE) --no-print-directory
 
 .PHONY: visual-setup visual
 
 visual-setup:
-	@# Validate accepted inputs and the installed graph before reusing dependencies.
-	@DEVKIT_TARGET_COMPONENT=apps/playground sh $(devkit_loader) setup >/dev/null 2>&1 && \
-		sh $(devkit_loader) exec --component apps/playground -- \
-			node scripts/visual-ready.mjs >/dev/null 2>&1 || \
-		$(MAKE) setup-playground
+	@# Validate accepted inputs/receipts and real pnpm resolution before reusing dependencies.
+	@mkdir -p .devkit/cache
+	@preflight_err="$$(mktemp .devkit/cache/visual-preflight.XXXXXX)" || exit 1; \
+	trap 'rm -f "$$preflight_err"' EXIT; \
+	if ! ( $(VISUAL_MAKE) doctor >/dev/null 2>"$$preflight_err" && \
+		$(VISUAL_MAKE) exec app=playground command='node scripts/visual-ready.mjs' >/dev/null 2>"$$preflight_err" ); then \
+		if ! $(VISUAL_MAKE) setup app=playground; then \
+			if [ -s "$$preflight_err" ]; then \
+				printf '%s\n' 'visual-setup: initial preflight failure:' >&2; \
+				cat "$$preflight_err" >&2; \
+			fi; \
+			exit 1; \
+		fi; \
+		$(VISUAL_MAKE) doctor || exit 1; \
+		if ! $(VISUAL_MAKE) exec app=playground command='node scripts/visual-ready.mjs'; then \
+			printf '%s\n' \
+				'visual-setup: renderer dependency probe still failed after make setup.' \
+				'pnpm repeat install can skip missing files inside an existing node_modules tree.' \
+				'Recover manually with: rm -rf node_modules apps/*/node_modules packages/*/node_modules && make setup' >&2; \
+			exit 1; \
+		fi; \
+	fi
 	@docker image inspect $(VISUAL_IMAGE) >/dev/null 2>&1 || \
 		docker build -f .devkit/runtime/desktop.Dockerfile -t $(VISUAL_IMAGE) .devkit/runtime
 	@mkdir -p "$(PLAYWRIGHT_CACHE)"
@@ -33,7 +51,7 @@ visual-setup:
 				-v "$(PLAYWRIGHT_CACHE):/ms-playwright" \
 				-w /workspace/apps/playground \
 				$(VISUAL_IMAGE) \
-				npx --no-install playwright-core install chromium --only-shell; \
+				node ./node_modules/playwright-core/cli.js install chromium --only-shell; \
 		fi'
 
 # The renderer resolves workspace package exports to source through Vite.

@@ -1,0 +1,8 @@
+packages:
+- apps/playground
+- packages/ui
+nodeLinker: isolated
+packageImportMethod: hardlink
+verifyDepsBeforeRun: false
+minimumReleaseAgeExclude:
+- "@docouno/env@0.5.1"

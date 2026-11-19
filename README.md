@@ -39,8 +39,9 @@ The playground includes all ten [Folio product scenes](docs/compositions/folio.m
 
 ```text
 unica/
+├── .config/wt.toml    # Worktrunk hooks for sticky stand reservation and cleanup
 ├── Makefile
-├── compose.yaml
+├── pnpm-workspace.yaml
 ├── packages/
 │   └── ui/            # @docouno/unica library source, CSS tokens, and themes
 ├── apps/
@@ -60,15 +61,18 @@ make dev app=playground
 
 | Command | Purpose |
 | --- | --- |
-| `make setup` | Prepare pinned container images and workspace dependencies |
+| `make setup` | Prepare pinned container images and pnpm workspace dependencies |
+| `make doctor` | Verify accepted images, workspace receipts, disk space, and invariants |
+| `make sync [reconcile=1] [preview=1]` | Synchronize workspace projections and `pnpm-lock.yaml` after manifest edits |
 | `make check` | Run formatting, lint, `isolatedDeclarations` typecheck, and gates |
 | `make fix` | Apply formatting and lint autofixes |
 | `make test` | Run unit and component test suites |
 | `make build` | Build `packages/ui` and `apps/playground` |
 | `make package` | Pack `@docouno/unica` and verify ESM/TypeScript exports |
-| `make dev app=playground` | Start the interactive 6-preset Vite workbench |
+| `make dev app=playground` / `make up app=playground headless=1` | Start the interactive 6-preset Vite workbench with per-checkout sticky host ports |
+| `make info [json=1]` | Show checkout readiness, running services, and preview addresses |
+| `make down [cleanup=1]` | Stop services (keep port leases by default; pass `cleanup=1` to release them) |
 | `make visual` | Render deterministic `2x` PNG screenshots into `.artifacts/visual/` |
-| `make status` / `make down` | Show active ports or stop running services |
 
 ## Documentation
 

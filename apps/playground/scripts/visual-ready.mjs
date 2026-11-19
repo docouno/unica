@@ -1,18 +1,31 @@
-import { spawnSync } from 'node:child_process';
-import { readFileSync } from 'node:fs';
+import { accessSync, constants, realpathSync } from 'node:fs';
+import { resolve } from 'node:path';
 import process from 'node:process';
+import { fileURLToPath } from 'node:url';
 
-const app = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8'));
-const result = spawnSync(
-  'npm',
-  ['ls', '--all', '--offline', '--json', '--workspaces', '--include-workspace-root'],
-  { encoding: 'utf8', maxBuffer: 8 * 1024 * 1024 },
-);
+const appRoot = resolve(import.meta.dirname, '..');
+const requiredSpecifiers = ['playwright-core', 'vite', '@vitejs/plugin-react', '@docouno/env/vite'];
 
-if (result.status !== 0) {
+try {
+  for (const specifier of requiredSpecifiers) {
+    const resolvedPath = realpathSync(fileURLToPath(import.meta.resolve(specifier)));
+    accessSync(resolvedPath, constants.R_OK);
+  }
+
+  const playwrightCliPath = realpathSync(resolve(appRoot, 'node_modules/playwright-core/cli.js'));
+  accessSync(playwrightCliPath, constants.R_OK);
+
+  const unicaPkgPath = realpathSync(
+    fileURLToPath(import.meta.resolve('@docouno/unica/package.json')),
+  );
+  const expectedUnicaPkgPath = realpathSync(resolve(appRoot, '../../packages/ui/package.json'));
+  if (unicaPkgPath !== expectedUnicaPkgPath) {
+    throw new Error(
+      `@docouno/unica/package.json resolved to ${unicaPkgPath}, expected ${expectedUnicaPkgPath}`,
+    );
+  }
+} catch (error) {
+  const message = error instanceof Error ? error.message : String(error);
+  process.stderr.write(`visual-ready: ${message}\n`);
   process.exit(1);
 }
-
-// npm can report success for an empty tree when workspace links are missing.
-const tree = JSON.parse(result.stdout);
-process.exit(Object.hasOwn(tree.dependencies ?? {}, app.name) ? 0 : 1);
