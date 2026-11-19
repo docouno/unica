@@ -1,0 +1,54 @@
+.stepper-example,
+.stepper-example-panel-copy {
+  display: grid;
+  gap: var(--space-8);
+  min-inline-size: 0;
+}
+
+.stepper-example-stack,
+.stepper-example-layouts {
+  display: grid;
+  max-inline-size: 60rem;
+  gap: var(--space-24);
+}
+
+.stepper-example-layouts {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 17rem), 1fr));
+  align-items: start;
+}
+
+.stepper-example-journey {
+  display: grid;
+  max-inline-size: 48rem;
+  gap: var(--space-24);
+}
+
+.stepper-example-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-8);
+}
+
+.stepper-example-overlay {
+  inline-size: min(100%, 23rem);
+  min-inline-size: 0;
+  box-sizing: border-box;
+  padding: var(--surface-m-padding);
+  border: 1px solid var(--overlay-border);
+  border-radius: var(--surface-m-radius);
+  background: var(--bg-overlay);
+  box-shadow: var(--overlay-shadow);
+  backdrop-filter: var(--overlay-backdrop);
+}
+
+.stepper-example-compact {
+  inline-size: min(100%, 320px);
+}
+
+.stepper-example-vertical-sizes {
+  display: grid;
+  max-inline-size: 60rem;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 12rem), 1fr));
+  align-items: start;
+  gap: var(--space-24);
+}
