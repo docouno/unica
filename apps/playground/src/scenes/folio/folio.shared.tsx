@@ -23,6 +23,7 @@ import { Code, CodeBlock } from '../../prototypes/code/code.proto.js';
 import { Blockquote } from '../../prototypes/blockquote/blockquote.proto.js';
 import { Alert, AlertTitle, AlertDescription } from '../../prototypes/alert/alert.proto.js';
 import { Icon } from '../../prototypes/icon/icon.proto.js';
+import { List, ListItem } from '../../prototypes/list/list.proto.js';
 import {
   Table,
   TableBody,
@@ -340,13 +341,13 @@ export function RunbookArticle({ compact = false }: { readonly compact?: boolean
         </AlertDescription>
       </Alert>
       {!compact && (
-        <ul className="folio-checklist">
-          <li>
+        <List className="folio-checklist">
+          <ListItem>
             Verify <Code>pg_stat_replication</Code> reports <Code>sync_state = sync</Code> on
             standby
-          </li>
-          <li>Pause PgBouncer writer pools and confirm zero active DDL locks</li>
-        </ul>
+          </ListItem>
+          <ListItem>Pause PgBouncer writer pools and confirm zero active DDL locks</ListItem>
+        </List>
       )}
       {!compact && (
         <section className="folio-stack">

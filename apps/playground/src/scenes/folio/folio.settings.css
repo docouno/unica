@@ -61,25 +61,6 @@
   min-inline-size: 0;
 }
 
-.folio-connector-installed {
-  min-block-size: 186px;
-}
-
-.folio-connector-installed .folio-connector-icon {
-  inline-size: 32px;
-  block-size: 32px;
-}
-
-.folio-connector-installed-title {
-  --text-size-body-m: var(--text-size-body-s);
-  --text-size-body-m-lh: var(--text-size-body-s-lh);
-}
-
-.folio-connector-installed .folio-connector-footer {
-  padding-block-start: var(--space-8);
-  border-block-start: 0;
-}
-
 .folio-connector-result-status {
   position: absolute;
   inline-size: 1px;

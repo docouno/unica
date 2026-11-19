@@ -340,7 +340,6 @@
 }
 .folio-activity-meta {
   text-align: end;
-  align-content: start;
 }
 .folio-revision-diff {
   color: var(--status-success-soft-fg);
@@ -426,14 +425,8 @@
   border-block-start: 1px solid var(--border-subtle);
 }
 .folio-checklist {
-  display: grid;
-  gap: var(--space-8);
-  padding-inline-start: var(--space-24);
-  margin: 0;
   font-size: var(--text-size-body-s);
-}
-.folio-checklist li::marker {
-  color: var(--status-success-signal);
+  line-height: var(--text-size-body-s-lh);
 }
 .folio-toast-dock {
   position: absolute;
@@ -656,9 +649,6 @@
   }
   .folio-activity-row {
     gap: var(--space-8);
-  }
-  .folio-activity-meta {
-    max-inline-size: 75px;
   }
   .folio-person {
     flex-wrap: wrap;
