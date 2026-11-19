@@ -10,24 +10,34 @@ All toolchains run inside pinned Devkit containers on Linux x86_64 with Docker E
 
 | Command | Purpose |
 | --- | --- |
-| `make setup` | Prepare accepted container images and workspace dependencies |
-| `make sync [reconcile=1] [preview=1]` | Synchronize workspace manifests and optionally reconcile lockfiles in-container |
+| `make setup` | Prepare accepted container images and pnpm workspace dependencies |
+| `make doctor` | Verify accepted images, receipts, disk space, and project invariants |
+| `make sync [reconcile=1] [preview=1]` | Synchronize workspace projections and `pnpm-lock.yaml` after manual manifest or `.npmrc` edits |
 | `make check` | Run read-only formatting, lint, `isolatedDeclarations` typecheck, and gates |
 | `make fix` | Apply deterministic formatting and lint autofixes |
 | `make test` | Run unit and component test suites across registered components |
 | `make build` | Build `packages/ui` and `apps/playground` |
 | `make package` | Pack `@docouno/unica` and verify exports (`publint` + `attw`) |
-| `make dev app=playground` | Start the interactive 6-preset Vite workbench |
+| `make dev app=playground` / `make up app=playground headless=1` | Start the interactive 6-preset Vite workbench (foreground or background) with sticky per-checkout host ports |
+| `make info [json=1]` | Show checkout readiness, running services, and confirmed preview addresses (`make status` is a quiet alias) |
+| `make down [cleanup=1]` | Stop services while preserving port leases; pass `cleanup=1` to release leases after verified container cleanup |
 | `make visual` | Render deterministic `2x` PNG screenshots (`item=`, `mode=6up\|focus`, `theme=`, `surface=auto\|base\|overlay`, `section=`, `vp=`, `scale=`, `dir=`, `raw=0\|1`, `out=`) |
 
-Scope commands during iteration with `package=ui` or `app=playground` (for example `make check package=ui` or `make test package=ui`). Checks and builds keep source, configuration, and lockfiles read-only. To modify dependencies with the accepted toolchain:
+Scope commands during iteration with `package=ui` or `app=playground` (for example `make check package=ui` or `make test package=ui`). Checks and builds keep source, configuration, and lockfiles read-only.
+
+To add or update dependencies with the accepted pnpm toolchain (use `app=playground` for the playground, or omit the selector and pass `-w` for the root Node workspace):
 
 ```sh
-sh .devkit/runtime/devkit.sh cli exec --component packages/ui --write --network bridge -- npm install <pkg>
-make sync reconcile=1
+make exec package=ui write=1 network=bridge command='pnpm add <pkg> --lockfile-only --ignore-scripts'
 make setup
 make check
 ```
+
+After manual edits to `package.json` or `.npmrc` (including registry dependencies or registry routes), optionally preview with `make sync preview=1`, then run `make sync` followed by `make setup` (`make sync` runs offline JSON sync or online resolution when registry dependencies change). Use `make sync reconcile=1` only for a demonstrated peer or transitive lock conflict after inspecting the planned delta with `make sync reconcile=1 preview=1`, followed by `make setup`.
+
+Development stands lease a sticky loopback port per checkout (retained across ordinary `make down` and released via `make down cleanup=1`), so multiple checkouts run side by side without collisions. Loopback URLs work out of the box; to publish reverse-proxied URLs, set `DEVKIT_PREVIEW_URL_TEMPLATE` (an HTTP/HTTPS template with `{port}`, `{service}`, `{branch}`/`{slug}`) in the process environment or a Git-ignored root `.env` file, and inspect confirmed addresses with `make info`. The Vite plugin (`@docouno/env/vite`) accepts the exact configured preview hosts automatically while preserving loopback access.
+
+Worktrunk project hooks live in `.config/wt.toml` (`pre-start` reserves sticky ports, optional `post-start` starts the stand when `DEVKIT_WT_AUTOSTART=1`, and `pre-remove` verifies ownership and cleans up stand resources before worktree removal). In non-interactive or agent sessions, pass `--yes` (`wt switch --create --no-cd --yes <branch>`, `wt remove --foreground --yes <branch>`) or pre-approve hooks once via `wt config approvals add --yes`. For other worktree workflows, call `sh .devkit/runtime/devkit.sh cli stand reserve .` and `sh .devkit/runtime/devkit.sh cli stand remove .` directly.
 
 ## Repository Structure
 

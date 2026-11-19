@@ -1,8 +1,4 @@
 {
   "name": "unica",
-  "private": true,
-  "workspaces": [
-    "apps/playground",
-    "packages/ui"
-  ]
+  "private": true
 }

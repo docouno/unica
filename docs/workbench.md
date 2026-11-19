@@ -53,12 +53,11 @@ Set `surface: 'overlay'` and `overlayStage: true` for a floating context. The wo
 
 ```sh
 make setup
-make build package=ui
 make up app=playground headless=1
-make status
+make info
 ```
 
-Open the reported URL with `/?item=text` or `/?item=title`. Each worktree receives its own host port. Use `6-up Matrix` to compare presets and `Live Focus` to inspect at full size. Check Auto/Base/Overlay surfaces, 360/768/1280/1440px containers, 120% Text, and RTL.
+Open the reported URL with `/?item=text` or `/?item=title`. Each checkout leases its own sticky loopback port (`make up` builds `packages/ui` automatically before starting the dev server, and Vite serves library source changes via HMR). Loopback preview works out of the box; to route through an HTTP(S) reverse proxy, set `DEVKIT_PREVIEW_URL_TEMPLATE` (using `{port}`, `{service}`, `{branch}`/`{slug}`) in the process environment or a Git-ignored root `.env` file, and confirm the active address with `make info`. Use `6-up Matrix` to compare presets and `Live Focus` to inspect at full size. Check Auto/Base/Overlay surfaces, 360/768/1280/1440px containers, 120% Text, and RTL.
 
 ```sh
 make visual item=text section=scale out=text-scale.png
@@ -66,11 +65,11 @@ make visual item=title section=modal mode=focus theme=frost-dark vp=1280 out=tit
 make visual item=title section=wrapping mode=focus theme=pixel-light vp=360 scale=120 dir=rtl out=title-stress.png
 ```
 
-`make visual` checks workspace readiness through the pinned Devkit engine and prepares missing dependencies and Chromium automatically. Prepared workspaces reuse their dependencies; Vite resolves library exports directly to source, so screenshots need no library build and include current source edits. Dependency or environment changes remain subject to Devkit validation; follow its `make sync` or `make setup` guidance if required. The capture itself runs offline at 2× resolution. Run repository checks for the affected code and dependencies as described in [Definition of Done](../AGENTS.md#definition-of-done); screenshots and package checks establish different things.
+`make visual` validates accepted inputs and receipts through `make doctor`, then verifies real pnpm resolution for the renderer entry points and the local `@docouno/unica` workspace link (`scripts/visual-ready.mjs`) without requiring `packages/ui/dist`. Missing workspace dependencies or headless Chromium are prepared automatically; prepared checkouts reuse their environment without reinstalling dependencies or browsers. If the post-setup probe still fails (for example, when missing files or symlinks inside `node_modules` are skipped by pnpm's `optimistic-repeat-install`), `visual-setup` exits loudly with manual recovery instructions instead of deleting `node_modules`. Vite resolves library exports directly to source, so screenshots need no library build and include current source edits. Dependency or environment changes remain subject to Devkit validation; follow its `make sync` or `make setup` guidance if required. The capture itself runs offline at 2× resolution. Run repository checks for the affected code and dependencies as described in [Definition of Done](../AGENTS.md#definition-of-done); screenshots and package checks establish different things.
 
 Captures keep Chromium's native inner scrollbars visible. The renderer paints the full document without clipping the root frame, then captures it directly: Chromium's usual full-page path hides scrollbars and changes their occupied space. The 900px layout viewport and viewport-relative units remain unchanged. The outer document scrollbar is omitted; inspect that scrollbar in the live browser. Inner overflow and classic scrollbar geometry remain visible as a platform sample, not a promise of identical macOS or touch rendering.
 
-Files go to Git-ignored `.artifacts/visual/`. `raw=0` includes the workbench controls; the default captures artboards. Keep other temporary evidence in `.artifacts/<task>/` inside the checkout. Stop the preview with `make down` when it is no longer needed.
+Files go to Git-ignored `.artifacts/visual/`. `raw=0` includes the workbench controls; the default captures artboards. Keep other temporary evidence in `.artifacts/<task>/` inside the checkout. Stop the preview with `make down` (keeping its sticky port lease) or `make down cleanup=1` to release the lease when it is no longer needed. When managing parallel worktrees with [Worktrunk](https://worktrunk.dev/), `.config/wt.toml` hooks reserve ports on creation and clean up stand resources before removal (pass `--yes` in non-interactive sessions or run `wt config approvals add --yes` once).
 
 ## Boundaries and Handoff
 
