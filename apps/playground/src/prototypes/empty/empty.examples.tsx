@@ -38,8 +38,8 @@ function EmptySizes(): ReactElement {
           </Text>
           <Empty size={size}>
             <EmptyMedia icon={ArchiveBoxIcon} />
-            <EmptyTitle>Nothing archived</EmptyTitle>
-            <ExampleDescription>Archived items will appear here.</ExampleDescription>
+            <EmptyTitle>No archives</EmptyTitle>
+            <ExampleDescription>Archived items appear here.</ExampleDescription>
           </Empty>
         </div>
       ))}
@@ -47,13 +47,13 @@ function EmptySizes(): ReactElement {
   );
 }
 
-function EmptyReasons(): ReactElement {
+function EmptyCollections(): ReactElement {
   return (
     <div className="empty-example-grid empty-example-reasons">
       <Empty>
         <EmptyMedia icon={TrayIcon} />
-        <EmptyTitle>No items yet</EmptyTitle>
-        <ExampleDescription>Items appear here when they’re shared with you.</ExampleDescription>
+        <EmptyTitle>Nothing shared yet</EmptyTitle>
+        <ExampleDescription>Items shared with you will appear here.</ExampleDescription>
       </Empty>
       <Empty>
         <EmptyMedia icon={FolderSimpleIcon} color="accent" />
@@ -63,12 +63,17 @@ function EmptyReasons(): ReactElement {
           <Button iconLeft={PlusIcon}>Create collection</Button>
         </EmptyActions>
       </Empty>
+    </div>
+  );
+}
+
+function EmptyActivity(): ReactElement {
+  return (
+    <div className="empty-example-grid empty-example-reasons">
       <Empty>
         <EmptyMedia icon={BellSlashIcon} color="info" />
         <EmptyTitle>Notifications are paused</EmptyTitle>
-        <ExampleDescription>
-          New activity will appear here when notifications resume.
-        </ExampleDescription>
+        <ExampleDescription>Resume notifications to see new activity here.</ExampleDescription>
         <EmptyActions>
           <Button variant="secondary" tone="neutral">
             Resume notifications
@@ -79,13 +84,20 @@ function EmptyReasons(): ReactElement {
         <EmptyMedia icon={CheckIcon} color="success" />
         <EmptyTitle>You’re all caught up</EmptyTitle>
         <ExampleDescription>
-          New requests will appear here when they’re ready for review.
+          New requests will appear here when they need review.
         </ExampleDescription>
       </Empty>
+    </div>
+  );
+}
+
+function EmptyUnavailable(): ReactElement {
+  return (
+    <div className="empty-example-grid empty-example-reasons">
       <Empty>
         <EmptyMedia icon={LockKeyIcon} color="warning" />
         <EmptyTitle>This collection is private</EmptyTitle>
-        <ExampleDescription>Ask the owner for access to see the documents.</ExampleDescription>
+        <ExampleDescription>The owner can grant you access.</ExampleDescription>
         <EmptyActions>
           <Button variant="secondary" tone="neutral">
             Request access
@@ -95,9 +107,7 @@ function EmptyReasons(): ReactElement {
       <Empty>
         <EmptyMedia icon={CloudSlashIcon} color="danger" />
         <EmptyTitle>Couldn’t load reports</EmptyTitle>
-        <ExampleDescription>
-          We couldn’t reach the report service. Try again in a moment.
-        </ExampleDescription>
+        <ExampleDescription>The report service didn’t respond.</ExampleDescription>
         <EmptyActions>
           <Button variant="secondary" tone="neutral">
             Try again
@@ -112,13 +122,11 @@ function EmptyPlacement(): ReactElement {
   return (
     <div className="empty-example-grid empty-example-placement">
       <Card size="m">
-        <CardTitle>Scheduled exports</CardTitle>
+        <CardTitle>Exports</CardTitle>
         <Empty size="s" align="start">
           <EmptyMedia icon={ArchiveBoxIcon} />
-          <EmptyTitle as="h4">No exports scheduled</EmptyTitle>
-          <ExampleDescription>
-            Schedule an export to send a copy of your data automatically.
-          </ExampleDescription>
+          <EmptyTitle as="h4">Nothing scheduled</EmptyTitle>
+          <ExampleDescription>Pick a time to send a copy of your data.</ExampleDescription>
           <EmptyActions>
             <Button size="s" variant="secondary" tone="neutral">
               Schedule export
@@ -443,6 +451,8 @@ function EmptyOverlay(): ReactElement {
 export type EmptyExampleSection =
   | 'sizes'
   | 'reasons'
+  | 'activity'
+  | 'unavailable'
   | 'placement'
   | 'media'
   | 'routes'
@@ -453,7 +463,9 @@ export type EmptyExampleSection =
 
 const examples: Record<EmptyExampleSection, () => ReactElement> = {
   sizes: EmptySizes,
-  reasons: EmptyReasons,
+  reasons: EmptyCollections,
+  activity: EmptyActivity,
+  unavailable: EmptyUnavailable,
   placement: EmptyPlacement,
   media: EmptyIllustrations,
   routes: EmptyRoutes,
@@ -474,7 +486,7 @@ export default function EmptyExamples({
   return (
     <div className="empty-example-stack">
       {note && (
-        <Text size="caption-l" color="muted">
+        <Text size="caption-l" color="subtle">
           <bdi>{note}</bdi>
         </Text>
       )}

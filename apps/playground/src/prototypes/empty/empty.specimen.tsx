@@ -17,10 +17,21 @@ export default defineSpecimen({
     { id: 'sizes', title: 'Sizes', kind: 'matrix', render: () => example('sizes') },
     {
       id: 'reasons',
-      title: 'Reasons and actions',
+      title: 'Empty collections',
       kind: 'states',
-      render: () =>
-        example('reasons', 'Fixed examples. Search and Retry show the live interactions.'),
+      render: () => example('reasons', 'Static examples.'),
+    },
+    {
+      id: 'activity',
+      title: 'Activity states',
+      kind: 'states',
+      render: () => example('activity', 'Static examples.'),
+    },
+    {
+      id: 'unavailable',
+      title: 'Access and loading failures',
+      kind: 'states',
+      render: () => example('unavailable', 'Fixed examples. Retry shows the live recovery path.'),
     },
     {
       id: 'placement',

@@ -90,12 +90,22 @@
 }
 
 .folio-webhook-card.card-proto {
-  min-block-size: 288px;
+  min-block-size: 320px;
+}
+
+.folio-webhook-card.card-proto::before {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
   background-image: var(--motif-canvas-grid);
   background-size: 24px 24px;
+  opacity: 0.45;
+  pointer-events: none;
+  content: '';
 }
 
 .folio-webhook-stage {
+  position: relative;
   display: grid;
   flex: 1;
   align-content: center;
@@ -129,7 +139,7 @@
 
 @container artboard (max-width: 480px) {
   .folio-webhook-card.card-proto {
-    min-block-size: max(288px, calc(280px * var(--font-scale)));
+    min-block-size: max(320px, calc(280px * var(--font-scale)));
   }
 }
 

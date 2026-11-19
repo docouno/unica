@@ -2,14 +2,14 @@
   --empty-medallion-size: 56px;
   --empty-glyph-size: 32px;
   --empty-media-size: 120px;
-  --empty-media-gap: var(--space-16);
-  --empty-copy-gap: var(--space-4);
-  --empty-action-gap: var(--space-16);
-  --empty-max-width: 42ch;
+  --empty-media-gap: 18px;
+  --empty-copy-gap: var(--space-8);
+  --empty-action-gap: var(--space-24);
+  --empty-max-width: 38ch;
   --empty-title-size: var(--text-size-heading-m);
   --empty-title-line: var(--text-size-heading-m-lh);
-  --empty-body-size: var(--text-size-body-m);
-  --empty-body-line: var(--text-size-body-m-lh);
+  --empty-body-size: var(--text-size-body-s);
+  --empty-body-line: var(--text-size-body-s-lh);
 
   display: flex;
   flex-direction: column;
@@ -26,22 +26,25 @@
   --empty-glyph-size: 24px;
   --empty-media-size: 80px;
   --empty-media-gap: var(--space-12);
-  --empty-action-gap: var(--space-12);
+  --empty-copy-gap: 6px;
+  --empty-action-gap: var(--space-16);
+  --empty-max-width: 34ch;
   --empty-title-size: var(--text-size-heading-s);
   --empty-title-line: var(--text-size-heading-s-lh);
-  --empty-body-size: var(--text-size-body-s);
-  --empty-body-line: var(--text-size-body-s-lh);
 }
 
 .empty-proto[data-size='l'] {
   --empty-medallion-size: 72px;
   --empty-glyph-size: 40px;
   --empty-media-size: 160px;
-  --empty-media-gap: 20px;
-  --empty-copy-gap: var(--space-8);
-  --empty-action-gap: var(--space-24);
+  --empty-media-gap: var(--space-24);
+  --empty-copy-gap: 10px;
+  --empty-action-gap: var(--space-32);
+  --empty-max-width: 42ch;
   --empty-title-size: var(--text-size-heading-xl);
   --empty-title-line: var(--text-size-heading-xl-lh);
+  --empty-body-size: var(--text-size-body-m);
+  --empty-body-line: var(--text-size-body-m-lh);
 }
 
 .empty-proto[data-align='start'] {
@@ -84,14 +87,18 @@
 
 .empty-description-proto {
   max-inline-size: min(100%, var(--empty-max-width));
-  color: var(--fg-muted);
+  color: color-mix(in oklab, var(--fg-subtle) 80%, var(--fg-muted));
   font-size: var(--empty-body-size);
   line-height: var(--empty-body-line);
+  text-wrap: pretty;
+}
+
+.empty-proto[data-align='center'] > .empty-description-proto {
+  text-wrap: balance;
 }
 
 .empty-media-proto[data-kind='medallion'] {
-  --empty-media-ink: var(--fg-muted);
-  --empty-media-tint: var(--neutral-soft-fg);
+  --empty-media-signal: var(--fg-subtle);
 
   display: grid;
   place-items: center;
@@ -100,34 +107,29 @@
   aspect-ratio: 1;
   border: var(--pill-border-width) solid var(--card-border);
   border-radius: var(--radius-full);
-  background: color-mix(in srgb, var(--empty-media-tint) 10%, transparent);
-  color: var(--empty-media-ink);
+  background: color-mix(in srgb, var(--empty-media-signal) 6%, transparent);
+  color: color-mix(in oklab, var(--empty-media-signal) 76%, var(--fg-subtle));
   font-size: var(--empty-glyph-size);
 }
 
 .empty-media-proto[data-color='accent'] {
-  --empty-media-ink: var(--accent-soft-fg);
-  --empty-media-tint: var(--empty-media-ink);
+  --empty-media-signal: var(--accent-soft-fg);
 }
 
 .empty-media-proto[data-color='info'] {
-  --empty-media-ink: var(--status-info-soft-fg);
-  --empty-media-tint: var(--empty-media-ink);
+  --empty-media-signal: var(--status-info-soft-fg);
 }
 
 .empty-media-proto[data-color='success'] {
-  --empty-media-ink: var(--status-success-soft-fg);
-  --empty-media-tint: var(--empty-media-ink);
+  --empty-media-signal: var(--status-success-soft-fg);
 }
 
 .empty-media-proto[data-color='warning'] {
-  --empty-media-ink: var(--status-warning-soft-fg);
-  --empty-media-tint: var(--empty-media-ink);
+  --empty-media-signal: var(--status-warning-soft-fg);
 }
 
 .empty-media-proto[data-color='danger'] {
-  --empty-media-ink: var(--status-danger-soft-fg);
-  --empty-media-tint: var(--empty-media-ink);
+  --empty-media-signal: var(--status-danger-soft-fg);
 }
 
 .empty-media-proto[data-kind='illustration'] {
@@ -164,6 +166,12 @@
 
 :is(.empty-proto, .empty-media-proto, .empty-actions-proto)[hidden] {
   display: none;
+}
+
+@media (prefers-contrast: more) {
+  .empty-description-proto {
+    color: var(--fg-secondary);
+  }
 }
 
 @media (forced-colors: active) {

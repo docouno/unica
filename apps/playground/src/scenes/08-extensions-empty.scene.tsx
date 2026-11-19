@@ -369,10 +369,7 @@ function ExtensionsScene(): ReactElement {
                       No webhook sandboxes yet
                     </EmptyTitle>
                     <EmptyDescription>
-                      <bdi>
-                        Test signed events in an isolated endpoint before sending them to
-                        production.
-                      </bdi>
+                      <bdi>Test signed events before routing them to production.</bdi>
                     </EmptyDescription>
                     <EmptyActions>
                       <Button

@@ -27,14 +27,14 @@ Arrange the slots in reading order from media and title through description and 
 | ------------------------------- | ---------------------- | ---------------------- | ----------------------- |
 | Medallion / glyph               | 40 / 24px              | 56 / 32px              | 72 / 40px               |
 | Artwork maximum per axis        | 80px                   | 120px                  | 160px                   |
-| Heading / description           | `heading-s` / `body-s` | `heading-m` / `body-m` | `heading-xl` / `body-m` |
-| Media to first visible text     | 12px                   | 16px                   | 20px                    |
-| Title to description            | 4px                    | 4px                    | 8px                     |
-| Last visible content to actions | 12px                   | 16px                   | 24px                    |
+| Heading / description           | `heading-s` / `body-s` | `heading-m` / `body-s` | `heading-xl` / `body-m` |
+| Media to first visible text     | 12px                   | 18px                   | 24px                    |
+| Title to description            | 6px                    | 8px                    | 10px                    |
+| Last visible content to actions | 16px                   | 24px                   | 32px                    |
 
 The outer composition paints no surface, adds no padding, and introduces no minimum stage height. The host provides the outer inset, block-axis placement, and clearance for focus and action paint. Use S for narrow cards, table rows, and popovers. M suits a standalone panel or collection. L gives a page-level message more emphasis while keeping its copy compact. Center is the default. Start aligns every slot, text, and the action row along the logical start edge. Both alignments work at every size. RTL mirrors that edge and the first action’s placement without changing reading or tab order.
 
-Use primary ink at weight 600 for the heading and muted ink for the description. Heading lines balance within 28ch where space permits. Description wraps at the available width up to 42ch in its own font. Long identifiers break as needed. Keep all copy visible with no clamping. The 120% text control scales the typography and line heights through the theme while media dimensions and spacing retain their selected size. Missing slots leave only the gap between the remaining neighbors. If just actions remain, they start at the top. Empty slot values like `null`, `false`, or an empty string collapse, and a displayed `0` remains visible.
+Use primary ink at weight 600 for the heading. Keep the title and description close, then leave a larger gap before the action. Supporting copy uses a blend of 80% `fg-subtle` and 20% `fg-muted` in Oklab. Use `fg-secondary` when increased contrast is requested. Heading lines balance within 28ch. Descriptions wrap to 34ch, 38ch, and 42ch at S, M, and L. Centered descriptions balance short lines. Start-aligned descriptions keep a natural rag. Long identifiers break as needed. Keep all copy visible with no clamping. The 120% text control scales the typography and line heights through the theme while media dimensions and spacing retain their selected size. Missing slots leave only the gap between the remaining neighbors. If just actions remain, they start at the top. Empty slot values like `null`, `false`, or an empty string collapse, and a displayed `0` remains visible.
 
 Use the component’s native action types. Commands use Button and destinations use links, including a button-shaped link for a prominent destination. The first action in source order is the most important. Usually one action is enough. A pair uses an 8px gap in both axes, wraps in source order, and keeps natural widths as space allows. Long labels wrap with their own button padding. Use one control size in a row. Start with S controls in tight regions and M controls in ordinary panels and route layouts; their geometry and interaction states come from [Button](../button/README.md) and [Link](../link/README.md).
 
@@ -48,7 +48,7 @@ Use the component’s native action types. Commands use Button and destinations 
 | Frost  | Translucent round disc with a 1px neutral rim. The tint follows the underlying paint. On Overlay the rim comes from the surface cascade and the host provides glass.          |
 | Pixel  | Square tinted disc with a crisp 1px `border-default` on Base, with the overlay context’s card border on Overlay. A coordinate grid belongs to the surrounding canvas or Card. |
 
-Use `muted` by default. `accent`, `info`, `success`, `warning`, and `danger` change only the glyph and its local tint. Paint the glyph with `fg-muted`, `accent-soft-fg`, or the corresponding `status-*-soft-fg`. Mix 10% of the neutral soft foreground or the tint’s glyph ink into transparency for the disc. The rim remains neutral and follows `card-border` and `pill-border-width`. The mask shape uses `radius-full`. The disc stays flat and static. In forced colors it uses Canvas, CanvasText, and a GrayText perimeter. Copy, action semantics, and the independent focus indicator still carry the experience. Use no backdrop blur on the disc. Actions retain their theme-specific press, hover, loading and reduced-motion treatments.
+Use `muted` by default. `accent`, `info`, `success`, `warning`, and `danger` change only the glyph and its local tint. Use `fg-subtle`, `accent-soft-fg`, or the corresponding `status-*-soft-fg` as the source color. Blend 76% source with 24% `fg-subtle` in Oklab for the glyph. Mix 6% of the source into transparency for the disc. The rim remains neutral and follows `card-border` and `pill-border-width`. The mask shape uses `radius-full`. The disc stays flat and static. In forced colors it uses Canvas, CanvasText, and a GrayText perimeter. Copy, action semantics, and the independent focus indicator still carry the experience. Use no backdrop blur on the disc. Actions retain their theme-specific press, hover, loading and reduced-motion treatments.
 
 ## State changes and focus
 
@@ -60,13 +60,14 @@ Use `muted` by default. `accent`, `info`, `success`, `warning`, and `danger` cha
 
 ## Review in the playground
 
-| Location                | What to inspect                                                                                                                                          |
-| ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `sizes`, `reasons`      | Three size steps and six semantic tints. Compare first-run primary weight with quieter secondary recovery.                                               |
-| `placement`, `overflow` | Flush alignment with a card’s heading, a description-only native table row, long copy, wrapped actions, and RTL.                                         |
-| `media`, `routes`       | Both file formats and orientations across the artwork bounds, plus the balance of artwork, copy and actions on a missing or failed route.                |
-| `search`, `retry`       | Live filtering and clear, focus after explicit empty submission, and both retry outcomes. The first retry fails and the second shows the loaded reports. |
-| `overlay`               | A compact state on the workbench’s floating surface. Look at the rim, ink hierarchy and button against the actual overlay.                               |
-| `08-extensions-empty`   | The webhook sandbox card and the filtered installed-connectors message in their collection context.                                                      |
+| Location                  | What to inspect                                                                                                                                          |
+| ------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `sizes`, `reasons`        | Compare size steps and the difference between passive emptiness and first-time setup.                                                                    |
+| `activity`, `unavailable` | Paused and completed activity, access restrictions, and failed loads.                                                                                    |
+| `placement`, `overflow`   | Flush alignment with a card’s heading, a description-only native table row, long copy, wrapped actions, and RTL.                                         |
+| `media`, `routes`         | Both file formats and orientations across the artwork bounds, plus the balance of artwork, copy and actions on a missing or failed route.                |
+| `search`, `retry`         | Live filtering and clear, focus after explicit empty submission, and both retry outcomes. The first retry fails and the second shows the loaded reports. |
+| `overlay`                 | A compact state on the workbench’s floating surface. Look at the rim, ink hierarchy and button against the actual overlay.                               |
+| `08-extensions-empty`     | The webhook sandbox card and the filtered installed-connectors message in their collection context.                                                      |
 
 Inspect all six presets. Use 360/768/1280/1440px, 120% text, RTL and the overlay sample. The matrices and layout examples pin their visual content and actions. Search, Retry and Folio use local state and native controls. Requests, navigation and service responses outside those examples belong to the consuming application. Public package signatures and reusable implementation mechanics are defined when the family ships.
