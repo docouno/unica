@@ -1,40 +1,71 @@
-import { useId, useState } from 'react';
-import type { ComponentPropsWithRef, HTMLAttributes, ReactElement, ReactNode } from 'react';
+import { useId, useRef, useState } from 'react';
+import type {
+  ComponentPropsWithRef,
+  DragEvent,
+  HTMLAttributes,
+  ReactElement,
+  ReactNode,
+} from 'react';
 import {
-  ArrowClockwiseIcon,
   CheckCircleIcon,
   FileIcon,
-  UploadSimpleIcon,
+  InfoIcon,
   WarningCircleIcon,
   XIcon,
 } from '@phosphor-icons/react';
-import { Progress } from '../progress/progress.proto.js';
+import { Icon } from '../icon/icon.proto.js';
+import { Button, IconButton } from '../button/button.proto.js';
+import { Progress, Spinner } from '../progress/progress.proto.js';
 import { FormField } from '../input/input.proto.js';
+import { useInputFocus } from '../input/input-focus.proto.js';
+import type { ControlSize, FieldStatus, FieldVariant } from '../input/input.proto.js';
+import { formatFileSize } from './file-input.utils.js';
 import './file-input.css';
+
+export type FilePreviewState = 'rest' | 'hover' | 'active' | 'focus' | 'dragging';
+function isFileDrag(event: DragEvent): boolean {
+  return Array.from(event.dataTransfer.types).includes('Files');
+}
 
 export interface FileInputProps extends Omit<
   ComponentPropsWithRef<'input'>,
   'type' | 'size' | 'value' | 'defaultValue'
 > {
+  readonly size?: ControlSize;
+  readonly variant?: FieldVariant;
+  readonly status?: FieldStatus;
   readonly label?: ReactNode;
   readonly description?: ReactNode;
+  readonly message?: ReactNode;
   readonly fileName?: string | undefined;
-  readonly initialFileName?: string | undefined;
+  readonly initialFileName?: string;
   readonly fileDetail?: ReactNode;
-  readonly browseLabel?: string | undefined;
-  readonly placeholder?: string | undefined;
+  readonly browseLabel?: string;
+  readonly placeholder?: string;
+  readonly loading?: boolean | undefined;
+  readonly clearable?: boolean;
+  readonly onClear?: () => void;
   readonly onFilesChange?: ((files: readonly File[]) => void) | undefined;
+  /** Pinned visual comparison, not actual focus or drag. */
+  readonly previewState?: FilePreviewState;
 }
 
-// The file stays in the browser. Selecting it changes only the visual preview.
+// Local selection only. Native form projection and reusable state authority belong to the library.
 export function FileInput({
+  size = 'm',
+  variant = 'default',
+  status = 'neutral',
   label,
   description,
+  message,
   fileName,
   initialFileName = '',
   fileDetail,
   browseLabel,
-  placeholder = 'Choose a file…',
+  placeholder = 'No file selected',
+  loading = false,
+  clearable = true,
+  onClear,
   onFilesChange,
   onChange,
   id,
@@ -43,50 +74,193 @@ export function FileInput({
   disabled,
   readOnly,
   hidden,
+  required,
+  multiple,
+  previewState,
   ...props
 }: FileInputProps): ReactElement {
   const [localName, setLocalName] = useState(initialFileName);
   const [localDetail, setLocalDetail] = useState('');
+  const [dragging, setDragging] = useState(false);
   const generatedId = useId();
+  const focusScope = useInputFocus();
+  const trigger = useRef<HTMLButtonElement>(null);
   const inputId = id ?? generatedId;
+  const triggerId = readOnly ? inputId : `${inputId}-picker`;
   const currentName = fileName ?? localName;
+  const effectiveStatus = disabled ? 'neutral' : status;
+  const isRequired = required && !readOnly && !disabled;
+  const busy = loading && !disabled && !readOnly;
+  const blocked = disabled || readOnly || busy;
   const detail = fileDetail ?? localDetail;
+  const activeDrop = !blocked && (dragging || previewState === 'dragging');
+  const chooseLabel = browseLabel ?? (multiple ? 'Add files' : 'Choose file');
+  const labelId = `${inputId}-label`;
+  const actionId = `${inputId}-action`;
+  const selectionId = `${inputId}-selection`;
+  const fieldName =
+    props['aria-labelledby'] ?? (label && !props['aria-label'] ? labelId : undefined);
+  const describedBy =
+    [
+      props['aria-describedby'],
+      isRequired && `${inputId}-required`,
+      (currentName || readOnly) && selectionId,
+      busy && `${inputId}-checking`,
+      readOnly && `${inputId}-readonly`,
+      description && `${triggerId}-description`,
+      message && `${triggerId}-message`,
+    ]
+      .filter(Boolean)
+      .join(' ') || undefined;
+  function receive(files: readonly File[]): void {
+    if (blocked || !files.length) {
+      return;
+    }
+    setLocalName(multiple ? `${files.length} files selected` : files[0]!.name);
+    setLocalDetail(formatFileSize(files.reduce((sum, file) => sum + file.size, 0)));
+    onFilesChange?.(files);
+  }
   return (
-    <FormField label={label} description={description} htmlFor={inputId} hidden={hidden}>
+    <FormField
+      label={label && <span id={labelId}>{label}</span>}
+      description={description}
+      message={message}
+      status={effectiveStatus}
+      required={isRequired}
+      htmlFor={triggerId}
+      hidden={hidden}
+    >
       <span
+        ref={focusScope}
+        data-input-focus-scope=""
         className={`file-input-proto ${className}`}
         style={style}
-        data-selected={Boolean(currentName) || undefined}
+        data-size={size}
+        data-readonly={readOnly || undefined}
+        data-disabled={disabled || undefined}
+        data-dragging={activeDrop || undefined}
+        tabIndex={readOnly && !disabled ? 0 : undefined}
+        role={readOnly ? 'group' : undefined}
+        aria-labelledby={readOnly ? fieldName : undefined}
+        aria-label={readOnly && !fieldName ? (props['aria-label'] ?? 'File attachment') : undefined}
+        aria-describedby={readOnly ? describedBy : undefined}
+        onDragOver={(event) => {
+          if (isFileDrag(event)) {
+            event.preventDefault();
+            event.dataTransfer.dropEffect = blocked ? 'none' : 'copy';
+            if (!blocked) {
+              setDragging(true);
+            }
+          }
+        }}
+        onDragLeave={(event) => {
+          if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
+            setDragging(false);
+          }
+        }}
+        onDrop={(event) => {
+          if (isFileDrag(event)) {
+            event.preventDefault();
+            setDragging(false);
+            receive(Array.from(event.dataTransfer.files));
+          }
+        }}
       >
-        <span className="file-input-icon-proto">
-          <FileIcon size="1em" aria-hidden="true" />
-        </span>
-        <span className="file-input-copy-proto">
-          <span className="file-input-name-proto">{currentName || placeholder}</span>
-          {currentName && detail && <span className="file-input-detail-proto">{detail}</span>}
-        </span>
-        <span className="file-input-browse-proto">
-          {browseLabel ?? (currentName ? 'Replace file' : 'Browse')}
-        </span>
+        {!readOnly && (
+          <Button
+            ref={trigger}
+            id={triggerId}
+            className="file-input-picker-proto"
+            size={size}
+            variant={variant === 'ghost' ? 'ghost' : 'secondary'}
+            tone="neutral"
+            disabled={disabled}
+            loading={busy}
+            previewState={previewState === 'dragging' ? undefined : previewState}
+            aria-labelledby={fieldName ? `${actionId} ${fieldName}` : undefined}
+            aria-label={
+              fieldName ? undefined : [chooseLabel, props['aria-label']].filter(Boolean).join(' · ')
+            }
+            aria-describedby={describedBy}
+            aria-invalid={effectiveStatus === 'danger' || undefined}
+            onClick={() => focusScope.current?.querySelector('input')?.click()}
+          >
+            <span className="file-input-prompt-proto">
+              <span id={actionId} className="file-input-action-proto">
+                {chooseLabel}
+              </span>
+              {activeDrop && (
+                <span aria-hidden="true">{multiple ? 'Drop files' : 'Drop file'}</span>
+              )}
+            </span>
+          </Button>
+        )}
+        {(currentName || readOnly) && (
+          <span className="file-input-selection-proto">
+            <span id={selectionId} className="file-input-copy-proto">
+              <bdi className="file-input-name-proto">{currentName || placeholder}</bdi>
+              {currentName && detail && (
+                <span className="file-input-detail-proto" dir="auto">
+                  {detail}
+                </span>
+              )}
+            </span>
+            {!multiple && clearable && !readOnly && !disabled && (
+              <IconButton
+                className="file-input-clear-proto"
+                icon={XIcon}
+                size="s"
+                variant="ghost"
+                aria-label={`Remove ${currentName}`}
+                disabled={busy}
+                onClick={() => {
+                  setLocalName('');
+                  setLocalDetail('');
+                  onClear?.();
+                  onFilesChange?.([]);
+                  const native = focusScope.current?.querySelector('input');
+                  if (native) {
+                    native.value = '';
+                  }
+                  trigger.current?.focus();
+                }}
+              />
+            )}
+          </span>
+        )}
+        {busy && (
+          <span id={`${inputId}-checking`} className="file-input-note-proto">
+            Checking…
+          </span>
+        )}
+        {readOnly && (
+          <span id={`${inputId}-readonly`} className="file-input-note-proto">
+            Read only
+          </span>
+        )}
+        {isRequired && (
+          <span id={`${inputId}-required`} hidden>
+            Required
+          </span>
+        )}
         <input
           {...props}
           id={inputId}
           type="file"
-          className="file-input-native-proto"
+          multiple={multiple}
+          hidden
+          tabIndex={-1}
+          aria-hidden="true"
           disabled={disabled || readOnly}
-          aria-label={label ? undefined : 'Choose a file'}
+          required={isRequired}
+          onClick={(event) => {
+            if (blocked) {
+              event.preventDefault();
+            }
+            props.onClick?.(event);
+          }}
           onChange={(event) => {
-            const files = Array.from(event.currentTarget.files ?? []);
-            setLocalName(files.map((file) => file.name).join(', '));
-            const bytes = files.reduce((total, file) => total + file.size, 0);
-            setLocalDetail(
-              bytes < 1000
-                ? `${bytes} B`
-                : bytes < 1000000
-                  ? `${(bytes / 1000).toFixed(1)} KB`
-                  : `${(bytes / 1000000).toFixed(1)} MB`,
-            );
-            onFilesChange?.(files);
+            receive(Array.from(event.currentTarget.files ?? []));
             onChange?.(event);
           }}
         />
@@ -96,25 +270,35 @@ export function FileInput({
 }
 
 export interface DropzoneProps extends Omit<HTMLAttributes<HTMLDivElement>, 'title' | 'onChange'> {
-  readonly title?: string | undefined;
+  readonly size?: ControlSize;
+  readonly title?: string;
   readonly description?: ReactNode;
-  readonly disabled?: boolean | undefined;
-  readonly accept?: string | undefined;
-  readonly multiple?: boolean | undefined;
+  readonly message?: ReactNode;
+  readonly status?: 'neutral' | 'danger';
+  readonly disabled?: boolean;
+  readonly readOnly?: boolean;
+  readonly accept?: string;
+  readonly multiple?: boolean;
   readonly onFilesChange?: ((files: readonly File[]) => void) | undefined;
-  readonly browseLabel?: string | undefined;
+  readonly browseLabel?: string;
+  readonly previewState?: FilePreviewState;
 }
 
 export function Dropzone({
-  title = 'Drop Markdown or ZIP archives here',
-  description = 'UTF-8 .md, .mdx, or .zip up to 50 MB per archive',
+  size = 'm',
+  title,
+  description = 'Markdown or ZIP · 50 MB max per file',
+  message,
+  status = 'neutral',
   disabled,
+  readOnly,
   accept = '.md,.mdx,.zip',
   multiple = true,
   onFilesChange,
-  browseLabel = 'Browse files',
+  browseLabel,
   className = '',
   children,
+  previewState,
   onDragOver,
   onDragLeave,
   onDrop,
@@ -122,132 +306,269 @@ export function Dropzone({
 }: DropzoneProps): ReactElement {
   const [dragging, setDragging] = useState(false);
   const inputId = useId();
+  const active = !disabled && !readOnly && (dragging || previewState === 'dragging');
+  const unavailable = disabled || readOnly;
+  const pickerLabel = browseLabel ?? (multiple ? 'Browse files' : 'Browse for a file');
+  const unavailableLabel =
+    title ?? (disabled ? 'Attachments unavailable' : 'Attachments are locked');
   return (
     <div
       {...props}
       className={`dropzone-proto ${className}`}
-      data-dragging={dragging || undefined}
+      data-size={size}
+      data-status={disabled ? 'neutral' : status}
+      data-dragging={active || undefined}
       data-disabled={disabled || undefined}
-      onDragOver={(event) => {
-        onDragOver?.(event);
-        if (!disabled) {
-          event.preventDefault();
-          setDragging(true);
-        }
-      }}
-      onDragLeave={(event) => {
-        onDragLeave?.(event);
-        setDragging(false);
-      }}
-      onDrop={(event) => {
-        onDrop?.(event);
-        event.preventDefault();
-        setDragging(false);
-        if (!disabled) {
-          onFilesChange?.(Array.from(event.dataTransfer.files));
-        }
-      }}
+      data-readonly={readOnly || undefined}
+      data-preview={previewState}
     >
-      <label className="dropzone-surface-proto" htmlFor={inputId}>
-        <UploadSimpleIcon size="1.5em" aria-hidden="true" />
-        <strong>{dragging ? 'Release to add these files' : title}</strong>
-        {description && <span className="dropzone-description-proto">{description}</span>}
-        <span className="dropzone-browse-proto">{browseLabel}</span>
+      <div
+        className="dropzone-surface-proto"
+        onDragOver={(event) => {
+          onDragOver?.(event);
+          if (isFileDrag(event)) {
+            event.preventDefault();
+            event.dataTransfer.dropEffect = disabled || readOnly ? 'none' : 'copy';
+            if (!disabled && !readOnly) {
+              setDragging(true);
+            }
+          }
+        }}
+        onDragLeave={(event) => {
+          onDragLeave?.(event);
+          if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
+            setDragging(false);
+          }
+        }}
+        onDrop={(event) => {
+          onDrop?.(event);
+          if (isFileDrag(event)) {
+            event.preventDefault();
+            setDragging(false);
+            if (!disabled && !readOnly) {
+              onFilesChange?.(Array.from(event.dataTransfer.files));
+            }
+          }
+        }}
+      >
+        <div className="dropzone-copy-proto">
+          {unavailable ? (
+            <span className="dropzone-unavailable-proto">{unavailableLabel}</span>
+          ) : (
+            <div className="dropzone-prompt-proto">
+              <span className="dropzone-invitation-proto" aria-hidden="true">
+                {multiple ? 'Drop files' : 'Drop a file'} or{' '}
+                <span className="dropzone-browse-proto">{browseLabel ?? 'browse'}</span>
+              </span>
+              {active && <span className="dropzone-release-proto">Release to add</span>}
+            </div>
+          )}
+          {description && (
+            <div id={`${inputId}-description`} className="dropzone-description-proto">
+              {description}
+            </div>
+          )}
+        </div>
         <input
           id={inputId}
           type="file"
           accept={accept}
           multiple={multiple}
           disabled={disabled}
-          className="file-input-native-proto"
-          onChange={(event) => onFilesChange?.(Array.from(event.currentTarget.files ?? []))}
+          aria-disabled={readOnly || undefined}
+          aria-label={unavailable ? unavailableLabel : pickerLabel}
+          aria-describedby={
+            [description && `${inputId}-description`, message && `${inputId}-message`]
+              .filter(Boolean)
+              .join(' ') || undefined
+          }
+          aria-invalid={(status === 'danger' && !disabled) || undefined}
+          className="dropzone-native-proto"
+          onClick={(event) => {
+            if (readOnly) {
+              event.preventDefault();
+            }
+          }}
+          onKeyDown={(event) => {
+            if (readOnly && (event.key === 'Enter' || event.key === ' ')) {
+              event.preventDefault();
+            }
+          }}
+          onChange={(event) => {
+            const files = Array.from(event.currentTarget.files ?? []);
+            if (!readOnly && files.length) {
+              onFilesChange?.(files);
+            }
+            event.currentTarget.value = '';
+          }}
         />
-      </label>
+      </div>
+      {message && (
+        <div id={`${inputId}-message`} className="dropzone-message-proto">
+          <Icon icon={status === 'danger' && !disabled ? WarningCircleIcon : InfoIcon} />
+          <span>{message}</span>
+        </div>
+      )}
       {children}
     </div>
   );
 }
 
 export type FileListProps = HTMLAttributes<HTMLUListElement>;
-
 export function FileList({ className = '', ...props }: FileListProps): ReactElement {
   return <ul {...props} className={`file-list-proto ${className}`} />;
 }
 
-export type FileItemStatus = 'neutral' | 'uploading' | 'processing' | 'success' | 'danger';
-
+export type FileItemStatus =
+  'neutral' | 'uploading' | 'processing' | 'success' | 'danger' | 'removing' | 'paused';
 export interface FileItemProps extends HTMLAttributes<HTMLLIElement> {
   readonly name: string;
   readonly detail?: ReactNode;
+  readonly fileSize?: string;
+  readonly size?: ControlSize;
   readonly status?: FileItemStatus | undefined;
-  readonly progress?: number | undefined;
+  readonly progress?: number | null | undefined;
+  readonly thumbnail?: string;
+  readonly href?: string;
   readonly onRemove?: (() => void) | undefined;
   readonly onRetry?: (() => void) | undefined;
   readonly disabled?: boolean | undefined;
+  readonly readOnly?: boolean;
 }
-
+const phaseLabels: Record<FileItemStatus, string> = {
+  neutral: '',
+  uploading: 'Uploading…',
+  processing: 'Checking file…',
+  success: 'Uploaded',
+  danger: 'Upload failed. Try again.',
+  removing: 'Removing…',
+  paused: 'Upload paused',
+};
 export function FileItem({
   name,
   detail,
+  fileSize,
+  size = 'm',
   status = 'neutral',
   progress,
+  thumbnail,
+  href,
   onRemove,
   onRetry,
   disabled,
+  readOnly,
   className = '',
   children,
   ...props
 }: FileItemProps): ReactElement {
+  const effectiveStatus = disabled ? 'neutral' : status;
+  const removing = effectiveStatus === 'removing';
+  const waiting =
+    effectiveStatus === 'processing' ||
+    removing ||
+    (effectiveStatus === 'uploading' && (progress === null || progress === undefined));
+  const measured = progress !== null && progress !== undefined;
+  const caption =
+    detail ??
+    (readOnly && effectiveStatus === 'neutral' ? 'Read only' : phaseLabels[effectiveStatus]);
+  const showTrack =
+    !disabled && progress !== undefined && !removing && effectiveStatus !== 'success';
   return (
-    <li {...props} className={`file-item-proto ${className}`} data-status={status}>
+    <li
+      {...props}
+      className={`file-item-proto ${className}`}
+      data-status={effectiveStatus}
+      data-size={size}
+      data-disabled={disabled || undefined}
+      data-readonly={readOnly || undefined}
+      data-thumbnail={Boolean(thumbnail) || undefined}
+    >
       <span className="file-item-icon-proto" aria-hidden="true">
-        {status === 'success' ? (
-          <CheckCircleIcon size="1.2em" />
-        ) : status === 'danger' ? (
-          <WarningCircleIcon size="1.2em" />
-        ) : (
-          <FileIcon size="1.2em" />
-        )}
+        {thumbnail ? <img src={thumbnail} alt="" /> : <Icon icon={FileIcon} size={size} />}
       </span>
       <div className="file-item-body-proto">
-        <span className="file-item-name-proto">{name}</span>
-        {detail && <span className="file-item-detail-proto">{detail}</span>}
-        {progress !== undefined && (
+        {href && !disabled ? (
+          <a className="file-item-name-proto file-item-link-proto" href={href} download>
+            <bdi>{name}</bdi>
+          </a>
+        ) : (
+          <span className="file-item-name-proto">
+            <bdi>{name}</bdi>
+          </span>
+        )}
+        {(fileSize || caption || (measured && showTrack)) && (
+          <div className="file-item-meta-proto">
+            {fileSize && (
+              <span className="file-item-size-proto" dir="auto">
+                {fileSize}
+              </span>
+            )}
+            {caption && (
+              <span className="file-item-detail-proto">
+                {!disabled &&
+                  (waiting && !showTrack ? (
+                    <Spinner />
+                  ) : effectiveStatus === 'success' ? (
+                    <Icon icon={CheckCircleIcon} color="success" />
+                  ) : null)}
+                <span dir="auto">{caption}</span>
+              </span>
+            )}
+            {measured && showTrack && (
+              <span className="file-item-percentage-proto" dir="ltr" aria-hidden="true">
+                {Math.floor(Math.min(100, Math.max(0, progress)))}%
+              </span>
+            )}
+          </div>
+        )}
+        {showTrack && (
           <Progress
             size="s"
             showValue={false}
             className="file-item-progress-proto"
-            value={progress}
-            active={status === 'uploading' || status === 'processing'}
-            max={100}
-            aria-label={`Import progress for ${name}`}
+            value={progress ?? null}
+            active={effectiveStatus === 'uploading' || effectiveStatus === 'processing'}
+            paused={effectiveStatus === 'paused'}
+            status={
+              effectiveStatus === 'danger'
+                ? 'danger'
+                : effectiveStatus === 'paused' || disabled
+                  ? 'neutral'
+                  : 'accent'
+            }
+            aria-label={`Progress for ${name}`}
           />
         )}
         {children}
       </div>
-      {(onRetry || onRemove) && (
+      {(onRetry || onRemove) && !readOnly && (
         <span className="file-item-actions-proto">
-          {onRetry && (
-            <button
-              type="button"
-              className="field-icon-button-proto"
-              disabled={disabled}
+          {onRetry && effectiveStatus === 'danger' && (
+            <Button
+              size={size}
+              variant="ghost"
+              tone="neutral"
               aria-label={`Retry ${name}`}
-              onClick={onRetry}
+              onClick={(event) => {
+                const row = event.currentTarget.closest('li');
+                onRetry();
+                requestAnimationFrame(() =>
+                  row?.querySelector<HTMLButtonElement>('button[aria-label^="Remove"]')?.focus(),
+                );
+              }}
             >
-              <ArrowClockwiseIcon size="1em" />
-            </button>
+              Retry
+            </Button>
           )}
           {onRemove && (
-            <button
-              type="button"
-              className="field-icon-button-proto"
-              disabled={disabled}
+            <IconButton
+              icon={XIcon}
+              size={size}
+              variant="ghost"
               aria-label={`Remove ${name}`}
+              disabled={disabled || removing}
               onClick={onRemove}
-            >
-              <XIcon size="1em" />
-            </button>
+            />
           )}
         </span>
       )}

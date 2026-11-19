@@ -1325,6 +1325,11 @@ textarea {
 }
 
 :root,
+[data-theme] {
+  --btn-ghost-neutral-bg-hover: color-mix(in srgb, var(--fg-primary) 10%, transparent);
+}
+
+:root,
 [data-theme],
 [data-surface='base'] {
   --table-sticky-header-bg: initial;

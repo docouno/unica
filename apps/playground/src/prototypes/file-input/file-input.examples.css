@@ -1,0 +1,97 @@
+.file-demo-stack,
+.file-demo-sample,
+.file-demo-surface {
+  display: grid;
+  gap: var(--space-16);
+  min-inline-size: 0;
+}
+.file-demo-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr));
+  gap: var(--space-24);
+  align-items: start;
+}
+.file-demo-grid,
+.file-demo-stack {
+  inline-size: 100%;
+}
+[data-surface='overlay'] > :is(.file-demo-grid, .file-demo-stack) {
+  padding: var(--space-16);
+  border: 1px solid var(--overlay-border);
+  border-radius: var(--surface-m-radius);
+  background: var(--bg-overlay);
+  box-shadow: var(--overlay-rim), var(--overlay-shadow-popover);
+  backdrop-filter: var(--overlay-backdrop);
+}
+.file-demo-sample {
+  gap: var(--space-12);
+  container-type: inline-size;
+}
+.file-demo-label {
+  color: var(--fg-muted);
+  font: 500 var(--text-size-caption-l)/1.5 var(--font-family-base);
+  text-transform: capitalize;
+}
+.file-demo-note {
+  color: var(--fg-muted);
+  font: var(--text-size-caption-l)/1.5 var(--font-family-base);
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.file-demo-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-8);
+}
+.file-demo-controls {
+  display: grid;
+  gap: var(--space-8);
+  padding-block-start: var(--space-16);
+  border-block-start: 1px solid var(--border-subtle);
+}
+.file-demo-surface-stage {
+  min-inline-size: 0;
+  padding: var(--space-16);
+  border-radius: var(--surface-l-radius);
+  background: var(--bg-canvas);
+}
+.file-demo-surface-stage[data-underlay] {
+  background:
+    radial-gradient(ellipse at 12% 10%, var(--accent-soft-bg), transparent 70%), var(--bg-canvas);
+}
+.file-demo-surface {
+  position: relative;
+  padding: var(--space-24);
+  border: 1px solid var(--card-border);
+  border-radius: var(--surface-m-radius);
+  background: var(--bg-surface);
+  container-type: inline-size;
+}
+.file-demo-surface[data-plate='overlay'] {
+  border-color: var(--overlay-border);
+  background: var(--bg-overlay);
+  box-shadow: var(--overlay-rim), var(--overlay-shadow-popover);
+  backdrop-filter: var(--overlay-backdrop);
+}
+@media (forced-colors: active) {
+  .file-demo-surface {
+    border-color: CanvasText;
+  }
+}
+
+@font-face {
+  font-family: 'File Demo Arabic';
+  src: url('/assets/file-input-arabic-400.ttf') format('truetype');
+  font-weight: 400 500;
+  font-display: block;
+}
+.file-demo-arabic
+  :is(
+    .file-input-name-proto,
+    .form-field-label-proto,
+    .file-item-name-proto,
+    .file-item-detail-proto
+  ) {
+  font-family: 'File Demo Arabic', var(--font-family-base);
+}

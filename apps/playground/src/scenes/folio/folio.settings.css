@@ -257,11 +257,6 @@
   min-inline-size: 0;
 }
 
-.folio-import-queue-label {
-  color: var(--fg-muted);
-  font-size: var(--text-size-caption-l);
-}
-
 .folio-import-footer {
   display: flex;
   align-items: center;
@@ -273,21 +268,6 @@
 
 .folio-import-footer .folio-row {
   flex-wrap: wrap;
-}
-
-.folio-import-dropzone .dropzone-surface-proto {
-  min-block-size: 114px;
-  gap: var(--space-8);
-  padding: var(--space-12);
-  background: var(--bg-canvas);
-}
-
-.folio-import-dropzone .dropzone-surface-proto > svg {
-  font-size: 24px;
-}
-
-.folio-import-file-status {
-  margin-inline-start: var(--space-12);
 }
 
 @container artboard (max-width: 900px) {
