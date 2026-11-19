@@ -1,6 +1,6 @@
 # Empty design reference
 
-Open `/?item=empty` in the playground. This is the candidate design for `Empty`, `EmptyMedia`, `EmptyTitle`, `EmptyDescription`, and `EmptyActions`.
+The visual and interaction design was approved on 2026-11-19. Open `/?item=empty` in the playground for the prototype and implementation reference.
 
 ## When to use it
 
