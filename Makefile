@@ -3,6 +3,7 @@ include .devkit/runtime/toolchains.env
 
 VISUAL_IMAGE := devkit-visual-desktop:$(DEVKIT_DESKTOP_RECIPE_HASH)
 PLAYWRIGHT_CACHE := $(or $(XDG_CACHE_HOME),$(HOME)/.cache)/ms-playwright
+VISUAL_MAKE = env -u MAKEFLAGS -u MFLAGS -u MAKEOVERRIDES -u GNUMAKEFLAGS $(MAKE) --no-print-directory
 
 .PHONY: visual-setup visual
 
@@ -11,21 +12,21 @@ visual-setup:
 	@mkdir -p .devkit/cache
 	@preflight_err="$$(mktemp .devkit/cache/visual-preflight.XXXXXX)" || exit 1; \
 	trap 'rm -f "$$preflight_err"' EXIT; \
-	if ! ( $(MAKE) --no-print-directory doctor >/dev/null 2>"$$preflight_err" && \
-		$(MAKE) --no-print-directory exec app=playground command='node scripts/visual-ready.mjs' >/dev/null 2>"$$preflight_err" ); then \
-		if ! $(MAKE) --no-print-directory setup app=playground; then \
+	if ! ( $(VISUAL_MAKE) doctor >/dev/null 2>"$$preflight_err" && \
+		$(VISUAL_MAKE) exec app=playground command='node scripts/visual-ready.mjs' >/dev/null 2>"$$preflight_err" ); then \
+		if ! $(VISUAL_MAKE) setup app=playground; then \
 			if [ -s "$$preflight_err" ]; then \
 				printf '%s\n' 'visual-setup: initial preflight failure:' >&2; \
 				cat "$$preflight_err" >&2; \
 			fi; \
 			exit 1; \
 		fi; \
-		$(MAKE) --no-print-directory doctor || exit 1; \
-		if ! $(MAKE) --no-print-directory exec app=playground command='node scripts/visual-ready.mjs'; then \
+		$(VISUAL_MAKE) doctor || exit 1; \
+		if ! $(VISUAL_MAKE) exec app=playground command='node scripts/visual-ready.mjs'; then \
 			printf '%s\n' \
 				'visual-setup: renderer dependency probe still failed after make setup.' \
-				'pnpm optimistic-repeat-install can skip missing files or symlinks inside an existing node_modules tree.' \
-				'Recover manually by removing node_modules/.pnpm-workspace-state-v1.json (or node_modules directories) and re-running make setup.' >&2; \
+				'pnpm repeat install can skip missing files inside an existing node_modules tree.' \
+				'Recover manually with: rm -rf node_modules apps/*/node_modules packages/*/node_modules && make setup' >&2; \
 			exit 1; \
 		fi; \
 	fi
