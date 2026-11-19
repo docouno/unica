@@ -10,7 +10,9 @@ import {
 import { AsidePanel } from '../prototypes/app-shell/app-shell.proto.js';
 import { Badge } from '../prototypes/badge/badge.proto.js';
 import { Button, IconButton } from '../prototypes/button/button.proto.js';
-import { DatePicker, DateRangePicker } from '../prototypes/calendar/calendar.proto.js';
+import { DatePicker, DateRangePicker } from '../prototypes/date-picker/date-picker.proto.js';
+import { dateLabel, dateObject } from '../prototypes/date-picker/date-utils.proto.js';
+import type { DateRange } from '../prototypes/date-picker/date-utils.proto.js';
 import { Card, CardMedia } from '../prototypes/card/card.proto.js';
 import { ChipGroup } from '../prototypes/chip/chip.proto.js';
 import { Progress } from '../prototypes/progress/progress.proto.js';
@@ -54,104 +56,115 @@ const rows = [
   {
     title: 'Zero-Downtime PG Failover',
     tier: 'Tier-0',
-    date: '17 Sep 2026',
+    modified: '2026-09-17',
+    verifiedOn: '2026-09-17',
     initials: 'DB',
     owner: 'DB team',
-    verified: true,
   },
   {
     title: 'Edge TLS Certificate Rotation',
     tier: 'Tier-0',
-    date: '16 Sep 2026',
+    modified: '2026-09-16',
+    verifiedOn: '2026-09-14',
     initials: 'ED',
     owner: 'Edge SRE',
-    verified: true,
   },
   {
     title: 'Redis Cluster Eviction Policy',
     tier: 'Tier-1',
-    date: '15 Sep 2026',
+    modified: '2026-09-15',
+    verifiedOn: '2026-09-13',
     initials: 'NW',
     owner: 'Core team',
-    verified: true,
   },
   {
     title: 'Kafka Partition Rebalance Drill',
     tier: 'Tier-1',
-    date: '14 Sep 2026',
+    modified: '2026-09-14',
+    verifiedOn: '2026-09-11',
     initials: 'PE',
     owner: 'Platform',
-    verified: true,
   },
   {
     title: 'Regional Ingress Failback',
     tier: 'Tier-0',
-    date: '17 Sep 2026',
+    modified: '2026-09-17',
+    verifiedOn: '2026-09-11',
     initials: 'ED',
     owner: 'Edge SRE',
-    verified: true,
   },
   {
     title: 'Restore the Artifact Registry',
     tier: 'Tier-1',
-    date: '16 Sep 2026',
+    modified: '2026-09-16',
+    verifiedOn: '2026-09-10',
     initials: 'PE',
     owner: 'Platform',
-    verified: true,
   },
   {
     title: 'Rotate the Secrets Signing Key',
     tier: 'Tier-0',
-    date: '16 Sep 2026',
+    modified: '2026-09-22',
+    verifiedOn: '2026-09-19',
     initials: 'SE',
     owner: 'Security',
-    verified: true,
   },
   {
     title: 'Replay the Billing Event Stream',
     tier: 'Tier-1',
-    date: '15 Sep 2026',
+    modified: '2026-09-11',
+    verifiedOn: '2026-09-10',
     initials: 'NW',
     owner: 'Core team',
-    verified: true,
   },
   {
     title: 'Restore a Database Snapshot',
     tier: 'Tier-0',
-    date: '17 Sep 2026',
+    modified: '2026-09-17',
+    verifiedOn: '',
     initials: 'DB',
     owner: 'DB team',
-    verified: false,
   },
   {
     title: 'Drain the CI Worker Pool',
     tier: 'Tier-1',
-    date: '16 Sep 2026',
+    modified: '2026-09-16',
+    verifiedOn: '',
     initials: 'PE',
     owner: 'Platform',
-    verified: false,
   },
   {
     title: 'Recover a Stalled Release',
     tier: 'Tier-1',
-    date: '15 Sep 2026',
+    modified: '2026-09-15',
+    verifiedOn: '',
     initials: 'PE',
     owner: 'Platform',
-    verified: false,
   },
   {
     title: 'Quarantine a Compromised Runner',
     tier: 'Tier-1',
-    date: '14 Sep 2026',
+    modified: '2026-09-14',
+    verifiedOn: '',
     initials: 'SE',
     owner: 'Security',
-    verified: false,
   },
 ] as const;
 
 const tierZeroRows = rows.filter((row) => row.tier === 'Tier-0');
-const verifiedRows = rows.filter((row) => row.verified);
+const verifiedRows = rows.filter((row) => row.verifiedOn);
 const pageSize = 4;
+const initialWindow: DateRange = ['2026-09-14', '2026-09-17'];
+const emptyWindow: DateRange = ['', ''];
+
+function modifiedLabel(range: DateRange): string {
+  return new Intl.DateTimeFormat('en-GB', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+    timeZone: 'UTC',
+  }).formatRange(dateObject(range[0]), dateObject(range[1]));
+}
 
 function RunbookMenu<T extends HTMLElement>({
   title,
@@ -209,24 +222,45 @@ function CollectionScene(): ReactElement {
   const [view, setView] = useState('list');
   const [selected, setSelected] = useState<readonly string[]>([rows[0].title, rows[1].title]);
   const [scope, setScope] = useState(true);
-  const [windowFilter, setWindowFilter] = useState(true);
+  const [verifiedOnly, setVerifiedOnly] = useState(true);
+  const [dateWindow, setDateWindow] = useState<DateRange>(initialWindow);
+  const [verificationBaseline, setVerificationBaseline] = useState('');
+  const [sort, setSort] = useState('verified');
   const [notice, setNotice] = useState('');
   const resetRef = useRef<HTMLAnchorElement>(null);
   const filters: TagGroupItem[] = [];
   if (scope) {
     filters.push({ id: 'scope', label: 'scope: prod', removeLabel: 'Remove scope: prod filter' });
   }
-  if (windowFilter) {
-    filters.push({ id: 'date', label: '14–17 Sep', removeLabel: 'Remove 14–17 Sep date filter' });
+  const hasWindow = Boolean(dateWindow[0] && dateWindow[1]);
+  if (hasWindow) {
+    filters.push({
+      id: 'date',
+      label: modifiedLabel(dateWindow),
+      removeLabel: 'Remove modified date filter',
+    });
   }
-  const filteredRows =
-    tab === 'tier0'
-      ? tierZeroRows
-      : tab === 'verified'
-        ? verifiedRows
-        : tab === 'drafts'
-          ? []
-          : rows;
+  if (verificationBaseline) {
+    filters.push({
+      id: 'verification',
+      label: `Verified since ${dateLabel(verificationBaseline)}`,
+      removeLabel: 'Remove verification date filter',
+    });
+  }
+  const filteredRows = rows
+    .filter(
+      (row) =>
+        tab !== 'drafts' &&
+        (tab !== 'tier0' || row.tier === 'Tier-0') &&
+        (!(verifiedOnly || tab === 'verified') || row.verifiedOn) &&
+        (!verificationBaseline || row.verifiedOn >= verificationBaseline) &&
+        (!hasWindow || (row.modified >= dateWindow[0] && row.modified <= dateWindow[1])),
+    )
+    .sort((first, second) =>
+      sort === 'name'
+        ? first.title.localeCompare(second.title)
+        : second.verifiedOn.localeCompare(first.verifiedOn),
+    );
   const pageStart = (page - 1) * pageSize;
   const visibleRows = filteredRows.slice(pageStart, pageStart + pageSize);
   const resultSummary =
@@ -290,27 +324,41 @@ function CollectionScene(): ReactElement {
         rightAside={
           <AsidePanel title="Collection scope" side="right" width={360}>
             <InspectorSection title="Verification gates">
-              <Switch size="s" defaultChecked label="Verified only" />
+              <Switch
+                size="s"
+                checked={verifiedOnly}
+                label="Verified only"
+                onChange={(event) => {
+                  setVerifiedOnly(event.currentTarget.checked);
+                  setPage(1);
+                }}
+              />
               <Switch size="s" label="Include RFCs" />
-              <div className="folio-stack">
-                <Text size="caption-l" color="muted">
-                  Audit baseline date
-                </Text>
-                <DatePicker size="s" defaultValue="2026-09-01" />
-              </div>
+              <DatePicker
+                size="s"
+                label="Verified on or after"
+                value={verificationBaseline}
+                onValueChange={(value) => {
+                  setVerificationBaseline(value);
+                  setPage(1);
+                }}
+                clearable
+              />
             </InspectorSection>
             <InspectorSection title="Drill readiness">
               <Progress value={84} label="Q3 drill coverage" />
             </InspectorSection>
-            <InspectorSection title="Modified date window">
-              <Text size="caption-l" color="secondary">
-                Filter by drill window
-              </Text>
+            <InspectorSection title="Activity filters">
               <DateRangePicker
                 size="s"
+                label="Last modified"
                 panelTitle="Modified date range"
-                defaultValue={['2026-09-14', '2026-09-17']}
-                defaultOpen
+                value={dateWindow}
+                onValueChange={(value) => {
+                  setDateWindow(value);
+                  setPage(1);
+                }}
+                clearable
               />
             </InspectorSection>
           </AsidePanel>
@@ -331,7 +379,11 @@ function CollectionScene(): ReactElement {
                 className="folio-sort-control"
                 size="s"
                 aria-label="Sort runbooks"
-                defaultValue="verified"
+                value={sort}
+                onValueChange={(value) => {
+                  setSort(value ?? 'verified');
+                  setPage(1);
+                }}
                 options={[
                   { value: 'verified', label: 'Sort: Recently verified' },
                   { value: 'name', label: 'Sort: Name' },
@@ -359,8 +411,12 @@ function CollectionScene(): ReactElement {
                 onRemove={(id) => {
                   if (id === 'scope') {
                     setScope(false);
+                  } else if (id === 'date') {
+                    setDateWindow(emptyWindow);
+                    setPage(1);
                   } else {
-                    setWindowFilter(false);
+                    setVerificationBaseline('');
+                    setPage(1);
                   }
                 }}
                 emptyMessage="No filters applied"
@@ -372,7 +428,9 @@ function CollectionScene(): ReactElement {
                 onClick={(event) => {
                   event.preventDefault();
                   setScope(true);
-                  setWindowFilter(true);
+                  setVerifiedOnly(true);
+                  setDateWindow(emptyWindow);
+                  setVerificationBaseline('');
                   changeTab('all');
                 }}
               >
@@ -432,13 +490,9 @@ function CollectionScene(): ReactElement {
             </div>
           </section>
           <section className="folio-stack folio-collection-results">
-            <Text size="caption-l" color="muted">
-              Filtered to {filteredRows.length} operational runbooks modified between 14 Sep and 17
-              Sep 2026
-            </Text>
             {visibleRows.length === 0 ? (
               <Card variant="subtle">
-                <Text size="body-s">No drafts match this drill window.</Text>
+                <Text size="body-s">No runbooks match the current filters.</Text>
               </Card>
             ) : view === 'list' ? (
               <TableScroll aria-label="Runbook directory">
@@ -462,7 +516,8 @@ function CollectionScene(): ReactElement {
                       </TableCell>
                       <TableColumnHeader>Runbook</TableColumnHeader>
                       <TableColumnHeader>Tier</TableColumnHeader>
-                      <TableColumnHeader>Last drill</TableColumnHeader>
+                      <TableColumnHeader>Last modified</TableColumnHeader>
+                      <TableColumnHeader>Last verified</TableColumnHeader>
                       <TableColumnHeader>Owner</TableColumnHeader>
                       <TableColumnHeader aria-label="Actions" className="folio-runbook-menu-cell" />
                     </TableRow>
@@ -494,7 +549,10 @@ function CollectionScene(): ReactElement {
                                 {row.tier}
                               </Badge>
                             </TableCell>
-                            <TableCell>{row.date}</TableCell>
+                            <TableCell>{dateLabel(row.modified)}</TableCell>
+                            <TableCell>
+                              {row.verifiedOn ? dateLabel(row.verifiedOn) : '—'}
+                            </TableCell>
                             <TableCell>
                               <Person initials={row.initials} name={row.owner} />
                             </TableCell>
@@ -529,6 +587,12 @@ function CollectionScene(): ReactElement {
                         <Badge size="s" status="neutral">
                           {row.tier}
                         </Badge>
+                        <Text size="caption-l" color="muted">
+                          Modified {dateLabel(row.modified)}
+                        </Text>
+                        <Text size="caption-l" color="muted">
+                          {row.verifiedOn ? `Verified ${dateLabel(row.verifiedOn)}` : 'Unverified'}
+                        </Text>
                         <Person initials={row.initials} name={row.owner} />
                         {panel}
                       </Card>
