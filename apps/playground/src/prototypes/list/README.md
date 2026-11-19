@@ -20,6 +20,8 @@ Use a markerless list. Each item has a main area with an optional leading icon o
 
 Unspecified size uses the M geometry and inherited label typography. Size and line-height tokens carry the theme's typography and text scale. Media, copy, and adjacent trailing content sit centered on the row. The action plate extends into the parent's inline-start padding by its inset, keeping the label and media aligned with a neighboring static item or heading. Allow that clearance inside the owning surface. The plate ends before the trailing slot. Its radius follows the S/M/L control radius (6/8/10px in Soft and Frost, 0px in Pixel).
 
+The caller supplies trailing content, such as text, a badge, a switch, a button, or a group of controls. The list handles placement and wrapping. Each control uses its own size, variant, and states. The specimen uses a neutral secondary button for the available recovery action and a neutral ghost button for the quieter reviewer action.
+
 Keep the trailing group beside the main area while it fits with a 12em main basis. When space runs out, it wraps as a group below the main area, aligned to inline end. Its controls may wrap again within the available width. Both regions preserve DOM order and separate hit areas. Long identifiers can break within a word. The list applies no line limits. Consumers supply compact status labels and keep the complete value available if a child truncates its own content.
 
 Optional 1px dividers sit strictly between visible direct items, with 2px of clearance above and below the line for record rows. The rule stays at the list's content edges. Soft uses a subtle border, Frost uses translucent ink, and Pixel uses a crisp default border. The first and last edges stay open.
@@ -40,7 +42,7 @@ An action's primary label names it and the optional description supplies extra c
 
 ## Review in the workbench
 
-- **Prose and numbering** and **Row sizes** show hierarchy, geometry, and inherited type. **Action states** pins hover, press, main focus, and trailing focus for side-by-side inspection.
+- **Prose and numbering** and **Row sizes** show hierarchy, geometry, and inherited type. **Action states** pins main-area states for side-by-side inspection. Tab to **Request access** to see the trailing button's keyboard focus.
 - **Independent row actions** uses live native links, a lightweight router stand-in, local command feedback, a switch, and the shared menu preview. **Rows on a floating surface** shows the same anatomy over a pinned popover surface. Use **Long labels and trailing content** at 360px, 120% text, and RTL to see a wrapped command and its independent trailing button.
 - Folio's **Document Reader** uses the family in prose and in its inspector. The **Workspace Overview** uses informational rows with diff and time metadata. **Extensions** uses a static list with independently actionable connector controls.
 

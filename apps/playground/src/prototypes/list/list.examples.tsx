@@ -309,7 +309,7 @@ export function StateExamples(): ReactElement {
           trailing={
             <Button
               size="s"
-              variant="ghost"
+              variant="secondary"
               tone="neutral"
               aria-label={
                 requestSent
@@ -317,7 +317,6 @@ export function StateExamples(): ReactElement {
                   : 'Request access to archived export keys'
               }
               onClick={() => setRequestSent(true)}
-              previewFocus
             >
               {requestSent ? 'Requested' : 'Request access'}
             </Button>

@@ -26,7 +26,7 @@ export default defineSpecimen({
       id: 'states',
       title: 'Action states',
       kind: 'states',
-      caption: 'Hover, press, and focus appearances are pinned here for comparison.',
+      caption: 'Main-area states are pinned. Use Tab to focus the Request access button.',
       render: () => <StateExamples />,
     },
     {
@@ -40,7 +40,7 @@ export default defineSpecimen({
       title: 'Independent row actions',
       kind: 'context',
       caption:
-        'Tab from the primary action to the menu. Only the switch changes export notifications.',
+        'The trailing slot holds the switch and menu trigger. Tab from the row link to its menu.',
       render: () => <LiveRows />,
     },
     {
