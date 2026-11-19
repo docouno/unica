@@ -43,6 +43,7 @@ export interface CalendarProps extends Omit<
   readonly onViewAvailability?: ((empty: boolean) => void) | undefined;
   readonly showFeedback?: boolean | undefined;
   readonly onFeedback?: ((issue: string, message: string) => void) | undefined;
+  readonly onToday?: (() => void) | undefined;
   readonly previewAnchor?: string | undefined;
   readonly previewCandidate?: string | undefined;
   readonly previewRange?: DateRange | undefined;
@@ -84,6 +85,7 @@ export function Calendar({
   readOnly,
   disabled,
   onFeedback,
+  onToday,
   showFeedback = true,
   onViewAvailability,
   previewRange,
@@ -428,6 +430,17 @@ export function Calendar({
             </div>
           ))}
         </div>
+        {count === 1 && onToday && !readOnly && !disabled && (
+          <button
+            type="button"
+            className="date-picker-today-proto"
+            onFocus={() => setHovered('')}
+            onMouseEnter={() => setHovered('')}
+            onClick={onToday}
+          >
+            Today
+          </button>
+        )}
       </div>
     );
   };

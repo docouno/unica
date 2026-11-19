@@ -5,7 +5,13 @@ import { Input } from '../input/input.proto.js';
 import type { ControlSize, FieldStatus, FieldVariant, InputProps } from '../input/input.proto.js';
 import { PopoverContent } from '../popover/popover.proto.js';
 import { Calendar } from './calendar.proto.js';
-import { dateLabel, numericDate, parseDate, rangeIssue } from './date-utils.proto.js';
+import {
+  dateAvailability,
+  dateLabel,
+  numericDate,
+  parseDate,
+  rangeIssue,
+} from './date-utils.proto.js';
 import type { DateRange } from './date-utils.proto.js';
 import './date-picker.css';
 function datePlaceholder(locale: string): string {
@@ -30,16 +36,14 @@ export type { CalendarProps } from './calendar.proto.js';
 
 export interface DatePickerPanelProps extends HTMLAttributes<HTMLDivElement> {
   readonly title?: string | undefined;
-  readonly onClose?: (() => void) | undefined;
-  readonly footer?: ReactNode;
+  readonly feedback?: { readonly message: string; readonly error?: boolean } | undefined;
   readonly panelRef?: RefObject<HTMLDivElement | null> | undefined;
   readonly floating?: boolean | undefined;
 }
 // The in-flow form is for material comparisons. Live fields use a native top-layer popover.
 export function DatePickerPanel({
   title,
-  onClose,
-  footer,
+  feedback,
   panelRef,
   floating,
   children,
@@ -55,19 +59,14 @@ export function DatePickerPanel({
       aria-label={title || 'Choose dates'}
     >
       {children}
-      {(footer || onClose) && (
-        <div className="date-picker-panel-footer-proto">
-          {footer}
-          {onClose && (
-            <button
-              className="date-action-proto date-picker-dismiss-proto"
-              type="button"
-              aria-label="Close calendar"
-              onClick={onClose}
-            >
-              <XIcon size="1em" />
-            </button>
-          )}
+      {feedback && (
+        <div
+          className="date-picker-panel-feedback-proto"
+          role="status"
+          data-empty={!feedback.message || undefined}
+          data-error={feedback.error || undefined}
+        >
+          <bdi>{feedback.message}</bdi>
         </div>
       )}
     </PopoverContent>
@@ -276,9 +275,13 @@ export function DatePicker({
   }, [field, validity]);
   const pick = (next: string): void => {
     update(next);
-    setOpen(false);
+    close();
     trigger.current?.focus();
   };
+  const canChooseToday = !readOnly && !dateAvailability(today, { min, max, unavailable, locale });
+  const calendarMessage =
+    calendarIssue ||
+    (noAvailableDays ? 'No dates available this month' : readOnly ? 'Read only' : '');
   return (
     <div
       {...props}
@@ -364,13 +367,16 @@ export function DatePicker({
               ref={trigger}
               className="date-action-proto"
               type="button"
-              aria-label={readOnly ? 'View calendar' : 'Select date'}
+              aria-label={
+                open && !disabled ? 'Close calendar' : readOnly ? 'View calendar' : 'Select date'
+              }
               aria-expanded={open && !disabled}
               aria-controls={`${id}-panel`}
               disabled={disabled}
               onClick={(event) => {
                 if (open) {
                   close();
+                  event.currentTarget.focus();
                   return;
                 }
                 setCalendarIssue('');
@@ -394,39 +400,8 @@ export function DatePicker({
           id={`${id}-panel`}
           floating={!previewInline}
           panelRef={panel}
-          onClose={() => {
-            close();
-            trigger.current?.focus();
-          }}
           title={readOnly ? 'View date' : 'Select date'}
-          footer={
-            <>
-              <span
-                className="date-picker-feedback-proto"
-                data-error={Boolean(calendarIssue) || undefined}
-                aria-live="polite"
-              >
-                <bdi>
-                  {calendarIssue ||
-                    (noAvailableDays
-                      ? 'No dates available this month'
-                      : readOnly
-                        ? 'Read only'
-                        : '')}
-                </bdi>
-              </span>
-              {!readOnly &&
-                !((min && today < min) || (max && today > max) || unavailable.includes(today)) && (
-                  <button
-                    type="button"
-                    className="date-picker-today-proto"
-                    onClick={() => pick(today)}
-                  >
-                    Today
-                  </button>
-                )}
-            </>
-          }
+          feedback={{ message: calendarMessage, error: Boolean(calendarIssue) }}
         >
           <Calendar
             key={viewDate.slice(0, 7)}
@@ -434,6 +409,7 @@ export function DatePicker({
             value={current}
             onFeedback={setCalendarIssue}
             onViewAvailability={setNoAvailableDays}
+            onToday={canChooseToday ? () => pick(today) : undefined}
             today={today}
             locale={locale}
             min={min}
@@ -648,13 +624,20 @@ export function DateRangePicker({
               ref={trigger}
               className="date-action-proto"
               type="button"
-              aria-label={readOnly ? 'View date range' : 'Choose date range'}
+              aria-label={
+                open && !disabled
+                  ? 'Close date range calendar'
+                  : readOnly
+                    ? 'View date range'
+                    : 'Choose date range'
+              }
               aria-expanded={open && !disabled}
               aria-controls={`${id}-panel`}
               disabled={disabled}
               onClick={(event) => {
                 if (open) {
                   close();
+                  event.currentTarget.focus();
                   return;
                 }
                 setOpen(true);
@@ -673,20 +656,8 @@ export function DateRangePicker({
           id={`${id}-panel`}
           floating={!previewInline}
           panelRef={panel}
-          onClose={() => {
-            close();
-            trigger.current?.focus();
-          }}
           title={readOnly && panelTitle === 'Choose date range' ? 'View date range' : panelTitle}
-          footer={
-            <span
-              className="date-range-summary-proto"
-              data-error={Boolean(calendarFeedback.issue) || undefined}
-              aria-live="polite"
-            >
-              <bdi>{calendarFeedback.message}</bdi>
-            </span>
-          }
+          feedback={{ message: calendarFeedback.message, error: Boolean(calendarFeedback.issue) }}
         >
           <Calendar
             key={textSource(current)}

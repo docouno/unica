@@ -144,8 +144,8 @@ export default defineSpecimen({
             clearable
           />
           <DatePicker
-            label="Review date"
-            defaultValue="2026-09-16"
+            label="Six-week month"
+            defaultValue="2026-03-30"
             defaultOpen
             previewInline
             clearable
