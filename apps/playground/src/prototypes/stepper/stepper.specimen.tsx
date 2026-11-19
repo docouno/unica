@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useLayoutEffect, useRef, useState } from 'react';
 import type { ReactElement, ReactNode } from 'react';
 import { defineSpecimen } from '../../workbench/types.js';
 import { Button } from '../button/button.proto.js';
@@ -189,10 +189,18 @@ function Interaction(): ReactElement {
 function Journey(): ReactElement {
   const [current, setCurrent] = useState<string | null>('access');
   const [completed, setCompleted] = useState<readonly string[]>(['details']);
-  const [owner, setOwner] = useState<'unchecked' | 'missing' | 'assigned'>('missing');
+  const [owner, setOwner] = useState<'unchecked' | 'missing' | 'assigned'>('unchecked');
+  const ownerAction = useRef<HTMLButtonElement>(null);
+  const continueAction = useRef<HTMLButtonElement>(null);
   const needsOwner = owner === 'missing';
   const index = setup.findIndex((step) => step.value === current);
   const active = setup[index];
+
+  useLayoutEffect(() => {
+    if (owner === 'assigned') {
+      continueAction.current?.focus();
+    }
+  }, [owner]);
 
   function advance(): void {
     if (!active) {
@@ -201,17 +209,15 @@ function Journey(): ReactElement {
       setCurrent('details');
       return;
     }
-    if (active.value === 'access' && needsOwner) {
+    if (active.value === 'access' && owner !== 'assigned') {
+      setOwner('missing');
+      ownerAction.current?.focus();
       return;
     }
     setCompleted((previous) =>
       previous.includes(active.value) ? previous : [...previous, active.value],
     );
-    const next = setup[index + 1]?.value ?? null;
-    if (next === 'access' && owner === 'unchecked') {
-      setOwner('missing');
-    }
-    setCurrent(next);
+    setCurrent(setup[index + 1]?.value ?? null);
   }
 
   return (
@@ -221,7 +227,8 @@ function Journey(): ReactElement {
         value={current}
         onValueChange={setCurrent}
         steps={setup.map((step) => ({
-          ...step,
+          value: step.value,
+          label: step.label,
           completed: completed.includes(step.value),
           invalid: step.value === 'access' && needsOwner,
           issue: step.value === 'access' && needsOwner ? 'Assign a workspace owner.' : undefined,
@@ -230,21 +237,24 @@ function Journey(): ReactElement {
       <Card>
         <div className="stepper-example-panel-copy">
           <Title as="h3" size="body-m">
-            {active?.label ?? 'Workspace created'}
+            {active?.value === 'access'
+              ? 'Workspace owner'
+              : (active?.label ?? 'Workspace created')}
           </Title>
           <Text size="body-s" color="secondary">
             <bdi>
               {active?.value === 'access'
-                ? needsOwner
-                  ? 'Every workspace needs at least one owner.'
-                  : 'An owner has been assigned.'
+                ? owner === 'assigned'
+                  ? 'An owner has been assigned.'
+                  : 'Owners can manage members and workspace settings.'
                 : (active?.description ?? 'Your workspace is ready to use.')}
             </bdi>
           </Text>
         </div>
         <div className="stepper-example-actions">
-          {active?.value === 'access' && needsOwner && (
+          {active?.value === 'access' && owner !== 'assigned' && (
             <Button
+              ref={ownerAction}
               variant="secondary"
               tone="neutral"
               size="s"
@@ -253,7 +263,12 @@ function Journey(): ReactElement {
               Assign an owner
             </Button>
           )}
-          <Button size="s" disabled={active?.value === 'access' && needsOwner} onClick={advance}>
+          <Button
+            ref={continueAction}
+            size="s"
+            disabled={active?.value === 'access' && needsOwner}
+            onClick={advance}
+          >
             {active ? (active.value === 'review' ? 'Create workspace' : 'Continue') : 'Start over'}
           </Button>
         </div>
@@ -263,9 +278,20 @@ function Journey(): ReactElement {
 }
 
 function FloatingExample(): ReactElement {
+  const steps: readonly StepperStepProps[] = [
+    {
+      value: 'source',
+      label: 'Source repository',
+      invalid: true,
+      issue: 'Reconnect the repository.',
+    },
+    { value: 'destination', label: 'Destination', description: 'Choose a workspace' },
+    { value: 'review', label: 'Review' },
+  ];
+
   return (
     <div className="stepper-example-overlay">
-      <Map label="Workspace setup" layout="vertical" steps={issues} value="access" />
+      <Map label="Repository import" layout="vertical" steps={steps} value="destination" />
     </div>
   );
 }
@@ -276,6 +302,7 @@ export default defineSpecimen({
   group: 'Navigation',
   summary: 'An ordered map for setup, review, and other staged tasks.',
   sections: [
+    { id: 'journey', title: 'Workspace setup', kind: 'context', render: () => <Journey /> },
     {
       id: 'sizes',
       title: 'Horizontal sizes',
@@ -301,7 +328,6 @@ export default defineSpecimen({
       kind: 'states',
       render: () => <Interaction />,
     },
-    { id: 'journey', title: 'Workspace setup', kind: 'context', render: () => <Journey /> },
     {
       id: 'overlay',
       title: 'In a floating surface',

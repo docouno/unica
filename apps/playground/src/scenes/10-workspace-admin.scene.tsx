@@ -68,6 +68,15 @@ function WorkspaceAdminScene(): ReactElement {
   const [showValidationToast, setShowValidationToast] = useState(true);
   const policyName = useId();
   const feedbackRegion = useRef<HTMLDivElement>(null);
+  const sourceHeading = useRef<HTMLHeadingElement>(null);
+  const verificationHeading = useRef<HTMLHeadingElement>(null);
+  const commitStatus = useRef<HTMLElement>(null);
+  useLayoutEffect(() => {
+    if (currentStep === 'commit') {
+      commitStatus.current?.focus();
+    }
+  }, [currentStep]);
+
   useLayoutEffect(() => {
     const region = feedbackRegion.current;
     const scene = region?.closest<HTMLElement>('.folio-scene');
@@ -209,7 +218,7 @@ function WorkspaceAdminScene(): ReactElement {
                 description={`${archives.length} bundles staged`}
                 completed={readyToCommit}
               />
-              <StepperStep value="commit" label="Commit to space" description="Publish & index" />
+              <StepperStep value="commit" label="Commit to space" />
             </Stepper>
             {error && (
               <Alert
@@ -225,15 +234,15 @@ function WorkspaceAdminScene(): ReactElement {
             <Card className="folio-import-card">
               <div className="folio-row folio-between folio-import-card-heading">
                 <div className="folio-stack">
-                  <Title as="h2" size="body-m">
+                  <Title as="h2" size="body-m" ref={sourceHeading} tabIndex={-1}>
                     1. Schema &amp; duplicate slug policy
                   </Title>
                   <Text size="body-s" color="secondary">
                     Attach a YAML mapping rule set and choose how matching slugs are reconciled.
                   </Text>
                 </div>
-                <Badge size="s" status="success" dot>
-                  Schema valid
+                <Badge size="s" status={schema ? 'success' : 'neutral'} dot={Boolean(schema)}>
+                  {schema ? 'Schema valid' : 'Default rules'}
                 </Badge>
               </div>
               <FileInput
@@ -284,7 +293,7 @@ function WorkspaceAdminScene(): ReactElement {
             <Card className="folio-import-card">
               <div className="folio-row folio-between folio-import-card-heading">
                 <div className="folio-stack">
-                  <Title as="h2" size="body-m">
+                  <Title as="h2" size="body-m" ref={verificationHeading} tabIndex={-1}>
                     2. Archive bundles &amp; validation queue
                   </Title>
                   <Text size="body-s" color="secondary">
@@ -337,6 +346,7 @@ function WorkspaceAdminScene(): ReactElement {
                     setValidation('required');
                     setShowValidationToast(false);
                     setNotice('The staged import was cleared.');
+                    sourceHeading.current?.focus();
                   }}
                 >
                   Abort import
@@ -348,23 +358,36 @@ function WorkspaceAdminScene(): ReactElement {
                     tone="neutral"
                     iconLeft={ArrowLeftIcon}
                     disabled={currentStep === 'source'}
-                    onClick={() => setCurrentStep(currentStep === 'commit' ? 'verify' : 'source')}
+                    onClick={() => {
+                      if (currentStep === 'commit') {
+                        setCurrentStep('verify');
+                        verificationHeading.current?.focus();
+                      } else {
+                        setCurrentStep('source');
+                        sourceHeading.current?.focus();
+                      }
+                    }}
                   >
                     Back
                   </Button>
-                  <Button
-                    size="s"
-                    disabled={!readyToCommit || currentStep !== 'verify'}
-                    onClick={() => {
-                      setCurrentStep('commit');
-                      setShowValidationToast(false);
-                      setNotice(
-                        `${archives.length} validated ${archives.length === 1 ? 'archive is' : 'archives are'} ready to import.`,
-                      );
-                    }}
-                  >
-                    Continue to commit
-                  </Button>
+                  {currentStep === 'commit' ? (
+                    <Text ref={commitStatus} tabIndex={-1} size="body-s" color="secondary">
+                      {archives.length} validated{' '}
+                      {archives.length === 1 ? 'archive is' : 'archives are'} ready to import.
+                    </Text>
+                  ) : (
+                    <Button
+                      size="s"
+                      disabled={!readyToCommit || currentStep !== 'verify'}
+                      onClick={() => {
+                        setCurrentStep('commit');
+                        setShowValidationToast(false);
+                        setNotice('');
+                      }}
+                    >
+                      Continue to commit
+                    </Button>
+                  )}
                 </div>
               </div>
             </Card>

@@ -7,10 +7,11 @@
   --stepper-map-gap: var(--space-16);
   --stepper-stack-gap: var(--space-24);
   --stepper-focus: var(--focus-ring-color);
+  --stepper-current-error-edge: var(--status-danger-soft-fg);
   --stepper-hover-fill: color-mix(in srgb, var(--control-bg), var(--fg-muted) 10%);
   --stepper-press-fill: color-mix(in srgb, var(--control-bg), var(--fg-muted) 20%);
-  --stepper-rail: color-mix(in srgb, var(--control-border-focus) 46%, transparent);
-  --stepper-rail-traversed: color-mix(in srgb, var(--control-border-focus) 78%, transparent);
+  --stepper-rail: color-mix(in srgb, var(--control-border-focus) 40%, transparent);
+  --stepper-rail-traversed: color-mix(in srgb, var(--control-border-focus) 64%, transparent);
 
   container: stepper / inline-size;
   min-inline-size: 0;
@@ -84,13 +85,11 @@ button.stepper-entry-proto {
 
 .stepper-marker-proto {
   --stepper-marker-fill: var(--control-bg);
-  --stepper-marker-edge: var(--control-border-hover);
+  --stepper-marker-edge: var(--control-border);
   --stepper-marker-ink: var(--fg-muted);
-  --stepper-current-edge: var(--accent-soft-fg);
   --stepper-marker-hover: var(--stepper-hover-fill);
   --stepper-marker-press: var(--stepper-press-fill);
 
-  position: relative;
   display: grid;
   inline-size: var(--stepper-marker-size);
   block-size: var(--stepper-marker-size);
@@ -118,7 +117,7 @@ button.stepper-entry-proto {
 
 .stepper-step-proto[data-current] .stepper-marker-proto {
   --stepper-marker-fill: var(--accent-solid);
-  --stepper-marker-edge: var(--accent-solid);
+  --stepper-marker-edge: var(--accent-signal);
   --stepper-marker-ink: var(--fg-on-accent);
 }
 
@@ -130,7 +129,6 @@ button.stepper-entry-proto {
   --stepper-marker-fill: var(--status-danger-soft-bg);
   --stepper-marker-edge: var(--status-danger-border);
   --stepper-marker-ink: var(--status-danger-soft-fg);
-  --stepper-current-edge: var(--status-danger-soft-fg);
   --stepper-marker-hover: color-mix(
     in srgb,
     var(--status-danger-soft-bg) 90%,
@@ -143,13 +141,10 @@ button.stepper-entry-proto {
   );
 }
 
-.stepper-step-proto[data-current] .stepper-marker-proto::before {
-  position: absolute;
-  inset: -4px;
-  border: 1px solid var(--stepper-current-edge);
-  border-radius: inherit;
-  content: '';
-  pointer-events: none;
+.stepper-step-proto[data-current][data-status='invalid'] .stepper-marker-proto {
+  --stepper-marker-edge: var(--stepper-current-error-edge);
+
+  border-width: 2px;
 }
 
 .stepper-connector-proto {
@@ -220,14 +215,10 @@ button.stepper-entry-proto .stepper-title-text-proto {
   outline: none;
 }
 
-.stepper-entry-proto:is(:focus-visible, [data-preview='focus']) .stepper-marker-proto {
-  outline: 2px solid var(--stepper-focus);
-  outline-offset: 2px;
-}
-
+.stepper-entry-proto:is(:focus-visible, [data-preview='focus']) .stepper-marker-proto,
 .stepper-step-proto:focus-visible .stepper-marker-proto {
   outline: 2px solid var(--stepper-focus);
-  outline-offset: 5px;
+  outline-offset: 2px;
 }
 
 .stepper-entry-proto:is(:focus-visible, [data-preview='focus']) .stepper-title-text-proto {
@@ -451,6 +442,7 @@ button.stepper-entry-proto:is(:active, [data-preview='hover'], [data-preview='pr
   .stepper-proto {
     --stepper-current-shadow: none;
     --stepper-focus: Highlight;
+    --stepper-current-error-edge: Highlight;
     --stepper-rail: GrayText;
     --stepper-rail-traversed: CanvasText;
   }
@@ -460,7 +452,6 @@ button.stepper-entry-proto:is(:active, [data-preview='hover'], [data-preview='pr
     --stepper-marker-fill: Canvas;
     --stepper-marker-ink: CanvasText;
     --stepper-marker-edge: CanvasText;
-    --stepper-current-edge: Highlight;
     --stepper-marker-hover: Canvas;
     --stepper-marker-press: Canvas;
 
