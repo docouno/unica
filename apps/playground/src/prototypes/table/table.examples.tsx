@@ -6,6 +6,7 @@ import {
   GitBranchIcon,
   LockSimpleIcon,
   PushPinIcon,
+  ArrowCounterClockwiseIcon,
 } from '@phosphor-icons/react';
 import { Alert, AlertDescription, AlertTitle } from '../alert/alert.proto.js';
 import { Badge } from '../badge/badge.proto.js';
@@ -24,6 +25,7 @@ import { Empty } from '../empty/empty.proto.js';
 import { Input } from '../input/input.proto.js';
 import { Link } from '../link/link.proto.js';
 import { ContextMenu } from '../menu/context-menu.proto.js';
+import { Menu } from '../menu/menu.live.js';
 import { Pagination } from '../pagination/pagination.proto.js';
 import { Select } from '../select/select-control.proto.js';
 import { SkeletonText } from '../skeleton/skeleton.proto.js';
@@ -105,9 +107,9 @@ export function DensityExamples(): ReactElement {
 }
 
 const routes = [
-  { id: 'queue', path: '/v1/queue', policy: 'inherit' },
-  { id: 'events', path: '/v1/events', policy: 'allow' },
-  { id: 'system', path: '/health', policy: 'inherit', locked: true },
+  { id: 'queue', path: '/queue', policy: 'inherit' },
+  { id: 'events', path: '/events', policy: 'allow' },
+  { id: 'system', path: '/up', policy: 'inherit', locked: true },
 ];
 const policies = [
   { value: 'inherit', label: 'Inherit' },
@@ -115,49 +117,131 @@ const policies = [
   { value: 'deny', label: 'Deny' },
 ];
 
+function copyValue(value: string, onNotice: (message: string) => void): void {
+  if (!navigator.clipboard) {
+    onNotice(value);
+    return;
+  }
+  void navigator.clipboard.writeText(value).then(
+    () => onNotice(`Copied ${value}.`),
+    () => onNotice(value),
+  );
+}
+
+function RouteRow({
+  route,
+  size,
+  onNotice,
+}: {
+  readonly route: (typeof routes)[number];
+  readonly size: TableSize;
+  readonly onNotice: (message: string) => void;
+}): ReactElement {
+  const [path, setPath] = useState(route.path);
+  const [policy, setPolicy] = useState<string | null>(route.policy);
+  return (
+    <TableRow>
+      <TableCell control="field">
+        <Input
+          aria-label={`Path for ${route.id}`}
+          variant="ghost"
+          size={size}
+          dir="ltr"
+          value={path}
+          onChange={(event) => setPath(event.currentTarget.value)}
+          readOnly={route.locked}
+          iconRight={route.locked ? LockSimpleIcon : undefined}
+        />
+      </TableCell>
+      <TableCell control="field">
+        <Select
+          aria-label={`Policy for ${route.id}`}
+          variant="ghost"
+          size={size}
+          options={policies}
+          value={policy}
+          onValueChange={setPolicy}
+          disabled={route.locked}
+        />
+      </TableCell>
+      <TableCell control="action" align="center">
+        <Menu
+          label={`Actions for ${route.id}`}
+          align="end"
+          size="s"
+          items={[
+            {
+              id: 'copy',
+              label: 'Copy path',
+              icon: CopyIcon,
+              run: () => copyValue(path, onNotice),
+            },
+            {
+              id: 'reset',
+              label: 'Restore defaults',
+              icon: ArrowCounterClockwiseIcon,
+              disabled: route.locked || (path === route.path && policy === route.policy),
+              run: () => {
+                setPath(route.path);
+                setPolicy(route.policy);
+                onNotice(`Defaults restored for ${route.id}.`);
+              },
+            },
+          ]}
+          trigger={(props) => (
+            <IconButton
+              {...props}
+              aria-label={`Actions for ${route.id}`}
+              icon={DotsThreeIcon}
+              size={size}
+              variant="ghost"
+            />
+          )}
+        />
+      </TableCell>
+    </TableRow>
+  );
+}
+
 function RouteTable({ size }: { readonly size: TableSize }): ReactElement {
   const captionId = useId();
+  const [notice, setNotice] = useState('');
   return (
-    <TableScroll aria-labelledby={captionId}>
-      <Table size={size} className="table-example-routes">
-        <TableCaption id={captionId}>
-          Route policies <span>{size.toUpperCase()}</span>
-        </TableCaption>
-        <TableHeader>
-          <TableRow>
-            <TableColumnHeader>Route</TableColumnHeader>
-            <TableColumnHeader>Policy</TableColumnHeader>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {routes.map((route) => (
-            <TableRow key={route.id}>
-              <TableCell editor>
-                <Input
-                  aria-label={`Path for ${route.id}`}
-                  variant="ghost"
-                  size={size}
-                  dir="ltr"
-                  defaultValue={route.path}
-                  readOnly={route.locked}
-                  iconRight={route.locked ? LockSimpleIcon : undefined}
-                />
-              </TableCell>
-              <TableCell editor>
-                <Select
-                  aria-label={`Policy for ${route.id}`}
-                  variant="ghost"
-                  size={size}
-                  options={policies}
-                  defaultValue={route.policy}
-                  disabled={route.locked}
-                />
-              </TableCell>
+    <div className="table-example-route-case">
+      <TableScroll aria-labelledby={captionId}>
+        <Table size={size} className="table-example-routes">
+          <TableCaption id={captionId}>
+            Route policies <span>{size.toUpperCase()}</span>
+          </TableCaption>
+          <colgroup>
+            <col />
+            <col className="table-example-policy-column" />
+            <col className="table-example-actions-column" />
+          </colgroup>
+          <TableHeader>
+            <TableRow>
+              <TableColumnHeader>Route</TableColumnHeader>
+              <TableColumnHeader>Policy</TableColumnHeader>
+              <TableColumnHeader aria-label="Actions" className="table-example-action-heading" />
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </TableScroll>
+          </TableHeader>
+          <TableBody>
+            {routes.map((route) => (
+              <RouteRow key={route.id} route={route} size={size} onNotice={setNotice} />
+            ))}
+          </TableBody>
+        </Table>
+      </TableScroll>
+      <Text
+        className="table-example-route-notice"
+        size="caption-l"
+        color="muted"
+        role="status"
+        dir="auto"
+      >
+        {notice}
+      </Text>
+    </div>
   );
 }
 
@@ -284,16 +368,7 @@ export function BuildQueue(): ReactElement {
                         id: 'copy',
                         label: 'Copy version',
                         icon: CopyIcon,
-                        run: () => {
-                          if (!navigator.clipboard) {
-                            setNotice(`Build version ${build.version}.`);
-                            return;
-                          }
-                          void navigator.clipboard.writeText(build.version).then(
-                            () => setNotice(`Copied ${build.version}.`),
-                            () => setNotice(`Build version ${build.version}.`),
-                          );
-                        },
+                        run: () => copyValue(build.version, setNotice),
                       },
                     ]}
                     trigger={(props) => (
@@ -301,7 +376,7 @@ export function BuildQueue(): ReactElement {
                         {...props}
                         aria-label={`${build.name} actions`}
                         icon={DotsThreeIcon}
-                        size="s"
+                        size="m"
                         variant="ghost"
                       />
                     )}
@@ -345,7 +420,11 @@ export function BuildQueue(): ReactElement {
                         <TableCell align="end">
                           <bdi>{build.duration.toFixed(1)}</bdi>
                         </TableCell>
-                        <TableCell align="center" className="table-example-actions">
+                        <TableCell
+                          align="center"
+                          control="action"
+                          className="table-example-actions"
+                        >
                           {trigger}
                           {panel}
                         </TableCell>

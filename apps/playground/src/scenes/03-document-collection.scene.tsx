@@ -498,7 +498,11 @@ function CollectionScene(): ReactElement {
                             <TableCell>
                               <Person initials={row.initials} name={row.owner} />
                             </TableCell>
-                            <TableCell className="folio-runbook-menu-cell">
+                            <TableCell
+                              align="center"
+                              control="action"
+                              className="folio-runbook-menu-cell"
+                            >
                               {trigger}
                               {panel}
                             </TableCell>

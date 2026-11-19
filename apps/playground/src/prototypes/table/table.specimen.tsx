@@ -22,8 +22,9 @@ export default defineSpecimen({
     },
     {
       id: 'editors',
-      title: 'Inline fields',
+      title: 'Editable rows',
       kind: 'matrix',
+      caption: 'Edit a route or policy, then restore that row from its actions menu.',
       render: () => <EditorExamples />,
     },
     {

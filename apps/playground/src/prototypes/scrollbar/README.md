@@ -23,10 +23,10 @@ The subdued resting indicator deliberately prioritizes visual hierarchy; it is n
 
 Desktop and keyboard-only Chromium/WebKit expose native scrollbar parts through `::-webkit-scrollbar`. The recipe uses those parts to follow `--radius-full`: rounded Soft/Frost, `0px` Pixel. Standard `scrollbar-color` and `scrollbar-width` are reset to `auto` in this path because non-auto values suppress the pseudo-element styles.
 
-| Owner                                                             | Scrollbar gutter | Visible thumb | Standard fallback |
-| ----------------------------------------------------------------- | ---------------- | ------------- | ----------------- |
-| Page, sidebar, reading region, Table, CodeBlock                   | 14px             | 8px           | `auto` width      |
-| PopoverBody, DialogBody, Textarea, document tabs, bounded choices | 10px             | 4px           | `thin` width      |
+| Owner                                                                    | Scrollbar gutter | Visible thumb | Standard fallback |
+| ------------------------------------------------------------------------ | ---------------- | ------------- | ----------------- |
+| Page, sidebar, reading region, CodeBlock                                 | 14px             | 8px           | `auto` width      |
+| Table, PopoverBody, DialogBody, Textarea, document tabs, bounded choices | 10px             | 4px           | `thin` width      |
 
 A 3px transparent border on each side supplies breathing room while retaining the native thumb's full hit area. The minimum thumb length is 24px; its actual length follows the content ratio. The track has no authored end buttons. The same dimensions apply to both axes. Explicit pseudo-element dimensions reserve a classic gutter on desktop, including systems that normally use overlay scrollbars; this is an intentional cost of controlling the shape. Content that fits still has no scrollbar because the owner uses `overflow: auto`.
 

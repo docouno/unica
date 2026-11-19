@@ -725,8 +725,7 @@
 }
 
 .folio-content-collection .table-proto :is(th, td).folio-runbook-menu-cell {
-  width: 1%;
-  padding-inline: var(--space-4) var(--space-8);
+  inline-size: 1%;
 }
 
 @container folio-content (max-width: 640px) {

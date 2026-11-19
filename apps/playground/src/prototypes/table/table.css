@@ -1,4 +1,6 @@
 .table-scroll-proto {
+  --scrollbar-size: 10px;
+  --scrollbar-width: thin;
   min-inline-size: 0;
   max-inline-size: 100%;
   overflow: auto;
@@ -12,7 +14,11 @@
 
 .table-proto {
   --table-row-height: var(--size-m-height);
-  --table-control-height: var(--size-m-height);
+  --table-control-inset-block: 3px;
+  --table-control-inset-inline: var(--space-4);
+  --table-control-height: calc(
+    var(--table-row-height) - 2 * var(--table-control-inset-block) - 1px
+  );
   --table-cell-x: var(--size-m-padding-x);
   --table-cell-y: var(--size-m-padding-y);
   --table-font: var(--text-size-body-s);
@@ -34,7 +40,6 @@
 }
 .table-proto[data-size='s'] {
   --table-row-height: 32px;
-  --table-control-height: var(--size-s-height);
   --table-cell-x: var(--size-s-padding-x);
   --table-cell-y: var(--size-s-padding-y);
   --table-font: var(--text-size-body-xs);
@@ -46,7 +51,6 @@
 }
 .table-proto[data-size='l'] {
   --table-row-height: var(--size-l-height);
-  --table-control-height: var(--size-l-height);
   --table-cell-x: var(--size-l-padding-x);
   --table-cell-y: var(--size-l-padding-y);
   --table-font: var(--text-size-body-m);
@@ -172,23 +176,34 @@
   outline-offset: 1px;
 }
 
-.table-proto > tbody > tr > td[data-editor] {
-  padding: 0 4px;
+.table-proto > tbody > tr > td[data-control] {
+  padding: var(--table-control-inset-block) var(--table-control-inset-inline);
+  line-height: 0;
 }
-.table-proto td[data-editor] :is(.input-shell-proto, .select-trigger-proto)[data-variant='ghost'] {
-  --field-height: min(var(--table-control-height), calc(var(--table-row-height) - 1px));
-  --field-padding: calc(var(--table-cell-x) - 5px);
+.table-proto td[data-control='field'] .input-shell-proto[data-variant='ghost'] {
+  --field-height: var(--table-control-height);
+  --field-padding: calc(var(--table-cell-x) - var(--table-control-inset-inline) - 1px);
   --field-font: var(--table-font);
   outline-offset: -2px;
 }
+.table-proto td[data-control='field'] .input-native-proto {
+  padding-block: 0;
+}
+.table-proto td[data-control='action'] > .button-proto-icon[data-variant='ghost'] {
+  --button-height: var(--table-control-height);
+  --button-radius: var(--table-sort-radius);
+  --button-tint: var(--neutral-soft-bg);
+  --button-ghost-hover-bg: var(--neutral-soft-bg);
+  outline-offset: -2px;
+}
 .table-proto
-  td[data-editor]
+  td[data-control='field']
   .input-shell-proto[data-variant='ghost']:not(.select-trigger-proto)::after {
-  inset-inline: calc(var(--table-cell-x) - 4px);
+  inset-inline: calc(var(--table-cell-x) - var(--table-control-inset-inline));
 }
 /* Keep the editable edge legible on both unpainted and selected rows. */
 .table-proto
-  td[data-editor]
+  td[data-control='field']
   .input-shell-proto[data-variant='ghost'][data-status='neutral']:has(
     input:not(:disabled, [readonly])
   ):not(:focus-within)::after {
@@ -196,24 +211,24 @@
 }
 @media (hover: hover) {
   .table-proto
-    td[data-editor]
+    td[data-control='field']
     .input-shell-proto[data-variant='ghost'][data-status='neutral']:has(
       input:not(:disabled, [readonly])
     ):hover:not(:focus-within)::after {
     border-block-end-color: var(--fg-muted);
   }
 }
-.table-proto td[data-editor] .input-shell-proto:has(input[readonly])::after {
+.table-proto td[data-control='field'] .input-shell-proto:has(input[readonly])::after {
   display: none;
 }
-.table-proto:dir(rtl) td[data-editor] input[dir='ltr'] {
+.table-proto:dir(rtl) td[data-control='field'] input[dir='ltr'] {
   text-align: end;
 }
 
 @media (pointer: coarse) {
   .table-proto[data-size] {
     --table-row-height: var(--size-l-height);
-    --table-control-height: var(--size-l-height);
+    --table-control-height: 46px;
   }
   .table-sort-proto {
     min-block-size: 44px;

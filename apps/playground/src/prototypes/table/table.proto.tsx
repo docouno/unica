@@ -107,12 +107,11 @@ export function TableRowHeader({ align, ...props }: TableHeadingProps): ReactEle
 
 export interface TableCellProps extends Omit<ComponentPropsWithRef<'td'>, 'align'> {
   readonly align?: TableAlign;
-  /** Uses the inset and sizing for a full-width ghost field. */
-  readonly editor?: boolean;
+  readonly control?: 'field' | 'action';
 }
 
-export function TableCell({ align, editor, ...props }: TableCellProps): ReactElement {
-  return <td {...props} data-align={align} data-editor={editor || undefined} />;
+export function TableCell({ align, control, ...props }: TableCellProps): ReactElement {
+  return <td {...props} data-align={align} data-control={control} />;
 }
 
 function visibleTableArea(
