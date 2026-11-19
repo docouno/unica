@@ -577,6 +577,12 @@ function CollectionScene(): ReactElement {
                         <Badge size="s" status="neutral">
                           {row.tier}
                         </Badge>
+                        <Text size="caption-l" color="muted">
+                          Modified {dateLabel(row.modified)}
+                        </Text>
+                        <Text size="caption-l" color="muted">
+                          {row.verifiedOn ? `Verified ${dateLabel(row.verifiedOn)}` : 'Unverified'}
+                        </Text>
                         <Person initials={row.initials} name={row.owner} />
                         {panel}
                       </Card>
