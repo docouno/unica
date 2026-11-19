@@ -80,31 +80,67 @@
   border-block-start: 0;
 }
 
+.folio-connector-result-status {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
 .folio-webhook-card.card-proto {
-  min-block-size: 356px;
-  padding: 0;
+  min-block-size: 320px;
+}
+
+.folio-webhook-card.card-proto::before {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
   background-image: var(--motif-canvas-grid);
   background-size: 24px 24px;
+  opacity: 0.45;
+  pointer-events: none;
+  content: '';
 }
 
-.folio-webhook-card .empty-proto {
+.folio-webhook-stage {
+  position: relative;
+  display: grid;
   flex: 1;
-  justify-content: center;
-  padding: 28px 32px;
+  align-content: center;
+  min-inline-size: 0;
 }
 
-.folio-webhook-card .empty-copy-proto > h3 {
-  font-size: var(--text-size-heading-m);
-  line-height: var(--text-size-heading-m-lh);
+.folio-webhook-sandbox {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-12) var(--space-24);
 }
 
-.folio-webhook-card .empty-copy-proto {
-  max-inline-size: 520px;
+.folio-webhook-sandbox-copy {
+  display: grid;
+  gap: var(--space-4);
 }
 
-.folio-webhook-card .empty-description-proto {
-  font-size: var(--text-size-body-m);
-  line-height: var(--text-size-body-m-lh);
+.folio-webhook-sandbox-title:focus-visible {
+  border-radius: var(--radius-xs);
+  outline: 2px solid var(--focus-ring-color);
+  outline-offset: 3px;
+}
+
+@media (forced-colors: active) {
+  .folio-webhook-sandbox-title:focus-visible {
+    outline-color: Highlight;
+  }
+}
+
+@container artboard (max-width: 480px) {
+  .folio-webhook-card.card-proto {
+    min-block-size: max(320px, calc(280px * var(--font-scale)));
+  }
 }
 
 .folio-preferences-column {
@@ -305,7 +341,7 @@
     flex-wrap: wrap;
   }
 
-  .folio-webhook-card .empty-proto {
+  .folio-webhook-card.card-proto {
     padding: var(--space-24) var(--space-16);
   }
 
