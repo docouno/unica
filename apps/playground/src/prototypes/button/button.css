@@ -251,6 +251,10 @@
   --button-press: none;
 }
 
+.button-proto[data-variant='ghost'][data-tone='neutral']:where(:not([aria-pressed='true'])) {
+  --button-tint: var(--_button-context-bg, var(--btn-ghost-neutral-bg-hover));
+}
+
 /* Pinned previews and real hover use the same recipe; touch never keeps a hover plate. */
 .button-proto:not(:disabled, [data-loading])[data-preview='hover'] {
   background-color: var(--button-hover-bg);

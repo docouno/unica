@@ -47,9 +47,9 @@ const initialArchives: readonly StagedArchive[] = [
   },
   {
     id: 'rfcs',
-    name: 'legacy-envoy-rfcs.tar.gz',
+    name: 'legacy-envoy-rfcs.zip',
     megabytes: 6.4,
-    detail: 'Uploading & indexing archive…',
+    detail: 'Uploading archive…',
     status: 'uploading',
     progress: 65,
   },
@@ -87,7 +87,7 @@ function WorkspaceAdminScene(): ReactElement {
     return () => observer.disconnect();
   }, [archives, notice, showActivityToast, showValidationToast]);
   const totalSize = archives.reduce((sum, archive) => sum + archive.megabytes, 0);
-  const stagedLabel = `${archives.length} ${archives.length === 1 ? 'archive' : 'archives'} staged · ${totalSize.toFixed(1)} MB`;
+  const uploadingArchive = archives.find((archive) => archive.status === 'uploading');
 
   function chooseSchema(files: readonly File[]): void {
     const file = files[0];
@@ -211,8 +211,11 @@ function WorkspaceAdminScene(): ReactElement {
                 label="Frontmatter mapping schema"
                 fileName={schema}
                 fileDetail={schemaSize}
-                browseLabel="Replace file"
                 onFilesChange={chooseSchema}
+                onClear={() => {
+                  setSchema('');
+                  setSchemaSize('');
+                }}
                 description="Optional YAML mapping for custom status and service tags."
               />
               <div
@@ -248,29 +251,19 @@ function WorkspaceAdminScene(): ReactElement {
                     2. Archive bundles &amp; validation queue
                   </Title>
                   <Text size="body-s" color="secondary">
-                    Drop Markdown or ZIP archives to verify internal links before publishing.
+                    Verify links and frontmatter before publishing.
                   </Text>
                 </div>
                 <Badge size="s">
                   {archives.length} staged · {totalSize.toFixed(1)} MB
                 </Badge>
               </div>
-              <div className="folio-stack folio-import-dropzone">
-                <Dropzone
-                  title="Drop Markdown or ZIP archives here"
-                  browseLabel="Browse bundles"
-                  accept=".md,.mdx,.zip"
-                  onFilesChange={addArchives}
-                />
-                <div className="folio-row folio-between folio-wrap">
-                  <Text size="caption-l" color="muted">
-                    UTF-8 .md, .mdx, or .zip up to 50 MB per archive
-                  </Text>
-                  <Text size="caption-l" color="muted" className="folio-import-queue-label">
-                    {stagedLabel}
-                  </Text>
-                </div>
-              </div>
+              <Dropzone
+                size="m"
+                description=".md and .mdx (UTF-8), or .zip · 50 MB max per file"
+                accept=".md,.mdx,.zip"
+                onFilesChange={addArchives}
+              />
               <Progress value={archives.length ? 84 : 0} label="Schema & cross-link validation" />
               <FileList>
                 {archives.map((archive) => (
@@ -279,22 +272,12 @@ function WorkspaceAdminScene(): ReactElement {
                     name={archive.name}
                     status={archive.status}
                     progress={archive.progress}
-                    detail={
-                      <>
-                        {archive.megabytes.toFixed(1)} MB{' '}
-                        <span className="folio-import-file-status">{archive.detail}</span>
-                      </>
-                    }
+                    fileSize={`${archive.megabytes.toFixed(1)} MB`}
+                    detail={archive.detail}
                     onRemove={() =>
                       setArchives((current) => current.filter((file) => file.id !== archive.id))
                     }
-                  >
-                    {archive.progress !== undefined && (
-                      <Text size="caption-l" color="muted">
-                        {archive.progress}%
-                      </Text>
-                    )}
-                  </FileItem>
+                  />
                 ))}
               </FileList>
               <div className="folio-import-footer">
@@ -341,13 +324,13 @@ function WorkspaceAdminScene(): ReactElement {
       <div className="folio-import-toast-region" ref={feedbackRegion}>
         <ToastViewport
           items={[
-            ...(showActivityToast && archives.some((archive) => archive.status === 'uploading')
+            ...(showActivityToast && uploadingArchive
               ? [
                   {
                     id: 'activity',
                     loading: true,
-                    title: 'Indexing archive',
-                    children: 'legacy-envoy-rfcs.tar.gz · You can keep reviewing the import.',
+                    title: 'Uploading archive',
+                    children: `${uploadingArchive.name} · You can keep reviewing the import.`,
                   },
                 ]
               : []),

@@ -1,0 +1,15 @@
+File input Arabic typography fixture
+
+File: file-input-arabic-400.ttf (Noto Sans Arabic, weight 400)
+Retrieved: 2026-11-16
+Purpose: deterministic filename, label, and status rendering in the file-input specimens.
+Text subset: ملف مرجعي تقرير البحث تم التحقق من الملف 2026.pdf
+
+Google Fonts supplied this text subset:
+https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@400&text=%D9%85%D9%84%D9%81+%D9%85%D8%B1%D8%AC%D8%B9%D9%8A+%D8%AA%D9%82%D8%B1%D9%8A%D8%B1+%D8%A7%D9%84%D8%A8%D8%AD%D8%AB+%D8%AA%D9%85+%D8%A7%D9%84%D8%AA%D8%AD%D9%82%D9%82+%D9%85%D9%86+%D8%A7%D9%84%D9%85%D9%84%D9%81+2026.pdf
+
+Downloaded font, preserved without further modification:
+https://fonts.gstatic.com/l/font?kit=nwpxtLGrOAZMl5nJ_wfgRg3DrWFZWsnVBJ_sS6tlqHHFlhQ5l3sQWIHPqzCfyGyvu2ihPS3yuWAyEycJxk7Q7dFNxb0A9ho0V3jHAeS8_Ef9ZDGigMF1&skey=f979c51db865377e&v=v33
+
+License: SIL Open Font License 1.1, included as file-input-arabic-OFL.txt.
+Upstream: https://github.com/google/fonts/blob/main/ofl/notosansarabic/OFL.txt
