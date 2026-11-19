@@ -5,6 +5,7 @@ import { Input } from '../input/input.proto.js';
 import type { ControlSize, FieldStatus, FieldVariant, InputProps } from '../input/input.proto.js';
 import { PopoverContent } from '../popover/popover.proto.js';
 import { Calendar } from './calendar.proto.js';
+import type { CalendarFeedback } from './calendar.proto.js';
 import {
   dateAvailability,
   dateLabel,
@@ -36,7 +37,7 @@ export type { CalendarProps } from './calendar.proto.js';
 
 export interface DatePickerPanelProps extends HTMLAttributes<HTMLDivElement> {
   readonly title?: string | undefined;
-  readonly feedback?: { readonly message: string; readonly error?: boolean } | undefined;
+  readonly feedback?: CalendarFeedback | undefined;
   readonly panelRef?: RefObject<HTMLDivElement | null> | undefined;
   readonly floating?: boolean | undefined;
 }
@@ -59,12 +60,13 @@ export function DatePickerPanel({
       aria-label={title || 'Choose dates'}
     >
       {children}
-      {feedback && (
+      {feedback !== undefined && (
         <div
           className="date-picker-panel-feedback-proto"
           role="status"
           data-empty={!feedback.message || undefined}
-          data-error={feedback.error || undefined}
+          data-draft-prompt={feedback.draftPrompt}
+          data-longest-preview={feedback.longestPreview}
         >
           <bdi>{feedback.message}</bdi>
         </div>
@@ -236,12 +238,10 @@ export function DatePicker({
     previewText ?? numericDate(current, locale),
   );
   const [error, setError] = useState('');
-  const [calendarIssue, setCalendarIssue] = useState('');
   const [noAvailableDays, setNoAvailableDays] = useState(false);
   const [open, setOpen] = useState(defaultOpen);
   const close = useCallback((): void => {
     setOpen(false);
-    setCalendarIssue('');
   }, []);
   const { panel, trigger, field } = useDatePanel(open && !disabled && !previewInline, close);
   const update = (next: string): void => {
@@ -279,9 +279,11 @@ export function DatePicker({
     trigger.current?.focus();
   };
   const canChooseToday = !readOnly && !dateAvailability(today, { min, max, unavailable, locale });
-  const calendarMessage =
-    calendarIssue ||
-    (noAvailableDays ? 'No dates available this month' : readOnly ? 'Read only' : '');
+  const calendarMessage = noAvailableDays
+    ? 'No dates available this month'
+    : readOnly
+      ? 'Read only'
+      : '';
   return (
     <div
       {...props}
@@ -379,7 +381,6 @@ export function DatePicker({
                   event.currentTarget.focus();
                   return;
                 }
-                setCalendarIssue('');
                 setOpen(true);
                 if (event.detail === 0) {
                   requestAnimationFrame(() =>
@@ -401,13 +402,12 @@ export function DatePicker({
           floating={!previewInline}
           panelRef={panel}
           title={readOnly ? 'View date' : 'Select date'}
-          feedback={{ message: calendarMessage, error: Boolean(calendarIssue) }}
+          feedback={{ message: calendarMessage }}
         >
           <Calendar
             key={viewDate.slice(0, 7)}
             month={viewDate}
             value={current}
-            onFeedback={setCalendarIssue}
             onViewAvailability={setNoAvailableDays}
             onToday={canChooseToday ? () => pick(today) : undefined}
             today={today}
@@ -478,10 +478,7 @@ export function DateRangePicker({
   const textSource = (next: DateRange): string => `${locale}|${next[0]}|${next[1]}`;
   const [text, setText] = useDraftText(textSource(current), previewText ?? format(current));
   const [error, setError] = useState('');
-  const [calendarFeedback, setCalendarFeedback] = useState({ issue: '', message: '' });
-  const reportCalendarFeedback = useCallback((issue: string, message: string): void => {
-    setCalendarFeedback({ issue, message });
-  }, []);
+  const [calendarFeedback, setCalendarFeedback] = useState<CalendarFeedback>({ message: '' });
   const [open, setOpen] = useState(defaultOpen);
   const viewDate = defaultViewDate(current[0] || today, min, max);
   const focusCalendar = (): number =>
@@ -490,7 +487,7 @@ export function DateRangePicker({
     );
   const close = useCallback((): void => {
     setOpen(false);
-    setCalendarFeedback({ issue: '', message: '' });
+    setCalendarFeedback({ message: '' });
   }, []);
   const { panel, trigger, field } = useDatePanel(open && !disabled && !previewInline, close);
   const update = (next: DateRange): void => {
@@ -657,7 +654,7 @@ export function DateRangePicker({
           floating={!previewInline}
           panelRef={panel}
           title={readOnly && panelTitle === 'Choose date range' ? 'View date range' : panelTitle}
-          feedback={{ message: calendarFeedback.message, error: Boolean(calendarFeedback.issue) }}
+          feedback={calendarFeedback}
         >
           <Calendar
             key={textSource(current)}
@@ -665,7 +662,7 @@ export function DateRangePicker({
             initialActiveDate={viewDate}
             mode="range"
             range={current[0] && current[1] ? current : undefined}
-            onFeedback={reportCalendarFeedback}
+            onFeedback={setCalendarFeedback}
             today={today}
             locale={locale}
             min={min}

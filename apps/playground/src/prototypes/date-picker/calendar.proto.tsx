@@ -1,18 +1,26 @@
-import { useEffect, useId, useRef, useState } from 'react';
+import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
 import type { HTMLAttributes, KeyboardEvent, ReactElement } from 'react';
 import { CaretLeftIcon, CaretRightIcon } from '@phosphor-icons/react';
 import type { ControlSize } from '../input/input.proto.js';
+import { Tooltip } from '../menu/menu.proto.js';
 import {
   addDays,
   addMonths,
   dateLabel,
   dateObject,
   dateAvailability,
+  rangeDays,
   rangeDurationLabel,
   rangeIssue,
 } from './date-utils.proto.js';
 import type { DateRange } from './date-utils.proto.js';
 import './date-picker.css';
+
+export interface CalendarFeedback {
+  readonly message: string;
+  readonly draftPrompt?: string | undefined;
+  readonly longestPreview?: string | undefined;
+}
 
 export interface CalendarProps extends Omit<
   HTMLAttributes<HTMLDivElement>,
@@ -42,7 +50,7 @@ export interface CalendarProps extends Omit<
   readonly disabled?: boolean | undefined;
   readonly onViewAvailability?: ((empty: boolean) => void) | undefined;
   readonly showFeedback?: boolean | undefined;
-  readonly onFeedback?: ((issue: string, message: string) => void) | undefined;
+  readonly onFeedback?: ((feedback: CalendarFeedback) => void) | undefined;
   readonly onToday?: (() => void) | undefined;
   readonly previewAnchor?: string | undefined;
   readonly previewCandidate?: string | undefined;
@@ -59,6 +67,58 @@ function dayInMonth(day: string, month: string): string {
 
 function orderedRange(first: string, second: string): DateRange {
   return first <= second ? [first, second] : [second, first];
+}
+
+function positionIssueTooltip(
+  tooltip: HTMLDivElement,
+  anchor: HTMLButtonElement,
+  calendar: HTMLDivElement,
+  persistent: boolean,
+): void {
+  const viewport = window.visualViewport;
+  const left = viewport?.offsetLeft ?? 0;
+  const top = viewport?.offsetTop ?? 0;
+  const width = viewport?.width ?? window.innerWidth;
+  const height = viewport?.height ?? window.innerHeight;
+  const right = left + width;
+  const bottom = top + height;
+  const day = anchor.getBoundingClientRect();
+  const panel = calendar.closest('.date-picker-panel-proto');
+  const surface = (panel ?? calendar).getBoundingClientRect();
+  const clip = panel?.hasAttribute('popover') ? surface : undefined;
+  if (
+    day.right <= Math.max(left, clip?.left ?? left) ||
+    day.left >= Math.min(right, clip?.right ?? right) ||
+    day.bottom <= Math.max(top, clip?.top ?? top) ||
+    day.top >= Math.min(bottom, clip?.bottom ?? bottom)
+  ) {
+    tooltip.style.visibility = 'hidden';
+    return;
+  }
+  tooltip.style.visibility = '';
+  tooltip.style.maxInlineSize = `${Math.min(240, width - 16)}px`;
+  const size = tooltip.getBoundingClientRect();
+  const leftSide = surface.left - left >= size.width + 14;
+  const rightSide = right - surface.right >= size.width + 14;
+  const above = surface.top - size.height - 6;
+  const below = surface.bottom + 6;
+  const aboveFits = above >= top + 8;
+  const belowFits = below + size.height <= bottom - 8;
+  const aboveDay = day.top - size.height - 6;
+  let x = day.left + (day.width - size.width) / 2;
+  let y = aboveDay >= top + 8 ? aboveDay : day.bottom + 6;
+
+  // Keep a retained explanation clear of the dates whenever the viewport has room.
+  if (persistent && (leftSide || rightSide)) {
+    const preferLeft = day.left - surface.left < surface.right - day.right;
+    x = leftSide && (!rightSide || preferLeft) ? surface.left - size.width - 6 : surface.right + 6;
+    y = day.top + (day.height - size.height) / 2;
+  } else if (persistent && (aboveFits || belowFits)) {
+    const preferAbove = day.top - surface.top < surface.bottom - day.bottom;
+    y = aboveFits && (!belowFits || preferAbove) ? above : below;
+  }
+  tooltip.style.left = `${Math.max(left + 8, Math.min(x, right - size.width - 8))}px`;
+  tooltip.style.top = `${Math.max(top + 8, Math.min(y, bottom - size.height - 8))}px`;
 }
 
 export function Calendar({
@@ -99,6 +159,8 @@ export function Calendar({
 }: CalendarProps): ReactElement {
   const id = useId();
   const root = useRef<HTMLDivElement>(null);
+  const issueTooltip = useRef<HTMLDivElement>(null);
+  const hoverExit = useRef<number | undefined>(undefined);
   const [viewMonth, setViewMonth] = useState(`${month.slice(0, 7)}-01`);
   const [view, setView] = useState(initialView);
   const [yearStart, setYearStart] = useState(() => Math.floor(Number(month.slice(0, 4)) / 12) * 12);
@@ -114,6 +176,7 @@ export function Calendar({
       (today.startsWith(month.slice(0, 7)) ? today : `${month.slice(0, 7)}-01`),
   );
   const [rejectedDate, setRejectedDate] = useState('');
+  const [dismissedTooltips, setDismissedTooltips] = useState<readonly string[]>([]);
   const selected = value ?? localValue;
   const currentRange = range ?? localRange;
   const fixedPoint = previewAnchor || anchor;
@@ -173,40 +236,137 @@ export function Calendar({
     !readOnly && !disabled && rejectedDate
       ? issueFor(rejectedDate, fixedPoint ? orderedRange(fixedPoint, rejectedDate) : undefined)
       : '';
-  const feedbackIssue = rejectedIssue || inspectedIssue;
-  const feedbackDate = rejectedIssue ? rejectedDate : inspectedDate;
+  const feedbackIssue = inspectedIssue || rejectedIssue;
+  const feedbackDate = inspectedIssue ? inspectedDate : rejectedDate;
+  const showIssueTooltip = Boolean(
+    view === 'days' &&
+    feedbackIssue &&
+    feedbackDate >= visibleStart &&
+    feedbackDate < visibleEnd &&
+    !dismissedTooltips.includes(feedbackDate),
+  );
+  const tooltipId = `${id}-date-issue`;
+  const persistentIssue = Boolean(rejectedIssue && feedbackDate === rejectedDate);
+  const dismissTooltip = useCallback(() => {
+    setDismissedTooltips((dates) => [...dates, feedbackDate]);
+  }, [feedbackDate]);
+  useLayoutEffect(() => {
+    const tooltip = issueTooltip.current;
+    const calendar = root.current;
+    const day = calendar?.querySelector<HTMLButtonElement>(`[data-date="${feedbackDate}"]`);
+    if (!showIssueTooltip || !tooltip?.showPopover || !calendar || !day) {
+      return;
+    }
+    const position = (): void => positionIssueTooltip(tooltip, day, calendar, persistentIssue);
+    const dismissHover = (event: globalThis.KeyboardEvent): void => {
+      const target = event.target as Node;
+      const field = calendar.closest('.date-picker-proto');
+      if (
+        event.key === 'Escape' &&
+        tooltip.style.visibility !== 'hidden' &&
+        !calendar.contains(target) &&
+        (field?.contains(target) ||
+          day.matches(':hover') ||
+          tooltip.matches(':hover') ||
+          (persistentIssue && calendar.matches(':hover')))
+      ) {
+        event.preventDefault();
+        event.stopPropagation();
+        dismissTooltip();
+      }
+    };
+    tooltip.showPopover();
+    position();
+    const observer =
+      typeof ResizeObserver === 'undefined' ? undefined : new ResizeObserver(position);
+    observer?.observe(calendar);
+    window.addEventListener('resize', position);
+    window.addEventListener('scroll', position, true);
+    window.visualViewport?.addEventListener('resize', position);
+    window.visualViewport?.addEventListener('scroll', position);
+    document.addEventListener('keydown', dismissHover, true);
+    return () => {
+      observer?.disconnect();
+      window.removeEventListener('resize', position);
+      window.removeEventListener('scroll', position, true);
+      window.visualViewport?.removeEventListener('resize', position);
+      window.visualViewport?.removeEventListener('scroll', position);
+      document.removeEventListener('keydown', dismissHover, true);
+      if (tooltip.matches(':popover-open')) {
+        tooltip.hidePopover();
+      }
+    };
+  }, [
+    showIssueTooltip,
+    feedbackDate,
+    feedbackIssue,
+    persistentIssue,
+    dismissTooltip,
+    visibleStart,
+  ]);
+  useEffect(() => () => window.clearTimeout(hoverExit.current), []);
+  const stopHoverExit = (): void => window.clearTimeout(hoverExit.current);
+  const clearInspection = (): void => {
+    const focused = root.current?.querySelector<HTMLElement>('.calendar-day-proto:focus-visible');
+    setHovered(focused?.dataset.date ?? '');
+  };
+  const leaveInspection = (): void => {
+    stopHoverExit();
+    if (showIssueTooltip && !persistentIssue) {
+      hoverExit.current = window.setTimeout(clearInspection, 160);
+    } else {
+      clearInspection();
+    }
+  };
+  const inspect = (day: string): void => {
+    stopHoverExit();
+    setHovered(day);
+    if (dismissedTooltips.includes(day)) {
+      setDismissedTooltips((dates) => dates.filter((date) => date !== day));
+    }
+  };
   const proposedRange = pending && !inspectedIssue ? pending : undefined;
   const previewLabel = proposedRange ? `Preview · ${rangeDurationLabel(proposedRange)}` : '';
-  const rangePrompt = anchor ? 'Choose a second date' : 'Choose a first date';
-  const feedback =
-    feedbackIssue ||
-    (noAvailability
-      ? 'No dates available in this view'
-      : readOnly
-        ? currentRange
-          ? `${rangeDurationLabel(currentRange)} · Read only`
-          : 'Read only'
-        : mode === 'range'
-          ? previewLabel || rangePrompt
-          : 'Unavailable dates cannot be selected');
-  const firstDateLabel = dateLabel(anchor, locale, {
-    year: Number(anchor.slice(0, 4)) === year ? undefined : 'numeric',
+  const rangePrompt = fixedPoint ? 'Choose next date' : 'Choose a first date';
+  const feedback = noAvailability
+    ? 'No dates available in this view'
+    : readOnly
+      ? currentRange
+        ? `${rangeDurationLabel(currentRange)} · Read only`
+        : 'Read only'
+      : mode === 'range'
+        ? previewLabel || rangePrompt
+        : '';
+  const firstDateLabel = dateLabel(fixedPoint, locale, {
+    year: Number(fixedPoint.slice(0, 4)) === year ? undefined : 'numeric',
   });
   const feedbackMessage = firstDateLabel ? `First ${firstDateLabel} · ${feedback}` : feedback;
+  const draftPrompt =
+    firstDateLabel && !noAvailability ? `First ${firstDateLabel} · ${rangePrompt}` : undefined;
+  const longestSelection = draftPrompt
+    ? Math.max(
+        rangeDays(orderedRange(fixedPoint, visibleStart)),
+        rangeDays(orderedRange(fixedPoint, addDays(visibleEnd, -1))),
+      )
+    : 1;
+  const longestPreview = draftPrompt
+    ? `First ${firstDateLabel} · Preview · ${Math.min(longestSelection, maxRangeDays ?? longestSelection)} days`
+    : undefined;
   useEffect(() => {
-    onFeedback?.(feedbackIssue, feedbackMessage);
-  }, [onFeedback, feedbackIssue, feedbackMessage]);
+    onFeedback?.({ message: feedbackMessage, draftPrompt, longestPreview });
+  }, [onFeedback, feedbackMessage, draftPrompt, longestPreview]);
   const pick = (day: string): void => {
     if (disabled || readOnly) {
       return;
     }
     const next = mode === 'range' && anchor ? orderedRange(anchor, day) : undefined;
     if (issueFor(day, next)) {
-      setHovered(day);
+      inspect(day);
       setRejectedDate(day);
       return;
     }
     setRejectedDate('');
+    setDismissedTooltips([]);
     if (mode === 'range') {
       if (!next) {
         setAnchor(day);
@@ -368,7 +528,11 @@ export function Calendar({
                   coveredByPreview && day === inspectedDate && day !== fixedPoint && !acceptedEdge;
                 const isFixed = fixedPoint === day;
                 const draftAnchor = isFixed && currentRange && !acceptedEdge;
-                const rejected = !readOnly && !disabled && day === feedbackDate && feedbackIssue;
+                const rejected =
+                  !readOnly &&
+                  !disabled &&
+                  ((day === rejectedDate && rejectedIssue) ||
+                    (day === inspectedDate && inspectedIssue));
                 const edge =
                   mode === 'range' ? acceptedEdge || (isFixed && !currentRange) : day === selected;
                 const committed = mode === 'range' ? Boolean(acceptedDay) : day === selected;
@@ -401,6 +565,11 @@ export function Calendar({
                         disabled={disabled}
                         aria-disabled={Boolean(unavailableReason) || undefined}
                         aria-current={day === today ? 'date' : undefined}
+                        aria-describedby={
+                          showIssueTooltip && day === feedbackDate && !unavailableReason
+                            ? tooltipId
+                            : undefined
+                        }
                         aria-label={`${dateLabel(day, locale, { weekday: 'long' })}${isFixed && (anchor || !currentRange) ? ', start date' : ''}${unavailableReason ? `, ${unavailableReason}` : ''}${indicators.includes(day) ? ', has events' : ''}`}
                         tabIndex={
                           day === active ||
@@ -414,9 +583,15 @@ export function Calendar({
                         onKeyDown={(event) => keyDay(event, day)}
                         onFocus={() => {
                           setActive(day);
-                          setHovered(day);
+                          inspect(day);
                         }}
-                        onMouseEnter={() => setHovered(day)}
+                        onBlur={(event) => {
+                          if (!event.currentTarget.matches(':hover')) {
+                            leaveInspection();
+                          }
+                        }}
+                        onMouseEnter={() => inspect(day)}
+                        onMouseLeave={leaveInspection}
                       >
                         <span>{Number(day.slice(8))}</span>
                         {indicators.includes(day) && (
@@ -454,6 +629,16 @@ export function Calendar({
       data-disabled={disabled || undefined}
       data-readonly={readOnly || undefined}
       onKeyDownCapture={(event) => {
+        if (
+          event.key === 'Escape' &&
+          showIssueTooltip &&
+          issueTooltip.current?.style.visibility !== 'hidden'
+        ) {
+          event.preventDefault();
+          event.stopPropagation();
+          dismissTooltip();
+          return;
+        }
         if (event.key === 'Escape' && view !== 'days') {
           event.preventDefault();
           event.stopPropagation();
@@ -521,10 +706,24 @@ export function Calendar({
         <div
           className="calendar-months-proto"
           data-year={layout === 'year' || undefined}
-          onMouseLeave={() => setHovered('')}
+          onMouseLeave={leaveInspection}
         >
           {Array.from({ length: count }, (_, index) =>
             renderMonth(addMonths(layout === 'year' ? `${year}-01-01` : viewMonth, index), index),
+          )}
+          {showIssueTooltip && (
+            <Tooltip
+              id={tooltipId}
+              ref={issueTooltip}
+              className="calendar-date-tooltip-proto"
+              popover="manual"
+              data-persistent={persistentIssue || undefined}
+              onMouseEnter={stopHoverExit}
+              onMouseLeave={leaveInspection}
+              onClick={persistentIssue ? dismissTooltip : undefined}
+            >
+              <bdi>{feedbackIssue}</bdi>
+            </Tooltip>
           )}
         </div>
       ) : (
@@ -582,22 +781,14 @@ export function Calendar({
           })}
         </div>
       )}
-      {showFeedback &&
-        view === 'days' &&
-        (mode === 'range' ||
-          min ||
-          max ||
-          unavailable.length > 0 ||
-          readOnly ||
-          noAvailability) && (
-          <div
-            className="calendar-feedback-proto"
-            aria-live="polite"
-            data-error={Boolean(feedbackIssue) || undefined}
-          >
-            <bdi>{feedbackMessage}</bdi>
-          </div>
-        )}
+      <span className="calendar-issue-announcement-proto" role="status">
+        {rejectedIssue}
+      </span>
+      {showFeedback && view === 'days' && feedbackMessage && (
+        <div className="calendar-feedback-proto" aria-live="polite">
+          <bdi>{feedbackMessage}</bdi>
+        </div>
+      )}
     </div>
   );
 }

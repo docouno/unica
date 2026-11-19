@@ -38,7 +38,16 @@ it('previews a corrected range while retaining the prior selection and error', (
   expect(first.getAttribute('data-draft-anchor')).toBe('true');
   expect(day(container, 8).getAttribute('data-edge')).toBe('true');
   expect(day(container, 11).getAttribute('data-edge')).toBe('true');
-  expect(screen.getByText('First 14 Sept · This range includes an unavailable date.')).toBeTruthy();
+  expect(container.querySelector('[role="tooltip"]')?.textContent).toBe(
+    'This range includes an unavailable date.',
+  );
+  expect(screen.getByText('First 14 Sept · Preview · 4 days')).toBeTruthy();
+
+  fireEvent.mouseEnter(day(container, 18));
+  expect(container.querySelector('[role="tooltip"]')?.textContent).toBe(
+    '18 Sept 2026 is unavailable',
+  );
+  expect(blocked.getAttribute('data-rejected')).toBe('true');
 
   fireEvent.click(suggested);
 
@@ -104,7 +113,7 @@ it('replaces a filled range with two day choices in the same panel', () => {
 
   expect(screen.queryByRole('button', { name: /^(start|end) date/i })).toBeNull();
   fireEvent.click(first);
-  expect(screen.getByText('First 15 Sept · Choose a second date')).toBeTruthy();
+  expect(screen.getByText('First 15 Sept · Choose next date')).toBeTruthy();
   fireEvent.mouseEnter(second);
 
   expect(panel).toBeTruthy();

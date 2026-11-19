@@ -32,7 +32,9 @@ it('places Today beside the sixth week and commits it from the same panel', () =
   expect(today.parentElement).toBe(grid.parentElement);
   expect(grid.contains(today)).toBe(false);
   expect(within(dialog).queryByRole('button', { name: 'Close calendar' })).toBeNull();
-  expect(within(dialog).getByRole('status').hasAttribute('data-empty')).toBe(true);
+  expect(
+    dialog.querySelector('.date-picker-panel-feedback-proto')?.hasAttribute('data-empty'),
+  ).toBe(true);
 
   fireEvent.click(today);
 
@@ -71,4 +73,37 @@ it('returns focus on trigger dismissal even when the click does not focus it', (
 
   expect(screen.queryByRole('dialog', { name: 'Select date' })).toBeNull();
   expect(document.activeElement).toBe(trigger);
+});
+
+it('describes an unavailable date beside the grid without filling the panel footer', () => {
+  render(
+    <DatePicker
+      label="Review date"
+      defaultValue="2026-09-14"
+      unavailable={['2026-09-19']}
+      defaultOpen
+      previewInline
+    />,
+  );
+
+  const panel = screen.getByRole('dialog', { name: 'Select date' });
+  const blocked = within(panel).getByRole('button', { name: /19 Sept 2026.*unavailable/ });
+  const footer = panel.querySelector('.date-picker-panel-feedback-proto');
+  fireEvent.focus(blocked);
+
+  expect(panel.querySelector('[role="tooltip"]')?.textContent).toBe('19 Sept 2026 is unavailable');
+  expect(footer?.hasAttribute('data-empty')).toBe(true);
+
+  fireEvent.keyDown(blocked, { key: 'Escape' });
+
+  expect(panel.querySelector('[role="tooltip"]')).toBeNull();
+  expect(screen.getByRole('dialog', { name: 'Select date' })).toBe(panel);
+
+  fireEvent.click(blocked);
+  fireEvent.click(within(panel).getByRole('tooltip', { hidden: true }));
+
+  expect(panel.querySelector('[role="tooltip"]')).toBeNull();
+  expect(screen.getByRole<HTMLInputElement>('textbox', { name: 'Review date' }).value).toBe(
+    '14/09/2026',
+  );
 });

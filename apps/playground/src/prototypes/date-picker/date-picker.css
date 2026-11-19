@@ -324,8 +324,17 @@
   line-height: 1.4;
   overflow-wrap: anywhere;
 }
-.calendar-feedback-proto[data-error] {
-  color: var(--status-danger-soft-fg);
+.calendar-date-tooltip-proto.tooltip-proto[popover] {
+  position: fixed;
+  inset: auto;
+  margin: 0;
+  inline-size: max-content;
+  max-inline-size: min(240px, calc(100vw - 16px));
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.calendar-date-tooltip-proto.tooltip-proto[popover]:not(:popover-open) {
+  display: none;
 }
 .date-picker-proto {
   position: relative;
@@ -379,13 +388,30 @@
   padding-block-start: var(--space-8);
   color: var(--fg-secondary);
   font-size: var(--text-size-caption-l);
+  font-variant-numeric: tabular-nums;
   line-height: 1.4;
   overflow-wrap: anywhere;
 }
-.date-picker-panel-feedback-proto[data-error] {
-  color: var(--status-danger-soft-fg);
+.date-picker-panel-feedback-proto[data-draft-prompt] {
+  display: grid;
 }
-.date-picker-panel-feedback-proto[data-empty] {
+.date-picker-panel-feedback-proto[data-draft-prompt] > bdi,
+.date-picker-panel-feedback-proto[data-draft-prompt]::before,
+.date-picker-panel-feedback-proto[data-draft-prompt]::after {
+  grid-area: 1 / 1;
+}
+.date-picker-panel-feedback-proto[data-draft-prompt]::before,
+.date-picker-panel-feedback-proto[data-draft-prompt]::after {
+  visibility: hidden;
+}
+.date-picker-panel-feedback-proto[data-draft-prompt]::before {
+  content: attr(data-draft-prompt);
+}
+.date-picker-panel-feedback-proto[data-draft-prompt]::after {
+  content: attr(data-longest-preview);
+}
+.date-picker-panel-feedback-proto[data-empty],
+.calendar-issue-announcement-proto {
   position: absolute;
   inset-block-start: 0;
   inset-inline-start: 0;
