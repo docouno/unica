@@ -215,6 +215,7 @@ it('keeps dark and light together and preserves the same artboard when isolating
 
 it('preserves inspected matrix rows on isolation and bounds work when the selection expands', () => {
   const sample = vi.fn(() => <input aria-label="Cell value" />);
+  const reference = vi.fn(() => <span>Reference</span>);
   const axis = (count: number) => ({
     kind: 'enum' as const,
     group: 'Geometry',
@@ -225,7 +226,7 @@ it('preserves inspected matrix rows on isolation and bounds work when the select
   const matrix = defineComponent({
     ...field,
     props: { row: axis(4), col: axis(3) },
-    matrixViews: [{ id: 'basic', title: 'Basic', rows: 'row', cols: 'col' }],
+    matrixViews: [{ id: 'basic', title: 'Basic', rows: 'row', cols: 'col', reference }],
     render: sample,
   });
   window.history.replaceState(null, '', '/?item=field&tab=matrix&scheme=dark');
@@ -237,8 +238,14 @@ it('preserves inspected matrix rows on isolation and bounds work when the select
   const edited = cells()[3]!;
   fireEvent.change(edited, { target: { value: 'Keep this edit' } });
   sample.mockClear();
+  reference.mockClear();
   fireEvent.change(screen.getByRole('searchbox'), { target: { value: 'field' } });
+  fireEvent.click(screen.getByRole('button', { name: 'RTL' }));
+  fireEvent.click(screen.getByRole('button', { name: '120% Text' }));
+  fireEvent.change(screen.getByRole('combobox', { name: 'Width' }), { target: { value: '360' } });
   expect(sample).not.toHaveBeenCalled();
+  expect(reference).not.toHaveBeenCalled();
+  expect(cells()[3]).toBe(edited);
   fireEvent.click(board.getByRole('button', { name: 'Isolate Haze Night' }));
   expect(cells()[3]).toBe(edited);
   expect(edited.value).toBe('Keep this edit');

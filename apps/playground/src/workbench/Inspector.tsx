@@ -1,4 +1,4 @@
-import { useId, useRef, useState } from 'react';
+import { useCallback, useId, useRef, useState } from 'react';
 import type { MouseEvent, ReactElement, ReactNode, SyntheticEvent } from 'react';
 import { InspectorCode } from './InspectorCode.js';
 import { Matrix } from './Matrix.js';
@@ -451,30 +451,47 @@ export function Inspector({
     }));
   };
 
-  const renderPreview = (
-    theme: WorkbenchTheme,
-    identity: string,
-    settings: StageSettings | undefined,
-    render: (ctx: PreviewContext) => ReactNode,
-    surfaceMode: SurfaceMode = surface,
-    action?: Action,
-  ): ReactElement => (
-    <PreviewStage
-      key={identity}
-      theme={theme}
-      comparing={comparing}
-      bounds={bounds}
-      surfaceMode={surfaceMode}
-      defaultSurface={settings?.surface ?? component.defaultSurface ?? 'base'}
-      overlayStage={settings?.overlayStage ?? component.overlayStage}
-      renderStage={renderStage}
-      action={action}
-    >
-      {render}
-    </PreviewStage>
+  const renderPreview = useCallback(
+    (
+      theme: WorkbenchTheme,
+      identity: string,
+      settings: StageSettings | undefined,
+      render: (ctx: PreviewContext) => ReactNode,
+      surfaceMode: SurfaceMode = surface,
+      action?: Action,
+    ): ReactElement => (
+      <PreviewStage
+        key={identity}
+        theme={theme}
+        comparing={comparing}
+        bounds={bounds}
+        surfaceMode={surfaceMode}
+        defaultSurface={settings?.surface ?? component.defaultSurface ?? 'base'}
+        overlayStage={settings?.overlayStage ?? component.overlayStage}
+        renderStage={renderStage}
+        action={action}
+      >
+        {render}
+      </PreviewStage>
+    ),
+    [bounds, comparing, component.defaultSurface, component.overlayStage, renderStage, surface],
   );
 
   const Component = component.render;
+  const renderMatrixSubject = useCallback(
+    (theme: WorkbenchTheme, values: Values, identity: string, settings?: StageSettings) =>
+      renderPreview(theme, identity, settings, (ctx) => <Component values={values} ctx={ctx} />),
+    [Component, renderPreview],
+  );
+  const renderMatrixReference = useCallback(
+    (theme: WorkbenchTheme, view: MatrixView) => {
+      const Reference = view.reference;
+      return Reference
+        ? renderPreview(theme, view.id, view, (ctx) => <Reference ctx={ctx} />)
+        : null;
+    },
+    [renderPreview],
+  );
   if (tab === 'matrix') {
     return (
       <Matrix
@@ -487,15 +504,8 @@ export function Inspector({
         onSliceChange={(selected) => update({ slice: selected }, 'replace')}
         onModeChange={(selected) => update({ mode: selected }, 'replace')}
         renderArtboards={renderArtboards}
-        renderSubject={(theme, values, identity, settings) =>
-          renderPreview(theme, identity, settings, (ctx) => <Component values={values} ctx={ctx} />)
-        }
-        renderReference={(theme, view: MatrixView) => {
-          const Reference = view.reference;
-          return Reference
-            ? renderPreview(theme, view.id, view, (ctx) => <Reference ctx={ctx} />)
-            : null;
-        }}
+        renderSubject={renderMatrixSubject}
+        renderReference={renderMatrixReference}
       />
     );
   }
