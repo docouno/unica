@@ -12,7 +12,7 @@ During design, use these constraints to define appearance and the intended acces
 | [Geometry and Layout](concepts/geometry-and-layout.md) | Parametric `Control` vs `Surface` radius scales, `--radius-factor`, concentric inner-radius math ($R_{\text{inner}}$), `0px` degeneration in `Pixel` (preserving circular `Radio`), monotonic Z-elevation (`AppRail < Aside < Main Canvas < Card`), and unified `s / m / l` sizing. |
 | [Native Scrollbars](concepts/scrollbars.md) | Shipped native scrollbar utilities for ordinary surfaces and overlays, including system fallbacks. |
 | [Overlays and Forms](concepts/overlays-and-forms.md) | Native browser top layer (`popover="auto" | "manual"`, `<dialog>` `showModal()`, toast host above active modals, positioning adapter) and native `<form>` participation (`FormData`, `reset`, `disabled`/`readOnly`/`loading`, controlled vs uncontrolled authority). |
-| [Support and Accessibility](concepts/support-and-accessibility.md) | Two-tier browser support floor (`Guarantee` vs `Baseline`), React 19+ pure-ESM contract, WCAG contrast invariants, keyboard navigation, `forced-colors`, and `prefers-reduced-motion`. |
+| [Support and Accessibility](concepts/support-and-accessibility.md) | Two-tier browser support floor (`Guarantee` vs `Baseline`), React 19 pure-ESM contract, WCAG contrast invariants, keyboard navigation, `forced-colors`, and `prefers-reduced-motion`. |
 
 ## Workbench & Component Contracts
 

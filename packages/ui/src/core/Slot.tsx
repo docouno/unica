@@ -15,10 +15,28 @@ function isEventHandler(value: unknown): value is EventHandler {
   return typeof value === 'function';
 }
 
+function isUnsupportedSlotType(type: unknown): boolean {
+  if (typeof type === 'symbol') {
+    return true;
+  }
+  if (typeof type !== 'object' || type === null || !('$$typeof' in type)) {
+    return false;
+  }
+
+  // React 19 identifies Context and memo objects with shared type tags.
+  switch (type.$$typeof) {
+    case Symbol.for('react.context'):
+    case Symbol.for('react.consumer'):
+      return true;
+    case Symbol.for('react.memo'):
+      return 'type' in type && isUnsupportedSlotType(type.type);
+    default:
+      return false;
+  }
+}
+
 function requireChild<T extends Element>(children: ReactNode): ReactElement<SlotProps<T>> {
-  // Built-ins such as Fragment, Suspense, and StrictMode use symbol types and
-  // cannot receive Slot's props or ref. Custom components own that forwarding.
-  if (!isValidElement<SlotProps<T>>(children) || typeof children.type === 'symbol') {
+  if (!isValidElement<SlotProps<T>>(children) || isUnsupportedSlotType(children.type)) {
     throw new Error('Slot requires exactly one React element that accepts props and a ref.');
   }
   return children;

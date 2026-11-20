@@ -1,5 +1,5 @@
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
-import { createRef, Fragment, lazy, memo, StrictMode, Suspense } from 'react';
+import { createContext, createRef, Fragment, lazy, memo, StrictMode, Suspense } from 'react';
 import type {
   ComponentPropsWithRef,
   MouseEvent,
@@ -67,6 +67,9 @@ it('composes a slotted anchor and lets the child cancel the slot action', () => 
   expect(calls).toEqual(['child', 'slot', 'child']);
 });
 
+const Context = createContext('initial');
+const MemoFragment = memo(Fragment);
+
 it.each<[string, ReactNode]>([
   ['no element', null],
   ['text', 'Text'],
@@ -88,6 +91,19 @@ it.each<[string, ReactNode]>([
     <StrictMode key="strict-mode">
       <a />
     </StrictMode>,
+  ],
+  [
+    'a context provider',
+    <Context key="context" value="provided">
+      <a />
+    </Context>,
+  ],
+  ['a context consumer', <Context.Consumer key="consumer">{() => <a />}</Context.Consumer>],
+  [
+    'a memoized fragment',
+    <MemoFragment key="memo-fragment">
+      <a />
+    </MemoFragment>,
   ],
 ])('reports %s as an invalid Slot child', (_name, children) => {
   expect(() => render(<Slot>{children}</Slot>)).toThrow('Slot requires exactly one React element');
