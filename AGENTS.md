@@ -16,6 +16,8 @@ All toolchains run inside pinned Devkit containers on Linux x86_64 with Docker E
 | `make check` | Run read-only formatting, lint, `isolatedDeclarations` typecheck, and gates |
 | `make fix` | Apply deterministic formatting and lint autofixes |
 | `make test` | Run unit and component test suites across registered components |
+| `make visual-setup` | Prepare the shared container image, dependencies, and Chromium cache |
+| `make test-browser` | Run offline Chromium tests against UI source. See [Browser Tests](docs/browser-tests.md) for fixture and suite conventions. |
 | `make build` | Build `packages/ui` and `apps/playground` |
 | `make package` | Pack `@docouno/unica` and verify exports (`publint` + `attw`) |
 | `make dev app=playground` / `make up app=playground headless=1` | Start the interactive 6-preset Vite workbench (foreground or background) with sticky per-checkout host ports |
@@ -108,7 +110,7 @@ These are library implementation obligations. During design, specify the intende
 
 Apply completion criteria to the stage and the surfaces being changed:
 
-1. **Repository health:** Code changes pass canonical `make check`, `make test`, and `make build` for affected components and dependencies with zero warnings. Changes affecting the library package also pass `make package package=ui` (`publint` and `@arethetypeswrong/core`). Documentation-only changes require consistency, link, and diff review; they do not require repeating unchanged runtime or package checks. Repeat passed checks when a change, failure, or unresolved concern justifies it.
+1. **Repository health:** Code changes pass canonical `make check`, `make test`, and `make build` for affected components and dependencies with zero warnings. Browser contract changes also pass `make test-browser`. Changes affecting the library package also pass `make package package=ui` (`publint` and `@arethetypeswrong/core`). Documentation-only changes require consistency, link, and diff review; they do not require repeating unchanged runtime or package checks. Repeat passed checks when a change, failure, or unresolved concern justifies it.
 2. **Design:** The agreed anatomy, states, relevant combinations, transitions, and intended accessible interaction are specified and inspectable in the live prototype. Evaluate visual quality and material coherence alongside measured readability, geometry, focus, motion, and availability feedback. Check all 6 presets, relevant Base/Overlay consumers, `360px`–`1440px`, `120%` text, and `RTL`. Probes should answer design questions; full production contract coverage is not a design completion requirement. Owner visual approval accepts the design.
 3. **Library implementation:** The shipped component preserves the approved experience and proves its full public API, keyboard, focus return, top-layer dismissal, state, and native `<form>` submission/reset contracts, including `forced-colors` and `prefers-reduced-motion`, under [Overlays and Forms](docs/concepts/overlays-and-forms.md) and [Support and Accessibility](docs/concepts/support-and-accessibility.md).
 4. **Current documentation:** Update affected public APIs, tokens, workflows, and design handoff in the same change. Distinguish intended behavior from prototype limitations and from verified library behavior.

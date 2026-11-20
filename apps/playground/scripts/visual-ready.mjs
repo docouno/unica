@@ -4,7 +4,15 @@ import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 
 const appRoot = resolve(import.meta.dirname, '..');
-const requiredSpecifiers = ['playwright-core', 'vite', '@vitejs/plugin-react', '@docouno/env/vite'];
+const requiredSpecifiers = [
+  'playwright-core',
+  'vite',
+  '@vitejs/plugin-react',
+  '@docouno/env/vite',
+  'react',
+  'react/jsx-dev-runtime',
+  'react-dom/client',
+];
 
 try {
   for (const specifier of requiredSpecifiers) {
