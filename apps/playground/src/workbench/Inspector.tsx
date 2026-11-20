@@ -3,6 +3,7 @@ import type { MouseEvent, ReactElement, ReactNode, SyntheticEvent } from 'react'
 import { InspectorCode } from './InspectorCode.js';
 import { Matrix } from './Matrix.js';
 import { PlaygroundControls } from './PlaygroundControls.js';
+import { PlaygroundLayout } from './PlaygroundLayout.js';
 import { componentCode, defaultValues, evaluate } from './schema.js';
 import type { WorkbenchRoute } from './route.js';
 import { useSubjectBounds } from './subjectBounds.js';
@@ -242,76 +243,65 @@ function eventDetail(value: unknown): string | undefined {
   }
 }
 
-function Diagnostics({
+function EventsPanel({
   events,
-  submissions,
-  hasForm,
   onClear,
 }: {
   readonly events: readonly LoggedEvent[];
-  readonly submissions: readonly SubmittedData[];
-  readonly hasForm: boolean;
   readonly onClear: () => void;
 }): ReactElement {
   return (
-    <div className="wb-diagnostics">
-      <section className="wb-inspector-panel" aria-label="Events">
-        <header className="wb-inspector-panel-heading">
-          <h2>Events</h2>
-          <button
-            type="button"
-            className="wb-action-btn"
-            onClick={onClear}
-            disabled={events.length === 0}
-          >
-            Clear
-          </button>
-        </header>
-        <div aria-live="polite">
-          {events.length ? (
-            <ol className="wb-inspector-events">
-              {events.map(({ theme, name, detail }, index) => (
-                <li key={index}>
-                  <span>{theme.label}</span> <code>{name}</code>
-                  {detail !== undefined && <code className="wb-event-detail">{detail}</code>}
-                </li>
-              ))}
-            </ol>
-          ) : (
-            <p className="wb-inspector-note">No events yet.</p>
-          )}
-        </div>
-      </section>
-      {hasForm && (
-        <section className="wb-inspector-panel" aria-label="FormData">
-          <header className="wb-inspector-panel-heading">
-            <h2>FormData</h2>
-          </header>
-          <p className="wb-inspector-note">Last submission in each theme.</p>
-          <div aria-live="polite">
-            {submissions.length ? (
-              submissions.map(({ theme, entries }) => (
-                <div className="wb-inspector-submission" key={theme.id}>
-                  <h3>{theme.label}</h3>
-                  {entries.length ? (
-                    <dl>
-                      {entries.map(([name, value], index) => (
-                        <div key={index}>
-                          <dt>{name}</dt>
-                          <dd>{JSON.stringify(value)}</dd>
-                        </div>
-                      ))}
-                    </dl>
-                  ) : (
-                    <p className="wb-inspector-note">Empty submission.</p>
-                  )}
-                </div>
-              ))
+    <>
+      <div className="wb-events-actions">
+        <button type="button" className="wb-action-btn" onClick={onClear} disabled={!events.length}>
+          Clear
+        </button>
+      </div>
+      <div aria-live="polite">
+        {events.length ? (
+          <ol className="wb-inspector-events">
+            {events.map(({ theme, name, detail }, index) => (
+              <li key={index}>
+                <span>{theme.label}</span> <code>{name}</code>
+                {detail !== undefined && <code className="wb-event-detail">{detail}</code>}
+              </li>
+            ))}
+          </ol>
+        ) : (
+          <p className="wb-inspector-note">No events yet.</p>
+        )}
+      </div>
+    </>
+  );
+}
+
+function FormDataPanel({
+  submissions,
+}: {
+  readonly submissions: readonly SubmittedData[];
+}): ReactElement {
+  return (
+    <div aria-live="polite">
+      {submissions.length ? (
+        submissions.map(({ theme, entries }) => (
+          <div className="wb-inspector-submission" key={theme.id}>
+            <h3>{theme.label}</h3>
+            {entries.length ? (
+              <dl>
+                {entries.map(([name, value], index) => (
+                  <div key={index}>
+                    <dt>{name}</dt>
+                    <dd>{JSON.stringify(value)}</dd>
+                  </div>
+                ))}
+              </dl>
             ) : (
-              <p className="wb-inspector-note">Submit an example to inspect its values.</p>
+              <p className="wb-inspector-note">Empty submission.</p>
             )}
           </div>
-        </section>
+        ))
+      ) : (
+        <p className="wb-inspector-note">Submit an example to inspect its values.</p>
       )}
     </div>
   );
@@ -331,7 +321,7 @@ function PreviewHeading({
   readonly kind?: CaseBlock['kind'];
 }): ReactElement {
   return (
-    <div className="wb-inspector-meta wb-block-heading" dir="auto">
+    <header className="wb-inspector-meta wb-block-heading wb-frame-heading" dir="auto">
       <h3>{block.title}</h3>
       {(kind || block.mode) && (
         <span className="wb-inspector-note">
@@ -345,7 +335,7 @@ function PreviewHeading({
           {block.caption}
         </p>
       )}
-    </div>
+    </header>
   );
 }
 
@@ -506,7 +496,7 @@ export function Inspector({
                 ? ['base', 'overlay']
                 : [surface];
               return (
-                <section key={item.id} data-wb-block={item.id}>
+                <section key={item.id} className="wb-story-frame" data-wb-block={item.id}>
                   <PreviewHeading block={item} kind={item.kind} />
                   {renderArtboards((theme) => (
                     <div className="wb-surface-previews">
@@ -571,7 +561,7 @@ export function Inspector({
             {selectBlock(usage, block).map((item) => {
               const Sample = item.render;
               return (
-                <section key={item.id} data-wb-block={item.id}>
+                <section key={item.id} className="wb-story-frame" data-wb-block={item.id}>
                   <PreviewHeading block={item} />
                   {renderArtboards((theme) =>
                     renderPreview(theme, item.id, item, (ctx) => <Sample ctx={ctx} />),
@@ -619,71 +609,59 @@ export function Inspector({
     );
   }
 
-  const checked = evaluate(component.constraints, playground.draft);
+  const preview = renderArtboards((theme) =>
+    renderPreview(
+      theme,
+      'playground',
+      undefined,
+      (ctx) => (
+        <PlaygroundForm
+          kind={component.form}
+          showCommands={!raw}
+          onSubmit={(entries) => {
+            setSubmissions((current) => [
+              ...current.filter((data) => data.theme.id !== theme.id),
+              { theme, entries },
+            ]);
+            report(theme, 'submit');
+          }}
+          onReset={() => report(theme, 'reset')}
+        >
+          <Component values={playground.values} ctx={ctx} />
+        </PlaygroundForm>
+      ),
+      surface,
+      (name) => (value) => report(theme, name, value),
+    ),
+  );
+  if (raw) {
+    return <div className="wb-inspector wb-playground-capture">{preview}</div>;
+  }
+
   const propDefinitions = Object.values(component.props);
-  const showDiagnostics =
-    component.form !== undefined || propDefinitions.some((prop) => prop.kind === 'action');
+  const hasForm = component.form !== undefined;
+  const showEvents = hasForm || propDefinitions.some((prop) => prop.kind === 'action');
   return (
-    <div className="wb-inspector">
-      <div
-        className="wb-playground-layout"
-        data-wb-controls={(!raw && propDefinitions.length > 0) || undefined}
-      >
-        {renderArtboards((theme) =>
-          renderPreview(
-            theme,
-            'playground',
-            undefined,
-            (ctx) => (
-              <PlaygroundForm
-                kind={component.form}
-                showCommands={!raw}
-                onSubmit={(entries) => {
-                  setSubmissions((current) => [
-                    ...current.filter((data) => data.theme.id !== theme.id),
-                    { theme, entries },
-                  ]);
-                  report(theme, 'submit');
-                }}
-                onReset={() => report(theme, 'reset')}
-              >
-                <Component values={playground.values} ctx={ctx} />
-              </PlaygroundForm>
-            ),
-            surface,
-            (name) => (value) => report(theme, name, value),
-          ),
-        )}
-        {!raw && (
-          <PlaygroundControls
-            component={component}
-            draft={playground.draft}
-            numberDrafts={playground.numberDrafts}
-            matches={checked.matches}
-            onValue={updateValue}
-            onNumber={updateNumber}
-            onReset={() => setPlayground(initialState(component))}
-          />
-        )}
-      </div>
-      {!raw && (
-        <>
-          <section className="wb-inspector-panel" aria-label="JSX">
-            <header className="wb-inspector-panel-heading">
-              <h2>JSX</h2>
-            </header>
-            <InspectorCode code={componentCode(component, playground.values)} />
-          </section>
-          {showDiagnostics && (
-            <Diagnostics
-              hasForm={component.form !== undefined}
-              submissions={submissions}
-              events={events}
-              onClear={() => setEvents([])}
+    <div className="wb-inspector wb-inspector-playground">
+      <PlaygroundLayout
+        preview={preview}
+        code={<InspectorCode code={componentCode(component, playground.values)} />}
+        controls={
+          propDefinitions.length > 0 && (
+            <PlaygroundControls
+              component={component}
+              draft={playground.draft}
+              numberDrafts={playground.numberDrafts}
+              matches={evaluate(component.constraints, playground.draft).matches}
+              onValue={updateValue}
+              onNumber={updateNumber}
+              onReset={() => setPlayground(initialState(component))}
             />
-          )}
-        </>
-      )}
+          )
+        }
+        events={showEvents && <EventsPanel events={events} onClear={() => setEvents([])} />}
+        formData={hasForm && <FormDataPanel submissions={submissions} />}
+      />
     </div>
   );
 }

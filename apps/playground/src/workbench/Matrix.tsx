@@ -215,7 +215,12 @@ function SliceGrid({
             {axisLabels.length === 0 ? (
               renderSample(group.rows[0]!.cells[0]!, 'group-' + String(groupIndex))
             ) : (
-              <div className="wb-matrix-scroll" role="region" aria-label={tableLabel} tabIndex={0}>
+              <div
+                className="wb-matrix-scroll wb-scroll"
+                role="region"
+                aria-label={tableLabel}
+                tabIndex={0}
+              >
                 <table className="wb-matrix-grid" aria-label={tableLabel}>
                   {axes.cols !== undefined && (
                     <thead>
@@ -465,12 +470,6 @@ function MatrixContent({
         </div>
       )}
 
-      {(view?.title || view?.caption) && (
-        <header className="wb-matrix-heading">
-          <h2>{view.title}</h2>
-          {view.caption && <p>{view.caption}</p>}
-        </header>
-      )}
       {!fullAvailable && (!raw || mode === 'full') && (
         <p className="wb-matrix-status" role="status">
           Full exceeds {FULL_LIMIT} cells across the selected themes. Fix more values or select
@@ -502,42 +501,50 @@ function MatrixContent({
         </p>
       )}
 
-      {renderArtboards((theme) => (
-        <div className="wb-matrix-artboard">
-          {grid && (
-            <SliceGrid
-              grid={grid}
-              axes={axes}
-              labelProp={labelProp}
-              labelValue={labelValue}
-              renderSample={(values, identity) => sample(theme, values, identity)}
-            />
-          )}
-          {renderedAssignments && renderedAssignments.length > 0 && (
-            <ul className="wb-matrix-combinations">
-              {renderedAssignments.map((assignment, index) => (
-                <li key={JSON.stringify(assignment)} className="wb-matrix-combination">
-                  <dl className="wb-matrix-coordinate">
-                    {varyingKeys.map((key) => (
-                      <div key={key}>
-                        <dt>{labelProp(key)}</dt>
-                        <dd>{labelValue(key, assignment[key])}</dd>
-                      </div>
-                    ))}
-                  </dl>
-                  {sample(theme, assignment, 'combination-' + String(index))}
-                </li>
-              ))}
-            </ul>
-          )}
-          {modeShown === 'slice' && view?.reference && (
-            <div className="wb-matrix-reference">
-              <h3 className="wb-matrix-group-label">Reference example</h3>
-              {renderReference(theme, view)}
-            </div>
-          )}
-        </div>
-      ))}
+      <div className={view ? 'wb-story-frame' : undefined}>
+        {view && (
+          <header className="wb-matrix-heading wb-frame-heading">
+            <h2>{view.title}</h2>
+            {view.caption && <p>{view.caption}</p>}
+          </header>
+        )}
+        {renderArtboards((theme) => (
+          <div className="wb-matrix-artboard">
+            {grid && (
+              <SliceGrid
+                grid={grid}
+                axes={axes}
+                labelProp={labelProp}
+                labelValue={labelValue}
+                renderSample={(values, identity) => sample(theme, values, identity)}
+              />
+            )}
+            {renderedAssignments && renderedAssignments.length > 0 && (
+              <ul className="wb-matrix-combinations">
+                {renderedAssignments.map((assignment, index) => (
+                  <li key={JSON.stringify(assignment)} className="wb-matrix-combination">
+                    <dl className="wb-matrix-coordinate">
+                      {varyingKeys.map((key) => (
+                        <div key={key}>
+                          <dt>{labelProp(key)}</dt>
+                          <dd>{labelValue(key, assignment[key])}</dd>
+                        </div>
+                      ))}
+                    </dl>
+                    {sample(theme, assignment, 'combination-' + String(index))}
+                  </li>
+                ))}
+              </ul>
+            )}
+            {modeShown === 'slice' && view?.reference && (
+              <div className="wb-matrix-reference">
+                <h3 className="wb-matrix-group-label">Reference example</h3>
+                {renderReference(theme, view)}
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
     </section>
   );
 }

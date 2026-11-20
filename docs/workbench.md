@@ -25,9 +25,9 @@ make up app=playground headless=1
 make info
 ```
 
-Open the reported URL. Search the catalog by name, ID, or category with `/` or `Ctrl+K` (`Cmd+K` on macOS). Filter component entries by `Proto` for visual prototypes or `UI` for shipped families. Scenes have their own catalog section.
+Open the reported URL. Expand or collapse categories using their heading buttons. Scene collections are nested under **Scenes**. Search the catalog by name, ID, or category with `/` or `Ctrl+K` (`Cmd+K` on macOS). Search reveals matching groups while keeping the regular catalog expansion choices. Filter component entries by `Proto` for visual prototypes or `UI` for shipped families. The desktop catalog keeps its width as groups expand, and the catalog, preview, and inspection panes share a compact scrollbar.
 
-Each scene artboard has a visible frame around the composition. **Reset scene** restores the initial state of the scene across the selected themes and keeps the current view settings and URL.
+Preview frames keep the heading and the live content together. A named slice, case, or usage example has one shared frame around its theme comparison. Each full scene has a frame around its artboard. **Reset scene** restores the initial state of the scene across the selected themes and keeps the current view settings and URL.
 
 Every component has the same four views.
 
@@ -38,13 +38,15 @@ Every component has the same four views.
 | Cases | Explore overflow, material, and behavioral examples. Pinned examples identify conditions set by the author. |
 | Usage | Review a small composition and follow links to registered scenes that consume the component. Browser Back returns to the Usage view. |
 
+The right Playground panel shows **Controls** and live **JSX** at the same time. The top tabs switch between **Controls**, **Events**, and **FormData** when the example supports them. The selected tab and JSX scroll independently. On narrow screens, **Inspector** opens the same panel over the right side of the preview.
+
 Pairwise covers every pair of finite values that has a valid completion under the current fixed values. Read the coverage count before treating it as an audit. Full shows every combination, including N/A cells, while the total across selected themes fits in 64 displayed cells.
 
-Choose Family and Scheme independently. All × Both compares all available presets. Select one family and one scheme, or click an artboard header, to inspect a single theme at natural size. Change Surface, Width, 120% Text, and RTL to stress the selected example. Bounds measures authored subjects in CSS pixels. Use browser Back and Forward to revisit item, tab, and theme selections.
+Choose Family and Scheme independently. All × Both compares all available presets. Select one family and one scheme, or click an artboard header, to inspect a single theme at natural size. Change Surface, Width, 120% Text, and RTL to stress the selected example. In comparisons at a fixed width, the scaled frames follow the measured height of each example. Bounds measures authored subjects in CSS pixels. Use browser Back and Forward to revisit item, tab, and theme selections.
 
 The environment controls sit beside the page heading when space allows. The theme canvas is applied to the live sample. Matrix coordinates and review notes use Workbench typography, and Cases and Usage show each caption once above the theme comparison. Usage shows one JSX snippet per authored example.
 
-The Workbench owns its catalog and control styles. The shell uses a small, local set of Soft Dark recipes for fields, segments, buttons, and navigation. Those styles and the font assets load with the shell. Changing a preview theme changes the examples while the inspection controls keep their appearance. Select fields use the system menu on browsers without customizable native pickers.
+The Workbench owns a grayscale palette and compact recipes for fields, segments, buttons, and navigation. Those styles and the font assets load with the shell. Changing a preview theme changes the examples while the inspection controls keep their appearance. Workbench fields change the border on focus and show a separate outline during keyboard navigation. Select fields use the system menu on browsers without customizable native pickers.
 
 Each checkout leases a sticky loopback port. `make up` builds the playground's dependencies before starting Vite, which serves library source changes via HMR. For reverse-proxied preview, set `DEVKIT_PREVIEW_URL_TEMPLATE` with the desired URL and placeholders (`{port}`, `{service}`, `{branch}` or `{slug}`) in the environment or a Git-ignored root `.env` file. Confirm the address with `make info`.
 

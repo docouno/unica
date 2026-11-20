@@ -13,6 +13,10 @@
   font: 500 0.75rem / 1.4 var(--wb-font);
 }
 
+.wb-matrix-artboard {
+  padding: 12px;
+}
+
 .wb-matrix-toolbar {
   display: flex;
   align-items: end;

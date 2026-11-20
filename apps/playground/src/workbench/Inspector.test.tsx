@@ -107,6 +107,11 @@ it('shares valid controls across themes while keeping the last valid Subject and
     ),
   });
   showInspector(component);
+  const controls = screen.getByRole('tab', { name: 'Controls' });
+  expect(controls.getAttribute('aria-selected')).toBe('true');
+  expect(screen.getAllByRole('tabpanel')).toHaveLength(1);
+  const code = screen.getByRole('region', { name: 'JSX' });
+
   const label = screen.getByRole('textbox', { name: 'label' });
   fireEvent.change(label, { target: { value: 'Save choice' } });
   expect(screen.getAllByRole('button', { name: 'Save choice' })).toHaveLength(2);
@@ -118,7 +123,6 @@ it('shares valid controls across themes while keeping the last valid Subject and
 
   fireEvent.click(screen.getByRole('checkbox', { name: 'ready' }));
   fireEvent.change(label, { target: { value: 'Save choice' } });
-  const code = screen.getByRole('region', { name: 'JSX' });
   await waitFor(() => {
     expect(code.querySelector('.token.boolean')?.textContent).toBe('false');
     expect(code.textContent).toContain('ready={false}');
@@ -126,10 +130,20 @@ it('shares valid controls across themes while keeping the last valid Subject and
   });
   const light = screen.getByRole('region', { name: 'Example Light' });
   fireEvent.click(within(light).getByRole('button', { name: 'Save choice' }));
-  expect(screen.getByRole('region', { name: 'Events' }).textContent).toContain(
+  controls.focus();
+  fireEvent.keyDown(controls, { key: 'ArrowRight' });
+  const events = screen.getByRole('tab', { name: 'Events' });
+  expect(document.activeElement).toBe(events);
+  expect(screen.getByRole('tabpanel', { name: 'Events' }).textContent).toContain(
     'Example Light onPressSave choice',
   );
 
+  expect(screen.getByRole('region', { name: 'JSX' })).toBe(code);
+  fireEvent.keyDown(events, { key: 'Home' });
+  expect(document.activeElement).toBe(controls);
+  expect(screen.getByRole<HTMLInputElement>('textbox', { name: 'label' }).value).toBe(
+    'Save choice',
+  );
   fireEvent.click(screen.getByRole('button', { name: 'Reset props' }));
   expect(screen.getAllByRole('button', { name: 'Submit choice' })).toHaveLength(2);
 });
@@ -186,7 +200,8 @@ it('submits ordered native data and resets one owned form without touching anoth
   fireEvent.click(light.getByRole('radio', { name: 'Second' }));
   fireEvent.click(dark.getByRole('button', { name: 'Submit' }));
 
-  const formData = screen.getByRole('region', { name: 'FormData' });
+  fireEvent.click(screen.getByRole('tab', { name: 'FormData' }));
+  const formData = screen.getByRole('tabpanel', { name: 'FormData' });
   expect([...formData.querySelectorAll('dt, dd')].map((entry) => entry.textContent)).toEqual([
     'choice',
     '"second"',
@@ -202,8 +217,9 @@ it('submits ordered native data and resets one owned form without touching anoth
   fireEvent.click(dark.getByRole('button', { name: 'Submit' }));
   expect(formData.textContent).toContain('"first"');
 
+  fireEvent.click(screen.getByRole('tab', { name: 'Events' }));
   expect(
-    within(screen.getByRole('region', { name: 'Events' }))
+    within(screen.getByRole('tabpanel', { name: 'Events' }))
       .getAllByRole('listitem')
       .map((entry) => entry.textContent),
   ).toEqual(['Example Dark submit', 'Example Dark reset', 'Example Dark submit']);

@@ -21,7 +21,7 @@ export function InspectorCode({ code }: { readonly code: string }): ReactElement
 
   const ready = preview?.source === code;
   return (
-    <pre className="wb-inspector-code" data-wb-pending={ready ? undefined : ''}>
+    <pre className="wb-inspector-code wb-scroll" data-wb-pending={ready ? undefined : ''}>
       <code>{ready ? preview.content : code}</code>
     </pre>
   );

@@ -1,23 +1,22 @@
 :where(.wb-shell, .wb-raw-canvas) {
-  /* Small controls from the Soft Dark reference, owned by Workbench. */
   --wb-control-height: 30px;
   --wb-control-radius: 6px;
   --wb-control-font: 13px;
   --wb-control-motion: 120ms;
-  --wb-field-bg: #1a2026;
-  --wb-field-border-hover: #5c6d7c;
-  --wb-field-border-focus: #84939e;
-  --wb-focus: #f7efe0;
-  --wb-invalid: #e87078;
-  --wb-segment-rail: #191f25;
-  --wb-segment-thumb: #34414b;
-  --wb-action-bg: #313c46;
-  --wb-action-hover: #3b4854;
-  --wb-picker-bg: #28323b;
-  --wb-option-hover: #333f48;
-  --wb-accent-ink: #211512;
-  --wb-accent-hover: #e59277;
-  --wb-accent-active: #df7453;
+  --wb-field-bg: #1b1b1b;
+  --wb-field-border-hover: #6f6f6f;
+  --wb-field-border-focus: #a0a0a0;
+  --wb-focus: #f1f1f1;
+  --wb-invalid: #ef959a;
+  --wb-segment-rail: #1c1c1c;
+  --wb-segment-thumb: #444444;
+  --wb-action-bg: #353535;
+  --wb-action-hover: #424242;
+  --wb-picker-bg: #2d2d2d;
+  --wb-option-hover: #414141;
+  --wb-accent-ink: #191919;
+  --wb-accent-hover: #e8e8e8;
+  --wb-accent-active: #b8b8b8;
 }
 
 .wb-field {
@@ -43,6 +42,7 @@
 
 .wb-field:focus {
   border-color: var(--wb-field-border-focus);
+  outline: none;
 }
 
 .wb-field[aria-invalid='true'] {
@@ -95,8 +95,8 @@ select.wb-field:enabled {
     background: var(--wb-picker-bg);
     color: var(--wb-fg);
     box-shadow:
-      0 2px 6px rgb(8 11 14 / 0.278),
-      0 10px 24px -4px rgb(8 11 14 / 0.42);
+      0 2px 6px rgb(0 0 0 / 0.28),
+      0 10px 24px -4px rgb(0 0 0 / 0.42);
   }
 
   .wb-field option {
@@ -110,7 +110,11 @@ select.wb-field:enabled {
     background: var(--wb-option-hover);
   }
 
-  .wb-field option:focus-visible {
+  .wb-field option:focus {
+    outline: none;
+  }
+
+  .wb-field option:not(:where([data-wb-field-focus='pointer'] *)):focus-visible {
     outline: 2px solid var(--wb-focus);
     outline-offset: -2px;
   }
@@ -307,11 +311,12 @@ select.wb-field:enabled {
   color: var(--wb-fg);
 }
 
+.wb-field:not(:where([data-wb-field-focus='pointer'] *)):focus-visible,
 :where(
-  .wb-field,
   .wb-action-btn,
   .wb-seg-btn,
   .wb-disclosure,
+  .wb-nav-toggle,
   .wb-nav-item,
   .wb-tab,
   .wb-cell,
@@ -333,7 +338,7 @@ select.wb-field:enabled {
   outline-color: var(--wb-invalid);
 }
 
-:where(.wb-seg-btn, .wb-tab, .wb-isolate):focus-visible {
+:where(.wb-seg-btn, .wb-tab, .wb-isolate, .wb-story-frame .wb-cell):focus-visible {
   outline-offset: -2px;
 }
 
@@ -346,6 +351,10 @@ select.wb-field:enabled {
 @media (forced-colors: active) {
   .wb-action-btn {
     border-color: ButtonText;
+  }
+
+  .wb-field:focus {
+    border-color: Highlight;
   }
 
   :is(.wb-action-btn, .wb-field):disabled {

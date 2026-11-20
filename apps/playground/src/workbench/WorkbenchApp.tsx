@@ -1,6 +1,15 @@
 import '@fontsource-variable/inter';
 import '@fontsource-variable/jetbrains-mono';
-import { Fragment, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import {
+  Fragment,
+  useCallback,
+  useEffect,
+  useId,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import type { MouseEvent, ReactElement, ReactNode, RefObject } from 'react';
 import { Inspector } from './Inspector.js';
 import {
@@ -81,7 +90,7 @@ function ViewportFrame({
   return (
     <div
       ref={hostRef}
-      className="wb-viewport-host"
+      className="wb-viewport-host wb-scroll"
       data-scaled={vp !== 'auto' && scaleToFit ? 'true' : undefined}
       data-fixed={vp !== 'auto' ? 'true' : undefined}
       style={vp !== 'auto' && scaleToFit ? { height: metrics.height } : undefined}
@@ -223,6 +232,43 @@ function useCaptureReadiness(
   }, [hostRef, route, sceneRevision]);
 }
 
+function trackFieldFocus(shell: HTMLElement): () => void {
+  const doc = shell.ownerDocument;
+  const pointer = (): void => {
+    shell.dataset.wbFieldFocus = 'pointer';
+  };
+  const clearPointerFocus = (): void => {
+    delete shell.dataset.wbFieldFocus;
+  };
+  const keyboard = (event: KeyboardEvent): void => {
+    if (
+      event.isComposing ||
+      event.altKey ||
+      event.ctrlKey ||
+      event.metaKey ||
+      ['Shift', 'Control', 'Alt', 'Meta'].includes(event.key)
+    ) {
+      return;
+    }
+    const editing =
+      event.target instanceof Element &&
+      event.target.matches('input, textarea, [contenteditable="true"]');
+    // Typing and moving the caret keep the pointer focus treatment.
+    if (!editing || event.key === 'Tab' || event.key === 'Escape') {
+      clearPointerFocus();
+    }
+  };
+  doc.addEventListener('pointerdown', pointer, true);
+  doc.addEventListener('keydown', keyboard, true);
+  doc.defaultView?.addEventListener('blur', clearPointerFocus);
+  return () => {
+    doc.removeEventListener('pointerdown', pointer, true);
+    doc.removeEventListener('keydown', keyboard, true);
+    doc.defaultView?.removeEventListener('blur', clearPointerFocus);
+    clearPointerFocus();
+  };
+}
+
 function shouldFollowInPlace(event: MouseEvent<HTMLAnchorElement>): boolean {
   return (
     !event.defaultPrevented &&
@@ -271,6 +317,50 @@ function filterMatch(
   query: string,
 ): boolean {
   return [item.id, item.title, category].some((value) => value.toLowerCase().includes(query));
+}
+
+function catalogPath(config: WorkbenchConfig, item: string): Record<string, boolean> {
+  const component = config.components.find((entry) => entry.id === item);
+  if (component) {
+    return { [`component:${component.category}`]: true };
+  }
+  const scene = config.scenes.find((entry) => entry.id === item);
+  return scene ? { scenes: true, [`scene:${scene.group}`]: true } : {};
+}
+
+function CatalogGroup({
+  title,
+  open,
+  nested = false,
+  onToggle,
+  children,
+}: {
+  readonly title: string;
+  readonly open: boolean;
+  readonly nested?: boolean;
+  readonly onToggle: () => void;
+  readonly children: ReactNode;
+}): ReactElement {
+  const id = useId();
+  const Heading = nested ? 'h3' : 'h2';
+  return (
+    <section className="wb-nav-section">
+      <Heading className="wb-nav-heading">
+        <button
+          type="button"
+          className="wb-nav-toggle"
+          aria-expanded={open}
+          aria-controls={id}
+          onClick={onToggle}
+        >
+          {title}
+        </button>
+      </Heading>
+      <div id={id} className="wb-nav-list" hidden={!open}>
+        {children}
+      </div>
+    </section>
+  );
 }
 
 function useSceneIndex(config: WorkbenchConfig): ReadonlyMap<string, readonly SceneDefinition[]> {
@@ -466,6 +556,8 @@ export function WorkbenchApp({ config }: WorkbenchAppProps): ReactElement {
   const [route, setRoute] = useState(() => readRoute(window.location.search, config));
   const [sceneRevision, setSceneRevision] = useState(0);
   const [query, setQuery] = useState('');
+  const [openGroups, setOpenGroups] = useState(() => catalogPath(config, route.item));
+  const [searchGroups, setSearchGroups] = useState<Record<string, boolean>>({});
   const [status, setStatus] = useState<'All' | ComponentStatus>('All');
   const [catalogOpen, setCatalogOpen] = useState(false);
   const [searchRequest, setSearchRequest] = useState(0);
@@ -474,22 +566,36 @@ export function WorkbenchApp({ config }: WorkbenchAppProps): ReactElement {
   const mobileCatalogRef = useRef<HTMLButtonElement>(null);
   const headingRef = useRef<HTMLHeadingElement>(null);
   const catalogId = useId();
+  const revealCatalogPath = useCallback(
+    (item: string): void => {
+      const path = catalogPath(config, item);
+      setOpenGroups((previous) => ({ ...previous, ...path }));
+      setSearchGroups((previous) => ({ ...previous, ...path }));
+    },
+    [config],
+  );
 
   useCaptureReadiness(rootRef, route, sceneRevision);
   useEffect(() => {
     const restore = (): void => {
-      setRoute(readRoute(window.location.search, config));
+      const next = readRoute(window.location.search, config);
+      if (next.item !== route.item) {
+        revealCatalogPath(next.item);
+      }
+      setRoute(next);
     };
     window.addEventListener('popstate', restore);
     return () => {
       window.removeEventListener('popstate', restore);
     };
-  }, [config]);
+  }, [config, revealCatalogPath, route.item]);
 
   useEffect(() => {
-    if (route.raw) {
+    const shell = rootRef.current;
+    if (route.raw || !shell) {
       return;
     }
+    const stopTrackingFocus = trackFieldFocus(shell);
     const openSearch = (event: KeyboardEvent): void => {
       if (event.defaultPrevented || event.isComposing || event.altKey || event.repeat) {
         return;
@@ -508,12 +614,14 @@ export function WorkbenchApp({ config }: WorkbenchAppProps): ReactElement {
         return;
       }
       event.preventDefault();
+      delete shell.dataset.wbFieldFocus;
       setCatalogOpen(true);
       setSearchRequest((previous) => previous + 1);
     };
     window.addEventListener('keydown', openSearch);
     return () => {
       window.removeEventListener('keydown', openSearch);
+      stopTrackingFocus();
     };
   }, [route.raw]);
 
@@ -537,6 +645,9 @@ export function WorkbenchApp({ config }: WorkbenchAppProps): ReactElement {
       window.history.pushState(null, '', href);
     } else {
       window.history.replaceState(null, '', href);
+    }
+    if (next.item !== current.item) {
+      revealCatalogPath(next.item);
     }
     setRoute(next);
   };
@@ -564,6 +675,23 @@ export function WorkbenchApp({ config }: WorkbenchAppProps): ReactElement {
   const filteredScenes = config.scenes.filter((item) =>
     filterMatch(item, item.group, normalizedQuery),
   );
+  const sceneGroups = new Map<string, SceneDefinition[]>();
+  for (const entry of filteredScenes) {
+    const group = sceneGroups.get(entry.group) ?? [];
+    group.push(entry);
+    sceneGroups.set(entry.group, group);
+  }
+
+  function catalogDisclosure(key: string): { open: boolean; onToggle: () => void } {
+    const open = normalizedQuery ? (searchGroups[key] ?? true) : (openGroups[key] ?? false);
+    const setGroups = normalizedQuery ? setSearchGroups : setOpenGroups;
+    return {
+      open,
+      onToggle: () => {
+        setGroups((previous) => ({ ...previous, [key]: !open }));
+      },
+    };
+  }
 
   const renderArtboards = (render: (theme: WorkbenchTheme) => ReactNode): ReactElement => (
     <div className="wb-artboards" data-single={selectedThemes.length === 1 ? 'true' : undefined}>
@@ -573,7 +701,6 @@ export function WorkbenchApp({ config }: WorkbenchAppProps): ReactElement {
           key={theme.id}
           aria-label={theme.label}
           tabIndex={route.raw ? undefined : -1}
-          data-wb-scene-frame={scene ? '' : undefined}
         >
           {route.raw || selectedThemes.length === 1 ? (
             <div className="wb-cell-header">
@@ -678,7 +805,7 @@ export function WorkbenchApp({ config }: WorkbenchAppProps): ReactElement {
           </div>
           <div
             id={catalogId}
-            className="wb-rail-content"
+            className="wb-rail-content wb-scroll"
             data-open={catalogOpen ? 'true' : undefined}
           >
             <div className="wb-search-wrap">
@@ -692,6 +819,7 @@ export function WorkbenchApp({ config }: WorkbenchAppProps): ReactElement {
                 value={query}
                 onChange={(event) => {
                   setQuery(event.target.value);
+                  setSearchGroups({});
                 }}
               />
             </div>
@@ -719,49 +847,56 @@ export function WorkbenchApp({ config }: WorkbenchAppProps): ReactElement {
                   return null;
                 }
                 return (
-                  <section key={category} className="wb-nav-section">
-                    <h2 className="wb-nav-heading">{category}</h2>
-                    <div className="wb-nav-list">
-                      {entries.map((entry) => (
-                        <Destination
-                          key={entry.id}
-                          className="wb-nav-item"
-                          active={entry.id === route.item}
-                          href={createHref({ item: entry.id })}
-                          navigate={() => {
-                            navigateItem(entry.id);
-                          }}
-                        >
-                          <span>{entry.title}</span>{' '}
-                          <span className="wb-nav-tag">{entry.status}</span>
-                        </Destination>
-                      ))}
-                    </div>
-                  </section>
+                  <CatalogGroup
+                    key={category}
+                    title={category}
+                    {...catalogDisclosure(`component:${category}`)}
+                  >
+                    {entries.map((entry) => (
+                      <Destination
+                        key={entry.id}
+                        className="wb-nav-item"
+                        active={entry.id === route.item}
+                        href={createHref({ item: entry.id })}
+                        navigate={() => {
+                          navigateItem(entry.id);
+                        }}
+                      >
+                        <span>{entry.title}</span>{' '}
+                        <span className="wb-nav-tag">{entry.status}</span>
+                      </Destination>
+                    ))}
+                  </CatalogGroup>
                 );
               })}
               {!filteredComponents.length && (
                 <p className="wb-nav-empty">No matching components.</p>
               )}
-              <section className="wb-nav-section">
-                <h2 className="wb-nav-heading">Scenes</h2>
-                <div className="wb-nav-list">
-                  {filteredScenes.map((entry) => (
-                    <Destination
-                      key={entry.id}
-                      className="wb-nav-item"
-                      active={entry.id === route.item}
-                      href={createHref({ item: entry.id })}
-                      navigate={() => {
-                        navigateItem(entry.id);
-                      }}
-                    >
-                      <span>{entry.title}</span>
-                    </Destination>
-                  ))}
-                  {!filteredScenes.length && <p className="wb-nav-empty">No matching scenes.</p>}
-                </div>
-              </section>
+              <CatalogGroup title="Scenes" {...catalogDisclosure('scenes')}>
+                {[...sceneGroups].map(([group, entries]) => (
+                  <CatalogGroup
+                    key={group}
+                    title={group}
+                    nested
+                    {...catalogDisclosure(`scene:${group}`)}
+                  >
+                    {entries.map((entry) => (
+                      <Destination
+                        key={entry.id}
+                        className="wb-nav-item"
+                        active={entry.id === route.item}
+                        href={createHref({ item: entry.id })}
+                        navigate={() => {
+                          navigateItem(entry.id);
+                        }}
+                      >
+                        <span>{entry.title}</span>
+                      </Destination>
+                    ))}
+                  </CatalogGroup>
+                ))}
+                {!sceneGroups.size && <p className="wb-nav-empty">No matching scenes.</p>}
+              </CatalogGroup>
             </nav>
           </div>
         </div>

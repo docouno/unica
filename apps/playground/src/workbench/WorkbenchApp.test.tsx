@@ -209,7 +209,7 @@ it('resets every visible scene instance while keeping the current view and focus
   const href = window.location.href;
   const historyLength = window.history.length;
   const boards = screen.getAllByRole('region', { name: /^Haze / }).map((board) => within(board));
-  expect(container.querySelectorAll('[data-wb-scene-frame]')).toHaveLength(2);
+  expect(container.querySelectorAll('.wb-cell > .wb-cell-header')).toHaveLength(2);
 
   for (const board of boards) {
     fireEvent.click(board.getByRole('button', { name: 'Scene action' }));
@@ -255,6 +255,8 @@ it('searches by id and category while preserving scene access and editable short
   const filters = within(screen.getByRole('group', { name: 'Component status' }));
   fireEvent.click(filters.getByRole('button', { name: 'UI' }));
   expect(catalog.queryByRole('link', { name: 'Field Proto' })).toBeNull();
+  fireEvent.click(catalog.getByRole('button', { name: 'Scenes' }));
+  fireEvent.click(catalog.getByRole('button', { name: scene.group }));
   fireEvent.click(catalog.getByRole('link', { name: scene.title }));
   const modalAction = screen.getByRole('button', { name: 'Scene action' });
   modalAction.focus();
@@ -264,13 +266,67 @@ it('searches by id and category while preserving scene access and editable short
   expect(document.activeElement).toBe(modalAction);
 });
 
+it('keeps catalog groups collapsible and reveals the active path after navigation', async () => {
+  open('/?item=field&family=haze&scheme=light');
+  const catalog = within(screen.getByRole('navigation', { name: 'Components and scenes' }));
+  const controls = catalog.getByRole('button', { name: 'Controls' });
+  const scenes = catalog.getByRole('button', { name: 'Scenes' });
+  const search = screen.getByRole('searchbox');
+
+  expect(controls.getAttribute('aria-expanded')).toBe('true');
+  expect(scenes.getAttribute('aria-expanded')).toBe('false');
+  fireEvent.click(controls);
+  expect(catalog.queryByRole('link', { name: 'Field Proto' })).toBeNull();
+
+  fireEvent.change(search, { target: { value: 'field' } });
+  expect(catalog.getByRole('link', { name: 'Field Proto' })).toBeTruthy();
+  fireEvent.click(controls);
+  expect(catalog.queryByRole('link', { name: 'Field Proto' })).toBeNull();
+  fireEvent.change(search, { target: { value: '' } });
+  expect(controls.getAttribute('aria-expanded')).toBe('false');
+
+  fireEvent.click(screen.getByRole('link', { name: 'Usage' }));
+  fireEvent.change(search, { target: { value: scene.title } });
+  fireEvent.click(catalog.getByRole('button', { name: scene.group }));
+  expect(catalog.queryByRole('link', { name: scene.title })).toBeNull();
+  fireEvent.click(
+    within(screen.getByRole('navigation', { name: 'Consuming scenes' })).getByRole('link', {
+      name: scene.title,
+    }),
+  );
+  expect(catalog.getByRole('button', { name: 'Scenes' }).getAttribute('aria-expanded')).toBe(
+    'true',
+  );
+  expect(catalog.getByRole('button', { name: scene.group }).getAttribute('aria-expanded')).toBe(
+    'true',
+  );
+  expect(catalog.getByRole('link', { name: scene.title }).getAttribute('aria-current')).toBe(
+    'page',
+  );
+
+  fireEvent.change(search, { target: { value: '' } });
+  window.history.back();
+  await waitFor(() => {
+    expect(catalog.getByRole('button', { name: 'Controls' }).getAttribute('aria-expanded')).toBe(
+      'true',
+    );
+    expect(catalog.getByRole('link', { name: 'Field Proto' }).getAttribute('aria-current')).toBe(
+      'page',
+    );
+  });
+});
+
 it('opens an unknown item with navigation and renders raw only for the requested block', () => {
   open('/?item=missing');
   expect(screen.getByRole('heading', { name: 'Item not found' })).toBeTruthy();
+  fireEvent.click(screen.getByRole('button', { name: 'Controls' }));
   expect(screen.getByRole('link', { name: 'Field Proto' })).toBeTruthy();
   cleanup();
   const { container } = open('/?item=field&tab=cases&block=overflow&raw=1');
   expect(screen.queryByRole('navigation', { name: 'Components and scenes' })).toBeNull();
   expect(container.querySelector('.wb-raw-canvas')?.getAttribute('data-wb-block')).toBe('overflow');
   expect(screen.getAllByText('Long text')).toHaveLength(5);
+  const story = container.querySelector('.wb-story-frame[data-wb-block="overflow"]');
+  expect(story?.querySelector('.wb-frame-heading h3')?.textContent).toBe('Overflow');
+  expect(story?.querySelectorAll('.wb-artboard')).toHaveLength(5);
 });

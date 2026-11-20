@@ -188,12 +188,11 @@ export function PlaygroundControls({
 
   return (
     <section className="wb-inspector-controls" aria-label="Component controls">
-      <header className="wb-inspector-panel-heading">
-        <h2>Controls</h2>
+      <div className="wb-controls-actions">
         <button type="button" className="wb-action-btn" onClick={onReset}>
           Reset props
         </button>
-      </header>
+      </div>
       <div className="wb-control-groups">
         {[...groups].map(([group, props]) => (
           <fieldset className="wb-control-group" key={group}>
