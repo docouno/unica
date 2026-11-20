@@ -10,8 +10,9 @@ import {
   useRef,
   useState,
 } from 'react';
-import type { MouseEvent, ReactElement, ReactNode, RefObject } from 'react';
+import type { CSSProperties, MouseEvent, ReactElement, ReactNode, RefObject } from 'react';
 import { Inspector } from './Inspector.js';
+import { SettingsProvider } from './ViewSettings.js';
 import {
   patchRoute,
   readRoute,
@@ -44,6 +45,22 @@ const tabLabels = {
 const schemeLabels = { dark: 'Dark', light: 'Light', both: 'Both' };
 const surfaceLabels = { auto: 'Auto', base: 'Base', overlay: 'Overlay' };
 
+function groupThemes(themes: readonly WorkbenchTheme[]): readonly (readonly WorkbenchTheme[])[] {
+  const families = new Map<string, WorkbenchTheme[]>();
+  for (const theme of themes) {
+    const family = families.get(theme.family) ?? [];
+    family.push(theme);
+    families.set(theme.family, family);
+  }
+  return [...families.values()].flatMap((family) => {
+    const dark = family.filter((theme) => theme.colorScheme === 'dark');
+    const light = family.filter((theme) => theme.colorScheme === 'light');
+    return Array.from({ length: Math.max(dark.length, light.length) }, (_, index) =>
+      [dark[index], light[index]].filter((theme) => theme !== undefined),
+    );
+  });
+}
+
 function ViewportFrame({
   vp,
   scaleToFit,
@@ -53,59 +70,47 @@ function ViewportFrame({
   readonly scaleToFit: boolean;
   readonly children: ReactNode;
 }): ReactElement {
-  const hostRef = useRef<HTMLDivElement | null>(null);
-  const innerRef = useRef<HTMLDivElement | null>(null);
-  const [metrics, setMetrics] = useState<{ scale: number; height: number | undefined }>({
-    scale: 1,
-    height: undefined,
-  });
+  const hostRef = useRef<HTMLDivElement>(null);
+  const compare = vp !== 'auto' && scaleToFit;
+  const fit = compare && globalThis.CSS?.supports('zoom', '1') === true;
+  const [scale, setScale] = useState(1);
 
   useLayoutEffect(() => {
     const host = hostRef.current;
-    const inner = innerRef.current;
-    if (vp === 'auto' || !scaleToFit || !host || !inner || typeof ResizeObserver === 'undefined') {
+    if (!fit || !host) {
       return;
     }
 
     const measure = (): void => {
-      if (host.clientWidth === 0) {
-        return;
+      if (host.clientWidth > 0) {
+        setScale(Math.min(1, host.clientWidth / vp));
       }
-      const scale = Math.min(1, host.clientWidth / vp);
-      const height = Math.ceil(inner.offsetHeight * scale);
-      setMetrics((previous) =>
-        previous.scale === scale && previous.height === height ? previous : { scale, height },
-      );
     };
 
     measure();
+    if (typeof ResizeObserver === 'undefined') {
+      return;
+    }
     const observer = new ResizeObserver(measure);
     observer.observe(host);
-    observer.observe(inner);
-    return () => {
-      observer.disconnect();
-    };
-  }, [vp, scaleToFit]);
+    return () => observer.disconnect();
+  }, [fit, vp]);
 
   return (
     <div
       ref={hostRef}
       className="wb-viewport-host wb-scroll"
-      data-scaled={vp !== 'auto' && scaleToFit ? 'true' : undefined}
-      data-fixed={vp !== 'auto' ? 'true' : undefined}
-      style={vp !== 'auto' && scaleToFit ? { height: metrics.height } : undefined}
+      data-scaled={fit || undefined}
+      tabIndex={compare && !fit ? 0 : undefined}
     >
       {vp === 'auto' ? (
         children
       ) : (
         <div
-          ref={innerRef}
           className="wb-viewport-inner"
           style={{
             width: vp,
-            ...(scaleToFit && metrics.scale < 1
-              ? { scale: metrics.scale, marginInline: 0, '--wb-viewport-scale': metrics.scale }
-              : {}),
+            ...(fit && scale < 1 ? { zoom: scale, '--wb-viewport-scale': scale } : {}),
           }}
         >
           {children}
@@ -389,33 +394,17 @@ function Environment({
   update,
   href,
   hasComponent,
-  onResetScene,
 }: {
   readonly route: WorkbenchRoute;
   readonly themes: readonly WorkbenchTheme[];
   readonly update: Update;
   readonly href: Href;
   readonly hasComponent: boolean;
-  readonly onResetScene: (() => void) | undefined;
 }): ReactElement {
   const families = new Map(themes.map((theme) => [theme.family, theme.familyLabel]));
   const familyOptions = [...families, ['all', 'All'] as const];
-  const [copyResult, setCopyResult] = useState<{ status: string; url: string }>();
-  const url = new URL(href({}), window.location.href).href;
-  function copyLink(): void {
-    const unavailable = (): void => {
-      setCopyResult({ status: 'Copy unavailable', url });
-    };
-    if (!navigator.clipboard) {
-      unavailable();
-      return;
-    }
-    navigator.clipboard.writeText(url).then(() => {
-      setCopyResult({ status: 'Link copied', url });
-    }, unavailable);
-  }
   return (
-    <div className="wb-environment">
+    <div className="wb-environment" role="group" aria-label="Preview settings">
       <div className="wb-environment-group">
         <span aria-hidden="true">Family</span>
         <div className="wb-seg" role="group" aria-label="Family">
@@ -506,12 +495,14 @@ function Environment({
         <button
           className="wb-seg-btn"
           type="button"
+          aria-label="120% Text"
+          title="Preview text at 120%"
           aria-pressed={route.scale === 120}
           onClick={() => {
             update({ scale: route.scale === 120 ? 100 : 120 });
           }}
         >
-          120% Text
+          120%
         </button>
         <button
           className="wb-seg-btn"
@@ -536,15 +527,28 @@ function Environment({
           </button>
         )}
       </div>
-      {onResetScene && (
-        <button className="wb-action-btn" type="button" onClick={onResetScene}>
-          Reset scene
-        </button>
-      )}
-      <button className="wb-action-btn" type="button" onClick={copyLink}>
-        {copyResult?.url === url ? copyResult.status : 'Copy Link'}
-      </button>
     </div>
+  );
+}
+
+function CopyLink({ url }: { readonly url: string }): ReactElement {
+  const [copyResult, setCopyResult] = useState<{ status: string; url: string }>();
+  function copyLink(): void {
+    const unavailable = (): void => {
+      setCopyResult({ status: 'Copy unavailable', url });
+    };
+    if (!navigator.clipboard) {
+      unavailable();
+      return;
+    }
+    navigator.clipboard.writeText(url).then(() => {
+      setCopyResult({ status: 'Link copied', url });
+    }, unavailable);
+  }
+  return (
+    <button className="wb-action-btn" type="button" onClick={copyLink}>
+      {copyResult?.url === url ? copyResult.status : 'Copy Link'}
+    </button>
   );
 }
 
@@ -560,12 +564,18 @@ export function WorkbenchApp({ config }: WorkbenchAppProps): ReactElement {
   const [searchGroups, setSearchGroups] = useState<Record<string, boolean>>({});
   const [status, setStatus] = useState<'All' | ComponentStatus>('All');
   const [catalogOpen, setCatalogOpen] = useState(false);
+  const [compact, setCompact] = useState(false);
+  const [settingsTarget, setSettingsTarget] = useState<HTMLDivElement | null>(null);
   const [searchRequest, setSearchRequest] = useState(0);
   const rootRef = useRef<HTMLDivElement>(null);
   const searchRef = useRef<HTMLInputElement>(null);
   const mobileCatalogRef = useRef<HTMLButtonElement>(null);
   const headingRef = useRef<HTMLHeadingElement>(null);
   const catalogId = useId();
+  const inspectorId = useId();
+  const inspectorDialogRef = useRef<HTMLDialogElement>(null);
+  const inspectorLaunchRef = useRef<HTMLButtonElement>(null);
+  const restoreInspectorFocus = useRef(false);
   const revealCatalogPath = useCallback(
     (item: string): void => {
       const path = catalogPath(config, item);
@@ -574,6 +584,45 @@ export function WorkbenchApp({ config }: WorkbenchAppProps): ReactElement {
     },
     [config],
   );
+
+  useLayoutEffect(() => {
+    if (route.raw) {
+      return;
+    }
+    const media = window.matchMedia?.('(max-width: 1079px)');
+    if (!media) {
+      return;
+    }
+    const measure = (): void => {
+      if (media.matches === rootRef.current?.hasAttribute('data-wb-compact')) {
+        return;
+      }
+      const active = document.activeElement;
+      restoreInspectorFocus.current =
+        active === inspectorLaunchRef.current ||
+        document.getElementById(inspectorId)?.contains(active) === true;
+      setCompact(media.matches);
+    };
+    measure();
+    media.addEventListener('change', measure);
+    return () => media.removeEventListener('change', measure);
+  }, [inspectorId, route.raw]);
+
+  useLayoutEffect(() => {
+    if (!restoreInspectorFocus.current) {
+      return;
+    }
+    const sidebar = document.getElementById(inspectorId);
+    if (!compact && (!settingsTarget || !sidebar?.contains(settingsTarget))) {
+      return;
+    }
+    const target = compact
+      ? inspectorLaunchRef.current
+      : (sidebar?.querySelector<HTMLElement>('[role="tab"][aria-selected="true"]') ??
+        sidebar?.querySelector<HTMLElement>('button'));
+    target?.focus({ preventScroll: true });
+    restoreInspectorFocus.current = false;
+  }, [compact, settingsTarget, inspectorId]);
 
   useCaptureReadiness(rootRef, route, sceneRevision);
   useEffect(() => {
@@ -665,6 +714,8 @@ export function WorkbenchApp({ config }: WorkbenchAppProps): ReactElement {
   const notFound =
     !component && !scene && Boolean(route.item || config.components.length || config.scenes.length);
   const selectedThemes = selectThemes(config.themes, route.family, route.scheme);
+  const themeGroups = useMemo(() => groupThemes(config.themes), [config.themes]);
+  const selectedThemeIds = new Set(selectedThemes.map((theme) => theme.id));
   const sceneIndex = useSceneIndex(config);
   const normalizedQuery = query.trim().toLowerCase();
   const filteredComponents = config.components.filter(
@@ -694,48 +745,63 @@ export function WorkbenchApp({ config }: WorkbenchAppProps): ReactElement {
   }
 
   const renderArtboards = (render: (theme: WorkbenchTheme) => ReactNode): ReactElement => (
-    <div className="wb-artboards" data-single={selectedThemes.length === 1 ? 'true' : undefined}>
-      {selectedThemes.map((theme) => (
-        <section
-          className="wb-cell"
-          key={theme.id}
-          aria-label={theme.label}
-          tabIndex={route.raw ? undefined : -1}
-        >
-          {route.raw || selectedThemes.length === 1 ? (
-            <div className="wb-cell-header">
-              <span className="wb-cell-title">{theme.label}</span>
-              {theme.meta && <span className="wb-cell-meta">{theme.meta}</span>}
-            </div>
-          ) : (
-            <button
-              className="wb-cell-header wb-isolate"
-              type="button"
-              aria-label={`Isolate ${theme.label}`}
-              onClick={(event) => {
-                event.currentTarget.parentElement?.focus();
-                update({ family: theme.family, scheme: theme.colorScheme }, 'push');
-              }}
-            >
-              <span className="wb-cell-title">{theme.label}</span>
-              <span className="wb-cell-meta">Isolate</span>
-            </button>
-          )}
-          <ViewportFrame vp={route.vp} scaleToFit={selectedThemes.length > 1}>
-            <div
-              className="wb-artboard"
-              data-theme={theme.id}
-              data-color-scheme={theme.colorScheme}
-              data-text-scale={route.scale}
-              data-wb-scene={component ? undefined : ''}
-              dir={route.dir}
-              style={{ colorScheme: theme.colorScheme }}
-            >
-              {render(theme)}
-            </div>
-          </ViewportFrame>
-        </section>
-      ))}
+    <div
+      className="wb-artboards"
+      data-single={selectedThemes.length === 1 ? 'true' : undefined}
+      data-wb-fixed={route.vp !== 'auto' || undefined}
+    >
+      {themeGroups.map((group) => {
+        const visible = group.filter((theme) => selectedThemeIds.has(theme.id));
+        return visible.length ? (
+          <div
+            key={group[0]!.id}
+            className="wb-theme-slot"
+            data-wb-pair={visible.length > 1 || undefined}
+          >
+            {visible.map((theme) => (
+              <section
+                className="wb-cell"
+                key={theme.id}
+                aria-label={theme.label}
+                tabIndex={route.raw ? undefined : -1}
+              >
+                {route.raw || selectedThemes.length === 1 ? (
+                  <div className="wb-cell-header">
+                    <span className="wb-cell-title">{theme.label}</span>
+                    {theme.meta && <span className="wb-cell-meta">{theme.meta}</span>}
+                  </div>
+                ) : (
+                  <button
+                    className="wb-cell-header wb-isolate"
+                    type="button"
+                    aria-label={`Isolate ${theme.label}`}
+                    onClick={(event) => {
+                      event.currentTarget.parentElement?.focus();
+                      update({ family: theme.family, scheme: theme.colorScheme }, 'push');
+                    }}
+                  >
+                    <span className="wb-cell-title">{theme.label}</span>
+                    <span className="wb-cell-meta">Isolate</span>
+                  </button>
+                )}
+                <ViewportFrame vp={route.vp} scaleToFit={selectedThemes.length > 1}>
+                  <div
+                    className="wb-artboard"
+                    data-theme={theme.id}
+                    data-color-scheme={theme.colorScheme}
+                    data-text-scale={route.scale}
+                    data-wb-scene={component ? undefined : ''}
+                    dir={route.dir}
+                    style={{ colorScheme: theme.colorScheme }}
+                  >
+                    {render(theme)}
+                  </div>
+                </ViewportFrame>
+              </section>
+            ))}
+          </div>
+        ) : null;
+      })}
       {!selectedThemes.length && <p className="wb-empty-note">No themes registered.</p>}
     </div>
   );
@@ -767,6 +833,7 @@ export function WorkbenchApp({ config }: WorkbenchAppProps): ReactElement {
 
   const identity = {
     'data-wb-item': route.item,
+    'data-wb-fixed-view': route.vp !== 'auto' || undefined,
     'data-wb-tab': component ? route.tab : undefined,
     'data-wb-slice':
       route.tab === 'matrix' ? (route.slice ?? component?.matrixViews?.[0]?.id) : undefined,
@@ -775,16 +842,58 @@ export function WorkbenchApp({ config }: WorkbenchAppProps): ReactElement {
     'data-wb-not-found': notFound ? '1' : undefined,
   };
 
+  const itemTitle =
+    component?.title ?? scene?.title ?? (notFound ? 'Item not found' : 'Preset calibration');
+  const viewportStyle =
+    route.vp === 'auto' ? undefined : ({ '--wb-preview-width': `${route.vp}px` } as CSSProperties);
+
   if (route.raw) {
     return (
-      <div ref={rootRef} className="wb-raw-canvas" {...identity}>
+      <div ref={rootRef} className="wb-raw-canvas wb-scroll" style={viewportStyle} {...identity}>
         {body}
       </div>
     );
   }
 
+  const settings = (
+    <>
+      <div className="wb-inspector-toolbar">
+        <span>Inspector</span>
+        <div className="wb-inspector-actions">
+          {scene && (
+            <button
+              type="button"
+              className="wb-action-btn"
+              onClick={() => setSceneRevision((previous) => previous + 1)}
+            >
+              Reset scene
+            </button>
+          )}
+          <CopyLink url={new URL(createHref({}), window.location.href).href} />
+          {compact && (
+            <button
+              type="button"
+              className="wb-action-btn"
+              aria-label="Close inspector"
+              onClick={() => inspectorDialogRef.current?.close()}
+            >
+              Close
+            </button>
+          )}
+        </div>
+      </div>
+      <div ref={setSettingsTarget} className="wb-view-settings wb-scroll" />
+    </>
+  );
+
   return (
-    <div ref={rootRef} className="wb-shell" {...identity}>
+    <div
+      ref={rootRef}
+      className="wb-shell"
+      data-wb-compact={compact || undefined}
+      style={viewportStyle}
+      {...identity}
+    >
       <aside className="wb-rail" aria-label="Workbench catalog">
         <div className="wb-rail-sticky">
           <div className="wb-brand">
@@ -904,18 +1013,11 @@ export function WorkbenchApp({ config }: WorkbenchAppProps): ReactElement {
 
       <div className="wb-main">
         <header className="wb-topbar">
-          <div className="wb-item-info">
-            <div className="wb-item-heading">
-              <h1 ref={headingRef} className="wb-item-title" tabIndex={-1}>
-                {component?.title ??
-                  scene?.title ??
-                  (notFound ? 'Item not found' : 'Preset calibration')}
-              </h1>
-              {component && <span className="wb-nav-tag">{component.status}</span>}
-            </div>
-            {(component?.summary ?? scene?.summary) && (
-              <p className="wb-item-summary">{component?.summary ?? scene?.summary}</p>
-            )}
+          <div className="wb-item-heading">
+            <h1 ref={headingRef} className="wb-item-title" tabIndex={-1} title={itemTitle}>
+              {itemTitle}
+            </h1>
+            {component && <span className="wb-nav-tag">{component.status}</span>}
           </div>
           <Environment
             route={route}
@@ -923,14 +1025,19 @@ export function WorkbenchApp({ config }: WorkbenchAppProps): ReactElement {
             update={update}
             href={createHref}
             hasComponent={Boolean(component)}
-            onResetScene={
-              scene
-                ? () => {
-                    setSceneRevision((previous) => previous + 1);
-                  }
-                : undefined
-            }
           />
+          {compact && (
+            <button
+              ref={inspectorLaunchRef}
+              type="button"
+              className="wb-action-btn wb-inspector-launch"
+              aria-haspopup="dialog"
+              aria-controls={inspectorId}
+              onClick={() => inspectorDialogRef.current?.showModal()}
+            >
+              Inspector
+            </button>
+          )}
         </header>
         {component && (
           <nav className="wb-tabs" aria-label="Inspector tabs">
@@ -949,8 +1056,29 @@ export function WorkbenchApp({ config }: WorkbenchAppProps): ReactElement {
             ))}
           </nav>
         )}
-        <main className="wb-canvas">{body}</main>
+        <main
+          className="wb-canvas wb-scroll"
+          tabIndex={
+            route.vp !== 'auto' && (!component || route.tab !== 'playground') ? 0 : undefined
+          }
+        >
+          <SettingsProvider target={settingsTarget}>{body}</SettingsProvider>
+        </main>
       </div>
+      {compact ? (
+        <dialog
+          ref={inspectorDialogRef}
+          id={inspectorId}
+          className="wb-settings"
+          aria-label="Workbench inspector"
+        >
+          {settings}
+        </dialog>
+      ) : (
+        <aside id={inspectorId} className="wb-settings" aria-label="Workbench inspector">
+          {settings}
+        </aside>
+      )}
     </div>
   );
 }

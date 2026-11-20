@@ -1,5 +1,6 @@
 .wb-inspector {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 16px;
   min-inline-size: 0;
 }
@@ -11,21 +12,8 @@
   min-block-size: 0;
 }
 
-.wb-playground-layout {
-  display: grid;
-  flex: 1;
-  grid-template-columns: minmax(0, 1fr) clamp(19rem, 31%, 25rem);
-  gap: 12px;
-  min-block-size: 0;
-}
-
-.wb-playground-layout[data-wb-compact] {
-  grid-template-columns: minmax(0, 1fr);
-  grid-template-rows: auto minmax(0, 1fr);
-  gap: 8px;
-}
-
 .wb-playground-preview {
+  flex: 1;
   min-block-size: 0;
   min-inline-size: 0;
 }
@@ -35,37 +23,51 @@
   align-items: stretch;
 }
 
-.wb-inspector-launch {
-  display: flex;
-  justify-content: end;
-}
-
-.wb-playground-sidebar {
+.wb-settings {
   min-block-size: 0;
   min-inline-size: 0;
-  overflow: hidden;
-  border: 1px solid var(--wb-border);
-  border-radius: 8px;
+  block-size: 100dvh;
   background: var(--wb-rail);
   color: var(--wb-fg);
   color-scheme: dark;
 }
 
-dialog.wb-playground-sidebar {
+aside.wb-settings,
+dialog.wb-settings[open] {
+  display: flex;
+  flex-direction: column;
+}
+
+aside.wb-settings {
+  position: sticky;
+  inset-block-start: 0;
+  align-self: start;
+  border-inline-start: 1px solid var(--wb-border);
+}
+
+dialog.wb-settings {
   position: fixed;
   inset: 0 0 0 auto;
   inline-size: min(24rem, 100%);
-  block-size: 100dvh;
   max-inline-size: none;
   max-block-size: none;
   margin: 0;
   padding: 0;
+  border: 1px solid var(--wb-border);
   border-radius: 8px 0 0 8px;
   box-shadow: -12px 0 36px rgb(0 0 0 / 0.4);
 }
 
-dialog.wb-playground-sidebar::backdrop {
+dialog.wb-settings::backdrop {
   background: rgb(0 0 0 / 0.35);
+}
+
+.wb-view-settings {
+  flex: 1;
+  min-block-size: 0;
+  min-inline-size: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
 }
 
 .wb-inspector-split {
@@ -79,22 +81,23 @@ dialog.wb-playground-sidebar::backdrop {
   grid-template-rows: minmax(0, 1fr) minmax(9rem, 35%);
 }
 
-dialog.wb-playground-sidebar .wb-inspector-split {
-  grid-template-rows: auto minmax(0, 1fr);
-}
-
-dialog.wb-playground-sidebar .wb-inspector-split[data-wb-has-panes] {
-  grid-template-rows: auto minmax(0, 1fr) minmax(9rem, 35%);
-}
-
 .wb-inspector-toolbar {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 7px 10px;
+  min-block-size: 46px;
+  gap: 6px 8px;
+  padding: 6px 10px;
   border-block-end: 1px solid var(--wb-border);
   font-size: 13px;
   font-weight: 650;
+}
+
+.wb-inspector-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: end;
+  gap: 6px;
 }
 
 .wb-inspector-panes,
@@ -169,12 +172,6 @@ dialog.wb-playground-sidebar .wb-inspector-split[data-wb-has-panes] {
   }
 }
 
-@media (max-height: 419px) {
-  .wb-playground-layout:not([data-wb-compact]) .wb-playground-sidebar {
-    max-block-size: 24rem;
-  }
-}
-
 @media (min-width: 721px) and (min-height: 420px) {
   .wb-shell[data-wb-tab='playground'] .wb-main {
     block-size: 100dvh;
@@ -191,6 +188,7 @@ dialog.wb-playground-sidebar .wb-inspector-split[data-wb-has-panes] {
 
 .wb-inspector-preview {
   position: relative;
+  flex: 1;
   min-inline-size: 0;
   padding: var(--wb-sample-padding, 16px);
 }
@@ -204,13 +202,12 @@ dialog.wb-playground-sidebar .wb-inspector-split[data-wb-has-panes] {
   border-radius: 0;
 }
 
-:is(.wb-playground-layout, .wb-playground-capture) .wb-inspector-preview {
+:is(.wb-playground-preview, .wb-playground-capture) .wb-inspector-preview {
   --wb-sample-padding: 0 20px;
 }
 
 .wb-playground-preview .wb-inspector-preview {
   display: grid;
-  flex: 1;
 }
 
 .wb-playground-preview .wb-inspector-preview > [data-surface] {
@@ -498,15 +495,10 @@ dialog.wb-playground-sidebar .wb-inspector-split[data-wb-has-panes] {
 }
 
 .wb-block-picker {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px;
+  display: grid;
+  gap: 5px;
+  padding: 12px;
   font-weight: 600;
-}
-
-.wb-block-picker .wb-field {
-  max-inline-size: min(25rem, 100%);
 }
 
 .wb-inspector-blocks {
@@ -543,8 +535,14 @@ dialog.wb-playground-sidebar .wb-inspector-split[data-wb-has-panes] {
 
 .wb-surface-previews {
   display: grid;
+  flex: 1;
   grid-template-columns: minmax(0, 1fr);
   gap: 12px;
+}
+
+.wb-surface-previews > div {
+  display: flex;
+  flex-direction: column;
 }
 
 .wb-story-frame > .wb-inspector-code {

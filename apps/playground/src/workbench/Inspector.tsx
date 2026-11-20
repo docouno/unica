@@ -3,7 +3,8 @@ import type { MouseEvent, ReactElement, ReactNode, SyntheticEvent } from 'react'
 import { InspectorCode } from './InspectorCode.js';
 import { Matrix } from './Matrix.js';
 import { PlaygroundControls } from './PlaygroundControls.js';
-import { PlaygroundLayout } from './PlaygroundLayout.js';
+import { PlaygroundPanels } from './PlaygroundPanels.js';
+import { ViewSettings } from './ViewSettings.js';
 import { componentCode, defaultValues, evaluate } from './schema.js';
 import type { WorkbenchRoute } from './route.js';
 import { useSubjectBounds } from './subjectBounds.js';
@@ -480,13 +481,15 @@ export function Inspector({
     const cases = component.cases ?? [];
     return (
       <div className="wb-inspector">
-        {!raw && (
-          <BlockPicker
-            label="Case"
-            blocks={cases}
-            selected={block}
-            onSelect={(id) => update({ block: id }, 'push')}
-          />
+        {!raw && cases.length > 0 && (
+          <ViewSettings>
+            <BlockPicker
+              label="Case"
+              blocks={cases}
+              selected={block}
+              onSelect={(id) => update({ block: id }, 'push')}
+            />
+          </ViewSettings>
         )}
         {cases.length > 0 ? (
           <div className="wb-inspector-blocks">
@@ -548,13 +551,15 @@ export function Inspector({
     };
     return (
       <div className="wb-inspector">
-        {!raw && (
-          <BlockPicker
-            label="Example"
-            blocks={usage}
-            selected={block}
-            onSelect={(id) => update({ block: id }, 'push')}
-          />
+        {!raw && usage.length > 0 && (
+          <ViewSettings>
+            <BlockPicker
+              label="Example"
+              blocks={usage}
+              selected={block}
+              onSelect={(id) => update({ block: id }, 'push')}
+            />
+          </ViewSettings>
         )}
         {usage.length > 0 ? (
           <div className="wb-inspector-blocks">
@@ -643,8 +648,15 @@ export function Inspector({
   const showEvents = hasForm || propDefinitions.some((prop) => prop.kind === 'action');
   return (
     <div className="wb-inspector wb-inspector-playground">
-      <PlaygroundLayout
-        preview={preview}
+      <div
+        className="wb-playground-preview wb-scroll"
+        role="region"
+        aria-label="Preview"
+        tabIndex={0}
+      >
+        {preview}
+      </div>
+      <PlaygroundPanels
         code={<InspectorCode code={componentCode(component, playground.values)} />}
         controls={
           propDefinitions.length > 0 && (

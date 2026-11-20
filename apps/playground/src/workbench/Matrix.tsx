@@ -21,6 +21,7 @@ import type {
   Values,
   WorkbenchTheme,
 } from './types.js';
+import { ViewSettings } from './ViewSettings.js';
 import './matrix.css';
 
 const FULL_LIMIT = 64;
@@ -303,6 +304,7 @@ function MatrixContent({
         ...(finiteKeys[1] === undefined ? {} : { cols: finiteKeys[1] }),
       };
   const [axes, setAxes] = useState<Axes>(initialAxes);
+  const [overridesOpen, setOverridesOpen] = useState(false);
   const [fixed, setFixed] = useState<Values>(() => ({ ...view?.fixed }));
   const values = useMemo(() => ({ ...defaults, ...fixed }), [defaults, fixed]);
   const cellCount = fullCellCount(props, fixed, themeCount, FULL_LIMIT);
@@ -372,102 +374,108 @@ function MatrixContent({
   return (
     <section className="wb-matrix" aria-label="Component matrix" data-wb-matrix-mode={modeShown}>
       {!raw && (
-        <div className="wb-matrix-controls">
-          <div className="wb-matrix-toolbar">
-            {component.matrixViews && component.matrixViews.length > 0 && (
-              <label className="wb-matrix-field">
-                Slice
-                <select
-                  className="wb-field"
-                  value={view?.id ?? ''}
-                  onChange={(event) => {
-                    onSliceChange(event.currentTarget.value);
-                  }}
-                >
-                  {component.matrixViews.map((candidate) => (
-                    <option key={candidate.id} value={candidate.id}>
-                      {candidate.title}
-                    </option>
-                  ))}
-                </select>
-              </label>
-            )}
-            {finiteKeys.length > 0 &&
-              modeShown === 'slice' &&
-              AXES.map((axis) => (
-                <label key={axis} className="wb-matrix-field">
-                  {AXIS_LABELS[axis]}
+        <ViewSettings>
+          <section className="wb-matrix-controls" aria-label="Matrix settings">
+            <div className="wb-matrix-toolbar">
+              {component.matrixViews && component.matrixViews.length > 0 && (
+                <label className="wb-matrix-field">
+                  Slice
                   <select
                     className="wb-field"
-                    value={axes[axis] ?? ''}
+                    value={view?.id ?? ''}
                     onChange={(event) => {
-                      const key = event.currentTarget.value;
-                      setAxes((previous) => {
-                        const next = { ...previous };
-                        if (key === '') {
-                          delete next[axis];
-                        } else {
-                          next[axis] = key;
-                        }
-                        return next;
-                      });
+                      onSliceChange(event.currentTarget.value);
                     }}
                   >
-                    <option value="">None</option>
-                    {finiteKeys.map((key) => (
-                      <option
-                        key={key}
-                        value={key}
-                        disabled={axes[axis] !== key && Object.values(axes).includes(key)}
-                      >
-                        {labelProp(key)}
+                    {component.matrixViews.map((candidate) => (
+                      <option key={candidate.id} value={candidate.id}>
+                        {candidate.title}
                       </option>
                     ))}
                   </select>
                 </label>
-              ))}
-            <div role="group" className="wb-seg" aria-label="Matrix mode">
-              {(Object.keys(MODES) as MatrixMode[]).map((candidate) => (
-                <button
-                  type="button"
-                  className="wb-seg-btn"
-                  key={candidate}
-                  aria-pressed={candidate === modeShown}
-                  data-active={candidate === modeShown}
-                  disabled={candidate === 'full' && !fullAvailable}
-                  onClick={() => {
-                    onModeChange(candidate);
-                  }}
-                >
-                  {MODES[candidate]}
-                </button>
-              ))}
-            </div>
-            <button type="button" className="wb-action-btn" onClick={reset}>
-              Reset matrix
-            </button>
-          </div>
-          {overrideKeys.length > 0 && (
-            <details className="wb-matrix-overrides">
-              <summary className="wb-disclosure">Global values</summary>
-              <div className="wb-matrix-toolbar">
-                {overrideKeys.map((key) => (
-                  <ValuePicker
-                    key={key}
-                    name={key}
-                    prop={props[key]!}
-                    mode={modeShown}
-                    override={fixed[key]}
-                    value={defaults[key]!}
-                    onChange={(value) => {
-                      fixValue(key, value);
+              )}
+              {finiteKeys.length > 0 &&
+                modeShown === 'slice' &&
+                AXES.map((axis) => (
+                  <label key={axis} className="wb-matrix-field">
+                    {AXIS_LABELS[axis]}
+                    <select
+                      className="wb-field"
+                      value={axes[axis] ?? ''}
+                      onChange={(event) => {
+                        const key = event.currentTarget.value;
+                        setAxes((previous) => {
+                          const next = { ...previous };
+                          if (key === '') {
+                            delete next[axis];
+                          } else {
+                            next[axis] = key;
+                          }
+                          return next;
+                        });
+                      }}
+                    >
+                      <option value="">None</option>
+                      {finiteKeys.map((key) => (
+                        <option
+                          key={key}
+                          value={key}
+                          disabled={axes[axis] !== key && Object.values(axes).includes(key)}
+                        >
+                          {labelProp(key)}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                ))}
+              <div role="group" className="wb-seg" aria-label="Matrix mode">
+                {(Object.keys(MODES) as MatrixMode[]).map((candidate) => (
+                  <button
+                    type="button"
+                    className="wb-seg-btn"
+                    key={candidate}
+                    aria-pressed={candidate === modeShown}
+                    data-active={candidate === modeShown}
+                    disabled={candidate === 'full' && !fullAvailable}
+                    onClick={() => {
+                      onModeChange(candidate);
                     }}
-                  />
+                  >
+                    {MODES[candidate]}
+                  </button>
                 ))}
               </div>
-            </details>
-          )}
-        </div>
+              <button type="button" className="wb-action-btn" onClick={reset}>
+                Reset matrix
+              </button>
+            </div>
+            {overrideKeys.length > 0 && (
+              <details
+                className="wb-matrix-overrides"
+                open={overridesOpen}
+                onToggle={(event) => setOverridesOpen(event.currentTarget.open)}
+              >
+                <summary className="wb-disclosure">Global values</summary>
+                <div className="wb-matrix-toolbar">
+                  {overrideKeys.map((key) => (
+                    <ValuePicker
+                      key={key}
+                      name={key}
+                      prop={props[key]!}
+                      mode={modeShown}
+                      override={fixed[key]}
+                      value={defaults[key]!}
+                      onChange={(value) => {
+                        fixValue(key, value);
+                      }}
+                    />
+                  ))}
+                </div>
+              </details>
+            )}
+          </section>
+        </ViewSettings>
       )}
 
       {!fullAvailable && (!raw || mode === 'full') && (

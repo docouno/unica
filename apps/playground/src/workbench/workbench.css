@@ -81,6 +81,10 @@ html:has(.wb-shell) {
   min-height: 100vh;
 }
 
+.wb-shell:not([data-wb-compact]) {
+  grid-template-columns: 272px minmax(0, 1fr) clamp(19rem, 22%, 25rem);
+}
+
 .wb-rail {
   min-width: 0;
   border-inline-end: 1px solid var(--wb-border);
@@ -264,26 +268,25 @@ html:has(.wb-shell) {
   display: flex;
   flex-direction: column;
   min-width: 0;
+  container: wb-main / inline-size;
 }
 
 .wb-topbar {
   display: grid;
   grid-template-columns: minmax(10rem, 1fr) minmax(0, max-content);
+  min-block-size: 46px;
   align-items: center;
-  gap: 6px 16px;
-  padding: 8px 20px;
+  gap: 6px 10px;
+  padding: 6px 12px;
   border-bottom: 1px solid var(--wb-border);
   background: var(--wb-bar);
-}
-
-.wb-item-info {
-  min-inline-size: 0;
 }
 
 .wb-item-heading {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 7px;
+  min-inline-size: 0;
 }
 
 .wb-item-title {
@@ -291,15 +294,11 @@ html:has(.wb-shell) {
   color: var(--wb-fg);
   font-size: 17px;
   line-height: 1.2;
+  min-inline-size: 0;
+  overflow: hidden;
   font-weight: 650;
-}
-
-.wb-item-summary {
-  max-inline-size: 64ch;
-  margin: 0;
-  color: var(--wb-fg-muted);
-  font-size: 12px;
-  line-height: 1.4;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .wb-environment {
@@ -309,21 +308,36 @@ html:has(.wb-shell) {
   flex-wrap: wrap;
   align-items: center;
   justify-content: flex-end;
-  gap: 6px 8px;
-  max-inline-size: 100%;
+  gap: 4px;
 }
 
 .wb-environment .wb-seg-btn {
-  padding-inline: 6px;
+  padding-inline: 4px;
 }
 
 .wb-environment-group {
   display: flex;
-  min-width: 0;
   align-items: center;
-  gap: 5px;
-  color: var(--wb-fg-subtle);
+  gap: 4px;
+  color: var(--wb-fg-muted);
   font-size: 11px;
+}
+
+.wb-topbar .wb-field {
+  padding-inline: 5px;
+}
+
+.wb-shell[data-wb-compact] .wb-topbar {
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.wb-shell[data-wb-compact] .wb-environment {
+  grid-area: 2 / 1 / auto / -1;
+  justify-content: flex-start;
+}
+
+.wb-inspector-launch {
+  justify-self: end;
 }
 
 .wb-tabs {
@@ -369,6 +383,12 @@ html:has(.wb-shell) {
   flex: 1;
   min-width: 0;
   padding: 16px 20px 20px;
+  container: wb-canvas / inline-size;
+}
+
+[data-wb-fixed-view] :is(.wb-canvas, .wb-playground-preview),
+.wb-raw-canvas[data-wb-fixed-view] {
+  overflow-x: auto;
 }
 
 .wb-canvas > .wb-artboards {
@@ -383,20 +403,39 @@ html:has(.wb-shell) {
 }
 
 .wb-artboards {
+  --wb-artboard-gap: 14px;
+  --wb-comparison-min: 18rem;
+
+  display: flex;
+  flex-wrap: wrap;
+  align-content: stretch;
+  align-items: start;
+  gap: var(--wb-artboard-gap);
+}
+
+.wb-theme-slot {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  align-items: start;
-  gap: 14px;
-}
-
-.wb-artboards[data-single='true'] {
+  flex: 0 1 calc((100% - var(--wb-artboard-gap)) / 2);
   grid-template-columns: minmax(0, 1fr);
+  min-inline-size: 0;
+  gap: var(--wb-artboard-gap);
 }
 
-.wb-artboards:has(> .wb-cell > .wb-viewport-host[data-scaled='true']) {
-  min-block-size: 0;
-  align-content: start;
-  align-items: start;
+.wb-theme-slot[data-wb-pair] {
+  flex-basis: 100%;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, var(--wb-comparison-min)), 1fr));
+}
+
+.wb-artboards[data-wb-fixed] > .wb-theme-slot {
+  flex-basis: min(100%, var(--wb-preview-width));
+}
+
+.wb-artboards[data-wb-fixed] > .wb-theme-slot[data-wb-pair] {
+  flex-basis: min(100%, calc(2 * var(--wb-preview-width) + var(--wb-artboard-gap)));
+}
+
+.wb-artboards[data-single] > .wb-theme-slot {
+  flex-basis: 100%;
 }
 
 :where(.wb-cell, .wb-story-frame) {
@@ -408,34 +447,61 @@ html:has(.wb-shell) {
 }
 
 .wb-story-frame > .wb-artboards {
+  --wb-artboard-gap: 1px;
+
   align-items: stretch;
-  gap: 1px;
   background: var(--wb-border);
 }
 
-.wb-story-frame > .wb-artboards > .wb-cell {
+.wb-story-frame > .wb-artboards:is(:not([data-wb-fixed]), [data-single]) .wb-cell {
   border: 0;
   border-radius: 0;
   background: var(--wb-bg);
 }
 
-:is(.wb-canvas, .wb-playground-preview) > .wb-artboards > .wb-cell {
+/* Keep the grid track and size its frame to the selected viewport. */
+.wb-artboards[data-wb-fixed] .wb-cell,
+.wb-story-frame:has(> .wb-artboards[data-wb-fixed][data-single]) {
+  position: relative;
+  inline-size: var(--wb-preview-width);
+  border: 0;
+}
+
+.wb-artboards[data-wb-fixed]:not([data-single]) .wb-cell {
+  max-inline-size: 100%;
+}
+
+.wb-artboards[data-wb-fixed] .wb-cell::after,
+.wb-story-frame:has(> .wb-artboards[data-wb-fixed][data-single])::after {
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  border: 1px solid var(--wb-border-strong);
+  border-radius: inherit;
+  content: '';
+  pointer-events: none;
+}
+
+.wb-story-frame > .wb-artboards[data-wb-fixed][data-single] .wb-cell::after {
+  content: none;
+}
+
+.wb-story-frame > .wb-artboards[data-wb-fixed]:not([data-single]) {
+  --wb-artboard-gap: 14px;
+
+  background: var(--wb-bg);
+}
+
+.wb-cell,
+.wb-viewport-host,
+.wb-viewport-host :is(.wb-viewport-inner, .wb-artboard) {
   display: flex;
   flex-direction: column;
 }
 
-:is(.wb-canvas, .wb-playground-preview)
-  > .wb-artboards
-  > .wb-cell
-  > .wb-viewport-host:not([data-scaled='true']),
-:is(.wb-canvas, .wb-playground-preview)
-  > .wb-artboards
-  > .wb-cell
-  > .wb-viewport-host:not([data-scaled='true'])
-  :is(.wb-viewport-inner, .wb-artboard) {
-  display: flex;
+.wb-viewport-host,
+.wb-viewport-host :is(.wb-viewport-inner, .wb-artboard) {
   flex: 1;
-  flex-direction: column;
 }
 
 .wb-cell-header {
@@ -494,17 +560,20 @@ html:has(.wb-shell) {
   overflow-x: auto;
 }
 
-.wb-viewport-host[data-fixed='true']:not([data-scaled='true']) {
-  padding: 12px;
-}
-
 .wb-viewport-host[data-scaled='true'] {
   overflow: hidden;
 }
 
 .wb-viewport-inner {
   margin-inline: auto;
-  transform-origin: top left;
+}
+
+/* Native top-layer surfaces use window coordinates. Cancel the preview zoom once. */
+.wb-viewport-host[data-scaled]
+  :is([popover]:popover-open, dialog:modal):not(
+    .wb-viewport-inner :is([popover]:popover-open, dialog:modal) *
+  ) {
+  zoom: calc(1 / var(--wb-viewport-scale, 1));
 }
 
 :where(.wb-artboard) {
@@ -576,28 +645,30 @@ html:has(.wb-shell) {
   padding: 24px;
 }
 
-@media (max-width: 1079px) {
-  .wb-shell .wb-artboards {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .wb-topbar {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .wb-environment {
-    justify-content: flex-start;
-  }
-}
-
-@media (max-width: 1350px) {
+@container wb-main (max-width: 1000px) {
   .wb-environment-group > span[aria-hidden='true'] {
     display: none;
   }
 }
 
+.wb-shell .wb-matrix .wb-artboards:not([data-wb-fixed]) {
+  --wb-comparison-min: 29rem;
+}
+
+@container wb-canvas (max-width: 960px) {
+  .wb-shell .wb-matrix .wb-artboards:not([data-wb-fixed]) > .wb-theme-slot {
+    flex-basis: 100%;
+  }
+}
+
+@container wb-canvas (max-width: 620px) {
+  .wb-shell .wb-artboards:not([data-wb-fixed]) > .wb-theme-slot {
+    flex-basis: 100%;
+  }
+}
+
 @media (max-width: 720px) {
-  .wb-shell {
+  .wb-shell.wb-shell {
     grid-template-rows: auto 1fr;
     grid-template-columns: minmax(0, 1fr);
   }
@@ -632,7 +703,7 @@ html:has(.wb-shell) {
 }
 
 @media (max-width: 680px) {
-  .wb-raw-canvas .wb-artboards {
-    grid-template-columns: minmax(0, 1fr);
+  .wb-raw-canvas .wb-artboards:not([data-wb-fixed]) > .wb-theme-slot {
+    flex-basis: 100%;
   }
 }

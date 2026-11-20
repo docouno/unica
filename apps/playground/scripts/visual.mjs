@@ -109,39 +109,36 @@ try {
   }
 
   await waitForReady();
-  const fitWidth = await page.evaluate(() => {
-    const boards = document.querySelectorAll('.wb-artboards');
-    if (boards.length === 0 || [...boards].some((board) => !board.hasAttribute('data-single'))) {
-      return null;
-    }
-    let widest = 0;
-    for (const inner of document.querySelectorAll('.wb-viewport-inner')) {
-      const host = inner.closest('.wb-viewport-host');
-      if (host) {
-        const { paddingInlineStart, paddingInlineEnd } = window.getComputedStyle(host);
-        const chromeWidth = window.innerWidth - host.clientWidth;
-        const innerWidth = inner.getBoundingClientRect().width;
-        widest = Math.max(
-          widest,
-          Math.ceil(
-            innerWidth +
-              chromeWidth +
-              parseFloat(paddingInlineStart) +
-              parseFloat(paddingInlineEnd),
-          ),
-        );
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    const fitWidth = await page.evaluate(() => {
+      const boards = document.querySelectorAll('.wb-artboards');
+      if (boards.length === 0 || [...boards].some((board) => !board.hasAttribute('data-single'))) {
+        return null;
       }
+      let widest = 0;
+      for (const inner of document.querySelectorAll('.wb-viewport-inner')) {
+        const viewport = inner.closest('.wb-playground-preview, .wb-canvas, .wb-raw-canvas');
+        if (viewport) {
+          const { paddingInlineStart, paddingInlineEnd } = window.getComputedStyle(viewport);
+          const available =
+            viewport.clientWidth - parseFloat(paddingInlineStart) - parseFloat(paddingInlineEnd);
+          const chromeWidth = window.innerWidth - available;
+          widest = Math.max(widest, Math.ceil(inner.getBoundingClientRect().width + chromeWidth));
+        }
+      }
+      return widest;
+    });
+    if (fitWidth === null) {
+      break;
     }
-    return widest;
-  });
-  if (fitWidth !== null) {
     const isolatedWidth = Math.max(raw ? 1120 : 1560, fitWidth);
-    if (isolatedWidth !== width) {
-      // A previous readiness signal describes the old CSS viewport.
-      await page.evaluate(() => document.documentElement.removeAttribute('data-wb-ready'));
-      await page.setViewportSize({ width: isolatedWidth, height: 900 });
-      await waitForReady();
+    if (isolatedWidth === page.viewportSize()?.width) {
+      break;
     }
+    // Recalculate after resizing because the sidebars respond to the viewport width.
+    await page.evaluate(() => document.documentElement.removeAttribute('data-wb-ready'));
+    await page.setViewportSize({ width: isolatedWidth, height: 900 });
+    await waitForReady();
   }
   if (errors.length > 0) {
     throw new Error(`Runtime errors:\n${errors.join('\n')}`);

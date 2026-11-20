@@ -10,6 +10,7 @@
   display: grid;
   gap: 8px;
   min-inline-size: 0;
+  padding: 12px;
   font: 500 0.75rem / 1.4 var(--wb-font);
 }
 
@@ -18,10 +19,18 @@
 }
 
 .wb-matrix-toolbar {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   align-items: end;
-  flex-wrap: wrap;
-  gap: 8px 12px;
+  gap: 8px;
+}
+
+.wb-matrix-controls > .wb-matrix-toolbar {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.wb-matrix-toolbar > :is(.wb-seg, .wb-action-btn) {
+  justify-self: start;
 }
 
 .wb-matrix-field {
@@ -32,11 +41,7 @@
 }
 
 .wb-matrix-field .wb-field {
-  min-inline-size: 4rem;
-}
-
-.wb-matrix-field input {
-  inline-size: 10rem;
+  inline-size: 100%;
 }
 
 .wb-matrix-overrides[open] .wb-matrix-toolbar {

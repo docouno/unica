@@ -9,6 +9,7 @@ import type { WorkbenchConfig } from './types.js';
 const field = defineComponent({
   id: 'field',
   title: 'Field',
+  summary: 'Field summary from the catalog.',
   category: 'Controls',
   status: 'Proto',
   props: {},
@@ -136,6 +137,77 @@ it('normalizes v2 routes using definitions and ignores stale v1 switches', () =>
     bounds: false,
   });
   expect(readRoute('?item=example-scene&vp=auto', config).vp).toBe('auto');
+});
+
+it('keeps preview settings in the header and view settings in the inspector', () => {
+  open('/?item=field&family=haze&scheme=light');
+  const inspector = within(screen.getByRole('complementary', { name: 'Workbench inspector' }));
+  const workspace = within(screen.getByRole('main'));
+  const views = within(screen.getByRole('navigation', { name: 'Inspector tabs' }));
+  const header = within(screen.getByRole('banner'));
+  const previewSettings = within(header.getByRole('group', { name: 'Preview settings' }));
+  const family = previewSettings.getByRole('group', { name: 'Family' });
+
+  expect(screen.getByRole('heading', { name: 'Field' })).toBeTruthy();
+  expect(inspector.queryByRole('group', { name: 'Family' })).toBeNull();
+  expect(screen.queryByText(field.summary!)).toBeNull();
+  expect(inspector.getByRole('region', { name: 'JSX' })).toBeTruthy();
+  expect(workspace.queryByRole('region', { name: 'JSX' })).toBeNull();
+
+  fireEvent.click(views.getByRole('link', { name: 'Matrix' }));
+  expect(previewSettings.getByRole('group', { name: 'Family' })).toBe(family);
+  expect(inspector.getByRole('region', { name: 'Matrix settings' })).toBeTruthy();
+  expect(inspector.getByRole('combobox', { name: 'Slice' })).toBeTruthy();
+  expect(workspace.queryByRole('combobox', { name: 'Slice' })).toBeNull();
+  expect(workspace.getByRole('region', { name: 'Component matrix' })).toBeTruthy();
+
+  fireEvent.click(views.getByRole('link', { name: 'Cases' }));
+  expect(previewSettings.getByRole('group', { name: 'Family' })).toBe(family);
+  expect(inspector.getByRole('combobox', { name: 'Case' })).toBeTruthy();
+  expect(workspace.queryByRole('combobox', { name: 'Case' })).toBeNull();
+  expect(inspector.queryByRole('region', { name: 'Matrix settings' })).toBeNull();
+});
+
+it('applies the selected width to the frame and its viewport without changing the theme', () => {
+  const { container } = open('/?item=field&tab=cases&family=haze&scheme=light');
+  const previewSettings = screen.getByRole('group', { name: 'Preview settings' });
+  const width = within(previewSettings).getByRole('combobox', { name: 'Width' });
+  const shell = container.querySelector<HTMLElement>('.wb-shell')!;
+  const grid = container.querySelector('.wb-artboards')!;
+
+  fireEvent.change(width, { target: { value: '360' } });
+  expect(shell.style.getPropertyValue('--wb-preview-width')).toBe('360px');
+  expect(grid.getAttribute('data-wb-fixed')).toBe('true');
+  expect(grid.getAttribute('data-single')).toBe('true');
+  expect(grid.querySelector<HTMLElement>('.wb-viewport-inner')?.style.width).toBe('360px');
+  expect(grid.querySelector('.wb-artboard')?.getAttribute('data-theme')).toBe('day');
+
+  fireEvent.change(width, { target: { value: 'auto' } });
+  expect(shell.style.getPropertyValue('--wb-preview-width')).toBe('');
+  expect(grid.hasAttribute('data-wb-fixed')).toBe(false);
+  expect(grid.querySelector('.wb-viewport-inner')).toBeNull();
+});
+
+it('keeps dark and light together and preserves the same artboard when isolating', () => {
+  const { container } = render(
+    <WorkbenchApp
+      config={{
+        ...config,
+        themes: [config.themes[1]!, ...config.themes.filter((_, index) => index !== 1)],
+      }}
+    />,
+  );
+  const pair = container.querySelector('.wb-theme-slot[data-wb-pair]')!;
+  expect(
+    [...pair.querySelectorAll('.wb-artboard')].map((board) => board.getAttribute('data-theme')),
+  ).toEqual(['night', 'day']);
+
+  const day = screen.getByRole('region', { name: 'Haze Day' });
+  fireEvent.click(within(day).getByRole('button', { name: 'Isolate Haze Day' }));
+  expect(screen.getByRole('region', { name: 'Haze Day' })).toBe(day);
+  expect(container.querySelector('.wb-theme-slot')).toBe(pair);
+  expect(container.querySelectorAll('.wb-cell')).toHaveLength(1);
+  expect(pair.hasAttribute('data-wb-pair')).toBe(false);
 });
 
 it('filters sparse theme axes independently and isolates an artboard with native Back', async () => {
@@ -325,6 +397,7 @@ it('opens an unknown item with navigation and renders raw only for the requested
   const { container } = open('/?item=field&tab=cases&block=overflow&raw=1');
   expect(screen.queryByRole('navigation', { name: 'Components and scenes' })).toBeNull();
   expect(container.querySelector('.wb-raw-canvas')?.getAttribute('data-wb-block')).toBe('overflow');
+  expect(screen.queryByRole('complementary', { name: 'Workbench inspector' })).toBeNull();
   expect(screen.getAllByText('Long text')).toHaveLength(5);
   const story = container.querySelector('.wb-story-frame[data-wb-block="overflow"]');
   expect(story?.querySelector('.wb-frame-heading h3')?.textContent).toBe('Overflow');
