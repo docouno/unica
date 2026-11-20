@@ -138,6 +138,70 @@ describe('FocusOrigin', () => {
     expect(field.dataset.focusOrigin).toBe('pointer');
   });
 
+  it('keeps the actual focus when a previous owner emits a late focusout', () => {
+    const from = document.createElement('input');
+    const redirected = document.createElement('input');
+    document.body.append(from, redirected);
+    const { report } = bind(redirected);
+    from.focus();
+    key(from, 'Tab');
+    redirected.focus();
+    from.dispatchEvent(new FocusEvent('focusout', { bubbles: true, relatedTarget: null }));
+
+    expect(document.activeElement).toBe(redirected);
+    expect(report.mock.calls).toEqual([['keyboard']]);
+  });
+
+  it('keeps one continuous report while focus moves within the same owner', async () => {
+    const owner = document.createElement('div');
+    const first = document.createElement('input');
+    const next = document.createElement('input');
+    owner.append(first, next);
+    document.body.append(owner);
+    const { report } = bind(owner);
+    key(first, 'Tab');
+    first.focus();
+    next.focus();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    expect(report.mock.calls).toEqual([['keyboard']]);
+  });
+
+  it('never reports focus for a proposed destination that disappears during focusout', async () => {
+    const from = document.createElement('input');
+    const wrapper = document.createElement('label');
+    const proposed = document.createElement('input');
+    wrapper.append(proposed);
+    document.body.append(from, wrapper);
+    const { report } = bind(wrapper);
+    from.focus();
+    key(from, 'Tab');
+    from.addEventListener('focusout', () => proposed.remove(), { once: true });
+    from.dispatchEvent(new FocusEvent('focusout', { bubbles: true, relatedTarget: proposed }));
+    from.blur();
+    await Promise.resolve();
+
+    expect(document.activeElement).toBe(document.body);
+    expect(report).not.toHaveBeenCalled();
+  });
+
+  it('releases the binding and document listeners when the initial notification throws', () => {
+    const owner = document.createElement('input');
+    document.body.append(owner);
+    owner.focus();
+    const remove = vi.spyOn(document, 'removeEventListener');
+    const failed = vi.fn(() => {
+      throw new Error('attachment failed');
+    });
+    expect(() => subscribeFocusOrigin(owner, failed)).toThrow('attachment failed');
+    expect(remove.mock.calls.filter(([type]) => type === 'focusin')).toHaveLength(1);
+
+    const { report } = bind(owner);
+    pointer(owner);
+    expect(report.mock.calls).toEqual([['unknown'], ['pointer']]);
+    expect(failed).toHaveBeenCalledTimes(1);
+  });
+
   it('shares capture listeners and resets the last modality only after the final detach', () => {
     const add = vi.spyOn(document, 'addEventListener');
     const remove = vi.spyOn(document, 'removeEventListener');

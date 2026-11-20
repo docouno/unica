@@ -38,7 +38,7 @@ interface UnicaScope {
   readonly overrides: OverrideScope | undefined;
 }
 
-const UnicaContext = createContext<UnicaScope>({
+const UnicaContext = /* @__PURE__ */ createContext<UnicaScope>({
   theme: { preset: 'soft-dark' },
   overrides: undefined,
 });

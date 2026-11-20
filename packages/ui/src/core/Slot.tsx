@@ -61,20 +61,20 @@ export function Slot<T extends Element = HTMLElement>({
 
   const mergedProps: Partial<SlotProps<T>> = { ...slotProps };
   for (const name of Object.keys(slotProps)) {
-    if (!Object.hasOwn(childProps, name)) {
-      continue;
-    }
-
     const slotValue = slotProps[name];
-    const childValue = childProps[name];
-    if (name === 'className') {
+    const hasChildProp = Object.hasOwn(childProps, name);
+    const childValue = hasChildProp ? childProps[name] : undefined;
+    if (/^on[A-Z]/.test(name) && isEventHandler(slotValue)) {
+      mergedProps[name] = composeEventHandlers(
+        isEventHandler(childValue) ? childValue : undefined,
+        slotValue,
+      );
+    } else if (!hasChildProp) {
+      continue;
+    } else if (name === 'className') {
       mergedProps.className = [slotProps.className, childProps.className].filter(Boolean).join(' ');
     } else if (name === 'style') {
       mergedProps.style = { ...slotProps.style, ...childProps.style };
-    } else if (/^on[A-Z]/.test(name) && isEventHandler(slotValue)) {
-      mergedProps[name] = isEventHandler(childValue)
-        ? composeEventHandlers(childValue, slotValue)
-        : slotValue;
     } else {
       mergedProps[name] = childValue;
     }

@@ -56,6 +56,7 @@ function createTracker(doc: Document, view: Window): FocusTracker {
   const bindings = new Map<Element, Set<FocusBinding>>();
   let focused = new Set<FocusBinding>();
   let origin: FocusOrigin = 'unknown';
+  let pendingFocusCheck: number | undefined;
 
   function sync(target: Element | null): void {
     const affected = focused;
@@ -101,12 +102,26 @@ function createTracker(doc: Document, view: Window): FocusTracker {
     setOrigin('keyboard');
   }
 
-  function focusIn(event: FocusEvent): void {
-    sync(elementOf(event.target));
+  function cancelFocusCheck(): void {
+    if (pendingFocusCheck !== undefined) {
+      view.clearTimeout(pendingFocusCheck);
+      pendingFocusCheck = undefined;
+    }
+  }
+
+  function syncActiveElement(): void {
+    cancelFocusCheck();
+    sync(doc.activeElement);
   }
 
   function focusOut(event: FocusEvent): void {
-    sync(elementOf(event.relatedTarget));
+    // A successful transfer reports focusin. If a handler removes the destination,
+    // reconcile after native dispatch; a microtask can run between blur and focus.
+    if (event.relatedTarget === null) {
+      syncActiveElement();
+    } else if (focused.size && pendingFocusCheck === undefined) {
+      pendingFocusCheck = view.setTimeout(syncActiveElement, 0);
+    }
   }
 
   function blur(): void {
@@ -117,7 +132,7 @@ function createTracker(doc: Document, view: Window): FocusTracker {
 
   doc.addEventListener('pointerdown', pointer, true);
   doc.addEventListener('keydown', keyboard, true);
-  doc.addEventListener('focusin', focusIn, true);
+  doc.addEventListener('focusin', syncActiveElement, true);
   doc.addEventListener('focusout', focusOut, true);
   view.addEventListener('blur', blur);
 
@@ -131,9 +146,8 @@ function createTracker(doc: Document, view: Window): FocusTracker {
       }
       const binding: FocusBinding = { notify, reported: null, attached: true };
       owners.add(binding);
-      sync(doc.activeElement);
 
-      return () => {
+      const detach = (): void => {
         if (!binding.attached) {
           return;
         }
@@ -144,14 +158,23 @@ function createTracker(doc: Document, view: Window): FocusTracker {
           bindings.delete(element);
         }
         if (!bindings.size) {
+          cancelFocusCheck();
           doc.removeEventListener('pointerdown', pointer, true);
           doc.removeEventListener('keydown', keyboard, true);
-          doc.removeEventListener('focusin', focusIn, true);
+          doc.removeEventListener('focusin', syncActiveElement, true);
           doc.removeEventListener('focusout', focusOut, true);
           view.removeEventListener('blur', blur);
           trackers.delete(doc);
         }
       };
+
+      try {
+        syncActiveElement();
+      } catch (error) {
+        detach();
+        throw error;
+      }
+      return detach;
     },
   };
 }

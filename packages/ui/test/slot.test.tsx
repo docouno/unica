@@ -67,6 +67,25 @@ it('composes a slotted anchor and lets the child cancel the slot action', () => 
   expect(calls).toEqual(['child', 'slot', 'child']);
 });
 
+it.each([false, true])(
+  'respects capture cancellation with a child handler present=%s',
+  (present) => {
+    const action = vi.fn();
+    const child = vi.fn();
+    render(
+      <div onClickCapture={(event) => event.preventDefault()}>
+        <Slot onClick={action}>
+          <button onClick={present ? child : undefined}>Open</button>
+        </Slot>
+      </div>,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Open' }));
+    expect(child).toHaveBeenCalledTimes(present ? 1 : 0);
+    expect(action).not.toHaveBeenCalled();
+  },
+);
+
 const Context = createContext('initial');
 const MemoFragment = memo(Fragment);
 

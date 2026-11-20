@@ -25,7 +25,7 @@ export type ThemePreset =
 | **Frost** | `frost-dark`, `frost-light` | Obsidian (`Dark`) and crystalline alabaster (`Light`) neutrals, deep violet CTAs with a vertical contact edge and diffuse ambient light, quiet neutral and danger solids, `1px`-rimmed jewel badges, and `backdrop-filter` frosted glass exclusively on floating overlays. |
 | **Pixel** | `pixel-dark`, `pixel-light` | Carbon-phosphor (`Dark`) and drafting-paper (`Light`) surfaces, `0px` sharp corners (`--radius-factor: 0`), `JetBrains Mono` base typography, `1px` structural borders, `8px` corner registration ticks, coordinate grids, flat signal buttons, and crisp `{6px, 6px}` `blur: 0` block shadows on floating panels. |
 
-`THEME_PRESETS` exposes the six presets and their display metadata. Custom product themes can override semantic `--*` variables on a DOM subtree.
+`THEME_PRESETS` exposes the six presets and their display metadata. React Server Components can import the same catalogue from the package root under the `react-server` condition. Use `UnicaProvider` inside a client boundary. Custom product themes can override semantic `--*` variables on a DOM subtree.
 
 In-flow Alert surfaces use status soft backgrounds and readable status ink without shadow or backdrop filtering. `--alert-border-width` is 0px in Soft and 1px in Frost/Pixel. `--alert-edge-width` is 0px in Soft/Frost and 2px in Pixel, setting the total logical leading-border width to the larger of the perimeter and edge recipes. The leading edge uses the semantic border color and mirrors in RTL. Status glyphs use the readable soft foreground rather than the general signal color; the latter is not calibrated for every tinted ground. An enclosing overlay owns all glass and elevation.
 
