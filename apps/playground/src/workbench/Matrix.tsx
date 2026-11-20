@@ -1,4 +1,12 @@
-import { Fragment, startTransition, useEffect, useMemo, useState } from 'react';
+import {
+  Fragment,
+  startTransition,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import type { ReactElement, ReactNode } from 'react';
 import {
   buildFull,
@@ -37,6 +45,7 @@ interface MatrixProps {
   readonly slice: string | undefined;
   readonly mode: MatrixMode;
   readonly raw: boolean;
+  readonly freeze?: boolean;
   readonly themeCount: number;
   readonly onSliceChange: (slice: string) => void;
   readonly onModeChange: (mode: MatrixMode) => void;
@@ -188,6 +197,7 @@ function RuleNotes({ rules }: { readonly rules: readonly Constraint[] }): ReactE
 
 interface SliceGridProps {
   readonly grid: ReturnType<typeof buildSlice>;
+  readonly rowLimit: number;
   readonly axes: Axes;
   readonly labelProp: (key: string) => string;
   readonly labelValue: (key: string | undefined, value: PropValue | undefined) => string;
@@ -196,6 +206,7 @@ interface SliceGridProps {
 
 function SliceGrid({
   grid,
+  rowLimit,
   axes,
   labelProp,
   labelValue,
@@ -205,13 +216,22 @@ function SliceGrid({
   return (
     <>
       {grid.groups.map((group, groupIndex) => {
+        const rowsPerGroup = group.rows.length;
+        const remaining = rowLimit - groupIndex * rowsPerGroup;
+        if (remaining <= 0) {
+          return null;
+        }
         const groupLabel =
           axes.group === undefined
             ? undefined
             : labelProp(axes.group) + ': ' + labelValue(axes.group, group.value);
         const tableLabel = [groupLabel, ...axisLabels].filter(Boolean).join(' × ');
         return (
-          <div key={groupIndex} className="wb-matrix-group">
+          <div
+            key={groupIndex}
+            className="wb-matrix-group"
+            data-wb-result-row={axisLabels.length === 0 ? '' : undefined}
+          >
             {groupLabel && <h3 className="wb-matrix-group-label">{groupLabel}</h3>}
             {axisLabels.length === 0 ? (
               renderSample(group.rows[0]!.cells[0]!, 'group-' + String(groupIndex))
@@ -236,8 +256,8 @@ function SliceGrid({
                     </thead>
                   )}
                   <tbody>
-                    {group.rows.map((row, rowIndex) => (
-                      <tr key={rowIndex}>
+                    {group.rows.slice(0, remaining).map((row, rowIndex) => (
+                      <tr key={rowIndex} data-wb-result-row="">
                         {axes.rows !== undefined && (
                           <th scope="row">{labelValue(axes.rows, row.value)}</th>
                         )}
@@ -267,12 +287,63 @@ function SliceGrid({
   );
 }
 
+// Keep a keyboard action for tall rows and for browsers without an observer.
+function MoreRows({
+  visible,
+  total,
+  onMore,
+}: {
+  readonly visible: number;
+  readonly total: number;
+  readonly onMore: () => void;
+}): ReactElement {
+  const button = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    if (!button.current || typeof IntersectionObserver === 'undefined') {
+      return;
+    }
+    const observer = new IntersectionObserver((entries) => {
+      if (
+        !document.activeElement?.hasAttribute('data-wb-more-rows') &&
+        entries.some((entry) => entry.isIntersecting)
+      ) {
+        onMore();
+      }
+    });
+    observer.observe(button.current);
+    return () => observer.disconnect();
+  }, [onMore]);
+
+  return (
+    <button
+      type="button"
+      ref={button}
+      data-wb-more-rows=""
+      className="wb-action-btn"
+      onClick={(event) => {
+        const board = event.currentTarget.parentElement;
+        onMore();
+        if (event.detail === 0 && board) {
+          // Continue keyboard inspection at the first appended row, including the last batch.
+          requestAnimationFrame(() => {
+            const first = board.querySelectorAll<HTMLElement>('[data-wb-result-row]')[visible];
+            if (first) {
+              first.tabIndex = -1;
+              first.focus();
+            }
+          });
+        }
+      }}
+    >
+      Show more rows ({visible} of {total})
+    </button>
+  );
+}
+
 export function Matrix(props: MatrixProps): ReactElement {
   const views = props.component.matrixViews;
   const view = views?.find((candidate) => candidate.id === props.slice) ?? views?.[0];
-  return (
-    <MatrixContent key={JSON.stringify([props.component.id, view?.id])} {...props} view={view} />
-  );
+  return <MatrixContent key={props.component.id} {...props} view={view} />;
 }
 
 function MatrixContent({
@@ -280,6 +351,7 @@ function MatrixContent({
   view,
   mode,
   raw,
+  freeze = false,
   themeCount,
   onSliceChange,
   onModeChange,
@@ -306,6 +378,12 @@ function MatrixContent({
   const [axes, setAxes] = useState<Axes>(initialAxes);
   const [overridesOpen, setOverridesOpen] = useState(false);
   const [fixed, setFixed] = useState<Values>(() => ({ ...view?.fixed }));
+  const [previousView, setPreviousView] = useState(view);
+  if (view !== previousView) {
+    setPreviousView(view);
+    setAxes(initialAxes);
+    setFixed({ ...view?.fixed });
+  }
   const values = useMemo(() => ({ ...defaults, ...fixed }), [defaults, fixed]);
   const cellCount = fullCellCount(props, fixed, themeCount, FULL_LIMIT);
   const fullAvailable = cellCount <= FULL_LIMIT;
@@ -333,6 +411,25 @@ function MatrixContent({
     [fixed, hasThemes, modeShown, props],
   );
   const renderedAssignments = audit?.rows ?? cartesian;
+  const source = grid ?? renderedAssignments;
+  const [revealed, setRevealed] = useState<{ source: typeof source; count: number }>();
+  const rowCount = grid
+    ? grid.groups.length * (grid.groups[0]?.rows.length ?? 0)
+    : (renderedAssignments?.length ?? 0);
+  const cellsPerRow = Math.max(1, themeCount * (grid?.columns.length ?? 1));
+  const batch = Math.max(1, Math.floor(2 / cellsPerRow));
+  // Full is already bounded. Frozen captures include offscreen rows.
+  const eager =
+    raw ||
+    freeze ||
+    modeShown === 'full' ||
+    (rowCount <= 4 && rowCount * cellsPerRow <= FULL_LIMIT);
+  const visible = eager
+    ? rowCount
+    : Math.min(rowCount, revealed && revealed.source === source ? revealed.count : batch);
+  const showMore = useCallback(() => {
+    setRevealed({ source, count: visible + batch });
+  }, [source, visible, batch]);
   const varyingKeys = finiteKeys.filter((key) => !Object.hasOwn(fixed, key));
   const overrideKeys = Object.keys(props).filter(
     (key) =>
@@ -360,6 +457,9 @@ function MatrixContent({
   }
 
   function fixValue(key: string, value: PropValue | undefined): void {
+    if (value !== undefined && Object.values(axes).includes(key)) {
+      setAxes(Object.fromEntries(Object.entries(axes).filter(([, prop]) => prop !== key)));
+    }
     setFixed((previous) => {
       const next = { ...previous };
       if (value === undefined) {
@@ -405,6 +505,9 @@ function MatrixContent({
                       value={axes[axis] ?? ''}
                       onChange={(event) => {
                         const key = event.currentTarget.value;
+                        if (key && Object.hasOwn(fixed, key)) {
+                          fixValue(key, undefined);
+                        }
                         setAxes((previous) => {
                           const next = { ...previous };
                           if (key === '') {
@@ -521,6 +624,7 @@ function MatrixContent({
             {grid && (
               <SliceGrid
                 grid={grid}
+                rowLimit={visible}
                 axes={axes}
                 labelProp={labelProp}
                 labelValue={labelValue}
@@ -529,8 +633,12 @@ function MatrixContent({
             )}
             {renderedAssignments && renderedAssignments.length > 0 && (
               <ul className="wb-matrix-combinations">
-                {renderedAssignments.map((assignment, index) => (
-                  <li key={JSON.stringify(assignment)} className="wb-matrix-combination">
+                {renderedAssignments.slice(0, visible).map((assignment, index) => (
+                  <li
+                    key={JSON.stringify(assignment)}
+                    className="wb-matrix-combination"
+                    data-wb-result-row=""
+                  >
                     <dl className="wb-matrix-coordinate">
                       {varyingKeys.map((key) => (
                         <div key={key}>
@@ -543,6 +651,9 @@ function MatrixContent({
                   </li>
                 ))}
               </ul>
+            )}
+            {visible < rowCount && (
+              <MoreRows visible={visible} total={rowCount} onMore={showMore} />
             )}
             {modeShown === 'slice' && view?.reference && (
               <div className="wb-matrix-reference">

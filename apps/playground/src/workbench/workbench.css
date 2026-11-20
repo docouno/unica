@@ -564,6 +564,10 @@ html:has(.wb-shell) {
   overflow: hidden;
 }
 
+.wb-viewport-auto {
+  display: contents;
+}
+
 .wb-viewport-inner {
   margin-inline: auto;
 }

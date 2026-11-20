@@ -33,12 +33,14 @@ Every component has the same four views.
 
 | View | What to inspect |
 | --- | --- |
-| Playground | Change the component properties in one place and compare the resulting subjects across themes. Review formatted, syntax-highlighted JSX and any events supplied by the example. Form examples support native Submit and Reset and show the submitted FormData. |
+| Playground | Change the component properties in one place and compare the resulting subjects across themes. Review formatted, syntax-highlighted JSX and any events supplied by the example. The event log keeps the latest 100 entries and reports how many earlier entries it omitted. Form examples support native Submit and Reset and show the submitted FormData. |
 | Matrix | Select a named slice or choose Rows, Columns, and an optional Group. Global values apply across the view. Forbidden cells show N/A, and ignored or lower-priority values retain their explanation. |
 | Cases | Explore overflow, material, and behavioral examples. Pinned examples identify conditions set by the author. |
 | Usage | Review a small composition and follow links to registered scenes that consume the component. Browser Back returns to the Usage view. |
 
 The full-height **Inspector** on the right holds the settings for the current view. Preview settings stay in the header above the canvas. In Playground, the Controls, Events, and FormData tabs share the panel with live JSX. The selected tab and JSX scroll independently. In Matrix, the panel holds the slice, axes, mode, and global values. Cases and Usage put their example picker there. On narrow screens, **Inspector** opens the same panel over the right edge of the preview.
+
+Selecting an axis releases any global value for that property. Fixing a property removes it from the free axes. Large Slice and Pairwise views load more rows as you scroll. The **Show more rows** button also supports keyboard navigation. Frozen captures include the entire result.
 
 Pairwise covers every pair of finite values that has a valid completion under the current fixed values. Read the coverage count before treating it as an audit. Full shows every combination, including N/A cells, while the total across selected themes fits in 64 displayed cells.
 
@@ -135,7 +137,7 @@ make visual item=title tab=matrix mode=pairwise family=soft scheme=dark bounds=1
 make visual item=07-invite-access-modal family=pixel scheme=light vp=360 scale=120 dir=rtl out=folio-invite.png
 ```
 
-The capture runs offline at 2× resolution and writes to Git-ignored `.artifacts/visual/`. Omit `out` to use a filename derived from the selected view and its options. Motion is frozen in captures. Use `freeze=1` to request that condition in the browser. The renderer loads the current sources through Vite and keeps Chromium's native inner scrollbars visible at a fixed 900px layout height. A single-theme capture allows room for the requested natural width, and multiple themes use the live comparison layout. Test focus, typing, and overlay dismissal in the live browser.
+Capture rejects an unknown item or any explicit setting that the rendered view cannot honor. The capture runs offline at 2× resolution and writes to Git-ignored `.artifacts/visual/`. Omit `out` to use a filename derived from the selected view and its options. Motion is frozen in captures. Use `freeze=1` to request that condition in the browser. The renderer loads the current sources through Vite and keeps Chromium's native inner scrollbars visible at a fixed 900px layout height. A single-theme capture allows room for the requested natural width, and multiple themes use the live comparison layout. Test focus, typing, and overlay dismissal in the live browser.
 
 `make visual` checks the accepted environment with `make doctor` and verifies real pnpm resolution for the renderer and local library link. It can prepare missing dependencies and headless Chromium. If setup leaves dependency resolution broken, the preparation exits with recovery instructions. The renderer uses library sources directly. Run the applicable repository checks separately as described in the [Definition of Done](../AGENTS.md#definition-of-done).
 

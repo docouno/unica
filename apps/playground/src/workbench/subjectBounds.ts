@@ -358,7 +358,17 @@ export function useSubjectBounds(
     for (const event of motionEvents) {
       scope.addEventListener(event, schedule, true);
     }
-    window.addEventListener('scroll', schedule, true);
+    const onScroll = (event: Event): void => {
+      const target = event.target;
+      if (
+        target === document ||
+        target === window ||
+        (target instanceof Element && (scope.contains(target) || target.contains(scope)))
+      ) {
+        schedule();
+      }
+    };
+    window.addEventListener('scroll', onScroll, true);
     window.addEventListener('resize', schedule);
     draw();
 
@@ -373,7 +383,7 @@ export function useSubjectBounds(
       for (const event of motionEvents) {
         scope.removeEventListener(event, schedule, true);
       }
-      window.removeEventListener('scroll', schedule, true);
+      window.removeEventListener('scroll', onScroll, true);
       window.removeEventListener('resize', schedule);
       layer?.remove();
     };

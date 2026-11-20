@@ -208,3 +208,38 @@ it('computes audit rows for the current overrides when a pending request is repl
   expect(container.querySelectorAll('[data-wb-subject]')).toHaveLength(4);
   expect(screen.queryByText(/12 compatible pairs/)).toBeNull();
 });
+
+it('keeps slice focus and releases a named pin when it becomes a free axis', async () => {
+  const definition = {
+    ...grouped,
+    constraints: [],
+    matrixViews: [
+      { id: 'all', title: 'All features', rows: 'a' },
+      { id: 'pinned', title: 'Pinned feature', rows: 'a', fixed: { b: false } },
+    ],
+  };
+  render(<MatrixFixture definition={definition} />);
+  const picker = screen.getByLabelText('Slice');
+  picker.focus();
+  fireEvent.change(picker, { target: { value: 'pinned' } });
+  expect(document.activeElement).toBe(picker);
+  fireEvent.change(screen.getByLabelText('Group'), { target: { value: 'b' } });
+  fireEvent.click(screen.getByRole('button', { name: 'Pairwise' }));
+  expect(await screen.findByText(/12 \/ 12 compatible pairs/)).toBeTruthy();
+});
+
+it('reveals every row of a large slice and includes all rows in a capture', () => {
+  const definition = wide(9, 2);
+  const { container } = render(<MatrixFixture definition={definition} />);
+  const rows = () => container.querySelectorAll('tbody tr').length;
+  expect(rows()).toBeLessThan(9);
+  for (let step = 0; step < 9 && rows() < 9; step++) {
+    const previous = rows();
+    fireEvent.click(screen.getByRole('button', { name: /Show more rows/ }));
+    expect(rows()).toBeGreaterThan(previous);
+  }
+  expect(rows()).toBe(9);
+  cleanup();
+  const capture = render(<MatrixFixture definition={definition} raw />);
+  expect(capture.container.querySelectorAll('tbody tr')).toHaveLength(9);
+});

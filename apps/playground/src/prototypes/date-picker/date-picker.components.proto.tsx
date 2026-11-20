@@ -105,7 +105,7 @@ function useDatePanel(
       const topOffset = viewport?.offsetTop ?? 0;
       const leftOffset = viewport?.offsetLeft ?? 0;
       const start =
-        getComputedStyle(button).direction === 'rtl' ? bounds.right - size.width : bounds.left;
+        getComputedStyle(boundary).direction === 'rtl' ? bounds.right - size.width : bounds.left;
       element.style.left = `${Math.max(leftOffset + 8, Math.min(start, leftOffset + width - size.width - 8))}px`;
       const above = Math.max(0, bounds.top - topOffset - 16);
       const below = Math.max(0, height + topOffset - bounds.bottom - 16);

@@ -34,7 +34,7 @@ export default defineComponent({
     locale: choice(
       'Content',
       'Controls the displayed date format.',
-      ['en-GB', 'en-US', 'de-DE', 'ar-SA'],
+      ['en-GB', 'en-US', 'de-DE'],
       'en-GB',
     ),
     allowUnavailableInRange: toggle(
@@ -54,9 +54,10 @@ export default defineComponent({
   render: ({ values, ctx }) => (
     <DateRangePicker
       {...values}
+      style={{ inlineSize: 'min(100%, 22rem)' }}
       subjectAttributes={ctx.subject}
       label="Release window"
-      defaultValue={['2026-09-14', '2026-09-23']}
+      defaultValue={['2026-09-14', '2026-09-18']}
       unavailable={['2026-09-19']}
       onValueChange={ctx.action('onValueChange')}
     />
@@ -64,7 +65,7 @@ export default defineComponent({
   code: (_values, attributes) =>
     `<DateRangePicker
   label="Release window"
-  defaultValue={['2026-09-14', '2026-09-23']}
+  defaultValue={['2026-09-14', '2026-09-18']}
   unavailable={['2026-09-19']}${attributes}
 />`,
   matrixViews: [

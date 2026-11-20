@@ -49,11 +49,12 @@ function PropControl({
 }: ControlProps): ReactElement {
   const descriptionId = useId();
   const label = prop.label ?? propKey;
+  const description = (prop.demo ? 'Example setting. ' : '') + prop.description;
   if (prop.kind === 'action') {
     return (
       <div className="wb-control">
         <span className="wb-control-label">{label}</span>
-        <span className="wb-control-description">{prop.description}</span>
+        <span className="wb-control-description">{description}</span>
       </div>
     );
   }
@@ -141,7 +142,7 @@ function PropControl({
         {input}
       </label>
       <div id={descriptionId} className="wb-control-description">
-        <span className="wb-control-description">{prop.description}</span>
+        <span className="wb-control-description">{description}</span>
         {invalidNumber && <div>Enter a number.</div>}
         <RuleReasons rules={currentRules} />
         <RuleReasons rules={blockedToggle} />

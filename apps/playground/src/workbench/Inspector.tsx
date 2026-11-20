@@ -244,24 +244,41 @@ function eventDetail(value: unknown): string | undefined {
   }
 }
 
+const EVENT_LIMIT = 100;
+
+interface EventLog {
+  readonly entries: readonly LoggedEvent[];
+  readonly omitted: number;
+}
+
+const emptyLog: EventLog = { entries: [], omitted: 0 };
+
 function EventsPanel({
   events,
   onClear,
 }: {
-  readonly events: readonly LoggedEvent[];
+  readonly events: EventLog;
   readonly onClear: () => void;
 }): ReactElement {
   return (
     <>
       <div className="wb-events-actions">
-        <button type="button" className="wb-action-btn" onClick={onClear} disabled={!events.length}>
+        <button
+          type="button"
+          className="wb-action-btn"
+          onClick={onClear}
+          disabled={!events.entries.length}
+        >
           Clear
         </button>
       </div>
       <div aria-live="polite">
-        {events.length ? (
+        {events.omitted > 0 && (
+          <p className="wb-inspector-note">{events.omitted} earlier events omitted.</p>
+        )}
+        {events.entries.length ? (
           <ol className="wb-inspector-events">
-            {events.map(({ theme, name, detail }, index) => (
+            {events.entries.map(({ theme, name, detail }, index) => (
               <li key={index}>
                 <span>{theme.label}</span> <code>{name}</code>
                 {detail !== undefined && <code className="wb-event-detail">{detail}</code>}
@@ -403,7 +420,7 @@ export function Inspector({
   renderStage,
 }: InspectorProps): ReactElement {
   const [playground, setPlayground] = useState(() => initialState(component));
-  const [events, setEvents] = useState<readonly LoggedEvent[]>([]);
+  const [events, setEvents] = useState<EventLog>(emptyLog);
   const [submissions, setSubmissions] = useState<readonly SubmittedData[]>([]);
   const { tab, surface, raw, bounds, block, slice, mode } = route;
   const comparing = themes.length > 1;
@@ -426,7 +443,10 @@ export function Inspector({
   };
   const report = (theme: WorkbenchTheme, name: string, value?: unknown): void => {
     const entry = { theme, name, detail: eventDetail(value) };
-    setEvents((current) => [...current, entry]);
+    setEvents(({ entries, omitted }) => ({
+      entries: [...entries.slice(1 - EVENT_LIMIT), entry],
+      omitted: omitted + Number(entries.length === EVENT_LIMIT),
+    }));
   };
 
   const renderPreview = (
@@ -460,6 +480,7 @@ export function Inspector({
         slice={slice}
         mode={mode}
         raw={raw}
+        freeze={route.freeze}
         themeCount={themes.length}
         onSliceChange={(selected) => update({ slice: selected }, 'replace')}
         onModeChange={(selected) => update({ mode: selected }, 'replace')}
@@ -671,7 +692,7 @@ export function Inspector({
             />
           )
         }
-        events={showEvents && <EventsPanel events={events} onClear={() => setEvents([])} />}
+        events={showEvents && <EventsPanel events={events} onClear={() => setEvents(emptyLog)} />}
         formData={hasForm && <FormDataPanel submissions={submissions} />}
       />
     </div>

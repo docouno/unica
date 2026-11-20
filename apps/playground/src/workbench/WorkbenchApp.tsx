@@ -103,19 +103,19 @@ function ViewportFrame({
       data-scaled={fit || undefined}
       tabIndex={compare && !fit ? 0 : undefined}
     >
-      {vp === 'auto' ? (
-        children
-      ) : (
-        <div
-          className="wb-viewport-inner"
-          style={{
-            width: vp,
-            ...(fit && scale < 1 ? { zoom: scale, '--wb-viewport-scale': scale } : {}),
-          }}
-        >
-          {children}
-        </div>
-      )}
+      <div
+        className={vp === 'auto' ? 'wb-viewport-auto' : 'wb-viewport-inner'}
+        style={
+          vp === 'auto'
+            ? undefined
+            : {
+                width: vp,
+                ...(fit && scale < 1 ? { zoom: scale, '--wb-viewport-scale': scale } : {}),
+              }
+        }
+      >
+        {children}
+      </div>
     </div>
   );
 }
@@ -564,6 +564,7 @@ export function WorkbenchApp({ config }: WorkbenchAppProps): ReactElement {
   const [searchGroups, setSearchGroups] = useState<Record<string, boolean>>({});
   const [status, setStatus] = useState<'All' | ComponentStatus>('All');
   const [catalogOpen, setCatalogOpen] = useState(false);
+  const [inspectorVisited, setInspectorVisited] = useState(false);
   const [compact, setCompact] = useState(false);
   const [settingsTarget, setSettingsTarget] = useState<HTMLDivElement | null>(null);
   const [searchRequest, setSearchRequest] = useState(0);
@@ -701,10 +702,22 @@ export function WorkbenchApp({ config }: WorkbenchAppProps): ReactElement {
     setRoute(next);
   };
 
-  function navigateItem(item: string): void {
+  const focusHeading = useRef(false);
+  useLayoutEffect(() => {
+    if (focusHeading.current) {
+      headingRef.current?.focus();
+      headingRef.current?.scrollIntoView?.({ block: 'nearest' });
+      focusHeading.current = false;
+    }
+  }, [route.item]);
+
+  function navigateItem(item: string, fromUsage = false): void {
+    const focusDestination =
+      fromUsage || Boolean(mobileCatalogRef.current?.getClientRects().length && catalogOpen);
+    focusHeading.current = focusDestination && item !== route.item;
     update({ item }, 'push');
     setCatalogOpen(false);
-    if (mobileCatalogRef.current?.getClientRects().length && catalogOpen) {
+    if (focusDestination && item === route.item) {
       headingRef.current?.focus();
     }
   }
@@ -815,7 +828,7 @@ export function WorkbenchApp({ config }: WorkbenchAppProps): ReactElement {
       scenes={sceneIndex.get(component.id) ?? []}
       update={update}
       itemHref={(item) => createHref({ item })}
-      navigateItem={navigateItem}
+      navigateItem={(item) => navigateItem(item, true)}
       renderArtboards={renderArtboards}
       renderStage={config.renderStage}
     />
@@ -833,6 +846,7 @@ export function WorkbenchApp({ config }: WorkbenchAppProps): ReactElement {
 
   const identity = {
     'data-wb-item': route.item,
+    'data-wb-capture-route': route.freeze ? JSON.stringify(route) : undefined,
     'data-wb-fixed-view': route.vp !== 'auto' || undefined,
     'data-wb-tab': component ? route.tab : undefined,
     'data-wb-slice':
@@ -1033,7 +1047,10 @@ export function WorkbenchApp({ config }: WorkbenchAppProps): ReactElement {
               className="wb-action-btn wb-inspector-launch"
               aria-haspopup="dialog"
               aria-controls={inspectorId}
-              onClick={() => inspectorDialogRef.current?.showModal()}
+              onClick={() => {
+                setInspectorVisited(true);
+                inspectorDialogRef.current?.showModal();
+              }}
             >
               Inspector
             </button>
@@ -1062,7 +1079,9 @@ export function WorkbenchApp({ config }: WorkbenchAppProps): ReactElement {
             route.vp !== 'auto' && (!component || route.tab !== 'playground') ? 0 : undefined
           }
         >
-          <SettingsProvider target={settingsTarget}>{body}</SettingsProvider>
+          <SettingsProvider target={compact && !inspectorVisited ? null : settingsTarget}>
+            {body}
+          </SettingsProvider>
         </main>
       </div>
       {compact ? (

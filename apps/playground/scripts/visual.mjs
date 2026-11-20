@@ -7,7 +7,11 @@ import react from '@vitejs/plugin-react';
 import { chromium } from 'playwright-core';
 import { createServer } from 'vite';
 
-const raw = process.env.VISUAL_RAW !== '0';
+const rawOption = process.env.VISUAL_RAW || '1';
+if (!['0', '1'].includes(rawOption)) {
+  throw new Error('raw must be 0 or 1.');
+}
+const raw = rawOption === '1';
 const params = new URLSearchParams({ freeze: '1' });
 for (const key of [
   'item',
@@ -109,6 +113,27 @@ try {
   }
 
   await waitForReady();
+  const actual = await page.locator('[data-wb-capture-route]').evaluate((shell) => {
+    if (shell.hasAttribute('data-wb-not-found')) {
+      throw new Error(`Unknown workbench item: ${shell.dataset.wbItem}`);
+    }
+    const route = JSON.parse(shell.dataset.wbCaptureRoute);
+    return {
+      ...route,
+      tab: shell.dataset.wbTab,
+      mode: shell.querySelector('[data-wb-matrix-mode]')?.dataset.wbMatrixMode,
+      slice: shell.dataset.wbSlice,
+    };
+  });
+  for (const [key, requested] of params) {
+    const value = actual[key];
+    const rendered = typeof value === 'boolean' ? String(Number(value)) : String(value ?? '');
+    if (rendered !== requested) {
+      throw new Error(
+        `Requested ${key}=${requested}, but the rendered view has ${key}=${rendered || '(none)'}.`,
+      );
+    }
+  }
   for (let attempt = 0; attempt < 3; attempt += 1) {
     const fitWidth = await page.evaluate(() => {
       const boards = document.querySelectorAll('.wb-artboards');

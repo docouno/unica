@@ -169,7 +169,9 @@ it('keeps preview settings in the header and view settings in the inspector', ()
 });
 
 it('applies the selected width to the frame and its viewport without changing the theme', () => {
-  const { container } = open('/?item=field&tab=cases&family=haze&scheme=light');
+  const { container } = open('/?item=field&family=haze&scheme=light');
+  const input = screen.getByLabelText<HTMLInputElement>('Test field');
+  fireEvent.change(input, { target: { value: 'Keep this edit' } });
   const previewSettings = screen.getByRole('group', { name: 'Preview settings' });
   const width = within(previewSettings).getByRole('combobox', { name: 'Width' });
   const shell = container.querySelector<HTMLElement>('.wb-shell')!;
@@ -185,7 +187,8 @@ it('applies the selected width to the frame and its viewport without changing th
   fireEvent.change(width, { target: { value: 'auto' } });
   expect(shell.style.getPropertyValue('--wb-preview-width')).toBe('');
   expect(grid.hasAttribute('data-wb-fixed')).toBe(false);
-  expect(grid.querySelector('.wb-viewport-inner')).toBeNull();
+  expect(screen.getByLabelText('Test field')).toBe(input);
+  expect(input.value).toBe('Keep this edit');
 });
 
 it('keeps dark and light together and preserves the same artboard when isolating', () => {

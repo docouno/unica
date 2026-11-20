@@ -107,6 +107,7 @@ export default defineComponent({
   render: ({ ctx, values }) => (
     <DatePicker
       {...values}
+      style={{ inlineSize: 'min(100%, 22rem)' }}
       subjectAttributes={ctx.subject}
       label={values.variant === 'ghost' ? 'Inline review date' : 'Review date'}
       defaultValue={reviewDate}

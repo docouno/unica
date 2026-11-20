@@ -48,15 +48,19 @@ export function PlacementExamples({
     const position = (): void => {
       const body = panel.querySelector<HTMLElement>('.popover-body-proto');
       const bodyScrollTop = body?.scrollTop ?? 0;
-      const box = stage.getBoundingClientRect();
+      // The live inspector uses a natural-size top layer even in a scaled artboard.
+      // Only the placement study uses the stage edges as collision boundaries.
+      const box = previewSize ? undefined : stage.getBoundingClientRect();
       const target = trigger.getBoundingClientRect();
       const viewport = window.visualViewport;
       const viewportTop = viewport?.offsetTop ?? 0;
       const viewportBottom = viewportTop + (viewport?.height ?? window.innerHeight);
-      const left = Math.max(16, box.left + 16);
-      const right = Math.min(window.innerWidth - 16, box.right - 16);
-      const top = Math.max(viewportTop + 16, box.top + 16);
-      const bottom = Math.min(viewportBottom - 16, box.bottom - 16);
+      const viewportLeft = viewport?.offsetLeft ?? 0;
+      const viewportRight = viewportLeft + (viewport?.width ?? window.innerWidth);
+      const left = Math.max(viewportLeft, box?.left ?? viewportLeft) + 16;
+      const right = Math.min(viewportRight, box?.right ?? viewportRight) - 16;
+      const top = Math.max(viewportTop, box?.top ?? viewportTop) + 16;
+      const bottom = Math.min(viewportBottom, box?.bottom ?? viewportBottom) - 16;
       if (target.bottom < viewportTop || target.top > viewportBottom) {
         panel.hidePopover();
         return;
