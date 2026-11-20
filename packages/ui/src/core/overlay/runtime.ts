@@ -6,6 +6,7 @@ import {
   deepFocus,
   focusElement,
   lockDocumentScroll,
+  shadowRootsOf,
   watchSlotAssignments,
 } from './dom.js';
 
@@ -80,6 +81,7 @@ class Layer {
   focused = false;
   previousFocus: Element | null = null;
   private previousInert: boolean | undefined;
+  private openRevision = 0;
   private unbindTrigger: (() => void) | undefined;
 
   constructor(readonly options: Registration) {
@@ -151,11 +153,15 @@ class Layer {
   }
 
   setOpen = (open: boolean): void => {
-    if (this.disposed) {
+    this.commitOpen(open, ++this.openRevision);
+  };
+
+  private commitOpen(open: boolean, revision: number): void {
+    if (this.disposed || revision !== this.openRevision) {
       return;
     }
     this.runtime?.reconcile();
-    if (!this.ownsCarrier) {
+    if (!this.ownsCarrier || revision !== this.openRevision) {
       return;
     }
     if (!open) {
@@ -164,12 +170,12 @@ class Layer {
     }
     if (this.phase === 'closed' && !this.dismissed) {
       if (this.dismissPending) {
-        queueMicrotask(() => this.setOpen(true));
+        queueMicrotask(() => this.commitOpen(true, revision));
       } else {
         runtimeFor(this.document)?.open(this);
       }
     }
-  };
+  }
 
   requestOpen = (): void => {
     if (!this.disposed && this.ownsCarrier && this.phase !== 'exiting') {
@@ -203,6 +209,7 @@ class Layer {
   }
 
   finishExit = (): void => {
+    this.openRevision++;
     this.dismissed = false;
     this.runtime?.close(this);
   };
@@ -318,6 +325,7 @@ class OverlayRuntime {
   private readonly resizeTargets = new Map<Element, number>();
   private readonly mutations: MutationObserver;
   private readonly modalAncestors = new Set<Element>();
+  private observedShadowRoots = new Set<ShadowRoot>();
   private stopSlotChanges: (() => void) | undefined;
   private order = 0;
   private transactions = 0;
@@ -552,8 +560,14 @@ class OverlayRuntime {
     for (const root of roots) {
       this.mutations.observe(root, { childList: true, subtree: true });
     }
-    if (this.modalAncestors.size) {
-      this.stopSlotChanges = watchSlotAssignments(this.modalAncestors, this.onAncestryChange);
+    this.observedShadowRoots = shadowRootsOf(this.modalAncestors);
+    for (const root of this.observedShadowRoots) {
+      if (!roots.has(root)) {
+        this.mutations.observe(root, { childList: true, subtree: true });
+      }
+    }
+    if (this.observedShadowRoots.size) {
+      this.stopSlotChanges = watchSlotAssignments(this.observedShadowRoots, this.onAncestryChange);
     }
   }
 
@@ -567,10 +581,16 @@ class OverlayRuntime {
     const moved = records.some((record) =>
       Array.from(record.removedNodes).some((node) => this.modalAncestors.has(node as Element)),
     );
+    const structural = records.some(({ type }) => type === 'childList');
     const changedPath =
-      records.some(({ type }) => type === 'childList') &&
+      structural &&
       this.hasModalAncestryChanged(Array.from(composedAncestors(this.resolveModal())));
-    if (moved || changedPath) {
+    const discoveredRoot =
+      structural &&
+      Array.from(shadowRootsOf(this.modalAncestors)).some(
+        (root) => !this.observedShadowRoots.has(root),
+      );
+    if (moved || changedPath || discoveredRoot) {
       // A state-preserving move can keep :modal while changing the structural owners.
       this.onAncestryChange();
     } else if (records.some(({ type }) => type === 'attributes')) {

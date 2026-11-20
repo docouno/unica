@@ -1,6 +1,6 @@
 import { autoUpdate, computePosition, flip, offset, platform, shift, size } from '@floating-ui/dom';
 import type { Placement } from '@floating-ui/dom';
-import { composedAncestors, isShadowRoot, watchSlotAssignments } from './dom.js';
+import { composedAncestors, isShadowRoot, shadowRootsOf, watchSlotAssignments } from './dom.js';
 
 type Side = 'top' | 'bottom' | 'start' | 'end';
 type Align = 'start' | 'center' | 'end';
@@ -153,7 +153,7 @@ export function positionOverlay({
     stopSlotChanges?.();
     const current = Array.from(composedAncestors(anchor));
     ancestry = new Set(current);
-    stopSlotChanges = watchSlotAssignments(current, onSlotChange);
+    stopSlotChanges = watchSlotAssignments(shadowRootsOf(current), onSlotChange);
     for (const ancestor of ancestry) {
       direction.observe(ancestor, {
         attributes: true,

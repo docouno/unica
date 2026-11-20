@@ -123,6 +123,12 @@ export default function OverlayFixture(): JSX.Element {
         p2.hidePopover();
         b.requestOpen();
       },
+      'dismiss-then-controlled-close': () => {
+        p2.hidePopover();
+        b.setOpen(false);
+        b.setOpen(true);
+        b.setOpen(false);
+      },
       animate: () => {
         animated = true;
       },

@@ -106,6 +106,19 @@ export default {
     assert.equal(await page.locator('#trigger2').getAttribute('aria-expanded'), 'true');
   },
 
+  'a newer controlled close supersedes a reopen deferred behind native dismissal': async ({
+    page,
+    mount,
+  }) => {
+    await mount('overlay');
+    await command(page, 'open-a', 'open-b', 'dismiss-then-controlled-close');
+    await statistic(page, 'p2Changes', 1);
+    await statistic(page, 'reason', 'native');
+    await page.evaluate(() => new Promise((resolve) => requestAnimationFrame(resolve)));
+    await closedLayer(page, 'p2');
+    assert.equal(await page.locator('#trigger2').getAttribute('aria-expanded'), 'false');
+  },
+
   'Escape routes manual, passive, and foreign layers without stopping propagation': async ({
     page,
     mount,

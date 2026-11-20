@@ -20,10 +20,7 @@ export function composedContains(parent: Element, child: Element | null): boolea
   return false;
 }
 
-export function watchSlotAssignments(
-  ancestry: Iterable<Element>,
-  onChange: () => void,
-): () => void {
+export function shadowRootsOf(ancestry: Iterable<Element>): Set<ShadowRoot> {
   const roots = new Set<ShadowRoot>();
   for (const element of ancestry) {
     const root = element.getRootNode();
@@ -34,6 +31,13 @@ export function watchSlotAssignments(
       roots.add(element.shadowRoot);
     }
   }
+  return roots;
+}
+
+export function watchSlotAssignments(
+  roots: ReadonlySet<ShadowRoot>,
+  onChange: () => void,
+): () => void {
   for (const root of roots) {
     root.addEventListener('slotchange', onChange);
   }

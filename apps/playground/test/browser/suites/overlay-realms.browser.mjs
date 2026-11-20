@@ -111,6 +111,9 @@ export default {
     const fixture = page.locator('#overlay-realms');
     assert.equal(await fixture.getAttribute('data-scoped-hosts'), 'late-dialog|none');
     await dispatch(page, 'attach-shadow-scope');
+    await page.evaluate(() => new Promise((resolve) => requestAnimationFrame(resolve)));
+    assert.equal(await fixture.getAttribute('data-scoped-hosts'), 'late-dialog|none');
+    await dispatch(page, 'add-default-slot');
     await page.waitForFunction(
       () =>
         document.querySelector('#overlay-realms').dataset.scopedHosts === 'late-dialog|late-dialog',

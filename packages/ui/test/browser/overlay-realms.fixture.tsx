@@ -128,7 +128,6 @@ export default function OverlayRealmsFixture(): JSX.Element {
     const attachShadowScope = () => {
       const shadow = source!.attachShadow({ mode: 'open' });
       shadow.moveBefore(destination!, null);
-      destination!.appendChild(document.createElement('slot'));
     };
     const openSlottedDialog = () => {
       const host = root.appendChild(document.createElement('div'));
@@ -187,6 +186,9 @@ export default function OverlayRealmsFixture(): JSX.Element {
     root.addEventListener('open-slotted-dialog', openSlottedDialog);
     root.addEventListener('open-for-late-shadow', openForLateShadow);
     root.addEventListener('attach-shadow-scope', attachShadowScope);
+    root.addEventListener('add-default-slot', () => {
+      destination!.appendChild(document.createElement('slot'));
+    });
     root.addEventListener('reassign-dialog-slot', () => {
       slottedDialog!.slot = 'second';
     });
