@@ -54,6 +54,10 @@ const builtinAdapters: Readonly<Record<BuiltinIconAdapterName, IconAdapter>> = {
       weight: inputProps.weight ?? (usage === 'standalone' ? 'regular' : undefined),
       color: 'currentColor',
       fill: 'currentColor',
+      style:
+        svgProps.style?.fill === undefined
+          ? svgProps.style
+          : { ...svgProps.style, fill: 'currentColor' },
       alt: undefined,
       mirrored: false,
       // Phosphor gives its context an OR fallback for mirrored. Override the

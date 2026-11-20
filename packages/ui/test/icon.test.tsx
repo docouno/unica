@@ -128,6 +128,7 @@ it('sanitizes naming and focus attributes before handing props to a source', () 
     'aria-hidden': false,
     focusable: true,
     tabIndex: 0,
+    tabindex: 0,
     alt: 'Vendor name',
     width: 24,
     viewBox: '1 2 3 4',
@@ -148,13 +149,18 @@ it('sanitizes naming and focus attributes before handing props to a source', () 
       <Icon icon={fixedMark} data-testid="invalid-title">
         <desc>Invalid title</desc>
       </Icon>
+      <Icon icon={fixedMark} data-testid="nested-title">
+        <title>
+          Invalid <tspan>markup</tspan>
+        </title>
+      </Icon>
     </>,
   );
   expect(screen.getByRole('img', { name: 'Project mark' })).toBe(screen.getByTestId('title'));
   expect(screen.getByRole('img', { name: 'Linked name' }).getAttribute('aria-labelledby')).toBe(
     'name',
   );
-  for (const id of ['blank', 'slot', 'invalid-title']) {
+  for (const id of ['blank', 'slot', 'invalid-title', 'nested-title']) {
     const svg = screen.getByTestId(id);
     expect(svg.getAttribute('aria-hidden')).toBe('true');
     expect(svg.getAttribute('focusable')).toBe('false');
@@ -166,7 +172,7 @@ it('sanitizes naming and focus attributes before handing props to a source', () 
   }
   screen.getByTestId('slot').dispatchEvent(new MouseEvent('click', { bubbles: true }));
   expect(click).not.toHaveBeenCalled();
-  expect(container.querySelectorAll('svg')).toHaveLength(5);
+  expect(container.querySelectorAll('svg')).toHaveLength(6);
 });
 
 it('lets a custom adapter replace a drawing, then clears the owner ref on null', () => {
@@ -207,6 +213,14 @@ it('keeps request-local adapters, SVG nodes and generated IDs through SSR and hy
       <Icon icon={fixedMark} />
     </IconProvider>
   );
+  const status = 'ready';
+  const named = renderToString(
+    <Icon icon={fixedMark} aria-labelledby="icon-title">
+      <title id="icon-title">Build {status}</title>
+    </Icon>,
+  );
+  expect(named).toContain('<title id="icon-title">Build ready</title>');
+
   const first = view(adapter('first'));
   const firstHtml = renderToString(first);
   const secondHtml = renderToString(view(adapter('second')));

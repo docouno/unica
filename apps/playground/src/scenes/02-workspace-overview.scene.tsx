@@ -160,7 +160,7 @@ function OverviewScene(): ReactElement {
                 <Card key={document.title} className="folio-document-card">
                   <div className="folio-row folio-between">
                     <div className="folio-row">
-                      <Icon icon={FileTextIcon} size="s" />
+                      <Icon usage="slot" icon={FileTextIcon} size="s" />
                       <Text size="caption-l" color="muted">
                         {document.category}
                       </Text>
@@ -249,7 +249,7 @@ function OverviewScene(): ReactElement {
                   { title: 'On-Call Escalation Matrix', category: 'Onboarding · Core Infra' },
                 ].map((item) => (
                   <div className="folio-activity-row" key={item.title}>
-                    <Icon icon={PushPinIcon} size="s" />
+                    <Icon usage="slot" icon={PushPinIcon} size="s" />
                     <div>
                       <Text size="body-s" weight="medium">
                         {item.title}
@@ -258,7 +258,7 @@ function OverviewScene(): ReactElement {
                         {item.category}
                       </Text>
                     </div>
-                    <Icon icon={ArrowRightIcon} size="s" />
+                    <Icon usage="slot" icon={ArrowRightIcon} size="s" />
                   </div>
                 ))}
               </Card>

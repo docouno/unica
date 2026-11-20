@@ -73,6 +73,8 @@ export default function IconFixture() {
   const [modal, setModal] = useState(false);
   const [drawer, setDrawer] = useState(false);
   const [swap, setSwap] = useState(false);
+  const buildStatus = 'ready';
+  const slotAttributes = { tabindex: 0, 'data-testid': 'html-attributes' };
   return (
     <>
       <section data-testid="measurements" style={{ width: 560 }}>
@@ -116,10 +118,19 @@ export default function IconFixture() {
         <Icon icon={ArrowRightIcon}>
           <title>Arrow title</title>
         </Icon>
+        <Icon icon={mark} aria-labelledby="build-title" aria-label="Fallback">
+          <title id="build-title">Build {buildStatus}</title>
+        </Icon>
+        <Icon usage="slot" icon={mark} {...slotAttributes} />
         <Icon icon={ArrowRightIcon} data-testid="decorative" aria-label="   " />
         <Button iconLeft={ArrowRightIcon}>After icons</Button>
       </section>
 
+      <div hidden>
+        {(['regular', 'fill', 'bold'] as const).map((weight) => (
+          <ArrowRightIcon key={weight} weight={weight} data-testid={`reference-${weight}`} />
+        ))}
+      </div>
       <IconContext value={vendor}>
         <section data-testid="vendor" style={{ color: 'rgb(21, 77, 133)' }}>
           <button type="button" onClick={() => setBold(!bold)}>
@@ -132,12 +143,21 @@ export default function IconFixture() {
             aria-label="Owner label"
             size="m"
             ref={(node) => node?.setAttribute('data-owner-ref', '')}
-            style={{ width: 99, height: 99, inlineSize: 99, maxBlockSize: 2, color: 'red' }}
+            style={{
+              all: 'unset',
+              width: 99,
+              height: 99,
+              inlineSize: 99,
+              maxBlockSize: 2,
+              color: 'red',
+              fill: 'blue',
+            }}
           />
           <Icon icon={ArrowRightIcon} usage="slot" size="m" data-testid="slot-weight" />
           <Icon icon={ArrowRightIcon} directional mirrored size="m" data-testid="logical" />
           <Icon icon={ArrowRightIcon} mirrored size="m" data-testid="physical" />
           <Icon icon={CheckIcon} size="m" data-testid="check" />
+          <button type="button">After vendor icons</button>
         </section>
       </IconContext>
 

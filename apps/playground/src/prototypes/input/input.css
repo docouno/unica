@@ -245,7 +245,6 @@
 .input-status-proto,
 .control-spinner-proto {
   flex: 0 0 auto;
-  color: var(--fg-muted);
 }
 
 .input-shell-proto > .input-status-proto {

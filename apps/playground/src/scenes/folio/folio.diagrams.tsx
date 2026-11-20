@@ -18,7 +18,7 @@ export function DatabaseTopology(): ReactElement {
           <strong>Primary</strong>
           <span>writer · RW</span>
         </div>
-        <Icon icon={ArrowRightIcon} directional />
+        <Icon usage="slot" icon={ArrowRightIcon} directional />
         <div className="folio-topology-node">
           <strong>Replica A</strong>
           <span>sync · 0 ms</span>

@@ -54,10 +54,10 @@ function Anatomy(): ReactElement {
       <Example label="Icon root and directional separator">
         <Breadcrumb
           aria-label="Runbook location"
-          separator={<Icon icon={CaretRightIcon} directional />}
+          separator={<Icon usage="slot" icon={CaretRightIcon} directional />}
         >
           <BreadcrumbLink href={workspace} aria-label="Workspace home" iconOnly>
-            <Icon icon={HouseIcon} />
+            <Icon usage="slot" icon={HouseIcon} />
           </BreadcrumbLink>
           <BreadcrumbLink href={runbooks}>Runbooks</BreadcrumbLink>
           <BreadcrumbPage>Failover guide</BreadcrumbPage>
@@ -121,7 +121,7 @@ function LinkStates(): ReactElement {
       <Example label="Live · Tab, hover or press">
         <Breadcrumb aria-label="Interactive path">
           <BreadcrumbLink href={workspace} iconOnly aria-label="Workspace home">
-            <Icon icon={HouseIcon} />
+            <Icon usage="slot" icon={HouseIcon} />
           </BreadcrumbLink>
           <BreadcrumbLink href={runbooks}>Runbooks</BreadcrumbLink>
           <BreadcrumbPage>Failover guide</BreadcrumbPage>
@@ -245,7 +245,7 @@ export default defineComponent({
       underline={underline}
       separator={
         separator === 'none' ? null : separator === 'chevron' ? (
-          <Icon icon={CaretRightIcon} directional />
+          <Icon usage="slot" icon={CaretRightIcon} directional />
         ) : (
           '/'
         )
@@ -261,7 +261,7 @@ export default defineComponent({
       separator === 'none'
         ? ' separator={null}'
         : separator === 'chevron'
-          ? ' separator={<Icon icon={CaretRightIcon} directional />}'
+          ? ' separator={<Icon usage="slot" icon={CaretRightIcon} directional />}'
           : '';
     return `<Breadcrumb${previewProps({ size, underline }, { size: 'm', underline: 'always' })}${separatorCode}>\n  <BreadcrumbLink href="/workspace">Workspace</BreadcrumbLink>\n  <BreadcrumbLink href="/runbooks">Runbooks</BreadcrumbLink>\n  <BreadcrumbPage>${previewText(page)}</BreadcrumbPage>\n</Breadcrumb>`;
   },

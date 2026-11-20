@@ -87,9 +87,6 @@
   font-size: var(--option-icon);
 }
 
-.choice-option-icon-proto {
-  color: var(--fg-secondary);
-}
 .choice-option-check-proto {
   visibility: hidden;
   color: var(--accent-soft-fg);

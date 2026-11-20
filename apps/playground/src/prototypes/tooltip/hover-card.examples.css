@@ -60,9 +60,6 @@
   min-block-size: 88px;
   align-content: center;
 }
-.hover-demo-unavailable > .hover-demo-glyph {
-  color: var(--fg-secondary);
-}
 .hover-demo-constrained {
   max-block-size: 200px;
 }

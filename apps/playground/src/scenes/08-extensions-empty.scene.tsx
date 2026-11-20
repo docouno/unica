@@ -133,7 +133,7 @@ function ExtensionsScene(): ReactElement {
                   <div className="folio-row folio-between">
                     <div className="folio-row folio-connector-link">
                       <span className="folio-connector-icon">
-                        <Icon icon={BooksIcon} />
+                        <Icon usage="slot" icon={BooksIcon} />
                       </span>
                       <Icon
                         usage="slot"
@@ -141,7 +141,7 @@ function ExtensionsScene(): ReactElement {
                         className="folio-connector-arrow"
                       />
                       <span className="folio-connector-icon">
-                        <Icon icon={GithubLogoIcon} />
+                        <Icon usage="slot" icon={GithubLogoIcon} />
                       </span>
                     </div>
                     <Badge size="s" status="success" dot>
@@ -167,7 +167,7 @@ function ExtensionsScene(): ReactElement {
                   </div>
                   <div className="folio-row folio-between folio-connector-footer">
                     <div className="folio-row folio-connector-sync">
-                      <Icon icon={CheckCircleIcon} />
+                      <Icon usage="slot" icon={CheckCircleIcon} />
                       <Text size="caption-l" color="muted">
                         Synced 2m ago
                       </Text>
@@ -188,7 +188,7 @@ function ExtensionsScene(): ReactElement {
                   <div className="folio-row folio-between">
                     <div className="folio-row folio-connector-link">
                       <span className="folio-connector-icon">
-                        <Icon icon={BooksIcon} />
+                        <Icon usage="slot" icon={BooksIcon} />
                       </span>
                       <Icon
                         usage="slot"
@@ -196,7 +196,7 @@ function ExtensionsScene(): ReactElement {
                         className="folio-connector-arrow"
                       />
                       <span className="folio-connector-icon">
-                        <Icon icon={PhoneCallIcon} />
+                        <Icon usage="slot" icon={PhoneCallIcon} />
                       </span>
                     </div>
                     <Badge size="s" status="success" dot>
@@ -223,7 +223,7 @@ function ExtensionsScene(): ReactElement {
                   </div>
                   <div className="folio-row folio-between folio-connector-footer">
                     <div className="folio-row folio-connector-sync">
-                      <Icon icon={CheckCircleIcon} />
+                      <Icon usage="slot" icon={CheckCircleIcon} />
                       <Text size="caption-l" color="muted">
                         14 services linked
                       </Text>
@@ -273,7 +273,7 @@ function ExtensionsScene(): ReactElement {
                         key={connector.title}
                         title={connector.title}
                         description={connector.description}
-                        leading={<Icon icon={connector.icon} />}
+                        leading={<Icon usage="slot" icon={connector.icon} />}
                         trailing={
                           <>
                             <Badge>Installed</Badge>

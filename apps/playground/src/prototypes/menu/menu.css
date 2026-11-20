@@ -153,8 +153,7 @@
   border-radius: var(--radius-circular);
 }
 
-.menu-icon-slot-proto,
-.menu-branch-proto {
+.menu-icon-slot-proto {
   color: var(--fg-secondary);
 }
 

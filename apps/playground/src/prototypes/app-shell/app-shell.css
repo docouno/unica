@@ -519,7 +519,6 @@
 
 .app-shell-nav-row > .app-shell-nav-glyph,
 .app-shell-nav-group > summary > .app-shell-nav-glyph {
-  color: var(--fg-muted);
   font-size: 15px;
 }
 

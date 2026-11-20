@@ -25,6 +25,24 @@ async function centerSize(frame) {
 }
 
 export default {
+  'Folio connector and list slots retain owner sizes under standalone overrides': async ({
+    page,
+    mount,
+  }) => {
+    await mount('icon-folio');
+    for (const selector of [
+      '.folio-connector-icon > svg',
+      '.folio-connector-sync svg',
+      '.list-leading-proto svg',
+    ]) {
+      const glyph = page.locator(selector).first();
+      await size(
+        glyph,
+        await glyph.evaluate((svg) => parseFloat(getComputedStyle(svg.parentElement).fontSize)),
+      );
+    }
+  },
+
   'Icon sizes follow owner geometry and the project SVG is centered without distortion': async ({
     page,
     mount,
@@ -65,10 +83,10 @@ export default {
   }) => {
     await mount('icon');
     const group = page.getByTestId('accessible');
-    for (const name of ['Linked name', 'Fallback name', 'Arrow title']) {
+    for (const name of ['Linked name', 'Fallback name', 'Arrow title', 'Build ready']) {
       assert.equal(await group.getByRole('img', { name, exact: true }).count(), 1);
     }
-    assert.equal(await group.getByRole('img').count(), 3);
+    assert.equal(await group.getByRole('img').count(), 4);
     const decorative = page.getByTestId('decorative');
     assert.equal(await decorative.getAttribute('aria-hidden'), 'true');
     assert.equal(await decorative.getAttribute('focusable'), 'false');
@@ -94,11 +112,21 @@ export default {
         await inheritedPaint(scope, weight);
 
         const markup = (locator) => locator.evaluate((svg) => svg.innerHTML);
-        const regular = await markup(weight);
-        assert.notEqual(regular, await markup(page.getByTestId('slot-weight')));
+        assert.equal(await markup(weight), await markup(page.getByTestId('reference-regular')));
+        assert.equal(
+          await markup(page.getByTestId('slot-weight')),
+          await markup(page.getByTestId('reference-fill')),
+        );
+        await scope.getByRole('button', { name: 'Toggle weight' }).focus();
+        await page.keyboard.press('Tab');
+        await assertFocused(scope.getByRole('button', { name: 'After vendor icons' }));
+        assert.equal(
+          await weight.locator('path').evaluate((node) => getComputedStyle(node).fill),
+          await scope.evaluate((node) => getComputedStyle(node).color),
+        );
         const original = await weight.elementHandle();
         await scope.getByRole('button', { name: 'Toggle weight' }).click();
-        assert.notEqual(regular, await markup(weight));
+        assert.equal(await markup(weight), await markup(page.getByTestId('reference-bold')));
         assert.equal(await weight.evaluate((node, previous) => node === previous, original), true);
         await original.dispose();
 

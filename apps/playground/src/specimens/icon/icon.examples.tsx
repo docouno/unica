@@ -192,7 +192,7 @@ export function EditorExample(): ReactElement {
           FOLIO / RELEASE PLAYBOOK
         </Text>
         <Text size="caption-l" color="muted">
-          <Icon icon={CheckCircleIcon} color="success" /> Saved
+          <Icon usage="slot" icon={CheckCircleIcon} color="success" /> Saved
         </Text>
       </div>
       <div className="icon-toolbar" role="group" aria-label="Formatting preview">
@@ -211,7 +211,7 @@ export function EditorExample(): ReactElement {
               )
             }
           >
-            <Icon icon={glyph} size="s" />
+            <Icon usage="slot" icon={glyph} size="s" />
           </button>
         ))}
         <button
@@ -220,7 +220,7 @@ export function EditorExample(): ReactElement {
           aria-label="Insert link (unavailable in preview)"
           disabled
         >
-          <Icon icon={LinkIcon} size="s" />
+          <Icon usage="slot" icon={LinkIcon} size="s" />
         </button>
       </div>
       <Title as="h3" size="heading-l">
@@ -243,8 +243,8 @@ export function ConnectorExample(): ReactElement {
     <article className="icon-product icon-study">
       <div className="icon-row icon-between">
         <div className="icon-row">
-          <Icon icon={GithubLogoIcon} size="l" />
-          <Icon icon={ArrowsLeftRightIcon} size="s" color="muted" />
+          <Icon usage="slot" icon={GithubLogoIcon} size="l" />
+          <Icon usage="slot" icon={ArrowsLeftRightIcon} size="s" color="muted" />
           <Text size="caption-l" color="secondary">
             FOLIO
           </Text>
@@ -262,6 +262,7 @@ export function ConnectorExample(): ReactElement {
       <div className="icon-row icon-between icon-connector-footer">
         <div className="icon-row icon-no-wrap">
           <Icon
+            usage="slot"
             icon={connected ? CheckCircleIcon : WarningCircleIcon}
             size="s"
             color={connected ? 'success' : 'warning'}

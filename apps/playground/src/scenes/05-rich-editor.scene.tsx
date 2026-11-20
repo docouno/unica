@@ -324,7 +324,8 @@ function EditorScene(): ReactElement {
                       toggleReference(event.currentTarget, event.detail === 0);
                     }}
                   >
-                    Zero-Downtime PG Failover <Icon icon={ArrowUpRightIcon} size="inherit" />
+                    Zero-Downtime PG Failover{' '}
+                    <Icon usage="slot" icon={ArrowUpRightIcon} size="inherit" />
                   </Link>
                 ) : (
                   'Zero-Downtime PG Failover'

@@ -1,13 +1,88 @@
 @layer unica.components {
   .unica-icon {
+    --unica-icon-frame: 1em;
     display: inline-block;
     flex: none;
+    min-width: var(--unica-icon-frame);
+    max-width: var(--unica-icon-frame);
+    min-height: var(--unica-icon-frame);
+    max-height: var(--unica-icon-frame);
     vertical-align: -0.125em;
+    color: inherit;
   }
 
-  .unica-icon[data-unica-icon-directional]:dir(rtl),
+  .unica-icon[data-unica-icon-size='s'] {
+    --unica-icon-frame: var(--size-s-icon);
+  }
+
+  .unica-icon[data-unica-icon-size='m'] {
+    --unica-icon-frame: var(--size-m-icon);
+  }
+
+  .unica-icon[data-unica-icon-size='l'] {
+    --unica-icon-frame: var(--size-l-icon);
+  }
+
+  .unica-icon[data-unica-icon-color='primary'] {
+    color: var(--fg-primary);
+  }
+
+  .unica-icon[data-unica-icon-color='secondary'] {
+    color: var(--fg-secondary);
+  }
+
+  .unica-icon[data-unica-icon-color='muted'] {
+    color: var(--fg-muted);
+  }
+
+  .unica-icon[data-unica-icon-color='subtle'] {
+    color: var(--fg-subtle);
+  }
+
+  .unica-icon[data-unica-icon-color='disabled'] {
+    color: var(--fg-disabled);
+  }
+
+  .unica-icon[data-unica-icon-color='accent'] {
+    color: var(--accent-signal);
+  }
+
+  .unica-icon[data-unica-icon-color='info'] {
+    color: var(--status-info-signal);
+  }
+
+  .unica-icon[data-unica-icon-color='success'] {
+    color: var(--status-success-signal);
+  }
+
+  .unica-icon[data-unica-icon-color='warning'] {
+    color: var(--status-warning-signal);
+  }
+
+  .unica-icon[data-unica-icon-color='danger'] {
+    color: var(--status-danger-signal);
+  }
+
   .unica-icon[data-unica-icon-mirrored]:not([data-unica-icon-directional]) {
     scale: -1 1;
+  }
+
+  @supports selector(:dir(rtl)) {
+    .unica-icon[data-unica-icon-directional]:dir(rtl) {
+      scale: -1 1;
+    }
+  }
+
+  @supports not selector(:dir(rtl)) {
+    [dir='rtl' i] {
+      --unica-icon-direction: -1;
+    }
+    [dir='ltr' i] {
+      --unica-icon-direction: 1;
+    }
+    .unica-icon[data-unica-icon-directional] {
+      scale: var(--unica-icon-direction, 1) 1;
+    }
   }
 
   @media (forced-colors: active) {

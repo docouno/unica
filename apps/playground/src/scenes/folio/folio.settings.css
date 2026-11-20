@@ -28,7 +28,6 @@
 }
 
 .folio-connector-link > .folio-connector-arrow {
-  color: var(--fg-muted);
   font-size: var(--text-size-body-xs);
 }
 

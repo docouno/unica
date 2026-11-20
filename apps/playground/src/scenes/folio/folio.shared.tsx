@@ -404,7 +404,7 @@ export function DocumentActions({
 export function DocumentName({ children }: { readonly children: ReactNode }): ReactElement {
   return (
     <span className="folio-document-name">
-      <Icon icon={FileTextIcon} size="s" />
+      <Icon usage="slot" icon={FileTextIcon} size="s" />
       <span>{children}</span>
     </span>
   );

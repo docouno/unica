@@ -337,15 +337,15 @@ export default defineComponent({
   usage: [
     {
       id: 'editor',
-      code: `<button type="button" aria-label="Insert a document">
-  <Icon icon={FileTextIcon} />
+      code: `<button type="button" aria-label="Bold" aria-pressed={active} onClick={toggleBold}>
+  <Icon usage="slot" icon={TextBIcon} size="s" />
 </button>`,
       title: 'Folio · Rich editor',
       render: () => <EditorExample />,
     },
     {
       id: 'connector',
-      code: `<span><Icon icon={ArrowRightIcon} directional /> Continue setup</span>`,
+      code: `<span><Icon usage="slot" icon={CheckCircleIcon} size="s" color="success" /> Synced 2 minutes ago</span>`,
       title: 'Folio · Connector spotlight',
       render: () => <ConnectorExample />,
     },

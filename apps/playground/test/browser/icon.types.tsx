@@ -11,6 +11,7 @@ import {
   type IconProps,
 } from '@docouno/unica';
 import { ArrowRightIcon } from '@phosphor-icons/react';
+import type { ReactNode } from 'react';
 import { Component, createElement, createRef, type ComponentPropsWithRef } from 'react';
 
 type SvgProps = ComponentPropsWithRef<'svg'>;
@@ -30,6 +31,27 @@ export function FallbackGlyph({ source }: { source?: GlyphSource }) {
 
 function OptionalGlyph({ compact, ...props }: SvgProps & { readonly compact?: boolean }) {
   return <svg {...props} viewBox={compact ? '0 0 16 16' : '0 0 32 16'} />;
+}
+
+function Outline({ detail, ...svg }: SvgProps & { detail?: 'shared' | 'outline' }): ReactNode {
+  return <svg {...svg} data-detail={detail} />;
+}
+
+type BrandDetail =
+  { detail?: 'shared'; monochrome?: false } | { detail?: 'brand'; monochrome?: true };
+
+function Brand({ detail, monochrome, ...svg }: SvgProps & BrandDetail): ReactNode {
+  return <svg {...svg} data-detail={detail} data-monochrome={monochrome} />;
+}
+
+const brand = defineGlyph(Brand);
+
+export function MixedSource({ useBrand }: { useBrand: boolean }) {
+  const icon = useBrand ? brand : Outline;
+  // @ts-expect-error Only the outline glyph accepts this value.
+  const wrong = <Icon icon={icon} detail="outline" />;
+  void wrong;
+  return <Icon icon={icon} detail="shared" />;
 }
 
 function RequiresVariant({ variant }: SvgProps & { variant: string }) {
@@ -60,6 +82,7 @@ const valid = [
   <Icon {...props} style={{ '--project-icon-ink': 'currentColor' }} />,
   <Icon icon={ArrowRightIcon} weight="bold" mirrored ref={svgRef} />,
   <Icon icon={arrow} weight={undefined} />,
+  <Icon icon={brand} detail="brand" monochrome />,
   <Icon icon={OptionalGlyph} compact />,
   <Icon icon={ProjectSvg}>
     <title>Project</title>
@@ -73,6 +96,8 @@ const closed = { role: 'img', 'aria-hidden': true, 'aria-describedby': 'hint', t
 const named = { 'aria-label': 'Open' };
 
 const invalid = [
+  // @ts-expect-error The shared detail does not support monochrome on Brand.
+  <Icon icon={brand} detail="shared" monochrome />,
   // @ts-expect-error Phosphor weight must be inferred from icon.
   <Icon icon={ArrowRightIcon} weight="heavy" />,
   // @ts-expect-error Branding preserves the valid weight union.

@@ -1,4 +1,4 @@
-import { createContext, isValidElement, useContext } from 'react';
+import { Children, createContext, isValidElement, useContext } from 'react';
 import type { CSSProperties, JSX, ReactElement, ReactNode } from 'react';
 import { useComponentDefaults } from '../../core/UnicaProvider.js';
 import { renderGlyph } from './glyph.js';
@@ -26,22 +26,21 @@ export function IconProvider({
   return <IconContext value={adapter}>{children}</IconContext>;
 }
 
-const colors = {
-  inherit: 'inherit',
-  primary: 'var(--fg-primary)',
-  secondary: 'var(--fg-secondary)',
-  muted: 'var(--fg-muted)',
-  subtle: 'var(--fg-subtle)',
-  disabled: 'var(--fg-disabled)',
-  accent: 'var(--accent-signal)',
-  info: 'var(--status-info-signal)',
-  success: 'var(--status-success-signal)',
-  warning: 'var(--status-warning-signal)',
-  danger: 'var(--status-danger-signal)',
-} as const;
+type IconColor =
+  | 'inherit'
+  | 'primary'
+  | 'secondary'
+  | 'muted'
+  | 'subtle'
+  | 'disabled'
+  | 'accent'
+  | 'info'
+  | 'success'
+  | 'warning'
+  | 'danger';
 
 type SvgProps = IconAdapterRenderContext['svgProps'];
-type IconTitle = ReactElement<{ children: string }, 'title'>;
+type IconTitle = ReactElement<{ children?: ReactNode; id?: string; lang?: string }, 'title'>;
 type IconStyle = CSSProperties & {
   readonly [property: `--${string}`]: string | number | undefined;
 };
@@ -50,21 +49,21 @@ const reservedInputProps = new Set([
   'role',
   'alt',
   'focusable',
-  'tabIndex',
+  'tabindex',
   'width',
   'height',
-  'viewBox',
-  'preserveAspectRatio',
+  'viewbox',
+  'preserveaspectratio',
   'transform',
   'fill',
   'stroke',
-  'dangerouslySetInnerHTML',
+  'dangerouslysetinnerhtml',
 ]);
 
 interface IconFrame<G extends GlyphSource> {
   readonly icon: G;
   readonly size?: 'inherit' | 's' | 'm' | 'l' | undefined;
-  readonly color?: keyof typeof colors | undefined;
+  readonly color?: IconColor | undefined;
   readonly directional?: boolean | undefined;
   readonly ref?: SvgProps['ref'];
   readonly id?: string | undefined;
@@ -100,25 +99,30 @@ type SourceProps<G> =
       ? Parameters<G>[0]
       : never;
 
-type VendorProps<Props> = [Props] extends [never]
-  ? unknown
-  : 0 extends 1 & Props
-    ? unknown
-    : {
-        readonly [
-          K in Exclude<
-            keyof Props,
-            | keyof IconFrame<GlyphSource>
-            | keyof IconName
-            | keyof ClosedProps
-            | `on${Capitalize<string>}`
-          >
-        ]?: Props[K] | undefined;
-      };
+type OwnedKey =
+  keyof IconFrame<GlyphSource> | keyof IconName | keyof ClosedProps | `on${Capitalize<string>}`;
 
-type SourceOptions<G extends GlyphSource> = GlyphSource extends G
+type VendorKeys<Props> = 0 extends 1 & Props
+  ? never
+  : Props extends unknown
+    ? Exclude<keyof Props, OwnedKey>
+    : never;
+
+// Keep alternatives declared by one glyph, including related optional fields.
+type VendorProps<Props, Keys extends PropertyKey> = Props extends unknown
+  ? { readonly [Key in Keys]?: Key extends keyof Props ? Props[Key] | undefined : never }
+  : never;
+
+// A caller with a dynamic source needs options accepted by every possible glyph.
+type SourceOptions<G extends GlyphSource, Keys extends PropertyKey = VendorKeys<SourceProps<G>>> = [
+  Keys,
+] extends [never]
   ? unknown
-  : VendorProps<SourceProps<G>>;
+  : (G extends unknown ? (options: VendorProps<SourceProps<G>, Keys>) => void : never) extends (
+        options: infer Options,
+      ) => void
+    ? Options
+    : never;
 
 export type IconProps<G extends GlyphSource = GlyphSource> = IconFrame<G> &
   IconName &
@@ -129,11 +133,43 @@ function textName(value: string | undefined): string | undefined {
   return typeof value === 'string' ? value.trim() || undefined : undefined;
 }
 
-function titleName(children: IconTitle | undefined): string | undefined {
-  return isValidElement(children) && children.type === 'title'
-    ? textName(children.props.children)
-    : undefined;
+function svgTitle(child: IconTitle | undefined): IconTitle | undefined {
+  if (!isValidElement(child) || child.type !== 'title') {
+    return undefined;
+  }
+  let content = '';
+  for (const part of Children.toArray(child.props.children)) {
+    if (typeof part !== 'string' && typeof part !== 'number' && typeof part !== 'bigint') {
+      return undefined;
+    }
+    content += String(part);
+  }
+  const text = content.trim();
+  return text ? (
+    <title id={child.props.id} lang={child.props.lang}>
+      {text}
+    </title>
+  ) : undefined;
 }
+
+const frameStyleKeys = new Set([
+  'all',
+  'font',
+  'fontSize',
+  'color',
+  'width',
+  'height',
+  'minWidth',
+  'maxWidth',
+  'minHeight',
+  'maxHeight',
+  'inlineSize',
+  'blockSize',
+  'minInlineSize',
+  'maxInlineSize',
+  'minBlockSize',
+  'maxBlockSize',
+]);
 
 export function Icon<G extends GlyphSource>({
   icon,
@@ -151,13 +187,16 @@ export function Icon<G extends GlyphSource>({
   ...props
 }: IconProps<G>): ReactElement | null {
   const providerAdapter = useContext(IconContext);
-  const resolvedSize = useComponentDefaults('Icon', 'size', { instance: size, builtIn: 'inherit' });
-  const frameSize = usage === 'slot' ? (size ?? 'inherit') : resolvedSize;
+  const frameSize = useComponentDefaults('Icon', 'size', {
+    instance: size,
+    group: usage === 'slot' ? 'inherit' : undefined,
+    builtIn: 'inherit',
+  });
   const dimension = frameSize === 'inherit' ? '1em' : `var(--size-${frameSize}-icon)`;
   const standalone = usage === 'standalone';
   const name = standalone ? textName(label) : undefined;
   const nameIds = standalone ? textName(labelledBy) : undefined;
-  const title = standalone ? titleName(children) : undefined;
+  const title = standalone ? svgTitle(children) : undefined;
   const named = name !== undefined || nameIds !== undefined || title !== undefined;
 
   const inputProps: Record<string, unknown> = {};
@@ -165,15 +204,18 @@ export function Icon<G extends GlyphSource>({
   for (const [key, value] of Object.entries(props)) {
     if (key.startsWith('data-')) {
       dataProps[key] = value;
-    } else if (!/^(aria-|on[A-Z])/.test(key) && !reservedInputProps.has(key)) {
+    } else if (
+      !/^aria-/i.test(key) &&
+      !/^on[A-Z]/.test(key) &&
+      !reservedInputProps.has(key.toLowerCase())
+    ) {
       inputProps[key] = value;
     }
   }
 
-  const frameStyle = { ...style };
-  // A 1em frame uses the host's font size. Keep font styling in the CSS cascade.
-  delete frameStyle.font;
-  delete frameStyle.fontSize;
+  const frameStyle =
+    style &&
+    Object.fromEntries(Object.entries(style).filter(([property]) => !frameStyleKeys.has(property)));
 
   const svgProps = {
     ...dataProps,
@@ -181,6 +223,8 @@ export function Icon<G extends GlyphSource>({
     id,
     color: 'currentColor',
     className: className ? `unica-icon ${className}` : 'unica-icon',
+    'data-unica-icon-size': frameSize === 'inherit' ? undefined : frameSize,
+    'data-unica-icon-color': color === 'inherit' ? undefined : color,
     'data-unica-icon-directional': directional ? '' : undefined,
     'data-unica-icon-mirrored': undefined,
     focusable: 'false',
@@ -189,25 +233,10 @@ export function Icon<G extends GlyphSource>({
     'aria-label': name,
     'aria-labelledby': nameIds,
     role: named ? 'img' : undefined,
-    children: title === undefined ? undefined : <title>{title}</title>,
+    children: title,
     width: dimension,
     height: dimension,
-    style: {
-      ...frameStyle,
-      width: dimension,
-      height: dimension,
-      minWidth: dimension,
-      maxWidth: dimension,
-      minHeight: dimension,
-      maxHeight: dimension,
-      inlineSize: dimension,
-      blockSize: dimension,
-      minInlineSize: dimension,
-      maxInlineSize: dimension,
-      minBlockSize: dimension,
-      maxBlockSize: dimension,
-      color: colors[color],
-    },
+    style: frameStyle,
   } satisfies SvgProps & Record<`data-${string}`, unknown>;
   return renderGlyph(icon, providerAdapter, { inputProps, svgProps, usage });
 }
