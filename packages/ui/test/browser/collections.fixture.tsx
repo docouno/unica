@@ -16,7 +16,8 @@ function RovingFixture(): JSX.Element {
   const [orientation, setOrientation] = useState<'horizontal' | 'vertical' | 'both'>('horizontal');
   const [wrap, setWrap] = useState(false);
   const [rtl, setRtl] = useState(false);
-  const roving = useRovingFocus<HTMLButtonElement>({
+  const [link, setLink] = useState(false);
+  const roving = useRovingFocus<HTMLElement>({
     items: items.map((key) => ({ key, label: key, navigable: key !== disabled })),
     entryKey: selected,
     recoveryKey: policy === 'tabs' ? selected : null,
@@ -34,19 +35,35 @@ function RovingFixture(): JSX.Element {
         onKeyDown={roving.onKeyDown}
         onBlur={roving.onBlur}
       >
-        {items.map((item) => (
-          <button
-            {...roving.getItemProps(item)}
-            key={item}
-            role="tab"
-            type="button"
-            aria-selected={item === selected}
-            disabled={item === disabled}
-            onClick={() => setSelected(item)}
-          >
-            {item}
-          </button>
-        ))}
+        {items.map((item) => {
+          const itemProps = roving.getItemProps(item);
+          if (link && item === 'B') {
+            return (
+              <a
+                {...itemProps}
+                key={item}
+                role="tab"
+                href="#tabs"
+                aria-selected={item === selected}
+              >
+                {item}
+              </a>
+            );
+          }
+          return (
+            <button
+              {...itemProps}
+              key={item}
+              role="tab"
+              type="button"
+              aria-selected={item === selected}
+              disabled={item === disabled}
+              onClick={() => setSelected(item)}
+            >
+              {item}
+            </button>
+          );
+        })}
       </div>
       <input aria-label="After tabs" />
       <output data-testid="selected-tab">{selected}</output>
@@ -61,6 +78,9 @@ function RovingFixture(): JSX.Element {
       </button>
       <button type="button" onClick={() => setItems(['C', 'B', 'A'])}>
         Reorder tabs
+      </button>
+      <button type="button" onClick={() => setLink(true)}>
+        Replace B node
       </button>
       <button type="button" onClick={() => setItems([])}>
         Remove all

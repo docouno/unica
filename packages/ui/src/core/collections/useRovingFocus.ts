@@ -56,7 +56,8 @@ export function useRovingFocus<T extends HTMLElement>(options: RovingFocusOption
     const lost = !findNavigable(items, origin.key);
     const orderChanged =
       before.length !== items.length || before.some(({ key }, index) => key !== items[index]?.key);
-    const needsRecovery = lost || (active !== origin.node && orderChanged);
+    const replaced = nodes.current.get(origin.key) !== origin.node;
+    const needsRecovery = lost || replaced || (active !== origin.node && orderChanged);
     if (!needsRecovery) {
       return;
     }
@@ -98,7 +99,9 @@ export function useRovingFocus<T extends HTMLElement>(options: RovingFocusOption
         },
       };
     },
-    onKeyDown: navigation.onKeyDown,
+    onKeyDown(event) {
+      navigation.onKeyDown(event, focused.current?.key ?? tabStop);
+    },
     onBlur(event) {
       if (event.currentTarget.contains(event.relatedTarget)) {
         return;

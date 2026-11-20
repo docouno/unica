@@ -241,6 +241,81 @@ export default {
     );
     assert.equal(await page.getByTestId('local-value').textContent(), 'a');
   },
+  'a native reset uses the owner that a reset listener assigns before the default action': async ({
+    page,
+    mount,
+  }) => {
+    await mount('form-authority');
+    await button(page, 'Change local to B').click();
+    const second = page.locator('#second');
+    assert.deepEqual(await entries(second), []);
+    const result = await second.evaluate((form) => {
+      const carrier = document.querySelector('select[name=local]');
+      form.addEventListener('reset', () => carrier.setAttribute('form', 'second'), { once: true });
+      form.reset();
+      return { owned: carrier.form === form, entries: [...new FormData(form)] };
+    });
+    assert.deepEqual(result, { owned: true, entries: [['local', 'a']] });
+    assert.equal(await page.getByTestId('local-value').textContent(), 'a');
+  },
+  'moving a mounted carrier subtree into Shadow DOM preserves synchronous native reset': async ({
+    page,
+    mount,
+  }) => {
+    await mount('form-authority');
+    await button(page, 'Change local to B').click();
+    await button(page, 'Change multi').click();
+    const result = await page.locator('#root').evaluate((root) => {
+      const form = root.querySelector('#first');
+      const carrier = root.querySelector('select[name=local]');
+      const parent = document.createElement('div');
+      document.body.append(parent);
+      const shadow = parent.attachShadow({ mode: 'open' });
+      shadow.append(root);
+      form.reset();
+      return { owner: carrier.form === form, entries: [...new FormData(form)] };
+    });
+    assert.deepEqual(result, { owner: true, entries: initial });
+    assert.equal(await page.getByTestId('local-value').textContent(), 'a');
+  },
+  'a delayed native reset confirmation preserves edits made after its default action': async ({
+    page,
+    mount,
+  }) => {
+    await mount('form-authority');
+    const buttonB = button(page, 'Change local to B');
+    await buttonB.click();
+    await button(page, 'Change multi').click();
+    const form = page.locator('#first');
+    const edit = await buttonB.elementHandle();
+    const result = await form.evaluate((node, edit) => {
+      let delayed;
+      node.addEventListener(
+        'reset',
+        () => {
+          const witness = node.querySelector('unica-reset-witness');
+          delayed = witness.confirmReset;
+          witness.confirmReset = undefined;
+        },
+        { once: true },
+      );
+      node.reset();
+      edit.click();
+      node.addEventListener(
+        'reset',
+        (event) => {
+          delayed();
+          event.preventDefault();
+        },
+        { once: true },
+      );
+      node.reset();
+      return [...new FormData(node)];
+    }, edit);
+    await edit.dispose();
+    assert.deepEqual(result, [['local', 'c'], ...initial.slice(1)]);
+    assert.equal(await page.getByTestId('local-value').textContent(), 'c');
+  },
   'Node SSR carriers serialize before hydration and keep their nodes and authority': async ({
     page,
     mount,

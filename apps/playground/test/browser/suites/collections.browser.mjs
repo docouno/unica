@@ -96,6 +96,32 @@ const suite = {
     await expectTab(page, 'B');
     assert.equal(await page.getByTestId('selected-tab').textContent(), 'A');
   },
+  'roving uses live focus in a batch and keeps focus on a replaced node with the same key': async ({
+    page,
+    mount,
+  }) => {
+    await mount('collections');
+    const first = tab(page, 'A');
+    await first.focus();
+    await first.evaluate((node) => {
+      const document = node.ownerDocument;
+      for (let count = 0; count < 2; count++) {
+        document.activeElement.dispatchEvent(
+          new KeyboardEvent('keydown', {
+            key: 'ArrowRight',
+            bubbles: true,
+            cancelable: true,
+          }),
+        );
+      }
+    });
+    await expectTab(page, 'C');
+    await tab(page, 'B').focus();
+    await activate(page, 'Replace B node');
+    await expectTab(page, 'B');
+    assert.equal(await tab(page, 'B').evaluate((node) => node.localName), 'a');
+    assert.equal(await page.getByTestId('selected-tab').textContent(), 'A');
+  },
   'menu typeahead includes readable unavailable commands and skips separators': async ({
     page,
     mount,

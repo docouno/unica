@@ -6,7 +6,7 @@ import type { NavigationOptions, TypeaheadBuffer } from './navigation.js';
 export type CollectionNavigationOptions = Omit<NavigationOptions, 'direction'>;
 
 interface CollectionNavigation {
-  onKeyDown: (event: KeyboardEvent<HTMLElement>) => void;
+  onKeyDown: (event: KeyboardEvent<HTMLElement>, activeKey?: string | null) => void;
   clearTypeahead: () => void;
 }
 
@@ -20,7 +20,7 @@ export function useCollectionNavigation(
   }, []);
 
   return {
-    onKeyDown(event) {
+    onKeyDown(event, activeKey = options.activeKey) {
       if (event.defaultPrevented) {
         return;
       }
@@ -29,7 +29,7 @@ export function useCollectionNavigation(
       const direction = view?.getComputedStyle(currentTarget).direction === 'rtl' ? 'rtl' : 'ltr';
       const result = navigateCollection(
         nativeEvent,
-        { ...options, direction },
+        { ...options, activeKey, direction },
         buffer.current,
         view?.performance.now() ?? Date.now(),
       );
