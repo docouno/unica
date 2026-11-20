@@ -54,6 +54,8 @@ const ProjectGlyph = defineGlyph(ProjectMark);
 </IconProvider>
 ```
 
+Every accepted source can render with just the Icon frame props. TypeScript infers extra options from the final call signature of an overloaded component. Give that signature the union of supported option shapes to expose every mode through Icon.
+
 A bare component uses the nearest `IconProvider`, with `phosphor` as the default. A module-scoped `defineGlyph(source, adapter?)` wraps a source in an immutable descriptor and pins its adapter, defaulting to `native`. Sources with repeated clip paths, masks, or gradients should create instance IDs with React's `useId`.
 
 The built-in Phosphor adapter defaults standalone icons to `regular`, including when `weight={undefined}`. A slot may inherit its weight from the application's Phosphor `IconContext`. An explicit weight takes precedence. Icon owns frame size, root paint, reflection, and accessibility fields, including competing `role`, `aria-hidden`, `aria-label`, `aria-labelledby`, `focusable`, and `tabIndex` in Phosphor 2.1.10 context. Monochrome Phosphor paths keep the semantic color when a supplied inline style also specifies `fill`. Use that context for supported styling options. Set `ref` on `Icon`, geometry such as `viewBox` and `preserveAspectRatio` in the source, and event handlers on the surrounding control. Keep these fields out of the vendor context.

@@ -55,6 +55,15 @@ function Report({ children, ...props }: SvgProps & ChartOptions): ReactNode {
   );
 }
 
+function OverloadedReport(props: SvgProps & { plotType?: 'plain' }): ReactNode;
+function OverloadedReport(
+  props: SvgProps & { plotType: 'chart'; series: readonly number[] },
+): ReactNode;
+function OverloadedReport(props: SvgProps & ChartOptions): ReactNode {
+  return <Report {...props} />;
+}
+
+const overloadedReport = defineGlyph(OverloadedReport);
 const report = defineGlyph(Report);
 
 function Summary({ plotType, ...props }: SvgProps & { plotType?: 'plain' | 'compact' }): ReactNode {
@@ -112,6 +121,9 @@ const valid = [
   <Icon icon={ArrowRightIcon} weight="bold" mirrored ref={svgRef} />,
   <Icon icon={arrow} weight={undefined} />,
   <Icon icon={brand} detail="brand" monochrome />,
+  <Icon icon={OverloadedReport} />,
+  <Icon icon={overloadedReport} plotType={undefined} />,
+  <Icon icon={overloadedReport} plotType="chart" series={[1]} />,
   <Icon icon={report} />,
   <Icon icon={report} plotType="chart" series={[1]} />,
   <Icon icon={OptionalGlyph} compact />,
@@ -127,6 +139,8 @@ const closed = { role: 'img', 'aria-hidden': true, 'aria-describedby': 'hint', t
 const named = { 'aria-label': 'Open' };
 
 const invalid = [
+  // @ts-expect-error Selecting the chart overload requires its series.
+  <Icon icon={overloadedReport} plotType="chart" />,
   // @ts-expect-error Chart mode requires its data.
   <Icon icon={report} plotType="chart" />,
   // @ts-expect-error Undefined cannot satisfy a required source option.

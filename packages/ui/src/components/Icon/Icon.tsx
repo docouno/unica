@@ -115,7 +115,8 @@ type VendorProps<Props, Keys extends PropertyKey> = Props extends unknown
     } & { readonly [K in Exclude<Keys, keyof Props>]?: never }
   : never;
 
-// A caller with a dynamic source needs options accepted by every possible glyph.
+// A dynamic source accepts only shared options. Every glyph also accepts a bare SVG,
+// even when its final overload requires options.
 type SourceOptions<
   G extends GlyphComponent,
   Keys extends PropertyKey = VendorKeys<Parameters<G>[0]>,
@@ -124,7 +125,7 @@ type SourceOptions<
   : (G extends unknown ? (options: VendorProps<Parameters<G>[0], Keys>) => void : never) extends (
         options: infer Options,
       ) => void
-    ? Options
+    ? Options | { readonly [K in Keys]?: undefined }
     : never;
 
 export type IconProps<G extends GlyphSource = GlyphSource> = IconFrame<G> &
