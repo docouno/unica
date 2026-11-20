@@ -9,6 +9,7 @@ export default defineConfig({
     splitting: false,
     fileName: 'style.css',
   },
+  copy: ['src/styles.d.ts'],
   deps: {
     neverBundle: [/^[^./]/],
   },

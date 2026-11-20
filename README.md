@@ -16,22 +16,31 @@ Every launch theme ships in calibrated `Dark` and `Light` presets (`6` presets t
 
 ```tsx
 import '@docouno/unica/styles.css';
-import { THEME_PRESETS } from '@docouno/unica';
+import { THEME_PRESETS, UnicaProvider, type ThemeConfig } from '@docouno/unica';
+
+const theme = { preset: 'frost-dark' } satisfies ThemeConfig;
 
 export function ThemePreview() {
   return (
-    <div data-theme="frost-dark" style={{
-      background: 'var(--bg-canvas)',
-      color: 'var(--fg-primary)',
-      padding: 'var(--space-24)',
-    }}>
-      {THEME_PRESETS.find((preset) => preset.id === 'frost-dark')?.label}
-    </div>
+    <UnicaProvider theme={theme}>
+      <div
+        data-theme={theme.preset}
+        style={{
+          background: 'var(--bg-canvas)',
+          color: 'var(--fg-primary)',
+          padding: 'var(--space-24)',
+        }}
+      >
+        {THEME_PRESETS.find((preset) => preset.id === theme.preset)?.label}
+      </div>
+    </UnicaProvider>
   );
 }
 ```
 
-The library currently provides theme tokens, preset metadata, and a starter Button. New component families are reviewed as live prototypes in the playground before their public package APIs ship. Architectural documents describe the target component contracts.
+The library currently ships theme tokens, preset metadata, `UnicaProvider`, and native scrollbar utilities. The `data-theme` attribute applies the CSS preset, and the provider supplies structural component defaults through React context. See [Structural Component Defaults](docs/concepts/themes-and-roles.md#structural-component-defaults) and [Native Scrollbars](docs/concepts/scrollbars.md).
+
+New component families are reviewed as live prototypes in the playground before their public package APIs ship.
 
 The playground includes all ten [Folio product scenes](docs/compositions/folio.md), assembled from shared visual prototypes. Open `/?item=02-workspace-overview` for the workspace, `/?item=05-rich-editor` for the editor, or `/?item=09-user-preferences` for settings. Inspect them in the six-preset matrix or Live Focus, then use the viewport, text-scale, and direction controls to check the same composition under stress. Scene interactions update local preview state; the prototypes are separate from the package's public API.
 

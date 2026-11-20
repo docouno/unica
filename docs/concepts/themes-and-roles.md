@@ -4,7 +4,7 @@ Unica separates **component roles** (declared in application JSX) from **materia
 
 ## Flat Tokens & Reference Presets
 
-Themes are flat semantic token dictionaries rather than per-component style-prop matrices. One structural stylesheet defines component layout and state hooks, while six reference presets bind values on `:root` or `[data-theme="<preset>"]`:
+Themes are flat semantic token dictionaries. Component styles define layout and state hooks, while six reference presets bind token values on `:root` or `[data-theme="<preset>"]`.
 
 ```ts
 export type ThemePreset =
@@ -25,7 +25,7 @@ export type ThemePreset =
 | **Frost** | `frost-dark`, `frost-light` | Obsidian (`Dark`) and crystalline alabaster (`Light`) neutrals, deep violet CTAs with a vertical contact edge and diffuse ambient light, quiet neutral and danger solids, `1px`-rimmed jewel badges, and `backdrop-filter` frosted glass exclusively on floating overlays. |
 | **Pixel** | `pixel-dark`, `pixel-light` | Carbon-phosphor (`Dark`) and drafting-paper (`Light`) surfaces, `0px` sharp corners (`--radius-factor: 0`), `JetBrains Mono` base typography, `1px` structural borders, `8px` corner registration ticks, coordinate grids, flat signal buttons, and crisp `{6px, 6px}` `blur: 0` block shadows on floating panels. |
 
-`THEME_PRESETS` exposes the six presets and their display metadata. Custom product themes override semantic `--*` variables on a DOM subtree without touching component CSS; there is no exported `ThemeConfig` object API.
+`THEME_PRESETS` exposes the six presets and their display metadata. Custom product themes can override semantic `--*` variables on a DOM subtree.
 
 In-flow Alert surfaces use status soft backgrounds and readable status ink without shadow or backdrop filtering. `--alert-border-width` is 0px in Soft and 1px in Frost/Pixel. `--alert-edge-width` is 0px in Soft/Frost and 2px in Pixel, setting the total logical leading-border width to the larger of the perimeter and edge recipes. The leading edge uses the semantic border color and mirrors in RTL. Status glyphs use the readable soft foreground rather than the general signal color; the latter is not calibrated for every tinted ground. An enclosing overlay owns all glass and elevation.
 
@@ -35,7 +35,7 @@ Neutral Ghost hover uses `--btn-ghost-neutral-bg-hover`, a translucent 10% prima
 
 Frost accent combines diagonal violet color stops, a colored lower edge, and diffuse light that brightens on hover and recedes on press. Its `--btn-primary-backlight-color` supplies a localized light that follows a fine pointer outside the opaque face. `--btn-primary-backlight-reach` enables approach response: `100px` in Frost and `0px` in Soft/Pixel, which also use a transparent light color. Proximity is measured from the nearest edge, including before hover; approach preserves the rest plate and fades with distance. The spot geometry controls the visibly lit area within that sampling range. Pointer light is absent during selection, loading, disabled and active states, on touch, in forced colors, and with reduced motion. Neutral and danger primary actions retain their solid colors and use `--btn-primary-contact-shadow`. Secondary plates use the separate `--btn-secondary-*` recipe, including state shadows and `--btn-secondary-press-transform`. `--btn-material-depth` controls selected inset depth, and `--btn-state-duration` controls theme response timing. Corner geometry never determines material physics.
 
-Material response can require shared input sampling as well as CSS. Keep input services separate from the material recipe: components retain the same action, keyboard, form, and availability semantics across themes. The live prototype demonstrates proximity with a family-local shared sampler; it does not export a provider or establish the future library service API.
+Material response can require shared input sampling as well as CSS. Components retain the same action, keyboard, form, and availability semantics across themes. The library has a document-scoped pointer sampler for family bindings. The live Button prototype demonstrates the approved proximity effect with its own binding and sampler.
 
 Keyboard hints use the neutral `--kbd-cap-bg` and `--kbd-cap-border` tokens. Their `--kbd-cap-shadow` recipe stays inside the keycap: a 1px lower edge in Soft, a 1px lower edge plus a top highlight in Frost, and a 2px lower step in Pixel. Keycaps do not add glass, external elevation, or their own press animation. Nested actions supply contextual foreground and contour over a transparent keycap face while retaining ownership of focus, motion, and availability.
 
@@ -75,6 +75,42 @@ The floating surface owns its perimeter, glass highlight, corner marks and exter
 When space is limited, an inner reading area owns scrolling. Decorative material layers must
 remain fixed to the surface rather than travel with its content. Pointer hit-area bridges
 also stay outside the scroll owner so they cannot create phantom scrollbars.
+
+## Structural Component Defaults
+
+`UnicaProvider` supplies React configuration to its descendants and renders its children directly. `ThemeConfig.preset` identifies a preset, and `ThemeConfig.defaults` supplies structural defaults for that configuration. Set `data-theme={theme.preset}` on the DOM container to apply the CSS preset. CSS-only usage can set the attribute on its own.
+
+```tsx
+import '@docouno/unica/styles.css';
+import { UnicaProvider, type ThemeConfig } from '@docouno/unica';
+import type { ReactNode } from 'react';
+
+const theme = { preset: 'frost-light', defaults: { Icon: { size: 'm' } } } satisfies ThemeConfig;
+
+export function ThemedArea({ children }: { children: ReactNode }) {
+  return (
+    <UnicaProvider theme={theme} overrides={{ Icon: { size: 's' } }}>
+      <main data-theme={theme.preset}>{children}</main>
+    </UnicaProvider>
+  );
+}
+```
+
+For each configurable property the first defined value wins, in this order.
+
+1. The instance prop.
+2. An explicit prop contributed by the containing group.
+3. The provider's effective `overrides`.
+4. The active theme configuration's `defaults`.
+5. The component's built-in default.
+
+A nested provider inherits the parent's theme configuration unless it supplies a complete replacement. Overrides inherit by family and property, with defined inner values winning. Without a provider, React uses the built-in `soft-dark` configuration and component defaults. The server and client can use the same configuration because resolution uses React inputs. Use the existing DOM container to keep the CSS theme aligned with that configuration.
+
+`UnicaComponentDefaults` contains only properties declared configurable by each family. The foundation defines `Icon.size` (`inherit`, `s`, `m`, `l`) for the upcoming Icon family. A component hosting a glyph can pass an explicit size to preserve the host's geometry. Behavior, accessibility attributes, and content remain the responsibility of each component and its caller.
+
+## CSS Layers
+
+Import `@docouno/unica/styles.css` once at the application entry. The stylesheet declares the order `unica.base`, `unica.tokens`, `unica.components`, `unica.utilities`. These layers hold the base reset, theme and context tokens, colocated component rules, and shared utilities, respectively. For normal declarations a later layer wins over an earlier layer. Unlayered application styles can override library styles.
 
 ## Role-Based API Over Decorative `appearance`
 

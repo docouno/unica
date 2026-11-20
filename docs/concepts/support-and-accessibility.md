@@ -30,7 +30,7 @@ Unica enforces two explicit browser tiers across CSS compilation and runtime beh
 
 ## React 19+ & Pure-ESM Package Contract
 
-- **React `>= 19.0.0` peer dependency:** Every component accepts `ref` directly as an ordinary prop (zero `React.forwardRef` wrappers) and is safe under React StrictMode, concurrent rendering, and server-side rendering + hydration (`React.useId()` deterministic IDs, zero module-scope `window` or `document` reads).
+- **React 19 peer dependencies:** Components accept `ref` as an ordinary prop and support StrictMode, concurrent rendering, server rendering, and hydration. Use `React.useId()` for stable IDs and defer DOM access until an element or its document is available.
 - **Pure ESM & `isolatedDeclarations`:** `@docouno/unica` ships pure ES modules (`"type": "module"`) with explicit TypeScript boundary annotations (`isolatedDeclarations: true`), accurate `sideEffects` metadata for CSS assets, and automated release verification via `publint` and `@arethetypeswrong/core`.
 
 ## WCAG Contrast & Non-Color Differentiation
@@ -55,7 +55,8 @@ Follow [WCAG 1.4.11: Non-text Contrast](https://www.w3.org/WAI/WCAG22/Understand
 | `Modal`, `Drawer` | Native `<dialog>` `showModal()` containment | `Tab` / `Shift+Tab` cycle inside dialog; `Escape` fires cancellable `cancel` and restores trigger focus. |
 
 - **Unclipped `:focus-visible` ring:** Keyboard navigation paints a crisp `2px` `--focus-ring-color` outline at `2px` offset (`0px` sharp in `Pixel`, concentric rounded in `Soft` and `Frost`); pointer clicks do not leave sticky rings on action buttons.
-- **Text-field focus:** Pointer editing uses a quieter active edge (`--control-border-focus` for Input) while keyboard navigation retains the explicit contour. Typing after a pointer click must not suddenly enable the navigation contour. Native `:focus-visible` also matches clicked text inputs; distinguish interaction origins when the design requires it, preserve focus return, and retain explicit system-color focus in forced colors.
+- **Text-field focus:** Pointer editing uses a quieter active edge (`--control-border-focus` for Input). Keyboard navigation and unknown focus origins use the explicit contour. The internal focus-origin service tracks meaningful input per owner document. Typing, composition and caret movement preserve the current origin; a composite can signal keyboard navigation while keeping focus on its text field. Components preserve native focus and supply explicit system-color focus in forced colors.
+- **Built-in glyphs:** Control chrome uses pinned decorative SVGs sized by the host and painted with `currentColor`. The host owns the accessible name and state.
 - **Coarse-pointer targets:** Dense desktop (`pointer: fine`) UIs use `size="s"` (`30px`) and `size="m"` (`40px`); touch-primary (`pointer: coarse`) layouts use `size="l"` (`48px`) or expanded hit areas meeting the `44×44px` target floor.
 
 ## Forced Colors & Reduced Motion

@@ -1,6 +1,23 @@
 # Native Scrollbars
 
-Approved design: the [live scrollbar reference](../../apps/playground/src/prototypes/scrollbar/README.md) defines geometry, theme colors and states on ordinary surfaces and inside overlays. The shared CSS recipe lives with the prototypes; it is not a package export.
+Import `@docouno/unica/styles.css` to use `.unica-scrollbar` on a scroll owner. Add `.unica-scrollbar--compact` on the same element for compact geometry. Each scroll owner chooses its own density, including when nested inside a compact region. The playground demonstrates the approved design with its prototype recipe. See the [live scrollbar reference](../../apps/playground/src/prototypes/scrollbar/README.md).
+
+```tsx
+import '@docouno/unica/styles.css';
+
+export function ActivityLog() {
+  return (
+    <section
+      aria-label="Activity log"
+      className="unica-scrollbar unica-scrollbar--compact"
+      style={{ maxBlockSize: '16rem', overflow: 'auto' }}
+      tabIndex={0}
+    >
+      {/* Log entries */}
+    </section>
+  );
+}
+```
 
 The track is transparent. A quiet neutral thumb stays subordinate to text: Soft uses 22% foreground opacity at rest, Frost 16% Dark / 18% Light, and Pixel 40%. Hovering or dragging the thumb makes it clearer. The theme producer owns separate rest, hover and active opacity tokens; component CSS does not branch on theme names.
 

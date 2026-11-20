@@ -14,7 +14,8 @@
     "node": "^24.22.1"
   },
   "files": [
-    "dist"
+    "dist",
+    "THIRD-PARTY-NOTICES.txt"
   ],
   "sideEffects": [
     "*.css",
@@ -25,7 +26,10 @@
       "types": "./dist/index.d.mts",
       "default": "./dist/index.mjs"
     },
-    "./styles.css": "./dist/style.css",
+    "./styles.css": {
+      "types": "./dist/styles.d.ts",
+      "default": "./dist/style.css"
+    },
     "./package.json": "./package.json"
   },
   "peerDependencies": {

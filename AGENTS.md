@@ -43,7 +43,10 @@ Worktrunk project hooks live in `.config/wt.toml` (`pre-start` reserves sticky p
 
 ```text
 unica/
-├── packages/ui/                 @docouno/unica source, CSS tokens, themes, and ESM exports
+├── packages/ui/src/             @docouno/unica CSS entry and public ESM exports
+│   ├── core/                    Theme configuration and shared runtime primitives
+│   ├── components/<Family>/     Library components and colocated family CSS
+│   └── internal/glyphs/         Pinned SVGs for built-in control chrome
 ├── apps/playground/             6-preset Vite workbench
 │   ├── src/workbench/           Portable workbench shell (zero @docouno/* imports)
 │   ├── src/prototypes/<family>/ Component specimens (*.specimen.tsx) and upfront visual prototypes (*.proto.tsx, *.css)
@@ -52,6 +55,8 @@ unica/
 ```
 
 Read [`docs/README.md`](docs/README.md) before modifying public props, tokens, or specimens.
+
+Add public re-exports to `packages/ui/src/index.ts`. Import each family stylesheet from its component module and put its rules in `@layer unica.components`. The package entry loads `styles.css`, which declares the layer order, reset, tokens, and shared utilities. See [CSS Layers](docs/concepts/themes-and-roles.md#css-layers).
 
 Keep temporary renders, logs, probes, and scratch scripts in a task-specific subdirectory of the Git-ignored `.artifacts/` directory inside the current checkout. `make visual` writes to `.artifacts/visual/`. Do not commit task artifacts or store them outside the checkout.
 
