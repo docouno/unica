@@ -391,6 +391,13 @@ html[data-wb-freeze='1'] *::after {
   min-width: 0;
 }
 
+.wb-cell[data-wb-scene-frame] {
+  overflow: hidden;
+  border: 1px solid var(--wb-border-strong);
+  border-radius: 8px;
+  background: var(--wb-card);
+}
+
 .wb-cell-header {
   display: flex;
   align-items: center;
@@ -404,6 +411,13 @@ html[data-wb-freeze='1'] *::after {
   font-family: var(--wb-font);
 }
 
+.wb-cell[data-wb-scene-frame] > .wb-cell-header {
+  min-height: 34px;
+  padding: 5px 11px;
+  border-block-end: 1px solid var(--wb-border);
+  background: var(--wb-bar);
+}
+
 .wb-isolate {
   cursor: pointer;
   text-align: start;
@@ -411,6 +425,10 @@ html[data-wb-freeze='1'] *::after {
 
 .wb-isolate:hover .wb-cell-title {
   color: var(--wb-accent);
+}
+
+.wb-cell[data-wb-scene-frame] > .wb-isolate:hover {
+  background: var(--wb-card-hover);
 }
 
 .wb-cell-title {

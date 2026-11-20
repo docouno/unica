@@ -1,4 +1,4 @@
-import { StrictMode } from 'react';
+import { StrictMode, useState } from 'react';
 import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, expect, it, vi } from 'vitest';
 import { WorkbenchApp } from './WorkbenchApp.js';
@@ -34,11 +34,18 @@ const scene = defineScene({
   group: 'Examples',
   defaultViewport: 1440,
   uses: ['field'],
-  render: () => (
-    <div role="alertdialog" aria-label="Scene confirmation">
-      <button type="button">Scene action</button>
-    </div>
-  ),
+  render: function ExampleScene() {
+    const [edited, setEdited] = useState(false);
+    return (
+      <div role="alertdialog" aria-label="Scene confirmation">
+        <button type="button" onClick={() => setEdited(true)}>
+          Scene action
+        </button>
+        <p>{edited ? 'Edited scene' : 'Initial scene'}</p>
+        <input aria-label="Scene title" defaultValue="Initial title" />
+      </div>
+    );
+  },
 });
 
 const config: WorkbenchConfig = {
@@ -195,6 +202,36 @@ it('returns from a scene to the same Usage context through actual browser histor
     expect(screen.getByRole('heading', { name: scene.title })).toBeTruthy();
   });
   expect(push).toHaveBeenCalledTimes(2);
+});
+
+it('resets every visible scene instance while keeping the current view and focus', () => {
+  const { container } = open('/?item=example-scene&family=haze&vp=360&scale=120&dir=rtl');
+  const href = window.location.href;
+  const historyLength = window.history.length;
+  const boards = screen.getAllByRole('region', { name: /^Haze / }).map((board) => within(board));
+  expect(container.querySelectorAll('[data-wb-scene-frame]')).toHaveLength(2);
+
+  for (const board of boards) {
+    fireEvent.click(board.getByRole('button', { name: 'Scene action' }));
+    fireEvent.change(board.getByRole('textbox', { name: 'Scene title' }), {
+      target: { value: 'Edited title' },
+    });
+    expect(board.getByText('Edited scene')).toBeTruthy();
+  }
+
+  const reset = screen.getByRole('button', { name: 'Reset scene' });
+  reset.focus();
+  fireEvent.click(reset);
+
+  for (const board of boards) {
+    expect(board.getByText('Initial scene')).toBeTruthy();
+    expect(board.getByRole<HTMLInputElement>('textbox', { name: 'Scene title' }).value).toBe(
+      'Initial title',
+    );
+  }
+  expect(window.location.href).toBe(href);
+  expect(window.history.length).toBe(historyLength);
+  expect(document.activeElement).toBe(reset);
 });
 
 it('searches by id and category while preserving scene access and editable shortcuts', () => {

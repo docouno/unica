@@ -27,6 +27,8 @@ make info
 
 Open the reported URL. Search the catalog by name, ID, or category with `/` or `Ctrl+K` (`Cmd+K` on macOS). Filter component entries by `Proto` for visual prototypes or `UI` for shipped families. Scenes have their own catalog section.
 
+Each scene artboard has a visible frame around the composition. **Reset scene** restores the initial state of the scene across the selected themes and keeps the current view settings and URL.
+
 Every component has the same four views.
 
 | View | What to inspect |

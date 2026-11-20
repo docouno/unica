@@ -1,4 +1,4 @@
-import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { Fragment, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import type { MouseEvent, ReactElement, ReactNode, RefObject } from 'react';
 import { Inspector } from './Inspector.js';
 import {
@@ -160,6 +160,7 @@ function sceneArtboard(
 function useCaptureReadiness(
   hostRef: RefObject<HTMLDivElement | null>,
   route: WorkbenchRoute,
+  sceneRevision: number,
 ): void {
   useLayoutEffect(() => {
     const host = hostRef.current;
@@ -216,7 +217,7 @@ function useCaptureReadiness(
       root.removeAttribute('data-wb-freeze');
       window.removeEventListener('resize', waitUntilReady);
     };
-  }, [hostRef, route]);
+  }, [hostRef, route, sceneRevision]);
 }
 
 function shouldFollowInPlace(event: MouseEvent<HTMLAnchorElement>): boolean {
@@ -295,12 +296,14 @@ function Environment({
   update,
   href,
   hasComponent,
+  onResetScene,
 }: {
   readonly route: WorkbenchRoute;
   readonly themes: readonly WorkbenchTheme[];
   readonly update: Update;
   readonly href: Href;
   readonly hasComponent: boolean;
+  readonly onResetScene: (() => void) | undefined;
 }): ReactElement {
   const families = new Map(themes.map((theme) => [theme.family, theme.familyLabel]));
   const familyOptions = [...families, ['all', 'All'] as const];
@@ -440,6 +443,11 @@ function Environment({
           </button>
         )}
       </div>
+      {onResetScene && (
+        <button className="wb-action-btn" type="button" onClick={onResetScene}>
+          Reset scene
+        </button>
+      )}
       <button className="wb-action-btn" type="button" onClick={copyLink}>
         {copyResult?.url === url ? copyResult.status : 'Copy Link'}
       </button>
@@ -453,6 +461,7 @@ export interface WorkbenchAppProps {
 
 export function WorkbenchApp({ config }: WorkbenchAppProps): ReactElement {
   const [route, setRoute] = useState(() => readRoute(window.location.search, config));
+  const [sceneRevision, setSceneRevision] = useState(0);
   const [query, setQuery] = useState('');
   const [status, setStatus] = useState<'All' | ComponentStatus>('All');
   const [catalogOpen, setCatalogOpen] = useState(false);
@@ -463,7 +472,7 @@ export function WorkbenchApp({ config }: WorkbenchAppProps): ReactElement {
   const headingRef = useRef<HTMLHeadingElement>(null);
   const catalogId = useId();
 
-  useCaptureReadiness(rootRef, route);
+  useCaptureReadiness(rootRef, route, sceneRevision);
   useEffect(() => {
     const restore = (): void => {
       setRoute(readRoute(window.location.search, config));
@@ -538,7 +547,7 @@ export function WorkbenchApp({ config }: WorkbenchAppProps): ReactElement {
   }
 
   const component = config.components.find((entry) => entry.id === route.item);
-  const scene = config.scenes.find((entry) => entry.id === route.item);
+  const scene = component ? undefined : config.scenes.find((entry) => entry.id === route.item);
   const notFound =
     !component && !scene && Boolean(route.item || config.components.length || config.scenes.length);
   const selectedThemes = selectThemes(config.themes, route.family, route.scheme);
@@ -561,6 +570,7 @@ export function WorkbenchApp({ config }: WorkbenchAppProps): ReactElement {
           key={theme.id}
           aria-label={theme.label}
           tabIndex={route.raw ? undefined : -1}
+          data-wb-scene-frame={scene ? '' : undefined}
         >
           {route.raw || selectedThemes.length === 1 ? (
             <div className="wb-cell-header">
@@ -618,7 +628,11 @@ export function WorkbenchApp({ config }: WorkbenchAppProps): ReactElement {
       Item “{route.item}” was not found. Choose a component or scene from the catalog.
     </p>
   ) : (
-    renderArtboards((theme) => sceneArtboard(config, route, theme, scene))
+    renderArtboards((theme) => (
+      <Fragment key={`${route.item}:${sceneRevision}`}>
+        {sceneArtboard(config, route, theme, scene)}
+      </Fragment>
+    ))
   );
 
   const identity = {
@@ -771,6 +785,13 @@ export function WorkbenchApp({ config }: WorkbenchAppProps): ReactElement {
             update={update}
             href={createHref}
             hasComponent={Boolean(component)}
+            onResetScene={
+              scene
+                ? () => {
+                    setSceneRevision((previous) => previous + 1);
+                  }
+                : undefined
+            }
           />
         </header>
         {component && (
