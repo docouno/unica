@@ -129,7 +129,7 @@ function handleReset(event: Event): void {
   };
   epochs.pending.add(pending);
 
-  function finish(confirmed: boolean): void {
+  const finish = (confirmed: boolean): void => {
     const result = operation.finish(confirmed);
     if (!result) {
       return;
@@ -155,7 +155,7 @@ function handleReset(event: Event): void {
         subscription.notify(reset && !pending.superseded.has(subscription) ? 'reset' : 'repair');
       }
     }
-  }
+  };
 
   if (witness) {
     witness.hidden = true;
