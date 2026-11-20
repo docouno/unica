@@ -1,0 +1,113 @@
+import {
+  Icon,
+  IconProvider,
+  defineGlyph,
+  type BuiltinIconAdapterName,
+  type GlyphComponent,
+  type GlyphDefinition,
+  type GlyphSource,
+  type IconAdapter,
+  type IconAdapterRenderContext,
+  type IconProps,
+} from '@docouno/unica';
+import { ArrowRightIcon } from '@phosphor-icons/react';
+import { Component, createElement, createRef, type ComponentPropsWithRef } from 'react';
+
+type SvgProps = ComponentPropsWithRef<'svg'>;
+
+export function ProjectSvg({ children, ...props }: SvgProps) {
+  return (
+    <svg {...props} viewBox="0 0 32 16">
+      {children}
+      <path d="M0 0h32v16H0z" />
+    </svg>
+  );
+}
+
+export function FallbackGlyph({ source }: { source?: GlyphSource }) {
+  return <Icon icon={source ?? ArrowRightIcon} usage="slot" size="m" />;
+}
+
+function OptionalGlyph({ compact, ...props }: SvgProps & { readonly compact?: boolean }) {
+  return <svg {...props} viewBox={compact ? '0 0 16 16' : '0 0 32 16'} />;
+}
+
+function RequiresVariant({ variant }: SvgProps & { variant: string }) {
+  return <svg data-variant={variant} />;
+}
+
+function HtmlGlyph(props: ComponentPropsWithRef<'button'>) {
+  return <button {...props} />;
+}
+
+class ClassGlyph extends Component<SvgProps> {
+  override render() {
+    return <svg {...this.props} />;
+  }
+}
+
+const svgRef = createRef<SVGSVGElement>();
+const component: GlyphComponent = ProjectSvg;
+const source: GlyphSource = defineGlyph(component);
+const builtin: BuiltinIconAdapterName = 'phosphor';
+const arrow: GlyphDefinition<typeof ArrowRightIcon> = defineGlyph(ArrowRightIcon, builtin);
+const adapter: IconAdapter = (glyph: GlyphComponent, ctx: IconAdapterRenderContext) =>
+  createElement(glyph, { ...ctx.inputProps, ...ctx.svgProps });
+const optional = defineGlyph(OptionalGlyph, adapter);
+const props: IconProps = { icon: source, ref: svgRef, 'data-probe': 1 };
+
+const valid = [
+  <Icon {...props} style={{ '--project-icon-ink': 'currentColor' }} />,
+  <Icon icon={ArrowRightIcon} weight="bold" mirrored ref={svgRef} />,
+  <Icon icon={arrow} weight={undefined} />,
+  <Icon icon={OptionalGlyph} compact />,
+  <Icon icon={ProjectSvg}>
+    <title>Project</title>
+  </Icon>,
+  <IconProvider adapter={adapter}>
+    <Icon icon={optional} compact usage="slot" />
+  </IconProvider>,
+];
+
+const closed = { role: 'img', 'aria-hidden': true, 'aria-describedby': 'hint', tabIndex: 0 };
+const named = { 'aria-label': 'Open' };
+
+const invalid = [
+  // @ts-expect-error Phosphor weight must be inferred from icon.
+  <Icon icon={ArrowRightIcon} weight="heavy" />,
+  // @ts-expect-error Branding preserves the valid weight union.
+  <Icon icon={arrow} weight="heavy" />,
+  // @ts-expect-error Native SVG has no vendor weight.
+  <Icon icon={ProjectSvg} weight="bold" />,
+  // @ts-expect-error An erased source does not expose arbitrary vendor props.
+  <Icon<ReturnType<typeof JSON.parse>> icon={ProjectSvg} unsupported />,
+  // @ts-expect-error A class ref cannot receive the rendered SVG.
+  <Icon icon={ClassGlyph} />,
+  // @ts-expect-error A class is not a callable glyph source.
+  defineGlyph(ClassGlyph),
+  // @ts-expect-error Required vendor fields are incompatible with slots.
+  <Icon icon={RequiresVariant} variant="solid" />,
+  // @ts-expect-error Glyph source has an HTML root ref.
+  <Icon icon={HtmlGlyph} />,
+  // @ts-expect-error Icon ref points to an SVGSVGElement.
+  <Icon icon={arrow} ref={createRef<HTMLButtonElement>()} />,
+  // @ts-expect-error Icon owns the accessibility and focus attributes.
+  <Icon icon={arrow} {...closed} />,
+  // @ts-expect-error Hyphenated ARIA keys are closed even in direct JSX.
+  <Icon icon={arrow} aria-describedby="hint" />,
+  // @ts-expect-error A slot takes its name from the owner.
+  <Icon icon={arrow} usage="slot" {...named} />,
+  // @ts-expect-error A slot does not accept a title.
+  <Icon icon={arrow} usage="slot">
+    <title>Open</title>
+  </Icon>,
+  // @ts-expect-error Actions belong to the owner.
+  <Icon icon={arrow} onClick={() => undefined} />,
+  // @ts-expect-error The source owns its viewBox.
+  <Icon icon={arrow} viewBox="0 0 1 1" />,
+  // @ts-expect-error Name the public Icon instead of passing vendor alt.
+  <Icon icon={arrow} alt="Open" />,
+];
+
+void valid;
+void invalid;

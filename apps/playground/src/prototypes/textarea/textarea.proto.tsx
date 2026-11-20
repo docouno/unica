@@ -1,8 +1,7 @@
+import { fieldStatusGlyphs } from '../control-glyphs.js';
 import { useId } from 'react';
 import type { ComponentPropsWithRef, CSSProperties, ReactElement, ReactNode } from 'react';
-import { CheckCircleIcon, InfoIcon, WarningCircleIcon, WarningIcon } from '@phosphor-icons/react';
-import { Icon } from '../icon/icon.proto.js';
-import type { GlyphComponent } from '../icon/icon.proto.js';
+import { Icon } from '@docouno/unica';
 import type { ControlSize, FieldStatus, FieldVariant } from '../input/input.proto.js';
 import { useInputFocus } from '../input/input-focus.proto.js';
 import '../input/input.css';
@@ -14,13 +13,6 @@ const statusLabels: Record<Exclude<FieldStatus, 'neutral'>, string> = {
   success: 'Valid',
   warning: 'Review this value',
   danger: 'Needs attention',
-};
-
-const statusIcons: Record<Exclude<FieldStatus, 'neutral'>, GlyphComponent> = {
-  info: InfoIcon,
-  success: CheckCircleIcon,
-  warning: WarningIcon,
-  danger: WarningCircleIcon,
 };
 
 export interface TextareaProps extends ComponentPropsWithRef<'textarea'> {
@@ -72,7 +64,7 @@ export function Textarea({
   const focusScope = useInputFocus();
   const textareaId = id ?? generatedId;
   const effectiveStatus = disabled ? 'neutral' : status;
-  const StatusGlyph = effectiveStatus === 'neutral' ? null : statusIcons[effectiveStatus];
+  const StatusGlyph = effectiveStatus === 'neutral' ? null : fieldStatusGlyphs[effectiveStatus];
   const footerStatus = props.wrap === 'off';
   const feedback =
     message ??
@@ -124,7 +116,7 @@ export function Textarea({
       />
       {StatusGlyph && !footerStatus && (
         <span className="textarea-status-proto" aria-hidden="true">
-          <Icon icon={StatusGlyph} size={size} />
+          <Icon className="textarea-message-glyph" usage="slot" icon={StatusGlyph} size={size} />
         </span>
       )}
     </span>
@@ -162,7 +154,14 @@ export function Textarea({
                   className="form-field-message-proto textarea-message-proto"
                   data-status-glyph={(footerStatus && !!StatusGlyph) || undefined}
                 >
-                  {footerStatus && StatusGlyph && <Icon icon={StatusGlyph} size="inherit" />}
+                  {footerStatus && StatusGlyph && (
+                    <Icon
+                      className="textarea-message-glyph"
+                      usage="slot"
+                      icon={StatusGlyph}
+                      size="inherit"
+                    />
+                  )}
                   <span>{feedback}</span>
                 </div>
               )}

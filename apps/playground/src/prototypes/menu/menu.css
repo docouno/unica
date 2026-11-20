@@ -173,7 +173,7 @@
 }
 
 .menu-item-proto[data-flipped] .menu-branch-proto {
-  scale: -1 1;
+  transform: scaleX(-1);
 }
 
 .menu-item-proto[data-shortcut] {

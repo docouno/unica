@@ -1,9 +1,11 @@
 import { useId } from 'react';
 import type { ComponentPropsWithRef, ReactElement } from 'react';
-import { ArrowUpRightIcon } from '@phosphor-icons/react';
-import { Icon } from '../icon/icon.proto.js';
+import { ArrowUpRightIcon } from '@phosphor-icons/react/ssr';
+import { Icon, defineGlyph } from '@docouno/unica';
 import type { TextSize } from '../text/text.proto.js';
 import './link.css';
+
+const ExternalGlyph = defineGlyph(ArrowUpRightIcon, 'phosphor');
 
 export interface LinkProps extends ComponentPropsWithRef<'a'> {
   readonly tone?: 'accent' | 'neutral' | 'inherit';
@@ -92,7 +94,7 @@ export function Link({
             {'\u2060'}
             <span className="link-proto-external">
               {'\u00a0'}
-              <Icon icon={ArrowUpRightIcon} />
+              <Icon icon={ExternalGlyph} usage="slot" />
             </span>
           </>
         )}

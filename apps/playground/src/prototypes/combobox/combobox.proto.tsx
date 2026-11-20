@@ -1,14 +1,10 @@
+import { BusyGlyph, LockGlyph, SearchGlyph, fieldStatusGlyphs } from '../control-glyphs.js';
+import { CaretDownIcon } from '@phosphor-icons/react';
+import type { Icon as PhosphorIcon } from '@phosphor-icons/react';
 import { useId, useLayoutEffect, useRef, useState } from 'react';
 import type { KeyboardEvent, MouseEvent, ReactElement, ReactNode, RefObject } from 'react';
-import {
-  CaretDownIcon,
-  CircleNotchIcon,
-  LockSimpleIcon,
-  MagnifyingGlassIcon,
-  WarningCircleIcon,
-} from '@phosphor-icons/react';
-import { Icon } from '../icon/icon.proto.js';
-import type { GlyphComponent } from '../icon/icon.proto.js';
+import { Icon } from '@docouno/unica';
+import type { GlyphSource } from '@docouno/unica';
 import { Input } from '../input/input.proto.js';
 import type { InputProps } from '../input/input.proto.js';
 import { Kbd } from '../kbd/kbd.proto.js';
@@ -42,7 +38,7 @@ interface FieldProps extends Pick<
   | 'data-wb-subject'
 > {
   readonly options: readonly Suggestion[];
-  readonly iconLeft?: GlyphComponent | null | undefined;
+  readonly iconLeft?: GlyphSource | null | undefined;
   readonly minimumQueryLength?: number;
   readonly searchState?: 'loading' | 'error';
   readonly listMessage?: ReactNode;
@@ -264,7 +260,9 @@ function SuggestionRows({
         data-active={current || undefined}
         key={option.value}
       >
-        {option.icon && <Icon icon={option.icon} size="s" className="choice-option-icon-proto" />}
+        {option.icon && (
+          <Icon usage="slot" icon={option.icon} size="s" className="choice-option-icon-proto" />
+        )}
         <span className="choice-option-copy-proto">
           <span dir="auto">{option.label}</span>
           {option.description && (
@@ -315,7 +313,7 @@ function SuggestionMessage({
 }: {
   readonly title: ReactNode;
   readonly detail?: ReactNode;
-  readonly icon: GlyphComponent;
+  readonly icon: PhosphorIcon;
   readonly warning?: boolean;
 }): ReactElement {
   return (
@@ -488,7 +486,7 @@ function SuggestionField({
   if (pending) {
     notice = (
       <SuggestionMessage
-        icon={CircleNotchIcon}
+        icon={BusyGlyph.source}
         title="Searching…"
         detail="Keep typing to refine your search."
       />
@@ -496,7 +494,7 @@ function SuggestionField({
   } else if (searchState === 'error') {
     notice = (
       <SuggestionMessage
-        icon={WarningCircleIcon}
+        icon={fieldStatusGlyphs.danger.source}
         warning
         title="Couldn’t load results"
         detail={
@@ -510,7 +508,7 @@ function SuggestionField({
   } else if (belowMinimum) {
     notice = (
       <SuggestionMessage
-        icon={MagnifyingGlassIcon}
+        icon={SearchGlyph.source}
         title="Type to search"
         detail={listMessage ?? `Enter at least ${minimumQueryLength} characters.`}
       />
@@ -518,7 +516,7 @@ function SuggestionField({
   } else if (results.length === 0) {
     notice = query.trim() ? (
       <SuggestionMessage
-        icon={MagnifyingGlassIcon}
+        icon={SearchGlyph.source}
         title={catalog ? 'No matches' : 'No matching suggestions'}
         detail={
           listMessage ??
@@ -529,7 +527,7 @@ function SuggestionField({
       />
     ) : (
       <SuggestionMessage
-        icon={MagnifyingGlassIcon}
+        icon={SearchGlyph.source}
         title={catalog ? 'No options available' : 'No suggestions available'}
         detail={listMessage}
       />
@@ -537,7 +535,7 @@ function SuggestionField({
   } else if (!enabled.length) {
     notice = (
       <SuggestionMessage
-        icon={LockSimpleIcon}
+        icon={LockGlyph.source}
         title="These results are unavailable"
         detail={listMessage}
       />
@@ -622,14 +620,16 @@ function SuggestionField({
             <>
               {pending && (
                 <Icon
-                  icon={CircleNotchIcon}
+                  usage="slot"
+                  icon={BusyGlyph}
                   size={size}
                   className="suggestion-spinner-proto control-spinner-proto"
                 />
               )}
               {readOnly && !disabled ? (
                 <Icon
-                  icon={LockSimpleIcon}
+                  usage="slot"
+                  icon={LockGlyph}
                   size={size}
                   color="muted"
                   className="suggestion-lock-proto"
@@ -718,7 +718,7 @@ export function Combobox({
       initialSelection={defaultSelection}
       initialText={previewDraft}
       onTextChange={onQueryChange}
-      iconLeft={props.iconLeft === null ? undefined : (props.iconLeft ?? MagnifyingGlassIcon)}
+      iconLeft={props.iconLeft === null ? undefined : (props.iconLeft ?? SearchGlyph)}
     />
   );
 }

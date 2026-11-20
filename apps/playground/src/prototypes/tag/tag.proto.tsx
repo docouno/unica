@@ -1,8 +1,8 @@
+import { CloseGlyph } from '../control-glyphs.js';
 import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import type { ComponentPropsWithRef, ReactElement, Ref, RefObject } from 'react';
-import { XIcon } from '@phosphor-icons/react';
-import { Icon } from '../icon/icon.proto.js';
-import type { GlyphComponent } from '../icon/icon.proto.js';
+import { Icon } from '@docouno/unica';
+import type { GlyphSource } from '@docouno/unica';
 import type { DisplayStatus } from '../badge/badge.styles.js';
 import { statusStyle } from '../badge/badge.styles.js';
 import { Tooltip } from '../tooltip/tooltip.proto.js';
@@ -15,7 +15,7 @@ export type TagPreviewState = 'hover' | 'active' | 'focus';
 export interface TagProps extends Omit<ComponentPropsWithRef<'span'>, 'onClick'> {
   readonly status?: DisplayStatus;
   readonly size?: TagSize;
-  readonly iconLeft?: GlyphComponent;
+  readonly iconLeft?: GlyphSource;
   readonly onRemove: () => void;
   readonly removeLabel: string;
   readonly disabled?: boolean;
@@ -109,7 +109,7 @@ export function Tag({
     >
       {iconLeft && (
         <span className="tag-icon-proto" aria-hidden="true">
-          <Icon icon={iconLeft} size={size} />
+          <Icon usage="slot" icon={iconLeft} size={size} />
         </span>
       )}
       <span ref={labelRef} className="tag-label-proto">
@@ -145,7 +145,11 @@ export function Tag({
         }}
       >
         <span className="tag-remove-visual-proto" aria-hidden="true">
-          {pending ? <Spinner size="inherit" tone="inherit" /> : <Icon icon={XIcon} />}
+          {pending ? (
+            <Spinner size="inherit" tone="inherit" />
+          ) : (
+            <Icon usage="slot" icon={CloseGlyph} />
+          )}
         </span>
       </button>
       {typeof children === 'string' && (
@@ -166,7 +170,7 @@ export interface TagGroupItem {
   readonly id: string;
   readonly label: string;
   readonly removeLabel: string;
-  readonly iconLeft?: GlyphComponent;
+  readonly iconLeft?: GlyphSource;
   readonly status?: DisplayStatus;
   readonly disabled?: boolean;
   readonly pending?: boolean;

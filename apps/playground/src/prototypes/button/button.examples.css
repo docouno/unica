@@ -112,3 +112,7 @@
   inline-size: 100%;
   max-inline-size: 320px;
 }
+
+.button-example-forward-glyph:dir(rtl) {
+  scale: -1 1;
+}

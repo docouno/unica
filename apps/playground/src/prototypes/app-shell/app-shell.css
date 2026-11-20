@@ -517,8 +517,8 @@
   cursor: pointer;
 }
 
-.app-shell-nav-row > .icon-proto,
-.app-shell-nav-group > summary > .icon-proto {
+.app-shell-nav-row > .app-shell-nav-glyph,
+.app-shell-nav-group > summary > .app-shell-nav-glyph {
   color: var(--fg-muted);
   font-size: 15px;
 }
@@ -550,7 +550,7 @@
   padding-inline: var(--space-8);
 }
 
-.app-shell-navigation[data-tree] .app-shell-nav-row[data-nested] > .icon-proto {
+.app-shell-navigation[data-tree] .app-shell-nav-row[data-nested] > .app-shell-nav-glyph {
   font-size: 14px;
 }
 

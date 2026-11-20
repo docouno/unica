@@ -31,7 +31,7 @@ import {
 } from '../prototypes/empty/empty.proto.js';
 import { ToastCard } from '../prototypes/toast/toast.proto.js';
 import { Spinner } from '../prototypes/progress/progress.proto.js';
-import { Icon } from '../prototypes/icon/icon.proto.js';
+import { Icon } from '@docouno/unica';
 import { Input } from '../prototypes/input/input.proto.js';
 import { List, ListItem } from '../prototypes/list/list.proto.js';
 import { Text } from '../prototypes/text/text.proto.js';
@@ -135,7 +135,11 @@ function ExtensionsScene(): ReactElement {
                       <span className="folio-connector-icon">
                         <Icon icon={BooksIcon} />
                       </span>
-                      <Icon icon={ArrowsLeftRightIcon} />
+                      <Icon
+                        usage="slot"
+                        icon={ArrowsLeftRightIcon}
+                        className="folio-connector-arrow"
+                      />
                       <span className="folio-connector-icon">
                         <Icon icon={GithubLogoIcon} />
                       </span>
@@ -186,7 +190,11 @@ function ExtensionsScene(): ReactElement {
                       <span className="folio-connector-icon">
                         <Icon icon={BooksIcon} />
                       </span>
-                      <Icon icon={ArrowsLeftRightIcon} />
+                      <Icon
+                        usage="slot"
+                        icon={ArrowsLeftRightIcon}
+                        className="folio-connector-arrow"
+                      />
                       <span className="folio-connector-icon">
                         <Icon icon={PhoneCallIcon} />
                       </span>

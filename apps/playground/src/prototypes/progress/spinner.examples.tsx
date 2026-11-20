@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import type { ReactElement } from 'react';
 import { CheckIcon, WarningCircleIcon } from '@phosphor-icons/react';
 import { Button } from '../button/button.proto.js';
-import { Icon } from '../icon/icon.proto.js';
+import { Icon } from '@docouno/unica';
 import { Spinner } from './progress.proto.js';
 import './progress.examples.css';
 

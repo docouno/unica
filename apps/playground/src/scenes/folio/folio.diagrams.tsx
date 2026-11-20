@@ -1,6 +1,6 @@
 import type { ReactElement } from 'react';
 import { ArrowRightIcon } from '@phosphor-icons/react';
-import { Icon } from '../../prototypes/icon/icon.proto.js';
+import { Icon } from '@docouno/unica';
 
 export function DatabaseTopology(): ReactElement {
   return (

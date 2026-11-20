@@ -1,0 +1,18 @@
+@layer unica.components {
+  .unica-icon {
+    display: inline-block;
+    flex: none;
+    vertical-align: -0.125em;
+  }
+
+  .unica-icon[data-unica-icon-directional]:dir(rtl),
+  .unica-icon[data-unica-icon-mirrored]:not([data-unica-icon-directional]) {
+    scale: -1 1;
+  }
+
+  @media (forced-colors: active) {
+    .unica-icon {
+      color: inherit !important;
+    }
+  }
+}

@@ -23,10 +23,14 @@ import {
   XCircleIcon,
   XIcon,
 } from '@phosphor-icons/react';
-import { Text } from '../text/text.proto.js';
-import { Title } from '../title/title.proto.js';
-import { Icon, VectorGlyph } from './icon.proto.js';
-import type { GlyphComponent, GlyphProps, IconColor, IconSize } from './icon.proto.js';
+import { Text } from '../../prototypes/text/text.proto.js';
+import { Title } from '../../prototypes/title/title.proto.js';
+import { Icon } from '@docouno/unica';
+import type { GlyphComponent, IconProps } from '@docouno/unica';
+
+type IconSize = NonNullable<IconProps['size']>;
+type IconColor = NonNullable<IconProps['color']>;
+import { WideGlyph } from './icon.glyph.js';
 import './icon.examples.css';
 
 const tiers: readonly Exclude<IconSize, 'inherit'>[] = ['s', 'm', 'l'];
@@ -43,14 +47,6 @@ const roles: readonly { color: IconColor; glyph: GlyphComponent }[] = [
   { color: 'warning', glyph: WarningCircleIcon },
   { color: 'danger', glyph: XCircleIcon },
 ];
-
-function WideGlyph(props: GlyphProps): ReactElement {
-  return (
-    <VectorGlyph {...props} viewBox="0 0 32 16">
-      <path fill="none" stroke="currentColor" strokeWidth="2" d="M1 1h30v14H1zM7 8h18" />
-    </VectorGlyph>
-  );
-}
 
 export function SizeExamples(): ReactElement {
   return (

@@ -7,7 +7,7 @@ import { Button } from '../prototypes/button/button.proto.js';
 import { Card } from '../prototypes/card/card.proto.js';
 import { Alert, AlertTitle, AlertDescription } from '../prototypes/alert/alert.proto.js';
 import { ToastCard } from '../prototypes/toast/toast.proto.js';
-import { Icon } from '../prototypes/icon/icon.proto.js';
+import { Icon } from '@docouno/unica';
 import { Tooltip } from '../prototypes/tooltip/tooltip.proto.js';
 import { Link } from '../prototypes/link/link.proto.js';
 import { List, ListItem } from '../prototypes/list/list.proto.js';

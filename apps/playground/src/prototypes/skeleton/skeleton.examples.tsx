@@ -4,7 +4,7 @@ import { ArrowClockwiseIcon, FileTextIcon, WarningCircleIcon } from '@phosphor-i
 import { Avatar } from '../avatar/avatar.proto.js';
 import { Button } from '../button/button.proto.js';
 import { Card, CardMedia } from '../card/card.proto.js';
-import { Icon } from '../icon/icon.proto.js';
+import { Icon } from '@docouno/unica';
 import { Text } from '../text/text.proto.js';
 import type { TextSize } from '../text/text.proto.js';
 import { Title } from '../title/title.proto.js';

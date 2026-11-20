@@ -1,7 +1,7 @@
 import { useId, useState } from 'react';
 import type { ReactElement } from 'react';
 import { CheckCircleIcon, PauseCircleIcon, WarningCircleIcon } from '@phosphor-icons/react';
-import { Icon } from '../icon/icon.proto.js';
+import { Icon } from '@docouno/unica';
 import { Button } from '../button/button.proto.js';
 import { Progress } from './progress.proto.js';
 import './progress.examples.css';

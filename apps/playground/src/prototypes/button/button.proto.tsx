@@ -1,7 +1,7 @@
 import { useCallback, useLayoutEffect, useRef } from 'react';
 import type { ButtonHTMLAttributes, ReactElement, Ref } from 'react';
-import { Icon } from '../icon/icon.proto.js';
-import type { GlyphComponent } from '../icon/icon.proto.js';
+import { Icon } from '@docouno/unica';
+import type { GlyphSource } from '@docouno/unica';
 import { bindButtonPointerLight } from './button-light.proto.js';
 import './button.css';
 
@@ -15,8 +15,8 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   readonly tone?: ButtonTone;
   readonly size?: ButtonSize;
   readonly width?: 'auto' | 'full';
-  readonly iconLeft?: GlyphComponent;
-  readonly iconRight?: GlyphComponent;
+  readonly iconLeft?: GlyphSource;
+  readonly iconRight?: GlyphSource;
   readonly loading?: boolean;
   readonly pressed?: boolean | undefined;
   readonly onPressedChange?: (pressed: boolean) => void;
@@ -115,11 +115,13 @@ export function Button({
       }}
     >
       <span className="button-proto-content">
-        {iconLeft && <Icon icon={iconLeft} size={size} />}
+        {iconLeft && (
+          <Icon className="button-leading-glyph" usage="slot" icon={iconLeft} size={size} />
+        )}
         {children !== undefined && children !== null && (
           <span className="button-proto-label">{children}</span>
         )}
-        {iconRight && <Icon icon={iconRight} size={size} />}
+        {iconRight && <Icon usage="slot" icon={iconRight} size={size} />}
       </span>
       {loading && <span className="button-proto-spinner" aria-hidden="true" />}
     </button>
@@ -130,7 +132,7 @@ export interface IconButtonProps extends Omit<
   ButtonProps,
   'children' | 'iconLeft' | 'iconRight' | 'width'
 > {
-  readonly icon: GlyphComponent;
+  readonly icon: GlyphSource;
   readonly 'aria-label': string;
 }
 

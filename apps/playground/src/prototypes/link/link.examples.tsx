@@ -1,7 +1,7 @@
 import { useId, useSyncExternalStore } from 'react';
 import type { ReactElement, ReactNode } from 'react';
 import { ArrowRightIcon, FileTextIcon } from '@phosphor-icons/react';
-import { Icon } from '../icon/icon.proto.js';
+import { Icon } from '@docouno/unica';
 import { Text } from '../text/text.proto.js';
 import type { TextSize } from '../text/text.proto.js';
 import { Title } from '../title/title.proto.js';

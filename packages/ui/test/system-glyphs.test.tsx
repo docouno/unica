@@ -1,7 +1,7 @@
 import { cleanup, render, screen } from '@testing-library/react';
-import { createContext } from 'react';
 import type { ReactElement } from 'react';
 import { afterEach, expect, it } from 'vitest';
+import { IconProvider } from '../src/index.js';
 import {
   AlertDangerGlyph,
   AlertInfoGlyph,
@@ -18,8 +18,6 @@ import {
   MinusGlyph,
   UploadGlyph,
 } from '../src/internal/glyphs/index.js';
-
-const ApplicationIconContext = createContext('default');
 
 function GlyphSet(): ReactElement {
   return (
@@ -55,11 +53,11 @@ it('renders the same decorative glyphs in different application contexts', () =>
       <div data-testid="plain" style={{ color: 'rgb(24, 56, 80)', fontSize: 14 }}>
         <GlyphSet />
       </div>
-      <ApplicationIconContext value="application override">
+      <IconProvider adapter={() => null}>
         <div data-testid="configured" style={{ color: 'rgb(80, 56, 24)', fontSize: 16 }}>
           <GlyphSet />
         </div>
-      </ApplicationIconContext>
+      </IconProvider>
     </>,
   );
 

@@ -1,6 +1,6 @@
 import type { ComponentPropsWithRef, ReactElement, ReactNode } from 'react';
-import { Icon } from '../icon/icon.proto.js';
-import type { GlyphComponent } from '../icon/icon.proto.js';
+import { Icon } from '@docouno/unica';
+import type { GlyphSource } from '@docouno/unica';
 import './blockquote.css';
 
 export type BlockquoteTone = 'neutral' | 'info' | 'success' | 'warning' | 'danger';
@@ -13,8 +13,8 @@ export interface BlockquoteProps extends Omit<
   readonly tone?: BlockquoteTone;
   readonly attribution?: ReactNode;
   readonly citeUrl?: string;
-  readonly iconLeft?: GlyphComponent;
-  readonly iconRight?: GlyphComponent;
+  readonly iconLeft?: GlyphSource;
+  readonly iconRight?: GlyphSource;
 }
 
 // The anatomy demonstrates the reading experience, not a final package API.
@@ -46,13 +46,13 @@ export function Blockquote({
       <div className="blockquote-body-proto">
         {iconLeft && (
           <span className="blockquote-glyph-proto" aria-hidden="true">
-            <Icon icon={iconLeft} size={size} />
+            <Icon usage="slot" icon={iconLeft} size={size} />
           </span>
         )}
         <blockquote cite={citeUrl}>{children}</blockquote>
         {iconRight && (
           <span className="blockquote-glyph-proto blockquote-glyph-end-proto" aria-hidden="true">
-            <Icon icon={iconRight} size={size} />
+            <Icon usage="slot" icon={iconRight} size={size} />
           </span>
         )}
       </div>

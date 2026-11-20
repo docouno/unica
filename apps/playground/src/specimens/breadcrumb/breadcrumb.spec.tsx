@@ -2,7 +2,7 @@ import { previewProps, previewText } from '../preview-code.js';
 import type { ReactElement, ReactNode } from 'react';
 import { CaretRightIcon, HouseIcon } from '@phosphor-icons/react';
 import { defineComponent } from '../../workbench/types.js';
-import { Icon } from '../../prototypes/icon/icon.proto.js';
+import { Icon } from '@docouno/unica';
 import { PopoverContent } from '../../prototypes/popover/popover.proto.js';
 import { Title } from '../../prototypes/title/title.proto.js';
 import {

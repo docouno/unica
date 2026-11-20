@@ -1,7 +1,7 @@
 import { useId, useState } from 'react';
 import type { ComponentPropsWithRef, CSSProperties, ReactElement, ReactNode } from 'react';
-import { UserIcon } from '@phosphor-icons/react';
-import { Icon } from '../icon/icon.proto.js';
+import { UserGlyph } from '../control-glyphs.js';
+import { Icon } from '@docouno/unica';
 import { AvatarNameHint } from './avatar-tooltip.proto.js';
 import './avatar.css';
 
@@ -72,7 +72,7 @@ export function Avatar({
   ...props
 }: AvatarProps): ReactElement {
   const initials = initialsFor(name, size === '2xs');
-  const mark = fallback ?? (initials || <Icon icon={UserIcon} />);
+  const mark = fallback ?? (initials || <Icon usage="slot" icon={UserGlyph} />);
   return (
     <span
       {...props}

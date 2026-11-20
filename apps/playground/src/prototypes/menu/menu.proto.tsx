@@ -1,9 +1,9 @@
+import { CaretLeftGlyph, CaretRightGlyph, CheckGlyph } from '../control-glyphs.js';
 import { useId, useLayoutEffect, useRef } from 'react';
 import type { ComponentPropsWithRef, ReactElement } from 'react';
-import { CaretLeftIcon, CaretRightIcon, CheckIcon } from '@phosphor-icons/react';
 import { menuRows } from './menu.entries.js';
 import type { MenuEntry, MenuRow, MenuSize } from './menu.entries.js';
-import { Icon } from '../icon/icon.proto.js';
+import { Icon } from '@docouno/unica';
 import { Kbd } from '../kbd/kbd.proto.js';
 import '../scrollbar/scrollbar.css';
 import './menu.css';
@@ -92,11 +92,11 @@ function MenuRowView({
           (item.type === 'radio' ? (
             <span className="menu-radio-dot-proto" />
           ) : (
-            <Icon icon={CheckIcon} className="menu-glyph-proto" />
+            <Icon usage="slot" icon={CheckGlyph} className="menu-glyph-proto" />
           ))}
       </span>
       <span className="menu-icon-slot-proto" aria-hidden="true">
-        {item.icon && <Icon icon={item.icon} className="menu-glyph-proto" />}
+        {item.icon && <Icon usage="slot" icon={item.icon} className="menu-glyph-proto" />}
       </span>
       <span className="menu-copy-proto">
         <span id={id} className="menu-label-proto">
@@ -108,7 +108,9 @@ function MenuRowView({
           </span>
         )}
       </span>
-      {branch && <Icon icon={CaretRightIcon} className="menu-branch-proto" directional />}
+      {branch && (
+        <Icon usage="slot" icon={CaretRightGlyph} className="menu-branch-proto" directional />
+      )}
       {shortcut && <MenuShortcut keys={shortcut} />}
     </>
   );
@@ -241,7 +243,7 @@ export function MenuBack({
 }): ReactElement {
   const content = (
     <>
-      <Icon icon={CaretLeftIcon} directional size="s" />
+      <Icon usage="slot" icon={CaretLeftGlyph} directional size="s" />
       <span>Back</span>
       <span className="menu-back-title-proto" aria-hidden="true">
         {title}

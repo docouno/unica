@@ -241,7 +241,7 @@
   overflow: visible;
 }
 
-.input-shell-proto > .icon-proto,
+.input-shell-proto > .input-leading-glyph,
 .input-status-proto,
 .control-spinner-proto {
   flex: 0 0 auto;
@@ -322,7 +322,15 @@
   background: transparent;
 }
 
-.input-shell-proto:has(.input-native-proto:disabled) :is(.input-affix-proto, .icon-proto),
+.input-shell-proto:has(.input-native-proto:disabled)
+  :is(
+    .input-affix-proto,
+    .input-leading-glyph,
+    .input-trailing-proto,
+    .input-clear-glyph,
+    .input-status-proto svg,
+    .control-spinner-proto
+  ),
 .input-native-proto:disabled::placeholder {
   color: var(--fg-disabled) !important;
 }

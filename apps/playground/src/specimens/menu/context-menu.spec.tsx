@@ -13,7 +13,7 @@ import { defineComponent } from '../../workbench/types.js';
 import { Checkbox } from '../../prototypes/binary-controls/binary-controls.proto.js';
 import { IconButton } from '../../prototypes/button/button.proto.js';
 import { Card } from '../../prototypes/card/card.proto.js';
-import { Icon } from '../../prototypes/icon/icon.proto.js';
+import { Icon } from '@docouno/unica';
 import { Input } from '../../prototypes/input/input.proto.js';
 import { Link } from '../../prototypes/link/link.proto.js';
 import { Text } from '../../prototypes/text/text.proto.js';

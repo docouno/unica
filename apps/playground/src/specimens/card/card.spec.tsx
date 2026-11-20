@@ -16,7 +16,7 @@ import { Text } from '../../prototypes/text/text.proto.js';
 import { Badge } from '../../prototypes/badge/badge.proto.js';
 import { Button, IconButton } from '../../prototypes/button/button.proto.js';
 import { Checkbox } from '../../prototypes/binary-controls/binary-controls.proto.js';
-import { Icon } from '../../prototypes/icon/icon.proto.js';
+import { Icon } from '@docouno/unica';
 import { Skeleton, SkeletonText } from '../../prototypes/skeleton/skeleton.proto.js';
 import { PopoverContent } from '../../prototypes/popover/popover.proto.js';
 import {

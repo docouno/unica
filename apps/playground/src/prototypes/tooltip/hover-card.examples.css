@@ -24,7 +24,7 @@
 .hover-demo-kicker > bdi {
   min-inline-size: 0;
 }
-.hover-demo-kicker > .icon-proto {
+.hover-demo-kicker > .hover-demo-glyph {
   flex: none;
 }
 .hover-demo-facts {
@@ -60,7 +60,7 @@
   min-block-size: 88px;
   align-content: center;
 }
-.hover-demo-unavailable > .icon-proto {
+.hover-demo-unavailable > .hover-demo-glyph {
   color: var(--fg-secondary);
 }
 .hover-demo-constrained {
