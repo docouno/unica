@@ -105,7 +105,7 @@ function useDatePanel(
       const topOffset = viewport?.offsetTop ?? 0;
       const leftOffset = viewport?.offsetLeft ?? 0;
       const start =
-        getComputedStyle(button).direction === 'rtl' ? bounds.right - size.width : bounds.left;
+        getComputedStyle(boundary).direction === 'rtl' ? bounds.right - size.width : bounds.left;
       element.style.left = `${Math.max(leftOffset + 8, Math.min(start, leftOffset + width - size.width - 8))}px`;
       const above = Math.max(0, bounds.top - topOffset - 16);
       const below = Math.max(0, height + topOffset - bounds.bottom - 16);
@@ -192,6 +192,8 @@ export interface DatePickerProps extends Omit<
   readonly previewText?: string | undefined;
   /** Keeps the open panel in document flow for side-by-side design inspection. */
   readonly previewInline?: boolean | undefined;
+  /** Marks the field, trigger, and panel independently in design inspection. */
+  readonly subjectAttributes?: Readonly<Record<`data-${string}`, string>> | undefined;
 }
 
 export function DatePicker({
@@ -218,6 +220,7 @@ export function DatePicker({
   previewState,
   previewText,
   previewInline,
+  subjectAttributes,
   className = '',
   ...props
 }: DatePickerProps): ReactElement {
@@ -286,6 +289,7 @@ export function DatePicker({
       data-preview-inline={previewInline || undefined}
     >
       <Input
+        {...subjectAttributes}
         id={id}
         label={label}
         description={description}
@@ -359,6 +363,7 @@ export function DatePicker({
               </button>
             )}
             <button
+              {...subjectAttributes}
               ref={trigger}
               className="date-action-proto"
               type="button"
@@ -391,6 +396,7 @@ export function DatePicker({
       />
       {open && !disabled && (
         <DatePickerPanel
+          {...subjectAttributes}
           id={`${id}-panel`}
           floating={!previewInline}
           panelRef={panel}
@@ -454,6 +460,7 @@ export function DateRangePicker({
   previewState,
   previewText,
   previewInline,
+  subjectAttributes,
   panelTitle = 'Choose date range',
   minRangeDays = 1,
   maxRangeDays,
@@ -536,6 +543,7 @@ export function DateRangePicker({
       data-preview-inline={previewInline || undefined}
     >
       <Input
+        {...subjectAttributes}
         id={id}
         label={label}
         description={description}
@@ -611,6 +619,7 @@ export function DateRangePicker({
               </button>
             )}
             <button
+              {...subjectAttributes}
               ref={trigger}
               className="date-action-proto"
               type="button"
@@ -643,6 +652,7 @@ export function DateRangePicker({
       />
       {open && !disabled && (
         <DatePickerPanel
+          {...subjectAttributes}
           id={`${id}-panel`}
           floating={!previewInline}
           panelRef={panel}

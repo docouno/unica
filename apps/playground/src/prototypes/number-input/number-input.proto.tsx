@@ -20,6 +20,7 @@ export interface NumberInputProps extends Omit<
   ComponentPropsWithRef<'input'>,
   'type' | 'size' | 'prefix' | 'value' | 'defaultValue' | 'min' | 'max' | 'step' | 'width'
 > {
+  readonly 'data-wb-subject'?: string | undefined;
   readonly value?: number | '' | undefined;
   readonly defaultValue?: number | '' | undefined;
   readonly min?: number | undefined;
@@ -123,6 +124,7 @@ export function NumberInput({
   previewState,
   previewAction,
   ref,
+  'data-wb-subject': subject,
   ...props
 }: NumberInputProps): ReactElement {
   const generatedId = useId();
@@ -251,6 +253,7 @@ export function NumberInput({
     <span
       ref={scope}
       data-input-focus-scope=""
+      data-wb-subject={subject}
       className={`input-shell-proto number-input-proto ${className}`}
       data-size={size}
       data-width={width}

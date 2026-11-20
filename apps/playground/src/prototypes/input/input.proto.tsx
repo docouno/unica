@@ -87,6 +87,7 @@ export function FormField({
 }
 
 export interface InputProps extends Omit<ComponentPropsWithRef<'input'>, 'size' | 'prefix'> {
+  readonly 'data-wb-subject'?: string | undefined;
   readonly size?: ControlSize | undefined;
   readonly variant?: FieldVariant | undefined;
   readonly status?: FieldStatus | undefined;
@@ -136,6 +137,7 @@ export function Input({
   previewState,
   previewClearState,
   onCompositionStart,
+  'data-wb-subject': subject,
   onCompositionEnd,
   ...props
 }: InputProps): ReactElement {
@@ -158,6 +160,7 @@ export function Input({
     <span
       ref={focusScope}
       data-input-focus-scope=""
+      data-wb-subject={subject}
       className={`input-shell-proto ${className}`}
       data-size={size}
       data-variant={variant}

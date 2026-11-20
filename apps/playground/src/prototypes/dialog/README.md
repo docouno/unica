@@ -2,7 +2,7 @@
 
 ## Modal
 
-Open **Modal** in the Workbench. The editor combines independent width and density controls with ready, field error, pending and retry previews. The other sections show a destructive confirmation, scrolling and short-window fallback, a live draft guard, and an inspection dialog with a dismissible Toast while the panel is open. Edit the project name or description before requesting close in the draft guard. **Folio → Invite & Access Modal** shows the same parts in a larger workspace form.
+Open **Modal** in the Workbench. The editor combines independent width and density controls with ready, field error, pending and retry previews. Cases and Usage show a destructive confirmation, scrolling and short-window fallback, a live draft guard, and an inspection dialog with a dismissible Toast while the panel is open. Edit the project name or description before requesting close in the draft guard. **Folio → Invite & Access Modal** shows the same parts in a larger workspace form.
 
 ### Surface and anatomy
 

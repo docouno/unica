@@ -40,7 +40,7 @@ Close has a quiet secondary glyph at rest, a neutral hover fill, a stronger neut
 - Clamp width to the available viewport, then height to the chosen side. Scroll the body; keep the title, Close and actions reachable. Reposition on viewport/keyboard resize and scroll. Close when the source leaves the visible viewport instead of leaving an orphaned panel.
 - At extreme heights where fixed header/footer cannot fit, allow the whole panel to scroll as a final escape. Never clip interactive content or invent a modal mode. The keyboard may require scrolling the focused field into view.
 
-The live framed area deliberately acts as a small available viewport even in Live Focus. It demonstrates flip/shift and a native top layer. The Overflow section pins a 360px height limit for repeatable body-scroll inspection. It is not a claim of complete mobile keyboard, safe-area, zoom or production positioning coverage.
+The live framed area deliberately acts as a small available viewport even with a single artboard. It demonstrates flip/shift and a native top layer. The Overflow case pins a 360px height limit for repeatable body-scroll inspection. It is not a claim of complete mobile keyboard, safe-area, zoom or production positioning coverage.
 
 The body uses the shared [native scrollbar recipe](../scrollbar/README.md), with a transparent track and compact width. The outer panel does not scroll in the normal layout. Its decorative layers do not extend the scrollable bounds; the browser's default `overflow: auto` on `[popover]` is explicitly reset.
 

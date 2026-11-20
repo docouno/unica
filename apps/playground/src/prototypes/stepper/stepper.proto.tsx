@@ -14,6 +14,7 @@ export interface StepperStepProps {
 }
 
 export interface StepperProps {
+  readonly 'data-wb-subject'?: '';
   readonly label: string;
   readonly value: string | null;
   readonly children: ReactElement<StepperStepProps> | readonly ReactElement<StepperStepProps>[];
@@ -40,6 +41,7 @@ export function Stepper({
   size = 'm',
   layout = 'responsive',
   onValueChange,
+  'data-wb-subject': subject,
 }: StepperProps): ReactElement | null {
   const listId = useId();
   const currentEntry = useRef<HTMLLIElement>(null);
@@ -87,7 +89,13 @@ export function Stepper({
   }
 
   return (
-    <div className="stepper-proto" role="group" aria-label={label} data-size={size}>
+    <div
+      className="stepper-proto"
+      role="group"
+      aria-label={label}
+      data-size={size}
+      data-wb-subject={subject}
+    >
       <div className="stepper-view-proto" data-layout={layout}>
         <div className="stepper-compact-proto" data-expanded={showMap || undefined}>
           <div className="stepper-segments-proto" aria-hidden="true">

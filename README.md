@@ -42,7 +42,9 @@ The library currently ships theme tokens, preset metadata, `UnicaProvider`, and 
 
 New component families are reviewed as live prototypes in the playground before their public package APIs ship.
 
-The playground includes all ten [Folio product scenes](docs/compositions/folio.md), assembled from shared visual prototypes. Open `/?item=02-workspace-overview` for the workspace, `/?item=05-rich-editor` for the editor, or `/?item=09-user-preferences` for settings. Inspect them in the six-preset matrix or Live Focus, then use the viewport, text-scale, and direction controls to check the same composition under stress. Scene interactions update local preview state; the prototypes are separate from the package's public API.
+The [Workbench](docs/workbench.md) has Playground, Matrix, Cases, and Usage views for each component. Choose Family and Scheme to compare themes or isolate one artboard, then inspect actual component bounds and interactions at different widths, text scales, and reading directions.
+
+The playground also includes ten [Folio scenes](docs/compositions/folio.md) assembled from shared visual prototypes. Open `/?item=02-workspace-overview` for the workspace, `/?item=05-rich-editor` for the editor, or `/?item=09-user-preferences` for settings. Component Usage views link to scenes that render the component. Scene interactions update local preview state.
 
 ## Repository Structure
 
@@ -86,7 +88,7 @@ make dev app=playground
 ## Documentation
 
 - [Documentation Index](docs/README.md) — themes, geometry, overlays, forms, and browser support
-- [Workbench Workflow](docs/workbench.md) — author prototypes, inspect six presets, and render screenshots
+- [Workbench Workflow](docs/workbench.md) — author specimens, compare themes, and capture a specific view
 - [Folio Composition](docs/compositions/folio.md) — baseline product scenes across `Soft`, `Frost`, and `Pixel`
 - [Contributor & Agent Guide](AGENTS.md) — architectural invariants and verification workflow
 - [Devkit Runtime Guide](.devkit/runtime/GUIDE.md) — container toolchain, dependency workflows, and packaging

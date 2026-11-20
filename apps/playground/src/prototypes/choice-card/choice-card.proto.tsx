@@ -21,6 +21,7 @@ export interface ChoiceCardProps extends Omit<
   ComponentPropsWithRef<'input'>,
   'type' | 'size' | 'children'
 > {
+  readonly 'data-wb-subject'?: string | undefined;
   readonly size?: ControlSize | undefined;
   readonly label?: ReactNode;
   readonly description?: ReactNode;
@@ -63,6 +64,7 @@ function ChoiceCard({
   onClick,
   onChange,
   onKeyDown,
+  'data-wb-subject': subject,
   ...props
 }: RootProps): ReactElement {
   const generatedId = useId();
@@ -71,6 +73,7 @@ function ChoiceCard({
   return (
     <ChoiceContext value={{ id: inputId, size, loading: busy }}>
       <div
+        data-wb-subject={subject}
         className={`choice-card-proto ${className}`}
         data-kind={kind}
         data-size={size}

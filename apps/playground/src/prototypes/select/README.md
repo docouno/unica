@@ -2,7 +2,7 @@
 
 This is an approved interactive design reference. It establishes the appearance and intended experience; prototype props and DOM are disposable. It is not exported by `@docouno/unica`.
 
-Open `?item=listbox` and `?item=select`. Use the **Live** section of Select for real popover opening, focus, searching and dismissal. Other open panels stay in flow so all six materials can be compared at once. Labeled hover, press and focus samples pin appearance without moving DOM focus.
+Open `?item=listbox` and `?item=select`. Open `?item=select&tab=cases&block=live` for real popover opening, focus, searching and dismissal. Other open panels stay in flow so all six materials can be compared at once. Labeled hover, press and focus samples pin appearance without moving DOM focus.
 
 ## Purpose and boundaries
 
@@ -91,7 +91,7 @@ Opening alone does not mutate an answer. A single choice returns focus to the tr
 
 ## Inspection and implementation handoff
 
-Listbox sections cover density, rich anatomy, selection-state combinations, availability, wrapping/scrolling and surfaces. Select covers density/roles, open anatomy, trigger states, field statuses, search, initial loading/refresh/recovery, availability, summary and live interaction. Existing composition consumers are the collection sort field, invite role/expiry, preferences and the editorial choice-panel stand-in; they consume the same prototypes.
+The Listbox Matrix and Cases cover density, rich anatomy, selection-state combinations, availability, wrapping/scrolling and surfaces. Select covers density/roles, open anatomy, trigger states, field statuses, search, initial loading/refresh/recovery, availability, summary and live interaction. Existing composition consumers are the collection sort field, invite role/expiry, preferences and the editorial choice-panel stand-in; they consume the same prototypes.
 
 The live harness implements local choices, search, native auto-popover, basic flip/shift, focus return and dismissal. In-flow open studies deliberately stay open after a single choice. The data-state selector pins loading/failure/empty; Retry restores local data. These are inspectable design decisions, not a reusable library engine.
 

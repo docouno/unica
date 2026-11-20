@@ -455,5 +455,22 @@ export default defineScene({
   summary:
     'Archive schema mapping, duplicate policies, local file selection, and validation feedback.',
   defaultViewport: 1440,
-  render: () => <WorkspaceAdminScene />,
+  uses: [
+    'alert',
+    'app-shell',
+    'badge',
+    'breadcrumb',
+    'button',
+    'card',
+    'dropzone',
+    'file-input',
+    'icon',
+    'progress',
+    'radio-card',
+    'stepper',
+    'text',
+    'title',
+    'toast',
+  ],
+  render: WorkspaceAdminScene,
 });

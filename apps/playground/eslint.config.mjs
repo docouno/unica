@@ -3,7 +3,7 @@ import { browserConfig } from '@docouno/env/eslint';
 export default [
   ...browserConfig(import.meta.dirname),
   {
-    files: ['src/**/*.specimen.tsx', 'src/**/*.scene.tsx', 'src/unica.workbench.tsx'],
+    files: ['src/specimens/**/*.spec.tsx', 'src/scenes/**/*.scene.tsx', 'src/unica.workbench.tsx'],
     rules: {
       'react-refresh/only-export-components': 'off',
     },
@@ -18,6 +18,7 @@ export default [
             '@docouno/*',
             '**/packages/**',
             '**/prototypes/**',
+            '**/specimens/**',
             '**/scenes/**',
             '**/unica*',
           ],

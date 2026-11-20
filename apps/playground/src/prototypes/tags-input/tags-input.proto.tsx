@@ -11,6 +11,7 @@ export interface TagsInputProps extends Omit<
   ComponentPropsWithRef<'textarea'>,
   'size' | 'value' | 'defaultValue' | 'onChange' | 'children'
 > {
+  readonly 'data-wb-subject'?: string | undefined;
   readonly values?: readonly string[];
   readonly initialValues?: readonly string[];
   readonly onValuesChange?: (values: readonly string[]) => void;
@@ -63,6 +64,7 @@ export function TagsInput({
   required,
   placeholder = 'Add a tag…',
   ref,
+  'data-wb-subject': subject,
   ...props
 }: TagsInputProps): ReactElement {
   const generatedId = useId();
@@ -284,6 +286,7 @@ export function TagsInput({
         <span
           ref={shell}
           data-input-focus-scope=""
+          data-wb-subject={subject}
           className="tags-editor-proto"
           data-size={size}
           data-variant={variant}

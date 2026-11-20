@@ -1,0 +1,379 @@
+:where(.wb-shell, .wb-raw-canvas) {
+  --wb-control-height: 30px;
+  --wb-control-radius: 6px;
+  --wb-control-font: 13px;
+  --wb-control-motion: 120ms;
+  --wb-field-bg: #1b1b1b;
+  --wb-field-border-hover: #6f6f6f;
+  --wb-field-border-focus: #a0a0a0;
+  --wb-focus: #f1f1f1;
+  --wb-invalid: #ef959a;
+  --wb-segment-rail: #1c1c1c;
+  --wb-segment-thumb: #444444;
+  --wb-action-bg: #353535;
+  --wb-action-hover: #424242;
+  --wb-picker-bg: #2d2d2d;
+  --wb-option-hover: #414141;
+  --wb-accent-ink: #191919;
+  --wb-accent-hover: #e8e8e8;
+  --wb-accent-active: #b8b8b8;
+}
+
+.wb-field {
+  min-inline-size: 0;
+  max-inline-size: 100%;
+  min-block-size: var(--wb-control-height);
+  padding: 3px 10px;
+  border: 1px solid var(--wb-border-strong);
+  border-radius: var(--wb-control-radius);
+  background: var(--wb-field-bg);
+  color: var(--wb-fg);
+  color-scheme: dark;
+  font: 400 var(--wb-control-font) / 20px var(--wb-font);
+}
+
+.wb-field::placeholder {
+  color: var(--wb-fg-muted);
+}
+
+.wb-field:where(:enabled):hover {
+  border-color: var(--wb-field-border-hover);
+}
+
+.wb-field:focus {
+  border-color: var(--wb-field-border-focus);
+  outline: none;
+}
+
+.wb-field[aria-invalid='true'] {
+  border-color: var(--wb-invalid);
+}
+
+.wb-field:disabled {
+  border-color: var(--wb-border-subtle);
+  background: var(--wb-bar);
+  color: var(--wb-fg-disabled);
+  cursor: not-allowed;
+}
+
+select.wb-field:enabled {
+  cursor: pointer;
+}
+
+@supports (appearance: base-select) {
+  select.wb-field,
+  select.wb-field::picker(select) {
+    appearance: base-select;
+  }
+
+  select.wb-field {
+    align-items: center;
+    gap: 8px;
+  }
+
+  select.wb-field::picker-icon {
+    inline-size: 7px;
+    block-size: 7px;
+    margin-block-start: -4px;
+    border: solid currentColor;
+    border-width: 0 1.5px 1.5px 0;
+    color: var(--wb-fg-muted);
+    rotate: 45deg;
+    content: '';
+  }
+
+  select.wb-field:open::picker-icon {
+    margin-block-start: 4px;
+    rotate: 225deg;
+  }
+
+  select.wb-field::picker(select) {
+    margin-block: 4px;
+    padding: 4px;
+    border: 1px solid var(--wb-border);
+    border-radius: 8px;
+    background: var(--wb-picker-bg);
+    color: var(--wb-fg);
+    box-shadow:
+      0 2px 6px rgb(0 0 0 / 0.28),
+      0 10px 24px -4px rgb(0 0 0 / 0.42);
+  }
+
+  .wb-field option {
+    gap: 6px;
+    min-block-size: var(--wb-control-height);
+    padding: 4px 8px;
+    border-radius: 4px;
+  }
+
+  .wb-field option:enabled:is(:hover, :focus-visible) {
+    background: var(--wb-option-hover);
+  }
+
+  .wb-field option:focus {
+    outline: none;
+  }
+
+  .wb-field option:not(:where([data-wb-field-focus='pointer'] *)):focus-visible {
+    outline: 2px solid var(--wb-focus);
+    outline-offset: -2px;
+  }
+
+  .wb-field option:disabled {
+    color: var(--wb-fg-disabled);
+  }
+
+  .wb-field option::checkmark {
+    margin-inline-start: auto;
+    order: 1;
+  }
+
+  .wb-field option:checked::checkmark {
+    align-self: center;
+    inline-size: 8px;
+    block-size: 5px;
+    border: solid currentColor;
+    border-width: 0 0 2px 2px;
+    rotate: -45deg;
+    color: var(--wb-accent);
+    content: '';
+  }
+}
+
+.wb-seg {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 3px;
+  max-inline-size: 100%;
+  padding: 3px;
+  border-radius: var(--wb-control-radius);
+  background: var(--wb-segment-rail);
+}
+
+.wb-seg-btn,
+.wb-action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding-inline: 10px;
+  border: 1px solid transparent;
+  text-align: center;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background-color var(--wb-control-motion),
+    color var(--wb-control-motion);
+}
+
+.wb-seg-btn {
+  min-block-size: calc(var(--wb-control-height) - 6px);
+  border-radius: 4px;
+  background: transparent;
+  color: var(--wb-fg-muted);
+  font: 500 var(--wb-control-font) / 1.4 var(--wb-font);
+}
+
+.wb-seg-btn:not(:disabled):hover {
+  background: color-mix(in srgb, var(--wb-fg) 6%, transparent);
+  color: var(--wb-fg);
+}
+
+.wb-seg-btn:not(:disabled):active {
+  background: color-mix(in srgb, var(--wb-fg) 10%, var(--wb-segment-rail));
+}
+
+.wb-seg-btn:is([aria-pressed='true'], [data-active='true']) {
+  background: var(--wb-segment-thumb);
+  color: var(--wb-fg);
+}
+
+.wb-seg-btn:is([aria-pressed='true'], [data-active='true']):not(:disabled):hover {
+  background: color-mix(in srgb, var(--wb-fg) 3%, var(--wb-segment-thumb));
+}
+
+.wb-seg-btn:is([aria-pressed='true'], [data-active='true']):not(:disabled):active {
+  background: color-mix(in srgb, var(--wb-fg) 6%, var(--wb-segment-thumb));
+}
+
+.wb-action-btn {
+  min-block-size: var(--wb-control-height);
+  padding: 4px 12px;
+  border-radius: var(--wb-control-radius);
+  background: var(--wb-action-bg);
+  color: var(--wb-fg);
+  font: 600 var(--wb-control-font) / 1.3 var(--wb-font);
+}
+
+.wb-action-btn:enabled:hover {
+  background: var(--wb-action-hover);
+}
+
+.wb-action-btn:enabled:active {
+  background: color-mix(in oklab, var(--wb-action-hover) 96%, var(--wb-fg));
+}
+
+:is(.wb-action-btn, .wb-seg-btn):disabled {
+  color: var(--wb-fg-disabled);
+  cursor: not-allowed;
+}
+
+.wb-action-btn:disabled {
+  background: var(--wb-bar);
+}
+
+.wb-checkbox {
+  position: relative;
+  display: inline-grid;
+  vertical-align: middle;
+  cursor: pointer;
+}
+
+.wb-checkbox input {
+  position: absolute;
+  inset: 0;
+  inline-size: 100%;
+  block-size: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: inherit;
+}
+
+.wb-check-mark {
+  display: grid;
+  place-items: center;
+  inline-size: 16px;
+  block-size: 16px;
+  border: 1px solid var(--wb-field-border-focus);
+  border-radius: 4px;
+  background: var(--wb-field-bg);
+  color: var(--wb-accent-ink);
+  pointer-events: none;
+}
+
+.wb-checkbox input:where(:checked) + .wb-check-mark {
+  border-color: var(--wb-accent);
+  background: var(--wb-accent);
+}
+
+.wb-checkbox input:checked + .wb-check-mark::after {
+  inline-size: 8px;
+  block-size: 5px;
+  margin-block-start: -2px;
+  border: solid currentColor;
+  border-width: 0 0 2px 2px;
+  rotate: -45deg;
+  content: '';
+}
+
+:where(label:hover) .wb-checkbox input:where(:enabled) + .wb-check-mark {
+  border-color: var(--wb-fg-subtle);
+}
+
+:where(label:hover) .wb-checkbox input:where(:checked:enabled) + .wb-check-mark {
+  border-color: var(--wb-accent-hover);
+  background: var(--wb-accent-hover);
+}
+
+:where(label:active) .wb-checkbox input:where(:enabled) + .wb-check-mark,
+.wb-checkbox input:where(:active:enabled) + .wb-check-mark {
+  border-color: var(--wb-fg-secondary);
+  background: var(--wb-card-hover);
+}
+
+:where(label:active) .wb-checkbox input:where(:checked:enabled) + .wb-check-mark,
+.wb-checkbox input:where(:checked:active:enabled) + .wb-check-mark {
+  border-color: var(--wb-accent-active);
+  background: var(--wb-accent-active);
+}
+
+.wb-checkbox input:disabled + .wb-check-mark {
+  border-color: var(--wb-border-strong);
+  background: var(--wb-bar);
+  color: var(--wb-fg-disabled);
+}
+
+.wb-checkbox:has(input:disabled) {
+  cursor: not-allowed;
+}
+
+.wb-disclosure {
+  inline-size: fit-content;
+  padding: 3px 6px;
+  border-radius: 4px;
+  color: var(--wb-fg-muted);
+  cursor: pointer;
+}
+
+.wb-disclosure:hover {
+  background: var(--wb-bar);
+  color: var(--wb-fg);
+}
+
+.wb-field:not(:where([data-wb-field-focus='pointer'] *)):focus-visible,
+:where(
+  .wb-action-btn,
+  .wb-seg-btn,
+  .wb-disclosure,
+  .wb-nav-toggle,
+  .wb-nav-item,
+  .wb-tab,
+  .wb-cell,
+  .wb-cell-header,
+  .wb-matrix-scroll,
+  .wb-scene-usage a
+):focus-visible,
+.wb-checkbox input:focus-visible + .wb-check-mark {
+  outline: 2px solid var(--wb-focus);
+  outline-offset: 2px;
+}
+
+.wb-checkbox input[aria-invalid='true']:enabled + .wb-check-mark {
+  border-color: var(--wb-invalid);
+}
+
+.wb-field[aria-invalid='true']:focus-visible,
+.wb-checkbox input[aria-invalid='true']:focus-visible + .wb-check-mark {
+  outline-color: var(--wb-invalid);
+}
+
+:where(.wb-seg-btn, .wb-tab, .wb-isolate, .wb-story-frame .wb-cell):focus-visible {
+  outline-offset: -2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :is(.wb-action-btn, .wb-seg-btn) {
+    transition: none;
+  }
+}
+
+@media (forced-colors: active) {
+  .wb-action-btn {
+    border-color: ButtonText;
+  }
+
+  .wb-field:focus {
+    border-color: Highlight;
+  }
+
+  :is(.wb-action-btn, .wb-field):disabled {
+    border-color: GrayText;
+  }
+
+  .wb-seg-btn:is([aria-pressed='true'], [data-active='true']),
+  .wb-nav-item[data-active='true'],
+  .wb-tab[data-active='true'] {
+    border-color: Highlight;
+  }
+
+  .wb-checkbox input:checked + .wb-check-mark {
+    border-color: Highlight;
+    color: Highlight;
+  }
+
+  .wb-checkbox input:disabled + .wb-check-mark {
+    border-color: GrayText;
+    color: GrayText;
+  }
+}

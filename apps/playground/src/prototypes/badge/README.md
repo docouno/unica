@@ -52,7 +52,7 @@ Forced colors retain a system border, Canvas/CanvasText for passive content, Lin
 
 ## Prototype boundary and review
 
-The six sections cover meaning/anatomy, size/count geometry, inline placement, overflow, active states, and manual lifecycle changes. Base and overlay placement are evaluated in existing scene consumers, including the document reader and its floating author card, and the document collection. The five button-state samples are visual pins, not simulated real focus. The lifecycle buttons drive local state; they do not perform a network operation. The prototype has native semantics sufficient to evaluate the experience, but does not prove the future package's polymorphic types, ref composition, validation diagnostics, or full browser-support contract.
+Matrix, Cases, and Usage cover meaning/anatomy, size/count geometry, inline placement, overflow, active states, and manual lifecycle changes. Base and overlay placement are evaluated in existing scene consumers, including the document reader and its floating author card, and the document collection. The five button-state samples are visual pins, not simulated real focus. The lifecycle buttons drive local state; they do not perform a network operation. The prototype has native semantics sufficient to evaluate the experience, but does not prove the future package's polymorphic types, ref composition, validation diagnostics, or full browser-support contract.
 
 The implementation stage must preserve these visual and user outcomes while choosing the exact React API and internals. Replace the prototype with package imports, preserve the specimen, and document the shipped API under `docs/components/badge.md`.
 

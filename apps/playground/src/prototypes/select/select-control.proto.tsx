@@ -104,6 +104,7 @@ export interface SelectProps extends Omit<
   ComponentPropsWithRef<'button'>,
   'value' | 'defaultValue' | 'onChange'
 > {
+  readonly 'data-wb-subject'?: string | undefined;
   readonly options: readonly SelectOption[];
   readonly value?: string | null | undefined;
   readonly defaultValue?: string | null | undefined;
@@ -173,6 +174,7 @@ export function Select({
   disabled,
   hidden,
   ref,
+  'data-wb-subject': subject,
   ...props
 }: SelectProps): ReactElement {
   const generatedId = useId();
@@ -358,6 +360,7 @@ export function Select({
       <div className="select-anchor-proto">
         <button
           {...props}
+          data-wb-subject={subject}
           type="button"
           id={controlId}
           disabled={disabled}
@@ -435,6 +438,7 @@ export function Select({
       </div>
       {!disabled && (
         <SelectPanel
+          data-wb-subject={subject}
           ref={panel}
           id={`${controlId}-panel`}
           tabIndex={-1}

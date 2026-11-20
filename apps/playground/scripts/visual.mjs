@@ -1,29 +1,60 @@
 import { Buffer } from 'node:buffer';
-import { mkdir, writeFile } from 'node:fs/promises';
-import { resolve } from 'node:path';
+import { constants } from 'node:fs';
+import { mkdir, realpath, writeFile } from 'node:fs/promises';
+import { basename, dirname, resolve, sep } from 'node:path';
 import process from 'node:process';
 import { devkitWorkspaceSource } from '@docouno/env/vite';
 import react from '@vitejs/plugin-react';
 import { chromium } from 'playwright-core';
 import { createServer } from 'vite';
 
-const item = process.env.VISUAL_ITEM ?? '';
-const mode = process.env.VISUAL_MODE ?? '6up';
-const theme = process.env.VISUAL_THEME ?? 'frost-dark';
-const surface = process.env.VISUAL_SURFACE ?? 'auto';
-const vp = process.env.VISUAL_VP ?? '';
-const scale = process.env.VISUAL_SCALE ?? '100';
-const dir = process.env.VISUAL_DIR ?? 'ltr';
-const section = process.env.VISUAL_SECTION ?? 'all';
-const raw = process.env.VISUAL_RAW ?? '1';
-const slug = item || 'workbench';
-const outName =
-  process.env.VISUAL_OUT ||
-  `${slug}-${mode}${mode === 'focus' ? `-${theme}` : ''}${surface !== 'auto' ? `-${surface}` : ''}${section !== 'all' ? `-${section}` : ''}${vp ? `-vp${vp}` : ''}${scale !== '100' ? `-s${scale}` : ''}${dir !== 'ltr' ? `-${dir}` : ''}${raw === '0' ? '-chrome' : ''}.png`;
+const rawOption = process.env.VISUAL_RAW || '1';
+if (!['0', '1'].includes(rawOption)) {
+  throw new Error('raw must be 0 or 1.');
+}
+const raw = rawOption === '1';
+const params = new URLSearchParams({ freeze: '1' });
+for (const key of [
+  'item',
+  'tab',
+  'family',
+  'scheme',
+  'slice',
+  'mode',
+  'block',
+  'bounds',
+  'surface',
+  'vp',
+  'scale',
+  'dir',
+]) {
+  const value = process.env[`VISUAL_${key.toUpperCase()}`];
+  if (value) {
+    params.set(key, value);
+  }
+}
+params.set('raw', raw ? '1' : '0');
+
+function filenamePart(value) {
+  return encodeURIComponent(value).replaceAll('_', '%5F');
+}
+
+const nameParts = [filenamePart(params.get('item') || 'workbench')];
+for (const [key, value] of params) {
+  if (key !== 'item' && key !== 'freeze') {
+    nameParts.push(`${key}-${filenamePart(value)}`);
+  }
+}
+const outName = process.env.VISUAL_OUT || `${nameParts.join('_')}.png`;
 
 const appRoot = resolve(import.meta.dirname, '..');
 const outDir = resolve(appRoot, '../../.artifacts/visual');
 await mkdir(outDir, { recursive: true });
+const output = resolve(outDir, outName);
+const outPath = resolve(await realpath(dirname(output)), basename(output));
+if (!outPath.startsWith((await realpath(outDir)) + sep)) {
+  throw new Error('out must name a file inside .artifacts/visual/.');
+}
 
 const t0 = performance.now();
 
@@ -36,7 +67,7 @@ const [server, browser] = await Promise.all([
     plugins: [devkitWorkspaceSource(), react()],
     resolve: { dedupe: ['react', 'react-dom'] },
     optimizeDeps: { include: ['@phosphor-icons/react'] },
-    server: { host: '127.0.0.1', port: 0 },
+    server: { host: '127.0.0.1', port: 0, watch: null, hmr: false },
   }).then((s) => s.listen()),
   chromium.launch({
     headless: true,
@@ -55,33 +86,7 @@ const [server, browser] = await Promise.all([
 try {
   const addr = server.httpServer?.address();
   const port = typeof addr === 'object' && addr ? addr.port : 5173;
-  const params = new URLSearchParams({
-    mode,
-    theme,
-    scale,
-    dir,
-    section,
-    freeze: '1',
-  });
-  if (item) {
-    params.set('item', item);
-  }
-  if (vp) {
-    params.set('vp', vp);
-  }
-  if (surface !== 'auto') {
-    params.set('surface', surface);
-  }
-  if (raw === '1') {
-    params.set('raw', '1');
-  }
-
-  const vpNum = Number(vp);
-  const baseWidth = raw === '0' ? 1560 : mode === 'focus' ? 1120 : 1440;
-  const width =
-    mode === 'focus' && Number.isFinite(vpNum) && vpNum > 0
-      ? Math.max(baseWidth, vpNum + (raw === '0' ? 360 : 96))
-      : baseWidth;
+  const width = raw ? 1440 : 1560;
 
   const page = await browser.newPage({
     viewport: { width, height: 900 },
@@ -102,26 +107,74 @@ try {
     throw new Error(`HTTP ${String(resp?.status())} for ${url}`);
   }
 
-  await page.waitForSelector('html[data-wb-ready="1"]', { timeout: 8000 });
-  if (mode === 'focus') {
-    const neededWidth = await page.evaluate(() => {
-      const inner = document.querySelector('.wb-viewport-inner');
-      if (!inner) {
-        return 0;
+  async function waitForReady() {
+    try {
+      await page.waitForSelector('html[data-wb-ready="1"]', { timeout: 8000 });
+    } catch (error) {
+      if (errors.length > 0) {
+        throw new Error(`Runtime errors:\n${errors.join('\n')}`, { cause: error });
       }
-      const rect = inner.getBoundingClientRect();
-      const hasRail = Boolean(document.querySelector('.wb-rail'));
-      return Math.ceil(rect.width) + (hasRail ? 360 : 96);
-    });
-    if (neededWidth > width) {
-      await page.setViewportSize({ width: neededWidth, height: 900 });
+      throw error;
     }
+  }
+
+  await waitForReady();
+  const actual = await page.locator('[data-wb-capture-route]').evaluate((shell) => {
+    if (shell.hasAttribute('data-wb-not-found')) {
+      throw new Error(`Unknown workbench item: ${shell.dataset.wbItem}`);
+    }
+    const route = JSON.parse(shell.dataset.wbCaptureRoute);
+    return {
+      ...route,
+      tab: shell.dataset.wbTab,
+      mode: shell.querySelector('[data-wb-matrix-mode]')?.dataset.wbMatrixMode,
+      slice: shell.dataset.wbSlice,
+    };
+  });
+  for (const [key, requested] of params) {
+    const value = actual[key];
+    const rendered = typeof value === 'boolean' ? String(Number(value)) : String(value ?? '');
+    if (rendered !== requested) {
+      throw new Error(
+        `Requested ${key}=${requested}, but the rendered view has ${key}=${rendered || '(none)'}.`,
+      );
+    }
+  }
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    const fitWidth = await page.evaluate(() => {
+      const boards = document.querySelectorAll('.wb-artboards');
+      if (boards.length === 0 || [...boards].some((board) => !board.hasAttribute('data-single'))) {
+        return null;
+      }
+      let widest = 0;
+      for (const inner of document.querySelectorAll('.wb-viewport-inner')) {
+        const viewport = inner.closest('.wb-playground-preview, .wb-canvas, .wb-raw-canvas');
+        if (viewport) {
+          const { paddingInlineStart, paddingInlineEnd } = window.getComputedStyle(viewport);
+          const available =
+            viewport.clientWidth - parseFloat(paddingInlineStart) - parseFloat(paddingInlineEnd);
+          const chromeWidth = window.innerWidth - available;
+          widest = Math.max(widest, Math.ceil(inner.getBoundingClientRect().width + chromeWidth));
+        }
+      }
+      return widest;
+    });
+    if (fitWidth === null) {
+      break;
+    }
+    const isolatedWidth = Math.max(raw ? 1120 : 1560, fitWidth);
+    if (isolatedWidth === page.viewportSize()?.width) {
+      break;
+    }
+    // Recalculate after resizing because the sidebars respond to the viewport width.
+    await page.evaluate(() => document.documentElement.removeAttribute('data-wb-ready'));
+    await page.setViewportSize({ width: isolatedWidth, height: 900 });
+    await waitForReady();
   }
   if (errors.length > 0) {
     throw new Error(`Runtime errors:\n${errors.join('\n')}`);
   }
 
-  const outPath = resolve(outDir, outName);
   const layoutViewport = page.viewportSize();
   const captureSize = await page.evaluate(() => ({
     width: Math.max(window.innerWidth, document.documentElement.scrollWidth),
@@ -143,7 +196,12 @@ try {
     captureBeyondViewport: false,
     clip: { x: 0, y: 0, ...captureSize, scale: 1 },
   });
-  await writeFile(outPath, Buffer.from(capture.data, 'base64'));
+  if (errors.length > 0) {
+    throw new Error(`Runtime errors:\n${errors.join('\n')}`);
+  }
+  await writeFile(outPath, Buffer.from(capture.data, 'base64'), {
+    flag: constants.O_WRONLY | constants.O_CREAT | constants.O_TRUNC | constants.O_NOFOLLOW,
+  });
   const elapsedMs = Math.round(performance.now() - t0);
   process.stdout.write(`visual: wrote ${outPath} (${String(elapsedMs)} ms)\n`);
 } finally {

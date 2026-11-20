@@ -17,6 +17,8 @@ export interface HintPreviewProps {
   readonly canShow?: (anchor: HTMLElement) => boolean;
   readonly children: ReactNode;
   readonly trigger: (bindings: HintTriggerBindings) => ReactElement;
+  readonly panelAttributes?: { readonly 'data-wb-subject': '' };
+  readonly onOpenChange?: (open: boolean) => void;
 }
 
 const openedEvent = 'hint-design-preview:open';
@@ -55,6 +57,8 @@ export function HintPreview({
   canShow,
   children,
   trigger,
+  panelAttributes,
+  onOpenChange,
 }: HintPreviewProps): ReactElement {
   const id = useId();
   const source = useRef<HTMLElement | null>(null);
@@ -69,6 +73,14 @@ export function HintPreview({
     drag: false,
   });
   const [open, setOpen] = useState(false);
+  const reportedOpen = useRef(false);
+
+  useEffect(() => {
+    if (open !== reportedOpen.current) {
+      reportedOpen.current = open;
+      onOpenChange?.(open);
+    }
+  }, [open, onOpenChange]);
 
   function clear(): void {
     clearTimeout(timer.current);
@@ -384,6 +396,7 @@ export function HintPreview({
       {open &&
         (family === 'tooltip' ? (
           <Tooltip
+            {...panelAttributes}
             ref={panel}
             popover="manual"
             {...shared}
@@ -393,7 +406,13 @@ export function HintPreview({
             {children}
           </Tooltip>
         ) : (
-          <HoverCard ref={panel} popover="manual" {...shared} previewBridge={<PointerBridge />}>
+          <HoverCard
+            {...panelAttributes}
+            ref={panel}
+            popover="manual"
+            {...shared}
+            previewBridge={<PointerBridge />}
+          >
             {children}
           </HoverCard>
         ))}

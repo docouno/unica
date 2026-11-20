@@ -33,7 +33,7 @@ Images default to `object-fit: cover; object-position: 50% 50%`. The host can su
 
 Combining marks remain attached to their letter. Preserve name order; do not infer culturally specific surnames, reorder scripts or derive a color from the name. Hosts can supply a compact mark where word segmentation is inappropriate. Custom fallback content must fit the frame, remain passive and avoid long strings. A full name stays in the accessible label or adjacent text, never inside the frame.
 
-The CJK example uses a local two-glyph Noto Sans SC font fixture so its appearance is reproducible in the capture container. The optional-name section similarly supplies local Noto Sans Arabic text subsets for its Arabic fixture (`public/assets/licenses/avatar-arabic-*.txt`). These fonts belong to the specimen only; production hosts supply appropriate script coverage through their typography. Font provenance and its Open Font License are included in `public/assets/licenses/avatar-cjk.txt` and `avatar-cjk-OFL.txt`.
+The CJK example uses a local two-glyph Noto Sans SC font fixture so its appearance is reproducible in the capture container. The optional-name case similarly supplies local Noto Sans Arabic text subsets for its Arabic fixture (`public/assets/licenses/avatar-arabic-*.txt`). These fonts belong to the specimen only; production hosts supply appropriate script coverage through their typography. Font provenance and its Open Font License are included in `public/assets/licenses/avatar-cjk.txt` and `avatar-cjk-OFL.txt`.
 
 ## Image states and transitions
 
@@ -100,7 +100,7 @@ Insets include the action border. The trailing label padding follows Button (S 1
 
 ## Review route and implementation boundary
 
-Specimen sections: `sizes`, `fallback`, `images`, `crop`, `groups`, `surfaces`, `direction`, `names`, `usage`, `actions`. The surface study paints Shell, Canvas, Card and real Overlay material over the workbench underlay. Check the existing overview/editor collaboration bars, collection table, document-owner HoverCard and inspector/member rows in the Folio scenes; these are consumers, not duplicate application screens inside the specimen.
+Matrix covers `sizes`. Cases include `fallback`, `images`, `crop`, `groups`, `surfaces`, `direction`, and `names`. Usage includes `usage` and `actions`. The surface study paints Shell, Canvas, Card and real Overlay material over the workbench underlay. Check the existing overview/editor collaboration bars, collection table, document-owner HoverCard and inspector/member rows in the Folio scenes; these are consumers, not duplicate application screens inside the specimen.
 
 Check 360/768/1280/1440px, 120% text, RTL, keyboard disclosure, image failure/retry, forced colors and reduced motion. Inspect capital-body centering and action insets at a readable zoom, including the actual owner HoverCard. Judge face recognition, text fit, edge weight and visual quietness together with numerical contrast. A frame perimeter is not a field boundary and should not be strengthened just to resemble an interactive control.
 

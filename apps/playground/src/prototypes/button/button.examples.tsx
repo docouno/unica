@@ -30,7 +30,7 @@ const toneActions = {
   danger: { label: 'Delete', icon: TrashIcon },
 } as const;
 
-function ForwardArrowIcon(props: GlyphProps): ReactElement {
+export function ForwardArrowIcon(props: GlyphProps): ReactElement {
   return <ArrowRightIcon {...props} data-directional />;
 }
 

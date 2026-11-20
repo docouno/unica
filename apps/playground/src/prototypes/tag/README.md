@@ -90,7 +90,7 @@ A hover tooltip is insufficient on touch. The overflow example also shows an adj
 
 ## Live reference and consumer fit
 
-| Workbench section | What it settles                                                                                          |
+| Workbench example | What it settles                                                                                          |
 | ----------------- | -------------------------------------------------------------------------------------------------------- |
 | `anatomy`         | Sizes, leading icons, optical spacing, remove/restore.                                                   |
 | `palette`         | All six semantic colors in all six themes.                                                               |
