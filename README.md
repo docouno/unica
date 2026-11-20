@@ -1,6 +1,6 @@
 # Unica UI
 
-`@docouno/unica` is a role-based React 19+ design system: accessible components, responsive layout primitives, semantic tokens, and multi-material themes in a single pure-ESM TypeScript package.
+`@docouno/unica` is a role-based design system for React 19. Its pure-ESM TypeScript package includes semantic tokens, multi-material themes, and shared foundations for accessible components and responsive layout primitives.
 
 Components expose semantic roles rather than decorative material props. Switching themes reconfigures surface physics, corner geometry, elevation, and typography across the application without changing component JSX.
 
@@ -16,22 +16,31 @@ Every launch theme ships in calibrated `Dark` and `Light` presets (`6` presets t
 
 ```tsx
 import '@docouno/unica/styles.css';
-import { THEME_PRESETS } from '@docouno/unica';
+import { THEME_PRESETS, UnicaProvider, type ThemeConfig } from '@docouno/unica';
+
+const theme = { preset: 'frost-dark' } satisfies ThemeConfig;
 
 export function ThemePreview() {
   return (
-    <div data-theme="frost-dark" style={{
-      background: 'var(--bg-canvas)',
-      color: 'var(--fg-primary)',
-      padding: 'var(--space-24)',
-    }}>
-      {THEME_PRESETS.find((preset) => preset.id === 'frost-dark')?.label}
-    </div>
+    <UnicaProvider theme={theme}>
+      <div
+        data-theme={theme.preset}
+        style={{
+          background: 'var(--bg-canvas)',
+          color: 'var(--fg-primary)',
+          padding: 'var(--space-24)',
+        }}
+      >
+        {THEME_PRESETS.find((preset) => preset.id === theme.preset)?.label}
+      </div>
+    </UnicaProvider>
   );
 }
 ```
 
-The library currently provides theme tokens, preset metadata, and a starter Button. New component families are reviewed as live prototypes in the playground before their public package APIs ship. Architectural documents describe the target component contracts.
+The library currently ships theme tokens, preset metadata, `UnicaProvider`, and native scrollbar utilities. The `data-theme` attribute applies the CSS preset, and the provider supplies structural component defaults through React context. See [Structural Component Defaults](docs/concepts/themes-and-roles.md#structural-component-defaults) and [Native Scrollbars](docs/concepts/scrollbars.md).
+
+New component families are reviewed as live prototypes in the playground before their public package APIs ship.
 
 The [Workbench](docs/workbench.md) has Playground, Matrix, Cases, and Usage views for each component. Choose Family and Scheme to compare themes or isolate one artboard, then inspect actual component bounds and interactions at different widths, text scales, and reading directions.
 

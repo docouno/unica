@@ -1,6 +1,6 @@
 # Native scrollbar design reference
 
-Status: design approved on 2026-11-15. Open `/?item=scrollbar` in the playground. This is a shared CSS design recipe, not a React ScrollArea component or a shipped package utility.
+The design was approved on 2026-11-15. Open `/?item=scrollbar` in the playground to inspect the prototype recipe. Applications can use the utilities shipped in `@docouno/unica/styles.css`. See [Native Scrollbars](../../../../../docs/concepts/scrollbars.md).
 
 ## Purpose and appearance
 
@@ -58,6 +58,6 @@ A standalone reading region needs an accessible name and `tabIndex={0}` for cros
 
 Use separate feature queries for standard color, standard width and native pseudo-element support. The geometry treatment is excluded on touch-primary devices and in forced colors. Safari 18.2 added standard width support; standard color arrived in Safari 26.2. Earlier touch Safari retains system color. Desktop WebKit can use the pseudo-element treatment without those standard properties.
 
-The library stage will decide the exported utility and integrate the recipe with actual library scroll owners. It must preserve the agreed hierarchy, native interaction and documented platform fallbacks. A JavaScript ScrollArea is not part of this design.
+The package exports `.unica-scrollbar` and `.unica-scrollbar--compact` through its CSS entry. The live reference and existing playground consumers still demonstrate the design with `.scrollbar-proto`. Their migration to the package classes is tracked in [the scrollbar integration issue](https://github.com/docouno/unica/issues/96).
 
 Sources: [Chrome scrollbar styling](https://developer.chrome.com/docs/css-ui/scrollbar-styling), [CSS Scrollbars Level 1](https://drafts.csswg.org/css-scrollbars/), [CSS Overflow: scrollbar gutter](https://drafts.csswg.org/css-overflow-3/#scrollbar-gutter-property), [Safari 18.2](https://webkit.org/blog/16301/webkit-features-in-safari-18-2/), [Safari 26.2](https://webkit.org/blog/17640/webkit-features-for-safari-26-2/).
