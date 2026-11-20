@@ -43,6 +43,25 @@ export default {
     }
   },
 
+  'AppShell disclosure points down when open and toward inline end when closed': async ({
+    page,
+    mount,
+  }) => {
+    for (const direction of ['ltr', 'rtl']) {
+      await mount('icon', { direction });
+      const summary = page
+        .getByTestId('chrome')
+        .locator('summary')
+        .filter({ hasText: 'Architecture' })
+        .first();
+      const caret = summary.locator('.app-shell-group-caret');
+      assert.ok((await caret.evaluate((svg) => svg.getScreenCTM().b)) > 0);
+      await summary.click();
+      const horizontal = await caret.evaluate((svg) => svg.getScreenCTM().a);
+      assert.ok(direction === 'rtl' ? horizontal < 0 : horizontal > 0);
+    }
+  },
+
   'Icon sizes follow owner geometry and the project SVG is centered without distortion': async ({
     page,
     mount,

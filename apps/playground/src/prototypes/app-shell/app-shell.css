@@ -586,11 +586,8 @@
 }
 
 .app-shell-nav-group[open] > summary > .app-shell-group-caret {
+  scale: none;
   rotate: 90deg;
-}
-
-.app-shell-nav-group:dir(rtl)[open] > summary > .app-shell-group-caret {
-  rotate: -90deg;
 }
 
 .app-shell-nav-children {

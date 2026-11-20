@@ -1,5 +1,5 @@
 import { Children, createContext, isValidElement, useContext } from 'react';
-import type { CSSProperties, JSX, ReactElement, ReactNode } from 'react';
+import type { Attributes, CSSProperties, JSX, ReactElement, ReactNode } from 'react';
 import { useComponentDefaults } from '../../core/UnicaProvider.js';
 import { renderGlyph } from './glyph.js';
 import type {
@@ -60,7 +60,7 @@ const reservedInputProps = new Set([
   'dangerouslysetinnerhtml',
 ]);
 
-interface IconFrame<G extends GlyphSource> {
+interface IconFrame<G extends GlyphSource> extends Attributes {
   readonly icon: G;
   readonly size?: 'inherit' | 's' | 'm' | 'l' | undefined;
   readonly color?: IconColor | undefined;
@@ -130,7 +130,7 @@ type SourceOptions<
 export type IconProps<G extends GlyphSource = GlyphSource> = IconFrame<G> &
   IconName &
   ClosedProps &
-  NoInfer<SourceOptions<GlyphCallable<G>>>;
+  SourceOptions<GlyphCallable<G>>;
 
 function textName(value: string | undefined): string | undefined {
   return typeof value === 'string' ? value.trim() || undefined : undefined;

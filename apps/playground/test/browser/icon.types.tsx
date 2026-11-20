@@ -46,13 +46,28 @@ function Brand({ detail, monochrome, ...svg }: SvgProps & BrandDetail): ReactNod
 
 const brand = defineGlyph(Brand);
 
-type ChartOptions = { mode?: 'plain' } | { mode: 'chart'; values: readonly number[] };
+type ChartOptions =
+  { plotType?: 'plain'; series?: never } | { plotType: 'chart'; series: readonly number[] };
 
 function Report({ children, ...props }: SvgProps & ChartOptions): ReactNode {
-  return <svg>{props.mode === 'chart' ? <title>{props.values.join(', ')}</title> : children}</svg>;
+  return (
+    <svg>{props.plotType === 'chart' ? <title>{props.series.join(', ')}</title> : children}</svg>
+  );
 }
 
 const report = defineGlyph(Report);
+
+function Summary({ plotType, ...props }: SvgProps & { plotType?: 'plain' | 'compact' }): ReactNode {
+  return <svg {...props} data-plot-type={plotType} />;
+}
+
+export function ReportChoice({ detailed }: { detailed: boolean }) {
+  const choice = defineGlyph(detailed ? Report : Summary);
+  // @ts-expect-error A summary has no chart mode or series.
+  const chart = <Icon icon={choice} plotType="chart" series={[1]} />;
+  void chart;
+  return <Icon icon={choice} plotType="plain" />;
+}
 
 export function MixedSource({ useBrand }: { useBrand: boolean }) {
   const icon = useBrand ? brand : Outline;
@@ -98,7 +113,7 @@ const valid = [
   <Icon icon={arrow} weight={undefined} />,
   <Icon icon={brand} detail="brand" monochrome />,
   <Icon icon={report} />,
-  <Icon icon={report} mode="chart" values={[1]} />,
+  <Icon icon={report} plotType="chart" series={[1]} />,
   <Icon icon={OptionalGlyph} compact />,
   <Icon icon={ProjectSvg}>
     <title>Project</title>
@@ -113,9 +128,9 @@ const named = { 'aria-label': 'Open' };
 
 const invalid = [
   // @ts-expect-error Chart mode requires its data.
-  <Icon icon={report} mode="chart" />,
+  <Icon icon={report} plotType="chart" />,
   // @ts-expect-error Undefined cannot satisfy a required source option.
-  <Icon icon={report} mode="chart" values={undefined} />,
+  <Icon icon={report} plotType="chart" series={undefined} />,
   // @ts-expect-error The shared detail does not support monochrome on Brand.
   <Icon icon={brand} detail="shared" monochrome />,
   // @ts-expect-error Phosphor weight must be inferred from icon.
