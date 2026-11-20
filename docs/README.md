@@ -16,7 +16,7 @@ During design, use these constraints to define appearance and the intended acces
 
 ## Workbench & Component Contracts
 
-- **Interactive workbench & compositions:** `apps/playground` hosts the 6-preset design workbench (`src/prototypes/` specimens and `src/scenes/` product compositions, starting with [Folio](compositions/folio.md)).
-- **Prototype authoring:** [Workbench workflow](workbench.md) explains registration, sections, live previews, and deterministic screenshots.
+- **Interactive workbench & compositions:** `apps/playground` hosts the component inspector. Catalog entries live in `src/specimens/`. Visual prototypes live in `src/prototypes/` and compositions such as [Folio](compositions/folio.md) in `src/scenes/`.
+- **Specimen authoring:** [Workbench workflow](workbench.md) explains the component schema, live inspection, scene links, and deterministic screenshots.
 - **Component contracts:** As each component family ships in `packages/ui`, its normative public API, keyboard/ARIA behavior, and token contract are recorded in `docs/components/<family>.md`.
 - **Contributor workflow:** [`../AGENTS.md`](../AGENTS.md) defines workspace commands, Devkit rules, and Definition of Done gates.

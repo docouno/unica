@@ -38,6 +38,7 @@ export interface SliderProps
       ComponentPropsWithRef<'input'>,
       'type' | 'size' | 'value' | 'defaultValue' | 'min' | 'max' | 'step'
     > {
+  readonly 'data-wb-subject'?: string | undefined;
   readonly value?: number | undefined;
   readonly defaultValue?: number | undefined;
   readonly min?: number | undefined;
@@ -387,6 +388,7 @@ export function Slider({
   style,
   id,
   hidden,
+  'data-wb-subject': subject,
   ...inputProps
 }: SliderProps): ReactElement {
   const [localValue, setLocalValue] = useState(defaultValue);
@@ -395,6 +397,7 @@ export function Slider({
   const current = value ?? localValue;
   return (
     <div
+      data-wb-subject={subject}
       className={`slider-proto ${className}`}
       data-size={size}
       data-orientation={orientation}

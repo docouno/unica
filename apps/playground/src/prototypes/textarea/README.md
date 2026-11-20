@@ -90,7 +90,7 @@ A soft budget preserves the entire draft, including a pasted over-limit value. I
 
 ## Review route and prototype boundary
 
-Sections cover roles and sizes, pinned hover/focus, all semantic feedback, availability combinations, height modes, footer anatomy, live changes, overflow/direction, and Base/Overlay plates. Pinned appearances never move DOM focus. Use the real controls to compare clicking, Tab, typing, selecting, resizing, scrolling, and copying.
+Matrix and Cases cover roles and sizes, pinned hover/focus, all semantic feedback, availability combinations, height modes, footer anatomy, live changes, overflow/direction, and Base/Overlay plates. Pinned appearances never move DOM focus. Use the real controls to compare clicking, Tab, typing, selecting, resizing, scrolling, and copying.
 
 Inspect all six presets and both surfaces. Check 360, 768, 1280, and 1440px; 120% text; RTL; the long invalid field with scroll and resize; and the two existing composition consumers. Evaluate the complete material, not just numeric border contrast. The package and portable workbench shell are unchanged.
 

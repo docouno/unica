@@ -72,7 +72,7 @@ Radio shares Checkbox's row sizes, label/description alignment, target expansion
 
 ### Inspection and boundary
 
-Sections cover sizes, live pairs with pinned interaction styling, read-only/disabled groups, unavailable selected options, vertical and wrapping horizontal layouts, deliberate empty selection, validation, long labels, and independent Base/Overlay groups. Each group receives an instance-specific native name so the six artboards never affect one another. `RadioIndicator` is the decorative shared primitive in RadioCard; no extra focus stop or interactive element is introduced.
+Matrix, Cases, and Usage cover sizes, live pairs with pinned interaction styling, read-only/disabled groups, unavailable selected options, vertical and wrapping horizontal layouts, deliberate empty selection, validation, long labels, and independent Base/Overlay groups. Each group receives an instance-specific native name so the six artboards never affect one another. `RadioIndicator` is the decorative shared primitive in RadioCard; no extra focus stop or interactive element is introduced.
 
 The prototype uses native arrow behavior plus local Home/End handling. Full reusable navigation, assistive announcement timing, reset/form guarantees, and cross-browser selected-disabled entry are not claimed as shipped behavior. The separate technical implementation may change DOM and state architecture while preserving these decisions.
 

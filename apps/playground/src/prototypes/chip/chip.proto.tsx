@@ -13,6 +13,7 @@ export interface ChipProps extends Omit<
   ComponentPropsWithRef<'input'>,
   'size' | 'children' | 'type' | 'readOnly'
 > {
+  readonly 'data-wb-subject'?: string | undefined;
   readonly size?: ChipSize;
   readonly iconLeft?: GlyphComponent | undefined;
   readonly children: ReactNode;
@@ -33,6 +34,7 @@ export function Chip({
   onFocus,
   onBlur,
   onKeyDown,
+  'data-wb-subject': subject,
   ...props
 }: ChipProps): ReactElement {
   const label = useRef<HTMLSpanElement>(null);
@@ -60,6 +62,7 @@ export function Chip({
   };
   return (
     <label
+      data-wb-subject={subject}
       className={`chip-proto ${className}`}
       data-size={size}
       data-iconless={!iconLeft || undefined}

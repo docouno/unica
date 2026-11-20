@@ -76,7 +76,7 @@ After confirmed removal, move focus to the next available Remove, then the previ
 
 ## Inspection and implementation boundary
 
-`file-input`: roles, interaction, feedback, availability, multiple, live, overflow, surfaces. `dropzone`: sizes, interaction, feedback, availability, row-sizes, lifecycle, live, overflow, surfaces. State sections explicitly identify pinned appearances and actions; live sections own working local behavior. Surface plates are in-flow material studies, not dialogs. The existing `10-workspace-admin` scene consumes the same family and remains a product-fit reference.
+`file-input`: roles, interaction, feedback, availability, multiple, live, overflow, surfaces. `dropzone`: sizes, interaction, feedback, availability, row-sizes, lifecycle, live, overflow, surfaces. Cases identify pinned appearances and actions. Live cases provide working local behavior. Surface plates are in-flow material studies, not dialogs. The existing `10-workspace-admin` scene consumes the same family and remains a product-fit reference.
 
 Inspect all six presets, Base/Overlay, 360/768/1280/1440px, 120% text, RTL, keyboard focus and pointer/drop interaction. Empty, long, unavailable, failed, and waiting cases matter as much as the standard intake. Do not treat a contrast measurement as proof of optical balance.
 

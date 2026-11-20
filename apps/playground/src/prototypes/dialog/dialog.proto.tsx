@@ -78,6 +78,7 @@ function DialogTrigger({ onClick, ...props }: Omit<ButtonProps, 'ref'>): ReactEl
 }
 
 export interface DialogContentProps {
+  readonly 'data-wb-subject'?: '';
   readonly size?: DialogSize;
   readonly width?: DialogSize;
   readonly described?: boolean;
@@ -212,6 +213,7 @@ function DialogSurface({
   dragHandle,
   layerRef,
   children,
+  'data-wb-subject': subject,
 }: DialogSurfaceProps): ReactElement | null {
   const { id, open, onOpenChange, trigger, launchedRef } = useDialog();
   const panel = useRef<HTMLElement>(null);
@@ -289,6 +291,7 @@ function DialogSurface({
       <div className="dialog-placement">
         <section
           ref={panel}
+          data-wb-subject={subject}
           className="dialog-surface scrollbar-proto"
           data-surface="overlay"
           data-dialog-size={size}

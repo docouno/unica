@@ -25,6 +25,7 @@ export interface LiveMenuProps {
   readonly trigger: (props: TriggerProps) => ReactElement;
   readonly size?: MenuSize;
   readonly align?: 'start' | 'end';
+  readonly panelAttributes?: { readonly 'data-wb-subject': '' };
 }
 
 export interface MenuInvocation {
@@ -177,6 +178,7 @@ export function useLiveMenu({
   items,
   size = 'm',
   align = 'start',
+  panelAttributes,
 }: Omit<LiveMenuProps, 'trigger'>): LiveMenuBindings {
   const id = useId();
   const rootRef = useRef<HTMLDivElement>(null);
@@ -550,6 +552,7 @@ export function useLiveMenu({
     },
     panel: (
       <MenuSurface
+        {...panelAttributes}
         ref={rootRef}
         id={id}
         popover="auto"
@@ -588,6 +591,7 @@ export function useLiveMenu({
         />
         {active && !drill && (
           <MenuSurface
+            {...panelAttributes}
             ref={childRef}
             id={childId}
             role="menu"

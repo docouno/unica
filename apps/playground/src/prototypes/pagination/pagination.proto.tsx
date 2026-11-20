@@ -7,6 +7,7 @@ type PageStep = 'previous' | 'next';
 type PagePreview = 'hover' | 'pressed' | 'focus';
 
 export interface PaginationProps {
+  readonly 'data-wb-subject'?: '';
   readonly label?: string;
   readonly page?: number;
   readonly defaultPage?: number;
@@ -64,6 +65,7 @@ export function Pagination({
   format,
   size = 'm',
   preview,
+  'data-wb-subject': subject,
 }: PaginationProps): ReactElement | null {
   const [localPage, setLocalPage] = useState(defaultPage);
   const track = useRef<HTMLUListElement>(null);
@@ -162,7 +164,13 @@ export function Pagination({
   }
 
   return (
-    <nav className="pagination-proto" aria-label={label} data-size={size} style={geometry}>
+    <nav
+      className="pagination-proto"
+      aria-label={label}
+      data-size={size}
+      data-wb-subject={subject}
+      style={geometry}
+    >
       <div className="pagination-fit-proto" data-format={format}>
         <ul
           className="pagination-track-proto"

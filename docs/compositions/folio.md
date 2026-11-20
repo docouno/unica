@@ -27,7 +27,7 @@ Folio consumes shared components. Its screens are independent integration exampl
 
 ## Explore the Live Compositions
 
-Run `make dev app=playground` and select a scene in the workbench's **Folio** group. The URL preserves the selected scene and review controls; for example, `/?item=05-rich-editor&mode=focus&theme=frost-light&vp=1440` opens the editor at its desktop reference width.
+Run `make dev app=playground` and select a Folio scene from **Scenes**. You can also follow a consuming scene link in a component's **Usage** view. Open `/?item=05-rich-editor&family=frost&scheme=light&vp=1440` to see the editor at its desktop reference width.
 
 | Scene | Useful interactions |
 | --- | --- |
@@ -48,7 +48,7 @@ The invitation and properties scenes use the shared [Modal and Drawer design ref
 
 Scenes import shared families from `src/prototypes/`; their `folio/` helpers contain product content and layout rather than duplicate controls. The shell owns the rail and aside topologies, while the theme owns all materials. The product scenes stay in place as individual prototype imports are replaced by package components later.
 
-Use `make visual item=02-workspace-overview` for a six-preset capture or `make visual item=07-invite-access-modal mode=focus theme=pixel-light vp=360 scale=120 dir=rtl` for a focused stress capture. See [Workbench Workflow](../workbench.md) for the complete controls and screenshot options.
+Use `make visual item=02-workspace-overview` for a six-preset capture or `make visual item=07-invite-access-modal family=pixel scheme=light vp=360 scale=120 dir=rtl` for a single-theme stress capture. See [Workbench Workflow](../workbench.md) for the complete controls and screenshot options.
 
 ## Semantic Token Dictionary
 

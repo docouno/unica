@@ -29,6 +29,7 @@ export interface IconProps {
   readonly color?: IconColor;
   readonly directional?: boolean;
   readonly 'aria-label'?: string;
+  readonly 'data-wb-subject'?: '';
   readonly ref?: Ref<SVGSVGElement>;
   readonly className?: string;
   readonly style?: CSSProperties;
@@ -55,6 +56,7 @@ export function Icon({
   color = 'inherit',
   directional = false,
   'aria-label': label,
+  'data-wb-subject': subject,
   ref,
   className = '',
   style,
@@ -69,6 +71,7 @@ export function Icon({
       color="currentColor"
       className={`icon-proto ${className}`}
       data-directional={directional || undefined}
+      data-wb-subject={subject}
       focusable="false"
       aria-hidden={name ? undefined : true}
       aria-label={name}

@@ -17,39 +17,7 @@ The prototype's implementation is disposable. Its props, helpers, and DOM struct
 
 Select cases and probes for the design questions or regressions they can expose. Measurements such as contrast support inspection of the actual result; passing a number or a test does not establish design quality. Full library contract coverage is not a prerequisite for a design review.
 
-## Author a Specimen
-
-Keep each family under `apps/playground/src/prototypes/<family>/`:
-
-- `<family>.proto.tsx`: a small native React visual prototype.
-- `<family>.css`: component styles consuming semantic tokens.
-- `<family>.specimen.tsx`: the default export of `defineSpecimen(...)`.
-- Optional example helpers and styles: isolated usage examples and specimen controls.
-
-Import `defineSpecimen` from `../../workbench/types.js`. Give the specimen a unique `id`, `title`, `group`, and `sections`. Each section has a unique `id`, `title`, `kind`, and `render` function:
-
-```tsx
-export default defineSpecimen({
-  id: 'family',
-  title: 'Family',
-  group: 'Foundations',
-  sections: [
-    { id: 'roles', title: 'Roles', kind: 'matrix', render: () => <RoleExamples /> },
-    { id: 'overflow', title: 'Overflow', kind: 'states', render: () => <OverflowExamples /> },
-    { id: 'usage', title: 'Action pair', kind: 'context', render: () => <ActionPair /> },
-  ],
-});
-```
-
-`RoleExamples`, `OverflowExamples`, and `ActionPair` are local React components. Render callbacks return their JSX elements so hooks belong to the example component when the selected item or section changes. Keep hooks inside components, and use instance-specific native radio group names because all six artboards share one document. The files are discovered automatically; no registry edit is needed. Text and Title provide working examples.
-
-Use `matrix` for supported roles and sizes and `states` for relevant states and long content. An optional `context` section may show a small, product-independent arrangement when it resolves a component question, such as adjacent actions or icon alignment. Do not reproduce application-specific screens, dialogs, or workflows inside each component specimen. A family still shows its own anatomy and the minimal neighboring content needed to evaluate it.
-
-Application compositions live independently in `src/scenes/<NN>-<slug>.scene.tsx` and default-export `defineScene(...)`. They consume shared components: **compositions → components**. [Folio](compositions/folio.md) is one example application, not the source of component requirements or a mandatory specimen checklist. New applications and compositions do not require new cases in every component specimen. Verify product fit in the existing scene consumers.
-
-Set `surface: 'overlay'` and `overlayStage: true` for a floating context. The workbench provides an underlay and inherited overlay context. A floating-surface family paints its own panel with `--bg-overlay`, `--overlay-backdrop`, and the appropriate border, radius, and shadow tokens. An isolated nested control does not gain a panel from the surface override; inspect its actual placement in a relevant consumer without copying that application into its specimen.
-
-## Inspect and Render
+## Inspect Components and Scenes
 
 ```sh
 make setup
@@ -57,19 +25,113 @@ make up app=playground headless=1
 make info
 ```
 
-Open the reported URL with `/?item=text` or `/?item=title`. Each checkout leases its own sticky loopback port (`make up` builds `packages/ui` automatically before starting the dev server, and Vite serves library source changes via HMR). Loopback preview works out of the box; to route through an HTTP(S) reverse proxy, set `DEVKIT_PREVIEW_URL_TEMPLATE` (using `{port}`, `{service}`, `{branch}`/`{slug}`) in the process environment or a Git-ignored root `.env` file, and confirm the active address with `make info`. Use `6-up Matrix` to compare presets and `Live Focus` to inspect at full size. Check Auto/Base/Overlay surfaces, 360/768/1280/1440px containers, 120% Text, and RTL.
+Open the reported URL. Search the catalog by name, ID, or category with `/` or `Ctrl+K` (`Cmd+K` on macOS). Filter component entries by `Proto` for visual prototypes or `UI` for shipped families. Scenes have their own catalog section.
 
-```sh
-make visual item=text section=scale out=text-scale.png
-make visual item=title section=modal mode=focus theme=frost-dark vp=1280 out=title-modal.png
-make visual item=title section=wrapping mode=focus theme=pixel-light vp=360 scale=120 dir=rtl out=title-stress.png
+Every component has the same four views.
+
+| View | What to inspect |
+| --- | --- |
+| Playground | Change the component properties in one place and compare the resulting subjects across themes. Inspect the JSX and any events supplied by the example. Form examples support native Submit and Reset and show the submitted FormData. |
+| Matrix | Select a named slice or choose Rows, Columns, and an optional Group. Global values apply across the view. Forbidden cells show N/A, and ignored or lower-priority values retain their explanation. |
+| Cases | Explore overflow, material, and behavioral examples. Pinned examples identify conditions set by the author. |
+| Usage | Review a small composition and follow links to registered scenes that consume the component. Browser Back returns to the Usage view. |
+
+Pairwise covers every pair of finite values that has a valid completion under the current fixed values. Read the coverage count before treating it as an audit. Full shows every combination, including N/A cells, while the total across selected themes fits in 64 displayed cells.
+
+Choose Family and Scheme independently. All × Both compares all available presets. Select one family and one scheme, or click an artboard header, to inspect a single theme at natural size. Change Surface, Width, 120% Text, and RTL to stress the selected example. Bounds measures authored subjects in CSS pixels. Use browser Back and Forward to revisit item, tab, and theme selections.
+
+Each checkout leases a sticky loopback port. `make up` builds the playground's dependencies before starting Vite, which serves library source changes via HMR. For reverse-proxied preview, set `DEVKIT_PREVIEW_URL_TEMPLATE` with the desired URL and placeholders (`{port}`, `{service}`, `{branch}` or `{slug}`) in the environment or a Git-ignored root `.env` file. Confirm the address with `make info`.
+
+## Author a Specimen
+
+Place each catalog entry under `apps/playground/src/specimens/<family>/*.spec.tsx` and default-export `defineComponent` from `../../workbench/types.js`. The playground discovers these files automatically. Keep design-only component implementations and their semantic CSS under `src/prototypes/<family>/`. Put reusable example helpers next to the family or its specimen.
+
+Use a stable `id`, a `title`, a catalog `category`, and a `status`. The same props drive Playground controls and Matrix. This minimal Title example demonstrates an author-declared rule.
+
+```tsx
+import { Title } from '../../prototypes/title/title.proto.js';
+import { defineComponent } from '../../workbench/types.js';
+
+export default defineComponent({
+  id: 'article-title',
+  title: 'Article title',
+  category: 'Typography',
+  status: 'Proto',
+  componentName: 'Title',
+  props: {
+    truncate: {
+      kind: 'boolean',
+      group: 'Overflow',
+      default: false,
+      description: 'Use a single line and truncate the remaining text.',
+    },
+    lineClamp: {
+      kind: 'number',
+      group: 'Overflow',
+      default: 0,
+      examples: [0, 2],
+      description: 'Limit the number of lines. Zero leaves the line count unrestricted.',
+    },
+  },
+  constraints: [
+    {
+      kind: 'precedence',
+      when: { lineClamp: 2 },
+      affects: [{ key: 'truncate', value: true }],
+      reason: 'A two-line clamp takes precedence over single-line truncation.',
+    },
+  ],
+  matrixViews: [{ id: 'overflow', title: 'Line limits', rows: 'lineClamp', cols: 'truncate' }],
+  code: ({ truncate, lineClamp }) =>
+    `<Title${truncate ? ' truncate' : ''}${lineClamp ? ` lineClamp={${lineClamp}}` : ''}>Release notes for the document editor</Title>`,
+  render: ({ values, ctx }) => (
+    <Title {...ctx.subject} truncate={values.truncate} lineClamp={values.lineClamp}>
+      Release notes for the document editor
+    </Title>
+  ),
+});
 ```
 
-`make visual` validates accepted inputs and receipts through `make doctor`, then verifies real pnpm resolution for the renderer entry points and the local `@docouno/unica` workspace link (`scripts/visual-ready.mjs`) without requiring `packages/ui/dist`. Missing workspace dependencies or headless Chromium are prepared automatically; prepared checkouts reuse their environment without reinstalling dependencies or browsers. If the post-setup probe still fails (for example, when missing files inside an existing `node_modules` tree are skipped by pnpm repeat install), `visual-setup` exits loudly with manual recovery instructions (`rm -rf node_modules apps/*/node_modules packages/*/node_modules && make setup`) instead of deleting `node_modules`. Vite resolves library exports directly to source, so screenshots need no library build and include current source edits. Dependency or environment changes remain subject to Devkit validation; follow its `make sync` or `make setup` guidance if required. The capture itself runs offline at 2× resolution. Run repository checks for the affected code and dependencies as described in [Definition of Done](../AGENTS.md#definition-of-done); screenshots and package checks establish different things.
+Every value control has a `group`, a `description`, and a `default`. The `enum` and `slot` types use stable `choices`, with optional labels and JSX `code` for slots. String and number controls accept free input. To include them in Matrix, set finite `examples` that include the default. Boolean controls supply both values. The `action` type documents a callback with an authored JSX expression such as `code: 'handleChange'`. The property key supplies the attribute name. Wire it to a real event through `ctx.action(name)` and supply the relevant event value. Mark preview-only settings with `demo: true` to keep them out of the generated JSX.
 
-Captures keep Chromium's native inner scrollbars visible. The renderer paints the full document without clipping the root frame, then captures it directly: Chromium's usual full-page path hides scrollbars and changes their occupied space. The 900px layout viewport and viewport-relative units remain unchanged. The outer document scrollbar is omitted; inspect that scrollbar in the live browser. Inner overflow and classic scrollbar geometry remain visible as a platform sample, not a promise of identical macOS or touch rendering.
+Rules apply when every value in `when` matches and at least one `affects` target applies. A target can name a key at any value or a specific `{ key, value }` pair. Give each rule a readable `reason`. `forbidden` prevents rendering the combination. `ignored` and `precedence` explain what loses effect while preserving the chosen values for the component. Fix named slice values with `fixed` and use `reference` for authored examples that illuminate that slice.
 
-Files go to Git-ignored `.artifacts/visual/`. `raw=0` includes the workbench controls; the default captures artboards. Keep other temporary evidence in `.artifacts/<task>/` inside the checkout. Stop the preview with `make down` (keeping its sticky port lease) or `make down cleanup=1` to release the lease when it is no longer needed. When managing parallel worktrees with [Worktrunk](https://worktrunk.dev/), `.config/wt.toml` hooks reserve ports on creation and clean up stand resources before removal (pass `--yes` in non-interactive sessions or run `wt config approvals add --yes` once).
+The renderer is a React component. Put `ctx.subject` on the real DOM subject or pass it through a wrapper that forwards DOM props to that node. In a compound example such as [Table](../apps/playground/src/specimens/table/table.spec.tsx), mark the table itself, keep its header and body in their normal slots, and use `code(values, attributes)` to show the actual nesting or supply required props. The optional `attributes` argument contains the generated JSX attributes, with a leading space when present. Use `ctx.id` when forming native IDs and radio group names so independent artboards can share the document. For a form example, use `form: 'wrap'` for a Workbench-provided form or `form: 'owned'` if the example already supplies one. In an owned example, spread `ctx.form` on the real `<form>`. A controlled example handles its own state change on the native reset event.
+
+Give each Case and Usage block a stable ID and an explanatory caption where needed. Use Case kinds `content`, `surface`, and `behavior`. Set `mode: 'pinned'` where the example fixes a visual state, or `mode: 'live'` when inspection depends on interaction. A Case can set a bounded `width` or compare material contexts with `compareSurfaces: true`. Set `surface: 'overlay'` for an inherited floating context, or `overlayStage: true` to request staging in the app's underlay. The overlay component paints its own panel with semantic tokens. Usage blocks may include a short JSX `code` sample beside their render.
+
+Application compositions live independently in `src/scenes/<NN>-<slug>.scene.tsx` and default-export `defineScene(...)`. Declare consumed component IDs in `uses` to create Usage links. Verify that the scene renders each listed family. [Folio](compositions/folio.md) is one example application. Keep its workflows in scenes and use small, product-independent compositions for component usage.
+
+## Address and Capture a View
+
+Live URLs and `make visual` share the following controls.
+
+| Parameter | Values |
+| --- | --- |
+| `item` | A component or scene ID. Omit to open the first registered item. |
+| `tab` | `playground`, `matrix`, `cases`, `usage`. Scenes have a single view. |
+| `family`, `scheme` | A registered family key (`soft`, `frost`, `pixel`) or `all`, and `dark`, `light`, or `both`. Defaults are `all` and `both`. |
+| `slice`, `mode` | A named Matrix slice and `slice`, `pairwise`, or `full`. Pairwise and Full imply Matrix if the URL has no tab. |
+| `block` | A named Cases or Usage block. Omit to see the whole tab. |
+| `bounds`, `surface` | Use `bounds=1` to show measurements. Set `surface=auto\|base\|overlay`. Auto uses the example's declared context. |
+| `vp`, `scale`, `dir` | Width `auto\|360\|768\|1280\|1440`, scale `100\|120`, and direction `ltr\|rtl`. An omitted scene width uses its declared default. |
+| `raw` | `1` for the artboards, `0` for Workbench controls as well. Captures default to `1`. |
+
+Open `/?item=table&tab=cases&block=editors` for editable rows or `/?item=text&tab=usage&block=reader` for the text reading composition. Previous bookmarks retain their item ID and use current defaults for retired parameters.
+
+```sh
+make visual item=button tab=matrix slice=roles family=all scheme=both out=button-roles.png
+make visual item=table tab=cases block=editors family=frost scheme=dark bounds=1 raw=0 out=table-editors.png
+make visual item=date-picker tab=cases block=live family=frost scheme=light surface=overlay vp=360 scale=120 dir=rtl out=date-picker-live.png
+make visual item=title tab=matrix mode=pairwise family=soft scheme=dark bounds=1 out=title-pairs.png
+make visual item=07-invite-access-modal family=pixel scheme=light vp=360 scale=120 dir=rtl out=folio-invite.png
+```
+
+The capture runs offline at 2× resolution and writes to Git-ignored `.artifacts/visual/`. Omit `out` to use a filename derived from the selected view and its options. Motion is frozen in captures. Use `freeze=1` to request that condition in the browser. The renderer loads the current sources through Vite and keeps Chromium's native inner scrollbars visible at a fixed 900px layout height. A single-theme capture allows room for the requested natural width, and multiple themes use the live comparison layout. Test focus, typing, and overlay dismissal in the live browser.
+
+`make visual` checks the accepted environment with `make doctor` and verifies real pnpm resolution for the renderer and local library link. It can prepare missing dependencies and headless Chromium. If setup leaves dependency resolution broken, the preparation exits with recovery instructions. The renderer uses library sources directly. Run the applicable repository checks separately as described in the [Definition of Done](../AGENTS.md#definition-of-done).
+
+Keep other temporary evidence in `.artifacts/<task>/` inside the checkout. Stop the preview with `make down` or release its port lease with `make down cleanup=1`. The Worktrunk hooks reserve ports on creation and clean up stand resources on removal. Pass `--yes` in non-interactive sessions.
 
 ## Boundaries and Handoff
 
@@ -77,4 +139,16 @@ Prototype styles use semantic CSS custom properties. Do not branch on theme name
 
 Use the system's structural roles and established vocabulary when describing the design. Illustrative JSX and prototype controls help explain anatomy and use; exact TypeScript signatures, internal state architecture, and complete reusable focus/form/ARIA mechanisms are resolved during library implementation. Record expected user outcomes separately from mechanisms not yet implemented. Identify native stand-ins for adjacent unfinished families.
 
-After visual approval, implement the family in `packages/ui` in a separate change. Engineering choices may change the prototype's internal structure while preserving approved appearance and interaction. Resolve a new product or visual conflict explicitly rather than silently redesigning it or treating prototype helpers as a fixed API. Switch the specimen and scene imports to `@docouno/unica`, remove the temporary prototype and its component CSS, and retain only example layout styles. Add `docs/components/<family>.md` with the public contract. Run the repository checks, tests, build, package verification, and visual inspection before handoff.
+After visual approval, implement the family in `packages/ui` in a separate change. Preserve approved appearance and interaction and resolve any new product or visual conflict explicitly. Keep the same specimen ID. Once the package exports the component, switch the import and status as shown for the Title example.
+
+```diff
+-import { Title } from '../../prototypes/title/title.proto.js';
++import { Title } from '@docouno/unica';
+
+ export default defineComponent({
+   id: 'article-title',
+-  status: 'Proto',
++  status: 'UI',
+```
+
+Update the schema, examples, and JSX readout to match the shipped API. Switch scene imports to the package, remove the temporary prototype and its component CSS, and retain example layout styles. Record the public contract in `docs/components/<family>.md`. Run the repository checks, tests, build, package verification, and visual inspection before handoff.

@@ -7,19 +7,40 @@ import react from '@vitejs/plugin-react';
 import { chromium } from 'playwright-core';
 import { createServer } from 'vite';
 
-const item = process.env.VISUAL_ITEM ?? '';
-const mode = process.env.VISUAL_MODE ?? '6up';
-const theme = process.env.VISUAL_THEME ?? 'frost-dark';
-const surface = process.env.VISUAL_SURFACE ?? 'auto';
-const vp = process.env.VISUAL_VP ?? '';
-const scale = process.env.VISUAL_SCALE ?? '100';
-const dir = process.env.VISUAL_DIR ?? 'ltr';
-const section = process.env.VISUAL_SECTION ?? 'all';
-const raw = process.env.VISUAL_RAW ?? '1';
-const slug = item || 'workbench';
-const outName =
-  process.env.VISUAL_OUT ||
-  `${slug}-${mode}${mode === 'focus' ? `-${theme}` : ''}${surface !== 'auto' ? `-${surface}` : ''}${section !== 'all' ? `-${section}` : ''}${vp ? `-vp${vp}` : ''}${scale !== '100' ? `-s${scale}` : ''}${dir !== 'ltr' ? `-${dir}` : ''}${raw === '0' ? '-chrome' : ''}.png`;
+const raw = process.env.VISUAL_RAW !== '0';
+const params = new URLSearchParams({ freeze: '1' });
+for (const key of [
+  'item',
+  'tab',
+  'family',
+  'scheme',
+  'slice',
+  'mode',
+  'block',
+  'bounds',
+  'surface',
+  'vp',
+  'scale',
+  'dir',
+]) {
+  const value = process.env[`VISUAL_${key.toUpperCase()}`];
+  if (value) {
+    params.set(key, value);
+  }
+}
+params.set('raw', raw ? '1' : '0');
+
+function filenamePart(value) {
+  return encodeURIComponent(value).replaceAll('_', '%5F');
+}
+
+const nameParts = [filenamePart(params.get('item') || 'workbench')];
+for (const [key, value] of params) {
+  if (key !== 'item' && key !== 'freeze') {
+    nameParts.push(`${key}-${filenamePart(value)}`);
+  }
+}
+const outName = process.env.VISUAL_OUT || `${nameParts.join('_')}.png`;
 
 const appRoot = resolve(import.meta.dirname, '..');
 const outDir = resolve(appRoot, '../../.artifacts/visual');
@@ -36,7 +57,7 @@ const [server, browser] = await Promise.all([
     plugins: [devkitWorkspaceSource(), react()],
     resolve: { dedupe: ['react', 'react-dom'] },
     optimizeDeps: { include: ['@phosphor-icons/react'] },
-    server: { host: '127.0.0.1', port: 0 },
+    server: { host: '127.0.0.1', port: 0, watch: null, hmr: false },
   }).then((s) => s.listen()),
   chromium.launch({
     headless: true,
@@ -55,33 +76,7 @@ const [server, browser] = await Promise.all([
 try {
   const addr = server.httpServer?.address();
   const port = typeof addr === 'object' && addr ? addr.port : 5173;
-  const params = new URLSearchParams({
-    mode,
-    theme,
-    scale,
-    dir,
-    section,
-    freeze: '1',
-  });
-  if (item) {
-    params.set('item', item);
-  }
-  if (vp) {
-    params.set('vp', vp);
-  }
-  if (surface !== 'auto') {
-    params.set('surface', surface);
-  }
-  if (raw === '1') {
-    params.set('raw', '1');
-  }
-
-  const vpNum = Number(vp);
-  const baseWidth = raw === '0' ? 1560 : mode === 'focus' ? 1120 : 1440;
-  const width =
-    mode === 'focus' && Number.isFinite(vpNum) && vpNum > 0
-      ? Math.max(baseWidth, vpNum + (raw === '0' ? 360 : 96))
-      : baseWidth;
+  const width = raw ? 1440 : 1560;
 
   const page = await browser.newPage({
     viewport: { width, height: 900 },
@@ -102,19 +97,38 @@ try {
     throw new Error(`HTTP ${String(resp?.status())} for ${url}`);
   }
 
-  await page.waitForSelector('html[data-wb-ready="1"]', { timeout: 8000 });
-  if (mode === 'focus') {
-    const neededWidth = await page.evaluate(() => {
+  async function waitForReady() {
+    try {
+      await page.waitForSelector('html[data-wb-ready="1"]', { timeout: 8000 });
+    } catch (error) {
+      if (errors.length > 0) {
+        throw new Error(`Runtime errors:\n${errors.join('\n')}`, { cause: error });
+      }
+      throw error;
+    }
+  }
+
+  await waitForReady();
+  if ((await page.locator('.wb-artboard').count()) === 1) {
+    const fitWidth = await page.evaluate(() => {
+      const host = document.querySelector('.wb-viewport-host');
       const inner = document.querySelector('.wb-viewport-inner');
-      if (!inner) {
+      if (!host || !inner) {
         return 0;
       }
-      const rect = inner.getBoundingClientRect();
-      const hasRail = Boolean(document.querySelector('.wb-rail'));
-      return Math.ceil(rect.width) + (hasRail ? 360 : 96);
+      const { paddingInlineStart, paddingInlineEnd } = window.getComputedStyle(host);
+      const chromeWidth = window.innerWidth - host.clientWidth;
+      const innerWidth = inner.getBoundingClientRect().width;
+      return Math.ceil(
+        innerWidth + chromeWidth + parseFloat(paddingInlineStart) + parseFloat(paddingInlineEnd),
+      );
     });
-    if (neededWidth > width) {
-      await page.setViewportSize({ width: neededWidth, height: 900 });
+    const isolatedWidth = Math.max(raw ? 1120 : 1560, fitWidth);
+    if (isolatedWidth !== width) {
+      // A previous readiness signal describes the old CSS viewport.
+      await page.evaluate(() => document.documentElement.removeAttribute('data-wb-ready'));
+      await page.setViewportSize({ width: isolatedWidth, height: 900 });
+      await waitForReady();
     }
   }
   if (errors.length > 0) {
@@ -143,6 +157,9 @@ try {
     captureBeyondViewport: false,
     clip: { x: 0, y: 0, ...captureSize, scale: 1 },
   });
+  if (errors.length > 0) {
+    throw new Error(`Runtime errors:\n${errors.join('\n')}`);
+  }
   await writeFile(outPath, Buffer.from(capture.data, 'base64'));
   const elapsedMs = Math.round(performance.now() - t0);
   process.stdout.write(`visual: wrote ${outPath} (${String(elapsedMs)} ms)\n`);

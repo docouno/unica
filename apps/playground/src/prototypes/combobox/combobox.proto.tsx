@@ -39,6 +39,7 @@ interface FieldProps extends Pick<
   | 'required'
   | 'previewState'
   | 'aria-label'
+  | 'data-wb-subject'
 > {
   readonly options: readonly Suggestion[];
   readonly iconLeft?: GlyphComponent | null | undefined;
@@ -547,6 +548,7 @@ function SuggestionField({
   const browsingCopy = unconfirmed && recoveryCopy && enabled.length > 0;
   const panel = shown && (
     <SelectPanel
+      data-wb-subject={fieldProps['data-wb-subject']}
       ref={popup}
       popover={previewOpen ? undefined : 'manual'}
       className={

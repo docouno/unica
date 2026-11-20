@@ -59,6 +59,7 @@ export interface CheckboxProps extends Omit<
   ComponentPropsWithRef<'input'>,
   'type' | 'size' | 'children'
 > {
+  readonly 'data-wb-subject'?: string | undefined;
   readonly size?: ControlSize | undefined;
   readonly label?: ReactNode;
   readonly description?: ReactNode;
@@ -90,6 +91,7 @@ export function Checkbox({
   value,
   onClick,
   onChange,
+  'data-wb-subject': subject,
   ...props
 }: CheckboxProps): ReactElement {
   const group = useContext(CheckboxContext);
@@ -113,6 +115,7 @@ export function Checkbox({
   }, [indeterminate, selected]);
   return (
     <label
+      data-wb-subject={subject}
       className={`binary-control ${className}`}
       data-size={effectiveSize}
       data-status={effectiveStatus}
@@ -283,6 +286,7 @@ export function Radio({
   onClick,
   onChange,
   onKeyDown,
+  'data-wb-subject': subject,
   ...props
 }: RadioProps): ReactElement {
   const group = useContext(RadioContext);
@@ -294,6 +298,7 @@ export function Radio({
   const effectiveStatus = unavailable ? 'neutral' : (status ?? group?.status ?? 'neutral');
   return (
     <label
+      data-wb-subject={subject}
       className={`binary-control ${className}`}
       data-size={effectiveSize}
       data-status={effectiveStatus}
@@ -507,6 +512,7 @@ export function Switch({
   onClick,
   onChange,
   onKeyDown,
+  'data-wb-subject': subject,
   ...props
 }: SwitchProps): ReactElement {
   const group = useContext(SwitchContext);
@@ -523,6 +529,7 @@ export function Switch({
   const effectiveSize = size ?? group.size ?? 'm';
   return (
     <label
+      data-wb-subject={subject}
       className={`binary-control ${className}`}
       data-kind="switch"
       data-size={effectiveSize}

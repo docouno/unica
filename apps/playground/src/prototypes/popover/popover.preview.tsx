@@ -11,10 +11,20 @@ import {
   PopoverHeader,
   PopoverTitle,
 } from './popover.proto.js';
-import type { PopoverAlign, PopoverSide } from './popover.proto.js';
+import type { PopoverAlign, PopoverSide, PopoverSize } from './popover.proto.js';
+
+interface CompactPreview {
+  readonly size: PopoverSize;
+  readonly subject: { readonly 'data-wb-subject': '' };
+  readonly onOpenChange: (open: boolean) => void;
+}
 
 // A bounded design harness, not the library's positioning/focus implementation.
-export function PlacementExamples(): ReactElement {
+export function PlacementExamples({
+  preview,
+}: {
+  readonly preview?: CompactPreview;
+}): ReactElement {
   const id = useId();
   const stageRef = useRef<HTMLDivElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
@@ -26,6 +36,7 @@ export function PlacementExamples(): ReactElement {
   const [anchor, setAnchor] = useState('center');
   const [placed, setPlaced] = useState('');
   const [value, setValue] = useState('Release notes');
+  const previewSize = preview?.size;
 
   useLayoutEffect(() => {
     const panel = panelRef.current;
@@ -50,7 +61,11 @@ export function PlacementExamples(): ReactElement {
         panel.hidePopover();
         return;
       }
-      panel.style.width = `${Math.min(352, right - left)}px`;
+      const preferred = previewSize
+        ? { s: 18, m: 22, l: 28 }[previewSize] *
+          Number.parseFloat(getComputedStyle(document.documentElement).fontSize)
+        : 352;
+      panel.style.width = `${Math.min(preferred, right - left)}px`;
       const width = panel.getBoundingClientRect().width;
       // Measure intrinsic height before choosing the side and constraining the body.
       panel.style.maxHeight = 'none';
@@ -141,7 +156,7 @@ export function PlacementExamples(): ReactElement {
       window.removeEventListener('scroll', onOutsideScroll, true);
       window.visualViewport?.removeEventListener('resize', position);
     };
-  }, [open, side, align, anchor]);
+  }, [open, side, align, anchor, previewSize]);
 
   const close = (): void => {
     panelRef.current?.hidePopover();
@@ -149,41 +164,56 @@ export function PlacementExamples(): ReactElement {
   };
   return (
     <div className="popover-demo-stack">
-      <div className="popover-demo-options">
-        <label>
-          Side
-          <select value={side} onChange={(event) => setSide(event.target.value as PopoverSide)}>
-            {(['top', 'bottom', 'start', 'end'] as const).map((item) => (
-              <option key={item}>{item}</option>
-            ))}
-          </select>
-        </label>
-        <label>
-          Alignment
-          <select value={align} onChange={(event) => setAlign(event.target.value as PopoverAlign)}>
-            {(['start', 'center', 'end'] as const).map((item) => (
-              <option key={item}>{item}</option>
-            ))}
-          </select>
-        </label>
-        <label>
-          Anchor
-          <select value={anchor} onChange={(event) => setAnchor(event.target.value)}>
-            <option value="center">Center</option>
-            <option value="top-start">Top start</option>
-            <option value="bottom-end">Bottom end</option>
-          </select>
-        </label>
-      </div>
-      <Text className="popover-demo-note" size="caption-l" color="secondary">
-        Open Settings, press Escape or click outside. Tab can leave the panel. This framed area acts
-        as the available viewport: 8px anchor gap, 16px edge clearance, flip and shift.
-      </Text>
-      <div ref={stageRef} className="popover-demo-live-stage" data-anchor={anchor}>
-        <Text className="popover-demo-live-label" size="caption-l" color="muted">
-          {open ? `Placed ${placed}` : 'Open the panel to explore'}
+      {!preview && (
+        <div className="popover-demo-options">
+          <label>
+            Side
+            <select value={side} onChange={(event) => setSide(event.target.value as PopoverSide)}>
+              {(['top', 'bottom', 'start', 'end'] as const).map((item) => (
+                <option key={item}>{item}</option>
+              ))}
+            </select>
+          </label>
+          <label>
+            Alignment
+            <select
+              value={align}
+              onChange={(event) => setAlign(event.target.value as PopoverAlign)}
+            >
+              {(['start', 'center', 'end'] as const).map((item) => (
+                <option key={item}>{item}</option>
+              ))}
+            </select>
+          </label>
+          <label>
+            Anchor
+            <select value={anchor} onChange={(event) => setAnchor(event.target.value)}>
+              <option value="center">Center</option>
+              <option value="top-start">Top start</option>
+              <option value="bottom-end">Bottom end</option>
+            </select>
+          </label>
+        </div>
+      )}
+      {!preview && (
+        <Text className="popover-demo-note" size="caption-l" color="secondary">
+          Open Settings, press Escape or click outside. Tab can leave the panel. This framed area
+          acts as the available viewport: 8px anchor gap, 16px edge clearance, flip and shift.
         </Text>
+      )}
+      <div
+        ref={stageRef}
+        className="popover-demo-live-stage"
+        data-anchor={anchor}
+        style={preview ? { blockSize: 320 } : undefined}
+      >
+        {!preview && (
+          <Text className="popover-demo-live-label" size="caption-l" color="muted">
+            {open ? `Placed ${placed}` : 'Open the panel to explore'}
+          </Text>
+        )}
         <Button
+          {...preview?.subject}
           ref={triggerRef}
           className="popover-demo-live-trigger"
           variant="secondary"
@@ -201,6 +231,8 @@ export function PlacementExamples(): ReactElement {
           Settings
         </Button>
         <PopoverContent
+          {...preview?.subject}
+          size={preview?.size ?? 'm'}
           ref={panelRef}
           id={`${id}-live`}
           popover="auto"
@@ -208,7 +240,11 @@ export function PlacementExamples(): ReactElement {
           className="popover-demo-native"
           aria-labelledby={`${id}-title`}
           aria-describedby={`${id}-description`}
-          onToggle={(event) => setOpen(event.newState === 'open')}
+          onToggle={(event) => {
+            const next = event.newState === 'open';
+            setOpen(next);
+            preview?.onOpenChange(next);
+          }}
           onBlur={(event) => {
             const next = event.relatedTarget;
             if (
@@ -238,13 +274,17 @@ export function PlacementExamples(): ReactElement {
             </Text>
           </PopoverBody>
         </PopoverContent>
-        <Button className="popover-demo-after" variant="ghost" tone="neutral" size="s">
-          Next focus target
-        </Button>
+        {!preview && (
+          <Button className="popover-demo-after" variant="ghost" tone="neutral" size="s">
+            Next focus target
+          </Button>
+        )}
       </div>
-      <Text className="popover-demo-result" size="body-s">
-        Current name: {value || 'Untitled page'}
-      </Text>
+      {!preview && (
+        <Text className="popover-demo-result" size="body-s">
+          Current name: {value || 'Untitled page'}
+        </Text>
+      )}
     </div>
   );
 }

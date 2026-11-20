@@ -2,7 +2,7 @@
 
 ## Combobox
 
-Open `?item=combobox` in the workbench. The role matrix and Team assignment are interactive. Sections marked **pinned** keep states side by side for inspection. Folio's Page Properties drawer provides the placement reference for a compact reviewer picker inside an inspector. The live field has also been checked inside the shared Drawer preview.
+Open `?item=combobox` in the workbench. The role matrix and the Team assignment example in Usage are interactive. Examples marked **Pinned** keep states side by side for inspection. Folio's Page Properties drawer provides the placement reference for a compact reviewer picker inside an inspector. The live field has also been checked inside the shared Drawer preview.
 
 ### Purpose
 

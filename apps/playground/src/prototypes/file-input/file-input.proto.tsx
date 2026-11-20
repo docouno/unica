@@ -31,6 +31,7 @@ export interface FileInputProps extends Omit<
   ComponentPropsWithRef<'input'>,
   'type' | 'size' | 'value' | 'defaultValue'
 > {
+  readonly 'data-wb-subject'?: string | undefined;
   readonly size?: ControlSize;
   readonly variant?: FieldVariant;
   readonly status?: FieldStatus;
@@ -77,6 +78,7 @@ export function FileInput({
   required,
   multiple,
   previewState,
+  'data-wb-subject': subject,
   ...props
 }: FileInputProps): ReactElement {
   const [localName, setLocalName] = useState(initialFileName);
@@ -133,6 +135,7 @@ export function FileInput({
       <span
         ref={focusScope}
         data-input-focus-scope=""
+        data-wb-subject={subject}
         className={`file-input-proto ${className}`}
         style={style}
         data-size={size}

@@ -42,17 +42,31 @@ import {
   TableRowHeader,
   TableScroll,
 } from './table.proto.js';
-import type { TableSize, TableSortDirection } from './table.proto.js';
+import type { TableAlign, TableSize, TableSortDirection } from './table.proto.js';
 import './table.examples.css';
 
 const sizes = ['s', 'm', 'l'] as const;
 const densityNames = { s: 'Compact', m: 'Standard', l: 'Comfortable' };
 
-function BudgetTable({ size }: { readonly size: TableSize }): ReactElement {
+type TableAttributes = Readonly<Record<`data-${string}`, string>>;
+
+export function BudgetTable({
+  size,
+  striped = false,
+  amountAlign = 'end',
+  selected = false,
+  subjectAttributes,
+}: {
+  readonly size: TableSize;
+  readonly striped?: boolean;
+  readonly amountAlign?: TableAlign;
+  readonly selected?: boolean;
+  readonly subjectAttributes?: TableAttributes;
+}): ReactElement {
   const captionId = useId();
   return (
     <TableScroll aria-labelledby={captionId}>
-      <Table size={size} className="table-example-budgets">
+      <Table {...subjectAttributes} size={size} striped={striped} className="table-example-budgets">
         <TableCaption id={captionId}>
           {densityNames[size]} <span>{size.toUpperCase()}</span>
         </TableCaption>
@@ -60,16 +74,16 @@ function BudgetTable({ size }: { readonly size: TableSize }): ReactElement {
           <TableRow>
             <TableColumnHeader>Service</TableColumnHeader>
             <TableColumnHeader align="center">Region</TableColumnHeader>
-            <TableColumnHeader align="end">Requests</TableColumnHeader>
+            <TableColumnHeader align={amountAlign}>Requests</TableColumnHeader>
           </TableRow>
         </TableHeader>
         <TableBody>
-          <TableRow>
+          <TableRow selected={selected}>
             <TableRowHeader>Gateway</TableRowHeader>
             <TableCell align="center">
               <bdi>eu-west</bdi>
             </TableCell>
-            <TableCell align="end">
+            <TableCell align={amountAlign}>
               <bdi>24,800</bdi>
             </TableCell>
           </TableRow>
@@ -78,7 +92,7 @@ function BudgetTable({ size }: { readonly size: TableSize }): ReactElement {
             <TableCell align="center">
               <bdi>us-east</bdi>
             </TableCell>
-            <TableCell align="end">
+            <TableCell align={amountAlign}>
               <bdi>1,260</bdi>
             </TableCell>
           </TableRow>
@@ -86,23 +100,13 @@ function BudgetTable({ size }: { readonly size: TableSize }): ReactElement {
         <TableFooter>
           <TableRow>
             <TableRowHeader colSpan={2}>Total</TableRowHeader>
-            <TableCell align="end">
+            <TableCell align={amountAlign}>
               <bdi>26,060</bdi>
             </TableCell>
           </TableRow>
         </TableFooter>
       </Table>
     </TableScroll>
-  );
-}
-
-export function DensityExamples(): ReactElement {
-  return (
-    <div className="table-example-stack">
-      {sizes.map((size) => (
-        <BudgetTable key={size} size={size} />
-      ))}
-    </div>
   );
 }
 
@@ -203,13 +207,19 @@ function RouteRow({
   );
 }
 
-function RouteTable({ size }: { readonly size: TableSize }): ReactElement {
+function RouteTable({
+  size,
+  subjectAttributes,
+}: {
+  readonly size: TableSize;
+  readonly subjectAttributes: TableAttributes | undefined;
+}): ReactElement {
   const captionId = useId();
   const [notice, setNotice] = useState('');
   return (
     <div className="table-example-route-case">
       <TableScroll aria-labelledby={captionId}>
-        <Table size={size} className="table-example-routes">
+        <Table {...subjectAttributes} size={size} className="table-example-routes">
           <TableCaption id={captionId}>
             Route policies <span>{size.toUpperCase()}</span>
           </TableCaption>
@@ -245,11 +255,15 @@ function RouteTable({ size }: { readonly size: TableSize }): ReactElement {
   );
 }
 
-export function EditorExamples(): ReactElement {
+export function EditorExamples({
+  subjectAttributes,
+}: {
+  readonly subjectAttributes?: TableAttributes;
+}): ReactElement {
   return (
     <div className="table-example-stack">
       {sizes.map((size) => (
-        <RouteTable key={size} size={size} />
+        <RouteTable key={size} size={size} subjectAttributes={subjectAttributes} />
       ))}
     </div>
   );

@@ -1,200 +1,104 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import type { ReactElement, ReactNode } from 'react';
+import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import type { MouseEvent, ReactElement, ReactNode, RefObject } from 'react';
+import { Inspector } from './Inspector.js';
+import {
+  patchRoute,
+  readRoute,
+  routeSearch,
+  schemes,
+  selectThemes,
+  surfaces,
+  tabs,
+  viewports,
+} from './route.js';
+import type { WorkbenchRoute } from './route.js';
 import type {
+  ComponentStatus,
   SceneDefinition,
-  SpecimenDefinition,
-  TextDirection,
-  TextScale,
   ViewportSize,
   WorkbenchConfig,
+  WorkbenchStageContext,
   WorkbenchTheme,
 } from './types.js';
 import './workbench.css';
 
-type ViewMode = '6up' | 'focus';
-type SurfaceMode = 'auto' | 'base' | 'overlay';
+const tabLabels = {
+  playground: 'Playground',
+  matrix: 'Matrix',
+  cases: 'Cases',
+  usage: 'Usage',
+};
 
-interface UrlState {
-  readonly item: string;
-  readonly mode: ViewMode;
-  readonly theme: string;
-  readonly surface: SurfaceMode;
-  readonly vp: ViewportSize;
-  readonly scale: TextScale;
-  readonly dir: TextDirection;
-  readonly section: string;
-  readonly raw: boolean;
-  readonly freeze: boolean;
-}
+const schemeLabels = { dark: 'Dark', light: 'Light', both: 'Both' };
+const surfaceLabels = { auto: 'Auto', base: 'Base', overlay: 'Overlay' };
 
-function parseViewport(val: string | null): ViewportSize {
-  if (val === '360') {
-    return 360;
-  }
-  if (val === '768') {
-    return 768;
-  }
-  if (val === '1280') {
-    return 1280;
-  }
-  if (val === '1440') {
-    return 1440;
-  }
-  return 'auto';
-}
-
-function parseSurface(val: string | null): SurfaceMode {
-  if (val === 'base') {
-    return 'base';
-  }
-  if (val === 'overlay') {
-    return 'overlay';
-  }
-  return 'auto';
-}
-
-function readUrlState(config: WorkbenchConfig): UrlState {
-  const params = new URLSearchParams(window.location.search);
-  const firstId = config.specimens[0]?.id ?? config.scenes[0]?.id ?? '';
-  const item = params.get('item') ?? firstId;
-  const matchedScene = config.scenes.find((s) => s.id === item);
-  const mode: ViewMode = params.get('mode') === 'focus' ? 'focus' : '6up';
-  const theme = params.get('theme') ?? config.defaultThemeId;
-  const surface = parseSurface(params.get('surface'));
-  const vpParam = params.get('vp');
-  const vp: ViewportSize =
-    vpParam !== null ? parseViewport(vpParam) : (matchedScene?.defaultViewport ?? 'auto');
-  const scale: TextScale = params.get('scale') === '120' ? 120 : 100;
-  const dir: TextDirection = params.get('dir') === 'rtl' ? 'rtl' : 'ltr';
-  const section = params.get('section') ?? 'all';
-  const raw = params.get('raw') === '1';
-  const freeze = params.get('freeze') === '1';
-  return { item, mode, theme, surface, vp, scale, dir, section, raw, freeze };
-}
-
-function writeUrlState(next: UrlState, config: WorkbenchConfig): void {
-  const params = new URLSearchParams();
-  if (next.item) {
-    params.set('item', next.item);
-  }
-  if (next.mode !== '6up') {
-    params.set('mode', next.mode);
-  }
-  if (next.theme !== config.defaultThemeId) {
-    params.set('theme', next.theme);
-  }
-  if (next.surface !== 'auto') {
-    params.set('surface', next.surface);
-  }
-  const matchedScene = config.scenes.find((s) => s.id === next.item);
-  const defaultVp: ViewportSize = matchedScene?.defaultViewport ?? 'auto';
-  if (next.vp !== defaultVp) {
-    params.set('vp', String(next.vp));
-  }
-  if (next.scale !== 100) {
-    params.set('scale', String(next.scale));
-  }
-  if (next.dir !== 'ltr') {
-    params.set('dir', next.dir);
-  }
-  if (next.section !== 'all') {
-    params.set('section', next.section);
-  }
-  if (next.raw) {
-    params.set('raw', '1');
-  }
-  if (next.freeze) {
-    params.set('freeze', '1');
-  }
-  const qs = params.toString();
-  const nextUrl = qs ? `${window.location.pathname}?${qs}` : window.location.pathname;
-  window.history.replaceState(null, '', nextUrl);
-}
-
-interface ViewportFrameProps {
+function ViewportFrame({
+  vp,
+  scaleToFit,
+  children,
+}: {
   readonly vp: ViewportSize;
   readonly scaleToFit: boolean;
   readonly children: ReactNode;
-}
-
-function ViewportFrame({ vp, scaleToFit, children }: ViewportFrameProps): ReactElement {
+}): ReactElement {
   const hostRef = useRef<HTMLDivElement | null>(null);
   const innerRef = useRef<HTMLDivElement | null>(null);
-  const [metrics, setMetrics] = useState<{ scale: number; height: number | null }>({
+  const [metrics, setMetrics] = useState<{ scale: number; height: number | undefined }>({
     scale: 1,
-    height: null,
+    height: undefined,
   });
 
   useLayoutEffect(() => {
-    if (vp === 'auto' || !scaleToFit) {
-      return;
-    }
     const host = hostRef.current;
     const inner = innerRef.current;
-    if (!host || !inner) {
+    if (vp === 'auto' || !scaleToFit || !host || !inner || typeof ResizeObserver === 'undefined') {
       return;
     }
 
-    const update = (): void => {
-      const slotW = host.clientWidth;
-      if (slotW <= 0) {
+    const measure = (): void => {
+      if (host.clientWidth === 0) {
         return;
       }
-      const scale = Math.min(1, slotW / vp);
-      const naturalH = inner.offsetHeight;
-      setMetrics({ scale, height: Math.ceil(naturalH * scale) });
+      const scale = Math.min(1, host.clientWidth / vp);
+      const height = Math.ceil(inner.offsetHeight * scale);
+      setMetrics((previous) =>
+        previous.scale === scale && previous.height === height ? previous : { scale, height },
+      );
     };
 
-    const RO = (globalThis as { ResizeObserver?: typeof ResizeObserver }).ResizeObserver;
-    if (!RO) {
-      return;
-    }
-    const ro = new RO(update);
-    ro.observe(host);
-    ro.observe(inner);
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(host);
+    observer.observe(inner);
     return () => {
-      ro.disconnect();
+      observer.disconnect();
     };
   }, [vp, scaleToFit]);
-
-  if (vp === 'auto') {
-    return <div className="wb-viewport-host">{children}</div>;
-  }
-
-  if (!scaleToFit) {
-    return (
-      <div className="wb-viewport-host" style={{ padding: '16px' }}>
-        <div
-          className="wb-viewport-inner"
-          style={{ width: `${String(vp)}px`, marginInline: 'auto' }}
-        >
-          {children}
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div
       ref={hostRef}
       className="wb-viewport-host"
-      style={{
-        overflow: 'hidden',
-        ...(metrics.height !== null ? { height: `${String(metrics.height)}px` } : {}),
-      }}
+      data-scaled={vp !== 'auto' && scaleToFit ? 'true' : undefined}
+      data-fixed={vp !== 'auto' ? 'true' : undefined}
+      style={vp !== 'auto' && scaleToFit ? { height: metrics.height } : undefined}
     >
-      <div
-        ref={innerRef}
-        className="wb-viewport-inner"
-        style={{
-          width: `${String(vp)}px`,
-          marginInline: metrics.scale === 1 ? 'auto' : '0',
-          transformOrigin: 'top left',
-          transform: `scale(${String(metrics.scale)})`,
-        }}
-      >
-        {children}
-      </div>
+      {vp === 'auto' ? (
+        children
+      ) : (
+        <div
+          ref={innerRef}
+          className="wb-viewport-inner"
+          style={{
+            width: vp,
+            ...(scaleToFit && metrics.scale < 1
+              ? { scale: metrics.scale, marginInline: 0, '--wb-viewport-scale': metrics.scale }
+              : {}),
+          }}
+        >
+          {children}
+        </div>
+      )}
     </div>
   );
 }
@@ -211,120 +115,333 @@ export function OverlayStage({
   children,
 }: OverlayStageProps): ReactElement {
   return (
-    <div className="wb-overlay-stage" style={{ minHeight: `${String(minHeight)}px` }}>
+    <div className="wb-overlay-stage" style={{ minHeight }}>
       {underlay}
       {children}
     </div>
   );
 }
 
-interface ArtboardBodyProps {
-  readonly config: WorkbenchConfig;
-  readonly theme: WorkbenchTheme;
-  readonly specimen: SpecimenDefinition | undefined;
-  readonly scene: SceneDefinition | undefined;
-  readonly surfaceOverride: SurfaceMode;
-  readonly scale: TextScale;
-  readonly dir: TextDirection;
-  readonly activeSectionId: string;
+function renderStage(config: WorkbenchConfig, ctx: WorkbenchStageContext): ReactNode {
+  if (config.renderStage) {
+    return config.renderStage(ctx);
+  }
+  return ctx.surface === 'overlay' ? (
+    <div data-surface="overlay">{ctx.children}</div>
+  ) : (
+    ctx.children
+  );
 }
 
-function ArtboardBody({
-  config,
-  theme,
-  specimen,
-  scene,
-  surfaceOverride,
-  scale,
-  dir,
-  activeSectionId,
-}: ArtboardBodyProps): ReactElement {
-  const wrapStage = (
-    surface: 'base' | 'overlay',
-    overlayStage: boolean,
-    content: ReactNode,
-  ): ReactNode => {
-    if (config.renderStage) {
-      return config.renderStage({ theme, surface, overlayStage, children: content });
-    }
-    return surface === 'overlay' ? <div data-surface="overlay">{content}</div> : content;
-  };
-
-  if (scene) {
-    const surface: 'base' | 'overlay' =
-      surfaceOverride === 'auto' ? (scene.surface ?? 'base') : surfaceOverride;
-    const overlayStage =
-      surfaceOverride === 'base' ? false : Boolean(scene.overlayStage) || surface === 'overlay';
-    return (
-      <div
-        className="wb-artboard"
-        data-theme={theme.id}
-        data-color-scheme={theme.colorScheme}
-        data-text-scale={String(scale)}
-        dir={dir}
-        style={{ colorScheme: theme.colorScheme }}
-      >
-        {wrapStage(surface, overlayStage, scene.render())}
-      </div>
-    );
-  }
-
-  if (!specimen) {
-    const effectiveSurface: 'base' | 'overlay' = surfaceOverride === 'overlay' ? 'overlay' : 'base';
-    const emptyContent = config.renderEmptyState ? (
-      config.renderEmptyState({ theme, surface: effectiveSurface })
+function sceneArtboard(
+  config: WorkbenchConfig,
+  route: WorkbenchRoute,
+  theme: WorkbenchTheme,
+  scene: SceneDefinition | undefined,
+): ReactNode {
+  const surface = route.surface === 'auto' ? (scene?.surface ?? 'base') : route.surface;
+  const overlayStage =
+    surface === 'overlay' || (route.surface === 'auto' && Boolean(scene?.overlayStage));
+  const Scene = scene?.render;
+  return renderStage(config, {
+    theme,
+    surface,
+    overlayStage,
+    children: Scene ? (
+      <Scene />
     ) : (
-      <div className="wb-empty-note">No specimen or scene registered yet.</div>
-    );
-    return (
-      <div
-        className="wb-artboard"
-        data-theme={theme.id}
-        data-color-scheme={theme.colorScheme}
-        data-text-scale={String(scale)}
-        dir={dir}
-        style={{ colorScheme: theme.colorScheme }}
-      >
-        {wrapStage(effectiveSurface, effectiveSurface === 'overlay', emptyContent)}
-      </div>
-    );
-  }
+      (config.renderEmptyState?.({ theme, surface }) ?? (
+        <p className="wb-empty-note">No components or scenes registered.</p>
+      ))
+    ),
+  });
+}
 
-  const visibleSections =
-    activeSectionId === 'all'
-      ? specimen.sections
-      : specimen.sections.filter((s) => s.id === activeSectionId);
+function useCaptureReadiness(
+  hostRef: RefObject<HTMLDivElement | null>,
+  route: WorkbenchRoute,
+): void {
+  useLayoutEffect(() => {
+    const host = hostRef.current;
+    const root = document.documentElement;
+    if (route.freeze) {
+      root.setAttribute('data-wb-freeze', '1');
+    }
 
+    let revision = 0;
+    const waitUntilReady = (): void => {
+      const current = ++revision;
+      root.removeAttribute('data-wb-ready');
+      if (host?.querySelector('[data-wb-pending]')) {
+        return;
+      }
+      const ready = document.fonts?.ready ?? Promise.resolve();
+      const afterLayout = (): void => {
+        if (current !== revision) {
+          return;
+        }
+        window.requestAnimationFrame(() => {
+          window.requestAnimationFrame(() => {
+            if (current === revision && !host?.querySelector('[data-wb-pending]')) {
+              root.setAttribute('data-wb-ready', '1');
+            }
+          });
+        });
+      };
+      ready.then(afterLayout, afterLayout);
+    };
+
+    let pending = Boolean(host?.querySelector('[data-wb-pending]'));
+    const observer = new MutationObserver(() => {
+      const next = Boolean(host?.querySelector('[data-wb-pending]'));
+      if (pending !== next) {
+        pending = next;
+        waitUntilReady();
+      }
+    });
+    if (host) {
+      observer.observe(host, {
+        subtree: true,
+        childList: true,
+        attributes: true,
+        attributeFilter: ['data-wb-pending'],
+      });
+    }
+    waitUntilReady();
+    window.addEventListener('resize', waitUntilReady);
+    return () => {
+      revision++;
+      observer.disconnect();
+      root.removeAttribute('data-wb-ready');
+      root.removeAttribute('data-wb-freeze');
+      window.removeEventListener('resize', waitUntilReady);
+    };
+  }, [hostRef, route]);
+}
+
+function shouldFollowInPlace(event: MouseEvent<HTMLAnchorElement>): boolean {
   return (
-    <div
-      className="wb-artboard"
-      data-theme={theme.id}
-      data-color-scheme={theme.colorScheme}
-      data-text-scale={String(scale)}
-      dir={dir}
-      style={{ colorScheme: theme.colorScheme }}
+    !event.defaultPrevented &&
+    event.button === 0 &&
+    !event.altKey &&
+    !event.ctrlKey &&
+    !event.metaKey &&
+    !event.shiftKey
+  );
+}
+
+function Destination({
+  href,
+  active,
+  navigate,
+  className,
+  children,
+}: {
+  readonly href: string;
+  readonly active?: boolean;
+  readonly navigate: () => void;
+  readonly className: string;
+  readonly children: ReactNode;
+}): ReactElement {
+  return (
+    <a
+      className={className}
+      href={href}
+      aria-current={active ? 'page' : undefined}
+      data-active={active ? 'true' : undefined}
+      onClick={(event) => {
+        if (shouldFollowInPlace(event)) {
+          event.preventDefault();
+          navigate();
+        }
+      }}
     >
-      <div className="wb-sections">
-        {visibleSections.map((sec) => {
-          const secSurface: 'base' | 'overlay' =
-            surfaceOverride === 'auto'
-              ? (sec.surface ?? specimen.defaultSurface ?? 'base')
-              : surfaceOverride;
-          const secOverlayStage =
-            surfaceOverride === 'base'
-              ? false
-              : Boolean(sec.overlayStage) || secSurface === 'overlay';
-          return (
-            <div key={sec.id} className="wb-section-block">
-              <div className="wb-section-head">
-                <span className="wb-section-title">{sec.title}</span>
-                <span className="wb-section-kind">{sec.kind}</span>
-              </div>
-              {wrapStage(secSurface, secOverlayStage, sec.render())}
-            </div>
-          );
-        })}
+      {children}
+    </a>
+  );
+}
+
+function filterMatch(
+  item: { readonly id: string; readonly title: string },
+  category: string,
+  query: string,
+): boolean {
+  return [item.id, item.title, category].some((value) => value.toLowerCase().includes(query));
+}
+
+function useSceneIndex(config: WorkbenchConfig): ReadonlyMap<string, readonly SceneDefinition[]> {
+  return useMemo(() => {
+    const index = new Map<string, SceneDefinition[]>();
+    for (const scene of config.scenes) {
+      for (const id of new Set(scene.uses)) {
+        const existing = index.get(id);
+        if (existing) {
+          existing.push(scene);
+        } else {
+          index.set(id, [scene]);
+        }
+      }
+    }
+    return index;
+  }, [config.scenes]);
+}
+
+type Update = (patch: Partial<WorkbenchRoute>, behavior?: 'push' | 'replace') => void;
+type Href = (patch: Partial<WorkbenchRoute>) => string;
+
+function Environment({
+  route,
+  themes,
+  update,
+  href,
+  hasComponent,
+}: {
+  readonly route: WorkbenchRoute;
+  readonly themes: readonly WorkbenchTheme[];
+  readonly update: Update;
+  readonly href: Href;
+  readonly hasComponent: boolean;
+}): ReactElement {
+  const families = new Map(themes.map((theme) => [theme.family, theme.familyLabel]));
+  const familyOptions = [...families, ['all', 'All'] as const];
+  const [copyResult, setCopyResult] = useState<{ status: string; url: string }>();
+  const url = new URL(href({}), window.location.href).href;
+  function copyLink(): void {
+    const unavailable = (): void => {
+      setCopyResult({ status: 'Copy unavailable', url });
+    };
+    if (!navigator.clipboard) {
+      unavailable();
+      return;
+    }
+    navigator.clipboard.writeText(url).then(() => {
+      setCopyResult({ status: 'Link copied', url });
+    }, unavailable);
+  }
+  return (
+    <div className="wb-environment">
+      <div className="wb-environment-group">
+        <span aria-hidden="true">Family</span>
+        <div className="wb-seg" role="group" aria-label="Family">
+          {familyOptions.map(([family, label]) =>
+            selectThemes(themes, family, route.scheme).length > 0 ? (
+              <Destination
+                key={family}
+                className="wb-seg-btn"
+                href={href({ family })}
+                active={route.family === family}
+                navigate={() => {
+                  update({ family }, 'push');
+                }}
+              >
+                {label}
+              </Destination>
+            ) : (
+              <button key={family} className="wb-seg-btn" type="button" disabled>
+                {label}
+              </button>
+            ),
+          )}
+        </div>
       </div>
+      <div className="wb-environment-group">
+        <span aria-hidden="true">Scheme</span>
+        <div className="wb-seg" role="group" aria-label="Scheme">
+          {schemes.map((scheme) =>
+            selectThemes(themes, route.family, scheme).length > 0 ? (
+              <Destination
+                key={scheme}
+                className="wb-seg-btn"
+                href={href({ scheme })}
+                active={route.scheme === scheme}
+                navigate={() => {
+                  update({ scheme }, 'push');
+                }}
+              >
+                {schemeLabels[scheme]}
+              </Destination>
+            ) : (
+              <button key={scheme} className="wb-seg-btn" type="button" disabled>
+                {schemeLabels[scheme]}
+              </button>
+            ),
+          )}
+        </div>
+      </div>
+      <div className="wb-environment-group">
+        <span aria-hidden="true">Surface</span>
+        <div className="wb-seg" role="group" aria-label="Surface">
+          {surfaces.map((surface) => (
+            <button
+              key={surface}
+              className="wb-seg-btn"
+              type="button"
+              aria-pressed={route.surface === surface}
+              onClick={() => {
+                update({ surface });
+              }}
+            >
+              {surfaceLabels[surface]}
+            </button>
+          ))}
+        </div>
+      </div>
+      <label className="wb-environment-group">
+        Width
+        <select
+          className="wb-select"
+          value={route.vp}
+          onChange={(event) => {
+            const match = viewports.find((vp) => String(vp) === event.target.value);
+            if (match !== undefined) {
+              update({ vp: match });
+            }
+          }}
+        >
+          {viewports.map((vp) => (
+            <option key={vp} value={vp}>
+              {vp === 'auto' ? 'Auto' : `${String(vp)} px`}
+            </option>
+          ))}
+        </select>
+      </label>
+      <div className="wb-seg" role="group" aria-label="Stress controls">
+        <button
+          className="wb-seg-btn"
+          type="button"
+          aria-pressed={route.scale === 120}
+          onClick={() => {
+            update({ scale: route.scale === 120 ? 100 : 120 });
+          }}
+        >
+          120% Text
+        </button>
+        <button
+          className="wb-seg-btn"
+          type="button"
+          aria-pressed={route.dir === 'rtl'}
+          onClick={() => {
+            update({ dir: route.dir === 'rtl' ? 'ltr' : 'rtl' });
+          }}
+        >
+          RTL
+        </button>
+        {hasComponent && (
+          <button
+            className="wb-seg-btn"
+            type="button"
+            aria-pressed={route.bounds}
+            onClick={() => {
+              update({ bounds: !route.bounds });
+            }}
+          >
+            Bounds
+          </button>
+        )}
+      </div>
+      <button className="wb-action-btn" type="button" onClick={copyLink}>
+        {copyResult?.url === url ? copyResult.status : 'Copy Link'}
+      </button>
     </div>
   );
 }
@@ -334,433 +451,340 @@ export interface WorkbenchAppProps {
 }
 
 export function WorkbenchApp({ config }: WorkbenchAppProps): ReactElement {
-  const [state, setState] = useState<UrlState>(() => readUrlState(config));
+  const [route, setRoute] = useState(() => readRoute(window.location.search, config));
   const [query, setQuery] = useState('');
-  const [copied, setCopied] = useState(false);
+  const [status, setStatus] = useState<'All' | ComponentStatus>('All');
+  const [catalogOpen, setCatalogOpen] = useState(false);
+  const [searchRequest, setSearchRequest] = useState(0);
+  const rootRef = useRef<HTMLDivElement>(null);
+  const searchRef = useRef<HTMLInputElement>(null);
+  const mobileCatalogRef = useRef<HTMLButtonElement>(null);
+  const headingRef = useRef<HTMLHeadingElement>(null);
+  const catalogId = useId();
 
-  const update = (patch: Partial<UrlState>): void => {
-    setState((prev) => {
-      const next = { ...prev, ...patch };
-      writeUrlState(next, config);
-      return next;
-    });
-  };
+  useCaptureReadiness(rootRef, route);
+  useEffect(() => {
+    const restore = (): void => {
+      setRoute(readRoute(window.location.search, config));
+    };
+    window.addEventListener('popstate', restore);
+    return () => {
+      window.removeEventListener('popstate', restore);
+    };
+  }, [config]);
 
   useEffect(() => {
-    const root = document.documentElement;
-    if (state.freeze) {
-      root.setAttribute('data-wb-freeze', '1');
-    } else {
-      root.removeAttribute('data-wb-freeze');
+    if (route.raw) {
+      return;
     }
-    root.removeAttribute('data-wb-ready');
-    let cancelled = false;
-    const fontsReady = (document as Partial<Document>).fonts?.ready ?? Promise.resolve();
-    fontsReady
-      .then(() => {
-        window.requestAnimationFrame(() => {
-          window.requestAnimationFrame(() => {
-            if (!cancelled) {
-              root.setAttribute('data-wb-ready', '1');
-            }
-          });
-        });
-      })
-      .catch(() => {});
-    return () => {
-      cancelled = true;
+    const openSearch = (event: KeyboardEvent): void => {
+      if (event.defaultPrevented || event.isComposing || event.altKey || event.repeat) {
+        return;
+      }
+      const target = event.target instanceof HTMLElement ? event.target : null;
+      const slash = event.key === '/' && !event.metaKey && !event.ctrlKey;
+      const command = event.key.toLowerCase() === 'k' && (event.metaKey || event.ctrlKey);
+      if (
+        (!slash && !command) ||
+        Array.from(document.querySelectorAll('dialog[open]')).some((dialog) =>
+          dialog.matches(':modal'),
+        ) ||
+        target?.closest('dialog[open], [role="dialog"], [role="alertdialog"]') ||
+        (slash && (target?.isContentEditable || target?.closest('input, textarea, select')))
+      ) {
+        return;
+      }
+      event.preventDefault();
+      setCatalogOpen(true);
+      setSearchRequest((previous) => previous + 1);
     };
-  }, [
-    state.freeze,
-    state.item,
-    state.mode,
-    state.theme,
-    state.surface,
-    state.vp,
-    state.scale,
-    state.dir,
-    state.section,
-  ]);
+    window.addEventListener('keydown', openSearch);
+    return () => {
+      window.removeEventListener('keydown', openSearch);
+    };
+  }, [route.raw]);
 
-  const activeSpecimen = useMemo(
-    () => config.specimens.find((s) => s.id === state.item),
-    [config.specimens, state.item],
-  );
-  const activeScene = useMemo(
-    () => config.scenes.find((s) => s.id === state.item),
-    [config.scenes, state.item],
-  );
-
-  const activeTheme = useMemo(
-    () => config.themes.find((t) => t.id === state.theme) ?? config.themes[0],
-    [config.themes, state.theme],
-  );
-
-  const normalizedQuery = query.trim().toLowerCase();
-  const filteredSpecimens = useMemo(
-    () =>
-      config.specimens.filter(
-        (s) =>
-          !normalizedQuery ||
-          s.title.toLowerCase().includes(normalizedQuery) ||
-          s.group.toLowerCase().includes(normalizedQuery),
-      ),
-    [config.specimens, normalizedQuery],
-  );
-  const filteredScenes = useMemo(
-    () =>
-      config.scenes.filter(
-        (s) =>
-          !normalizedQuery ||
-          s.title.toLowerCase().includes(normalizedQuery) ||
-          s.group.toLowerCase().includes(normalizedQuery),
-      ),
-    [config.scenes, normalizedQuery],
-  );
-
-  const renderCanvas = (): ReactElement => {
-    if (state.mode === 'focus' && activeTheme) {
-      return (
-        <div className="wb-focus-wrap">
-          <div className="wb-cell wb-cell-focus">
-            <div className="wb-cell-header">
-              <span className="wb-cell-title">
-                <span className="wb-dot" data-scheme={activeTheme.colorScheme} />
-                {activeTheme.label}
-              </span>
-              <span className="wb-cell-meta">
-                {activeTheme.meta ?? activeTheme.family}
-                {!state.raw && (
-                  <button
-                    type="button"
-                    className="wb-zoom-btn"
-                    onClick={() => {
-                      update({ mode: '6up' });
-                    }}
-                  >
-                    <svg width="10" height="10" viewBox="0 0 12 12" fill="none" aria-hidden="true">
-                      <path
-                        d="M9.5 6H2.5M2.5 6L5.5 3M2.5 6L5.5 9"
-                        stroke="currentColor"
-                        strokeWidth="1.5"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                    6-up Grid
-                  </button>
-                )}
-              </span>
-            </div>
-            <ViewportFrame vp={state.vp} scaleToFit={false}>
-              <ArtboardBody
-                config={config}
-                theme={activeTheme}
-                specimen={activeSpecimen}
-                scene={activeScene}
-                surfaceOverride={state.surface}
-                scale={state.scale}
-                dir={state.dir}
-                activeSectionId={state.section}
-              />
-            </ViewportFrame>
-          </div>
-        </div>
-      );
+  useLayoutEffect(() => {
+    if (searchRequest > 0) {
+      searchRef.current?.focus();
     }
+  }, [searchRequest]);
 
-    return (
-      <div className="wb-grid-6up">
-        {config.themes.map((th) => (
-          <div key={th.id} className="wb-cell">
-            <div className="wb-cell-header">
-              <span className="wb-cell-title">
-                <span className="wb-dot" data-scheme={th.colorScheme} />
-                {th.label}
-              </span>
-              <span className="wb-cell-meta">
-                {th.meta ?? th.family}
-                {!state.raw && (
-                  <button
-                    type="button"
-                    className="wb-zoom-btn"
-                    onClick={() => {
-                      update({ mode: 'focus', theme: th.id });
-                    }}
-                  >
-                    Focus
-                    <svg width="10" height="10" viewBox="0 0 12 12" fill="none" aria-hidden="true">
-                      <path
-                        d="M3.5 8.5L8.5 3.5M8.5 3.5H4.5M8.5 3.5V7.5"
-                        stroke="currentColor"
-                        strokeWidth="1.5"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                  </button>
-                )}
-              </span>
-            </div>
-            <ViewportFrame vp={state.vp} scaleToFit={true}>
-              <ArtboardBody
-                config={config}
-                theme={th}
-                specimen={activeSpecimen}
-                scene={activeScene}
-                surfaceOverride={state.surface}
-                scale={state.scale}
-                dir={state.dir}
-                activeSectionId={state.section}
-              />
-            </ViewportFrame>
-          </div>
-        ))}
-      </div>
-    );
+  const createHref: Href = (patch) =>
+    `${window.location.pathname}${routeSearch(patchRoute(route, patch, config), config)}${window.location.hash}`;
+  const update: Update = (patch, behavior = 'replace') => {
+    const current = readRoute(window.location.search, config);
+    const next = patchRoute(current, patch, config);
+    const search = routeSearch(next, config);
+    if (search === routeSearch(current, config)) {
+      return;
+    }
+    const href = `${window.location.pathname}${search}${window.location.hash}`;
+    if (behavior === 'push') {
+      window.history.pushState(null, '', href);
+    } else {
+      window.history.replaceState(null, '', href);
+    }
+    setRoute(next);
   };
 
-  if (state.raw) {
-    return <div className="wb-raw-canvas">{renderCanvas()}</div>;
+  function navigateItem(item: string): void {
+    update({ item }, 'push');
+    setCatalogOpen(false);
+    if (mobileCatalogRef.current?.getClientRects().length && catalogOpen) {
+      headingRef.current?.focus();
+    }
   }
 
-  const activeTitle = activeSpecimen?.title ?? activeScene?.title ?? 'Preset Calibration';
-  const activeSummary =
-    activeSpecimen?.summary ??
-    activeScene?.summary ??
-    'Live semantic token & surface hierarchy across all 6 presets';
+  const component = config.components.find((entry) => entry.id === route.item);
+  const scene = config.scenes.find((entry) => entry.id === route.item);
+  const notFound =
+    !component && !scene && Boolean(route.item || config.components.length || config.scenes.length);
+  const selectedThemes = selectThemes(config.themes, route.family, route.scheme);
+  const sceneIndex = useSceneIndex(config);
+  const normalizedQuery = query.trim().toLowerCase();
+  const filteredComponents = config.components.filter(
+    (item) =>
+      (status === 'All' || item.status === status) &&
+      filterMatch(item, item.category, normalizedQuery),
+  );
+  const filteredScenes = config.scenes.filter((item) =>
+    filterMatch(item, item.group, normalizedQuery),
+  );
+
+  const renderArtboards = (render: (theme: WorkbenchTheme) => ReactNode): ReactElement => (
+    <div className="wb-artboards" data-single={selectedThemes.length === 1 ? 'true' : undefined}>
+      {selectedThemes.map((theme) => (
+        <section className="wb-cell" key={theme.id} aria-label={theme.label}>
+          {route.raw ? (
+            <div className="wb-cell-header">
+              <span className="wb-cell-title">{theme.label}</span>
+              {theme.meta && <span className="wb-cell-meta">{theme.meta}</span>}
+            </div>
+          ) : (
+            <button
+              className="wb-cell-header wb-isolate"
+              type="button"
+              aria-label={`Isolate ${theme.label}`}
+              onClick={() => {
+                if (selectedThemes.length > 1) {
+                  update({ family: theme.family, scheme: theme.colorScheme }, 'push');
+                }
+              }}
+            >
+              <span className="wb-cell-title">{theme.label}</span>
+              <span className="wb-cell-meta">
+                {selectedThemes.length > 1 ? 'Isolate' : theme.meta}
+              </span>
+            </button>
+          )}
+          <ViewportFrame vp={route.vp} scaleToFit={selectedThemes.length > 1}>
+            <div
+              className="wb-artboard"
+              data-theme={theme.id}
+              data-color-scheme={theme.colorScheme}
+              data-text-scale={route.scale}
+              dir={route.dir}
+              style={{ colorScheme: theme.colorScheme }}
+            >
+              {render(theme)}
+            </div>
+          </ViewportFrame>
+        </section>
+      ))}
+      {!selectedThemes.length && <p className="wb-empty-note">No themes registered.</p>}
+    </div>
+  );
+
+  const body = component ? (
+    <Inspector
+      key={component.id}
+      component={component}
+      route={route}
+      themes={selectedThemes}
+      scenes={sceneIndex.get(component.id) ?? []}
+      update={update}
+      itemHref={(item) => createHref({ item })}
+      navigateItem={navigateItem}
+      renderArtboards={renderArtboards}
+      renderStage={config.renderStage}
+    />
+  ) : notFound ? (
+    <p className="wb-empty-note">
+      Item “{route.item}” was not found. Choose a component or scene from the catalog.
+    </p>
+  ) : (
+    renderArtboards((theme) => sceneArtboard(config, route, theme, scene))
+  );
+
+  const identity = {
+    'data-wb-item': route.item,
+    'data-wb-tab': component ? route.tab : undefined,
+    'data-wb-slice':
+      route.tab === 'matrix' ? (route.slice ?? component?.matrixViews?.[0]?.id) : undefined,
+    'data-wb-mode': route.tab === 'matrix' ? route.mode : undefined,
+    'data-wb-block': route.block,
+    'data-wb-not-found': notFound ? '1' : undefined,
+  };
+
+  if (route.raw) {
+    return (
+      <div ref={rootRef} className="wb-raw-canvas" {...identity}>
+        {body}
+      </div>
+    );
+  }
 
   return (
-    <div className="wb-shell">
-      <aside className="wb-rail">
+    <div ref={rootRef} className="wb-shell" {...identity}>
+      <aside className="wb-rail" aria-label="Workbench catalog">
         <div className="wb-rail-sticky">
           <div className="wb-brand">
             <span className="wb-brand-title">{config.title}</span>
-            <span className="wb-brand-sub">{config.subtitle}</span>
-          </div>
-          <div className="wb-search-wrap">
-            <input
-              type="search"
-              className="wb-search"
-              placeholder="Filter components & scenes..."
-              value={query}
-              onChange={(e) => {
-                setQuery(e.target.value);
+            {config.subtitle && <span className="wb-brand-sub">{config.subtitle}</span>}
+            <button
+              ref={mobileCatalogRef}
+              type="button"
+              className="wb-action-btn wb-mobile-nav"
+              aria-expanded={catalogOpen}
+              aria-controls={catalogId}
+              onClick={() => {
+                setCatalogOpen(!catalogOpen);
               }}
-            />
+            >
+              Catalog
+            </button>
           </div>
-          <div className="wb-nav-section">
-            <div className="wb-nav-heading">Specimens ({filteredSpecimens.length})</div>
-            <div className="wb-nav-list">
-              {filteredSpecimens.length === 0 ? (
-                <div className="wb-nav-empty">No specimens yet</div>
-              ) : (
-                filteredSpecimens.map((s) => (
+          <div
+            id={catalogId}
+            className="wb-rail-content"
+            data-open={catalogOpen ? 'true' : undefined}
+          >
+            <div className="wb-search-wrap">
+              <input
+                ref={searchRef}
+                type="search"
+                className="wb-search"
+                aria-label="Search components and scenes"
+                aria-keyshortcuts="/ Meta+K Control+K"
+                placeholder="Search catalog"
+                value={query}
+                onChange={(event) => {
+                  setQuery(event.target.value);
+                }}
+              />
+            </div>
+            <div className="wb-filter-row">
+              <div className="wb-seg" role="group" aria-label="Component status">
+                {(['All', 'UI', 'Proto'] as const).map((filter) => (
                   <button
-                    key={s.id}
+                    key={filter}
+                    className="wb-seg-btn"
                     type="button"
-                    className="wb-nav-item"
-                    data-active={s.id === state.item ? 'true' : 'false'}
+                    aria-pressed={status === filter}
                     onClick={() => {
-                      update({
-                        item: s.id,
-                        section: 'all',
-                        surface: 'auto',
-                        vp: 'auto',
-                      });
+                      setStatus(filter);
                     }}
                   >
-                    <span>{s.title}</span>
-                    <span className="wb-nav-tag">{s.group}</span>
+                    {filter}
                   </button>
-                ))
-              )}
+                ))}
+              </div>
             </div>
-          </div>
-          <div className="wb-nav-section">
-            <div className="wb-nav-heading">Scenes ({filteredScenes.length})</div>
-            <div className="wb-nav-list">
-              {filteredScenes.length === 0 ? (
-                <div className="wb-nav-empty">No scenes yet</div>
-              ) : (
-                filteredScenes.map((s) => (
-                  <button
-                    key={s.id}
-                    type="button"
-                    className="wb-nav-item"
-                    data-active={s.id === state.item ? 'true' : 'false'}
-                    onClick={() => {
-                      update({
-                        item: s.id,
-                        section: 'all',
-                        surface: 'auto',
-                        vp: s.defaultViewport ?? 'auto',
-                      });
-                    }}
-                  >
-                    <span>{s.title}</span>
-                    <span className="wb-nav-tag">{s.group}</span>
-                  </button>
-                ))
+            <nav aria-label="Components and scenes">
+              {config.categories.map((category) => {
+                const entries = filteredComponents.filter((entry) => entry.category === category);
+                if (!entries.length) {
+                  return null;
+                }
+                return (
+                  <section key={category} className="wb-nav-section">
+                    <h2 className="wb-nav-heading">{category}</h2>
+                    <div className="wb-nav-list">
+                      {entries.map((entry) => (
+                        <Destination
+                          key={entry.id}
+                          className="wb-nav-item"
+                          active={entry.id === route.item}
+                          href={createHref({ item: entry.id })}
+                          navigate={() => {
+                            navigateItem(entry.id);
+                          }}
+                        >
+                          <span>{entry.title}</span>{' '}
+                          <span className="wb-nav-tag">{entry.status}</span>
+                        </Destination>
+                      ))}
+                    </div>
+                  </section>
+                );
+              })}
+              {!filteredComponents.length && (
+                <p className="wb-nav-empty">No matching components.</p>
               )}
-            </div>
+              <section className="wb-nav-section">
+                <h2 className="wb-nav-heading">Scenes</h2>
+                <div className="wb-nav-list">
+                  {filteredScenes.map((entry) => (
+                    <Destination
+                      key={entry.id}
+                      className="wb-nav-item"
+                      active={entry.id === route.item}
+                      href={createHref({ item: entry.id })}
+                      navigate={() => {
+                        navigateItem(entry.id);
+                      }}
+                    >
+                      <span>{entry.title}</span>
+                    </Destination>
+                  ))}
+                  {!filteredScenes.length && <p className="wb-nav-empty">No matching scenes.</p>}
+                </div>
+              </section>
+            </nav>
           </div>
         </div>
       </aside>
 
       <div className="wb-main">
         <header className="wb-topbar">
-          <div className="wb-topbar-left">
-            <div className="wb-item-heading">
-              <span className="wb-item-title">{activeTitle}</span>
-              {activeSummary && <span className="wb-item-summary">{activeSummary}</span>}
-            </div>
+          <div className="wb-item-heading">
+            <h1 ref={headingRef} className="wb-item-title" tabIndex={-1}>
+              {component?.title ??
+                scene?.title ??
+                (notFound ? 'Item not found' : 'Preset calibration')}
+            </h1>
+            {component && <span className="wb-nav-tag">{component.status}</span>}
           </div>
-
-          <div className="wb-topbar-right">
-            <div className="wb-seg" role="group" aria-label="View mode">
-              <button
-                type="button"
-                className="wb-seg-btn"
-                data-active={state.mode === '6up' ? 'true' : 'false'}
-                onClick={() => {
-                  update({ mode: '6up' });
-                }}
-              >
-                6-up Matrix
-              </button>
-              <button
-                type="button"
-                className="wb-seg-btn"
-                data-active={state.mode === 'focus' ? 'true' : 'false'}
-                onClick={() => {
-                  update({ mode: 'focus' });
-                }}
-              >
-                Live Focus
-              </button>
-            </div>
-
-            {state.mode === 'focus' && (
-              <div className="wb-seg" role="group" aria-label="Preset">
-                {config.themes.map((th) => (
-                  <button
-                    key={th.id}
-                    type="button"
-                    className="wb-seg-btn"
-                    data-active={state.theme === th.id ? 'true' : 'false'}
-                    onClick={() => {
-                      update({ theme: th.id });
-                    }}
-                  >
-                    {th.label}
-                  </button>
-                ))}
-              </div>
-            )}
-
-            <div className="wb-seg" role="group" aria-label="Surface context">
-              {(['auto', 'base', 'overlay'] as const).map((s) => (
-                <button
-                  key={s}
-                  type="button"
-                  className="wb-seg-btn"
-                  data-active={state.surface === s ? 'true' : 'false'}
-                  onClick={() => {
-                    update({ surface: s });
-                  }}
-                >
-                  {s === 'auto' ? 'Auto' : s === 'base' ? 'Base' : 'Overlay'}
-                </button>
-              ))}
-            </div>
-
-            <div className="wb-seg" role="group" aria-label="Container viewport">
-              {(['auto', 360, 768, 1280, 1440] as const).map((v) => (
-                <button
-                  key={String(v)}
-                  type="button"
-                  className="wb-seg-btn"
-                  data-active={state.vp === v ? 'true' : 'false'}
-                  onClick={() => {
-                    update({ vp: v });
-                  }}
-                >
-                  {v === 'auto' ? 'Auto' : `${String(v)}px`}
-                </button>
-              ))}
-            </div>
-
-            <div className="wb-seg" role="group" aria-label="Stress controls">
-              <button
-                type="button"
-                className="wb-seg-btn"
-                data-active={state.scale === 120 ? 'true' : 'false'}
-                onClick={() => {
-                  update({ scale: state.scale === 120 ? 100 : 120 });
-                }}
-              >
-                120% Text
-              </button>
-              <button
-                type="button"
-                className="wb-seg-btn"
-                data-active={state.dir === 'rtl' ? 'true' : 'false'}
-                onClick={() => {
-                  update({ dir: state.dir === 'rtl' ? 'ltr' : 'rtl' });
-                }}
-              >
-                RTL
-              </button>
-            </div>
-
-            <button
-              type="button"
-              className="wb-action-btn"
-              onClick={() => {
-                navigator.clipboard?.writeText(window.location.href).catch(() => {});
-                setCopied(true);
-                window.setTimeout(() => {
-                  setCopied(false);
-                }, 1400);
-              }}
-            >
-              {copied ? 'Copied URL' : 'Copy Link'}
-            </button>
-          </div>
+          {(component?.summary ?? scene?.summary) && (
+            <p className="wb-item-summary">{component?.summary ?? scene?.summary}</p>
+          )}
+          <Environment
+            route={route}
+            themes={config.themes}
+            update={update}
+            href={createHref}
+            hasComponent={Boolean(component)}
+          />
         </header>
-
-        {activeSpecimen && activeSpecimen.sections.length > 1 && (
-          <div className="wb-subbar">
-            <div className="wb-pills">
-              <button
-                type="button"
-                className="wb-pill"
-                data-active={state.section === 'all' ? 'true' : 'false'}
-                onClick={() => {
-                  update({ section: 'all' });
+        {component && (
+          <nav className="wb-tabs" aria-label="Inspector tabs">
+            {tabs.map((tab) => (
+              <Destination
+                key={tab}
+                className="wb-tab"
+                href={createHref({ tab })}
+                active={route.tab === tab}
+                navigate={() => {
+                  update({ tab }, 'push');
                 }}
               >
-                All sections ({activeSpecimen.sections.length})
-              </button>
-              {activeSpecimen.sections.map((sec) => (
-                <button
-                  key={sec.id}
-                  type="button"
-                  className="wb-pill"
-                  data-active={state.section === sec.id ? 'true' : 'false'}
-                  onClick={() => {
-                    update({ section: sec.id });
-                  }}
-                >
-                  {sec.title}
-                </button>
-              ))}
-            </div>
-          </div>
+                {tabLabels[tab]}
+              </Destination>
+            ))}
+          </nav>
         )}
-
-        <main className="wb-canvas">{renderCanvas()}</main>
+        <main className="wb-canvas">{body}</main>
       </div>
     </div>
   );

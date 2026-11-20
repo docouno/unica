@@ -1,12 +1,10 @@
 import { readdir, readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, beforeAll, expect, it } from 'vitest';
-import { THEME_PRESETS } from '@docouno/unica';
 import { unicaWorkbench } from './unica.workbench.js';
 import { WorkbenchApp } from './workbench/WorkbenchApp.js';
-import { defineScene, defineSpecimen } from './workbench/types.js';
-import type { WorkbenchConfig } from './workbench/types.js';
+import { validateCatalog } from './workbench/schema.js';
 
 beforeAll(() => {
   if (typeof globalThis.ResizeObserver === 'undefined') {
@@ -24,143 +22,86 @@ afterEach(() => {
 });
 
 async function collectFiles(dirPath: string, exts: readonly string[]): Promise<string[]> {
-  try {
-    const entries = await readdir(dirPath, { withFileTypes: true });
-    const results: string[] = [];
-    for (const entry of entries) {
-      const full = resolve(dirPath, entry.name);
-      if (entry.isDirectory()) {
-        results.push(...(await collectFiles(full, exts)));
-      } else if (entry.isFile() && exts.some((ext) => entry.name.endsWith(ext))) {
-        results.push(full);
-      }
+  const entries = await readdir(dirPath, { withFileTypes: true });
+  const results: string[] = [];
+  for (const entry of entries) {
+    const full = resolve(dirPath, entry.name);
+    if (entry.isDirectory()) {
+      results.push(...(await collectFiles(full, exts)));
+    } else if (entry.isFile() && exts.some((ext) => entry.name.endsWith(ext))) {
+      results.push(full);
     }
-    return results;
-  } catch {
-    return [];
   }
+  return results;
 }
 
-it('renders the Unica Workbench across all 6 presets and toggles focus/stress controls', () => {
+it('discovers real Proto and scene entries and renders six themed Subjects', () => {
+  expect(() => validateCatalog(unicaWorkbench)).not.toThrow();
   expect(unicaWorkbench.themes).toHaveLength(6);
+  expect(unicaWorkbench.components.find(({ id }) => id === 'button')?.status).toBe('Proto');
+  expect(unicaWorkbench.scenes.find(({ id }) => id === '01-sign-in')?.uses).toContain('button');
+
+  window.history.replaceState(null, '', '/?item=button');
   const { container } = render(<WorkbenchApp config={unicaWorkbench} />);
-
   expect(screen.getByText('Unica Workbench')).toBeTruthy();
-  expect(screen.getByText('6-up Matrix')).toBeTruthy();
-  expect(screen.getByText('Live Focus')).toBeTruthy();
+  expect(container.querySelectorAll('.wb-artboard button[data-wb-subject]')).toHaveLength(6);
 
-  const artboards = container.querySelectorAll('.wb-artboard');
-  expect(artboards).toHaveLength(6);
-
-  fireEvent.click(screen.getByText('120% Text'));
-  expect(container.querySelector('.wb-artboard[data-text-scale="120"]')).toBeTruthy();
+  fireEvent.click(screen.getByRole('button', { name: '120% Text' }));
+  expect(container.querySelectorAll('.wb-artboard[data-text-scale="120"]')).toHaveLength(6);
 
   fireEvent.click(screen.getByRole('button', { name: 'RTL' }));
-  expect(container.querySelector('.wb-artboard[dir="rtl"]')).toBeTruthy();
-
-  fireEvent.click(screen.getByText('Live Focus'));
-  expect(container.querySelectorAll('.wb-artboard')).toHaveLength(1);
+  expect(container.querySelectorAll('.wb-artboard[dir="rtl"]')).toHaveLength(6);
 });
 
-it('supports Auto/Base/Overlay surface overrides and respects SceneDefinition.defaultViewport', () => {
-  const overlaySpecimen = defineSpecimen({
-    id: 'overlay-popover',
-    title: 'Overlay Popover',
-    group: 'Overlays',
-    defaultSurface: 'overlay',
-    sections: [
-      {
-        id: 'matrix',
-        title: 'Overlay matrix',
-        kind: 'matrix',
-        render: () => <span>Overlay Specimen Node</span>,
-      },
-    ],
-  });
-
-  const wideScene = defineScene({
-    id: '01-wide-scene',
-    title: '01 · Wide Scene',
-    group: 'Folio',
-    defaultViewport: 1440,
-    render: () => <span>Wide Scene Node</span>,
-  });
-
-  const syntheticConfig: WorkbenchConfig = {
-    ...unicaWorkbench,
-    themes: THEME_PRESETS,
-    specimens: [overlaySpecimen],
-    scenes: [wideScene],
-  };
-
-  const { container } = render(<WorkbenchApp config={syntheticConfig} />);
-  expect(screen.getAllByText('Overlay Specimen Node')).toHaveLength(6);
-  expect(container.querySelectorAll('[data-surface="overlay"]').length).toBeGreaterThan(0);
-
-  fireEvent.click(screen.getByRole('button', { name: 'Base' }));
-  expect(container.querySelectorAll('[data-surface="overlay"]')).toHaveLength(0);
-
-  fireEvent.click(screen.getByText('01 · Wide Scene'));
-  fireEvent.click(screen.getByText('Live Focus'));
-  const frameInner = container.querySelector<HTMLElement>('.wb-viewport-inner');
-  expect(frameInner?.style.width).toBe('1440px');
-  expect(frameInner?.style.maxWidth).toBe('');
-
-  cleanup();
-  window.history.replaceState(null, '', '/?item=01-wide-scene&mode=focus');
-  const direct = render(<WorkbenchApp config={syntheticConfig} />);
-  const directInner = direct.container.querySelector<HTMLElement>('.wb-viewport-inner');
-  expect(directInner?.style.width).toBe('1440px');
-
-  const autoBtn = direct.getByRole('group', { name: 'Container viewport' }).firstElementChild;
-  if (autoBtn) {
-    fireEvent.click(autoBtn);
-  }
-  expect(direct.container.querySelector('.wb-viewport-inner')).toBeNull();
-});
-
-it('navigates between the real scenes and specimen sections without sharing their hooks', () => {
-  window.history.replaceState(null, '', '/?item=01-sign-in&mode=focus');
+it('restores the material and case caption of a directly addressed RadioCard preview', () => {
+  window.history.replaceState(null, '', '/?item=radio-card&tab=cases&block=overlay');
   const { container } = render(<WorkbenchApp config={unicaWorkbench} />);
+  const artboards = [...container.querySelectorAll<HTMLElement>('.wb-artboard')];
+  expect(artboards).toHaveLength(6);
+  expect(artboards.every((artboard) => artboard.querySelector('[data-surface="overlay"]'))).toBe(
+    true,
+  );
+  expect(screen.getAllByText(/Static floating plate with live inputs/)).toHaveLength(6);
 
-  for (const scene of unicaWorkbench.scenes ?? []) {
-    fireEvent.click(screen.getByRole('button', { name: new RegExp(`^${scene.title}\\s*Folio$`) }));
-    expect(container.querySelectorAll('.folio-scene')).toHaveLength(1);
-    expect(screen.getByText('Unica Workbench')).toBeTruthy();
-  }
-
-  const buttons = unicaWorkbench.specimens.find((specimen) => specimen.id === 'button');
-  expect(buttons).toBeDefined();
-  fireEvent.click(screen.getByText(buttons!.title, { exact: true }));
-  fireEvent.click(screen.getByRole('button', { name: 'Light & response' }));
-  expect(screen.getByText('Unica Workbench')).toBeTruthy();
-  expect(container.querySelectorAll('.wb-artboard')).toHaveLength(1);
-});
-
-it('keeps native RadioCard choices independent across the six theme artboards', () => {
-  window.history.replaceState(null, '', '/?item=radio-card&mode=6up&section=overlay');
-  const { container } = render(<WorkbenchApp config={unicaWorkbench} />);
-  const artboards = [...container.querySelectorAll('.wb-artboard')];
   const chosen = (): number[] =>
     artboards.map((artboard) => artboard.querySelectorAll('input[type="radio"]:checked').length);
   expect(chosen()).toEqual([1, 1, 1, 1, 1, 1]);
 
-  const choices = artboards[0]!.querySelectorAll<HTMLInputElement>('input[type="radio"]');
+  const choices = within(artboards[0]!).getAllByRole<HTMLInputElement>('radio');
   fireEvent.click(choices[1]!);
-  expect(choices[1]!.checked).toBe(true);
+  expect(choices[1]?.checked).toBe(true);
   expect(chosen()).toEqual([1, 1, 1, 1, 1, 1]);
+  expect(artboards[1]?.querySelectorAll('input[type="radio"]')[1]).not.toHaveProperty(
+    'checked',
+    true,
+  );
 });
 
-it('keeps src/workbench portable with zero @docouno references or Unica CSS token leaks', async () => {
+it('uses the actual tag limit in the readout before and after an inspector edit', () => {
+  window.history.replaceState(null, '', '/?item=tags-input&family=frost&scheme=dark');
+  render(<WorkbenchApp config={unicaWorkbench} />);
+
+  const jsx = screen.getByRole('region', { name: 'JSX' });
+  const displayedLimits = (): string[] | null => jsx.textContent?.match(/maxTags=\{\d+\}/g) ?? null;
+  expect(displayedLimits()).toEqual(['maxTags={5}']);
+
+  fireEvent.change(screen.getByRole('spinbutton', { name: 'maxTags' }), {
+    target: { value: '2' },
+  });
+  expect(displayedLimits()).toEqual(['maxTags={2}']);
+});
+
+it('keeps src/workbench portable with zero app-specific imports or Unica token leaks', async () => {
   const workbenchDir = resolve(import.meta.dirname, 'workbench');
   const workbenchFiles = await collectFiles(workbenchDir, ['.ts', '.tsx', '.css']);
   expect(workbenchFiles.length).toBeGreaterThanOrEqual(3);
 
   const nonWorkbenchCustomProperty = /(?:^|[^\w-])--(?!wb-)[a-z][a-z0-9-]*/;
-
+  const nonPortableImport =
+    /['"][^'"]*(?:@docouno\/|\/(?:prototypes|specimens|scenes|packages)\/|\/unica\.)[^'"]*['"]/;
   for (const file of workbenchFiles) {
     const content = await readFile(file, 'utf8');
-    expect(content, `${file} must not reference @docouno/*`).not.toContain('@docouno/');
+    expect(content, `${file} must have portable imports`).not.toMatch(nonPortableImport);
     expect(content, `${file} must only use --wb-* CSS custom properties`).not.toMatch(
       nonWorkbenchCustomProperty,
     );
@@ -168,27 +109,31 @@ it('keeps src/workbench portable with zero @docouno references or Unica CSS toke
 
   const workbenchCss = await readFile(resolve(workbenchDir, 'workbench.css'), 'utf8');
   expect(workbenchCss).toContain(':where(.wb-artboard)');
-  expect(workbenchCss).toContain(":where(.wb-artboard[data-color-scheme='light'])");
-  expect(workbenchCss).toContain(":where(.wb-artboard[data-text-scale='120'])");
-
   const bridgeCss = await readFile(resolve(import.meta.dirname, 'unica.workbench.css'), 'utf8');
   expect(bridgeCss).toContain('.wb-artboard[data-theme]');
 });
 
-it('enforces zero [data-theme] selectors and zero raw hex literals in prototype/scene files', async () => {
+it('enforces semantic CSS in prototypes, specimens and scenes, including their live entrypoints', async () => {
   const srcDir = import.meta.dirname;
-  const files = [
-    ...(await collectFiles(resolve(srcDir, 'prototypes'), ['.css', '.ts', '.tsx'])),
-    ...(await collectFiles(resolve(srcDir, 'scenes'), ['.css', '.ts', '.tsx'])),
-  ];
-
-  for (const file of files) {
-    const raw = await readFile(file, 'utf8');
-    expect(raw, `${file} must not branch on data-theme`).not.toMatch(/\bdata-theme\b/);
-    const strippedComments = raw.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
+  for (const [folder, entry] of [
+    ['prototypes', '.proto.tsx'],
+    ['specimens', '.spec.tsx'],
+    ['scenes', '.scene.tsx'],
+  ] as const) {
+    const files = await collectFiles(resolve(srcDir, folder), ['.css', '.ts', '.tsx']);
     expect(
-      strippedComments,
-      `${file} must use semantic CSS tokens instead of raw #hex`,
-    ).not.toMatch(/#[0-9a-fA-F]{3,8}\b/);
+      files.some((file) => file.endsWith(entry)),
+      `${folder} must have entrypoints`,
+    ).toBe(true);
+
+    for (const file of files) {
+      const raw = await readFile(file, 'utf8');
+      expect(raw, `${file} must not branch on data-theme`).not.toMatch(/\bdata-theme\b/);
+      const strippedComments = raw.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
+      expect(
+        strippedComments,
+        `${file} must use semantic CSS tokens instead of raw #hex`,
+      ).not.toMatch(/#[0-9a-fA-F]{3,8}\b/);
+    }
   }
 });

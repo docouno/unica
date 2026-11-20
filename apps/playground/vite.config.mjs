@@ -19,39 +19,11 @@ export default defineConfig({
             { name: 'icons', test: /\/node_modules\/@phosphor-icons\/react\// },
             { name: 'workbench-definitions', test: /\/src\/workbench\/types\.ts$/ },
             {
-              name: 'disclosure',
-              test: /\/src\/prototypes\/disclosure\//,
+              name: 'specimens',
+              test: /\/src\/specimens\//,
+              // Keep each declaration's prototype dependencies in the native module graph.
               includeDependenciesRecursively: false,
-            },
-            {
-              name: 'combobox',
-              test: /\/src\/prototypes\/combobox\//,
-              includeDependenciesRecursively: false,
-            },
-            {
-              name: 'select',
-              test: /\/src\/prototypes\/select\//,
-              includeDependenciesRecursively: false,
-            },
-            {
-              name: 'menu',
-              test: /\/src\/prototypes\/menu\//,
-              includeDependenciesRecursively: false,
-            },
-            {
-              name: 'pagination',
-              test: /\/src\/prototypes\/pagination\//,
-              includeDependenciesRecursively: false,
-            },
-            {
-              name: 'tabs',
-              test: /\/src\/prototypes\/tabs\//,
-              includeDependenciesRecursively: false,
-            },
-            {
-              name: 'table',
-              test: /\/src\/prototypes\/table\//,
-              includeDependenciesRecursively: false,
+              maxSize: 300_000,
             },
           ],
         },

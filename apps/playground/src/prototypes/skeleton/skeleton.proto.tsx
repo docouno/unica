@@ -15,6 +15,7 @@ export interface SkeletonProps extends PlaceholderProps {
   readonly ref?: Ref<HTMLSpanElement>;
   readonly shape?: 'rect' | 'circle';
   readonly height?: CSSProperties['blockSize'];
+  readonly 'data-wb-subject'?: '';
 }
 
 export function Skeleton({
@@ -25,12 +26,14 @@ export function Skeleton({
   hidden,
   className = '',
   style,
+  'data-wb-subject': subject,
 }: SkeletonProps): ReactElement {
   return (
     <span
       ref={ref}
       className={`skeleton-proto ${className}`}
       data-shape={shape}
+      data-wb-subject={subject}
       hidden={hidden}
       aria-hidden="true"
       contentEditable={false}

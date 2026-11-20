@@ -4,38 +4,53 @@ import '@docouno/unica/styles.css';
 import type { ReactElement } from 'react';
 import { THEME_PRESETS } from '@docouno/unica';
 import { OverlayStage } from './workbench/WorkbenchApp.js';
+import { validateCatalog } from './workbench/schema.js';
 import './unica.workbench.css';
 import type {
+  ComponentDefinition,
   SceneDefinition,
-  SpecimenDefinition,
   WorkbenchConfig,
   WorkbenchEmptyContext,
   WorkbenchStageContext,
+  WorkbenchTheme,
 } from './workbench/types.js';
 
-interface SpecimenModule {
-  readonly default: SpecimenDefinition;
-}
-
-interface SceneModule {
-  readonly default: SceneDefinition;
-}
-
-const specimenModules = import.meta.glob<SpecimenModule>('./prototypes/**/*.specimen.tsx', {
+const componentModules = import.meta.glob<ComponentDefinition>('./specimens/**/*.spec.tsx', {
   eager: true,
+  import: 'default',
 });
 
-const sceneModules = import.meta.glob<SceneModule>('./scenes/**/*.scene.tsx', {
+const sceneModules = import.meta.glob<SceneDefinition>('./scenes/**/*.scene.tsx', {
   eager: true,
+  import: 'default',
 });
 
-const specimens: readonly SpecimenDefinition[] = Object.values(specimenModules)
-  .map((m) => m.default)
-  .sort((a, b) => a.title.localeCompare(b.title));
+const components: readonly ComponentDefinition[] = Object.values(componentModules).sort((a, b) =>
+  a.title.localeCompare(b.title),
+);
 
-const scenes: readonly SceneDefinition[] = Object.values(sceneModules)
-  .map((m) => m.default)
-  .sort((a, b) => a.id.localeCompare(b.id));
+const scenes: readonly SceneDefinition[] = Object.values(sceneModules).sort((a, b) =>
+  a.id.localeCompare(b.id),
+);
+
+const themes: readonly WorkbenchTheme[] = THEME_PRESETS.map((theme) => ({
+  ...theme,
+  family: theme.family.toLowerCase(),
+  familyLabel: theme.family,
+}));
+
+const categories = [
+  'Layout',
+  'Typography',
+  'Actions',
+  'Forms',
+  'Selection & Pickers',
+  'Surfaces & Structure',
+  'Feedback & Status',
+  'Overlays',
+  'Navigation',
+  'Data',
+];
 
 export function UnicaUnderlay(): ReactElement {
   return (
@@ -57,43 +72,38 @@ export function UnicaUnderlay(): ReactElement {
         style={{
           display: 'flex',
           alignItems: 'center',
-          justifyContent: 'space-between',
-          padding: '10px 14px',
+          gap: '12px',
+          padding: '14px',
           borderRadius: 'var(--surface-s-radius)',
           border: '1px solid var(--border-default)',
           background: 'var(--bg-surface)',
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <span
-            style={{
-              display: 'inline-block',
-              padding: '2px 8px',
-              borderRadius: 'var(--radius-full)',
-              background: 'var(--accent-soft-bg)',
-              color: 'var(--accent-soft-fg)',
-              fontSize: 'var(--text-size-caption-l)',
-              fontWeight: 600,
-            }}
-          >
-            Folio · Production
-          </span>
-          <span style={{ color: 'var(--fg-secondary)', fontSize: 'var(--text-size-caption-l)' }}>
-            Release pipeline · v2.4.0
-          </span>
-        </div>
         <span
           style={{
-            padding: '2px 8px',
+            width: '22%',
+            height: '18px',
+            borderRadius: 'var(--radius-full)',
+            background: 'var(--accent-soft-bg)',
+          }}
+        />
+        <span
+          style={{
+            width: '30%',
+            height: '8px',
+            borderRadius: 'var(--radius-xs)',
+            background: 'var(--border-subtle)',
+          }}
+        />
+        <span
+          style={{
+            marginInlineStart: 'auto',
+            width: '16%',
+            height: '18px',
             borderRadius: 'var(--radius-full)',
             background: 'var(--status-success-soft-bg)',
-            color: 'var(--status-success-soft-fg)',
-            fontSize: 'var(--text-size-caption-m)',
-            fontWeight: 600,
           }}
-        >
-          Healthy · 99.98%
-        </span>
+        />
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', flex: 1 }}>
@@ -255,7 +265,7 @@ function renderUnicaEmptyState({ theme, surface }: WorkbenchEmptyContext): React
             {theme.label}
           </span>
           <span style={{ fontSize: 'var(--text-size-caption-l)', color: 'var(--fg-muted)' }}>
-            Ready for component specimens (<code>src/prototypes/</code>) and Folio scenes (
+            Ready for component specimens (<code>src/specimens/</code>) and scenes (
             <code>src/scenes/</code>)
           </span>
         </div>
@@ -361,11 +371,12 @@ function renderUnicaStage({
 
 export const unicaWorkbench: WorkbenchConfig = {
   title: 'Unica Workbench',
-  subtitle: '6 presets',
-  themes: THEME_PRESETS,
-  defaultThemeId: 'frost-dark',
-  specimens,
+  themes,
+  categories,
+  components,
   scenes,
   renderStage: renderUnicaStage,
   renderEmptyState: renderUnicaEmptyState,
 };
+
+validateCatalog(unicaWorkbench);

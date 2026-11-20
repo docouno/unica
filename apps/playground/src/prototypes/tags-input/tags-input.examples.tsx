@@ -521,7 +521,7 @@ export function TagsDrafts(): ReactElement {
 export function TagsSurfaces(): ReactElement {
   return (
     <div className="tags-examples-proto">
-      <div className="tags-material-proto">
+      <div className="tags-material-proto" data-surface="base">
         <div className="tags-example-title-proto">Base · a form slot</div>
         <Input label="Collection" defaultValue="Field notes" />
         <TagsInput

@@ -70,14 +70,18 @@ visual: visual-setup
 		-e PLAYWRIGHT_BROWSERS_PATH=/ms-playwright \
 		-e VITE_CACHE_DIR=/cache/vite \
 		-e VISUAL_ITEM="$(item)" \
-		-e VISUAL_MODE="$(or $(mode),6up)" \
-		-e VISUAL_THEME="$(or $(theme),frost-dark)" \
-		-e VISUAL_SURFACE="$(or $(surface),auto)" \
+		-e VISUAL_TAB="$(tab)" \
+		-e VISUAL_FAMILY="$(family)" \
+		-e VISUAL_SCHEME="$(scheme)" \
+		-e VISUAL_SLICE="$(slice)" \
+		-e VISUAL_MODE="$(mode)" \
+		-e VISUAL_BLOCK="$(block)" \
+		-e VISUAL_BOUNDS="$(bounds)" \
+		-e VISUAL_SURFACE="$(surface)" \
 		-e VISUAL_VP="$(vp)" \
-		-e VISUAL_SCALE="$(or $(scale),100)" \
-		-e VISUAL_DIR="$(or $(dir),ltr)" \
-		-e VISUAL_SECTION="$(or $(section),all)" \
-		-e VISUAL_RAW="$(or $(raw),1)" \
+		-e VISUAL_SCALE="$(scale)" \
+		-e VISUAL_DIR="$(dir)" \
+		-e VISUAL_RAW="$(raw)" \
 		-e VISUAL_OUT="$(out)" \
 		-v "$$(pwd):/workspace:ro" \
 		-v "$(PLAYWRIGHT_CACHE):/ms-playwright:ro" \

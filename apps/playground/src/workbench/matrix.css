@@ -1,0 +1,214 @@
+.wb-matrix,
+.wb-matrix-artboard {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 16px;
+  min-inline-size: 0;
+}
+
+.wb-matrix-controls {
+  display: grid;
+  gap: 10px;
+  min-inline-size: 0;
+  padding: 12px 14px;
+  border: 1px solid var(--wb-border);
+  border-radius: 8px;
+  background: var(--wb-rail);
+  font: 500 0.75rem / 1.4 var(--wb-font);
+}
+
+.wb-matrix-toolbar {
+  display: flex;
+  align-items: end;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+}
+
+.wb-matrix-field {
+  display: grid;
+  gap: 3px;
+  min-inline-size: 0;
+  color: var(--wb-fg-muted);
+}
+
+.wb-matrix-field :is(select, input) {
+  min-block-size: 30px;
+  min-inline-size: 4rem;
+  max-inline-size: 100%;
+  padding-inline: 6px;
+  border: 1px solid var(--wb-border-strong);
+  border-radius: 5px;
+  background: var(--wb-bg);
+  color: var(--wb-fg);
+  color-scheme: dark;
+  font: inherit;
+}
+
+.wb-matrix-field input {
+  inline-size: 10rem;
+}
+
+.wb-matrix-overrides > summary {
+  inline-size: fit-content;
+  cursor: pointer;
+}
+
+.wb-matrix-overrides[open] .wb-matrix-toolbar {
+  padding-block-start: 8px;
+}
+
+.wb-matrix-modes button:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.wb-matrix-heading h2,
+.wb-matrix-heading p,
+.wb-matrix-status {
+  margin: 0;
+}
+
+.wb-matrix-heading h2 {
+  font: 650 0.875rem / 1.4 var(--wb-font);
+}
+
+.wb-matrix-heading p,
+.wb-matrix-status {
+  font: 400 0.75rem / 1.5 var(--wb-font);
+  color: var(--wb-fg-muted);
+}
+
+.wb-matrix-heading p {
+  margin-block-start: 4px;
+}
+
+.wb-matrix-scroll {
+  max-inline-size: 100%;
+  overflow-x: auto;
+}
+
+.wb-matrix-scroll:focus-visible {
+  outline: 2px solid var(--wb-accent);
+  outline-offset: 2px;
+}
+
+.wb-matrix-group {
+  min-inline-size: 0;
+}
+
+.wb-matrix-group-label {
+  inline-size: fit-content;
+  margin: 0 0 6px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  background: var(--wb-bar);
+  color: var(--wb-fg);
+  font: 600 0.75rem / 1.4 var(--wb-font);
+}
+
+.wb-matrix-grid {
+  inline-size: 100%;
+  border-spacing: 0;
+  border-block-start: 1px solid var(--wb-stage-border);
+  border-inline-start: 1px solid var(--wb-stage-border);
+}
+
+.wb-matrix-grid > :is(thead, tbody) > tr > :is(th, td) {
+  border-inline-end: 1px solid var(--wb-stage-border);
+  border-block-end: 1px solid var(--wb-stage-border);
+}
+
+.wb-matrix-grid > :is(thead, tbody) > tr > th,
+.wb-matrix-coordinate {
+  padding: 6px 8px;
+  background: var(--wb-bar);
+  color: var(--wb-fg);
+  text-align: start;
+  font: 500 0.7rem / 1.4 var(--wb-mono);
+}
+
+.wb-matrix-grid > tbody > tr > td {
+  padding: 10px;
+  vertical-align: top;
+}
+
+.wb-matrix-grid > tbody > tr > td > .wb-inspector-preview {
+  min-inline-size: calc(7rem / var(--wb-viewport-scale, 1));
+}
+
+.wb-matrix-grid > tbody > tr > td > .wb-matrix-notes {
+  margin-block: 6px 0;
+}
+
+.wb-matrix-combinations {
+  display: grid;
+  grid-template-columns: repeat(
+    auto-fit,
+    minmax(min(100%, max(10rem, calc(7rem / var(--wb-viewport-scale, 1) + 18px))), 1fr)
+  );
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.wb-matrix-combination {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-inline-size: 0;
+  padding: 8px;
+  border: 1px solid var(--wb-stage-border);
+}
+
+.wb-matrix-combination > .wb-inspector-preview,
+.wb-matrix-grid > tbody > tr > td > .wb-inspector-preview {
+  padding-block: calc(24px / var(--wb-viewport-scale, 1));
+}
+
+.wb-matrix-coordinate {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  margin: 0;
+}
+
+.wb-matrix-coordinate:empty {
+  display: none;
+}
+
+.wb-matrix-coordinate dt {
+  color: var(--wb-fg-muted);
+}
+
+.wb-matrix-coordinate dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.wb-matrix-notes {
+  inline-size: fit-content;
+  max-inline-size: 100%;
+  padding: 3px 6px;
+  border-radius: 4px;
+  background: var(--wb-card);
+  color: var(--wb-fg);
+  font: 500 0.7rem / 1.4 var(--wb-font);
+}
+
+.wb-matrix-notes > summary {
+  cursor: pointer;
+}
+
+.wb-matrix-notes ul {
+  max-inline-size: 24ch;
+  margin: 4px 0 0;
+  padding-inline-start: 1rem;
+  overflow-wrap: anywhere;
+}
+
+.wb-matrix-reference {
+  min-inline-size: 0;
+  padding-block-start: 14px;
+  border-block-start: 1px solid var(--wb-stage-border);
+}

@@ -21,7 +21,7 @@ All toolchains run inside pinned Devkit containers on Linux x86_64 with Docker E
 | `make dev app=playground` / `make up app=playground headless=1` | Start the interactive 6-preset Vite workbench (foreground or background) with sticky per-checkout host ports |
 | `make info [json=1]` | Show checkout readiness, running services, and confirmed preview addresses (`make status` is a quiet alias) |
 | `make down [cleanup=1]` | Stop services while preserving port leases; pass `cleanup=1` to release leases after verified container cleanup |
-| `make visual` | Render deterministic `2x` PNG screenshots (`item=`, `mode=6up\|focus`, `theme=`, `surface=auto\|base\|overlay`, `section=`, `vp=`, `scale=`, `dir=`, `raw=0\|1`, `out=`) |
+| `make visual` | Render deterministic `2x` PNG screenshots. See [capture parameters](docs/workbench.md#address-and-capture-a-view) for `item`, `tab`, `family`, `scheme`, `mode`, `slice`, `block`, `bounds`, and environment flags. |
 
 Scope commands during iteration with `package=ui` or `app=playground` (for example `make check package=ui` or `make test package=ui`). Checks and builds keep source, configuration, and lockfiles read-only.
 
@@ -46,7 +46,8 @@ unica/
 ├── packages/ui/                 @docouno/unica source, CSS tokens, themes, and ESM exports
 ├── apps/playground/             6-preset Vite workbench
 │   ├── src/workbench/           Portable workbench shell (zero @docouno/* imports)
-│   ├── src/prototypes/<family>/ Component specimens (*.specimen.tsx) and upfront visual prototypes (*.proto.tsx, *.css)
+│   ├── src/specimens/<family>/  Catalog declarations for prototypes and shipped components (*.spec.tsx)
+│   ├── src/prototypes/<family>/ Upfront visual prototypes (*.proto.tsx, *.css)
 │   └── src/scenes/              Live application compositions (*.scene.tsx)
 └── docs/                        Core concepts, compositions (folio.md), and component contracts
 ```
@@ -92,11 +93,11 @@ These are library implementation obligations. During design, specify the intende
 
 ### 3. Workbench prototypes (`src/prototypes/`) vs canonical library (`packages/ui`)
 
-- New visual component families are prototyped first in `apps/playground/src/prototypes/<family>/` (`<family>.proto.tsx`, `<family>.css`, and `<family>.specimen.tsx` auto-discovered via `import.meta.glob`) and verified across all 6 presets simultaneously using `make dev app=playground` and `make visual`.
+- Prototype new visual families under `apps/playground/src/prototypes/<family>/` and register a `defineComponent` catalog entry with status `Proto` under `apps/playground/src/specimens/<family>/`. Compare all six presets using Family `All` and Scheme `Both` in the live workbench and `make visual`.
 - The design deliverable is a detailed visual and interaction specification with a live reference. Prototype code serves inspection; its props and internal structure do not define the shipped contract. Implement enough behavior to evaluate design decisions honestly, and state which examples pin a state rather than implement its full mechanism. Deferred engineering must not leave agreed visual or interaction decisions to the library implementer.
-- Follow [Workbench workflow](docs/workbench.md) for component matrices, states, and optional focused usage examples. Application compositions consume components and stay in `src/scenes/`; do not duplicate them inside component specimens or expand every specimen when a composition is added. Full accessibility, focus, and form integration belong to library implementation. Keep the portable `src/workbench/` shell unchanged. Ordinary prototype tasks leave `packages/ui` unchanged; a demonstrated material recipe defect is repaired explicitly at the theme-token source, with its consumers and documentation verified.
-- Prototype and component stylesheets consume semantic CSS custom properties from `@docouno/unica/styles.css` with **zero `[data-theme]` selectors and zero raw `#hex` literals** (enforced by `unica.contract.test.tsx`), and `apps/playground/src/workbench/` maintains **zero `@docouno/*` imports** (enforced by ESLint).
-- Once a component ships in `packages/ui`, its `<family>.specimen.tsx` and Scene imports switch from the local prototype to `@docouno/unica`, its temporary `<family>.proto.tsx` and prototype `<family>.css` are removed, and `packages/ui` + `docs/components/<family>.md` serve as the sole canonical source of truth.
+- Follow the [Workbench workflow](docs/workbench.md) for Playground, Matrix, Cases, and Usage. Application compositions consume shared components in `src/scenes/` and register their dependencies for Usage links. Component specimens contain product-independent examples. Full accessibility, focus, and form integration belong to library implementation. Ordinary prototype tasks work within the catalog and prototype sources. Repair demonstrated material defects at the theme-token source and verify its consumers and documentation.
+- Prototypes, specimens, and scenes consume semantic CSS custom properties with **zero `[data-theme]` selectors and zero raw `#hex` literals** (enforced by `unica.contract.test.tsx`). The portable `src/workbench/` shell uses only `--wb-*` tokens and has **zero `@docouno/*` or app-owned example imports**.
+- Once a component ships, keep the specimen ID and switch its status to `UI`. Update the inspector schema to match the shipped API and switch specimen and scene imports to `@docouno/unica`. Remove temporary implementation and component styles under `src/prototypes/` and record the shipped contract in `docs/components/<family>.md`.
 
 ## Definition of Done
 

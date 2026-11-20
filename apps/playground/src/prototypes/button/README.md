@@ -48,7 +48,7 @@ A painted status surface can supply `--action-context-ink`. Only `secondary` and
 
 The theme's `--btn-context-ink-strength` blends 80% context ink with primary ink for readable action labels. `--btn-context-plate-tint`, `--btn-context-hover-tint`, and `--btn-context-active-tint` supply 8/12/16% ink veils. `--btn-context-border-tint` is 28% in Soft/Frost and 44% in Pixel. Secondary retains its theme perimeter, shadow, and press travel; ghost stays still. Context never derives physics from color or corner radius. Pending retains geometry and focus. Disabled adapts only the action: 4% veil, 40% action ink, 12% contour, ghost transparent; selected disabled retains its contextual keyline.
 
-Button focus uses the enclosing action-context ink when present, independently of its explicit tone. A neutral Card, a new theme, and a Base/Overlay boundary clear the outer context. Transparent text passes it through. A nested status surface can establish a new context. Use unplated inherited Code in the label. The [Alert reference](../alert/README.md#contextual-color) and its `context`, `context-states`, `context-boundaries`, and `context-overlay` sections demonstrate the approved extension together with the actual colored parent.
+Button focus uses the enclosing action-context ink when present, independently of its explicit tone. A neutral Card, a new theme, and a Base/Overlay boundary clear the outer context. Transparent text passes it through. A nested status surface can establish a new context. Use unplated inherited Code in the label. The [Alert reference](../alert/README.md#contextual-color) and its `context` Usage block and `context-states`, `context-boundaries`, and `context-overlay` Cases demonstrate the approved extension together with the actual colored parent.
 
 ## Materials and response
 
@@ -108,12 +108,12 @@ Small product-independent arrangements may clarify a component decision, such as
 | `toggles`                                   | Live selection and combined states; every tone and size.                                                      |
 | `open`, `overflow`                          | Pinned expanded-trigger visuals, long/unbroken labels, stable loading geometry.                               |
 
-Use 6-up, Focus, Base/Overlay, 360/768/1280/1440px, 120% Text, and RTL. Check integration separately in relevant application scenes:
+Compare Family All × Scheme Both, then isolate one artboard to check Base/Overlay, 360/768/1280/1440px, 120% Text, and RTL. Check integration in the scenes linked from Usage.
 
 ```sh
-make visual item=button section=light
-make visual item=button section=states-danger
-make visual item=button section=overflow mode=focus theme=pixel-light vp=360 scale=120 dir=rtl
+make visual item=button tab=cases block=light
+make visual item=button tab=cases block=states-danger
+make visual item=button tab=cases block=overflow family=pixel scheme=light vp=360 scale=120 dir=rtl
 ```
 
 `previewState` and `previewFocus` only pin specimen visuals; they are not proposed package API. React 19 refs, `asChild`, uncontrolled toggles, native form submission/reset, disabled link guards, full tooltip positioning, modal focus return, and focus after completion/removal belong to the subsequent library implementation. Follow the repository's accessibility and forms contracts for those behaviors. Replace the prototype imports and remove the temporary Button prototype, CSS, and sampling helper when the library family ships.
