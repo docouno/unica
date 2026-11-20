@@ -90,82 +90,134 @@ interface Subscription {
 
 interface PendingReset {
   actionRan: () => boolean;
+  cohort: Set<Subscription>;
   superseded: Set<Subscription>;
-}
-
-interface FormEpochs {
-  issued: number;
-  restored: number;
-  pending: Set<PendingReset>;
+  marker: HTMLInputElement;
+  witness: WitnessElement;
 }
 
 const roots = new WeakMap<Node, Set<Subscription>>();
-const formEpochs = new WeakMap<HTMLFormElement, FormEpochs>();
+const formEpochs = new WeakMap<HTMLFormElement, { issued: number; restored: number }>();
+const pendingResets = new Set<PendingReset>();
+const dispatches = new WeakMap<Event, () => void>();
+
+function associatedSubscriptions(form: HTMLFormElement): Set<Subscription> {
+  const owned = new Set<Subscription>();
+  // A detached subtree can still receive a reset on an observed ancestor after
+  // insertion into a fragment, even though its getRootNode() has changed.
+  for (let ancestor: Node | null = form; ancestor; ancestor = ancestor.parentNode) {
+    for (const subscription of roots.get(ancestor) ?? []) {
+      if (subscription.control.form === form) {
+        owned.add(subscription);
+      }
+    }
+  }
+  return owned;
+}
 
 function handleReset(event: Event): void {
-  const form = event.target as Node | null;
-  const FormElement = form?.ownerDocument?.defaultView?.HTMLFormElement;
-  if (!FormElement || !(form instanceof FormElement)) {
+  const target = event.target as Node | null;
+  const FormElement = target?.ownerDocument?.defaultView?.HTMLFormElement;
+  if (!FormElement || !(target instanceof FormElement)) {
+    return;
+  }
+  const form = target;
+  const path = event.composedPath();
+  if (event.currentTarget !== path.findLast((node) => roots.has(node as Node))) {
     return;
   }
 
-  const epochs = formEpochs.get(form) ?? {
-    issued: 0,
-    restored: 0,
-    pending: new Set<PendingReset>(),
-  };
+  // Dispatch can reuse an Event object before the previous cleanup microtask.
+  dispatches.get(event)?.();
+  const operation = createResetOperation(event);
+  const epochs = formEpochs.get(form) ?? { issued: 0, restored: 0 };
   formEpochs.set(form, epochs);
   const epoch = ++epochs.issued;
-  const operation = createResetOperation(event);
-  const witness = createWitness(form.ownerDocument);
-  // The marker is reset immediately before the witness. A queued reaction from an
-  // earlier dispatch cannot confirm this one while its marker is still armed.
-  const marker = form.ownerDocument.createElement('input');
-  marker.hidden = true;
-  marker.value = 'pending';
-  const pending: PendingReset = {
-    actionRan: () => event.eventPhase === 0 && marker.value === '',
-    superseded: new Set(),
+  const endpoint = path.at(-1);
+  let pending: PendingReset | undefined;
+  let active = true;
+
+  const cleanup = (): void => {
+    active = false;
+    dispatches.delete(event);
+    form.removeEventListener('reset', observeTail);
+    endpoint?.removeEventListener('reset', observeTail);
+    if (pending) {
+      pendingResets.delete(pending);
+      pending.witness.confirmReset = undefined;
+      pending.witness.remove();
+      pending.marker.remove();
+    }
   };
-  epochs.pending.add(pending);
 
   const finish = (confirmed: boolean): void => {
-    const result = operation.finish(confirmed);
+    const result = active ? operation.finish(confirmed) : undefined;
     if (!result) {
       return;
     }
-    epochs.pending.delete(pending);
-    if (witness) {
-      witness.confirmReset = undefined;
-      witness.remove();
-    }
-    marker.remove();
+    cleanup();
     const reset = result === 'reset' && epoch > epochs.restored;
     if (reset) {
       epochs.restored = epoch;
     }
 
-    // A reset listener can move the form or change which controls it owns.
-    const subscriptions = roots.get(form.getRootNode());
-    if (!subscriptions) {
-      return;
-    }
-    for (const subscription of [...subscriptions]) {
-      if (subscriptions.has(subscription) && subscription.control.form === form) {
-        subscription.notify(reset && !pending.superseded.has(subscription) ? 'reset' : 'repair');
-      }
+    for (const subscription of associatedSubscriptions(form)) {
+      const canRestore =
+        reset && pending?.cohort.has(subscription) && !pending.superseded.has(subscription);
+      subscription.notify(canRestore ? 'reset' : 'repair');
     }
   };
 
-  if (witness) {
+  const prepare = (): void => {
+    const cohort = associatedSubscriptions(form);
+    if (pending) {
+      pending.cohort = cohort;
+      return;
+    }
+    if (cohort.size === 0) {
+      return;
+    }
+    const witness = createWitness(form.ownerDocument);
+    if (!witness) {
+      return;
+    }
+
+    // The marker shows whether the native action has run. It is reset before
+    // the FACE callback and remains armed throughout the event dispatch.
+    const marker = form.ownerDocument.createElement('input');
+    marker.hidden = true;
+    marker.value = 'pending';
     witness.hidden = true;
+    const action: PendingReset = {
+      actionRan: () => event.eventPhase === 0 && marker.value === '',
+      cohort,
+      superseded: new Set(),
+      marker,
+      witness,
+    };
+    pending = action;
+    pendingResets.add(action);
     witness.confirmReset = () => {
-      if (pending.actionRan()) {
+      if (action.actionRan()) {
         finish(true);
       }
     };
     form.append(marker, witness);
-  }
+  };
+
+  const observeTail = (observed: Event): void => {
+    if (observed === event) {
+      prepare();
+    }
+  };
+
+  dispatches.set(event, cleanup);
+  prepare();
+  // A reset handler can change associations before the default action runs.
+  // Take the final cohort during propagation so a delayed witness cannot
+  // grant reset authority to controls added after the browser acted.
+  form.addEventListener('reset', observeTail);
+  endpoint?.addEventListener('reset', observeTail);
 
   queueMicrotask(() => {
     if (event.eventPhase === 0) {
@@ -228,12 +280,9 @@ export function subscribeNativeReset(
 
   return {
     noteCommit() {
-      const form = control.form;
-      if (form) {
-        for (const pending of formEpochs.get(form)?.pending ?? []) {
-          if (pending.actionRan()) {
-            pending.superseded.add(subscription);
-          }
+      for (const pending of pendingResets) {
+        if (pending.cohort.has(subscription) && pending.actionRan()) {
+          pending.superseded.add(subscription);
         }
       }
     },
