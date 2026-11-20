@@ -270,6 +270,32 @@ describe('PointerProximity', () => {
     }
   });
 
+  it('discards the parent position on iframe entry even without pointerout or pointerleave', () => {
+    const env = installEnvironment(document);
+    const frame = document.createElement('iframe');
+    document.body.append(frame);
+    const observer = { measure: vi.fn(), reset: vi.fn() };
+    const subscription = bind(document.body, observer);
+
+    move(document.body, 1, 2);
+    env.flush();
+    move(document.body, 3, 4);
+    expect(env.pending.size).toBe(1);
+
+    frame.dispatchEvent(new PointerEvent('pointerover', { bubbles: true }));
+    expect(observer.reset).toHaveBeenCalledTimes(1);
+    expect(env.cancel).toHaveBeenCalledTimes(1);
+    move(frame, 5, 6);
+    subscription.refresh();
+    expect(env.pending.size).toBe(0);
+    expect(observer.measure).toHaveBeenCalledExactlyOnceWith({ x: 1, y: 2 });
+
+    move(document.body, 7, 8);
+    env.flush();
+    expect(observer.measure).toHaveBeenCalledTimes(2);
+    expect(observer.measure).toHaveBeenLastCalledWith({ x: 7, y: 8 });
+  });
+
   it.each([
     [fineHover, false],
     [reducedMotion, true],

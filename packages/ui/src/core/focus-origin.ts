@@ -52,7 +52,7 @@ function editsText(target: Element | null, key: string): boolean {
   return target.localName === 'textarea' || (target as HTMLElement).isContentEditable;
 }
 
-function createTracker(doc: Document): FocusTracker {
+function createTracker(doc: Document, view: Window): FocusTracker {
   const bindings = new Map<Element, Set<FocusBinding>>();
   let focused = new Set<FocusBinding>();
   let origin: FocusOrigin = 'unknown';
@@ -109,10 +109,17 @@ function createTracker(doc: Document): FocusTracker {
     sync(elementOf(event.relatedTarget));
   }
 
+  function blur(): void {
+    // The next document entry can arrive without a local key event. A new pointerdown
+    // can arrive before window focus, so clear the previous origin on exit instead.
+    setOrigin('unknown');
+  }
+
   doc.addEventListener('pointerdown', pointer, true);
   doc.addEventListener('keydown', keyboard, true);
   doc.addEventListener('focusin', focusIn, true);
   doc.addEventListener('focusout', focusOut, true);
+  view.addEventListener('blur', blur);
 
   return {
     markKeyboard: () => setOrigin('keyboard'),
@@ -141,6 +148,7 @@ function createTracker(doc: Document): FocusTracker {
           doc.removeEventListener('keydown', keyboard, true);
           doc.removeEventListener('focusin', focusIn, true);
           doc.removeEventListener('focusout', focusOut, true);
+          view.removeEventListener('blur', blur);
           trackers.delete(doc);
         }
       };
@@ -151,12 +159,13 @@ function createTracker(doc: Document): FocusTracker {
 /** Subscribe to focus within an owner. Detach and subscribe again if the owner changes document. */
 export function subscribeFocusOrigin(element: Element, notify: FocusOriginListener): () => void {
   const doc = element.ownerDocument;
-  if (!doc.defaultView) {
+  const view = doc.defaultView;
+  if (!view) {
     return () => {};
   }
   let tracker = trackers.get(doc);
   if (!tracker) {
-    tracker = createTracker(doc);
+    tracker = createTracker(doc, view);
     trackers.set(doc, tracker);
   }
   return tracker.subscribe(element, notify);

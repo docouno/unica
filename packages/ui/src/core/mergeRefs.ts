@@ -1,41 +1,56 @@
 import type { Ref, RefCallback } from 'react';
 
+function releaseRefs(cleanups: readonly (() => void)[]): void {
+  let failure: { error: unknown } | undefined;
+  for (const cleanup of cleanups) {
+    try {
+      cleanup();
+    } catch (error) {
+      failure ??= { error };
+    }
+  }
+  if (failure) {
+    throw failure.error;
+  }
+}
+
 export function mergeRefs<T>(...refs: (Ref<T> | undefined)[]): RefCallback<T> {
   return (node) => {
+    // React 19 calls the returned cleanup after success. A null call after failed
+    // attachment follows the rollback below and has nothing left to release.
     if (node === null) {
-      for (const ref of refs) {
-        if (typeof ref === 'function') {
-          ref(null);
-        } else if (ref) {
-          ref.current = null;
-        }
-      }
       return;
     }
 
-    const detach: (() => void)[] = [];
-    for (const ref of refs) {
-      if (typeof ref === 'function') {
-        const cleanup = ref(node);
-        if (typeof cleanup === 'function') {
-          detach.push(cleanup);
-        } else {
-          detach.push(() => {
-            ref(null);
+    const cleanups: (() => void)[] = [];
+    try {
+      for (const ref of refs) {
+        if (typeof ref === 'function') {
+          // Register the null fallback before invoking a callback that can throw.
+          const index =
+            cleanups.push(() => {
+              ref(null);
+            }) - 1;
+          const cleanup = ref(node);
+          if (typeof cleanup === 'function') {
+            cleanups[index] = cleanup;
+          }
+        } else if (ref) {
+          cleanups.push(() => {
+            ref.current = null;
           });
+          ref.current = node;
         }
-      } else if (ref) {
-        ref.current = node;
-        detach.push(() => {
-          ref.current = null;
-        });
       }
+    } catch (error) {
+      try {
+        releaseRefs(cleanups);
+      } catch {
+        // The attachment error still belongs to React's error boundary.
+      }
+      throw error;
     }
 
-    return () => {
-      for (const cleanup of detach) {
-        cleanup();
-      }
-    };
+    return () => releaseRefs(cleanups);
   };
 }

@@ -1,6 +1,6 @@
 # Native Scrollbars
 
-Import `@docouno/unica/styles.css` to use `.unica-scrollbar` on a scroll owner. Add `.unica-scrollbar--compact` on the same element for compact geometry. Each scroll owner chooses its own density, including when nested inside a compact region. The playground demonstrates the approved design with its prototype recipe. See the [live scrollbar reference](../../apps/playground/src/prototypes/scrollbar/README.md).
+Import `@docouno/unica/styles.css` to use `.unica-scrollbar` on a scroll owner. Add `.unica-scrollbar--compact` on the same element for compact geometry. Each scroll owner opts in to the theme color and chooses its own density, including inside a compact region. The playground demonstrates the approved design with its prototype recipe. See the [live scrollbar reference](../../apps/playground/src/prototypes/scrollbar/README.md).
 
 ```tsx
 import '@docouno/unica/styles.css';

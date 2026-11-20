@@ -1,6 +1,6 @@
 # AGENTS.md — Contributor & Agent Guide
 
-`@docouno/unica` is a role-based React 19+ design system — accessible components, layout primitives, semantic tokens, and multi-material themes in a pure-ESM TypeScript package (`isolatedDeclarations: true`).
+`@docouno/unica` is a role-based design system for React 19. Its pure-ESM TypeScript package includes shared component foundations, semantic tokens, and multi-material themes (`isolatedDeclarations: true`).
 
 The repository is managed with [`@docouno/devkit`](https://github.com/docouno/devkit) and contains the shared library (`packages/ui`) alongside a 6-preset interactive Vite workbench (`apps/playground`).
 

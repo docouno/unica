@@ -1,6 +1,6 @@
 # Unica UI
 
-`@docouno/unica` is a role-based React 19+ design system: accessible components, responsive layout primitives, semantic tokens, and multi-material themes in a single pure-ESM TypeScript package.
+`@docouno/unica` is a role-based design system for React 19. Its pure-ESM TypeScript package includes semantic tokens, multi-material themes, and shared foundations for accessible components and responsive layout primitives.
 
 Components expose semantic roles rather than decorative material props. Switching themes reconfigures surface physics, corner geometry, elevation, and typography across the application without changing component JSX.
 

@@ -38,6 +38,10 @@ const inactive: PointerProximitySubscription = {
   unsubscribe() {},
 };
 
+function isFrame(target: EventTarget | null): boolean {
+  return !!target && 'localName' in target && target.localName === 'iframe';
+}
+
 function createSampler(doc: Document, view: Window): PointerSampler {
   const bindings = new Set<PointerBinding>();
   const enabledBindings = new Set<PointerBinding>();
@@ -69,6 +73,9 @@ function createSampler(doc: Document, view: Window): PointerSampler {
   }
 
   function clearPosition(): void {
+    if (!position) {
+      return;
+    }
     position = null;
     cancelFrame();
     for (const binding of enabledBindings) {
@@ -101,7 +108,7 @@ function createSampler(doc: Document, view: Window): PointerSampler {
   }
 
   function pointer(event: PointerEvent): void {
-    if (event.pointerType === 'touch') {
+    if (event.pointerType === 'touch' || isFrame(event.target)) {
       clearPosition();
       return;
     }
@@ -110,6 +117,14 @@ function createSampler(doc: Document, view: Window): PointerSampler {
     }
     position = { x: event.clientX, y: event.clientY };
     schedule();
+  }
+
+  function pointerOver(event: PointerEvent): void {
+    // Entering an iframe can report a boundary event on the iframe without a
+    // pointerout or pointerleave on the parent document.
+    if (isFrame(event.target)) {
+      clearPosition();
+    }
   }
 
   function pointerOut(event: PointerEvent): void {
@@ -127,6 +142,7 @@ function createSampler(doc: Document, view: Window): PointerSampler {
   doc.addEventListener('pointermove', pointer, { capture: true, passive: true });
   doc.addEventListener('pointerdown', pointer, { capture: true, passive: true });
   doc.addEventListener('pointerleave', clearPosition);
+  doc.addEventListener('pointerover', pointerOver, true);
   doc.addEventListener('pointerout', pointerOut, true);
   doc.addEventListener('pointercancel', clearPosition, true);
   doc.addEventListener('visibilitychange', visibility);
@@ -141,6 +157,7 @@ function createSampler(doc: Document, view: Window): PointerSampler {
     doc.removeEventListener('pointermove', pointer, true);
     doc.removeEventListener('pointerdown', pointer, true);
     doc.removeEventListener('pointerleave', clearPosition);
+    doc.removeEventListener('pointerover', pointerOver, true);
     doc.removeEventListener('pointerout', pointerOut, true);
     doc.removeEventListener('pointercancel', clearPosition, true);
     doc.removeEventListener('visibilitychange', visibility);

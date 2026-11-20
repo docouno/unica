@@ -1,4 +1,4 @@
-import { cloneElement, Fragment, isValidElement, useCallback } from 'react';
+import { cloneElement, isValidElement, useCallback } from 'react';
 import type { HTMLAttributes, ReactElement, ReactNode, Ref, RefCallback } from 'react';
 import { composeEventHandlers } from './composeEventHandlers.js';
 import { mergeRefs } from './mergeRefs.js';
@@ -16,7 +16,9 @@ function isEventHandler(value: unknown): value is EventHandler {
 }
 
 function requireChild<T extends Element>(children: ReactNode): ReactElement<SlotProps<T>> {
-  if (!isValidElement<SlotProps<T>>(children) || children.type === Fragment) {
+  // Built-ins such as Fragment, Suspense, and StrictMode use symbol types and
+  // cannot receive Slot's props or ref. Custom components own that forwarding.
+  if (!isValidElement<SlotProps<T>>(children) || typeof children.type === 'symbol') {
     throw new Error('Slot requires exactly one React element that accepts props and a ref.');
   }
   return children;

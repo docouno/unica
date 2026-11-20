@@ -1,6 +1,6 @@
 # Support and Accessibility
 
-`@docouno/unica` targets modern evergreen browsers and React 19+ applications, combining strict pure-ESM package hygiene with built-in WCAG contrast, keyboard accessibility, high-contrast adaptation, and motion safety.
+`@docouno/unica` targets modern evergreen browsers and React 19 applications, combining strict pure-ESM package hygiene with built-in WCAG contrast, keyboard accessibility, high-contrast adaptation, and motion safety.
 
 ## Two-Tier Browser Support Floor
 
@@ -28,7 +28,7 @@ Unica enforces two explicit browser tiers across CSS compilation and runtime beh
 }
 ```
 
-## React 19+ & Pure-ESM Package Contract
+## React 19 & Pure-ESM Package Contract
 
 - **React 19 peer dependencies:** Components accept `ref` as an ordinary prop and support StrictMode, concurrent rendering, server rendering, and hydration. Use `React.useId()` for stable IDs and defer DOM access until an element or its document is available.
 - **Pure ESM & `isolatedDeclarations`:** `@docouno/unica` ships pure ES modules (`"type": "module"`) with explicit TypeScript boundary annotations (`isolatedDeclarations: true`), accurate `sideEffects` metadata for CSS assets, and automated release verification via `publint` and `@arethetypeswrong/core`.

@@ -1,6 +1,12 @@
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
-import { createRef, Fragment, StrictMode } from 'react';
-import type { MouseEvent, ReactNode, RefCallback } from 'react';
+import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { createRef, Fragment, lazy, memo, StrictMode, Suspense } from 'react';
+import type {
+  ComponentPropsWithRef,
+  MouseEvent,
+  ReactElement,
+  ReactNode,
+  RefCallback,
+} from 'react';
 import { afterEach, expect, it, vi } from 'vitest';
 import { composeEventHandlers } from '../src/core/composeEventHandlers.js';
 import { mergeRefs } from '../src/core/mergeRefs.js';
@@ -71,8 +77,45 @@ it.each<[string, ReactNode]>([
       <a />
     </Fragment>,
   ],
+  [
+    'a Suspense boundary',
+    <Suspense key="suspense" fallback="Loading">
+      <a />
+    </Suspense>,
+  ],
+  [
+    'a StrictMode wrapper',
+    <StrictMode key="strict-mode">
+      <a />
+    </StrictMode>,
+  ],
 ])('reports %s as an invalid Slot child', (_name, children) => {
   expect(() => render(<Slot>{children}</Slot>)).toThrow('Slot requires exactly one React element');
+});
+
+it('forwards props and refs through a lazy memoized component', async () => {
+  const ref = createRef<HTMLAnchorElement>();
+
+  function Link(props: ComponentPropsWithRef<'a'>): ReactElement {
+    return <a {...props} />;
+  }
+
+  const loaded = Promise.resolve({ default: memo(Link) });
+  const LazyLink = lazy(() => loaded);
+  await act(async () => {
+    render(
+      <Suspense fallback="Loading">
+        <Slot className="slot" ref={ref}>
+          <LazyLink href="#details">Details</LazyLink>
+        </Slot>
+      </Suspense>,
+    );
+    await loaded;
+  });
+
+  const anchor = screen.getByRole('link', { name: 'Details' });
+  expect(anchor.className).toBe('slot');
+  expect(ref.current).toBe(anchor);
 });
 
 it('preserves live ref attachments across prop-only updates in Strict Mode', () => {

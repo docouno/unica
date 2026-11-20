@@ -115,9 +115,34 @@ describe('FocusOrigin', () => {
     expect(document.activeElement).toBe(field);
   });
 
+  it('forgets pointer origin after window blur while preserving a new pointerdown before window focus', () => {
+    const field = document.createElement('textarea');
+    document.body.append(field);
+    bind(field);
+
+    pointer(field);
+    field.focus();
+    expect(field.dataset.focusOrigin).toBe('pointer');
+
+    field.blur();
+    window.dispatchEvent(new Event('blur'));
+    window.dispatchEvent(new Event('focus'));
+    field.focus();
+    expect(field.dataset.focusOrigin).toBe('unknown');
+
+    field.blur();
+    window.dispatchEvent(new Event('blur'));
+    pointer(field);
+    window.dispatchEvent(new Event('focus'));
+    field.focus();
+    expect(field.dataset.focusOrigin).toBe('pointer');
+  });
+
   it('shares capture listeners and resets the last modality only after the final detach', () => {
     const add = vi.spyOn(document, 'addEventListener');
     const remove = vi.spyOn(document, 'removeEventListener');
+    const addWindow = vi.spyOn(window, 'addEventListener');
+    const removeWindow = vi.spyOn(window, 'removeEventListener');
     const field = document.createElement('input');
     document.body.append(field);
     field.focus();
@@ -130,6 +155,7 @@ describe('FocusOrigin', () => {
     expect(
       add.mock.calls.filter(([type]) => originEvents.includes(type)).map(([type]) => type),
     ).toEqual(originEvents);
+    expect(addWindow.mock.calls.filter(([type]) => type === 'blur')).toHaveLength(1);
     one.detach();
     one.detach();
     pointer(field);
@@ -139,6 +165,7 @@ describe('FocusOrigin', () => {
 
     two.detach();
     expect(remove.mock.calls.filter(([type]) => originEvents.includes(type))).toHaveLength(4);
+    expect(removeWindow.mock.calls.filter(([type]) => type === 'blur')).toHaveLength(1);
     expect(bind(field).report.mock.calls).toEqual([['unknown']]);
   });
 

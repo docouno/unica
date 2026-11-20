@@ -1490,6 +1490,11 @@
     :where(.unica-scrollbar:focus-visible) {
       scrollbar-color: var(--_scrollbar-thumb-hover) transparent;
     }
+
+    /* Keep the inherited color within each opted-in owner. */
+    :where(.unica-scrollbar > :not(.unica-scrollbar)) {
+      scrollbar-color: auto;
+    }
   }
 
   @supports (scrollbar-width: auto) {
@@ -1512,7 +1517,7 @@
         height: var(--_scrollbar-size);
       }
 
-      /* Native scroll controls must not inherit a text or action cursor. */
+      /* Use the default cursor for native scroll controls. */
       :where(.unica-scrollbar)::-webkit-scrollbar,
       :where(.unica-scrollbar)::-webkit-scrollbar-track,
       :where(.unica-scrollbar)::-webkit-scrollbar-track-piece,
