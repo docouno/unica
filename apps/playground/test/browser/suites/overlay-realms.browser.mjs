@@ -58,7 +58,7 @@ export default {
       'false',
     );
   },
-  'a state-preserving dialog move updates the ancestors observed for removal': async ({
+  'a state-preserving dialog move updates scoped hosts and observes the new ancestor': async ({
     page,
     mount,
   }) => {
@@ -67,7 +67,11 @@ export default {
     const fixture = page.locator('#overlay-realms');
     assert.equal(await fixture.getAttribute('data-preserved-modal'), 'true');
     assert.equal(await fixture.getAttribute('data-modal-host'), 'moved-dialog');
-    await page.evaluate(() => new Promise((resolve) => requestAnimationFrame(resolve)));
+    assert.equal(await fixture.getAttribute('data-hosts-before-move'), 'moved-dialog|none');
+    await page.waitForFunction(
+      () => document.querySelector('#overlay-realms').dataset.scopedHosts === 'none|moved-dialog',
+    );
+    assert.equal(await page.evaluate(() => document.documentElement.style.overflow), 'hidden');
     await dispatch(page, 'remove-moved-dialog');
     await page.waitForFunction(() => document.documentElement.style.overflow === '');
     assert.equal(await fixture.getAttribute('data-modal-host'), 'body');

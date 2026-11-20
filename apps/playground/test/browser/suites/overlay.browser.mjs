@@ -386,6 +386,25 @@ export default {
       await alignTo(direction === 'ltr' ? 'rtl' : 'ltr');
       await alignTo(direction);
 
+      await page.locator('#clip').evaluate((clip, dir) => {
+        const scope = clip.appendChild(document.createElement('div'));
+        scope.dir = dir === 'ltr' ? 'rtl' : 'ltr';
+        scope.style.cssText = 'position:absolute;inset:0';
+        scope.moveBefore(clip.querySelector('#anchor'), null);
+      }, direction);
+      const oppositeEdge = direction === 'ltr' ? anchor.x + anchor.width - box.width : anchor.x;
+      await page.waitForFunction(
+        (expected) =>
+          Math.abs(document.querySelector('#positioned').getBoundingClientRect().left - expected) <=
+          1,
+        oppositeEdge,
+      );
+      assert.deepEqual(await getBox(page.locator('#anchor')), anchor);
+      await page
+        .locator('#clip')
+        .evaluate((clip) => clip.appendChild(clip.querySelector('#anchor')));
+      await alignTo(direction);
+
       const originalClip = await page.locator('#clip').evaluate((clip, dir) => {
         const style = clip.style.cssText;
         clip.style.cssText += `top:562px;left:${dir === 'ltr' ? 710 : 4}px;width:120px`;

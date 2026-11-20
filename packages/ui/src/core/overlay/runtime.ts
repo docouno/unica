@@ -313,7 +313,7 @@ class OverlayRuntime {
   private needsSync = false;
   private moving = 0;
   private releaseScroll: (() => void) | undefined;
-  private publishedModal: HTMLDialogElement | null = null;
+  private modalAncestry: Element[] = [];
   private pointerTarget: Element | null = null;
   private pointerTimeout: number | undefined;
   private pendingReports = 0;
@@ -415,9 +415,12 @@ class OverlayRuntime {
   }
 
   publishModal(): void {
-    const modal = this.resolveModal();
-    if (modal !== this.publishedModal) {
-      this.publishedModal = modal;
+    const ancestry = Array.from(composedAncestors(this.resolveModal()));
+    if (
+      ancestry.length !== this.modalAncestry.length ||
+      ancestry.some((ancestor, index) => ancestor !== this.modalAncestry[index])
+    ) {
+      this.modalAncestry = ancestry;
       this.document.dispatchEvent(new this.view.Event(modalChange));
     }
   }
@@ -543,6 +546,7 @@ class OverlayRuntime {
     // A state-preserving move can keep :modal while changing the structural owners.
     if (moved) {
       this.watchModals();
+      this.publishModal();
     }
   };
 

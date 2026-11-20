@@ -85,19 +85,28 @@ export default function OverlayRealmsFixture(): JSX.Element {
     const checkShadow = () => {
       root.dataset.shadowProjection = String(resolveToastPortalHost(shadowHost) === modal);
     };
+    let source: HTMLDivElement | undefined;
     let destination: HTMLDivElement | undefined;
     const unsubscribe = subscribeToModalChanges(document, () => {
       root.dataset.modalHost = resolveToastPortalHost(document.body)?.id || 'body';
+      if (source && destination) {
+        root.dataset.scopedHosts = [source, destination]
+          .map((scope) => resolveToastPortalHost(scope)?.id || 'none')
+          .join('|');
+      }
     });
     const moveOwnedDialog = () => {
-      const source = root.appendChild(document.createElement('div'));
+      source = root.appendChild(document.createElement('div'));
+      source.id = 'origin';
       destination = root.appendChild(document.createElement('div'));
+      destination.id = 'destination';
       const dialog = source.appendChild(document.createElement('dialog'));
       dialog.id = 'moved-dialog';
       dialog.style.cssText = 'width:0;height:0;box-sizing:border-box;padding:0;border:0';
       const handle = registerOverlay({ element: dialog, kind: 'modal', onOpenChange() {} });
       registered.add(handle);
       handle.setOpen(true);
+      root.dataset.hostsBeforeMove = root.dataset.scopedHosts;
       destination.moveBefore(dialog, null);
       root.dataset.preservedModal = String(
         dialog.matches(':modal') && dialog.getBoundingClientRect().height === 0,

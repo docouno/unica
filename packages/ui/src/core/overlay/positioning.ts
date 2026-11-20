@@ -55,16 +55,16 @@ export function positionOverlay({
   let revision = 0;
   let lastRTL: boolean | undefined;
   const isRTL = (): boolean => view.getComputedStyle(anchor).direction === 'rtl';
+  const isLive = (): boolean =>
+    active &&
+    anchor.isConnected &&
+    floating.isConnected &&
+    anchor.ownerDocument === document &&
+    floating.ownerDocument === document &&
+    floating.matches(':popover-open');
   const update = (): void => {
     const current = ++revision;
-    const valid = (): boolean =>
-      active &&
-      current === revision &&
-      anchor.isConnected &&
-      floating.isConnected &&
-      anchor.ownerDocument === document &&
-      floating.ownerDocument === document &&
-      floating.matches(':popover-open');
+    const valid = (): boolean => current === revision && isLive();
     if (!valid()) {
       return;
     }
@@ -117,16 +117,36 @@ export function positionOverlay({
     );
   };
 
-  const stop = autoUpdate(anchor, floating, update);
-  const direction = new view.MutationObserver(() => {
-    // A cascade change can move the logical edge without changing either box.
-    if (anchor.ownerDocument === document && isRTL() !== lastRTL) {
+  let stop = autoUpdate(anchor, floating, update);
+  let ancestry: Set<Node>;
+  const direction = new view.MutationObserver((records) => {
+    if (!isLive()) {
+      return;
+    }
+    const moved = records.some((record) =>
+      Array.from(record.removedNodes).some((node) => ancestry.has(node)),
+    );
+    if (moved) {
+      watchAncestry();
+      stop();
+      stop = autoUpdate(anchor, floating, update);
+    } else if (isRTL() !== lastRTL) {
+      // A cascade change can move the logical edge without changing either box.
       update();
     }
   });
-  for (const ancestor of composedAncestors(anchor)) {
-    direction.observe(ancestor, { attributes: true, attributeFilter: ['dir', 'class', 'style'] });
-  }
+  const watchAncestry = (): void => {
+    direction.disconnect();
+    ancestry = new Set(composedAncestors(anchor));
+    for (const ancestor of ancestry) {
+      direction.observe(ancestor, {
+        attributes: true,
+        attributeFilter: ['dir', 'class', 'style'],
+        childList: true,
+      });
+    }
+  };
+  watchAncestry();
 
   const cleanup = (): void => {
     if (!active) {
