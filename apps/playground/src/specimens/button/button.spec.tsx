@@ -233,7 +233,10 @@ export default defineComponent({
     {
       id: 'actions',
       title: 'Confirm or cancel',
-      code: '<Button variant="ghost" tone="neutral">Cancel</Button>\n<Button>Save changes</Button>',
+      code: `<>
+  <Button variant="ghost" tone="neutral">Cancel</Button>
+  <Button>Save changes</Button>
+</>`,
       render: () => (
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-3)' }}>
           <Button variant="ghost" tone="neutral">

@@ -153,12 +153,13 @@ it('filters sparse theme axes independently and isolates an artboard with native
   fireEvent.click(screen.getByRole('button', { name: 'Isolate Haze Day' }));
   expect(themeLayers()).toEqual(['day']);
   expect(push).toHaveBeenCalledTimes(1);
-  fireEvent.click(screen.getByRole('button', { name: 'Isolate Haze Day' }));
-  expect(push).toHaveBeenCalledTimes(1);
+  expect(screen.queryByRole('button', { name: 'Isolate Haze Day' })).toBeNull();
+  expect(document.activeElement).toBe(screen.getByRole('region', { name: 'Haze Day' }));
   window.history.back();
   await waitFor(() => {
     expect(themeLayers()).toEqual(['night', 'day']);
   });
+  expect(document.activeElement).toBe(screen.getByRole('region', { name: 'Haze Day' }));
   expect(push).toHaveBeenCalledTimes(1);
 });
 

@@ -61,7 +61,8 @@ it('restores the material and case caption of a directly addressed RadioCard pre
   expect(artboards.every((artboard) => artboard.querySelector('[data-surface="overlay"]'))).toBe(
     true,
   );
-  expect(screen.getAllByText(/Static floating plate with live inputs/)).toHaveLength(6);
+  const caption = screen.getByText(/Static floating plate with live inputs/);
+  expect(caption.closest('.wb-artboard')).toBeNull();
 
   const chosen = (): number[] =>
     artboards.map((artboard) => artboard.querySelectorAll('input[type="radio"]:checked').length);

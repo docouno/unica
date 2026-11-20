@@ -113,8 +113,10 @@ export default defineComponent({
         'Pinned in flow. 22rem ceiling, 16px insets, 12px rhythm. Identity first, one short summary, optional metadata.',
       overlayStage: true,
       mode: 'pinned',
-      code: `<HoverCard><MemberPreview /></HoverCard>
-<HoverCard><TeamPreview /></HoverCard>`,
+      code: `<>
+  <HoverCard><MemberPreview /></HoverCard>
+  <HoverCard><TeamPreview /></HoverCard>
+</>`,
       render: () => <HoverIdentityExamples />,
     },
     {
@@ -124,9 +126,11 @@ export default defineComponent({
         'Content owns the anatomy. Classification uses passive badges; removable Tags would introduce actions.',
       overlayStage: true,
       mode: 'pinned',
-      code: `<HoverCard><DocumentPreview /></HoverCard>
-<HoverCard><IssuePreview /></HoverCard>
-<HoverCard><CommitPreview /></HoverCard>`,
+      code: `<>
+  <HoverCard><DocumentPreview /></HoverCard>
+  <HoverCard><IssuePreview /></HoverCard>
+  <HoverCard><CommitPreview /></HoverCard>
+</>`,
       render: () => <HoverEntityExamples />,
     },
     {
@@ -136,8 +140,10 @@ export default defineComponent({
         'Pinned relationship to a normal inline link. No focus ring at rest, no nested card or competing elevation.',
       overlayStage: true,
       mode: 'pinned',
-      code: `<p>Maintained by <Link href="#maintainer">Database reliability</Link>.</p>
-<HoverCard><TeamPreview /></HoverCard>`,
+      code: `<>
+  <p>Maintained by <Link href="#maintainer">Database reliability</Link>.</p>
+  <HoverCard><TeamPreview /></HoverCard>
+</>`,
       render: () => <HoverContextExamples />,
     },
   ],

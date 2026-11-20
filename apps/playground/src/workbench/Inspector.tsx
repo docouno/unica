@@ -1,5 +1,6 @@
 import { useId, useRef, useState } from 'react';
 import type { MouseEvent, ReactElement, ReactNode, SyntheticEvent } from 'react';
+import { InspectorCode } from './InspectorCode.js';
 import { Matrix } from './Matrix.js';
 import { PlaygroundControls } from './PlaygroundControls.js';
 import { componentCode, defaultValues, evaluate } from './schema.js';
@@ -316,14 +317,6 @@ function Diagnostics({
   );
 }
 
-function InspectorCode({ code }: { readonly code: string }): ReactElement {
-  return (
-    <pre className="wb-inspector-code">
-      <code>{code}</code>
-    </pre>
-  );
-}
-
 const caseKinds: Record<CaseBlock['kind'], string> = {
   behavior: 'Behavior',
   content: 'Content & overflow',
@@ -505,43 +498,41 @@ export function Inspector({
           />
         )}
         {cases.length > 0 ? (
-          renderArtboards((theme) => (
-            <div className="wb-inspector-blocks">
-              {selectBlock(cases, block).map((item) => {
-                const Sample = item.render;
-                const surfaces: readonly SurfaceMode[] = item.compareSurfaces
-                  ? ['base', 'overlay']
-                  : [surface];
-                return (
-                  <section key={item.id} data-wb-block={item.id}>
-                    <PreviewHeading block={item} kind={item.kind} />
-                    {surfaces.map((choice) => (
-                      <div
-                        className="wb-case-preview"
-                        key={choice}
-                        style={{ maxInlineSize: item.width }}
-                      >
-                        {item.compareSurfaces && (
-                          <p className="wb-inspector-meta wb-preview-surface">
-                            {choice === 'base' ? 'Base' : 'Overlay'}
-                          </p>
-                        )}
-                        {renderPreview(
-                          theme,
-                          choice,
-                          item,
-                          (ctx) => (
-                            <Sample ctx={ctx} />
-                          ),
-                          choice,
-                        )}
-                      </div>
-                    ))}
-                  </section>
-                );
-              })}
-            </div>
-          ))
+          <div className="wb-inspector-blocks">
+            {selectBlock(cases, block).map((item) => {
+              const Sample = item.render;
+              const surfaces: readonly SurfaceMode[] = item.compareSurfaces
+                ? ['base', 'overlay']
+                : [surface];
+              return (
+                <section key={item.id} data-wb-block={item.id}>
+                  <PreviewHeading block={item} kind={item.kind} />
+                  {renderArtboards((theme) => (
+                    <div className="wb-surface-previews">
+                      {surfaces.map((choice) => (
+                        <div key={choice} style={{ maxInlineSize: item.width }}>
+                          {item.compareSurfaces && (
+                            <p className="wb-inspector-meta wb-preview-surface">
+                              {choice === 'base' ? 'Base' : 'Overlay'}
+                            </p>
+                          )}
+                          {renderPreview(
+                            theme,
+                            choice,
+                            item,
+                            (ctx) => (
+                              <Sample ctx={ctx} />
+                            ),
+                            choice,
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  ))}
+                </section>
+              );
+            })}
+          </div>
         ) : (
           <p className="wb-inspector-note">No cases registered.</p>
         )}
@@ -574,26 +565,28 @@ export function Inspector({
             onSelect={(id) => update({ block: id }, 'push')}
           />
         )}
-        {renderArtboards((theme) => (
+        {usage.length > 0 ? (
           <div className="wb-inspector-blocks">
-            {usage.length
-              ? selectBlock(usage, block).map((item) => {
-                  const Sample = item.render;
-                  return (
-                    <section key={item.id} data-wb-block={item.id}>
-                      <PreviewHeading block={item} />
-                      {renderPreview(theme, item.id, item, (ctx) => (
-                        <Sample ctx={ctx} />
-                      ))}
-                      {item.code && <InspectorCode code={item.code} />}
-                    </section>
-                  );
-                })
-              : renderPreview(theme, 'usage-default', undefined, (ctx) => (
-                  <Component values={defaultValues(component.props)} ctx={ctx} />
-                ))}
+            {selectBlock(usage, block).map((item) => {
+              const Sample = item.render;
+              return (
+                <section key={item.id} data-wb-block={item.id}>
+                  <PreviewHeading block={item} />
+                  {renderArtboards((theme) =>
+                    renderPreview(theme, item.id, item, (ctx) => <Sample ctx={ctx} />),
+                  )}
+                  {item.code && <InspectorCode code={item.code} />}
+                </section>
+              );
+            })}
           </div>
-        ))}
+        ) : (
+          renderArtboards((theme) =>
+            renderPreview(theme, 'usage-default', undefined, (ctx) => (
+              <Component values={defaultValues(component.props)} ctx={ctx} />
+            )),
+          )
+        )}
         {!raw && (
           <>
             {usage.length === 0 && (

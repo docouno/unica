@@ -8,12 +8,8 @@
 
 .wb-matrix-controls {
   display: grid;
-  gap: 10px;
+  gap: 8px;
   min-inline-size: 0;
-  padding: 12px 14px;
-  border: 1px solid var(--wb-border);
-  border-radius: 8px;
-  background: var(--wb-rail);
   font: 500 0.75rem / 1.4 var(--wb-font);
 }
 
@@ -99,9 +95,6 @@
 .wb-matrix-group-label {
   inline-size: fit-content;
   margin: 0 0 6px;
-  padding: 4px 8px;
-  border-radius: 4px;
-  background: var(--wb-bar);
   color: var(--wb-fg);
   font: 600 0.75rem / 1.4 var(--wb-font);
 }
@@ -109,26 +102,22 @@
 .wb-matrix-grid {
   inline-size: 100%;
   border-spacing: 0;
-  border-block-start: 1px solid var(--wb-stage-border);
-  border-inline-start: 1px solid var(--wb-stage-border);
 }
 
 .wb-matrix-grid > :is(thead, tbody) > tr > :is(th, td) {
-  border-inline-end: 1px solid var(--wb-stage-border);
-  border-block-end: 1px solid var(--wb-stage-border);
+  border-block-end: 1px solid var(--wb-border);
 }
 
 .wb-matrix-grid > :is(thead, tbody) > tr > th,
 .wb-matrix-coordinate {
   padding: 6px 8px;
-  background: var(--wb-bar);
-  color: var(--wb-fg);
+  color: var(--wb-fg-muted);
   text-align: start;
   font: 500 0.7rem / 1.4 var(--wb-mono);
 }
 
 .wb-matrix-grid > tbody > tr > td {
-  padding: 10px;
+  padding: 1px;
   vertical-align: top;
 }
 
@@ -137,7 +126,7 @@
 }
 
 .wb-matrix-grid > tbody > tr > td > .wb-matrix-notes {
-  margin-block: 6px 0;
+  margin: 3px 5px;
 }
 
 .wb-matrix-combinations {
@@ -157,13 +146,11 @@
   flex-direction: column;
   gap: 6px;
   min-inline-size: 0;
-  padding: 8px;
-  border: 1px solid var(--wb-stage-border);
 }
 
 .wb-matrix-combination > .wb-inspector-preview,
 .wb-matrix-grid > tbody > tr > td > .wb-inspector-preview {
-  padding-block: calc(24px / var(--wb-viewport-scale, 1));
+  --wb-sample-padding: calc(24px / var(--wb-viewport-scale, 1)) 10px;
 }
 
 .wb-matrix-coordinate {
@@ -171,6 +158,7 @@
   flex-wrap: wrap;
   gap: 4px 10px;
   margin: 0;
+  padding: 0;
 }
 
 .wb-matrix-coordinate:empty {
@@ -178,21 +166,19 @@
 }
 
 .wb-matrix-coordinate dt {
-  color: var(--wb-fg-muted);
+  color: var(--wb-fg-subtle);
 }
 
 .wb-matrix-coordinate dd {
   margin: 0;
+  color: var(--wb-fg);
   overflow-wrap: anywhere;
 }
 
 .wb-matrix-notes {
   inline-size: fit-content;
   max-inline-size: 100%;
-  padding: 3px 6px;
-  border-radius: 4px;
-  background: var(--wb-card);
-  color: var(--wb-fg);
+  color: var(--wb-fg-muted);
   font: 500 0.7rem / 1.4 var(--wb-font);
 }
 
@@ -209,6 +195,4 @@
 
 .wb-matrix-reference {
   min-inline-size: 0;
-  padding-block-start: 14px;
-  border-block-start: 1px solid var(--wb-stage-border);
 }

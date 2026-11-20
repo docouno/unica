@@ -330,14 +330,16 @@ export default defineComponent({
     {
       id: 'context',
       title: 'Collection footer',
-      code: `<ul aria-label="Documents">
-  {visible.map((name) => <li key={name}>{name}</li>)}
-</ul>
-<div>
-  <span role="status">{range} of {results.length}</span>
-  <Pagination size="s" format="pages" label="Document result pages"
-    pageCount={Math.ceil(results.length / pageSize)} page={page} onPageChange={setPage} />
-</div>`,
+      code: `<>
+  <ul aria-label="Documents">
+    {visible.map((name) => <li key={name}>{name}</li>)}
+  </ul>
+  <div>
+    <span role="status">{range} of {results.length}</span>
+    <Pagination size="s" format="pages" label="Document result pages"
+      pageCount={Math.ceil(results.length / pageSize)} page={page} onPageChange={setPage} />
+  </div>
+</>`,
       render: () => (
         <div className="pagination-study-collections">
           <DocumentCollection title="Related documents" results={documents} />

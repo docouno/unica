@@ -701,10 +701,12 @@ export default defineComponent({
       title: 'With fields & controls',
       caption:
         'Tags fit inside fields and share the text scale of neighboring controls. Values stay in sync across sizes; add or remove them to inspect wrapping.',
-      code: `<TagsInput label="Assigned values" values={values} onValuesChange={setValues} />
-<Badge>Verified</Badge>
-<Tag iconLeft={FolderIcon} removeLabel="Remove Research" onRemove={removeResearch}>Research</Tag>
-<Button variant="secondary" tone="neutral" onClick={addLabel}>Add label</Button>`,
+      code: `<>
+  <TagsInput label="Assigned values" values={values} onValuesChange={setValues} />
+  <Badge>Verified</Badge>
+  <Tag iconLeft={FolderIcon} removeLabel="Remove Research" onRemove={removeResearch}>Research</Tag>
+  <Button variant="secondary" tone="neutral" onClick={addLabel}>Add label</Button>
+</>`,
       render: () => <SizeFit />,
     },
   ],

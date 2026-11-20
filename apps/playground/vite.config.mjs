@@ -17,6 +17,7 @@ export default defineConfig({
           groups: [
             { name: 'react', test: /\/node_modules\/(?:react|react-dom|scheduler)\// },
             { name: 'icons', test: /\/node_modules\/@phosphor-icons\/react\// },
+            { name: 'jsx-parser', test: /\/node_modules\/prettier\/plugins\/babel\.mjs$/ },
             { name: 'workbench-definitions', test: /\/src\/workbench\/types\.ts$/ },
             {
               name: 'specimens',

@@ -363,16 +363,18 @@ export default defineComponent({
       title: 'Groups & select all',
       caption:
         'Live selection. A partial selection moves to all; another activation clears the available items.',
-      code: `<Checkbox
-  label="Select all available items"
-  checked={selected.length === available.length}
-  indeterminate={selected.length > 0 && selected.length < available.length}
-  onCheckedChange={(checked) => setSelected(checked ? available : [])}
-/>
-<CheckboxGroup aria-label="Available items" value={selected} onValueChange={setSelected}>
-  <Checkbox value="notes" label="Notes" />
-  <Checkbox value="images" label="Images" />
-</CheckboxGroup>`,
+      code: `<>
+  <Checkbox
+    label="Select all available items"
+    checked={selected.length === available.length}
+    indeterminate={selected.length > 0 && selected.length < available.length}
+    onCheckedChange={(checked) => setSelected(checked ? available : [])}
+  />
+  <CheckboxGroup aria-label="Available items" value={selected} onValueChange={setSelected}>
+    <Checkbox value="notes" label="Notes" />
+    <Checkbox value="images" label="Images" />
+  </CheckboxGroup>
+</>`,
       render: () => <Aggregate />,
     },
   ],

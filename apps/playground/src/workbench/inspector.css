@@ -29,6 +29,20 @@
 .wb-inspector-preview {
   position: relative;
   min-inline-size: 0;
+  padding: var(--wb-sample-padding, 16px);
+}
+
+.wb-inspector-preview:has(> .wb-overlay-stage) {
+  padding: 0;
+}
+
+.wb-inspector-preview > .wb-overlay-stage {
+  border: 0;
+  border-radius: 0;
+}
+
+.wb-playground-layout .wb-inspector-preview {
+  --wb-sample-padding: 0 20px;
 }
 
 .wb-playground-subject {
@@ -245,13 +259,44 @@
   margin: 0;
   border: 1px solid var(--wb-border);
   border-radius: 6px;
-  padding: 8px 10px;
+  padding: 10px 12px;
   background: var(--wb-bg);
   overflow: auto;
   font-family: var(--wb-mono);
-  font-size: 12px;
+  font-size: 13px;
   direction: ltr;
   text-align: left;
+  tab-size: 2;
+}
+
+.wb-inspector-code code {
+  font: inherit;
+}
+
+.wb-inspector-code .tag,
+.wb-inspector-code .keyword {
+  color: var(--wb-code-tag);
+}
+
+.wb-inspector-code .attr-name,
+.wb-inspector-code .function {
+  color: var(--wb-code-attr);
+}
+
+.wb-inspector-code .attr-value,
+.wb-inspector-code .string {
+  color: var(--wb-code-string);
+}
+
+.wb-inspector-code .number,
+.wb-inspector-code .boolean {
+  color: var(--wb-code-literal);
+}
+
+.wb-inspector-code .punctuation,
+.wb-inspector-code .operator,
+.wb-inspector-code .comment {
+  color: var(--wb-fg-subtle);
 }
 
 .wb-diagnostics {
@@ -325,20 +370,18 @@
 }
 
 .wb-inspector-blocks {
-  gap: 16px;
+  gap: 24px;
 }
 
-.wb-block-heading,
-.wb-preview-surface {
+.wb-block-heading {
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
-  column-gap: 10px;
-  margin: 0;
-  padding: 6px 8px;
-  border: 1px solid var(--wb-border);
-  border-radius: 5px;
-  background: var(--wb-rail);
+  gap: 2px 10px;
+}
+
+.wb-block-heading h3 {
+  font-size: 15px;
 }
 
 .wb-block-caption {
@@ -350,13 +393,15 @@
 }
 
 .wb-preview-surface {
-  inline-size: fit-content;
-  margin-block-end: 5px;
+  margin: 0 0 4px;
+  color: var(--wb-fg-muted);
   font-size: 12px;
 }
 
-.wb-case-preview {
-  min-inline-size: 0;
+.wb-surface-previews {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 12px;
 }
 
 .wb-scene-usage ul {

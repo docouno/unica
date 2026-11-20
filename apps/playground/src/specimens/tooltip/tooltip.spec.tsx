@@ -139,8 +139,10 @@ export default defineComponent({
         'Pinned source and hint show their relationship. The floating label adds no extra focus target.',
       overlayStage: true,
       mode: 'pinned',
-      code: `<IconButton icon={GearIcon} aria-label="Preferences" variant="ghost" tone="neutral" />
-<Tooltip shortcut="⌘,">Preferences</Tooltip>`,
+      code: `<>
+  <IconButton icon={GearIcon} aria-label="Preferences" variant="ghost" tone="neutral" />
+  <Tooltip shortcut="⌘,">Preferences</Tooltip>
+</>`,
       render: () => <TooltipContextExamples />,
     },
   ],

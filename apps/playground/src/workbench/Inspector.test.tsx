@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { useState } from 'react';
 import type { ReactElement, ReactNode } from 'react';
 import { afterEach, expect, it, vi } from 'vitest';
@@ -71,7 +71,7 @@ function showInspector(component: ComponentDefinition, query = '') {
   return { navigateItem, update };
 }
 
-it('shares valid controls across themes while keeping the last valid Subject and live JSX', () => {
+it('shares valid controls across themes while keeping the last valid Subject and live JSX', async () => {
   const component = defineComponent({
     id: 'choice',
     title: 'Choice',
@@ -118,7 +118,12 @@ it('shares valid controls across themes while keeping the last valid Subject and
 
   fireEvent.click(screen.getByRole('checkbox', { name: 'ready' }));
   fireEvent.change(label, { target: { value: 'Save choice' } });
-  expect(screen.getByRole('region', { name: 'JSX' }).textContent).toContain('ready={false}');
+  const code = screen.getByRole('region', { name: 'JSX' });
+  await waitFor(() => {
+    expect(code.querySelector('.token.boolean')?.textContent).toBe('false');
+    expect(code.textContent).toContain('ready={false}');
+    expect(code.textContent).toContain('Save choice');
+  });
   const light = screen.getByRole('region', { name: 'Example Light' });
   fireEvent.click(within(light).getByRole('button', { name: 'Save choice' }));
   expect(screen.getByRole('region', { name: 'Events' }).textContent).toContain(
@@ -221,7 +226,7 @@ it.each(['matrix', 'usage'])('keeps a marked native form on the %s route after s
   expect(fireEvent.submit(form!)).toBe(false);
 });
 
-it('keeps both declared case surfaces and links to the registered scene from Usage', () => {
+it('shares example descriptions and highlighted JSX across theme previews', async () => {
   const component = defineComponent({
     id: 'choice',
     title: 'Choice',
@@ -244,16 +249,36 @@ it('keeps both declared case surfaces and links to the registered scene from Usa
         render: () => <button type="button">Open</button>,
       },
     ],
+    usage: [
+      {
+        id: 'settings',
+        title: 'Settings',
+        caption: 'Used in settings.',
+        code: '<Settings><Choice enabled={false} label="<Delete />"/><Save /></Settings>',
+        render: () => <p>Settings preview</p>,
+      },
+    ],
     render: () => <button type="button">Choice</button>,
   });
   showInspector(component, '?tab=cases&block=materials&surface=overlay&raw=1');
   expect(screen.getAllByText('base sample')).toHaveLength(2);
   expect(screen.getAllByText('overlay sample')).toHaveLength(2);
-  expect(screen.getAllByText('Inspect both surfaces.')).toHaveLength(2);
+  expect(screen.getAllByText('Inspect both surfaces.')).toHaveLength(1);
   expect(screen.queryByRole('button', { name: 'Open' })).toBeNull();
   cleanup();
 
   const { navigateItem } = showInspector(component, '?tab=usage');
+  expect(screen.getAllByText('Used in settings.')).toHaveLength(1);
+  expect(screen.getAllByText('Settings preview')).toHaveLength(2);
+  await waitFor(() => {
+    const snippets = document.querySelectorAll('.wb-inspector-code code');
+    expect(snippets).toHaveLength(1);
+    const snippet = snippets[0]!;
+    expect(snippet.textContent).toContain('\n  <Choice enabled={false} label="<Delete />" />');
+    expect(snippet.querySelector('.token.attr-name')?.textContent).toBe('enabled');
+    expect(snippet.querySelector('.token.attr-value')?.textContent).toContain('<Delete />');
+    expect(snippet.querySelector('delete')).toBeNull();
+  });
   const scene = screen.getByRole('link', { name: 'Schedule' });
   expect(scene.getAttribute('href')).toBe('?item=schedule');
   fireEvent.click(scene);

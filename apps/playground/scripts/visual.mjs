@@ -109,20 +109,32 @@ try {
   }
 
   await waitForReady();
-  if ((await page.locator('.wb-artboard').count()) === 1) {
-    const fitWidth = await page.evaluate(() => {
-      const host = document.querySelector('.wb-viewport-host');
-      const inner = document.querySelector('.wb-viewport-inner');
-      if (!host || !inner) {
-        return 0;
+  const fitWidth = await page.evaluate(() => {
+    const boards = document.querySelectorAll('.wb-artboards');
+    if (boards.length === 0 || [...boards].some((board) => !board.hasAttribute('data-single'))) {
+      return null;
+    }
+    let widest = 0;
+    for (const inner of document.querySelectorAll('.wb-viewport-inner')) {
+      const host = inner.closest('.wb-viewport-host');
+      if (host) {
+        const { paddingInlineStart, paddingInlineEnd } = window.getComputedStyle(host);
+        const chromeWidth = window.innerWidth - host.clientWidth;
+        const innerWidth = inner.getBoundingClientRect().width;
+        widest = Math.max(
+          widest,
+          Math.ceil(
+            innerWidth +
+              chromeWidth +
+              parseFloat(paddingInlineStart) +
+              parseFloat(paddingInlineEnd),
+          ),
+        );
       }
-      const { paddingInlineStart, paddingInlineEnd } = window.getComputedStyle(host);
-      const chromeWidth = window.innerWidth - host.clientWidth;
-      const innerWidth = inner.getBoundingClientRect().width;
-      return Math.ceil(
-        innerWidth + chromeWidth + parseFloat(paddingInlineStart) + parseFloat(paddingInlineEnd),
-      );
-    });
+    }
+    return widest;
+  });
+  if (fitWidth !== null) {
     const isolatedWidth = Math.max(raw ? 1120 : 1560, fitWidth);
     if (isolatedWidth !== width) {
       // A previous readiness signal describes the old CSS viewport.

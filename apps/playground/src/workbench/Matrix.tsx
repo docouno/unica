@@ -525,7 +525,10 @@ function MatrixContent({
             </ul>
           )}
           {modeShown === 'slice' && view?.reference && (
-            <div className="wb-matrix-reference">{renderReference(theme, view)}</div>
+            <div className="wb-matrix-reference">
+              <h3 className="wb-matrix-group-label">Reference example</h3>
+              {renderReference(theme, view)}
+            </div>
           )}
         </div>
       ))}

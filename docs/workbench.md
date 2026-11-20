@@ -31,7 +31,7 @@ Every component has the same four views.
 
 | View | What to inspect |
 | --- | --- |
-| Playground | Change the component properties in one place and compare the resulting subjects across themes. Inspect the JSX and any events supplied by the example. Form examples support native Submit and Reset and show the submitted FormData. |
+| Playground | Change the component properties in one place and compare the resulting subjects across themes. Review formatted, syntax-highlighted JSX and any events supplied by the example. Form examples support native Submit and Reset and show the submitted FormData. |
 | Matrix | Select a named slice or choose Rows, Columns, and an optional Group. Global values apply across the view. Forbidden cells show N/A, and ignored or lower-priority values retain their explanation. |
 | Cases | Explore overflow, material, and behavioral examples. Pinned examples identify conditions set by the author. |
 | Usage | Review a small composition and follow links to registered scenes that consume the component. Browser Back returns to the Usage view. |
@@ -39,6 +39,8 @@ Every component has the same four views.
 Pairwise covers every pair of finite values that has a valid completion under the current fixed values. Read the coverage count before treating it as an audit. Full shows every combination, including N/A cells, while the total across selected themes fits in 64 displayed cells.
 
 Choose Family and Scheme independently. All × Both compares all available presets. Select one family and one scheme, or click an artboard header, to inspect a single theme at natural size. Change Surface, Width, 120% Text, and RTL to stress the selected example. Bounds measures authored subjects in CSS pixels. Use browser Back and Forward to revisit item, tab, and theme selections.
+
+The environment controls sit beside the page heading when space allows. The theme canvas is applied to the live sample. Matrix coordinates and review notes use Workbench typography, and Cases and Usage show each caption once above the theme comparison. Usage shows one JSX snippet per authored example.
 
 Each checkout leases a sticky loopback port. `make up` builds the playground's dependencies before starting Vite, which serves library source changes via HMR. For reverse-proxied preview, set `DEVKIT_PREVIEW_URL_TEMPLATE` with the desired URL and placeholders (`{port}`, `{service}`, `{branch}` or `{slug}`) in the environment or a Git-ignored root `.env` file. Confirm the address with `make info`.
 
@@ -98,7 +100,7 @@ Rules apply when every value in `when` matches and at least one `affects` target
 
 The renderer is a React component. Put `ctx.subject` on the real DOM subject or pass it through a wrapper that forwards DOM props to that node. In a compound example such as [Table](../apps/playground/src/specimens/table/table.spec.tsx), mark the table itself, keep its header and body in their normal slots, and use `code(values, attributes)` to show the actual nesting or supply required props. The optional `attributes` argument contains the generated JSX attributes, with a leading space when present. Use `ctx.id` when forming native IDs and radio group names so independent artboards can share the document. For a form example, use `form: 'wrap'` for a Workbench-provided form or `form: 'owned'` if the example already supplies one. In an owned example, spread `ctx.form` on the real `<form>`. A controlled example handles its own state change on the native reset event.
 
-Give each Case and Usage block a stable ID and an explanatory caption where needed. Use Case kinds `content`, `surface`, and `behavior`. Set `mode: 'pinned'` where the example fixes a visual state, or `mode: 'live'` when inspection depends on interaction. A Case can set a bounded `width` or compare material contexts with `compareSurfaces: true`. Set `surface: 'overlay'` for an inherited floating context, or `overlayStage: true` to request staging in the app's underlay. The overlay component paints its own panel with semantic tokens. Usage blocks may include a short JSX `code` sample beside their render.
+Give each Case and Usage block a stable ID and an explanatory caption where needed. Use Case kinds `content`, `surface`, and `behavior`. Set `mode: 'pinned'` where the example fixes a visual state, or `mode: 'live'` when inspection depends on interaction. A Case can set a bounded `width` or compare material contexts with `compareSurfaces: true`. Set `surface: 'overlay'` for an inherited floating context, or `overlayStage: true` to request staging in the app's underlay. The overlay component paints its own panel with semantic tokens. Usage blocks may include a short JSX `code` sample beside their render. Wrap adjacent root elements in a JSX fragment so the snippet can be formatted and copied as one expression.
 
 Application compositions live independently in `src/scenes/<NN>-<slug>.scene.tsx` and default-export `defineScene(...)`. Declare consumed component IDs in `uses` to create Usage links. Verify that the scene renders each listed family. [Folio](compositions/folio.md) is one example application. Keep its workflows in scenes and use small, product-independent compositions for component usage.
 

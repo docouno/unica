@@ -368,24 +368,25 @@ function Environment({
           )}
         </div>
       </div>
-      <div className="wb-environment-group">
-        <span aria-hidden="true">Surface</span>
-        <div className="wb-seg" role="group" aria-label="Surface">
+      <label className="wb-environment-group">
+        Surface
+        <select
+          className="wb-select"
+          value={route.surface}
+          onChange={(event) => {
+            const surface = surfaces.find((entry) => entry === event.target.value);
+            if (surface) {
+              update({ surface });
+            }
+          }}
+        >
           {surfaces.map((surface) => (
-            <button
-              key={surface}
-              className="wb-seg-btn"
-              type="button"
-              aria-pressed={route.surface === surface}
-              onClick={() => {
-                update({ surface });
-              }}
-            >
+            <option key={surface} value={surface}>
               {surfaceLabels[surface]}
-            </button>
+            </option>
           ))}
-        </div>
-      </div>
+        </select>
+      </label>
       <label className="wb-environment-group">
         Width
         <select
@@ -555,8 +556,13 @@ export function WorkbenchApp({ config }: WorkbenchAppProps): ReactElement {
   const renderArtboards = (render: (theme: WorkbenchTheme) => ReactNode): ReactElement => (
     <div className="wb-artboards" data-single={selectedThemes.length === 1 ? 'true' : undefined}>
       {selectedThemes.map((theme) => (
-        <section className="wb-cell" key={theme.id} aria-label={theme.label}>
-          {route.raw ? (
+        <section
+          className="wb-cell"
+          key={theme.id}
+          aria-label={theme.label}
+          tabIndex={route.raw ? undefined : -1}
+        >
+          {route.raw || selectedThemes.length === 1 ? (
             <div className="wb-cell-header">
               <span className="wb-cell-title">{theme.label}</span>
               {theme.meta && <span className="wb-cell-meta">{theme.meta}</span>}
@@ -566,16 +572,13 @@ export function WorkbenchApp({ config }: WorkbenchAppProps): ReactElement {
               className="wb-cell-header wb-isolate"
               type="button"
               aria-label={`Isolate ${theme.label}`}
-              onClick={() => {
-                if (selectedThemes.length > 1) {
-                  update({ family: theme.family, scheme: theme.colorScheme }, 'push');
-                }
+              onClick={(event) => {
+                event.currentTarget.parentElement?.focus();
+                update({ family: theme.family, scheme: theme.colorScheme }, 'push');
               }}
             >
               <span className="wb-cell-title">{theme.label}</span>
-              <span className="wb-cell-meta">
-                {selectedThemes.length > 1 ? 'Isolate' : theme.meta}
-              </span>
+              <span className="wb-cell-meta">Isolate</span>
             </button>
           )}
           <ViewportFrame vp={route.vp} scaleToFit={selectedThemes.length > 1}>
@@ -584,6 +587,7 @@ export function WorkbenchApp({ config }: WorkbenchAppProps): ReactElement {
               data-theme={theme.id}
               data-color-scheme={theme.colorScheme}
               data-text-scale={route.scale}
+              data-wb-scene={component ? undefined : ''}
               dir={route.dir}
               style={{ colorScheme: theme.colorScheme }}
             >
@@ -748,17 +752,19 @@ export function WorkbenchApp({ config }: WorkbenchAppProps): ReactElement {
 
       <div className="wb-main">
         <header className="wb-topbar">
-          <div className="wb-item-heading">
-            <h1 ref={headingRef} className="wb-item-title" tabIndex={-1}>
-              {component?.title ??
-                scene?.title ??
-                (notFound ? 'Item not found' : 'Preset calibration')}
-            </h1>
-            {component && <span className="wb-nav-tag">{component.status}</span>}
+          <div className="wb-item-info">
+            <div className="wb-item-heading">
+              <h1 ref={headingRef} className="wb-item-title" tabIndex={-1}>
+                {component?.title ??
+                  scene?.title ??
+                  (notFound ? 'Item not found' : 'Preset calibration')}
+              </h1>
+              {component && <span className="wb-nav-tag">{component.status}</span>}
+            </div>
+            {(component?.summary ?? scene?.summary) && (
+              <p className="wb-item-summary">{component?.summary ?? scene?.summary}</p>
+            )}
           </div>
-          {(component?.summary ?? scene?.summary) && (
-            <p className="wb-item-summary">{component?.summary ?? scene?.summary}</p>
-          )}
           <Environment
             route={route}
             themes={config.themes}
