@@ -30,8 +30,10 @@ function SpinnerLifecycle(): ReactElement {
       <div className="activity-waiting-line" aria-busy={Boolean(request)}>
         <span className="activity-reserved">
           {request && <Spinner key={request.id} size="m" tone="muted" delay={150} />}
-          {outcome === 'saved' && <Icon icon={CheckIcon} size="m" color="muted" />}
-          {outcome === 'failed' && <Icon icon={WarningCircleIcon} size="m" color="danger" />}
+          {outcome === 'saved' && <Icon usage="slot" icon={CheckIcon} size="m" color="muted" />}
+          {outcome === 'failed' && (
+            <Icon usage="slot" icon={WarningCircleIcon} size="m" color="danger" />
+          )}
         </span>
         <span>
           {request

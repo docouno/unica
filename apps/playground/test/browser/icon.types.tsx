@@ -46,12 +46,26 @@ function Brand({ detail, monochrome, ...svg }: SvgProps & BrandDetail): ReactNod
 
 const brand = defineGlyph(Brand);
 
+type ChartOptions = { mode?: 'plain' } | { mode: 'chart'; values: readonly number[] };
+
+function Report({ children, ...props }: SvgProps & ChartOptions): ReactNode {
+  return <svg>{props.mode === 'chart' ? <title>{props.values.join(', ')}</title> : children}</svg>;
+}
+
+const report = defineGlyph(Report);
+
 export function MixedSource({ useBrand }: { useBrand: boolean }) {
   const icon = useBrand ? brand : Outline;
   // @ts-expect-error Only the outline glyph accepts this value.
   const wrong = <Icon icon={icon} detail="outline" />;
-  void wrong;
-  return <Icon icon={icon} detail="shared" />;
+  const registered = defineGlyph(useBrand ? Brand : Outline);
+  // @ts-expect-error The descriptor preserves the same source choice.
+  const wrongDescriptor = <Icon icon={registered} detail="outline" />;
+  void [wrong, wrongDescriptor];
+  return [
+    <Icon key="raw" icon={icon} detail="shared" />,
+    <Icon key="pinned" icon={registered} detail="shared" />,
+  ];
 }
 
 function RequiresVariant({ variant }: SvgProps & { variant: string }) {
@@ -83,6 +97,8 @@ const valid = [
   <Icon icon={ArrowRightIcon} weight="bold" mirrored ref={svgRef} />,
   <Icon icon={arrow} weight={undefined} />,
   <Icon icon={brand} detail="brand" monochrome />,
+  <Icon icon={report} />,
+  <Icon icon={report} mode="chart" values={[1]} />,
   <Icon icon={OptionalGlyph} compact />,
   <Icon icon={ProjectSvg}>
     <title>Project</title>
@@ -96,6 +112,10 @@ const closed = { role: 'img', 'aria-hidden': true, 'aria-describedby': 'hint', t
 const named = { 'aria-label': 'Open' };
 
 const invalid = [
+  // @ts-expect-error Chart mode requires its data.
+  <Icon icon={report} mode="chart" />,
+  // @ts-expect-error Undefined cannot satisfy a required source option.
+  <Icon icon={report} mode="chart" values={undefined} />,
   // @ts-expect-error The shared detail does not support monochrome on Brand.
   <Icon icon={brand} detail="shared" monochrome />,
   // @ts-expect-error Phosphor weight must be inferred from icon.

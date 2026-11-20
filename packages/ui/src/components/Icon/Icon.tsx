@@ -92,12 +92,8 @@ type ClosedProps = {
   ]?: never;
 };
 
-type SourceProps<G> =
-  G extends GlyphDefinition<infer Source>
-    ? Parameters<Source>[0]
-    : G extends GlyphComponent
-      ? Parameters<G>[0]
-      : never;
+type GlyphCallable<G> =
+  G extends GlyphDefinition<infer Source> ? Source : Extract<G, GlyphComponent>;
 
 type OwnedKey =
   keyof IconFrame<GlyphSource> | keyof IconName | keyof ClosedProps | `on${Capitalize<string>}`;
@@ -108,17 +104,24 @@ type VendorKeys<Props> = 0 extends 1 & Props
     ? Exclude<keyof Props, OwnedKey>
     : never;
 
-// Keep alternatives declared by one glyph, including related optional fields.
+// Omitted vendor options and explicit undefined behave alike. Required options need a value.
 type VendorProps<Props, Keys extends PropertyKey> = Props extends unknown
-  ? { readonly [Key in Keys]?: Key extends keyof Props ? Props[Key] | undefined : never }
+  ? {
+      readonly [K in keyof Props as K extends Keys ? K : never]: Partial<
+        Pick<Props, K>
+      > extends Pick<Props, K>
+        ? Props[K] | undefined
+        : Exclude<Props[K], undefined>;
+    } & { readonly [K in Exclude<Keys, keyof Props>]?: never }
   : never;
 
 // A caller with a dynamic source needs options accepted by every possible glyph.
-type SourceOptions<G extends GlyphSource, Keys extends PropertyKey = VendorKeys<SourceProps<G>>> = [
-  Keys,
-] extends [never]
+type SourceOptions<
+  G extends GlyphComponent,
+  Keys extends PropertyKey = VendorKeys<Parameters<G>[0]>,
+> = [Keys] extends [never]
   ? unknown
-  : (G extends unknown ? (options: VendorProps<SourceProps<G>, Keys>) => void : never) extends (
+  : (G extends unknown ? (options: VendorProps<Parameters<G>[0], Keys>) => void : never) extends (
         options: infer Options,
       ) => void
     ? Options
@@ -127,7 +130,7 @@ type SourceOptions<G extends GlyphSource, Keys extends PropertyKey = VendorKeys<
 export type IconProps<G extends GlyphSource = GlyphSource> = IconFrame<G> &
   IconName &
   ClosedProps &
-  NoInfer<SourceOptions<G>>;
+  NoInfer<SourceOptions<GlyphCallable<G>>>;
 
 function textName(value: string | undefined): string | undefined {
   return typeof value === 'string' ? value.trim() || undefined : undefined;
@@ -205,6 +208,7 @@ export function Icon<G extends GlyphSource>({
     if (key.startsWith('data-')) {
       dataProps[key] = value;
     } else if (
+      value !== undefined &&
       !/^aria-/i.test(key) &&
       !/^on[A-Z]/.test(key) &&
       !reservedInputProps.has(key.toLowerCase())

@@ -378,7 +378,11 @@ export function LifecycleExample(): ReactElement {
         >
           {state === 'empty' || state === 'error' ? (
             <div className="skeleton-demo-terminal">
-              <Icon icon={state === 'error' ? WarningCircleIcon : FileTextIcon} size="l" />
+              <Icon
+                usage="slot"
+                icon={state === 'error' ? WarningCircleIcon : FileTextIcon}
+                size="l"
+              />
               <Text size="body-s" weight="medium">
                 {state === 'error' ? 'Couldn’t load documents' : 'No documents yet'}
               </Text>
@@ -444,7 +448,7 @@ export function MotionExample(): ReactElement {
       </div>
       <div>
         <Button size="s" variant="secondary" tone="neutral" onClick={() => setRun(run + 1)}>
-          <Icon icon={ArrowClockwiseIcon} size="s" /> Replay motion
+          <Icon usage="slot" icon={ArrowClockwiseIcon} size="s" /> Replay motion
         </Button>
       </div>
       <Text size="caption-l" color="muted">

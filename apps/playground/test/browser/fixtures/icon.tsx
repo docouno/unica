@@ -157,6 +157,17 @@ export default function IconFixture() {
           <Icon icon={ArrowRightIcon} directional mirrored size="m" data-testid="logical" />
           <Icon icon={ArrowRightIcon} mirrored size="m" data-testid="physical" />
           <Icon icon={CheckIcon} size="m" data-testid="check" />
+          <span dir="rtl">
+            <span dir="ltr">
+              <Icon icon={ArrowRightIcon} directional data-testid="nested-ltr" />
+            </span>
+            <bdi>
+              English <Icon icon={ArrowRightIcon} directional data-testid="auto-ltr" />
+            </bdi>
+          </span>
+          <span dir="auto">
+            مرحبا <Icon icon={ArrowRightIcon} directional data-testid="auto-rtl" />
+          </span>
           <button type="button">After vendor icons</button>
         </section>
       </IconContext>

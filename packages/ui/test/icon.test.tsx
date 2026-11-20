@@ -66,6 +66,19 @@ it('resolves the nearest adapter and keeps an immutable definition on its own ad
   expect(screen.getByTestId('native').getAttribute('data-adapter')).toBeNull();
 });
 
+it('omits undefined vendor options when the source checks their presence', () => {
+  function LegendMark(props: SvgProps & { legend?: string }) {
+    return (
+      <svg>
+        <title>{'legend' in props ? props.legend.toUpperCase() : 'Default'}</title>
+      </svg>
+    );
+  }
+  expect(renderToString(<Icon icon={defineGlyph(LegendMark)} legend={undefined} />)).toContain(
+    'Default',
+  );
+});
+
 it('passes optional source props that share a prefix with event handlers', () => {
   function Project({ oneTone, ...svg }: SvgProps & { oneTone?: boolean }) {
     return <svg {...svg} data-tone={oneTone ? 'single' : 'multiple'} />;

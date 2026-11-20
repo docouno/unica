@@ -19,16 +19,16 @@ import '@docouno/unica/styles.css';
 
 | Prop | Behavior |
 | --- | --- |
-| `icon` | A callable SVG component or a descriptor returned by `defineGlyph`. The source accepts SVG props and a React 19 ref to its root SVG. Source-specific props must be optional. |
+| `icon` | A callable SVG component or a descriptor returned by `defineGlyph`. The source accepts SVG props and a React 19 ref to its root SVG. Calling the source with SVG props alone must be valid. Passing `undefined` omits a source option. A source may require a value for related options when a caller selects a specific mode. |
 | `size` | `inherit` uses a square `1em` frame. `s`, `m`, and `l` use `--size-s-icon`, `--size-m-icon`, and `--size-l-icon` (14, 16, and 20px by default). For a standalone icon, the nearest `UnicaProvider` override and then the active theme defaults apply when size is omitted. The built-in default is `inherit`. A slot with no explicit size always uses `1em` of the owner. |
 | `color` | `inherit` (default), `primary`, `secondary`, `muted`, `subtle`, `disabled`, `accent`, `info`, `success`, `warning`, or `danger`. The five foreground roles use `--fg-*`, accent uses `--accent-signal`, and status colors use `--status-*-signal`. |
 | `directional` | Reflects the drawing only in RTL. Set it on logical arrows and carets. When enabled it takes precedence over Phosphor's physical `mirrored` flag. |
 | `usage` | `standalone` (default) supports accessible naming. `slot` is decorative and takes its name and default size from its owner. |
 | `aria-labelledby`, `aria-label`, `children` | Name a standalone image through ID references, text, or one direct text-only SVG `<title>`. |
 | `ref`, `id`, `className`, `style`, `data-*` | Pass through to the root SVG. The frame size and semantic color take precedence over competing inline style properties. |
-| Source options | TypeScript infers options from `icon`, including the six Phosphor `weight` values and `mirrored`. For a choice between sources, pass options supported by every possible source or narrow the choice first. |
+| Source options | TypeScript infers options from `icon`, including the six Phosphor `weight` values and `mirrored`. For a choice between sources, including one passed to `defineGlyph`, pass options supported by every candidate or narrow the choice first. |
 
-Use an explicit `dir="rtl"` or `dir="ltr"` on the owning region for directional icons on Chrome and Edge 114–119. Newer browsers also resolve automatic text direction through `:dir()`.
+Use an explicit `dir="rtl"` or `dir="ltr"` on the owning region for directional icons on Chrome and Edge 114–119. Newer browsers also resolve automatic text direction through `:dir()`. For automatic direction, configure any CSS optimizer that lowers this selector to language selectors to preserve `:dir()` (for Lightning CSS, exclude `Features.DirSelector`).
 
 The source's `viewBox` controls drawing proportions inside the square. Use `currentColor` for strokes or fills that should track text and control states. Authored fills and strokes remain available for multicolor SVGs. Monochrome glyphs follow the owner's system color in forced-colors mode.
 

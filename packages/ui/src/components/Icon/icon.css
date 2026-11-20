@@ -67,22 +67,25 @@
     scale: -1 1;
   }
 
-  @supports selector(:dir(rtl)) {
-    .unica-icon[data-unica-icon-directional]:dir(rtl) {
-      scale: -1 1;
-    }
+  [dir='rtl' i] {
+    --unica-icon-direction: -1;
   }
 
-  @supports not selector(:dir(rtl)) {
-    [dir='rtl' i] {
-      --unica-icon-direction: -1;
-    }
-    [dir='ltr' i] {
-      --unica-icon-direction: 1;
-    }
-    .unica-icon[data-unica-icon-directional] {
-      scale: var(--unica-icon-direction, 1) 1;
-    }
+  [dir='ltr' i] {
+    --unica-icon-direction: 1;
+  }
+
+  /* An automatic boundary determines its own direction inside an explicit one. */
+  :where([dir='auto' i], bdi:not([dir])):dir(rtl) {
+    --unica-icon-direction: -1;
+  }
+
+  :where([dir='auto' i], bdi:not([dir])):dir(ltr) {
+    --unica-icon-direction: 1;
+  }
+
+  .unica-icon[data-unica-icon-directional] {
+    scale: var(--unica-icon-direction, 1) 1;
   }
 
   @media (forced-colors: active) {

@@ -135,6 +135,9 @@ export default {
         assert.ok((await xScale('logical')) * (direction === 'rtl' ? -1 : 1) > 0);
         assert.ok((await xScale('physical')) < 0);
         assert.ok((await xScale('check')) > 0);
+        assert.ok((await xScale('nested-ltr')) > 0);
+        assert.ok((await xScale('auto-ltr')) > 0);
+        assert.ok((await xScale('auto-rtl')) < 0);
       }
     },
 

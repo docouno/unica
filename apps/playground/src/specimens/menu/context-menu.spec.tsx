@@ -47,7 +47,7 @@ function FileIdentity({
   return (
     <div className="context-study-file">
       <span className="context-study-file-icon">
-        <Icon icon={FileTextIcon} size="m" />
+        <Icon usage="slot" icon={FileTextIcon} size="m" />
       </span>
       <span className="context-study-file-name">{name}</span>
       {children}

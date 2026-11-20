@@ -60,7 +60,14 @@ function PhaseStudy(): ReactElement {
           paused={phase === 'Paused'}
         />
         <div className="activity-outcome">
-          {glyph && <Icon icon={glyph} size="s" color={status === 'neutral' ? 'muted' : status} />}
+          {glyph && (
+            <Icon
+              usage="slot"
+              icon={glyph}
+              size="s"
+              color={status === 'neutral' ? 'muted' : status}
+            />
+          )}
           <span>{copy}</span>
         </div>
       </div>
