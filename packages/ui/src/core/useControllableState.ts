@@ -1,6 +1,6 @@
 import { useCallback, useInsertionEffect, useRef, useState, useSyncExternalStore } from 'react';
 
-declare const process: { readonly env: { readonly NODE_ENV?: string } };
+import { devWarningsEnabled } from './devWarningsEnabled.js';
 
 export interface ControllableStateOptions<T> {
   readonly value?: T | undefined;
@@ -38,15 +38,6 @@ function createControlledHistory<T>(defaultValue: T) {
 
 function subscribeToFixedSnapshot(): () => void {
   return () => undefined;
-}
-
-function devWarningsEnabled(): boolean {
-  try {
-    // Bundlers replace the environment expression. Native browser ESM can omit it.
-    return process.env.NODE_ENV !== 'production';
-  } catch {
-    return false;
-  }
 }
 
 export function useControllableState<T>({

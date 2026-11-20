@@ -174,6 +174,12 @@ export interface WorkbenchEmptyContext {
   readonly surface: Surface;
 }
 
+export interface WorkbenchArtboardContext {
+  readonly theme: WorkbenchTheme;
+  readonly host: HTMLDivElement | null;
+  readonly children: ReactNode;
+}
+
 export interface WorkbenchConfig {
   readonly title: string;
   readonly subtitle?: string;
@@ -181,6 +187,7 @@ export interface WorkbenchConfig {
   readonly categories: readonly string[];
   readonly components: readonly ComponentDefinition[];
   readonly scenes: readonly SceneDefinition[];
+  readonly renderArtboard?: (ctx: WorkbenchArtboardContext) => ReactNode;
   readonly renderStage?: (ctx: WorkbenchStageContext) => ReactNode;
   readonly renderEmptyState?: (ctx: WorkbenchEmptyContext) => ReactNode;
 }

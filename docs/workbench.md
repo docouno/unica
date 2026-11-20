@@ -29,6 +29,8 @@ Open the reported URL. Expand or collapse categories using their heading buttons
 
 Preview frames keep the heading and the live content together. A named slice, case, or usage example has one shared frame around its theme comparison. Each full scene has a frame around its artboard. **Reset scene** restores the initial state of the scene across the selected themes and keeps the current view settings and URL.
 
+Unica supplies one [Portal](components/portal.md) host per physical artboard. Scene content and inspector previews in the same artboard share its host. Portaled content inherits the artboard's theme, text scale, and direction. A native modal still applies to the whole document, and locally scoped notification viewports follow modals within their own artboard.
+
 Every component has the same four views.
 
 | View | What to inspect |

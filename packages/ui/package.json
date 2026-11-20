@@ -82,5 +82,8 @@
     "boundaries": {
       "forbidCrossAppImports": true
     }
+  },
+  "dependencies": {
+    "@floating-ui/dom": "^1.8.0"
   }
 }

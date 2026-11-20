@@ -557,6 +557,36 @@ export interface WorkbenchAppProps {
   readonly config: WorkbenchConfig;
 }
 
+function Artboard({
+  theme,
+  route,
+  scene,
+  renderArtboard,
+  children,
+}: {
+  readonly theme: WorkbenchTheme;
+  readonly route: WorkbenchRoute;
+  readonly scene: boolean;
+  readonly renderArtboard: WorkbenchConfig['renderArtboard'];
+  readonly children: ReactNode;
+}): ReactElement {
+  const [host, setHost] = useState<HTMLDivElement | null>(null);
+  return (
+    <div
+      ref={renderArtboard && setHost}
+      className="wb-artboard"
+      data-theme={theme.id}
+      data-color-scheme={theme.colorScheme}
+      data-text-scale={route.scale}
+      data-wb-scene={scene ? '' : undefined}
+      dir={route.dir}
+      style={{ colorScheme: theme.colorScheme }}
+    >
+      {renderArtboard ? renderArtboard({ theme, host, children }) : children}
+    </div>
+  );
+}
+
 const WorkbenchView = memo(function WorkbenchView({
   config,
   route,
@@ -626,17 +656,14 @@ const WorkbenchView = memo(function WorkbenchView({
                   </button>
                 )}
                 <ViewportFrame vp={route.vp} scaleToFit={selectedThemes.length > 1}>
-                  <div
-                    className="wb-artboard"
-                    data-theme={theme.id}
-                    data-color-scheme={theme.colorScheme}
-                    data-text-scale={route.scale}
-                    data-wb-scene={component ? undefined : ''}
-                    dir={route.dir}
-                    style={{ colorScheme: theme.colorScheme }}
+                  <Artboard
+                    theme={theme}
+                    route={route}
+                    scene={!component}
+                    renderArtboard={config.renderArtboard}
                   >
                     {render(theme)}
-                  </div>
+                  </Artboard>
                 </ViewportFrame>
               </section>
             ))}

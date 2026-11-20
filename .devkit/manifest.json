@@ -2,7 +2,7 @@
   "schemaVersion": 2,
   "version": "0.5.1",
   "releaseIdentity": "870146c4055749dd0e4555e49605c3dcd697444f481ef197ff043796c33df74c",
-  "generation": "b323eeb9-18f5-44fc-8d00-22c58bc43aa9",
+  "generation": "9e818c53-9a4d-4bbd-af53-a3daae2dc4e3",
   "packageMode": "registry",
   "managed": {
     ".devkit/compose.apps.yaml": {

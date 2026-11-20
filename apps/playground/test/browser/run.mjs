@@ -58,7 +58,7 @@ async function runScenario(t, browser, origin, scenario) {
       direction,
     }).toString();
     await page.goto(url.href);
-    await page.locator('[data-browser-ready]').waitFor({ state: 'attached' });
+    await page.locator('[data-browser-ready]').waitFor({ state: 'attached', timeout: 10000 });
   }
 
   try {

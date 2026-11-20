@@ -5,4 +5,6 @@ export type {
   ThemePresetMeta,
   UnicaComponentDefaults,
   UnicaProviderProps,
+  PortalProps,
+  PortalProviderProps,
 } from './index.js';
