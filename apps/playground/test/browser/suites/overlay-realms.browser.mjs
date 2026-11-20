@@ -77,6 +77,31 @@ export default {
     assert.equal(await fixture.getAttribute('data-modal-host'), 'body');
   },
 
+  'slot reassignment updates the modal scope with the same native dialog and scroll lock': async ({
+    page,
+    mount,
+  }) => {
+    await mount('overlay-realms');
+    const hosts = (scopes) =>
+      page.waitForFunction(
+        (value) => document.querySelector('#overlay-realms').dataset.scopedHosts === value,
+        scopes,
+      );
+    await dispatch(page, 'open-slotted-dialog');
+    await hosts('slotted-dialog|none');
+    await dispatch(page, 'reassign-dialog-slot');
+    await hosts('none|slotted-dialog');
+    await dispatch(page, 'rename-dialog-slot');
+    await hosts('none|none');
+    await dispatch(page, 'rename-dialog-slot');
+    await hosts('none|slotted-dialog');
+    assert.equal(
+      await page.locator('#slotted-dialog').evaluate((dialog) => dialog.matches(':modal')),
+      true,
+    );
+    assert.equal(await page.evaluate(() => document.documentElement.style.overflow), 'hidden');
+  },
+
   'a previous document releases an adopted carrier without closing it in the new document': async ({
     page,
     mount,

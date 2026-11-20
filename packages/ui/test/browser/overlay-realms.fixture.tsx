@@ -112,6 +112,25 @@ export default function OverlayRealmsFixture(): JSX.Element {
         dialog.matches(':modal') && dialog.getBoundingClientRect().height === 0,
       );
     };
+    let slottedDialog: HTMLDialogElement | undefined;
+    let secondSlot: HTMLSlotElement | undefined;
+    const openSlottedDialog = () => {
+      const host = root.appendChild(document.createElement('div'));
+      const shadow = host.attachShadow({ mode: 'open' });
+      source = shadow.appendChild(document.createElement('div'));
+      source.id = 'slot-origin';
+      source.appendChild(document.createElement('slot')).name = 'first';
+      destination = shadow.appendChild(document.createElement('div'));
+      destination.id = 'slot-destination';
+      secondSlot = destination.appendChild(document.createElement('slot'));
+      secondSlot.name = 'second';
+      slottedDialog = host.appendChild(document.createElement('dialog'));
+      slottedDialog.id = 'slotted-dialog';
+      slottedDialog.slot = 'first';
+      const handle = registerOverlay({ element: slottedDialog, kind: 'modal', onOpenChange() {} });
+      registered.add(handle);
+      handle.setOpen(true);
+    };
     const adoptPopover = () => {
       const element = root.appendChild(document.createElement('div'));
       element.id = 'adopted';
@@ -149,6 +168,14 @@ export default function OverlayRealmsFixture(): JSX.Element {
     root.addEventListener('move-owned-dialog', moveOwnedDialog);
     root.addEventListener('remove-moved-dialog', () => destination?.remove());
     root.addEventListener('adopt-popover', adoptPopover);
+    root.addEventListener('open-slotted-dialog', openSlottedDialog);
+    root.addEventListener('reassign-dialog-slot', () => {
+      slottedDialog!.slot = 'second';
+    });
+    root.addEventListener('rename-dialog-slot', () => {
+      const slot = secondSlot!;
+      slot.name = slot.name === 'second' ? 'unused' : 'second';
+    });
     return () => {
       unsubscribe();
       registered.forEach((handle) => handle.dispose());

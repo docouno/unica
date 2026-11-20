@@ -369,11 +369,9 @@ export default {
       await page.mouse.click(point.x, point.y);
       await statistic(page, 'positionedClicks', 1);
 
-      const alignTo = async (dir) => {
+      const opposite = direction === 'ltr' ? 'rtl' : 'ltr';
+      const assertAlignment = async (dir) => {
         const left = dir === 'ltr' ? anchor.x : anchor.x + anchor.width - box.width;
-        await page.locator('html').evaluate((html, dir) => {
-          html.dir = dir;
-        }, dir);
         await page.waitForFunction(
           (expected) =>
             Math.abs(
@@ -383,8 +381,12 @@ export default {
         );
         assert.deepEqual(await getBox(page.locator('#anchor')), anchor);
       };
-      await alignTo(direction === 'ltr' ? 'rtl' : 'ltr');
-      await alignTo(direction);
+      for (const dir of [opposite, direction]) {
+        await page.locator('html').evaluate((html, dir) => {
+          html.dir = dir;
+        }, dir);
+        await assertAlignment(dir);
+      }
 
       await page.locator('#clip').evaluate((clip, dir) => {
         const scope = clip.appendChild(document.createElement('div'));
@@ -392,18 +394,35 @@ export default {
         scope.style.cssText = 'position:absolute;inset:0';
         scope.moveBefore(clip.querySelector('#anchor'), null);
       }, direction);
-      const oppositeEdge = direction === 'ltr' ? anchor.x + anchor.width - box.width : anchor.x;
-      await page.waitForFunction(
-        (expected) =>
-          Math.abs(document.querySelector('#positioned').getBoundingClientRect().left - expected) <=
-          1,
-        oppositeEdge,
-      );
-      assert.deepEqual(await getBox(page.locator('#anchor')), anchor);
-      await page
-        .locator('#clip')
-        .evaluate((clip) => clip.appendChild(clip.querySelector('#anchor')));
-      await alignTo(direction);
+      await assertAlignment(opposite);
+
+      await page.locator('#clip').evaluate((clip, dir) => {
+        const host = clip.appendChild(document.createElement('div'));
+        host.id = 'slotted-anchor-host';
+        host.style.cssText = 'position:absolute;inset:0';
+        const shadow = host.attachShadow({ mode: 'open' });
+        for (const name of ['ltr', 'rtl']) {
+          const scope = shadow.appendChild(document.createElement('div'));
+          scope.style.cssText = 'position:absolute;inset:0';
+          scope.dir = name;
+          scope.appendChild(document.createElement('slot')).name = name;
+        }
+        const anchor = clip.querySelector('#anchor');
+        anchor.slot = dir;
+        host.moveBefore(anchor, null);
+      }, direction);
+      await assertAlignment(direction);
+      await page.locator('#anchor').evaluate((anchor, dir) => {
+        anchor.slot = dir;
+      }, opposite);
+      await assertAlignment(opposite);
+      await page.locator('#clip').evaluate((clip) => {
+        const anchor = clip.querySelector('#anchor');
+        clip.moveBefore(anchor, null);
+        anchor.removeAttribute('slot');
+        clip.querySelector('#slotted-anchor-host').remove();
+      });
+      await assertAlignment(direction);
 
       const originalClip = await page.locator('#clip').evaluate((clip, dir) => {
         const style = clip.style.cssText;

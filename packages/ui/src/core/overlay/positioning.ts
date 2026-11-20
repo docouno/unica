@@ -1,6 +1,6 @@
 import { autoUpdate, computePosition, flip, offset, platform, shift, size } from '@floating-ui/dom';
 import type { Placement } from '@floating-ui/dom';
-import { composedAncestors } from './dom.js';
+import { composedAncestors, watchSlotAssignments } from './dom.js';
 
 type Side = 'top' | 'bottom' | 'start' | 'end';
 type Align = 'start' | 'center' | 'end';
@@ -119,6 +119,21 @@ export function positionOverlay({
 
   let stop = autoUpdate(anchor, floating, update);
   let ancestry: Set<Node>;
+  let stopSlotChanges: (() => void) | undefined;
+  const rebind = (): void => {
+    watchAncestry();
+    stop();
+    stop = autoUpdate(anchor, floating, update);
+  };
+  const onSlotChange = (): void => {
+    if (!isLive()) {
+      return;
+    }
+    const current = Array.from(composedAncestors(anchor));
+    if (current.length !== ancestry.size || current.some((node) => !ancestry.has(node))) {
+      rebind();
+    }
+  };
   const direction = new view.MutationObserver((records) => {
     if (!isLive()) {
       return;
@@ -127,9 +142,7 @@ export function positionOverlay({
       Array.from(record.removedNodes).some((node) => ancestry.has(node)),
     );
     if (moved) {
-      watchAncestry();
-      stop();
-      stop = autoUpdate(anchor, floating, update);
+      rebind();
     } else if (isRTL() !== lastRTL) {
       // A cascade change can move the logical edge without changing either box.
       update();
@@ -137,7 +150,10 @@ export function positionOverlay({
   });
   const watchAncestry = (): void => {
     direction.disconnect();
-    ancestry = new Set(composedAncestors(anchor));
+    stopSlotChanges?.();
+    const current = Array.from(composedAncestors(anchor));
+    ancestry = new Set(current);
+    stopSlotChanges = watchSlotAssignments(current, onSlotChange);
     for (const ancestor of ancestry) {
       direction.observe(ancestor, {
         attributes: true,
@@ -155,6 +171,7 @@ export function positionOverlay({
     active = false;
     stop();
     direction.disconnect();
+    stopSlotChanges?.();
     updates.delete(floating);
     style.removeProperty('inset');
     style.removeProperty('margin');

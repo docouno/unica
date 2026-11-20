@@ -16,6 +16,30 @@ export function composedContains(parent: Element, child: Element | null): boolea
   return false;
 }
 
+export function watchSlotAssignments(
+  ancestry: Iterable<Element>,
+  onChange: () => void,
+): () => void {
+  const roots = new Set<ShadowRoot>();
+  for (const element of ancestry) {
+    const root = element.getRootNode();
+    if ('host' in root) {
+      roots.add(root as ShadowRoot);
+    }
+    if (element.shadowRoot) {
+      roots.add(element.shadowRoot);
+    }
+  }
+  for (const root of roots) {
+    root.addEventListener('slotchange', onChange);
+  }
+  return () => {
+    for (const root of roots) {
+      root.removeEventListener('slotchange', onChange);
+    }
+  };
+}
+
 export function deepFocus(document: Document): Element | null {
   let active = document.activeElement;
   while (active?.shadowRoot?.activeElement) {
