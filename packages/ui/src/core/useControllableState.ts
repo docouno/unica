@@ -6,6 +6,7 @@ export interface ControllableStateOptions<T> {
   readonly value?: T | undefined;
   readonly defaultValue: T;
   readonly onChange?: ((value: T) => void) | undefined;
+  readonly isEqual?: ((a: T, b: T) => boolean) | undefined;
 }
 
 interface LocalOrigin<T> {
@@ -21,6 +22,8 @@ interface CommittedState<T> {
   readonly controlled: boolean;
   readonly origin: LocalOrigin<T>;
   readonly onChange: ((value: T) => void) | undefined;
+  readonly isEqual: (a: T, b: T) => boolean;
+  readonly committedValue: T;
   latestValue: T;
 }
 
@@ -53,21 +56,23 @@ export function useControllableState<T>({
   value,
   defaultValue,
   onChange,
+  isEqual,
 }: ControllableStateOptions<T>): [T, (next: T) => void] {
-  const [current, { propose }] = useStateAuthority({ value, defaultValue, onChange });
+  const [current, { propose }] = useStateAuthority({ value, defaultValue, onChange, isEqual });
   return [current, propose];
 }
 
-interface StateAuthority<T> {
+export interface StateAuthority<T> {
   read: () => T;
   propose: (next: T, write?: (value: T) => void) => void;
-  restore: (initial: T, write: (value: T) => void) => void;
+  restore: (initial: T, write?: (value: T) => void) => void;
 }
 
 export function useStateAuthority<T>({
   value,
   defaultValue,
   onChange,
+  isEqual = Object.is,
 }: ControllableStateOptions<T>): [T, StateAuthority<T>] {
   const controlled = value !== undefined;
   const [history] = useState(() => createControlledHistory(defaultValue));
@@ -82,6 +87,8 @@ export function useStateAuthority<T>({
     controlled,
     origin,
     onChange,
+    isEqual,
+    committedValue: current,
     latestValue: current,
   });
   const deliveries = useRef<T[]>([]);
@@ -97,10 +104,9 @@ export function useStateAuthority<T>({
       controlled,
       origin,
       onChange,
-      latestValue:
-        controlled || previous.controlled || previous.origin !== origin
-          ? current
-          : previous.latestValue,
+      isEqual,
+      committedValue: current,
+      latestValue: current,
     };
     if (controlled !== previous.controlled && !warned.current && devWarningsEnabled()) {
       warned.current = true;
@@ -108,36 +114,51 @@ export function useStateAuthority<T>({
         `useControllableState switched to ${controlled ? 'controlled' : 'uncontrolled'} mode.`,
       );
     }
-  }, [controlled, history, origin, onChange, current]);
+  }, [controlled, history, origin, onChange, isEqual, current]);
 
   const read = useCallback((): T => committed.current.latestValue, []);
 
-  const restore = useCallback((initial: T, write: (value: T) => void): void => {
+  const restore = useCallback((initial: T, write?: (value: T) => void): void => {
     const snapshot = committed.current;
-    if (!snapshot.controlled && !Object.is(snapshot.latestValue, initial)) {
+    if (!snapshot.controlled && !snapshot.isEqual(snapshot.latestValue, initial)) {
+      write?.(initial);
       snapshot.latestValue = initial;
       setLocal({ origin: snapshot.origin, value: initial });
+      return;
     }
-    write(snapshot.latestValue);
+    write?.(snapshot.latestValue);
   }, []);
 
   const propose = useCallback((next: T, write?: (value: T) => void): void => {
     const active = deliveries.current;
     const snapshot = committed.current;
-    if (active.some((candidate) => Object.is(candidate, next))) {
+    if (active.some((candidate) => snapshot.isEqual(candidate, next))) {
       write?.(snapshot.latestValue);
       return;
     }
 
-    const unchanged = !snapshot.controlled && Object.is(snapshot.latestValue, next);
+    const unchanged = !snapshot.controlled && snapshot.isEqual(snapshot.latestValue, next);
     if (!snapshot.controlled && !unchanged) {
+      // Write before mutating local state so a throwing DOM writer keeps React and DOM in sync.
+      write?.(next);
       snapshot.latestValue = next;
       // A queued update can apply only under the authority that accepted it.
       setLocal({ origin: snapshot.origin, value: next });
+      queueMicrotask(() => {
+        // Reconcile if setLocal stayed pending in a transition or suspended render.
+        if (
+          committed.current === snapshot &&
+          !snapshot.isEqual(snapshot.latestValue, snapshot.committedValue)
+        ) {
+          snapshot.latestValue = snapshot.committedValue;
+          write?.(snapshot.committedValue);
+        }
+      });
+    } else {
+      // Repair native edits before external code can read the form.
+      write?.(snapshot.latestValue);
     }
 
-    // Repair native edits and publish local commits before external code can read the form.
-    write?.(snapshot.latestValue);
     if (!unchanged && snapshot.onChange) {
       active.push(next);
       try {

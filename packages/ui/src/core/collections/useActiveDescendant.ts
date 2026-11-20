@@ -1,3 +1,4 @@
+import { useCallback, useRef } from 'react';
 import type { FocusEvent, KeyboardEvent } from 'react';
 import { useIsoLayoutEffect } from '../useIsoLayoutEffect.js';
 import { findNavigable } from './navigation.js';
@@ -5,17 +6,18 @@ import type { CollectionItem } from './navigation.js';
 import { useCollectionNavigation } from './useCollectionNavigation.js';
 import type { CollectionNavigationOptions } from './useCollectionNavigation.js';
 
-interface DescendantItem extends CollectionItem {
-  id: string;
+export interface DescendantItem extends CollectionItem {
+  readonly id: string;
 }
 
-interface ActiveDescendantOptions extends Omit<CollectionNavigationOptions, 'items'> {
-  items: readonly DescendantItem[];
-  open: boolean;
-  onActiveChange: (key: string) => void;
+export interface ActiveDescendantOptions extends Omit<CollectionNavigationOptions, 'items'> {
+  readonly items: readonly DescendantItem[];
+  readonly open: boolean;
+  readonly onActiveChange: (key: string) => void;
 }
 
-interface ActiveDescendant {
+export interface ActiveDescendant {
+  activeKey: string | null;
   'aria-activedescendant': string | undefined;
   onKeyDown: (event: KeyboardEvent<HTMLElement>) => void;
   onBlur: (event: FocusEvent<HTMLElement>) => void;
@@ -25,26 +27,54 @@ interface ActiveDescendant {
 export function useActiveDescendant(options: ActiveDescendantOptions): ActiveDescendant {
   const { items, activeKey, open, onActiveChange } = options;
   const active = open ? findNavigable(items, activeKey) : undefined;
-  const { onKeyDown, clearTypeahead } = useCollectionNavigation(
-    { ...options, activeKey: active?.key ?? null },
-    onActiveChange,
+  const resolvedKey = active?.key ?? null;
+  const openRef = useRef(open);
+  const liveActiveKey = useRef<string | null>(resolvedKey);
+  const onActiveChangeRef = useRef(onActiveChange);
+
+  const handleNavigate = useCallback((key: string): void => {
+    liveActiveKey.current = key;
+    onActiveChangeRef.current(key);
+  }, []);
+
+  const { onKeyDown: navigateKeyDown, clearTypeahead } = useCollectionNavigation(
+    {
+      ...options,
+      homeEnd: options.homeEnd ?? false,
+      activeKey: resolvedKey,
+    },
+    handleNavigate,
   );
+
   useIsoLayoutEffect(() => {
+    openRef.current = open;
+    liveActiveKey.current = resolvedKey;
+    onActiveChangeRef.current = onActiveChange;
     if (!open) {
       clearTypeahead();
     }
-  }, [open, clearTypeahead]);
+  }, [open, resolvedKey, onActiveChange, clearTypeahead]);
 
-  return {
-    'aria-activedescendant': active?.id,
-    onKeyDown(event) {
-      if (open) {
-        onKeyDown(event);
+  const onKeyDown = useCallback(
+    (event: KeyboardEvent<HTMLElement>): void => {
+      if (openRef.current) {
+        navigateKeyDown(event, liveActiveKey.current);
       } else {
         clearTypeahead();
       }
     },
-    onBlur: clearTypeahead,
+    [clearTypeahead, navigateKeyDown],
+  );
+
+  const onBlur = useCallback((): void => {
+    clearTypeahead();
+  }, [clearTypeahead]);
+
+  return {
+    activeKey: resolvedKey,
+    'aria-activedescendant': active?.id,
+    onKeyDown,
+    onBlur,
     clearTypeahead,
   };
 }

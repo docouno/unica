@@ -1,9 +1,19 @@
+import {
+  addListenerSafe,
+  getDefaultView,
+  getFormElements,
+  getOwnerDocument,
+  getRootNodeSafe,
+  isHtmlForm,
+  removeListenerSafe,
+} from './dom.js';
+
 export type FormControl = HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement;
-type ResetResult = 'reset' | 'repair';
+export type ResetResult = 'reset' | 'repair';
 
 type ResetEvent = Pick<Event, 'isTrusted' | 'defaultPrevented' | 'eventPhase'>;
 
-interface ResetOperation {
+export interface ResetOperation {
   finish: (confirmed: boolean) => ResetResult | undefined;
 }
 
@@ -22,211 +32,141 @@ export function createResetOperation(event: ResetEvent): ResetOperation {
   };
 }
 
-const witnessTag = 'unica-reset-witness';
-const observerTag = 'unica-form-root-observer';
-
-interface WitnessElement extends HTMLElement {
-  confirmReset: (() => void) | undefined;
-}
-
-interface RootObserverElement extends HTMLElement {
-  rebind: (() => void) | undefined;
-}
-
-function createWitness(document: Document): WitnessElement | undefined {
-  const realm = document.defaultView;
-  if (!realm?.customElements) {
-    return undefined;
-  }
-  if (!realm.customElements.get(witnessTag)) {
-    realm.customElements.define(
-      witnessTag,
-      class extends realm.HTMLElement implements WitnessElement {
-        static readonly formAssociated = true;
-        confirmReset: WitnessElement['confirmReset'];
-
-        constructor() {
-          super();
-          this.attachInternals();
-        }
-
-        formResetCallback(): void {
-          this.confirmReset?.();
-        }
-      },
-    );
-  }
-  return document.createElement(witnessTag) as WitnessElement;
-}
-
-function createRootObserver(document: Document): RootObserverElement | undefined {
-  const realm = document.defaultView;
-  if (!realm?.customElements) {
-    return undefined;
-  }
-  if (!realm.customElements.get(observerTag)) {
-    realm.customElements.define(
-      observerTag,
-      class extends realm.HTMLElement implements RootObserverElement {
-        rebind: RootObserverElement['rebind'];
-
-        connectedCallback(): void {
-          this.rebind?.();
-        }
-
-        disconnectedCallback(): void {
-          this.rebind?.();
-        }
-      },
-    );
-  }
-  return document.createElement(observerTag) as RootObserverElement;
-}
-
 interface Subscription {
-  control: FormControl;
   notify: (result: ResetResult) => void;
 }
 
-interface PendingReset {
-  actionRan: () => boolean;
-  cohort: Set<Subscription>;
-  superseded: Set<Subscription>;
-  marker: HTMLInputElement;
-  witness: WitnessElement;
-}
+const roots = /* @__PURE__ */ new WeakMap<Node, Set<Subscription>>();
+const controlSubscriptions = /* @__PURE__ */ new WeakMap<FormControl, Set<Subscription>>();
+const dispatches = /* @__PURE__ */ new WeakMap<Event, () => void>();
 
-const roots = new WeakMap<Node, Set<Subscription>>();
-const formEpochs = new WeakMap<HTMLFormElement, { issued: number; restored: number }>();
-const pendingResets = new Set<PendingReset>();
-const dispatches = new WeakMap<Event, () => void>();
-
-function associatedSubscriptions(form: HTMLFormElement): Set<Subscription> {
-  const owned = new Set<Subscription>();
-  // A detached subtree can still receive a reset on an observed ancestor after
-  // insertion into a fragment, even though its getRootNode() has changed.
-  for (let ancestor: Node | null = form; ancestor; ancestor = ancestor.parentNode) {
-    for (const subscription of roots.get(ancestor) ?? []) {
-      if (subscription.control.form === form) {
-        owned.add(subscription);
+function collectFormSubscriptions(form: HTMLFormElement): Set<Subscription> {
+  const targets = new Set<Subscription>();
+  const elements = getFormElements(form);
+  for (let index = 0; index < elements.length; index++) {
+    const subs = controlSubscriptions.get(elements[index] as FormControl);
+    if (subs) {
+      for (const subscription of subs) {
+        targets.add(subscription);
       }
     }
   }
-  return owned;
+  return targets;
 }
 
 function handleReset(event: Event): void {
-  const target = event.target as Node | null;
-  const FormElement = target?.ownerDocument?.defaultView?.HTMLFormElement;
-  if (!FormElement || !(target instanceof FormElement)) {
+  if (!isHtmlForm(event.target)) {
     return;
   }
-  const form = target;
-  const path = event.composedPath();
-  if (event.currentTarget !== path.findLast((node) => roots.has(node as Node))) {
-    return;
+  const form = event.target;
+  const ownerRoot = getRootNodeSafe(form);
+  if (roots.has(ownerRoot)) {
+    if (event.currentTarget !== ownerRoot) {
+      return;
+    }
+  } else {
+    const path = event.composedPath();
+    if (event.currentTarget !== path.findLast((node) => roots.has(node as Node))) {
+      return;
+    }
   }
 
   // Dispatch can reuse an Event object before the previous cleanup microtask.
   dispatches.get(event)?.();
   const operation = createResetOperation(event);
-  const epochs = formEpochs.get(form) ?? { issued: 0, restored: 0 };
-  formEpochs.set(form, epochs);
-  const epoch = ++epochs.issued;
-  let pending: PendingReset | undefined;
+  const currentTarget = event.currentTarget;
+  const view = getDefaultView(getOwnerDocument(form));
   let active = true;
+  let bubbleBound = false;
+  let cancelFallback: (() => void) | undefined;
 
   const cleanup = (): void => {
     active = false;
     dispatches.delete(event);
-    for (const node of path) {
-      node.removeEventListener('reset', observeTail, true);
-      node.removeEventListener('reset', observeTail);
+    if (bubbleBound) {
+      bubbleBound = false;
+      removeListenerSafe(currentTarget, 'reset', onBubble, false);
     }
-    if (pending) {
-      pendingResets.delete(pending);
-      pending.witness.confirmReset = undefined;
-      pending.witness.remove();
-      pending.marker.remove();
+    if (cancelFallback) {
+      cancelFallback();
+      cancelFallback = undefined;
     }
   };
 
-  const finish = (confirmed: boolean): void => {
-    const result = active ? operation.finish(confirmed) : undefined;
+  const finish = (): void => {
+    if (!active) {
+      return;
+    }
+    const result = operation.finish(true);
     if (!result) {
       return;
     }
     cleanup();
-    const reset = result === 'reset' && epoch > epochs.restored;
-    if (reset) {
-      epochs.restored = epoch;
-    }
-
-    for (const subscription of associatedSubscriptions(form)) {
-      const canRestore =
-        reset && pending?.cohort.has(subscription) && !pending.superseded.has(subscription);
-      subscription.notify(canRestore ? 'reset' : 'repair');
-    }
-  };
-
-  const prepare = (): void => {
-    const cohort = associatedSubscriptions(form);
-    if (pending) {
-      pending.cohort = cohort;
+    const targets = collectFormSubscriptions(form);
+    if (targets.size === 0) {
       return;
     }
-    if (cohort.size === 0) {
-      return;
-    }
-    const witness = createWitness(form.ownerDocument);
-    if (!witness) {
-      return;
-    }
-
-    // The marker shows whether the native action has run. It is reset before
-    // the FACE callback and remains armed throughout the event dispatch.
-    const marker = form.ownerDocument.createElement('input');
-    marker.hidden = true;
-    marker.value = 'pending';
-    witness.hidden = true;
-    const action: PendingReset = {
-      actionRan: () => event.eventPhase === 0 && marker.value === '',
-      cohort,
-      superseded: new Set(),
-      marker,
-      witness,
-    };
-    pending = action;
-    pendingResets.add(action);
-    witness.confirmReset = () => {
-      if (action.actionRan()) {
-        finish(true);
+    let failure: { error: unknown } | undefined;
+    for (const subscription of targets) {
+      try {
+        subscription.notify(result);
+      } catch (error) {
+        failure ??= { error };
       }
-    };
-    form.append(marker, witness);
+    }
+    if (failure) {
+      if (typeof view?.reportError === 'function') {
+        view.reportError(failure.error);
+      } else if (typeof reportError === 'function') {
+        reportError(failure.error);
+      } else {
+        throw failure.error;
+      }
+    }
   };
 
-  const observeTail = (observed: Event): void => {
-    if (observed === event) {
-      prepare();
+  const onBubble = (observed: Event): void => {
+    if (observed === event && active) {
+      if (bubbleBound) {
+        bubbleBound = false;
+        removeListenerSafe(currentTarget, 'reset', onBubble, false);
+      }
+      queueMicrotask(finish);
     }
   };
 
   dispatches.set(event, cleanup);
-  prepare();
-  // Observe changes on the same node when an earlier reset handler stops propagation.
-  // The final cohort is recorded before the native action, independently of its witness.
-  for (const node of path) {
-    node.addEventListener('reset', observeTail, true);
-    node.addEventListener('reset', observeTail);
-  }
-
   queueMicrotask(() => {
+    if (!active) {
+      return;
+    }
     if (event.eventPhase === 0) {
-      finish(false);
+      finish();
+      return;
+    }
+    // A user-initiated reset button click can run microtasks between listeners.
+    // Re-check right after bubble, with a cancelable zero-delay task fallback.
+    bubbleBound = true;
+    addListenerSafe(currentTarget, 'reset', onBubble, false);
+    if (typeof MessageChannel !== 'undefined') {
+      const channel = new MessageChannel();
+      channel.port1.onmessage = () => {
+        channel.port1.close();
+        channel.port2.close();
+        finish();
+      };
+      cancelFallback = () => {
+        channel.port1.onmessage = null;
+        channel.port1.close();
+        channel.port2.close();
+      };
+      channel.port2.postMessage(undefined);
+    } else if (view) {
+      const timer = view.setTimeout(finish, 0);
+      cancelFallback = () => view.clearTimeout(timer);
     } else {
-      // A user-initiated event can run microtasks between native listeners.
-      setTimeout(() => finish(false), 0);
+      const timer = setTimeout(finish, 0);
+      cancelFallback = () => clearTimeout(timer);
     }
   });
 }
@@ -235,65 +175,107 @@ function bindRoot(root: Node, subscription: Subscription): () => void {
   let subscriptions = roots.get(root);
   if (!subscriptions) {
     subscriptions = new Set();
+    addListenerSafe(root, 'reset', handleReset, true);
     roots.set(root, subscriptions);
-    root.addEventListener('reset', handleReset, true);
   }
   subscriptions.add(subscription);
+
+  let active = true;
   return () => {
+    if (!active) {
+      return;
+    }
+    active = false;
     subscriptions.delete(subscription);
-    if (subscriptions.size === 0) {
-      root.removeEventListener('reset', handleReset, true);
+    if (subscriptions.size === 0 && roots.get(root) === subscriptions) {
       roots.delete(root);
+      removeListenerSafe(root, 'reset', handleReset, true);
     }
   };
 }
 
 export interface NativeResetSubscription {
-  noteCommit: () => void;
+  syncRoots: () => void;
   unsubscribe: () => void;
 }
 
 export function subscribeNativeReset(
-  control: FormControl,
+  input: FormControl | readonly FormControl[],
   notify: (result: ResetResult) => void,
 ): NativeResetSubscription {
-  const subscription = { control, notify };
-  let currentRoot: Node | undefined;
-  let unbind: (() => void) | undefined;
+  const controls: FormControl[] = Array.isArray(input)
+    ? Array.from(new Set<FormControl>(input as readonly FormControl[]))
+    : [input as FormControl];
+  const subscription: Subscription = { notify };
+  const rootUnbinds = new Map<Node, () => void>();
+  let active = true;
 
-  function rebind(): void {
-    const root = control.getRootNode();
-    if (root !== currentRoot) {
-      unbind?.();
-      currentRoot = root;
-      unbind = bindRoot(root, subscription);
+  function syncRoots(): void {
+    if (!active) {
+      return;
+    }
+    const nextRoots = new Set<Node>();
+    for (const control of controls) {
+      nextRoots.add(getRootNodeSafe(control));
+    }
+    for (const [root, unbind] of rootUnbinds) {
+      if (!nextRoots.has(root)) {
+        rootUnbinds.delete(root);
+        unbind();
+      }
+    }
+    for (const root of nextRoots) {
+      if (!rootUnbinds.has(root)) {
+        rootUnbinds.set(root, bindRoot(root, subscription));
+      }
     }
   }
 
-  // The observer travels with the carrier's root. Its native lifecycle can rebind
-  // on a DOM move before a synchronous reset in the new tree.
-  const observer = createRootObserver(control.ownerDocument);
-  if (observer) {
-    observer.hidden = true;
-    observer.rebind = rebind;
-    control.after(observer);
+  for (const control of controls) {
+    let subs = controlSubscriptions.get(control);
+    if (!subs) {
+      subs = new Set();
+      controlSubscriptions.set(control, subs);
+    }
+    subs.add(subscription);
   }
-  rebind();
+
+  try {
+    syncRoots();
+  } catch (error) {
+    for (const control of controls) {
+      const subs = controlSubscriptions.get(control);
+      subs?.delete(subscription);
+      if (subs?.size === 0) {
+        controlSubscriptions.delete(control);
+      }
+    }
+    for (const unbind of rootUnbinds.values()) {
+      unbind();
+    }
+    rootUnbinds.clear();
+    active = false;
+    throw error;
+  }
 
   return {
-    noteCommit() {
-      for (const pending of pendingResets) {
-        if (pending.cohort.has(subscription) && pending.actionRan()) {
-          pending.superseded.add(subscription);
+    syncRoots,
+    unsubscribe() {
+      if (!active) {
+        return;
+      }
+      active = false;
+      for (const control of controls) {
+        const subs = controlSubscriptions.get(control);
+        subs?.delete(subscription);
+        if (subs?.size === 0) {
+          controlSubscriptions.delete(control);
         }
       }
-    },
-    unsubscribe() {
-      if (observer) {
-        observer.rebind = undefined;
-        observer.remove();
+      for (const unbind of rootUnbinds.values()) {
+        unbind();
       }
-      unbind?.();
+      rootUnbinds.clear();
     },
   };
 }

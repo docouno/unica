@@ -1,11 +1,16 @@
-import { StrictMode, useRef, useState } from 'react';
+import { StrictMode, useEffect, useRef, useState } from 'react';
 import type { JSX } from 'react';
 import { flushSync } from 'react-dom';
+import { createRoot } from 'react-dom/client';
+import type { Root } from 'react-dom/client';
 import {
   FormInput,
   FormSelect,
+  FormTextarea,
   writeInputChecked,
+  writeInputValue,
   writeRadioGroup,
+  writeTextareaValue,
 } from '../../src/core/forms/carriers.js';
 import { useFormValue } from '../../src/core/forms/useFormValue.js';
 import { useFixtureSelect } from './form-fixture-helpers.js';
@@ -75,9 +80,9 @@ function AuthorityFixture(): JSX.Element {
   const checked = useFormValue<boolean>({
     defaultValue: localDefault === 'a',
     getControl: () => check.current,
-    write: (checked) => {
+    write: (next, context) => {
       if (check.current) {
-        writeInputChecked(check.current, checked);
+        writeInputChecked(check.current, next, { syncDefault: context.controlled });
       }
     },
   });
@@ -90,6 +95,8 @@ function AuthorityFixture(): JSX.Element {
         <button type="reset">Reset second</button>
       </form>
       <RadioFixture key={String(radioLocal)} local={radioLocal} record={record} />
+      <LiveTextFixture />
+      <ShadowResetHost />
       {visible && (
         <FormSelect
           ref={localCarrier}
@@ -140,16 +147,19 @@ function AuthorityFixture(): JSX.Element {
       <button ref={multiTrigger} type="button" onClick={() => multi.propose(['c'])}>
         Change multi
       </button>
-      <FormInput
-        ref={check}
-        type="checkbox"
-        name="checked"
-        value="yes"
-        form={owner}
-        defaultChecked={checked.value}
-        aria-label="Authority checkbox"
-        onChange={(event) => checked.propose(event.currentTarget.checked)}
-      />
+      <label>
+        <FormInput
+          ref={check}
+          type="checkbox"
+          name="checked"
+          value="yes"
+          form={owner}
+          defaultChecked={checked.value}
+          aria-label="Authority checkbox"
+          onChange={(event) => checked.propose(event.currentTarget.checked)}
+        />
+        <span data-testid="adjacent-indicator">Adjacent</span>
+      </label>
       <button type="button" onClick={() => setLocalDefault('d')}>
         Change defaults
       </button>
@@ -185,6 +195,8 @@ function RadioFixture({ local, record }: RadioFixtureProps): JSX.Element {
   const radioB = useRef<HTMLInputElement>(null);
   const [value, setValue] = useState('a');
   const [accept, setAccept] = useState(false);
+  const [disableA, setDisableA] = useState(false);
+  const [showA, setShowA] = useState(true);
   const radioChecks = (): boolean[] => [
     radioA.current?.checked ?? false,
     radioB.current?.checked ?? false,
@@ -192,39 +204,53 @@ function RadioFixture({ local, record }: RadioFixtureProps): JSX.Element {
   const radio = useFormValue<string | null>({
     value: local ? undefined : value,
     defaultValue: 'a',
-    getControl: () => radioA.current,
-    write: (next) => {
-      if (radioA.current && radioB.current && radioA.current.form === radioB.current.form) {
-        writeRadioGroup([radioA.current, radioB.current], next);
+    getControls: () => [radioA.current, radioB.current],
+    write: (next, context) => {
+      const radios = [radioA.current, radioB.current].filter(
+        (node): node is HTMLInputElement => node !== null,
+      );
+      if (radios.length > 0 && radios.every((node) => node.form === radios[0]!.form)) {
+        writeRadioGroup(radios, next, { syncDefault: context.controlled });
       }
     },
     onChange: (next) => {
-      record(local ? 'local radio' : 'radio', next, radioA.current, radioChecks());
+      record(
+        local ? 'local radio' : 'radio',
+        next,
+        radioA.current ?? radioB.current,
+        radioChecks(),
+      );
       if (accept) {
         flushSync(() => setValue('b'));
-        record('radio committed', 'b', radioA.current, radioChecks());
+        record('radio committed', 'b', radioA.current ?? radioB.current, radioChecks());
       }
     },
   });
   return (
     <form id="radios">
-      <label>
-        <FormInput
-          ref={radioA}
-          type="radio"
-          name="radio"
-          value="a"
-          defaultChecked
-          onChange={(event) => radio.propose('a', event.currentTarget)}
-        />
-        Radio A
-      </label>
+      {showA && (
+        <label>
+          <FormInput
+            ref={radioA}
+            controlled={!local}
+            type="radio"
+            name="radio"
+            value="a"
+            disabled={disableA}
+            defaultChecked={local ? true : value === 'a'}
+            onChange={(event) => radio.propose('a', event.currentTarget)}
+          />
+          Radio A
+        </label>
+      )}
       <label>
         <FormInput
           ref={radioB}
+          controlled={!local}
           type="radio"
           name="radio"
           value="b"
+          defaultChecked={local ? false : value === 'b'}
           onChange={(event) => radio.propose('b', event.currentTarget)}
         />
         Radio B
@@ -239,8 +265,128 @@ function RadioFixture({ local, record }: RadioFixtureProps): JSX.Element {
       <button type="button" onClick={() => setAccept(true)}>
         Accept radio B
       </button>
+      <button type="button" onClick={() => setDisableA(!disableA)}>
+        Toggle disable radio A
+      </button>
+      <button type="button" onClick={() => setShowA(!showA)}>
+        Toggle mount radio A
+      </button>
     </form>
   );
+}
+
+function LiveTextFixture(): JSX.Element {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const areaRef = useRef<HTMLTextAreaElement>(null);
+  const [text, setText] = useState('hello');
+  const [acceptText, setAcceptText] = useState(true);
+  const [resetCount, setResetCount] = useState(0);
+
+  const controlledText = useFormValue<string>({
+    value: text,
+    defaultValue: 'hello',
+    commitMode: 'deferred',
+    getControl: () => inputRef.current,
+    write: (next, context) => {
+      if (inputRef.current) {
+        writeInputValue(inputRef.current, next, { syncDefault: context.controlled });
+      }
+    },
+    onChange: (next) => {
+      if (acceptText) {
+        setText(next);
+      }
+    },
+    onReset: () => setResetCount((count) => count + 1),
+  });
+
+  const localArea = useFormValue<string>({
+    defaultValue: 'initial notes',
+    commitMode: 'deferred',
+    getControl: () => areaRef.current,
+    write: (next, context) => {
+      if (areaRef.current) {
+        writeTextareaValue(areaRef.current, next, { syncDefault: context.controlled });
+      }
+    },
+    onReset: () => setResetCount((count) => count + 1),
+  });
+
+  return (
+    <form id="live-text">
+      <FormInput
+        ref={inputRef}
+        controlled
+        name="live"
+        aria-label="Live controlled input"
+        defaultValue={controlledText.value}
+        onChange={(event) => controlledText.propose(event.currentTarget.value)}
+      />
+      <FormTextarea
+        ref={areaRef}
+        name="notes"
+        aria-label="Local textarea"
+        defaultValue={localArea.value}
+        onChange={(event) => localArea.propose(event.currentTarget.value)}
+      />
+      <button type="button" onClick={() => setAcceptText(!acceptText)}>
+        Toggle accept live text
+      </button>
+      <button type="reset">Reset live text</button>
+      <output data-testid="live-text-value">{controlledText.value}</output>
+      <output data-testid="local-area-value">{localArea.value}</output>
+      <output data-testid="live-reset-count">{resetCount}</output>
+    </form>
+  );
+}
+
+function ShadowFormInner(): JSX.Element {
+  const selectRef = useRef<HTMLSelectElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const catalog = [{ value: 'a' }, { value: 'b' }];
+  const choice = useFixtureSelect<string | null>(selectRef, {
+    defaultValue: 'a',
+    catalog,
+  });
+  return (
+    <form id="shadow-form">
+      <button ref={triggerRef} type="button" onClick={() => choice.propose('b')}>
+        Shadow choose B
+      </button>
+      <FormSelect
+        ref={selectRef}
+        name="shadowChoice"
+        required
+        initialValue={choice.value}
+        options={catalog}
+        getFocusTarget={() => triggerRef.current}
+      />
+      <button type="button" onClick={() => choice.propose(null)}>
+        Shadow clear
+      </button>
+      <button type="reset">Shadow reset</button>
+      <output data-testid="shadow-value">{choice.value ?? 'empty'}</output>
+    </form>
+  );
+}
+
+function ShadowResetHost(): JSX.Element {
+  const hostRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const host = hostRef.current;
+    if (!host) {
+      return;
+    }
+    const shadow = host.shadowRoot ?? host.attachShadow({ mode: 'open' });
+    const mount = document.createElement('div');
+    shadow.replaceChildren(mount);
+    const root: Root = createRoot(mount);
+    root.render(<ShadowFormInner />);
+    return () => {
+      root.unmount();
+    };
+  }, []);
+  return <div id="shadow-reset-host" ref={hostRef} />;
 }
 
 export default function StrictAuthorityFixture(): JSX.Element {

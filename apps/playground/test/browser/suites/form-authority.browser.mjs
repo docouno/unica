@@ -64,7 +64,7 @@ export default {
     assert.equal((await log(page)).length, 6);
     assert.equal(await controlled.inputValue(), 'c');
   },
-  'native radio changes repair the whole group before a controlled callback': async ({
+  'native radio changes repair the whole group and survive disabled or removed peers': async ({
     page,
     mount,
   }) => {
@@ -104,8 +104,17 @@ export default {
     assert.deepEqual(await entries(form), b);
     await resetForm(form);
     assert.deepEqual(await entries(form), a);
+
+    // Disabling or unmounting Radio A must leave Radio B operational and resettable.
+    await button(page, 'Toggle disable radio A').click();
+    await radioB.click();
+    assert.deepEqual(await entries(form), b);
+    await button(page, 'Toggle mount radio A').click();
+    await resetForm(form);
+    assert.deepEqual(await entries(form), [['other-radio', 'other']]);
+    assert.equal(await radioB.isChecked(), false);
   },
-  'native resets preserve controlled values and restore only mount defaults': async ({
+  'native resets preserve controlled values, restore mount defaults, and leave DOM clean': async ({
     page,
     mount,
   }) => {
@@ -123,17 +132,50 @@ export default {
     ];
     assert.deepEqual(await entries(form), changed);
 
+    // Adjacent sibling selector / nextElementSibling must never be broken by injected observers.
+    assert.equal(
+      await page
+        .getByRole('checkbox', { name: 'Authority checkbox' })
+        .evaluate((node) => node.nextElementSibling?.getAttribute('data-testid')),
+      'adjacent-indicator',
+    );
+
     const cancelled = await form.evaluate(async (node) => {
       const synthetic = new Event('reset', { bubbles: false, cancelable: true });
       node.dispatchEvent(synthetic);
       node.dispatchEvent(synthetic);
       await Promise.resolve();
       const afterSynthetic = [...new FormData(node)];
-      node.addEventListener('reset', (event) => event.preventDefault(), { once: true });
+      let elementsDuringReset = [];
+      node.addEventListener(
+        'reset',
+        (event) => {
+          elementsDuringReset = [...node.elements].map((el) => el.localName);
+          event.preventDefault();
+        },
+        { once: true },
+      );
       node.reset();
-      return { afterSynthetic, afterCancelled: [...new FormData(node)] };
+      await Promise.resolve();
+      return { afterSynthetic, afterCancelled: [...new FormData(node)], elementsDuringReset };
     });
-    assert.deepEqual(cancelled, { afterSynthetic: changed, afterCancelled: changed });
+    assert.deepEqual(cancelled.afterSynthetic, changed);
+    assert.deepEqual(cancelled.afterCancelled, changed);
+    // Zero phantom marker/witness elements injected into form.elements during reset.
+    assert.deepEqual(cancelled.elementsDuringReset, [
+      'button',
+      'select',
+      'select',
+      'select',
+      'input',
+    ]);
+
+    // Cancelled user click on <button type="reset"> preserves state without leaving phantom nodes.
+    await form.evaluate((node) => {
+      node.addEventListener('reset', (event) => event.preventDefault(), { once: true });
+    });
+    await button(page, 'Reset first').click();
+    assert.deepEqual(await entries(form), changed);
 
     const reset = [['local', 'a'], ['controlled', 'c'], ...initial.slice(2)];
     assert.deepEqual(
@@ -173,7 +215,10 @@ export default {
       ['b', 'c', 'b', 'c'],
     );
   },
-  'reset ownership follows reassociation, replacement, and unmount': async ({ page, mount }) => {
+  'reset ownership follows reassociation, replacement, remount, and unmount': async ({
+    page,
+    mount,
+  }) => {
     await mount('form-authority');
     const first = page.locator('#first');
     const second = page.locator('#second');
@@ -199,24 +244,32 @@ export default {
     await button(page, 'Toggle association').click();
     assert.deepEqual((await entries(second))[0], ['local', 'c']);
 
-    // Native association can change and immediately reset, before React or an observer runs.
+    // Native association can change and immediately reset, before React runs.
     const local = page.locator('select[name=local]');
     assert.deepEqual(
-      await local.evaluate((node) => {
+      await local.evaluate(async (node) => {
         node.setAttribute('form', 'first');
         node.form.reset();
+        await Promise.resolve();
         return [...new FormData(node.form)];
       }),
       [['local', 'a']],
     );
     await button(page, 'Change local to B').click();
-    // Restore the DOM attribute imperatively as React still owns the second-form prop.
     await local.evaluate((node) => node.setAttribute('form', 'second'));
     await resetForm(second);
     assert.deepEqual(await entries(second), initial);
+
+    // Unmount and remount carrier, then verify reset resubscribes cleanly.
     await button(page, 'Toggle local mount').click();
     await resetForm(second);
     assert.deepEqual(await entries(second), initial.slice(1));
+    await button(page, 'Toggle local mount').click();
+    await button(page, 'Change local to B').click();
+    assert.equal(await page.getByTestId('local-value').textContent(), 'c');
+    await resetForm(second);
+    assert.equal(await page.getByTestId('local-value').textContent(), 'a');
+    assert.deepEqual(await entries(second), initial);
   },
   'a native reset completes after synchronous edits from reset listeners': async ({
     page,
@@ -241,176 +294,114 @@ export default {
     );
     assert.equal(await page.getByTestId('local-value').textContent(), 'a');
   },
-  'a native reset uses the owner that a reset listener assigns before the default action': async ({
-    page,
-    mount,
-  }) => {
-    await mount('form-authority');
-    await button(page, 'Change local to B').click();
-    const second = page.locator('#second');
-    assert.deepEqual(await entries(second), []);
-    const result = await second.evaluate((form) => {
-      const carrier = document.querySelector('select[name=local]');
-      form.addEventListener('reset', () => carrier.setAttribute('form', 'second'), { once: true });
-      form.reset();
-      return { owned: carrier.form === form, entries: [...new FormData(form)] };
-    });
-    assert.deepEqual(result, { owned: true, entries: [['local', 'a']] });
-    assert.equal(await page.getByTestId('local-value').textContent(), 'a');
-  },
-  'a native reset follows its new owner when a listener stops propagation': async ({
-    page,
-    mount,
-  }) => {
-    for (const capture of [true, false]) {
-      await mount('form-authority');
-      await button(page, 'Change local to B').click();
-      const result = await page.locator('#second').evaluate((form, capture) => {
-        const local = document.querySelector('select[name=local]');
-        form.parentElement.addEventListener(
-          'reset',
-          (event) => {
-            local.setAttribute('form', 'second');
-            event.stopPropagation();
-          },
-          { capture, once: true },
-        );
-        form.reset();
-        return [...new FormData(form)];
-      }, capture);
-      assert.deepEqual(result, [['local', 'a']]);
-    }
-  },
-  'moving a mounted carrier subtree into Shadow DOM preserves synchronous native reset': async ({
-    page,
-    mount,
-  }) => {
-    await mount('form-authority');
-    await button(page, 'Change local to B').click();
-    await button(page, 'Change multi').click();
-    const result = await page.locator('#root').evaluate((root) => {
-      const form = root.querySelector('#first');
-      const carrier = root.querySelector('select[name=local]');
-      const parent = document.createElement('div');
-      document.body.append(parent);
-      const shadow = parent.attachShadow({ mode: 'open' });
-      shadow.append(root);
-      form.reset();
-      return { owner: carrier.form === form, entries: [...new FormData(form)] };
-    });
-    assert.deepEqual(result, { owner: true, entries: initial });
-    assert.equal(await page.getByTestId('local-value').textContent(), 'a');
-  },
-  'a delayed native reset confirmation preserves edits made after its default action': async ({
-    page,
-    mount,
-  }) => {
-    await mount('form-authority');
-    const buttonB = button(page, 'Change local to B');
-    await buttonB.click();
-    await button(page, 'Change multi').click();
-    const form = page.locator('#first');
-    const edit = await buttonB.elementHandle();
-    const result = await form.evaluate((node, edit) => {
-      let delayed;
-      node.addEventListener(
-        'reset',
-        () => {
-          const witness = node.querySelector('unica-reset-witness');
-          delayed = witness.confirmReset;
-          witness.confirmReset = undefined;
-        },
-        { once: true },
-      );
-      node.reset();
-      edit.click();
-      node.addEventListener(
-        'reset',
-        (event) => {
-          delayed();
-          event.preventDefault();
-        },
-        { once: true },
-      );
-      node.reset();
-      return [...new FormData(node)];
-    }, edit);
-    await edit.dispose();
-    assert.deepEqual(result, [['local', 'c'], ...initial.slice(1)]);
-    assert.equal(await page.getByTestId('local-value').textContent(), 'c');
-  },
-  'a delayed reset cannot restore a control acquired after the native action': async ({
-    page,
-    mount,
-  }) => {
-    await mount('form-authority');
-    await button(page, 'Change local to B').click();
-    const result = await page.locator('#second').evaluate((form) => {
-      const local = document.querySelector('select[name=local]');
-      document.querySelector('select[name=controlled]').setAttribute('form', 'second');
-      let delayed;
-      form.addEventListener(
-        'reset',
-        () => {
-          const witness = form.querySelector('unica-reset-witness');
-          delayed = witness.confirmReset;
-          witness.confirmReset = undefined;
-        },
-        { once: true },
-      );
-      form.reset();
-      local.setAttribute('form', 'second');
-      delayed();
-      return [...new FormData(form)];
-    });
-    assert.deepEqual(result, [
-      ['local', 'c'],
-      ['controlled', 'a'],
-    ]);
-  },
-  'a commit under a different form protects the value from an older reset after reassociation':
+  'a native reset follows a new owner even when a listener stops propagation or immediate propagation':
+    async ({ page, mount }) => {
+      for (const mode of ['capture-stop', 'bubble-stop', 'immediate-stop']) {
+        await mount('form-authority');
+        await button(page, 'Change local to B').click();
+        const result = await page.locator('#second').evaluate(async (form, mode) => {
+          const local = document.querySelector('select[name=local]');
+          const target = mode === 'immediate-stop' ? form : form.parentElement;
+          target.addEventListener(
+            'reset',
+            (event) => {
+              local.setAttribute('form', 'second');
+              if (mode === 'immediate-stop') {
+                event.stopImmediatePropagation();
+              } else {
+                event.stopPropagation();
+              }
+            },
+            { capture: mode === 'capture-stop', once: true },
+          );
+          form.reset();
+          await Promise.resolve();
+          return [...new FormData(form)];
+        }, mode);
+        assert.deepEqual(result, [['local', 'a']]);
+        assert.equal(await page.getByTestId('local-value').textContent(), 'a');
+      }
+    },
+  'controlled live text input and textarea preserve caret position, reject cleanly, and fire onReset':
     async ({ page, mount }) => {
       await mount('form-authority');
-      await button(page, 'Change local to B').click();
-      const result = await page.locator('#first').evaluate((form) => {
-        const local = document.querySelector('select[name=local]');
-        let delayed;
-        form.addEventListener(
-          'reset',
-          () => {
-            const witness = form.querySelector('unica-reset-witness');
-            delayed = witness.confirmReset;
-            witness.confirmReset = undefined;
-          },
-          { once: true },
-        );
-        form.reset();
-        local.setAttribute('form', 'second');
-        local.value = 'd';
-        local.dispatchEvent(new Event('change', { bubbles: true }));
-        const edited = new FormData(local.form).get('local');
-        local.setAttribute('form', 'first');
-        delayed();
-        return [edited, new FormData(form).get('local')];
-      });
-      assert.deepEqual(result, ['d', 'd']);
+      const input = page.getByRole('textbox', { name: 'Live controlled input' });
+      const area = page.getByRole('textbox', { name: 'Local textarea' });
+
+      // Insert in the middle of a controlled input: caret must stay right after the typed character.
+      await input.focus();
+      await input.evaluate((node) => node.setSelectionRange(2, 2));
+      await page.keyboard.type('XY');
+      assert.equal(await input.inputValue(), 'heXYllo');
+      assert.equal(await input.evaluate((node) => node.selectionStart), 4);
+      assert.equal(await page.getByTestId('live-text-value').textContent(), 'heXYllo');
+
+      // Rejecting controlled edits restores the committed DOM value after commit.
+      await button(page, 'Toggle accept live text').click();
+      await page.keyboard.type('Z');
+      assert.equal(await input.inputValue(), 'heXYllo');
+      assert.equal(await page.getByTestId('live-text-value').textContent(), 'heXYllo');
+
+      // Uncontrolled textarea edits and resets back to mount default; both fire onReset.
+      await area.fill('draft notes');
+      assert.equal(await page.getByTestId('local-area-value').textContent(), 'draft notes');
+      await button(page, 'Reset live text').click();
+      assert.equal(await input.inputValue(), 'heXYllo');
+      assert.equal(await area.inputValue(), 'initial notes');
+      assert.equal(await page.getByTestId('local-area-value').textContent(), 'initial notes');
+      assert.equal(await page.getByTestId('live-reset-count').textContent(), '2');
     },
-  'native reset works after a mounted form subtree is attached to a detached fragment': async ({
+  'Shadow DOM mounted forms support native reset and validation focus delegation': async ({
     page,
     mount,
   }) => {
     await mount('form-authority');
-    await button(page, 'Use local radio').click();
-    await page.getByRole('radio', { name: 'Radio B', exact: true }).click();
-    const result = await page.locator('#root').evaluate((root) => {
-      const form = root.querySelector('#radios');
-      const before = new FormData(form).get('radio');
-      root.remove();
-      document.createDocumentFragment().append(root);
-      form.reset();
-      return [before, new FormData(form).get('radio')];
+    const host = page.locator('#shadow-reset-host');
+    await host.locator('button', { hasText: 'Shadow choose B' }).click();
+    assert.equal(await host.getByTestId('shadow-value').textContent(), 'b');
+    await host.locator('button', { hasText: 'Shadow reset' }).click();
+    await page.evaluate(() => new Promise((resolve) => setTimeout(resolve, 0)));
+    assert.equal(await host.getByTestId('shadow-value').textContent(), 'a');
+
+    // Required validation inside Shadow DOM delegates focus to the shadow trigger.
+    await host.locator('button', { hasText: 'Shadow clear' }).click();
+    const valid = await host.evaluate((node) =>
+      node.shadowRoot.querySelector('form').reportValidity(),
+    );
+    assert.equal(valid, false);
+    assert.equal(
+      await host.evaluate(
+        (node) => node.shadowRoot.activeElement?.textContent === 'Shadow choose B',
+      ),
+      true,
+    );
+  },
+  'native reset is immune to HTMLFormElement DOM clobbering in Chromium': async ({
+    page,
+    mount,
+  }) => {
+    await mount('form-authority');
+    await button(page, 'Change local to B').click();
+    const form = page.locator('#first');
+    const result = await form.evaluate(async (node) => {
+      for (const name of [
+        'parentNode',
+        'append',
+        'ownerDocument',
+        'addEventListener',
+        'removeEventListener',
+        'elements',
+      ]) {
+        const clobber = document.createElement('input');
+        clobber.name = name;
+        Element.prototype.append.call(node, clobber);
+      }
+      HTMLFormElement.prototype.reset.call(node);
+      await Promise.resolve();
+      return new FormData(node).get('local');
     });
-    assert.deepEqual(result, ['b', 'a']);
+    assert.equal(result, 'a');
+    assert.equal(await page.getByTestId('local-value').textContent(), 'a');
   },
   'native reset leaves ordinary forms outside the runtime alone': async ({ page, mount }) => {
     await mount('form-authority');
@@ -437,6 +428,11 @@ export default {
     renderFixture,
   }) => {
     const html = await renderFixture('form-ssr');
+    assert.equal(
+      html.includes('style='),
+      false,
+      'Hidden SSR carriers must not rely on inline styles',
+    );
     await mount('form-hydration');
     const root = page.getByTestId('ssr-root');
     const before = await root.evaluate((node, markup) => {

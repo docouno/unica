@@ -1,14 +1,13 @@
 import type { RefObject } from 'react';
 import { writeSelectValue } from '../../src/core/forms/carriers.js';
-import type { CarrierOption } from '../../src/core/forms/carriers.js';
+import type { CarrierOption, SelectValue } from '../../src/core/forms/carriers.js';
 import { useFormValue } from '../../src/core/forms/useFormValue.js';
-
-type SelectValue = string | null | readonly string[];
 
 interface FixtureSelectOptions<T> {
   value?: T | undefined;
   defaultValue: T;
   onChange?: ((value: T) => void) | undefined;
+  onReset?: (() => void) | undefined;
   catalog?: readonly CarrierOption[] | undefined;
   readOnly?: boolean | undefined;
 }
@@ -26,9 +25,12 @@ export function useFixtureSelect<T extends SelectValue>(
     ...options,
     readOnly: options.readOnly ?? false,
     getControl: () => ref.current,
-    write: (value) => {
+    writeDeps: [options.catalog],
+    write: (next, context) => {
       if (ref.current) {
-        writeSelectValue(ref.current, value, options.catalog);
+        writeSelectValue(ref.current, next, options.catalog, {
+          defaultValue: context.controlled ? next : context.defaultValue,
+        });
       }
     },
   });

@@ -106,12 +106,30 @@ try {
   assert.ok(address && typeof address === 'object', 'Vite needs a loopback TCP address');
   const origin = `http://127.0.0.1:${address.port}`;
 
+  const serverFixtures = new Set(
+    globSync('fixtures/*.tsx', { cwd: import.meta.dirname }).map((file) =>
+      file.slice('fixtures/'.length, -'.tsx'.length),
+    ),
+  );
+
   async function renderFixture(fixture) {
-    const { default: Fixture } = await server.ssrLoadModule(
-      `/test/browser/fixtures/${fixture}.tsx`,
-    );
-    assert.equal(typeof Fixture, 'function', `Unknown server fixture: ${fixture}`);
-    return renderToString(createElement(Fixture));
+    assert.ok(serverFixtures.has(fixture), `Unknown server fixture: ${fixture}`);
+    const ssrErrors = [];
+    const originalError = console.error;
+    console.error = (...args) => {
+      ssrErrors.push(args.map(String).join(' '));
+    };
+    try {
+      const { default: Fixture } = await server.ssrLoadModule(
+        `/test/browser/fixtures/${fixture}.tsx`,
+      );
+      assert.equal(typeof Fixture, 'function', `Unknown server fixture: ${fixture}`);
+      const html = renderToString(createElement(Fixture));
+      assert.deepEqual(ssrErrors, [], `Node SSR console.error in ${fixture}`);
+      return html;
+    } finally {
+      console.error = originalError;
+    }
   }
 
   for (const [name, scenario] of scenarios) {

@@ -1,11 +1,14 @@
 import { useCallback, useRef } from 'react';
 import type { KeyboardEvent } from 'react';
+import { markKeyboardNavigation } from '../focus-origin.js';
+import { getDefaultView, getOwnerDocument } from '../forms/dom.js';
+import { useIsoLayoutEffect } from '../useIsoLayoutEffect.js';
 import { navigateCollection } from './navigation.js';
 import type { NavigationOptions, TypeaheadBuffer } from './navigation.js';
 
 export type CollectionNavigationOptions = Omit<NavigationOptions, 'direction'>;
 
-interface CollectionNavigation {
+export interface CollectionNavigation {
   onKeyDown: (event: KeyboardEvent<HTMLElement>, activeKey?: string | null) => void;
   clearTypeahead: () => void;
 }
@@ -15,32 +18,50 @@ export function useCollectionNavigation(
   onNavigate: (key: string) => void,
 ): CollectionNavigation {
   const buffer = useRef<TypeaheadBuffer | null>(null);
+  const latest = useRef({ options, onNavigate });
+
+  useIsoLayoutEffect(() => {
+    latest.current = { options, onNavigate };
+  });
+
   const clearTypeahead = useCallback((): void => {
     buffer.current = null;
   }, []);
 
-  return {
-    onKeyDown(event, activeKey = options.activeKey) {
+  const onKeyDown = useCallback(
+    (event: KeyboardEvent<HTMLElement>, activeKeyOverride?: string | null): void => {
       if (event.defaultPrevented) {
         return;
       }
+      const { options: currentOptions, onNavigate: navigate } = latest.current;
+      const activeKey =
+        activeKeyOverride === undefined ? currentOptions.activeKey : activeKeyOverride;
       const { currentTarget, nativeEvent } = event;
-      const view = currentTarget.ownerDocument.defaultView;
-      const direction = view?.getComputedStyle(currentTarget).direction === 'rtl' ? 'rtl' : 'ltr';
+      const doc = getOwnerDocument(currentTarget);
+      const view = getDefaultView(doc);
+      const needsDirection =
+        currentOptions.orientation !== 'vertical' &&
+        (nativeEvent.key === 'ArrowLeft' || nativeEvent.key === 'ArrowRight');
+      const direction =
+        needsDirection && view?.getComputedStyle(currentTarget).direction === 'rtl' ? 'rtl' : 'ltr';
+      const now = view?.performance?.now() ?? Date.now();
       const result = navigateCollection(
         nativeEvent,
-        { ...options, activeKey, direction },
+        { ...currentOptions, activeKey, direction },
         buffer.current,
-        view?.performance.now() ?? Date.now(),
+        now,
       );
       buffer.current = result.buffer;
       if (result.handled) {
         event.preventDefault();
-        if (result.key !== null) {
-          onNavigate(result.key);
+        markKeyboardNavigation(currentTarget);
+        if (result.key !== null && result.key !== activeKey) {
+          navigate(result.key);
         }
       }
     },
-    clearTypeahead,
-  };
+    [],
+  );
+
+  return { onKeyDown, clearTypeahead };
 }

@@ -1,30 +1,59 @@
-import { useId, useRef, useState } from 'react';
-import type { JSX } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
+import type { JSX, RefCallback } from 'react';
+import { createRoot } from 'react-dom/client';
+import type { Root } from 'react-dom/client';
+import { subscribeFocusOrigin } from '../../src/core/focus-origin.js';
+import type { FocusOrigin } from '../../src/core/focus-origin.js';
 import { FormSelect } from '../../src/core/forms/carriers.js';
 import { useActiveDescendant } from '../../src/core/collections/useActiveDescendant.js';
 import { useRovingFocus } from '../../src/core/collections/useRovingFocus.js';
 import { useFixtureSelect } from './form-fixture-helpers.js';
 
 const tabs = ['A', 'B', 'C'];
-const commands = ['Beta', 'Bravo', 'Blue', 'Cedar', 'Disabled command'];
+const commands = ['Beta', 'Bravo', 'Blue', 'Cedar', 'New Document', 'New File', 'Disabled command'];
 
 function RovingFixture(): JSX.Element {
   const [items, setItems] = useState(tabs);
   const [disabled, setDisabled] = useState<string | null>(null);
+  const [ariaDisabledB, setAriaDisabledB] = useState(false);
   const [selected, setSelected] = useState('A');
   const [policy, setPolicy] = useState<'tabs' | 'position'>('tabs');
   const [orientation, setOrientation] = useState<'horizontal' | 'vertical' | 'both'>('horizontal');
   const [wrap, setWrap] = useState(false);
   const [rtl, setRtl] = useState(false);
   const [link, setLink] = useState(false);
+  const [navigates, setNavigates] = useState<string[]>([]);
+  const [tick, setTick] = useState(0);
+  const [removeOnBlur, setRemoveOnBlur] = useState(false);
+  const refChanges = useRef(0);
+  const refChangesOutput = useRef<HTMLOutputElement>(null);
+  const firstRef = useRef<RefCallback<HTMLElement> | null>(null);
+
   const roving = useRovingFocus<HTMLElement>({
-    items: items.map((key) => ({ key, label: key, navigable: key !== disabled })),
+    items: items.map((key) => ({
+      key,
+      label: key,
+      navigable: key !== disabled && !(ariaDisabledB && key === 'B'),
+    })),
     entryKey: selected,
     recoveryKey: policy === 'tabs' ? selected : null,
     orientation,
     wrap,
     typeahead: false,
+    onNavigate: (key) => setNavigates((prev) => [...prev, key]),
   });
+
+  const itemAProps = roving.getItemProps('A');
+  useEffect(() => {
+    if (firstRef.current && firstRef.current !== itemAProps.ref) {
+      refChanges.current += 1;
+    }
+    firstRef.current = itemAProps.ref;
+    if (refChangesOutput.current) {
+      refChangesOutput.current.textContent = String(refChanges.current);
+    }
+  });
+
   return (
     <section aria-label="Roving focus">
       <button type="button">Before tabs</button>
@@ -33,10 +62,15 @@ function RovingFixture(): JSX.Element {
         aria-label="Tabs"
         style={{ direction: rtl ? 'rtl' : 'ltr' }}
         onKeyDown={roving.onKeyDown}
-        onBlur={roving.onBlur}
+        onBlur={(event) => {
+          roving.onBlur(event);
+          if (removeOnBlur && event.relatedTarget === null) {
+            setItems((current) => current.filter((item) => item !== 'B'));
+          }
+        }}
       >
         {items.map((item) => {
-          const itemProps = roving.getItemProps(item);
+          const itemProps = item === 'A' ? itemAProps : roving.getItemProps(item);
           if (link && item === 'B') {
             return (
               <a
@@ -58,17 +92,27 @@ function RovingFixture(): JSX.Element {
               type="button"
               aria-selected={item === selected}
               disabled={item === disabled}
+              aria-disabled={ariaDisabledB && item === 'B' ? true : undefined}
               onClick={() => setSelected(item)}
             >
               {item}
             </button>
           );
         })}
+        <input aria-label="Nested in tablist" />
       </div>
       <input aria-label="After tabs" />
       <output data-testid="selected-tab">{selected}</output>
+      <output data-testid="roving-navigates">{navigates.join(',')}</output>
+      <output data-testid="roving-ref-changes" ref={refChangesOutput}>
+        0
+      </output>
+      <output data-testid="roving-tick">{tick}</output>
       <button type="button" onClick={() => setDisabled('B')}>
         Disable B
+      </button>
+      <button type="button" onClick={() => setAriaDisabledB(true)}>
+        Aria disable B
       </button>
       <button type="button" onClick={() => setItems(items.filter((item) => item !== 'B'))}>
         Remove B
@@ -100,6 +144,12 @@ function RovingFixture(): JSX.Element {
       <button type="button" onClick={() => setRtl(!rtl)}>
         Toggle local RTL
       </button>
+      <button type="button" onClick={() => setTick((value) => value + 1)}>
+        Rerender tabs
+      </button>
+      <button type="button" onClick={() => setRemoveOnBlur(true)}>
+        Enable remove B on blur
+      </button>
     </section>
   );
 }
@@ -114,17 +164,23 @@ function MenuFixture(): JSX.Element {
   });
   return (
     <section aria-label="Menu navigation">
-      <div role="menu" aria-label="Commands" onKeyDown={roving.onKeyDown} onBlur={roving.onBlur}>
+      <div
+        role="menu"
+        aria-label="Commands"
+        tabIndex={-1}
+        onKeyDown={roving.onKeyDown}
+        onBlur={roving.onBlur}
+      >
         {commands.map((command, index) => (
           <div key={command} role="presentation">
-            {index === 4 && <hr role="separator" />}
+            {index === commands.length - 1 && <hr role="separator" />}
             <button
               {...roving.getItemProps(command)}
               role="menuitem"
               type="button"
-              aria-disabled={index === 4}
+              aria-disabled={index === commands.length - 1}
               onClick={() => {
-                if (index !== 4) {
+                if (index !== commands.length - 1) {
                   setAction(command);
                 }
               }}
@@ -158,7 +214,9 @@ function VirtualFixture(): JSX.Element {
   const [open, setOpen] = useState(true);
   const [query, setQuery] = useState('');
   const [removed, setRemoved] = useState<string | null>(null);
+  const [disabledKey, setDisabledKey] = useState<string | null>(null);
   const [submitCount, setSubmitCount] = useState(0);
+  const [focusOrigin, setFocusOrigin] = useState<FocusOrigin | null>(null);
   const acceptedCarrier = useRef<HTMLSelectElement>(null);
   const accepted = useFixtureSelect<string | null>(acceptedCarrier, {
     defaultValue: 'a',
@@ -168,7 +226,19 @@ function VirtualFixture(): JSX.Element {
     .filter(
       ({ key, label }) => key !== removed && label.toLowerCase().includes(query.toLowerCase()),
     )
-    .map((item) => ({ ...item, id: id + '-' + item.key }));
+    .map((item) => ({
+      ...item,
+      navigable: item.navigable !== false && item.key !== disabledKey,
+      id: id + '-' + item.key,
+    }));
+
+  useEffect(() => {
+    const node = input.current;
+    if (!node) {
+      return;
+    }
+    return subscribeFocusOrigin(node, setFocusOrigin);
+  }, []);
 
   function activate(key: string): void {
     setActiveKey(key);
@@ -212,6 +282,7 @@ function VirtualFixture(): JSX.Element {
         aria-controls={open ? id : undefined}
         aria-expanded={open}
         aria-activedescendant={virtual['aria-activedescendant']}
+        data-focus-origin={focusOrigin ?? ''}
         onBlur={virtual.onBlur}
         value={query}
         onChange={(event) => {
@@ -220,9 +291,8 @@ function VirtualFixture(): JSX.Element {
           setOpen(true);
         }}
         onKeyDown={(event) => {
-          if (event.key === 'ArrowUp' || event.key === 'ArrowDown') {
-            virtual.onKeyDown(event);
-          }
+          // Pass all keydowns straight to useActiveDescendant without fixture filtering.
+          virtual.onKeyDown(event);
           if (
             event.key === 'Enter' &&
             open &&
@@ -230,7 +300,7 @@ function VirtualFixture(): JSX.Element {
             !event.nativeEvent.isComposing
           ) {
             event.preventDefault();
-            accepted.propose(activeKey);
+            accepted.propose(virtual.activeKey);
           }
           if (event.key === 'Escape') {
             setOpen(false);
@@ -253,10 +323,10 @@ function VirtualFixture(): JSX.Element {
           aria-label="Document results"
           style={{ height: 75, overflow: 'auto' }}
         >
-          {items.map(({ key, label, id, ...item }) => (
+          {items.map(({ key, label, id: itemId, ...item }) => (
             <div
               key={key}
-              id={id}
+              id={itemId}
               role="option"
               aria-selected={accepted.value === key}
               aria-disabled={item.navigable === false}
@@ -275,6 +345,12 @@ function VirtualFixture(): JSX.Element {
       <button type="submit">Submit document</button>
       <button type="button" onClick={() => setRemoved(activeKey)}>
         Remove active result
+      </button>
+      <button type="button" onClick={() => setDisabledKey(activeKey)}>
+        Disable active result
+      </button>
+      <button type="button" onClick={() => setOpen(!open)}>
+        Toggle document list raw
       </button>
       <button
         type="button"
@@ -299,7 +375,105 @@ function VirtualFixture(): JSX.Element {
         Clear active document
       </button>
       <output data-testid="submitted-count">{submitCount}</output>
+      <output data-testid="virtual-active-key">{virtual.activeKey ?? ''}</output>
     </form>
+  );
+}
+
+function ActiveTypeaheadFixture(): JSX.Element {
+  const id = useId();
+  const [open, setOpen] = useState(true);
+  const [activeKey, setActiveKey] = useState<string | null>('a');
+  const options = [
+    { key: 'a', id: id + '-a', label: 'Alpha' },
+    { key: 'b', id: id + '-b', label: 'Beta' },
+    { key: 'c', id: id + '-c', label: 'Bravo' },
+  ];
+  const virtual = useActiveDescendant({
+    items: options,
+    activeKey,
+    orientation: 'vertical',
+    wrap: false,
+    typeahead: true,
+    homeEnd: true,
+    open,
+    onActiveChange: setActiveKey,
+  });
+  return (
+    <section aria-label="Active descendant typeahead">
+      <div
+        role="listbox"
+        aria-label="Typeahead listbox"
+        tabIndex={0}
+        aria-activedescendant={virtual['aria-activedescendant']}
+        onKeyDown={virtual.onKeyDown}
+        onBlur={virtual.onBlur}
+      >
+        {open &&
+          options.map((opt) => (
+            <div key={opt.key} id={opt.id} role="option" aria-selected={opt.key === activeKey}>
+              {opt.label}
+            </div>
+          ))}
+      </div>
+      <button type="button" onClick={() => setOpen(!open)}>
+        Toggle typeahead listbox
+      </button>
+      <output data-testid="typeahead-active">{virtual.activeKey ?? ''}</output>
+    </section>
+  );
+}
+
+function ShadowRovingInner(): JSX.Element {
+  const [items, setItems] = useState(['S1', 'S2']);
+  const roving = useRovingFocus<HTMLButtonElement>({
+    items: items.map((key) => ({ key, label: key })),
+    orientation: 'horizontal',
+    wrap: false,
+    typeahead: false,
+  });
+  return (
+    <div>
+      <div
+        role="tablist"
+        aria-label="Shadow tabs"
+        onKeyDown={roving.onKeyDown}
+        onBlur={roving.onBlur}
+      >
+        {items.map((item) => (
+          <button key={item} role="tab" type="button" {...roving.getItemProps(item)}>
+            {item}
+          </button>
+        ))}
+      </div>
+      <button type="button" onClick={() => setItems(['S2'])}>
+        Remove S1
+      </button>
+    </div>
+  );
+}
+
+function ShadowRovingHost(): JSX.Element {
+  const hostRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const host = hostRef.current;
+    if (!host) {
+      return;
+    }
+    const shadow = host.shadowRoot ?? host.attachShadow({ mode: 'open' });
+    const mount = document.createElement('div');
+    shadow.replaceChildren(mount);
+    const root: Root = createRoot(mount);
+    root.render(<ShadowRovingInner />);
+    return () => {
+      root.unmount();
+    };
+  }, []);
+  return (
+    <section aria-label="Shadow roving">
+      <div id="shadow-roving-host" ref={hostRef} />
+      <input aria-label="Outside shadow input" />
+    </section>
   );
 }
 
@@ -309,6 +483,8 @@ export default function CollectionsFixture(): JSX.Element {
       <RovingFixture />
       <MenuFixture />
       <VirtualFixture />
+      <ActiveTypeaheadFixture />
+      <ShadowRovingHost />
     </>
   );
 }

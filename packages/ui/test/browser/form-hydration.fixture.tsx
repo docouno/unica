@@ -1,4 +1,4 @@
-import { useId, useRef, useState } from 'react';
+import { StrictMode, useId, useRef, useState } from 'react';
 import type { JSX } from 'react';
 import { hydrateRoot } from 'react-dom/client';
 import { useIsoLayoutEffect } from '../../src/core/useIsoLayoutEffect.js';
@@ -32,9 +32,9 @@ export function HydratedControls(): JSX.Element {
   const check = useFormValue<boolean>({
     defaultValue: true,
     getControl: () => checkbox.current,
-    write: (checked) => {
+    write: (checked, context) => {
       if (checkbox.current) {
-        writeInputChecked(checkbox.current, checked);
+        writeInputChecked(checkbox.current, checked, { syncDefault: context.controlled });
       }
     },
     onChange: () => changes.current++,
@@ -101,13 +101,19 @@ export default function HydrationFixture(): JSX.Element {
         type="button"
         onClick={() => {
           if (container.current) {
-            hydrateRoot(container.current, <HydratedControls />, {
-              onRecoverableError: (error) => {
-                if (errors.current) {
-                  errors.current.textContent += String(error);
-                }
+            hydrateRoot(
+              container.current,
+              <StrictMode>
+                <HydratedControls />
+              </StrictMode>,
+              {
+                onRecoverableError: (error) => {
+                  if (errors.current) {
+                    errors.current.textContent += String(error);
+                  }
+                },
               },
-            });
+            );
           }
         }}
       >

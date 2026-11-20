@@ -76,6 +76,9 @@ function Choice({
       <button type="button" onClick={() => setFiltered(!filtered)}>
         {name} toggle filter
       </button>
+      <button type="button" onClick={() => choice.propose('b')}>
+        {name} force propose b
+      </button>
     </div>
   );
 }
@@ -86,18 +89,18 @@ function NativeInputs(): JSX.Element {
   const field = useFormValue<string>({
     defaultValue: 'initial',
     getControl: () => text.current,
-    write: (value) => {
+    write: (value, context) => {
       if (text.current) {
-        writeInputValue(text.current, value);
+        writeInputValue(text.current, value, { syncDefault: context.controlled });
       }
     },
   });
   const toggle = useFormValue<boolean>({
     defaultValue: true,
     getControl: () => check.current,
-    write: (checked) => {
+    write: (checked, context) => {
       if (check.current) {
-        writeInputChecked(check.current, checked);
+        writeInputChecked(check.current, checked, { syncDefault: context.controlled });
       }
     },
   });
@@ -257,9 +260,9 @@ function RequiredInput(): JSX.Element {
   const field = useFormValue<string>({
     defaultValue: '',
     getControl: () => input.current,
-    write: (value) => {
+    write: (value, context) => {
       if (input.current) {
-        writeInputValue(input.current, value);
+        writeInputValue(input.current, value, { syncDefault: context.controlled });
       }
     },
   });
