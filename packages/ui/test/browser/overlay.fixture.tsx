@@ -328,7 +328,11 @@ export default function OverlayFixture(): JSX.Element {
           height: 32,
         }}
       >
-        <button id="anchor" type="button" style={{ position: 'absolute', left: 20, width: 80 }}>
+        <button
+          id="anchor"
+          type="button"
+          style={{ position: 'absolute', left: 20, width: 80, height: 24 }}
+        >
           Anchor
         </button>
         <button id="anchor2" type="button" style={{ position: 'absolute', left: 250, width: 100 }}>
