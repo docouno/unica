@@ -1,3 +1,5 @@
+import '@fontsource-variable/inter';
+import '@fontsource-variable/jetbrains-mono';
 import { Fragment, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import type { MouseEvent, ReactElement, ReactNode, RefObject } from 'react';
 import { Inspector } from './Inspector.js';
@@ -21,6 +23,7 @@ import type {
   WorkbenchTheme,
 } from './types.js';
 import './workbench.css';
+import './controls.css';
 
 const tabLabels = {
   playground: 'Playground',
@@ -374,7 +377,7 @@ function Environment({
       <label className="wb-environment-group">
         Surface
         <select
-          className="wb-select"
+          className="wb-field"
           value={route.surface}
           onChange={(event) => {
             const surface = surfaces.find((entry) => entry === event.target.value);
@@ -393,7 +396,7 @@ function Environment({
       <label className="wb-environment-group">
         Width
         <select
-          className="wb-select"
+          className="wb-field"
           value={route.vp}
           onChange={(event) => {
             const match = viewports.find((vp) => String(vp) === event.target.value);
@@ -682,7 +685,7 @@ export function WorkbenchApp({ config }: WorkbenchAppProps): ReactElement {
               <input
                 ref={searchRef}
                 type="search"
-                className="wb-search"
+                className="wb-field wb-search"
                 aria-label="Search components and scenes"
                 aria-keyshortcuts="/ Meta+K Control+K"
                 placeholder="Search catalog"
@@ -709,7 +712,7 @@ export function WorkbenchApp({ config }: WorkbenchAppProps): ReactElement {
                 ))}
               </div>
             </div>
-            <nav aria-label="Components and scenes">
+            <nav className="wb-catalog-nav" aria-label="Components and scenes">
               {config.categories.map((category) => {
                 const entries = filteredComponents.filter((entry) => entry.category === category);
                 if (!entries.length) {

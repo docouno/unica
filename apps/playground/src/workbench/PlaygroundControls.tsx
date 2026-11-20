@@ -82,18 +82,22 @@ function PropControl({
   let input: ReactElement;
   if (prop.kind === 'boolean') {
     input = (
-      <input
-        {...inputAttrs}
-        type="checkbox"
-        checked={current === true}
-        disabled={blockedToggle.length > 0}
-        onChange={(event) => onValue(event.currentTarget.checked)}
-      />
+      <span className="wb-checkbox">
+        <input
+          {...inputAttrs}
+          type="checkbox"
+          checked={current === true}
+          disabled={blockedToggle.length > 0}
+          onChange={(event) => onValue(event.currentTarget.checked)}
+        />
+        <span className="wb-check-mark" aria-hidden="true" />
+      </span>
     );
   } else if (prop.kind === 'enum' || prop.kind === 'slot') {
     input = (
       <select
         {...inputAttrs}
+        className="wb-field"
         value={String(current)}
         onChange={(event) => onValue(event.currentTarget.value)}
       >
@@ -108,6 +112,7 @@ function PropControl({
     input = (
       <input
         {...inputAttrs}
+        className="wb-field"
         type="number"
         step="any"
         value={numberDraft ?? String(current)}
@@ -118,6 +123,7 @@ function PropControl({
     input = (
       <input
         {...inputAttrs}
+        className="wb-field"
         type="text"
         value={String(current)}
         onChange={(event) => onValue(event.currentTarget.value)}

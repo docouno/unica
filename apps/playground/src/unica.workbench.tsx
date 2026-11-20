@@ -1,5 +1,3 @@
-import '@fontsource-variable/inter';
-import '@fontsource-variable/jetbrains-mono';
 import '@docouno/unica/styles.css';
 import type { ReactElement } from 'react';
 import { THEME_PRESETS } from '@docouno/unica';

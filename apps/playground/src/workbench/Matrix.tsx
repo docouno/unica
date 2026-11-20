@@ -122,6 +122,7 @@ function ValuePicker({
       {label}
       {domain.length > 0 ? (
         <select
+          className="wb-field"
           value={choice < 0 ? '' : String(choice)}
           onChange={(event) => {
             const input = event.currentTarget.value;
@@ -139,6 +140,7 @@ function ValuePicker({
         </select>
       ) : (
         <input
+          className="wb-field"
           type={prop.kind === 'number' ? 'number' : 'text'}
           step={prop.kind === 'number' ? 'any' : undefined}
           value={String(override ?? value)}
@@ -171,7 +173,9 @@ function RuleNotes({ rules }: { readonly rules: readonly Constraint[] }): ReactE
 
   return (
     <details className="wb-matrix-notes">
-      <summary title={rules.map((rule) => rule.reason).join('\n')}>{labels.join(' · ')}</summary>
+      <summary className="wb-disclosure" title={rules.map((rule) => rule.reason).join('\n')}>
+        {labels.join(' · ')}
+      </summary>
       <ul>
         {rules.map((rule, index) => (
           <li key={index}>{rule.reason}</li>
@@ -369,6 +373,7 @@ function MatrixContent({
               <label className="wb-matrix-field">
                 Slice
                 <select
+                  className="wb-field"
                   value={view?.id ?? ''}
                   onChange={(event) => {
                     onSliceChange(event.currentTarget.value);
@@ -388,6 +393,7 @@ function MatrixContent({
                 <label key={axis} className="wb-matrix-field">
                   {AXIS_LABELS[axis]}
                   <select
+                    className="wb-field"
                     value={axes[axis] ?? ''}
                     onChange={(event) => {
                       const key = event.currentTarget.value;
@@ -415,7 +421,7 @@ function MatrixContent({
                   </select>
                 </label>
               ))}
-            <div role="group" className="wb-seg wb-matrix-modes" aria-label="Matrix mode">
+            <div role="group" className="wb-seg" aria-label="Matrix mode">
               {(Object.keys(MODES) as MatrixMode[]).map((candidate) => (
                 <button
                   type="button"
@@ -438,7 +444,7 @@ function MatrixContent({
           </div>
           {overrideKeys.length > 0 && (
             <details className="wb-matrix-overrides">
-              <summary>Global values</summary>
+              <summary className="wb-disclosure">Global values</summary>
               <div className="wb-matrix-toolbar">
                 {overrideKeys.map((key) => (
                   <ValuePicker

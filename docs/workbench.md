@@ -44,6 +44,8 @@ Choose Family and Scheme independently. All × Both compares all available prese
 
 The environment controls sit beside the page heading when space allows. The theme canvas is applied to the live sample. Matrix coordinates and review notes use Workbench typography, and Cases and Usage show each caption once above the theme comparison. Usage shows one JSX snippet per authored example.
 
+The Workbench owns its catalog and control styles. The shell uses a small, local set of Soft Dark recipes for fields, segments, buttons, and navigation. Those styles and the font assets load with the shell. Changing a preview theme changes the examples while the inspection controls keep their appearance. Select fields use the system menu on browsers without customizable native pickers.
+
 Each checkout leases a sticky loopback port. `make up` builds the playground's dependencies before starting Vite, which serves library source changes via HMR. For reverse-proxied preview, set `DEVKIT_PREVIEW_URL_TEMPLATE` with the desired URL and placeholders (`{port}`, `{service}`, `{branch}` or `{slug}`) in the environment or a Git-ignored root `.env` file. Confirm the address with `make info`.
 
 ## Author a Specimen

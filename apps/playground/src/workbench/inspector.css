@@ -169,13 +169,13 @@
   min-inline-size: 0;
   margin: 0;
   padding: 8px;
-  border: 1px solid var(--wb-border-strong);
-  border-radius: 6px;
+  border: 0;
+  border-block-start: 1px solid var(--wb-border-subtle);
 }
 
 .wb-control-group legend {
   padding-inline: 4px;
-  color: var(--wb-fg-muted);
+  color: var(--wb-fg-secondary);
   font-weight: 600;
 }
 
@@ -193,29 +193,16 @@
   grid-template-columns: minmax(0, 1fr);
 }
 
-.wb-control-field input,
-.wb-control-field select,
-.wb-block-picker select {
-  min-inline-size: 0;
+.wb-control-field .wb-field {
   max-inline-size: min(11rem, 100%);
-  min-block-size: 30px;
-  border-radius: 5px;
-  border: 1px solid var(--wb-border-strong);
-  padding: 3px 6px;
-  background: var(--wb-card);
-  color: var(--wb-fg);
-  font: inherit;
 }
 
-.wb-control-field input[type='text'],
-.wb-control-field input[type='number'] {
+.wb-control-field input.wb-field {
   inline-size: 9rem;
 }
 
-.wb-control-field input[type='checkbox'] {
-  min-block-size: 0;
-  margin: 0;
-  accent-color: var(--wb-accent);
+.wb-control-field:has(.wb-checkbox) {
+  min-block-size: 24px;
 }
 
 .wb-control-description {
@@ -358,7 +345,7 @@
   font-weight: 600;
 }
 
-.wb-block-picker select {
+.wb-block-picker .wb-field {
   max-inline-size: min(25rem, 100%);
 }
 
@@ -413,11 +400,4 @@
   color: var(--wb-fg);
   text-decoration-color: var(--wb-accent);
   text-underline-offset: 3px;
-}
-
-.wb-inspector-controls :is(button, input, select):focus-visible,
-.wb-inspector-panel :is(button, a):focus-visible,
-.wb-inspector-form-actions button:focus-visible,
-.wb-block-picker select:focus-visible {
-  outline-offset: 2px;
 }

@@ -367,6 +367,7 @@ function BlockPicker({
     <label className="wb-block-picker wb-inspector-meta">
       <span>{label}</span>
       <select
+        className="wb-field"
         value={selected ?? ''}
         onChange={(event) => onSelect(event.currentTarget.value || undefined)}
       >
