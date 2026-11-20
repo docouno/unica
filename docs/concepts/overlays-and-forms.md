@@ -15,23 +15,25 @@ Normal document flow uses only two stacking tokens (`--z-content: 0` and `--z-st
 
 ### Overlay coordination
 
-Unica's internal runtime coordinates native admission and dismissal per document. Bound auto triggers use `popovertarget` and make one controlled open or close request per activation. A native dismiss collapses the trigger and finalizes the panel even if the caller still holds its previous open value. An exit phase collapses the trigger and makes the departing carrier inert. The runtime checks native state after layout and relevant DOM changes and returns focus when the departing surface owned it.
+Unica's internal runtime coordinates native admission and dismissal per document using a protocol-versioned registry on the `Document`. Bound auto triggers use the native `popoverTargetElement` binding (crossing Shadow DOM boundaries) and emit one controlled open or close request per activation after React click handlers have run. Components own `aria-expanded` declaratively from their open state. A native dismiss finalizes the panel even if the caller still holds its previous open value. An exit phase disconnects the native invoker, makes the departing carrier `inert`, and can be canceled if the caller reopens before exit finishes. The runtime reconciles native state after layout, modal mutations, and ancestor visibility changes (dismissing nested popovers when a parent `<dialog>` or popover closes) and returns focus when the departing surface owned it unless the caller opts out.
 
-Escape normally follows the browser's auto-popover dismissal. Manual layers and modals receive a close request. A passive notification viewport is skipped. Inside a guarded modal, Escape closes a nested auto panel first and the next Escape reaches the modal's guard. The event still reaches application listeners.
+Nested `popover="auto"` chains should remain inside their parent popover's DOM subtree (in-place or via a nested `PortalProvider`) so native light-dismiss ancestry stays reliable across all Baseline and Guarantee browsers, including releases where `showPopover({ source })` is not yet supported.
 
-If a modal would dismiss its invoking auto chain on entry, the runtime temporarily holds the chain open in manual mode while preserving the native layer order. The chain resumes after the modal barriers above it close. The document scroll lock is shared across physical Unica modals, and scrolling inside a dialog stays available.
+A single bubble-phase `keydown` listener on the document respects `event.defaultPrevented` from inner React widgets and DOM controls before routing `Escape`. Passive notification viewports are skipped, and foreign open top-layer surfaces are respected. Inside any active Unica modal, `Escape` closes a nested `auto` panel first so browser close-watcher grouping never dismisses the modal on the same keypress; the next `Escape` reaches the modal owner. Outside a modal, `auto` popovers delegate `Escape` to the browser, while `manual` layers and modals receive a close request. The event still reaches application listeners.
+
+The document scroll lock is shared across physical Unica modals, compensates classic scrollbar gutter width to avoid horizontal layout shift when `scrollbar-gutter: stable` is absent, and leaves scrolling inside a dialog intact.
 
 ### Keeping Toasts Interactive Above Active Modals
 
 The native modal makes content outside its DOM subtree inert. A notification viewport can receive pointer and keyboard input by moving inside the active Unica dialog. Keep the queue, timer, and announcement state above the [Portal](../components/portal.md) so they survive the move.
 
-A document-wide viewport follows the topmost active Unica modal. A scoped viewport follows it only if the dialog belongs to the viewport's DOM scope. Moving an open dialog between scopes updates which viewport can follow it. While a modal in another scope is active, the local queue keeps its messages and defers its viewport until the scope becomes available. When no Unica modal is active, each viewport uses its ordinary portal host.
+A document-wide viewport follows the topmost active Unica modal. A scoped viewport follows it only if the dialog belongs to the viewport's DOM scope. While a modal in another scope is active, the local queue keeps its messages and defers its viewport until the scope becomes available. When no Unica modal is active, each viewport uses its ordinary portal host.
 
 ### Positioning Adapter & Discrete Transitions
 
 Anchored panels pair native `popover` promotion with a lightweight positioning adapter:
 
-- Computes collision-aware coordinates (`flip`, `shift`, logical `start` / `end` alignment across LTR and RTL) and writes `--anchor-width` and `--overlay-available-height` onto the floating element. The open panel follows anchor movement and changes to its reading direction.
+- Computes collision-aware coordinates (`flip`, `shift`, configurable viewport `padding`, and logical `start` / `end` alignment across LTR and RTL), writes `--anchor-width`, `--overlay-available-height`, and `--overlay-available-width` during layout sizing so constrained panels measure in one pass, and publishes logical `data-side` / `data-align` attributes onto the floating element. The open panel follows anchor movement and changes to ancestor `dir` attributes.
 - Sets `data-surface="overlay"` on the positioned container so nested controls automatically bind overlay tokens (see [Themes and Roles](themes-and-roles.md#contextual-surface-adaptation-base-vs-overlay)).
 - Motion belongs to the family’s design and the active material. Native top-layer positioning does not require a shared slide or fade. The current [Popover design reference](../../apps/playground/src/prototypes/popover/README.md) uses immediate show/hide in every preset. Any future overlay transition must preserve focus and dismissal timing, respect `prefers-reduced-motion`, and fall back to immediate visibility when unsupported.
 

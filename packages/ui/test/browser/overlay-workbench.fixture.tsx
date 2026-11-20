@@ -24,6 +24,75 @@ export function PortalProbe(): JSX.Element {
   );
 }
 
+function PortaledDialogForm({
+  subject,
+  form,
+  onHandle,
+}: {
+  readonly subject: { readonly 'data-wb-subject': '' };
+  readonly form: { readonly 'data-wb-form': '' };
+  readonly onHandle: (handle: ReturnType<typeof registerOverlay> | null) => void;
+}): JSX.Element {
+  const dialogRef = useRef<HTMLDialogElement>(null);
+
+  useLayoutEffect(() => {
+    const handle = registerOverlay({
+      kind: 'modal',
+      element: dialogRef.current!,
+      onOpenChange(open) {
+        handle.setOpen(open);
+      },
+    });
+    onHandle(handle);
+    return () => {
+      onHandle(null);
+      handle.dispose();
+    };
+  }, [onHandle]);
+
+  return (
+    <dialog
+      ref={dialogRef}
+      {...subject}
+      aria-label="Portaled dialog"
+      style={{ width: 240, height: 120 }}
+    >
+      <form {...form}>
+        <input name="owner" defaultValue="unica" />
+        <button type="submit">Save</button>
+      </form>
+    </dialog>
+  );
+}
+
+export function PortaledDialogFormProbe({
+  subject,
+  form,
+}: {
+  readonly subject: { readonly 'data-wb-subject': '' };
+  readonly form: { readonly 'data-wb-form': '' };
+}): JSX.Element {
+  const handleRef = useRef<ReturnType<typeof registerOverlay>>(null);
+  const attachHandle = useCallback((handle: ReturnType<typeof registerOverlay> | null) => {
+    handleRef.current = handle;
+  }, []);
+
+  return (
+    <>
+      <button
+        type="button"
+        data-open-portaled-dialog=""
+        onClick={() => handleRef.current?.setOpen(true)}
+      >
+        Open portaled dialog
+      </button>
+      <Portal>
+        <PortaledDialogForm subject={subject} form={form} onHandle={attachHandle} />
+      </Portal>
+    </>
+  );
+}
+
 function Viewport({
   ids,
   onAction,

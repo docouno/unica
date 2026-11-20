@@ -45,19 +45,31 @@ const UnicaContext = /* @__PURE__ */ createContext<UnicaScope>({
 
 export function UnicaProvider({ children, theme, overrides }: UnicaProviderProps): JSX.Element {
   const parent = useContext(UnicaContext);
+  const preset = theme?.preset;
+  const defaults = theme?.defaults;
+  const effectiveTheme = useMemo<ThemeConfig>(() => {
+    if (preset === undefined) {
+      return parent.theme;
+    }
+    if (preset === parent.theme.preset && defaults === parent.theme.defaults) {
+      return parent.theme;
+    }
+    return defaults === undefined ? { preset } : { preset, defaults };
+  }, [parent.theme, preset, defaults]);
+
   const scope = useMemo<UnicaScope>(() => {
-    if (theme === undefined && overrides === undefined) {
+    if (effectiveTheme === parent.theme && overrides === undefined) {
       return parent;
     }
 
     return {
-      theme: theme ?? parent.theme,
+      theme: effectiveTheme,
       overrides:
         overrides === undefined
           ? parent.overrides
           : { defaults: overrides, parent: parent.overrides },
     };
-  }, [parent, theme, overrides]);
+  }, [parent, effectiveTheme, overrides]);
 
   return <UnicaContext value={scope}>{children}</UnicaContext>;
 }

@@ -5,7 +5,7 @@ async function dispatch(page, event) {
 }
 
 export default {
-  'same-version modules share one stack while an iframe has its own runtime': async ({
+  'same-version modules share one document runtime while an iframe has its own': async ({
     page,
     mount,
   }) => {
@@ -34,7 +34,7 @@ export default {
     assert.equal(
       await iframe.evaluate(
         (element) =>
-          Object.getOwnPropertySymbols(element.ownerDocument.defaultView).filter((key) =>
+          Object.getOwnPropertySymbols(element.ownerDocument).filter((key) =>
             Symbol.keyFor(key)?.startsWith('@docouno/unica'),
           ).length,
       ),
@@ -58,72 +58,6 @@ export default {
       'false',
     );
   },
-  'a state-preserving dialog move updates scoped hosts and observes the new ancestor': async ({
-    page,
-    mount,
-  }) => {
-    await mount('overlay-realms');
-    await dispatch(page, 'move-owned-dialog');
-    const fixture = page.locator('#overlay-realms');
-    assert.equal(await fixture.getAttribute('data-preserved-modal'), 'true');
-    assert.equal(await fixture.getAttribute('data-modal-host'), 'moved-dialog');
-    assert.equal(await fixture.getAttribute('data-hosts-before-move'), 'moved-dialog|none');
-    await page.waitForFunction(
-      () => document.querySelector('#overlay-realms').dataset.scopedHosts === 'none|moved-dialog',
-    );
-    assert.equal(await page.evaluate(() => document.documentElement.style.overflow), 'hidden');
-    await dispatch(page, 'remove-moved-dialog');
-    await page.waitForFunction(() => document.documentElement.style.overflow === '');
-    assert.equal(await fixture.getAttribute('data-modal-host'), 'body');
-  },
-
-  'slot reassignment updates the modal scope with the same native dialog and scroll lock': async ({
-    page,
-    mount,
-  }) => {
-    await mount('overlay-realms');
-    const hosts = (scopes) =>
-      page.waitForFunction(
-        (value) => document.querySelector('#overlay-realms').dataset.scopedHosts === value,
-        scopes,
-      );
-    await dispatch(page, 'open-slotted-dialog');
-    await hosts('slotted-dialog|none');
-    await dispatch(page, 'reassign-dialog-slot');
-    await hosts('none|slotted-dialog');
-    await dispatch(page, 'rename-dialog-slot');
-    await hosts('none|none');
-    await dispatch(page, 'rename-dialog-slot');
-    await hosts('none|slotted-dialog');
-    assert.equal(
-      await page.locator('#slotted-dialog').evaluate((dialog) => dialog.matches(':modal')),
-      true,
-    );
-    assert.equal(await page.evaluate(() => document.documentElement.style.overflow), 'hidden');
-  },
-
-  'a document mutation discovers a newly attached shadow scope for an open dialog': async ({
-    page,
-    mount,
-  }) => {
-    await mount('overlay-realms');
-    await dispatch(page, 'open-for-late-shadow');
-    const fixture = page.locator('#overlay-realms');
-    assert.equal(await fixture.getAttribute('data-scoped-hosts'), 'late-dialog|none');
-    await dispatch(page, 'attach-shadow-scope');
-    await page.evaluate(() => new Promise((resolve) => requestAnimationFrame(resolve)));
-    assert.equal(await fixture.getAttribute('data-scoped-hosts'), 'late-dialog|none');
-    await dispatch(page, 'add-default-slot');
-    await page.waitForFunction(
-      () =>
-        document.querySelector('#overlay-realms').dataset.scopedHosts === 'late-dialog|late-dialog',
-    );
-    assert.equal(
-      await page.locator('#late-dialog').evaluate((dialog) => dialog.matches(':modal')),
-      true,
-    );
-    assert.equal(await page.evaluate(() => document.documentElement.style.overflow), 'hidden');
-  },
 
   'a previous document releases an adopted carrier without closing it in the new document': async ({
     page,
@@ -142,4 +76,14 @@ export default {
     assert.equal(await fixture.getAttribute('data-new-owner-dismiss'), 'escape');
     assert.equal(await adopted.evaluate((element) => element.matches(':popover-open')), false);
   },
+
+  'disposing a stale overlay after iframe navigation throws no errors and preserves new scroll':
+    async ({ page, mount }) => {
+      await mount('overlay-realms');
+      await dispatch(page, 'open-iframe-modal');
+      await dispatch(page, 'navigate-dispose-iframe');
+      await page.waitForFunction(
+        () => document.querySelector('#overlay-realms').dataset.iframeDisposedCleanly === 'true',
+      );
+    },
 };

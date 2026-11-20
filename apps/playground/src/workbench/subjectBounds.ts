@@ -170,6 +170,7 @@ function placeLabels(
 export function useSubjectBounds(
   scopeRef: RefObject<HTMLDivElement | null>,
   enabled: boolean,
+  mode: 'all' | 'portaled' = 'all',
 ): void {
   useLayoutEffect(() => {
     const root = scopeRef.current;
@@ -210,7 +211,12 @@ export function useSubjectBounds(
 
     function draw(): void {
       frame = 0;
-      const subjects = new Set(scope.querySelectorAll(subjectSelector));
+      const found = [...scope.querySelectorAll(subjectSelector)];
+      const subjects = new Set(
+        mode === 'portaled'
+          ? found.filter((element) => !element.closest('.wb-inspector-preview'))
+          : found,
+      );
       const samples: MeasuredSubject[] = [];
       const nextNativeHosts = new Set<Element>();
       const artboardScale =
@@ -326,7 +332,7 @@ export function useSubjectBounds(
       resize?.observe(viewport);
     }
     const artboard = scope.closest('.wb-artboard');
-    if (artboard) {
+    if (artboard && artboard !== scope) {
       watch.observe(artboard, { attributes: true });
     }
     const onToggle = (event: Event): void => {
@@ -387,5 +393,5 @@ export function useSubjectBounds(
       window.removeEventListener('resize', schedule);
       layer?.remove();
     };
-  }, [enabled, scopeRef]);
+  }, [enabled, mode, scopeRef]);
 }

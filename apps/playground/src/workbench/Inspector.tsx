@@ -130,7 +130,8 @@ function PlaygroundForm({
   }
 
   const findForm = (): HTMLFormElement | undefined => {
-    const forms = previewRef.current?.querySelectorAll<HTMLFormElement>('form[data-wb-form]');
+    const scope = previewRef.current?.closest('.wb-artboard') ?? previewRef.current;
+    const forms = scope?.querySelectorAll<HTMLFormElement>('form[data-wb-form]');
     return forms?.length === 1 ? forms[0] : undefined;
   };
   const ownsForm = (target: EventTarget): target is HTMLFormElement =>

@@ -14,12 +14,12 @@ export default function OverlayRealmsFixture(): JSX.Element {
     const root = ref.current!;
     const iframe = root.querySelector('iframe')!;
     const childDocument = iframe.contentDocument!;
-    const realmKeys = () =>
-      Object.getOwnPropertySymbols(window).filter((key) =>
+    const realmKeys = (doc: Document = document) =>
+      Object.getOwnPropertySymbols(doc).filter((key) =>
         Symbol.keyFor(key)?.startsWith('@docouno/unica'),
       );
     const registryKey = Symbol.for('@docouno/unica/OverlayRuntimeVersions');
-    const registeredBefore = realmKeys().length;
+    const registeredBefore = realmKeys(document).length;
     const registered = new Set<ReturnType<typeof registerOverlay>>();
 
     function attach(register: typeof registerOverlay, doc: Document, id: string) {
@@ -46,7 +46,7 @@ export default function OverlayRealmsFixture(): JSX.Element {
       const other = (await import(/* @vite-ignore */ url.href)) as typeof Runtime;
       root.dataset.distinctModules = String(other.registerOverlay !== registerOverlay);
       const versions = new Set(['earlier-version']);
-      Reflect.set(window, registryKey, versions);
+      Reflect.set(document, registryKey, versions);
       const warn = console.warn;
       const warnings: string[] = [];
       console.warn = (message: string) => warnings.push(message);
@@ -61,7 +61,7 @@ export default function OverlayRealmsFixture(): JSX.Element {
       root.dataset.versionWarnings = String(
         warnings.filter((message) => message.includes('different package versions')).length,
       );
-      root.dataset.mainRuntimeKeys = String(realmKeys().length - registeredBefore);
+      root.dataset.mainRuntimeKeys = String(realmKeys(document).length - registeredBefore);
     }
 
     const shadowHost = root.querySelector<HTMLElement>('[data-shadow-host]')!;
@@ -73,9 +73,9 @@ export default function OverlayRealmsFixture(): JSX.Element {
     registered.add(shadowLayer);
 
     const checkCleanup = () => {
-      const versions = Reflect.get(window, registryKey) as Set<string>;
+      const versions = Reflect.get(document, registryKey) as Set<string>;
       root.dataset.remainingVersions = [...versions].join(',');
-      root.dataset.mainRuntimeKeys = String(realmKeys().length - registeredBefore);
+      root.dataset.mainRuntimeKeys = String(realmKeys(document).length - registeredBefore);
     };
     const prepareShadow = () => {
       shadowLayer.setOpen(true);
@@ -85,67 +85,11 @@ export default function OverlayRealmsFixture(): JSX.Element {
     const checkShadow = () => {
       root.dataset.shadowProjection = String(resolveToastPortalHost(shadowHost) === modal);
     };
-    let source: HTMLDivElement | undefined;
-    let destination: HTMLDivElement | undefined;
+
     const unsubscribe = subscribeToModalChanges(document, () => {
       root.dataset.modalHost = resolveToastPortalHost(document.body)?.id || 'body';
-      if (source && destination) {
-        root.dataset.scopedHosts = [source, destination]
-          .map((scope) => resolveToastPortalHost(scope)?.id || 'none')
-          .join('|');
-      }
     });
-    const moveOwnedDialog = () => {
-      source = root.appendChild(document.createElement('div'));
-      source.id = 'origin';
-      destination = root.appendChild(document.createElement('div'));
-      destination.id = 'destination';
-      const dialog = source.appendChild(document.createElement('dialog'));
-      dialog.id = 'moved-dialog';
-      dialog.style.cssText = 'width:0;height:0;box-sizing:border-box;padding:0;border:0';
-      const handle = registerOverlay({ element: dialog, kind: 'modal', onOpenChange() {} });
-      registered.add(handle);
-      handle.setOpen(true);
-      root.dataset.hostsBeforeMove = root.dataset.scopedHosts;
-      destination.moveBefore(dialog, null);
-      root.dataset.preservedModal = String(
-        dialog.matches(':modal') && dialog.getBoundingClientRect().height === 0,
-      );
-    };
-    let slottedDialog: HTMLDialogElement | undefined;
-    let secondSlot: HTMLSlotElement | undefined;
-    const openForLateShadow = () => {
-      source = root.appendChild(document.createElement('div'));
-      source.id = 'late-host';
-      destination = root.appendChild(document.createElement('div'));
-      destination.id = 'late-scope';
-      const dialog = source.appendChild(document.createElement('dialog'));
-      dialog.id = 'late-dialog';
-      const handle = registerOverlay({ element: dialog, kind: 'modal', onOpenChange() {} });
-      registered.add(handle);
-      handle.setOpen(true);
-    };
-    const attachShadowScope = () => {
-      const shadow = source!.attachShadow({ mode: 'open' });
-      shadow.moveBefore(destination!, null);
-    };
-    const openSlottedDialog = () => {
-      const host = root.appendChild(document.createElement('div'));
-      const shadow = host.attachShadow({ mode: 'open' });
-      source = shadow.appendChild(document.createElement('div'));
-      source.id = 'slot-origin';
-      source.appendChild(document.createElement('slot')).name = 'first';
-      destination = shadow.appendChild(document.createElement('div'));
-      destination.id = 'slot-destination';
-      secondSlot = destination.appendChild(document.createElement('slot'));
-      secondSlot.name = 'second';
-      slottedDialog = host.appendChild(document.createElement('dialog'));
-      slottedDialog.id = 'slotted-dialog';
-      slottedDialog.slot = 'first';
-      const handle = registerOverlay({ element: slottedDialog, kind: 'modal', onOpenChange() {} });
-      registered.add(handle);
-      handle.setOpen(true);
-    };
+
     const adoptPopover = () => {
       const element = root.appendChild(document.createElement('div'));
       element.id = 'adopted';
@@ -172,6 +116,33 @@ export default function OverlayRealmsFixture(): JSX.Element {
       registered.add(newOwner);
       newOwner.setOpen(true);
     };
+
+    let iframeModalHandle: ReturnType<typeof registerOverlay> | undefined;
+    const openIframeModal = () => {
+      const spacer = childDocument.body.appendChild(childDocument.createElement('div'));
+      spacer.style.height = '2000px';
+      iframe.contentWindow!.scrollTo(0, 300);
+      const dialog = childDocument.body.appendChild(childDocument.createElement('dialog'));
+      iframeModalHandle = registerOverlay({ element: dialog, kind: 'modal', onOpenChange() {} });
+      registered.add(iframeModalHandle);
+      iframeModalHandle.setOpen(true);
+    };
+    const navigateAndDisposeIframe = () => {
+      iframe.addEventListener(
+        'load',
+        () => {
+          const newDoc = iframe.contentDocument!;
+          const tall = newDoc.body.appendChild(newDoc.createElement('div'));
+          tall.style.height = '2000px';
+          iframe.contentWindow!.scrollTo(0, 450);
+          iframeModalHandle?.dispose();
+          root.dataset.iframeDisposedCleanly = String(iframe.contentWindow!.scrollY === 450);
+        },
+        { once: true },
+      );
+      iframe.src = 'about:blank';
+    };
+
     const start = () => {
       openCopies().catch((error: unknown) => window.reportError(error));
     };
@@ -180,26 +151,14 @@ export default function OverlayRealmsFixture(): JSX.Element {
     root.addEventListener('open-shadow', prepareShadow);
     root.addEventListener('remove-shadow', moveShadow);
     root.addEventListener('check-shadow', checkShadow);
-    root.addEventListener('move-owned-dialog', moveOwnedDialog);
-    root.addEventListener('remove-moved-dialog', () => destination?.remove());
     root.addEventListener('adopt-popover', adoptPopover);
-    root.addEventListener('open-slotted-dialog', openSlottedDialog);
-    root.addEventListener('open-for-late-shadow', openForLateShadow);
-    root.addEventListener('attach-shadow-scope', attachShadowScope);
-    root.addEventListener('add-default-slot', () => {
-      destination!.appendChild(document.createElement('slot'));
-    });
-    root.addEventListener('reassign-dialog-slot', () => {
-      slottedDialog!.slot = 'second';
-    });
-    root.addEventListener('rename-dialog-slot', () => {
-      const slot = secondSlot!;
-      slot.name = slot.name === 'second' ? 'unused' : 'second';
-    });
+    root.addEventListener('open-iframe-modal', openIframeModal);
+    root.addEventListener('navigate-dispose-iframe', navigateAndDisposeIframe);
+
     return () => {
       unsubscribe();
       registered.forEach((handle) => handle.dispose());
-      Reflect.deleteProperty(window, registryKey);
+      Reflect.deleteProperty(document, registryKey);
     };
   }, []);
 

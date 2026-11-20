@@ -40,32 +40,75 @@ async function lock(page) {
   });
 }
 
-export default {
-  'a controlled auto trigger toggles once and marks its physical exit': async ({ page, mount }) => {
-    await mount('overlay');
-    const trigger = page.locator('#trigger2');
-    await page.locator('#trigger1').click();
-    await trigger.click();
-    await visibleLayer(page, 'p2');
-    assert.equal(await trigger.getAttribute('aria-expanded'), 'true');
-    assert.equal(await trigger.getAttribute('popovertarget'), 'p2');
-    await statistic(page, 'p2Changes', 1);
+async function invokerTargetId(page, selector) {
+  return page.locator(selector).evaluate((el) => el.popoverTargetElement?.id ?? null);
+}
 
-    await command(page, 'animate');
-    await trigger.click();
-    await statistic(page, 'p2Changes', 2);
-    assert.equal(await trigger.getAttribute('aria-expanded'), 'false');
-    assert.equal(await trigger.getAttribute('popovertarget'), null);
-    assert.equal(await page.locator('#p2:popover-open').getAttribute('inert'), '');
-    await command(page, 'finish-b', 'replace-trigger');
-    await closedLayer(page, 'p2');
-    assert.equal(await trigger.getAttribute('aria-expanded'), null);
-    const replacement = page.locator('#replacement');
-    await replacement.focus();
-    await page.keyboard.press('Space');
-    await visibleLayer(page, 'p2');
-    assert.equal(await replacement.getAttribute('popovertarget'), 'p2');
-    await statistic(page, 'p2Changes', 3);
+export default {
+  'a controlled auto trigger toggles once, respects click preventDefault, and updates callbacks':
+    async ({ page, mount }) => {
+      await mount('overlay');
+      const trigger = page.locator('#trigger2');
+      await page.locator('#trigger1').click();
+      await visibleLayer(page, 'p1');
+      assert.equal(
+        await page.locator('#stats').getAttribute('data-trigger1-default-prevented'),
+        'false',
+      );
+      await trigger.click();
+      await visibleLayer(page, 'p2');
+      assert.equal(await invokerTargetId(page, '#trigger2'), 'p2');
+      await statistic(page, 'p2Changes', 1);
+
+      await command(page, 'animate');
+      await trigger.click();
+      await statistic(page, 'p2Changes', 2);
+      assert.equal(await invokerTargetId(page, '#trigger2'), null);
+      assert.equal(await page.locator('#p2:popover-open').getAttribute('inert'), '');
+      await command(page, 'finish-b', 'replace-trigger');
+      await closedLayer(page, 'p2');
+      assert.equal(await invokerTargetId(page, '#trigger2'), null);
+      const replacement = page.locator('#replacement');
+      await replacement.focus();
+      await page.keyboard.press('Space');
+      await visibleLayer(page, 'p2');
+      assert.equal(await invokerTargetId(page, '#replacement'), 'p2');
+      await statistic(page, 'p2Changes', 3);
+
+      // handle.update swaps callbacks without re-registering an open overlay.
+      await command(page, 'update-b-callback');
+      await replacement.click();
+      await closedLayer(page, 'p2');
+      await statistic(page, 'updatedCallback', 1);
+
+      // A user click handler calling preventDefault cancels trigger toggling.
+      await command(page, 'cancel-trigger1-click');
+      await page.locator('#trigger1').click();
+      await visibleLayer(page, 'p1');
+    },
+
+  'non-button and Shadow DOM auto triggers toggle cleanly without reopening': async ({
+    page,
+    mount,
+  }) => {
+    await mount('overlay');
+    const divTrigger = page.locator('#div-trigger');
+    await divTrigger.click();
+    await visibleLayer(page, 'div-popover');
+    await divTrigger.click();
+    await closedLayer(page, 'div-popover');
+    await statistic(page, 'divPopoverChanges', 2);
+
+    const shadowButton = page.locator('#shadow-trigger-host').locator('#shadow-button');
+    await shadowButton.click();
+    await visibleLayer(page, 'shadow-popover');
+    assert.equal(
+      await shadowButton.evaluate((el) => el.popoverTargetElement?.id ?? null),
+      'shadow-popover',
+    );
+    await shadowButton.click();
+    await closedLayer(page, 'shadow-popover');
+    await statistic(page, 'shadowPopoverChanges', 2);
   },
 
   'native dismissal latches stale controlled state and respects outside focus': async ({
@@ -103,7 +146,7 @@ export default {
     await statistic(page, 'p2Changes', 2);
     await statistic(page, 'reason', 'trigger');
     await visibleLayer(page, 'p2');
-    assert.equal(await page.locator('#trigger2').getAttribute('aria-expanded'), 'true');
+    assert.equal(await invokerTargetId(page, '#trigger2'), 'p2');
   },
 
   'a newer controlled close supersedes a reopen deferred behind native dismissal': async ({
@@ -116,13 +159,88 @@ export default {
     await statistic(page, 'reason', 'native');
     await page.evaluate(() => new Promise((resolve) => requestAnimationFrame(resolve)));
     await closedLayer(page, 'p2');
-    assert.equal(await page.locator('#trigger2').getAttribute('aria-expanded'), 'false');
   },
 
-  'Escape routes manual, passive, and foreign layers without stopping propagation': async ({
+  'interrupting beginExit with setOpen(true) or native dismiss preserves state and focus': async ({
     page,
     mount,
   }) => {
+    await mount('overlay');
+    // Auto popover: beginExit -> reopen restores invoker and clears inert.
+    await command(page, 'open-a', 'open-b', 'begin-exit-b');
+    assert.equal(await page.locator('#p2:popover-open').getAttribute('inert'), '');
+    await command(page, 'reopen-b');
+    assert.equal(await page.locator('#p2:popover-open').getAttribute('inert'), null);
+    assert.equal(await invokerTargetId(page, '#trigger2'), 'p2');
+
+    // Auto popover: beginExit while focused -> native dismiss returns focus and does not latch dismissed.
+    await page.locator('#modal-trigger').focus();
+    await command(page, 'begin-exit-b', 'hide-b-natively');
+    await closedLayer(page, 'p2');
+    await assertFocused(page.locator('#trigger2'));
+    await command(page, 'reopen-b');
+    await visibleLayer(page, 'p2');
+
+    // Modal: beginExit -> reopen clears inert, restores modal projection, and Escape works again.
+    await command(page, 'open-dialog', 'disable-guard', 'begin-exit-dialog');
+    await statistic(page, 'toastHost', 'modal-host');
+    assert.equal(await page.locator('#dialog:modal').getAttribute('inert'), '');
+    await command(page, 'reopen-dialog');
+    assert.equal(await page.locator('#dialog:modal').getAttribute('inert'), null);
+    await statistic(page, 'toastHost', 'dialog');
+    await page.keyboard.press('Escape');
+    await closedLayer(page, 'dialog', ':modal');
+  },
+
+  'DOM clobbering inside forms never loops or throws in overlay coordination': async ({
+    page,
+    mount,
+  }) => {
+    await mount('overlay');
+    const box = await page.evaluate(() => {
+      const rect = document.querySelector('#clobbered-trigger').getBoundingClientRect();
+      return { x: rect.x + rect.width / 2, y: rect.y + rect.height / 2 };
+    });
+    await page.mouse.click(box.x, box.y);
+    await page.waitForFunction(() =>
+      Element.prototype.matches.call(document.querySelector('#clobbered-form'), ':popover-open'),
+    );
+    await page.evaluate(() => {
+      HTMLElement.prototype.focus.call(document.querySelector('#clobbered-action'));
+    });
+    await page.keyboard.press('Escape');
+    await page.waitForFunction(
+      () =>
+        !Element.prototype.matches.call(document.querySelector('#clobbered-form'), ':popover-open'),
+    );
+    assert.equal(
+      await page.evaluate(
+        () => document.activeElement === document.querySelector('#clobbered-trigger'),
+      ),
+      true,
+    );
+  },
+
+  'Escape respects inner preventDefault and routes manual, passive, and foreign layers': async ({
+    page,
+    mount,
+  }) => {
+    await mount('overlay');
+    await command(page, 'open-a');
+    await page.locator('#inside-a').focus();
+    await command(page, 'open-manual', 'open-passive', 'consume-inner-escape');
+    await page.locator('#inside-manual').focus();
+    await page.keyboard.press('Escape');
+    await statistic(page, 'innerEscapeConsumed', 1);
+    await visibleLayer(page, 'manual');
+
+    await mount('overlay');
+    await command(page, 'open-dialog', 'disable-guard', 'consume-inner-escape');
+    await page.locator('#draft').focus();
+    await page.keyboard.press('Escape');
+    await statistic(page, 'innerEscapeConsumed', 1);
+    await visibleLayer(page, 'dialog', ':modal');
+
     await mount('overlay');
     await command(page, 'open-a');
     await page.locator('#inside-a').focus();
@@ -145,10 +263,11 @@ export default {
     await statistic(page, 'manualChanges', 1);
   },
 
-  'an auto panel inside a guarded modal consumes its own first trusted Escape': async ({
+  'nested auto popovers inside guarded and unguarded modals dismiss one layer per Escape': async ({
     page,
     mount,
   }) => {
+    // Guarded modal with nested auto popover.
     await mount('overlay');
     await command(page, 'open-dialog', 'open-guarded', 'ignore-dismiss');
     await page.locator('#draft').evaluate((input) => {
@@ -179,127 +298,182 @@ export default {
     await statistic(page, 'guard', 2);
     await statistic(page, 'reason', 'cancel');
     await visibleLayer(page, 'dialog', ':modal');
-  },
 
-  'Escape in a foreign manual popover leaves the underlying native owners open': async ({
-    page,
-    mount,
-  }) => {
+    // Unguarded modal with two programmatically opened nested auto popovers.
     await mount('overlay');
-    await command(page, 'open-a', 'foreign-manual');
-    await page.locator('#foreign-manual-action').focus();
+    await command(page, 'disable-guard', 'open-dialog', 'open-guarded', 'open-guarded-inner');
+    await visibleLayer(page, 'guarded-inner');
     await page.keyboard.press('Escape');
-    await statistic(page, 'escapes', 1);
-    await visibleLayer(page, 'foreign-manual');
-    await visibleLayer(page, 'p1');
-    await statistic(page, 'p1Changes', 0);
-
-    await mount('overlay');
-    await command(page, 'open-dialog', 'foreign-manual-in-dialog');
-    await page.locator('#foreign-manual-action').focus();
-    await page.keyboard.press('Escape');
-    await statistic(page, 'escapes', 1);
-    await visibleLayer(page, 'foreign-manual');
+    await closedLayer(page, 'guarded-inner');
+    await visibleLayer(page, 'guarded');
     await visibleLayer(page, 'dialog', ':modal');
-    await statistic(page, 'guard', 0);
+    await page.keyboard.press('Escape');
+    await closedLayer(page, 'guarded');
+    await visibleLayer(page, 'dialog', ':modal');
+    await page.keyboard.press('Escape');
+    await closedLayer(page, 'dialog', ':modal');
   },
 
-  'modal lease preserves auto and interleaved manual order through stacked dialogs': async ({
+  'closing a modal immediately dismisses nested popovers instead of leaving hidden ghosts': async ({
     page,
     mount,
   }) => {
     await mount('overlay');
-    await command(page, 'open-a', 'open-manual', 'open-b');
-    assert.deepEqual(await layerOrder(page), ['p2', 'manual', 'p1']);
-    await page.locator('#dialog').evaluate((dialog) => {
-      dialog.addEventListener(
-        'beforetoggle',
-        () => {
-          const order = document.elementsFromPoint(335, 250).map(({ id }) => id);
-          dialog.dataset.leaseOrder = order
-            .filter((id) => ['p1', 'p2', 'manual'].includes(id))
-            .join(',');
-        },
-        { once: true },
+    await command(page, 'nested-positioned', 'open-guarded');
+    await visibleLayer(page, 'nested-positioned');
+    await visibleLayer(page, 'guarded');
+    await command(page, 'close-dialog');
+    await closedLayer(page, 'dialog', ':modal');
+    await closedLayer(page, 'nested-positioned');
+    await closedLayer(page, 'guarded');
+    await statistic(page, 'nestedPositionedChanges', 1);
+    await statistic(page, 'guardedChanges', 1);
+    await statistic(page, 'reason', 'lost');
+
+    // Reopening the dialog must not resurrect previously hidden nested popovers.
+    await command(page, 'open-dialog');
+    await visibleLayer(page, 'dialog', ':modal');
+    await closedLayer(page, 'nested-positioned');
+    await closedLayer(page, 'guarded');
+  },
+
+  'Escape in a foreign manual popover lets it close itself without dismissing underlying layers':
+    async ({ page, mount }) => {
+      await mount('overlay');
+      await command(page, 'open-a', 'foreign-manual');
+      await page.locator('#foreign-manual-action').focus();
+      await page.keyboard.press('Escape');
+      await statistic(page, 'escapes', 1);
+      await statistic(page, 'foreignManualClosed', 1);
+      assert.equal(
+        await page.locator('#stats').getAttribute('data-foreign-manual-default-prevented'),
+        'false',
       );
-    });
-    await page.locator('#modal-trigger').click();
+      await closedLayer(page, 'foreign-manual');
+      await visibleLayer(page, 'p1');
+      await statistic(page, 'p1Changes', 0);
+
+      await mount('overlay');
+      await command(page, 'open-dialog', 'foreign-manual-in-dialog');
+      await page.locator('#foreign-manual-action').focus();
+      await page.keyboard.press('Escape');
+      await statistic(page, 'escapes', 1);
+      await statistic(page, 'foreignManualClosed', 1);
+      await closedLayer(page, 'foreign-manual');
+      await visibleLayer(page, 'dialog', ':modal');
+      await statistic(page, 'guard', 0);
+    },
+
+  'focus return survives contextmenu, falls back past disabled triggers, and honors opt-out':
+    async ({ page, mount }) => {
+      await mount('overlay');
+      await page.locator('#outside').focus();
+      await command(page, 'open-a', 'open-b');
+      await page.locator('#modal-trigger').focus();
+      // Right-click outside dispatches pointerdown + contextmenu without pointerup.
+      await page.locator('#outside').evaluate((el) => {
+        el.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, button: 2 }));
+        el.dispatchEvent(new MouseEvent('contextmenu', { bubbles: true, button: 2 }));
+      });
+      await page.keyboard.press('Escape');
+      await closedLayer(page, 'p2');
+      await assertFocused(page.locator('#trigger2'));
+
+      // Disabled trigger falls back to previousFocus.
+      await page.locator('#inside-a').focus();
+      await command(page, 'open-b', 'disable-trigger2');
+      await page.locator('#modal-trigger').focus();
+      await command(page, 'finish-b');
+      await closedLayer(page, 'p2');
+      await assertFocused(page.locator('#inside-a'));
+
+      // Explicit opt-out skips focus restoration.
+      await command(page, 'open-b');
+      await page.locator('#modal-trigger').focus();
+      await command(page, 'finish-b-no-focus');
+      await closedLayer(page, 'p2');
+      assert.equal(
+        await page.evaluate(() => document.activeElement === document.querySelector('#inside-a')),
+        false,
+      );
+    },
+
+  'stacked dialogs keep scroll lock and toast projection until the last modal closes': async ({
+    page,
+    mount,
+  }) => {
+    await mount('overlay');
+    await command(page, 'open-dialog');
     await visibleLayer(page, 'dialog', ':modal');
-    assert.equal(await page.locator('#dialog').getAttribute('data-lease-order'), 'p2,manual,p1');
-    assert.equal(await page.locator('#p1:popover-open').getAttribute('popover'), 'manual');
-    assert.equal(await page.locator('#p2:popover-open').getAttribute('popover'), 'manual');
-    await statistic(page, 'toastHost', 'dialog');
-    await page.keyboard.press('Escape');
-    await statistic(page, 'toastHost', 'confirm');
-    await page.locator('#dismiss-confirm').click();
     await statistic(page, 'toastHost', 'dialog');
     assert.deepEqual(await lock(page), ['hidden', 'hidden', 'important']);
-    await page.locator('#close-modal').click();
+
+    await command(page, 'open-confirm');
+    await visibleLayer(page, 'confirm', ':modal');
+    await statistic(page, 'toastHost', 'confirm');
+
+    // Closing the lower modal keeps scroll lock and upper modal projection active.
+    await command(page, 'close-dialog');
+    await closedLayer(page, 'dialog', ':modal');
+    await visibleLayer(page, 'confirm', ':modal');
+    await statistic(page, 'toastHost', 'confirm');
+    assert.deepEqual(await lock(page), ['hidden', 'hidden', 'important']);
+
+    await page.locator('#dismiss-confirm').click();
+    await closedLayer(page, 'confirm', ':modal');
     await statistic(page, 'toastHost', 'modal-host');
-    assert.deepEqual(await layerOrder(page), ['p2', 'manual', 'p1']);
-    assert.equal(await page.locator('#p1').getAttribute('popover'), 'auto');
-    assert.equal(await page.locator('#p2').getAttribute('popover'), 'auto');
-    await assertFocused(page.locator('#modal-trigger'));
-    await statistic(page, 'p1Changes', 0);
-    await statistic(page, 'p2Changes', 0);
-    await page.keyboard.press('Escape');
-    await closedLayer(page, 'p2');
-    await assertFocused(page.locator('#trigger2'));
-    await visibleLayer(page, 'p1');
+    assert.deepEqual(await lock(page), ['clip', 'auto', 'important']);
   },
 
-  'removing or moving a modal releases projection, lease, and lock without the next input': async ({
+  'removing, moving, natively closing, or disposing a modal releases projection and lock': async ({
     page,
     mount,
   }) => {
-    for (const mutation of ['move-dialog', 'remove-dialog-host', 'native-close']) {
+    for (const mutation of [
+      'move-dialog',
+      'remove-dialog-host',
+      'native-close',
+      'dispose-dialog',
+    ]) {
       await mount('overlay');
-      await command(page, 'open-a', 'open-b', 'open-dialog');
+      await command(page, 'open-dialog');
       await statistic(page, 'toastHost', 'dialog');
       await command(page, mutation);
       await closedLayer(page, 'dialog', ':modal');
       await statistic(page, 'toastHost', 'modal-host');
       await statistic(page, 'projection', 2);
       assert.deepEqual(await lock(page), ['clip', 'auto', 'important']);
-      assert.equal(await page.locator('#p2:popover-open').getAttribute('popover'), 'auto');
-      await statistic(page, 'p2Changes', 0);
     }
   },
 
-  'closing a lower dialog defers chain restoration and a lost trigger stays closed': async ({
+  'removing an auto trigger dismisses its popover': async ({ page, mount }) => {
+    await mount('overlay');
+    await command(page, 'open-a', 'open-b');
+    await visibleLayer(page, 'p2');
+    await command(page, 'remove-trigger');
+    await closedLayer(page, 'p2');
+    await statistic(page, 'p2Changes', 1);
+    await statistic(page, 'reason', 'lost');
+  },
+
+  'aborted admission notifies lost while synchronous dispose rolls back silently': async ({
     page,
     mount,
   }) => {
     await mount('overlay');
-    await command(page, 'open-a', 'open-b', 'open-dialog', 'open-confirm', 'close-dialog');
-    await visibleLayer(page, 'confirm', ':modal');
-    await statistic(page, 'toastHost', 'confirm');
-    assert.equal(await page.locator('#p2').getAttribute('popover'), 'manual');
-    assert.deepEqual(await lock(page), ['hidden', 'hidden', 'important']);
-    await command(page, 'remove-trigger');
-    await closedLayer(page, 'p2');
-    await statistic(page, 'p2Changes', 1);
-    await page.locator('#dismiss-confirm').click();
-    await statistic(page, 'toastHost', 'modal-host');
+    await command(page, 'abort-admission');
+    await closedLayer(page, 'dialog', ':modal');
+    await statistic(page, 'guard', 1);
+    await statistic(page, 'reason', 'lost');
+    await statistic(page, 'projection', 0);
     assert.deepEqual(await lock(page), ['clip', 'auto', 'important']);
-    assert.equal(await page.locator('#p1:popover-open').getAttribute('popover'), 'auto');
-    await statistic(page, 'p2Changes', 1);
-  },
 
-  'aborted and synchronously disposed admissions roll back all leased layers': async ({
-    page,
-    mount,
-  }) => {
-    for (const abort of ['abort-admission', 'dispose-on-admission']) {
-      await mount('overlay');
-      await command(page, 'open-a', 'open-manual', 'open-b', abort);
-      await closedLayer(page, 'dialog', ':modal');
-      assert.deepEqual(await layerOrder(page), ['p2', 'manual', 'p1']);
-      assert.equal(await page.locator('#p2').getAttribute('popover'), 'auto');
-      await statistic(page, 'p2Changes', 0);
-      await statistic(page, 'projection', 0);
-      assert.deepEqual(await lock(page), ['clip', 'auto', 'important']);
-    }
+    await mount('overlay');
+    await command(page, 'dispose-on-admission');
+    await closedLayer(page, 'dialog', ':modal');
+    await statistic(page, 'guard', 0);
+    await statistic(page, 'projection', 0);
+    assert.deepEqual(await lock(page), ['clip', 'auto', 'important']);
   },
 
   'reentrant native show records the newly admitted layer above the layer that focused it': async ({
@@ -348,182 +522,163 @@ export default {
     await statistic(page, 'reason', 'lost');
   },
 
-  'background wheel is locked while the active dialog scrolls': async ({ page, mount }) => {
-    await mount('overlay');
-    await page.evaluate(() => window.scrollTo(0, 420));
-    await command(page, 'open-dialog');
-    await page.mouse.move(5, 300);
-    await page.mouse.wheel(0, 320);
-    const dialog = await getBox(page.locator('#dialog'));
-    await page.mouse.move(dialog.x + dialog.width / 2, dialog.y + dialog.height / 2);
-    await page.mouse.wheel(0, 450);
-    await page.waitForFunction(() => document.querySelector('#dialog').scrollTop > 0);
-    assert.equal(await page.evaluate(() => window.scrollY), 420);
-    await command(page, 'close-dialog');
-    assert.equal(await page.evaluate(() => window.scrollY), 420);
-    await page.mouse.move(5, 300);
-    await page.mouse.wheel(0, 300);
-    await page.waitForFunction(() => window.scrollY > 420);
-  },
-
-  'positioned top-layer panels escape clipping and align to their anchors in LTR and RTL': async ({
-    page,
-    mount,
-  }) => {
-    for (const direction of ['ltr', 'rtl']) {
-      await mount('overlay', { direction });
-      await command(page, 'open-positioned');
-      const floating = page.locator('#positioned');
-      await page.waitForFunction(
-        () =>
-          document.querySelector('#positioned').style.getPropertyValue('--anchor-width') === '80px',
-      );
-      const anchor = await getBox(page.locator('#anchor'));
-      const box = await getBox(floating);
-      const aligned =
-        direction === 'ltr' ? box.x - anchor.x : box.x + box.width - anchor.x - anchor.width;
-      assert.ok(Math.abs(aligned) <= 1, `logical alignment in ${direction}`);
-      assert.equal(await floating.getAttribute('data-surface'), 'overlay');
-      assert.ok(box.y >= anchor.y + anchor.height + 5);
-      const action = page.locator('#positioned-action');
-      const actionBox = await getBox(action);
-      const clip = await getBox(page.locator('#clip'));
-      assert.ok(actionBox.y + actionBox.height > clip.y + clip.height);
-      const point = { x: actionBox.x + actionBox.width / 2, y: actionBox.y + actionBox.height - 2 };
-      await assertHitTarget(action, point);
-      await page.mouse.click(point.x, point.y);
-      await statistic(page, 'positionedClicks', 1);
-
-      const opposite = direction === 'ltr' ? 'rtl' : 'ltr';
-      const assertAlignment = async (dir) => {
-        const left = dir === 'ltr' ? anchor.x : anchor.x + anchor.width - box.width;
-        await page.waitForFunction(
-          (expected) =>
-            Math.abs(
-              document.querySelector('#positioned').getBoundingClientRect().left - expected,
-            ) <= 1,
-          left,
-        );
-        assert.deepEqual(await getBox(page.locator('#anchor')), anchor);
-      };
-      for (const dir of [opposite, direction]) {
-        await page.locator('html').evaluate((html, dir) => {
-          html.dir = dir;
-        }, dir);
-        await assertAlignment(dir);
-      }
-
-      await page.locator('#clip').evaluate((clip, dir) => {
-        const scope = clip.appendChild(document.createElement('div'));
-        scope.dir = dir === 'ltr' ? 'rtl' : 'ltr';
-        scope.style.cssText = 'position:absolute;inset:0';
-        scope.moveBefore(clip.querySelector('#anchor'), null);
-      }, direction);
-      await assertAlignment(opposite);
-
-      await page.locator('#clip').evaluate((clip, dir) => {
-        const host = clip.appendChild(document.createElement('div'));
-        host.id = 'slotted-anchor-host';
-        host.style.cssText = 'position:absolute;inset:0';
-        const shadow = host.attachShadow({ mode: 'open' });
-        for (const name of ['ltr', 'rtl']) {
-          const scope = shadow.appendChild(document.createElement('div'));
-          scope.style.cssText = 'position:absolute;inset:0';
-          scope.dir = name;
-          scope.appendChild(document.createElement('slot')).name = name;
-        }
-        const anchor = clip.querySelector('#anchor');
-        anchor.slot = dir;
-        host.moveBefore(anchor, null);
-      }, direction);
-      await assertAlignment(direction);
-      await page.locator('#anchor').evaluate((anchor, dir) => {
-        anchor.slot = dir;
-      }, opposite);
-      await assertAlignment(opposite);
-      await page.locator('#clip').evaluate((clip) => {
-        const anchor = clip.querySelector('#anchor');
-        clip.moveBefore(anchor, null);
-        anchor.removeAttribute('slot');
-        clip.querySelector('#slotted-anchor-host').remove();
-      });
-      await assertAlignment(direction);
-
-      await page.locator('#clip').evaluate((clip, opposite) => {
-        const host = clip.appendChild(document.createElement('div'));
-        host.id = 'direct-anchor-host';
-        host.style.cssText = 'position:absolute;inset:0';
-        const shadow = host.attachShadow({ mode: 'open' });
-        const scope = shadow.appendChild(document.createElement('div'));
-        scope.dir = opposite;
-        scope.style.cssText = 'position:absolute;inset:0';
-        shadow.moveBefore(clip.querySelector('#anchor'), scope);
-      }, opposite);
-      await assertAlignment(direction);
-      await page.evaluate(async () => {
-        const nextFrame = () => new Promise((resolve) => requestAnimationFrame(resolve));
-        await nextFrame();
-        await nextFrame();
-      });
-      await page.locator('#direct-anchor-host').evaluate((host) => {
-        const root = host.shadowRoot;
-        root.querySelector('div').moveBefore(root.querySelector('#anchor'), null);
-      });
-      await assertAlignment(opposite);
-      await page.locator('#direct-anchor-host').evaluate((host, direction) => {
-        host.shadowRoot.querySelector('div').dir = direction;
-      }, direction);
-      await assertAlignment(direction);
-      await page.locator('#clip').evaluate((clip) => {
-        const host = clip.querySelector('#direct-anchor-host');
-        clip.moveBefore(host.shadowRoot.querySelector('#anchor'), null);
-        host.remove();
-      });
-
-      const originalClip = await page.locator('#clip').evaluate((clip, dir) => {
-        const style = clip.style.cssText;
-        clip.style.cssText += `top:562px;left:${dir === 'ltr' ? 710 : 4}px;width:120px`;
-        clip.querySelector('#anchor').style.width = '64px';
-        return style;
-      }, direction);
-      await page.waitForFunction(
-        () =>
-          document.querySelector('#positioned').style.getPropertyValue('--anchor-width') === '64px',
-      );
-      const flipped = await getBox(floating);
-      assert.ok(flipped.y + flipped.height < (await getBox(page.locator('#anchor'))).y);
-      assert.ok(flipped.x >= 0 && flipped.x + flipped.width <= 800);
-      assert.ok(
-        await floating.evaluate(
-          (element) => parseFloat(element.style.getPropertyValue('--overlay-available-height')) > 0,
-        ),
-      );
-
-      await page.locator('#clip').evaluate((clip, style) => {
-        clip.style.cssText = style;
-      }, originalClip);
-      await command(page, 'replace-anchor');
-      await page.waitForFunction(
-        () =>
-          document.querySelector('#positioned').style.getPropertyValue('--anchor-width') ===
-          '100px',
-      );
-      const newAnchor = await getBox(page.locator('#anchor2'));
-      const moved = await getBox(floating);
-      const gap =
-        direction === 'ltr'
-          ? moved.x - newAnchor.x - newAnchor.width
-          : newAnchor.x - moved.x - moved.width;
-      assert.ok(Math.abs(gap - 8) <= 1, `logical inline end in ${direction}`);
-      await command(page, 'close-positioned');
-      await closedLayer(page, 'positioned');
-      assert.equal(await floating.getAttribute('data-surface'), null);
+  'background wheel is locked while dialog scrolls, and shorthand overflow + scroll position behave':
+    async ({ page, mount }) => {
+      await mount('overlay');
+      await page.evaluate(() => window.scrollTo(0, 420));
+      await command(page, 'open-dialog');
+      await page.mouse.move(5, 300);
+      await page.mouse.wheel(0, 320);
+      const dialog = await getBox(page.locator('#dialog'));
+      await page.mouse.move(dialog.x + dialog.width / 2, dialog.y + dialog.height / 2);
+      await page.mouse.wheel(0, 450);
+      await page.waitForFunction(() => document.querySelector('#dialog').scrollTop > 0);
+      assert.equal(await page.evaluate(() => window.scrollY), 420);
+      await command(page, 'close-dialog');
+      assert.equal(await page.evaluate(() => window.scrollY), 420);
       assert.equal(
-        await floating.evaluate((element) => element.style.getPropertyValue('--anchor-width')),
+        await page.evaluate(() =>
+          document.documentElement.style.getPropertyValue('padding-inline-end'),
+        ),
         '',
       );
-    }
-  },
+      await page.mouse.move(5, 300);
+      await page.mouse.wheel(0, 300);
+      await page.waitForFunction(() => window.scrollY > 420);
+
+      // Shorthand overflow restoration and preserving intentional scroll changes during modal.
+      await command(page, 'set-shorthand-overflow', 'open-dialog');
+      await page.evaluate(() => window.scrollTo({ top: 100, behavior: 'instant' }));
+      await command(page, 'close-dialog');
+      assert.equal(await page.evaluate(() => window.scrollY), 100);
+      assert.deepEqual(await lock(page), ['scroll', 'scroll', 'important']);
+    },
+
+  'positioned top-layer panels escape clipping, size in one pass, and align in LTR and RTL':
+    async ({ page, mount }) => {
+      for (const direction of ['ltr', 'rtl']) {
+        await mount('overlay', { direction });
+        await command(page, 'open-positioned');
+        const floating = page.locator('#positioned');
+        await page.waitForFunction(
+          () =>
+            document.querySelector('#positioned').style.getPropertyValue('--anchor-width') ===
+            '80px',
+        );
+        const anchor = await getBox(page.locator('#anchor'));
+        const box = await getBox(floating);
+        const aligned =
+          direction === 'ltr' ? box.x - anchor.x : box.x + box.width - anchor.x - anchor.width;
+        assert.ok(Math.abs(aligned) <= 1, `logical alignment in ${direction}`);
+        assert.equal(await floating.getAttribute('data-surface'), 'overlay');
+        assert.equal(await floating.getAttribute('data-side'), 'bottom');
+        assert.equal(await floating.getAttribute('data-align'), 'start');
+        assert.ok(
+          await floating.evaluate(
+            (el) => parseFloat(el.style.getPropertyValue('--overlay-available-width')) > 0,
+          ),
+        );
+        assert.ok(box.y >= anchor.y + anchor.height + 5);
+        const action = page.locator('#positioned-action');
+        const actionBox = await getBox(action);
+        const clip = await getBox(page.locator('#clip'));
+        assert.ok(actionBox.y + actionBox.height > clip.y + clip.height);
+        const point = {
+          x: actionBox.x + actionBox.width / 2,
+          y: actionBox.y + actionBox.height - 2,
+        };
+        await assertHitTarget(action, point);
+        await page.mouse.click(point.x, point.y);
+        await statistic(page, 'positionedClicks', 1);
+
+        const opposite = direction === 'ltr' ? 'rtl' : 'ltr';
+        const assertAlignment = async (dir) => {
+          const left = dir === 'ltr' ? anchor.x : anchor.x + anchor.width - box.width;
+          await page.waitForFunction(
+            (expected) =>
+              Math.abs(
+                document.querySelector('#positioned').getBoundingClientRect().left - expected,
+              ) <= 1,
+            left,
+          );
+          assert.deepEqual(await getBox(page.locator('#anchor')), anchor);
+        };
+        for (const dir of [opposite, direction]) {
+          await page.locator('html').evaluate((html, dir) => {
+            html.dir = dir;
+          }, dir);
+          await assertAlignment(dir);
+        }
+
+        // Constrained top placement with padding sizes and positions cleanly without clipping.
+        await command(page, 'close-positioned', 'open-positioned-top-padded');
+        await page.waitForFunction(
+          () => document.querySelector('#positioned').getAttribute('data-side') === 'top',
+        );
+        const constrained = await getBox(floating);
+        assert.ok(constrained.y >= 15, `top padding respected (${constrained.y})`);
+        assert.ok(
+          Math.abs(constrained.y + constrained.height - (anchor.y - 8)) <= 2,
+          'constrained top panel sits directly above anchor',
+        );
+
+        await command(page, 'close-positioned', 'open-positioned');
+        const originalClip = await page.locator('#clip').evaluate((clip, dir) => {
+          const style = clip.style.cssText;
+          clip.style.cssText += `top:562px;left:${dir === 'ltr' ? 710 : 4}px;width:120px`;
+          clip.querySelector('#anchor').style.width = '64px';
+          return style;
+        }, direction);
+        await page.waitForFunction(
+          () =>
+            document.querySelector('#positioned').style.getPropertyValue('--anchor-width') ===
+            '64px',
+        );
+        const flipped = await getBox(floating);
+        assert.ok(flipped.y + flipped.height < (await getBox(page.locator('#anchor'))).y);
+        assert.equal(await floating.getAttribute('data-side'), 'top');
+        assert.ok(flipped.x >= 0 && flipped.x + flipped.width <= 800);
+        assert.ok(
+          await floating.evaluate(
+            (element) =>
+              parseFloat(element.style.getPropertyValue('--overlay-available-height')) > 0,
+          ),
+        );
+
+        await page.locator('#clip').evaluate((clip, style) => {
+          clip.style.cssText = style;
+        }, originalClip);
+        await command(page, 'replace-anchor');
+        await page.waitForFunction(
+          () =>
+            document.querySelector('#positioned').style.getPropertyValue('--anchor-width') ===
+            '100px',
+        );
+        const newAnchor = await getBox(page.locator('#anchor2'));
+        const moved = await getBox(floating);
+        assert.equal(await floating.getAttribute('data-side'), 'end');
+        const gap =
+          direction === 'ltr'
+            ? moved.x - newAnchor.x - newAnchor.width
+            : newAnchor.x - moved.x - moved.width;
+        assert.ok(Math.abs(gap - 8) <= 1, `logical inline end in ${direction}`);
+        await command(page, 'close-positioned');
+        await closedLayer(page, 'positioned');
+        assert.equal(await floating.getAttribute('data-surface'), null);
+        assert.equal(await floating.getAttribute('data-side'), null);
+        assert.equal(await floating.getAttribute('data-align'), null);
+        assert.equal(
+          await floating.evaluate((element) => element.style.getPropertyValue('--anchor-width')),
+          '',
+        );
+        assert.equal(
+          await floating.evaluate((element) =>
+            element.style.getPropertyValue('--overlay-available-width'),
+          ),
+          '',
+        );
+      }
+    },
 
   'an in-place anchored panel stays interactive inside a native modal': async ({ page, mount }) => {
     await mount('overlay');

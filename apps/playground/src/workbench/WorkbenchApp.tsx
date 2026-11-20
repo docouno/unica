@@ -14,6 +14,7 @@ import {
 import type { CSSProperties, MouseEvent, ReactElement, ReactNode, RefObject } from 'react';
 import { Inspector } from './Inspector.js';
 import { SettingsProvider } from './ViewSettings.js';
+import { useSubjectBounds } from './subjectBounds.js';
 import {
   patchRoute,
   readRoute,
@@ -570,10 +571,21 @@ function Artboard({
   readonly renderArtboard: WorkbenchConfig['renderArtboard'];
   readonly children: ReactNode;
 }): ReactElement {
+  const artboardRef = useRef<HTMLDivElement>(null);
   const [host, setHost] = useState<HTMLDivElement | null>(null);
+  const attachArtboard = useCallback(
+    (node: HTMLDivElement | null): void => {
+      artboardRef.current = node;
+      if (renderArtboard) {
+        setHost(node);
+      }
+    },
+    [renderArtboard],
+  );
+  useSubjectBounds(artboardRef, !scene && route.bounds, 'portaled');
   return (
     <div
-      ref={renderArtboard && setHost}
+      ref={attachArtboard}
       className="wb-artboard"
       data-theme={theme.id}
       data-color-scheme={theme.colorScheme}

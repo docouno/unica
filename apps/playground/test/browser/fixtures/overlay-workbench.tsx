@@ -1,15 +1,16 @@
 import type { JSX } from 'react';
 import {
   OverlayScene,
+  PortaledDialogFormProbe,
   PortalProbe,
   ToastQueue,
 } from '../../../../../packages/ui/test/browser/overlay-workbench.fixture.js';
-import { unicaWorkbench } from '../../../src/unica.workbench.js';
+import { unicaWorkbenchBase } from '../../../src/unica.workbench.shared.js';
 import { WorkbenchApp } from '../../../src/workbench/WorkbenchApp.js';
 import { defineComponent, defineScene } from '../../../src/workbench/types.js';
 
 const config = {
-  ...unicaWorkbench,
+  ...unicaWorkbenchBase,
   components: [
     defineComponent({
       id: 'portal-probe',
@@ -27,6 +28,15 @@ const config = {
           render: PortalProbe,
         },
       ],
+    }),
+    defineComponent({
+      id: 'portal-dialog-probe',
+      title: 'Portal dialog probe',
+      category: 'Overlays',
+      status: 'UI',
+      form: 'owned',
+      props: {},
+      render: ({ ctx }) => <PortaledDialogFormProbe subject={ctx.subject} form={ctx.form} />,
     }),
   ],
   scenes: [

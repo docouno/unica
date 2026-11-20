@@ -1,19 +1,46 @@
 import { autoUpdate, computePosition, flip, offset, platform, shift, size } from '@floating-ui/dom';
 import type { Placement } from '@floating-ui/dom';
-import { composedAncestors, isShadowRoot, shadowRootsOf, watchSlotAssignments } from './dom.js';
+import {
+  composedAncestors,
+  getAttr,
+  isConnectedNode,
+  matchesSelector,
+  ownerDocumentOf,
+  removeAttr,
+  setAttr,
+} from './dom.js';
 
-type Side = 'top' | 'bottom' | 'start' | 'end';
-type Align = 'start' | 'center' | 'end';
+export type Side = 'top' | 'bottom' | 'start' | 'end';
+export type Align = 'start' | 'center' | 'end';
 
-interface AnchoredOverlay {
+export interface AnchoredOverlay {
   readonly anchor: HTMLElement;
   readonly floating: HTMLElement;
   readonly side: Side;
   readonly align: Align;
   readonly gap: number;
+  readonly padding?: number | undefined;
 }
 
 const updates = new WeakMap<HTMLElement, () => void>();
+
+function restoreAttribute(element: Element, name: string, value: string | null): void {
+  if (value === null) {
+    removeAttr(element, name);
+  } else {
+    setAttr(element, name, value);
+  }
+}
+
+function logicalSide(physical: string, rtl: boolean): Side {
+  if (physical === 'left') {
+    return rtl ? 'end' : 'start';
+  }
+  if (physical === 'right') {
+    return rtl ? 'start' : 'end';
+  }
+  return physical === 'top' ? 'top' : 'bottom';
+}
 
 /** Bind an already open, in-place popover to its anchor. */
 export function positionOverlay({
@@ -22,9 +49,13 @@ export function positionOverlay({
   side,
   align,
   gap,
+  padding = 0,
 }: AnchoredOverlay): () => void {
   updates.get(floating)?.();
-  const document = anchor.ownerDocument;
+  const document = ownerDocumentOf(anchor);
+  if (!document || ownerDocumentOf(floating) !== document) {
+    return () => {};
+  }
   const view = document.defaultView;
   if (!view) {
     return () => {};
@@ -39,14 +70,17 @@ export function positionOverlay({
     ...(style.getPropertyValue('inset') ? ['inset'] : inset),
     '--anchor-width',
     '--overlay-available-height',
+    '--overlay-available-width',
   ];
   const original = properties.map((property) => ({
     property,
     value: style.getPropertyValue(property),
     priority: style.getPropertyPriority(property),
   }));
-  const surface = floating.getAttribute('data-surface');
-  floating.dataset.surface = 'overlay';
+  const previousSurface = getAttr(floating, 'data-surface');
+  const previousSide = getAttr(floating, 'data-side');
+  const previousAlign = getAttr(floating, 'data-align');
+  setAttr(floating, 'data-surface', 'overlay');
   style.position = 'fixed';
   style.margin = '0';
   style.inset = '0 auto auto 0';
@@ -54,14 +88,28 @@ export function positionOverlay({
   let active = true;
   let revision = 0;
   let lastRTL: boolean | undefined;
+  let lastX: number | undefined;
+  let lastY: number | undefined;
+  let lastAnchorWidth: number | undefined;
+  let lastAvailableHeight: number | undefined;
+  let lastAvailableWidth: number | undefined;
+  let lastResolvedSide: Side | undefined;
+  let lastResolvedAlign: Align | undefined;
+
   const isRTL = (): boolean => view.getComputedStyle(anchor).direction === 'rtl';
   const isLive = (): boolean =>
     active &&
-    anchor.isConnected &&
-    floating.isConnected &&
-    anchor.ownerDocument === document &&
-    floating.ownerDocument === document &&
-    floating.matches(':popover-open');
+    document.defaultView === view &&
+    isConnectedNode(anchor) &&
+    isConnectedNode(floating) &&
+    ownerDocumentOf(anchor) === document &&
+    ownerDocumentOf(floating) === document &&
+    matchesSelector(floating, ':popover-open');
+
+  const offsetMiddleware = offset(gap);
+  const flipMiddleware = flip({ padding });
+  const shiftMiddleware = shift({ padding });
+
   const update = (): void => {
     const current = ++revision;
     const valid = (): boolean => current === revision && isLive();
@@ -82,31 +130,62 @@ export function positionOverlay({
           : side;
     const placement: Placement = align === 'center' ? physical : `${physical}-${align}`;
 
-    let availableHeight = 0;
-    let anchorWidth = 0;
     void computePosition(anchor, floating, {
       placement,
       strategy: 'fixed',
       // A local direction override on the floating surface must not flip the anchor's alignment.
       platform: { ...platform, isRTL: () => rtl },
       middleware: [
-        offset(gap),
-        flip(),
-        shift(),
+        offsetMiddleware,
+        flipMiddleware,
+        shiftMiddleware,
         size({
-          apply({ availableHeight: height, rects }) {
-            availableHeight = Math.max(0, height);
-            anchorWidth = rects.reference.width;
+          padding,
+          apply({ availableWidth, availableHeight, rects }) {
+            if (!valid()) {
+              return;
+            }
+            const nextWidth = rects.reference.width;
+            const nextAvailHeight = Math.max(0, availableHeight);
+            const nextAvailWidth = Math.max(0, availableWidth);
+            if (nextWidth !== lastAnchorWidth) {
+              lastAnchorWidth = nextWidth;
+              style.setProperty('--anchor-width', `${nextWidth}px`);
+            }
+            if (nextAvailHeight !== lastAvailableHeight) {
+              lastAvailableHeight = nextAvailHeight;
+              style.setProperty('--overlay-available-height', `${nextAvailHeight}px`);
+            }
+            if (nextAvailWidth !== lastAvailableWidth) {
+              lastAvailableWidth = nextAvailWidth;
+              style.setProperty('--overlay-available-width', `${nextAvailWidth}px`);
+            }
           },
         }),
       ],
     }).then(
-      ({ x, y }) => {
-        if (valid()) {
+      ({ x, y, placement: resolved }) => {
+        if (!valid()) {
+          return;
+        }
+        if (x !== lastX) {
+          lastX = x;
           style.left = `${x}px`;
+        }
+        if (y !== lastY) {
+          lastY = y;
           style.top = `${y}px`;
-          style.setProperty('--anchor-width', `${anchorWidth}px`);
-          style.setProperty('--overlay-available-height', `${availableHeight}px`);
+        }
+        const [rawSide = 'bottom', rawAlign] = resolved.split('-');
+        const nextSide = logicalSide(rawSide, rtl);
+        const nextAlign: Align = rawAlign === 'start' || rawAlign === 'end' ? rawAlign : 'center';
+        if (nextSide !== lastResolvedSide) {
+          lastResolvedSide = nextSide;
+          setAttr(floating, 'data-side', nextSide);
+        }
+        if (nextAlign !== lastResolvedAlign) {
+          lastResolvedAlign = nextAlign;
+          setAttr(floating, 'data-align', nextAlign);
         }
       },
       (error: unknown) => {
@@ -117,57 +196,15 @@ export function positionOverlay({
     );
   };
 
-  let stop = autoUpdate(anchor, floating, update);
-  let ancestry: Set<Node>;
-  let stopSlotChanges: (() => void) | undefined;
-  const rebind = (): void => {
-    watchAncestry();
-    stop();
-    stop = autoUpdate(anchor, floating, update);
-  };
-  const onSlotChange = (): void => {
-    if (!isLive()) {
-      return;
-    }
-    const current = Array.from(composedAncestors(anchor));
-    if (current.length !== ancestry.size || current.some((node) => !ancestry.has(node))) {
-      rebind();
-    }
-  };
-  const direction = new view.MutationObserver((records) => {
-    if (!isLive()) {
-      return;
-    }
-    const moved = records.some((record) =>
-      Array.from(record.removedNodes).some((node) => ancestry.has(node)),
-    );
-    if (moved) {
-      rebind();
-    } else if (isRTL() !== lastRTL) {
-      // A cascade change can move the logical edge without changing either box.
+  const stop = autoUpdate(anchor, floating, update);
+  const direction = new view.MutationObserver(() => {
+    if (isLive() && isRTL() !== lastRTL) {
       update();
     }
   });
-  const watchAncestry = (): void => {
-    direction.disconnect();
-    stopSlotChanges?.();
-    const current = Array.from(composedAncestors(anchor));
-    ancestry = new Set(current);
-    stopSlotChanges = watchSlotAssignments(shadowRootsOf(current), onSlotChange);
-    for (const ancestor of ancestry) {
-      direction.observe(ancestor, {
-        attributes: true,
-        attributeFilter: ['dir', 'class', 'style'],
-        childList: true,
-      });
-      const parent = ancestor.parentNode;
-      if (isShadowRoot(parent)) {
-        // Removing a direct shadow child is reported on the ShadowRoot.
-        direction.observe(parent, { childList: true });
-      }
-    }
-  };
-  watchAncestry();
+  for (const ancestor of composedAncestors(anchor)) {
+    direction.observe(ancestor, { attributes: true, attributeFilter: ['dir'] });
+  }
 
   const cleanup = (): void => {
     if (!active) {
@@ -176,18 +213,15 @@ export function positionOverlay({
     active = false;
     stop();
     direction.disconnect();
-    stopSlotChanges?.();
     updates.delete(floating);
     style.removeProperty('inset');
     style.removeProperty('margin');
     for (const { property, value, priority } of original) {
       style.setProperty(property, value, priority);
     }
-    if (surface === null) {
-      floating.removeAttribute('data-surface');
-    } else {
-      floating.setAttribute('data-surface', surface);
-    }
+    restoreAttribute(floating, 'data-surface', previousSurface);
+    restoreAttribute(floating, 'data-side', previousSide);
+    restoreAttribute(floating, 'data-align', previousAlign);
   };
   updates.set(floating, cleanup);
   return cleanup;

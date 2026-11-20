@@ -1,10 +1,14 @@
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { act, cleanup, render } from '@testing-library/react';
-import { StrictMode, useLayoutEffect } from 'react';
+import { memo, StrictMode, useLayoutEffect } from 'react';
 import { hydrateRoot } from 'react-dom/client';
 import { renderToString } from 'react-dom/server';
 import { afterEach, expect, expectTypeOf, it, vi } from 'vitest';
-import { Portal, PortalProvider, usePortalContainer } from '../src/index.js';
+import { Portal, PortalProvider, UnicaProvider, usePortalContainer } from '../src/index.js';
 import type { PortalProps } from '../src/index.js';
+import { useComponentDefaults } from '../src/core/UnicaProvider.js';
+import { PACKAGE_VERSION } from '../src/core/version.js';
 
 function host() {
   return document.body.appendChild(document.createElement('section'));
@@ -19,13 +23,56 @@ it('has no wrapper-specific props', () => {
   expectTypeOf<Extract<keyof PortalProps, 'ref' | 'asChild'>>().toBeNever();
 });
 
-it('renders into the effective host without wrappers and preserves React events', () => {
+it('keeps PACKAGE_VERSION synchronized with packages/ui/package.json', () => {
+  const manifest = JSON.parse(
+    readFileSync(resolve(import.meta.dirname, '../package.json'), 'utf8'),
+  ) as { readonly version: string };
+  expect(PACKAGE_VERSION).toBe(manifest.version);
+});
+
+it('memoizes inline theme literals in UnicaProvider without re-rendering memo consumers', () => {
+  const renders = vi.fn();
+  const Consumer = memo(function Consumer() {
+    const size = useComponentDefaults('Icon', 'size', { builtIn: 'm' });
+    renders(size);
+    return <span>{size}</span>;
+  });
+
+  function Wrapper({ tick }: { readonly tick: number }) {
+    return (
+      <UnicaProvider theme={{ preset: 'frost-dark' }}>
+        <span data-tick={tick} />
+        <Consumer />
+      </UnicaProvider>
+    );
+  }
+
+  const { rerender } = render(<Wrapper tick={1} />);
+  expect(renders).toHaveBeenCalledTimes(1);
+  rerender(<Wrapper tick={2} />);
+  expect(renders).toHaveBeenCalledTimes(1);
+});
+
+it('renders into the effective host without wrappers, switches hosts cleanly, and preserves React events', () => {
   const first = host();
   const second = host();
   const click = vi.fn();
+  let mounts = 0;
+  let unmounts = 0;
+
+  function Tracked() {
+    useLayoutEffect(() => {
+      mounts++;
+      return () => {
+        unmounts++;
+      };
+    }, []);
+    return <button type="button">Click</button>;
+  }
+
   const content = (
     <div>
-      <button type="button">Click</button>
+      <Tracked />
       <Portal>
         <span>Nested</span>
       </Portal>
@@ -42,8 +89,23 @@ it('renders into the effective host without wrappers and preserves React events'
   );
   expect(first.children).toHaveLength(0);
   expect(second.children).toHaveLength(2);
+  expect(mounts).toBe(1);
+  expect(unmounts).toBe(0);
   second.querySelector('button')!.click();
   expect(click).toHaveBeenCalledOnce();
+
+  // Direct host switch A -> B remounts cleanly without leaving a duplicate node.
+  rerender(
+    <PortalProvider container={first}>
+      <div onClick={click}>
+        <Portal container={first}>{content}</Portal>
+      </div>
+    </PortalProvider>,
+  );
+  expect(second.children).toHaveLength(0);
+  expect(first.children).toHaveLength(2);
+  expect(mounts).toBe(2);
+  expect(unmounts).toBe(1);
 
   rerender(
     <PortalProvider container={first}>
@@ -51,6 +113,7 @@ it('renders into the effective host without wrappers and preserves React events'
     </PortalProvider>,
   );
   expect(document.body.querySelector('button')).toBeNull();
+  expect(unmounts).toBe(2);
 
   rerender(
     <PortalProvider container={first}>
