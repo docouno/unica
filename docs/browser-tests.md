@@ -5,7 +5,7 @@ make visual-setup
 make test-browser
 ```
 
-Run `make visual-setup` on a cold checkout or when the pinned environment changes. Preparation can use the network and shares its image and Chromium cache with `make visual`. Each `make test-browser` run uses the local image and cache with external networking disabled. Vite serves current UI source and CSS over container loopback. The run requires neither a Workbench server nor a build of `packages/ui`; `make test` still runs the regular Vitest suites.
+Run `make visual-setup` on a cold checkout, when the pinned environment changes, or when the browser cache needs repair. Preparation can use the network and shares its image and Chromium cache with `make visual`. Each `make test-browser` run loads the local dependencies and starts Chromium in the same container with external networking and image pulls disabled. Vite serves current UI source and CSS over container loopback. The run requires neither a Workbench server nor a build of `packages/ui`. Use `make test` for the regular Vitest suites.
 
 Each scenario gets a fresh Playwright browser context. The runner reports scenario names and errors and returns a failing status to Make when a test fails.
 
@@ -27,4 +27,6 @@ export default {
 };
 ```
 
-`mount` selects a fixture by filename and accepts a `theme` preset, `surface` (`base` or `overlay`), `textScale` (100 or 120), `direction` (`ltr` or `rtl`), and Playwright `forcedColors` and `reducedMotion` values. The defaults are Soft Dark, Base, 100%, LTR, and ordinary media modes. The helpers also expose viewport hit-testing, bounding boxes with an optional tolerance, and native form submission and reset. `submitForm` captures ordered FormData entries on the native form's `submit` event and cancels navigation. Entries include repeated names, the clicked submitter, and file metadata. See the [native scenarios](../apps/playground/test/browser/suites/native.browser.mjs) for complete examples.
+`mount` selects a fixture by filename and accepts a `theme` preset, `surface` (`base` or `overlay`), `textScale` (100 or 120), `direction` (`ltr` or `rtl`), and Playwright `forcedColors` and `reducedMotion` values. The defaults are Soft Dark, Base, 100%, LTR, and ordinary media modes. The environment applies to the whole fixture document, including portals mounted in `document.body`.
+
+The helpers expose viewport hit-testing, bounding boxes with an optional tolerance, and native form submission and reset. `submitForm` captures ordered FormData entries on the native form's `submit` event and cancels navigation. Entries include repeated names, the clicked submitter, and file metadata. See the [native scenarios](../apps/playground/test/browser/suites/native.browser.mjs) for complete examples.

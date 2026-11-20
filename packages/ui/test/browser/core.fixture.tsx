@@ -20,14 +20,18 @@ export default function CoreFixture(): JSX.Element {
       }),
     );
 
-    let samples = 0;
+    let measurements = 0;
     const proximity = subscribePointerProximity(target, {
-      measure:
-        ({ x, y }) =>
-        () => {
+      measure: ({ x, y }) => {
+        const count = ++measurements;
+        // Observe delivery without writing to the DOM during the measurement phase.
+        queueMicrotask(() => {
+          target.dataset.measurements = String(count);
+        });
+        return () => {
           target.dataset.position = `${x},${y}`;
-          target.dataset.samples = String(++samples);
-        },
+        };
+      },
       reset: () => {
         target.dataset.position = 'none';
       },
@@ -51,7 +55,7 @@ export default function CoreFixture(): JSX.Element {
         ref={pointer}
         data-testid="pointer"
         data-position="none"
-        data-samples="0"
+        data-measurements="0"
         style={{ width: 180, height: 100 }}
       />
     </>

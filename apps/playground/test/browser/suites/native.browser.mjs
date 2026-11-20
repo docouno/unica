@@ -3,6 +3,7 @@ import {
   assertBox,
   assertFocused,
   assertHitTarget,
+  getBox,
   pressKeys,
   resetForm,
   submitForm,
@@ -32,17 +33,25 @@ export default {
     mount,
   }) => {
     const probe = page.getByTestId('context');
+    const portal = page.getByTestId('portal-context');
     await mount('native');
     const base = await readContext(probe);
     assert.equal(base.direction, 'ltr');
     assert.equal(base.background, 'rgb(26, 32, 38)');
+    assert.deepEqual(await readContext(portal), base);
 
-    await mount('native', { surface: 'overlay', textScale: 120, direction: 'rtl' });
+    await mount('native', {
+      theme: 'frost-dark',
+      surface: 'overlay',
+      textScale: 120,
+      direction: 'rtl',
+    });
     const overlay = await readContext(probe);
-    assert.equal(overlay.background, 'rgb(31, 39, 46)');
+    assert.equal(overlay.background, 'rgba(255, 255, 255, 0.04)');
     assert.equal(overlay.direction, 'rtl');
     assert.ok(base.fontSize > 0);
     assert.ok(Math.abs(overlay.fontSize / base.fontSize - 1.2) < 0.001);
+    assert.deepEqual(await readContext(portal), overlay);
 
     await mount('native', { forcedColors: 'active', reducedMotion: 'reduce' });
     assert.deepEqual(
@@ -59,7 +68,7 @@ export default {
     mount,
   }) => {
     await mount('native');
-    const first = page.getByRole('button', { name: 'First stop' });
+    const first = page.getByRole('button', { name: 'First stop', includeHidden: true });
     const firstChoice = page.getByRole('radio', { name: 'First choice' });
     const secondChoice = page.getByRole('radio', { name: 'Second choice' });
     await pressKeys(page, 'Tab');
@@ -76,13 +85,22 @@ export default {
     const box = await assertBox(background, { width: 127.5, height: 40 }, { tolerance: 0.05 });
     const point = { x: box.x + box.width / 2, y: box.y + box.height / 2 };
     await assertHitTarget(background, point);
+    const firstBox = await getBox(first);
+    const outside = { x: firstBox.x + firstBox.width / 2, y: firstBox.y + firstBox.height / 2 };
+    await assertHitTarget(first, outside);
 
     const open = page.getByRole('button', { name: 'Open dialog' });
     await open.click();
     const dialog = page.getByRole('dialog');
-    await assertFocused(dialog.getByRole('button', { name: 'Dialog action' }));
+    const action = dialog.getByRole('button', { name: 'Dialog action' });
+    await assertFocused(action);
+    assert.equal(await dialog.evaluate((element) => element.matches(':modal')), true);
+    assert.ok(outside.x < (await getBox(dialog)).x, 'Background button is outside the dialog');
+    await first.evaluate((element) => element.focus());
+    await assertFocused(action);
     await assertHitTarget(dialog, point);
     await page.mouse.click(point.x, point.y);
+    await page.mouse.click(outside.x, outside.y);
     const clicks = page.getByTestId('background-clicks');
     assert.equal(await clicks.textContent(), '0');
 
@@ -91,7 +109,9 @@ export default {
     await assertFocused(open);
     await assertHitTarget(background, point);
     await page.mouse.click(point.x, point.y);
-    assert.equal(await clicks.textContent(), '1');
+    await assertHitTarget(first, outside);
+    await page.mouse.click(outside.x, outside.y);
+    assert.equal(await clicks.textContent(), '2');
   },
 
   'Captures named native form entries and restores default values on reset': async ({

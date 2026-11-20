@@ -43,15 +43,15 @@ export default {
     const y = Math.round(box.y + box.height / 2);
     await page.mouse.move(x, y);
     await page.locator(`[data-testid="pointer"][data-position="${x},${y}"]`).waitFor();
-    const samples = await target.getAttribute('data-samples');
-    assert.ok(Number(samples) > 0);
+    const measurements = await target.getAttribute('data-measurements');
+    assert.ok(Number(measurements) > 0);
 
     await page.emulateMedia({ reducedMotion: 'reduce' });
     await page.locator('[data-testid="pointer"][data-position="none"]').waitFor();
     await page.mouse.move(x + 10, y);
     await waitForFrames(page);
     assert.equal(await target.getAttribute('data-position'), 'none');
-    assert.equal(await target.getAttribute('data-samples'), samples);
+    assert.equal(await target.getAttribute('data-measurements'), measurements);
 
     await page.emulateMedia({ reducedMotion: 'no-preference' });
     await page.waitForFunction(() => matchMedia('(prefers-reduced-motion: no-preference)').matches);
@@ -59,6 +59,6 @@ export default {
     await waitForFrames(page);
     await page.mouse.move(x + 20, y);
     await page.locator(`[data-testid="pointer"][data-position="${x + 20},${y}"]`).waitFor();
-    assert.ok(Number(await target.getAttribute('data-samples')) > Number(samples));
+    assert.ok(Number(await target.getAttribute('data-measurements')) > Number(measurements));
   },
 };

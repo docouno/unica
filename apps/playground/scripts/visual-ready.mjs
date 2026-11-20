@@ -16,8 +16,7 @@ const requiredSpecifiers = [
 
 try {
   for (const specifier of requiredSpecifiers) {
-    const resolvedPath = realpathSync(fileURLToPath(import.meta.resolve(specifier)));
-    accessSync(resolvedPath, constants.R_OK);
+    await import(specifier);
   }
 
   const playwrightCliPath = realpathSync(resolve(appRoot, 'node_modules/playwright-core/cli.js'));

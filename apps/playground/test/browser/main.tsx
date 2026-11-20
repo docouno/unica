@@ -16,21 +16,20 @@ if (!preset) {
   throw new Error(`Unknown theme preset: ${params.get('theme')}`);
 }
 
-const Fixture = await loadFixture();
+const { documentElement } = document;
+documentElement.dataset.theme = preset;
+documentElement.dataset.surface = params.get('surface') ?? 'base';
+documentElement.dataset.textScale = params.get('textScale') ?? '100';
+documentElement.dir = params.get('direction') ?? 'ltr';
 
+const Fixture = await loadFixture();
 const root = document.getElementById('root');
 if (!root) {
   throw new Error('Browser fixture root is missing');
 }
 createRoot(root).render(
   <UnicaProvider theme={{ preset }}>
-    <main
-      data-browser-ready=""
-      data-theme={preset}
-      data-surface={params.get('surface')}
-      data-text-scale={params.get('textScale')}
-      dir={params.get('direction') ?? undefined}
-    >
+    <main data-browser-ready="">
       <Fixture />
     </main>
   </UnicaProvider>,
