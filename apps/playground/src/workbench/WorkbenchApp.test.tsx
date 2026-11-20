@@ -213,6 +213,42 @@ it('keeps dark and light together and preserves the same artboard when isolating
   expect(pair.hasAttribute('data-wb-pair')).toBe(false);
 });
 
+it('preserves inspected matrix rows on isolation and bounds work when the selection expands', () => {
+  const sample = vi.fn(() => <input aria-label="Cell value" />);
+  const axis = (count: number) => ({
+    kind: 'enum' as const,
+    group: 'Geometry',
+    description: 'Coordinate.',
+    choices: Array.from({ length: count }, (_, i) => ({ value: String(i) })),
+    default: '0',
+  });
+  const matrix = defineComponent({
+    ...field,
+    props: { row: axis(4), col: axis(3) },
+    matrixViews: [{ id: 'basic', title: 'Basic', rows: 'row', cols: 'col' }],
+    render: sample,
+  });
+  window.history.replaceState(null, '', '/?item=field&tab=matrix&scheme=dark');
+  render(<WorkbenchApp config={{ ...config, components: [matrix] }} />);
+  const board = within(screen.getByRole('region', { name: 'Haze Night' }));
+  const cells = () => board.getAllByRole<HTMLInputElement>('textbox', { name: 'Cell value' });
+  expect(cells()).toHaveLength(3);
+  fireEvent.click(board.getByRole('button', { name: /Show more rows/ }));
+  const edited = cells()[3]!;
+  fireEvent.change(edited, { target: { value: 'Keep this edit' } });
+  sample.mockClear();
+  fireEvent.change(screen.getByRole('searchbox'), { target: { value: 'field' } });
+  expect(sample).not.toHaveBeenCalled();
+  fireEvent.click(board.getByRole('button', { name: 'Isolate Haze Night' }));
+  expect(cells()[3]).toBe(edited);
+  expect(edited.value).toBe('Keep this edit');
+  fireEvent.click(
+    within(screen.getByRole('group', { name: 'Family' })).getByRole('link', { name: 'All' }),
+  );
+  expect(cells()).toHaveLength(3);
+  expect(screen.getAllByRole('textbox', { name: 'Cell value' })).toHaveLength(9);
+});
+
 it('filters sparse theme axes independently and isolates an artboard with native Back', async () => {
   const { container } = open();
   const themeLayers = (): (string | null)[] =>

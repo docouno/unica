@@ -2,6 +2,7 @@ import '@fontsource-variable/inter';
 import '@fontsource-variable/jetbrains-mono';
 import {
   Fragment,
+  memo,
   useCallback,
   useEffect,
   useId,
@@ -556,6 +557,122 @@ export interface WorkbenchAppProps {
   readonly config: WorkbenchConfig;
 }
 
+const WorkbenchView = memo(function WorkbenchView({
+  config,
+  route,
+  sceneRevision,
+  component,
+  scene,
+  notFound,
+  createHref,
+  update,
+  navigateFromUsage,
+}: {
+  readonly config: WorkbenchConfig;
+  readonly route: WorkbenchRoute;
+  readonly sceneRevision: number;
+  readonly component: WorkbenchConfig['components'][number] | undefined;
+  readonly scene: SceneDefinition | undefined;
+  readonly notFound: boolean;
+  readonly createHref: Href;
+  readonly update: Update;
+  readonly navigateFromUsage: (item: string) => void;
+}): ReactElement {
+  const selectedThemes = useMemo(
+    () => selectThemes(config.themes, route.family, route.scheme),
+    [config.themes, route.family, route.scheme],
+  );
+  const themeGroups = useMemo(() => groupThemes(config.themes), [config.themes]);
+  const selectedThemeIds = new Set(selectedThemes.map((theme) => theme.id));
+  const sceneIndex = useSceneIndex(config);
+  const renderArtboards = (render: (theme: WorkbenchTheme) => ReactNode): ReactElement => (
+    <div
+      className="wb-artboards"
+      data-single={selectedThemes.length === 1 ? 'true' : undefined}
+      data-wb-fixed={route.vp !== 'auto' || undefined}
+    >
+      {themeGroups.map((group) => {
+        const visible = group.filter((theme) => selectedThemeIds.has(theme.id));
+        return visible.length ? (
+          <div
+            key={group[0]!.id}
+            className="wb-theme-slot"
+            data-wb-pair={visible.length > 1 || undefined}
+          >
+            {visible.map((theme) => (
+              <section
+                className="wb-cell"
+                key={theme.id}
+                aria-label={theme.label}
+                tabIndex={route.raw ? undefined : -1}
+              >
+                {route.raw || selectedThemes.length === 1 ? (
+                  <div className="wb-cell-header">
+                    <span className="wb-cell-title">{theme.label}</span>
+                    {theme.meta && <span className="wb-cell-meta">{theme.meta}</span>}
+                  </div>
+                ) : (
+                  <button
+                    className="wb-cell-header wb-isolate"
+                    type="button"
+                    aria-label={`Isolate ${theme.label}`}
+                    onClick={(event) => {
+                      event.currentTarget.parentElement?.focus();
+                      update({ family: theme.family, scheme: theme.colorScheme }, 'push');
+                    }}
+                  >
+                    <span className="wb-cell-title">{theme.label}</span>
+                    <span className="wb-cell-meta">Isolate</span>
+                  </button>
+                )}
+                <ViewportFrame vp={route.vp} scaleToFit={selectedThemes.length > 1}>
+                  <div
+                    className="wb-artboard"
+                    data-theme={theme.id}
+                    data-color-scheme={theme.colorScheme}
+                    data-text-scale={route.scale}
+                    data-wb-scene={component ? undefined : ''}
+                    dir={route.dir}
+                    style={{ colorScheme: theme.colorScheme }}
+                  >
+                    {render(theme)}
+                  </div>
+                </ViewportFrame>
+              </section>
+            ))}
+          </div>
+        ) : null;
+      })}
+      {!selectedThemes.length && <p className="wb-empty-note">No themes registered.</p>}
+    </div>
+  );
+
+  return component ? (
+    <Inspector
+      key={component.id}
+      component={component}
+      route={route}
+      themes={selectedThemes}
+      scenes={sceneIndex.get(component.id) ?? []}
+      update={update}
+      itemHref={(item) => createHref({ item })}
+      navigateItem={navigateFromUsage}
+      renderArtboards={renderArtboards}
+      renderStage={config.renderStage}
+    />
+  ) : notFound ? (
+    <p className="wb-empty-note">
+      Item “{route.item}” was not found. Choose a component or scene from the catalog.
+    </p>
+  ) : (
+    renderArtboards((theme) => (
+      <Fragment key={`${route.item}:${sceneRevision}`}>
+        {sceneArtboard(config, route, theme, scene)}
+      </Fragment>
+    ))
+  );
+});
+
 export function WorkbenchApp({ config }: WorkbenchAppProps): ReactElement {
   const [route, setRoute] = useState(() => readRoute(window.location.search, config));
   const [sceneRevision, setSceneRevision] = useState(0);
@@ -681,26 +798,32 @@ export function WorkbenchApp({ config }: WorkbenchAppProps): ReactElement {
     }
   }, [searchRequest]);
 
-  const createHref: Href = (patch) =>
-    `${window.location.pathname}${routeSearch(patchRoute(route, patch, config), config)}${window.location.hash}`;
-  const update: Update = (patch, behavior = 'replace') => {
-    const current = readRoute(window.location.search, config);
-    const next = patchRoute(current, patch, config);
-    const search = routeSearch(next, config);
-    if (search === routeSearch(current, config)) {
-      return;
-    }
-    const href = `${window.location.pathname}${search}${window.location.hash}`;
-    if (behavior === 'push') {
-      window.history.pushState(null, '', href);
-    } else {
-      window.history.replaceState(null, '', href);
-    }
-    if (next.item !== current.item) {
-      revealCatalogPath(next.item);
-    }
-    setRoute(next);
-  };
+  const createHref = useCallback<Href>(
+    (patch) =>
+      `${window.location.pathname}${routeSearch(patchRoute(route, patch, config), config)}${window.location.hash}`,
+    [route, config],
+  );
+  const update = useCallback<Update>(
+    (patch, behavior = 'replace') => {
+      const current = readRoute(window.location.search, config);
+      const next = patchRoute(current, patch, config);
+      const search = routeSearch(next, config);
+      if (search === routeSearch(current, config)) {
+        return;
+      }
+      const href = `${window.location.pathname}${search}${window.location.hash}`;
+      if (behavior === 'push') {
+        window.history.pushState(null, '', href);
+      } else {
+        window.history.replaceState(null, '', href);
+      }
+      if (next.item !== current.item) {
+        revealCatalogPath(next.item);
+      }
+      setRoute(next);
+    },
+    [config, revealCatalogPath],
+  );
 
   const focusHeading = useRef(false);
   useLayoutEffect(() => {
@@ -711,25 +834,25 @@ export function WorkbenchApp({ config }: WorkbenchAppProps): ReactElement {
     }
   }, [route.item]);
 
-  function navigateItem(item: string, fromUsage = false): void {
-    const focusDestination =
-      fromUsage || Boolean(mobileCatalogRef.current?.getClientRects().length && catalogOpen);
-    focusHeading.current = focusDestination && item !== route.item;
-    update({ item }, 'push');
-    setCatalogOpen(false);
-    if (focusDestination && item === route.item) {
-      headingRef.current?.focus();
-    }
-  }
+  const visitItem = useCallback(
+    (item: string, focusDestination = true): void => {
+      focusHeading.current = focusDestination && item !== route.item;
+      update({ item }, 'push');
+      setCatalogOpen(false);
+      if (focusDestination && item === route.item) {
+        headingRef.current?.focus();
+      }
+    },
+    [route.item, update],
+  );
+  const navigateItem = (item: string): void => {
+    visitItem(item, Boolean(mobileCatalogRef.current?.getClientRects().length && catalogOpen));
+  };
 
   const component = config.components.find((entry) => entry.id === route.item);
   const scene = component ? undefined : config.scenes.find((entry) => entry.id === route.item);
   const notFound =
     !component && !scene && Boolean(route.item || config.components.length || config.scenes.length);
-  const selectedThemes = selectThemes(config.themes, route.family, route.scheme);
-  const themeGroups = useMemo(() => groupThemes(config.themes), [config.themes]);
-  const selectedThemeIds = new Set(selectedThemes.map((theme) => theme.id));
-  const sceneIndex = useSceneIndex(config);
   const normalizedQuery = query.trim().toLowerCase();
   const filteredComponents = config.components.filter(
     (item) =>
@@ -757,91 +880,18 @@ export function WorkbenchApp({ config }: WorkbenchAppProps): ReactElement {
     };
   }
 
-  const renderArtboards = (render: (theme: WorkbenchTheme) => ReactNode): ReactElement => (
-    <div
-      className="wb-artboards"
-      data-single={selectedThemes.length === 1 ? 'true' : undefined}
-      data-wb-fixed={route.vp !== 'auto' || undefined}
-    >
-      {themeGroups.map((group) => {
-        const visible = group.filter((theme) => selectedThemeIds.has(theme.id));
-        return visible.length ? (
-          <div
-            key={group[0]!.id}
-            className="wb-theme-slot"
-            data-wb-pair={visible.length > 1 || undefined}
-          >
-            {visible.map((theme) => (
-              <section
-                className="wb-cell"
-                key={theme.id}
-                aria-label={theme.label}
-                tabIndex={route.raw ? undefined : -1}
-              >
-                {route.raw || selectedThemes.length === 1 ? (
-                  <div className="wb-cell-header">
-                    <span className="wb-cell-title">{theme.label}</span>
-                    {theme.meta && <span className="wb-cell-meta">{theme.meta}</span>}
-                  </div>
-                ) : (
-                  <button
-                    className="wb-cell-header wb-isolate"
-                    type="button"
-                    aria-label={`Isolate ${theme.label}`}
-                    onClick={(event) => {
-                      event.currentTarget.parentElement?.focus();
-                      update({ family: theme.family, scheme: theme.colorScheme }, 'push');
-                    }}
-                  >
-                    <span className="wb-cell-title">{theme.label}</span>
-                    <span className="wb-cell-meta">Isolate</span>
-                  </button>
-                )}
-                <ViewportFrame vp={route.vp} scaleToFit={selectedThemes.length > 1}>
-                  <div
-                    className="wb-artboard"
-                    data-theme={theme.id}
-                    data-color-scheme={theme.colorScheme}
-                    data-text-scale={route.scale}
-                    data-wb-scene={component ? undefined : ''}
-                    dir={route.dir}
-                    style={{ colorScheme: theme.colorScheme }}
-                  >
-                    {render(theme)}
-                  </div>
-                </ViewportFrame>
-              </section>
-            ))}
-          </div>
-        ) : null;
-      })}
-      {!selectedThemes.length && <p className="wb-empty-note">No themes registered.</p>}
-    </div>
-  );
-
-  const body = component ? (
-    <Inspector
-      key={component.id}
-      component={component}
+  const body = (
+    <WorkbenchView
+      config={config}
       route={route}
-      themes={selectedThemes}
-      scenes={sceneIndex.get(component.id) ?? []}
+      sceneRevision={sceneRevision}
+      component={component}
+      scene={scene}
+      notFound={notFound}
+      createHref={createHref}
       update={update}
-      itemHref={(item) => createHref({ item })}
-      navigateItem={(item) => navigateItem(item, true)}
-      renderArtboards={renderArtboards}
-      renderStage={config.renderStage}
+      navigateFromUsage={visitItem}
     />
-  ) : notFound ? (
-    <p className="wb-empty-note">
-      Item “{route.item}” was not found. Choose a component or scene from the catalog.
-    </p>
-  ) : (
-    renderArtboards((theme) => (
-      <Fragment key={`${route.item}:${sceneRevision}`}>
-        {sceneArtboard(config, route, theme, scene)}
-      </Fragment>
-    ))
   );
 
   const identity = {

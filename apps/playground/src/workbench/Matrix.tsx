@@ -38,7 +38,7 @@ interface MatrixProps {
   readonly mode: MatrixMode;
   readonly raw: boolean;
   readonly freeze?: boolean;
-  readonly themeCount: number;
+  readonly themes: readonly WorkbenchTheme[];
   readonly onSliceChange: (slice: string) => void;
   readonly onModeChange: (mode: MatrixMode) => void;
   readonly renderArtboards: (render: (theme: WorkbenchTheme) => ReactNode) => ReactNode;
@@ -381,7 +381,7 @@ function MatrixContent({
   mode,
   raw,
   freeze = false,
-  themeCount,
+  themes,
   onSliceChange,
   onModeChange,
   renderArtboards,
@@ -389,6 +389,7 @@ function MatrixContent({
   renderReference,
 }: MatrixViewProps): ReactElement {
   const { props } = component;
+  const themeCount = themes.length;
   const defaults = useMemo(() => defaultValues(props), [props]);
   const finiteKeys = useMemo(
     () => Object.keys(props).filter((key) => finiteDomain(props[key]!).length > 0),
@@ -441,7 +442,18 @@ function MatrixContent({
   );
   const renderedAssignments = audit?.rows ?? cartesian;
   const source = grid ?? renderedAssignments;
-  const [revealed, setRevealed] = useState<{ source: typeof source; count: number }>();
+  const [revealed, setRevealed] = useState<{
+    source: typeof source;
+    themes: readonly WorkbenchTheme[];
+    count: number;
+  }>();
+  if (revealed && (revealed.source !== source || revealed.themes !== themes)) {
+    // Isolating an existing board preserves its rows. Newly added themes start with one batch.
+    const onlyRemovedThemes = themes.every((theme) => revealed.themes.includes(theme));
+    setRevealed(
+      revealed.source === source && onlyRemovedThemes ? { ...revealed, themes } : undefined,
+    );
+  }
   const rowCount = grid
     ? grid.groups.length * (grid.groups[0]?.rows.length ?? 0)
     : (renderedAssignments?.length ?? 0);
@@ -449,16 +461,11 @@ function MatrixContent({
   const batch = Math.max(1, Math.floor(2 / cellsPerRow));
   // Full is already bounded. Frozen captures include offscreen rows.
   const eager =
-    raw ||
-    freeze ||
-    modeShown === 'full' ||
-    (rowCount <= 4 && rowCount * cellsPerRow <= FULL_LIMIT);
-  const visible = eager
-    ? rowCount
-    : Math.min(rowCount, revealed && revealed.source === source ? revealed.count : batch);
+    raw || freeze || modeShown === 'full' || (rowCount <= 4 && rowCount * cellsPerRow <= 8);
+  const visible = eager ? rowCount : Math.min(rowCount, revealed?.count ?? batch);
   const showMore = useCallback(() => {
-    setRevealed({ source, count: visible + batch });
-  }, [source, visible, batch]);
+    setRevealed({ source, themes, count: visible + batch });
+  }, [source, themes, visible, batch]);
   const varyingKeys = finiteKeys.filter((key) => !Object.hasOwn(fixed, key));
   const overrideKeys = Object.keys(props).filter(
     (key) =>

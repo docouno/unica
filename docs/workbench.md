@@ -40,7 +40,7 @@ Every component has the same four views.
 
 The full-height **Inspector** on the right holds the settings for the current view. Preview settings stay in the header above the canvas. In Playground, the Controls, Events, and FormData tabs share the panel with live JSX. The selected tab and JSX scroll independently. In Matrix, the panel holds the slice, axes, mode, and global values. Cases and Usage put their example picker there. On narrow screens, **Inspector** opens the same panel over the right edge of the preview.
 
-Selecting an axis releases any global value for that property. Fixing a property removes it from the free axes. Large Slice and Pairwise views load more rows as you scroll. The **Show more rows** button also supports keyboard navigation. Frozen captures include the entire result.
+Selecting an axis releases any global value for that property. Fixing a property removes it from the free axes. Large Slice and Pairwise views load more rows as you scroll. Isolating a theme keeps its revealed rows. Adding a theme starts the comparison at its first batch. The **Show more rows** button also supports keyboard navigation. Frozen captures include the entire result.
 
 Pairwise covers every pair of finite values that has a valid completion under the current fixed values. Read the coverage count before treating it as an audit. Full shows every combination, including N/A cells, while the total across selected themes fits in 64 displayed cells.
 

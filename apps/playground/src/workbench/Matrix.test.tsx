@@ -127,7 +127,7 @@ function MatrixFixture({
       slice={slice}
       mode={mode}
       raw={raw}
-      themeCount={themeCount}
+      themes={Array.from({ length: themeCount }, () => theme)}
       onSliceChange={setSlice}
       onModeChange={setMode}
       renderArtboards={(draw) => (

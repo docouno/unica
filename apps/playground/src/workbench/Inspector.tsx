@@ -483,7 +483,7 @@ export function Inspector({
         mode={mode}
         raw={raw}
         freeze={route.freeze}
-        themeCount={themes.length}
+        themes={themes}
         onSliceChange={(selected) => update({ slice: selected }, 'replace')}
         onModeChange={(selected) => update({ mode: selected }, 'replace')}
         renderArtboards={renderArtboards}
