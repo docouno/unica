@@ -5,10 +5,7 @@ import { THEME_PRESETS } from '../src/index.js';
 
 function parsePresetBlock(css: string, presetId: string): Map<string, string> {
   const escaped = presetId.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  const re = new RegExp(
-    `(?:^|\\n)(?::root,\\s*)?\\[data-theme='${escaped}'\\]\\s*\\{([^}]*)\\}`,
-    'm',
-  );
+  const re = new RegExp(`^\\s*(?::root,\\s*)?\\[data-theme='${escaped}'\\]\\s*\\{([^}]*)\\}`, 'm');
   const match = re.exec(css);
   const body = match?.[1];
   if (body === undefined) {
@@ -43,6 +40,7 @@ it('exports all 6 canonical theme presets with symmetric, self-contained CSS tok
   ]);
 
   const css = await readFile(resolve(import.meta.dirname, '../src/styles.css'), 'utf8');
+  expect(css).toMatch(/^@layer unica\.base, unica\.tokens, unica\.components, unica\.utilities;/);
 
   const declaredVars = new Set<string>();
   for (const m of css.matchAll(/^\s*(--[a-zA-Z0-9_-]+)\s*:/gm)) {
@@ -103,8 +101,10 @@ it('exports all 6 canonical theme presets with symmetric, self-contained CSS tok
     }
   }
 
-  expect(css).toContain(":root,\n[data-theme],\n[data-surface='base'] {");
-  expect(css).toContain("[data-surface='overlay'] {");
-  expect(css).toContain(':root,\n[data-theme] {\n  --radius-xs: calc(4px * var(--radius-factor));');
-  expect(css).toContain(':root,\n[data-theme],\n[data-text-scale] {');
+  expect(css).toMatch(/:root,\s*\[data-theme\],\s*\[data-surface='base'\] \{/);
+  expect(css).toMatch(/\[data-surface='overlay'\] \{/);
+  expect(css).toMatch(
+    /:root,\s*\[data-theme\] \{\s*--radius-xs: calc\(4px \* var\(--radius-factor\)\);/,
+  );
+  expect(css).toMatch(/:root,\s*\[data-theme\],\s*\[data-text-scale\] \{/);
 });
