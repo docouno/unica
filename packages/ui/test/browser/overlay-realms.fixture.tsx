@@ -114,6 +114,22 @@ export default function OverlayRealmsFixture(): JSX.Element {
     };
     let slottedDialog: HTMLDialogElement | undefined;
     let secondSlot: HTMLSlotElement | undefined;
+    const openForLateShadow = () => {
+      source = root.appendChild(document.createElement('div'));
+      source.id = 'late-host';
+      destination = root.appendChild(document.createElement('div'));
+      destination.id = 'late-scope';
+      const dialog = source.appendChild(document.createElement('dialog'));
+      dialog.id = 'late-dialog';
+      const handle = registerOverlay({ element: dialog, kind: 'modal', onOpenChange() {} });
+      registered.add(handle);
+      handle.setOpen(true);
+    };
+    const attachShadowScope = () => {
+      const shadow = source!.attachShadow({ mode: 'open' });
+      shadow.moveBefore(destination!, null);
+      destination!.appendChild(document.createElement('slot'));
+    };
     const openSlottedDialog = () => {
       const host = root.appendChild(document.createElement('div'));
       const shadow = host.attachShadow({ mode: 'open' });
@@ -169,6 +185,8 @@ export default function OverlayRealmsFixture(): JSX.Element {
     root.addEventListener('remove-moved-dialog', () => destination?.remove());
     root.addEventListener('adopt-popover', adoptPopover);
     root.addEventListener('open-slotted-dialog', openSlottedDialog);
+    root.addEventListener('open-for-late-shadow', openForLateShadow);
+    root.addEventListener('attach-shadow-scope', attachShadowScope);
     root.addEventListener('reassign-dialog-slot', () => {
       slottedDialog!.slot = 'second';
     });

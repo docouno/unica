@@ -102,6 +102,26 @@ export default {
     assert.equal(await page.evaluate(() => document.documentElement.style.overflow), 'hidden');
   },
 
+  'a document mutation discovers a newly attached shadow scope for an open dialog': async ({
+    page,
+    mount,
+  }) => {
+    await mount('overlay-realms');
+    await dispatch(page, 'open-for-late-shadow');
+    const fixture = page.locator('#overlay-realms');
+    assert.equal(await fixture.getAttribute('data-scoped-hosts'), 'late-dialog|none');
+    await dispatch(page, 'attach-shadow-scope');
+    await page.waitForFunction(
+      () =>
+        document.querySelector('#overlay-realms').dataset.scopedHosts === 'late-dialog|late-dialog',
+    );
+    assert.equal(
+      await page.locator('#late-dialog').evaluate((dialog) => dialog.matches(':modal')),
+      true,
+    );
+    assert.equal(await page.evaluate(() => document.documentElement.style.overflow), 'hidden');
+  },
+
   'a previous document releases an adopted carrier without closing it in the new document': async ({
     page,
     mount,

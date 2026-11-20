@@ -1,6 +1,6 @@
 import { autoUpdate, computePosition, flip, offset, platform, shift, size } from '@floating-ui/dom';
 import type { Placement } from '@floating-ui/dom';
-import { composedAncestors, watchSlotAssignments } from './dom.js';
+import { composedAncestors, isShadowRoot, watchSlotAssignments } from './dom.js';
 
 type Side = 'top' | 'bottom' | 'start' | 'end';
 type Align = 'start' | 'center' | 'end';
@@ -160,6 +160,11 @@ export function positionOverlay({
         attributeFilter: ['dir', 'class', 'style'],
         childList: true,
       });
+      const parent = ancestor.parentNode;
+      if (isShadowRoot(parent)) {
+        // Removing a direct shadow child is reported on the ShadowRoot.
+        direction.observe(parent, { childList: true });
+      }
     }
   };
   watchAncestry();

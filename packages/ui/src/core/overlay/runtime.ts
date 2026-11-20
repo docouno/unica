@@ -72,6 +72,7 @@ class Layer {
   runtime: OverlayRuntime | undefined;
   trigger: HTMLElement | null = null;
   dismissed = false;
+  dismissPending = false;
   leased = false;
   moving = false;
   internal = false;
@@ -162,12 +163,21 @@ class Layer {
       return;
     }
     if (this.phase === 'closed' && !this.dismissed) {
-      runtimeFor(this.document)?.open(this);
+      if (this.dismissPending) {
+        queueMicrotask(() => this.setOpen(true));
+      } else {
+        runtimeFor(this.document)?.open(this);
+      }
     }
   };
 
   requestOpen = (): void => {
     if (!this.disposed && this.ownsCarrier && this.phase !== 'exiting') {
+      if (this.dismissPending) {
+        // Native beforetoggle completes before the dismissal report and the next request.
+        queueMicrotask(this.requestOpen);
+        return;
+      }
       this.dismissed = false;
       this.options.onOpenChange(true, 'trigger');
     }
@@ -418,13 +428,17 @@ class OverlayRuntime {
 
   publishModal(): void {
     const ancestry = Array.from(composedAncestors(this.resolveModal()));
-    if (
-      ancestry.length !== this.modalAncestry.length ||
-      ancestry.some((ancestor, index) => ancestor !== this.modalAncestry[index])
-    ) {
+    if (this.hasModalAncestryChanged(ancestry)) {
       this.modalAncestry = ancestry;
       this.document.dispatchEvent(new this.view.Event(modalChange));
     }
+  }
+
+  private hasModalAncestryChanged(ancestry: readonly Element[]): boolean {
+    return (
+      ancestry.length !== this.modalAncestry.length ||
+      ancestry.some((ancestor, index) => ancestor !== this.modalAncestry[index])
+    );
   }
 
   watchTrigger(previous: HTMLElement | null, current: HTMLElement | null): void {
@@ -553,7 +567,10 @@ class OverlayRuntime {
     const moved = records.some((record) =>
       Array.from(record.removedNodes).some((node) => this.modalAncestors.has(node as Element)),
     );
-    if (moved) {
+    const changedPath =
+      records.some(({ type }) => type === 'childList') &&
+      this.hasModalAncestryChanged(Array.from(composedAncestors(this.resolveModal())));
+    if (moved || changedPath) {
       // A state-preserving move can keep :modal while changing the structural owners.
       this.onAncestryChange();
     } else if (records.some(({ type }) => type === 'attributes')) {
@@ -589,14 +606,10 @@ class OverlayRuntime {
     layer.dismissed = true;
     this.transactions++;
     try {
-      if (!browserClosing) {
-        layer.hide();
-      }
-      this.detach(layer);
       if (notify) {
+        layer.dismissPending = true;
         this.pendingReports++;
         queueMicrotask(() => {
-          this.pendingReports--;
           try {
             if (!layer.disposed) {
               if (hadFocus && layer.phase === 'closed') {
@@ -605,10 +618,16 @@ class OverlayRuntime {
               layer.options.onOpenChange(false, reason);
             }
           } finally {
+            layer.dismissPending = false;
+            this.pendingReports--;
             this.finishIdle();
           }
         });
       }
+      if (!browserClosing) {
+        layer.hide();
+      }
+      this.detach(layer);
     } finally {
       this.completeTransaction();
     }

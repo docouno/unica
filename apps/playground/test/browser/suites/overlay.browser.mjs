@@ -94,6 +94,18 @@ export default {
     await statistic(page, 'p2Changes', 4);
   },
 
+  'an immediate explicit reopen follows the pending native dismissal report': async ({
+    page,
+    mount,
+  }) => {
+    await mount('overlay');
+    await command(page, 'open-a', 'open-b', 'dismiss-then-reopen');
+    await statistic(page, 'p2Changes', 2);
+    await statistic(page, 'reason', 'trigger');
+    await visibleLayer(page, 'p2');
+    assert.equal(await page.locator('#trigger2').getAttribute('aria-expanded'), 'true');
+  },
+
   'Escape routes manual, passive, and foreign layers without stopping propagation': async ({
     page,
     mount,
@@ -423,6 +435,37 @@ export default {
         clip.querySelector('#slotted-anchor-host').remove();
       });
       await assertAlignment(direction);
+
+      await page.locator('#clip').evaluate((clip, opposite) => {
+        const host = clip.appendChild(document.createElement('div'));
+        host.id = 'direct-anchor-host';
+        host.style.cssText = 'position:absolute;inset:0';
+        const shadow = host.attachShadow({ mode: 'open' });
+        const scope = shadow.appendChild(document.createElement('div'));
+        scope.dir = opposite;
+        scope.style.cssText = 'position:absolute;inset:0';
+        shadow.moveBefore(clip.querySelector('#anchor'), scope);
+      }, opposite);
+      await assertAlignment(direction);
+      await page.evaluate(async () => {
+        const nextFrame = () => new Promise((resolve) => requestAnimationFrame(resolve));
+        await nextFrame();
+        await nextFrame();
+      });
+      await page.locator('#direct-anchor-host').evaluate((host) => {
+        const root = host.shadowRoot;
+        root.querySelector('div').moveBefore(root.querySelector('#anchor'), null);
+      });
+      await assertAlignment(opposite);
+      await page.locator('#direct-anchor-host').evaluate((host, direction) => {
+        host.shadowRoot.querySelector('div').dir = direction;
+      }, direction);
+      await assertAlignment(direction);
+      await page.locator('#clip').evaluate((clip) => {
+        const host = clip.querySelector('#direct-anchor-host');
+        clip.moveBefore(host.shadowRoot.querySelector('#anchor'), null);
+        host.remove();
+      });
 
       const originalClip = await page.locator('#clip').evaluate((clip, dir) => {
         const style = clip.style.cssText;

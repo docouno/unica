@@ -1,8 +1,12 @@
+export function isShadowRoot(node: Node | null): node is ShadowRoot {
+  return node?.nodeType === 11 && 'host' in node;
+}
+
 export function* composedAncestors(node: Element | null): Iterable<Element> {
   for (let element = node; element;) {
     yield element;
     const root = element.getRootNode();
-    const host = 'host' in root ? (root as ShadowRoot).host : null;
+    const host = isShadowRoot(root) ? root.host : null;
     element = element.assignedSlot ?? element.parentElement ?? host;
   }
 }
@@ -23,8 +27,8 @@ export function watchSlotAssignments(
   const roots = new Set<ShadowRoot>();
   for (const element of ancestry) {
     const root = element.getRootNode();
-    if ('host' in root) {
-      roots.add(root as ShadowRoot);
+    if (isShadowRoot(root)) {
+      roots.add(root);
     }
     if (element.shadowRoot) {
       roots.add(element.shadowRoot);

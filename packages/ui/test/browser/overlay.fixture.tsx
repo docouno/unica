@@ -119,6 +119,10 @@ export default function OverlayFixture(): JSX.Element {
       'ignore-dismiss': () => {
         ignoreDismiss = true;
       },
+      'dismiss-then-reopen': () => {
+        p2.hidePopover();
+        b.requestOpen();
+      },
       animate: () => {
         animated = true;
       },
