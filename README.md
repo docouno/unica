@@ -78,6 +78,8 @@ make dev app=playground
 | `make check` | Run formatting, lint, `isolatedDeclarations` typecheck, and gates |
 | `make fix` | Apply formatting and lint autofixes |
 | `make test` | Run unit and component test suites |
+| `make visual-setup` | Prepare the shared container image, dependencies, and Chromium cache |
+| `make test-browser` | Run real-browser contract tests against UI source in offline Chromium |
 | `make build` | Build `packages/ui` and `apps/playground` |
 | `make package` | Pack `@docouno/unica` and verify ESM/TypeScript exports |
 | `make dev app=playground` / `make up app=playground headless=1` | Start the interactive 6-preset Vite workbench with per-checkout sticky host ports |
@@ -89,6 +91,7 @@ make dev app=playground
 
 - [Documentation Index](docs/README.md) — themes, geometry, overlays, forms, and browser support
 - [Workbench Workflow](docs/workbench.md) — author specimens, compare themes, and capture a specific view
+- [Browser Tests](docs/browser-tests.md) — prepare Chromium and add a browser contract scenario
 - [Folio Composition](docs/compositions/folio.md) — baseline product scenes across `Soft`, `Frost`, and `Pixel`
 - [Contributor & Agent Guide](AGENTS.md) — architectural invariants and verification workflow
 - [Devkit Runtime Guide](.devkit/runtime/GUIDE.md) — container toolchain, dependency workflows, and packaging

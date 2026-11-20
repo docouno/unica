@@ -4,8 +4,14 @@ include .devkit/runtime/toolchains.env
 VISUAL_IMAGE := devkit-visual-desktop:$(DEVKIT_DESKTOP_RECIPE_HASH)
 PLAYWRIGHT_CACHE := $(or $(XDG_CACHE_HOME),$(HOME)/.cache)/ms-playwright
 VISUAL_MAKE = env -u MAKEFLAGS -u MFLAGS -u MAKEOVERRIDES -u GNUMAKEFLAGS $(MAKE) --no-print-directory
+VISUAL_CONTAINER_FLAGS = --rm --init --network none --read-only --shm-size=256m \
+	--cap-drop ALL --security-opt no-new-privileges:true \
+	--security-opt seccomp=.devkit/runtime/desktop-seccomp.json \
+	--tmpfs /tmp:rw,noexec,nosuid,size=128m -u "$$(id -u):$$(id -g)" \
+	-e HOME=/tmp -e PLAYWRIGHT_BROWSERS_PATH=/ms-playwright \
+	-v "$$(pwd):/workspace:ro" -w /workspace/apps/playground
 
-.PHONY: visual-setup visual
+.PHONY: visual-setup visual test-browser
 
 ifneq ($(filter visual,$(MAKECMDGOALS)),)
 ifneq ($(filter command,$(origin section) $(origin theme)),)
@@ -41,15 +47,14 @@ visual-setup:
 	@mkdir -p "$(PLAYWRIGHT_CACHE)"
 	@# Probe the installed headless shell; executablePath() points to full Chromium.
 	@flock "$(PLAYWRIGHT_CACHE)/.install.lock" sh -c '\
-		if ! docker run --rm --network none \
-			-u "$$(id -u):$$(id -g)" \
-			-e PLAYWRIGHT_BROWSERS_PATH=/ms-playwright \
-			-v "$$(pwd):/workspace:ro" \
-			-v "$(PLAYWRIGHT_CACHE):/ms-playwright:ro" \
-			-w /workspace/apps/playground \
-			$(VISUAL_IMAGE) \
-			node --input-type=module -e "const { chromium } = await import(\"playwright-core\"); const browser = await chromium.launch({ chromiumSandbox: false }); await browser.close();" >/dev/null 2>&1; then \
-			docker run --rm --init \
+		probe() { \
+			docker run --pull=never $(VISUAL_CONTAINER_FLAGS) \
+				-v "$(PLAYWRIGHT_CACHE):/ms-playwright:ro" \
+				$(VISUAL_IMAGE) \
+				node --input-type=module -e "const { chromium } = await import(\"playwright-core\"); const browser = await chromium.launch({ chromiumSandbox: false }); await browser.close();"; \
+		}; \
+		if ! probe >/dev/null 2>&1; then \
+			docker run --pull=never --rm --init \
 				-u "$$(id -u):$$(id -g)" \
 				-e HOME=/tmp/pw-home \
 				-e PLAYWRIGHT_BROWSERS_PATH=/ms-playwright \
@@ -57,23 +62,14 @@ visual-setup:
 				-v "$(PLAYWRIGHT_CACHE):/ms-playwright" \
 				-w /workspace/apps/playground \
 				$(VISUAL_IMAGE) \
-				node ./node_modules/playwright-core/cli.js install chromium --only-shell; \
+				node ./node_modules/playwright-core/cli.js install chromium --only-shell --force --no-remove || exit 1; \
+			probe; \
 		fi'
 
 # The renderer resolves workspace package exports to source through Vite.
 visual: visual-setup
 	@mkdir -p .artifacts/visual .devkit/cache/vite-visual
-	@docker run --rm --init \
-		--network none \
-		--read-only \
-		--shm-size=256m \
-		--cap-drop ALL \
-		--security-opt no-new-privileges:true \
-		--security-opt seccomp=.devkit/runtime/desktop-seccomp.json \
-		--tmpfs /tmp:rw,noexec,nosuid,size=128m \
-		-u "$$(id -u):$$(id -g)" \
-		-e HOME=/tmp \
-		-e PLAYWRIGHT_BROWSERS_PATH=/ms-playwright \
+	@docker run $(VISUAL_CONTAINER_FLAGS) \
 		-e VITE_CACHE_DIR=/cache/vite \
 		-e VISUAL_ITEM="$${item}" \
 		-e VISUAL_TAB="$${tab}" \
@@ -89,10 +85,34 @@ visual: visual-setup
 		-e VISUAL_DIR="$${dir}" \
 		-e VISUAL_RAW="$${raw}" \
 		-e VISUAL_OUT="$${out}" \
-		-v "$$(pwd):/workspace:ro" \
 		-v "$(PLAYWRIGHT_CACHE):/ms-playwright:ro" \
 		-v "$$(pwd)/.devkit/cache/vite-visual:/cache/vite" \
 		-v "$$(pwd)/.artifacts/visual:/workspace/.artifacts/visual" \
-		-w /workspace/apps/playground \
 		$(VISUAL_IMAGE) \
 		node scripts/visual.mjs
+
+# Preparation is explicit so the test path never installs or downloads anything.
+test-browser:
+	@if ! preflight="$$(sh $(devkit_loader) cli --offline doctor . 2>&1)"; then \
+		printf '%s\n' "$$preflight" 'test-browser: prepare the local environment with make visual-setup.' >&2; \
+		exit 1; \
+	fi
+	@if [ ! -d "$(PLAYWRIGHT_CACHE)" ]; then \
+		printf '%s\n' 'test-browser: Chromium cache missing. Run make visual-setup.' >&2; \
+		exit 1; \
+	fi
+	@docker run --pull=never $(VISUAL_CONTAINER_FLAGS) \
+		-v "$(PLAYWRIGHT_CACHE):/ms-playwright:ro" \
+		$(VISUAL_IMAGE) \
+		sh -c '\
+			if ! node scripts/visual-ready.mjs; then \
+				printf "%s\n" "test-browser: prepare the local environment with make visual-setup." >&2; \
+				exit 1; \
+			fi; \
+			exec node --test --test-reporter=spec test/browser/run.mjs' || { \
+			status=$$?; \
+			if [ "$$status" -eq 125 ]; then \
+				printf '%s\n' 'test-browser: check the local container environment with make visual-setup.' >&2; \
+			fi; \
+			exit "$$status"; \
+		}

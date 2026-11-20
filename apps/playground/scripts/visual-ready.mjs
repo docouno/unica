@@ -4,12 +4,19 @@ import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 
 const appRoot = resolve(import.meta.dirname, '..');
-const requiredSpecifiers = ['playwright-core', 'vite', '@vitejs/plugin-react', '@docouno/env/vite'];
+const requiredSpecifiers = [
+  'playwright-core',
+  'vite',
+  '@vitejs/plugin-react',
+  '@docouno/env/vite',
+  'react',
+  'react/jsx-dev-runtime',
+  'react-dom/client',
+];
 
 try {
   for (const specifier of requiredSpecifiers) {
-    const resolvedPath = realpathSync(fileURLToPath(import.meta.resolve(specifier)));
-    accessSync(resolvedPath, constants.R_OK);
+    await import(specifier);
   }
 
   const playwrightCliPath = realpathSync(resolve(appRoot, 'node_modules/playwright-core/cli.js'));
