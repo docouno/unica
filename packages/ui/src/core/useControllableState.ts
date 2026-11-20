@@ -54,6 +54,21 @@ export function useControllableState<T>({
   defaultValue,
   onChange,
 }: ControllableStateOptions<T>): [T, (next: T) => void] {
+  const [current, { propose }] = useStateAuthority({ value, defaultValue, onChange });
+  return [current, propose];
+}
+
+interface StateAuthority<T> {
+  read: () => T;
+  propose: (next: T, write?: (value: T) => void) => void;
+  restore: (initial: T, write: (value: T) => void) => void;
+}
+
+export function useStateAuthority<T>({
+  value,
+  defaultValue,
+  onChange,
+}: ControllableStateOptions<T>): [T, StateAuthority<T>] {
   const controlled = value !== undefined;
   const [history] = useState(() => createControlledHistory(defaultValue));
   const [local, setLocal] = useState<LocalState<T> | null>(null);
@@ -95,23 +110,35 @@ export function useControllableState<T>({
     }
   }, [controlled, history, origin, onChange, current]);
 
-  const setValue = useCallback((next: T): void => {
+  const read = useCallback((): T => committed.current.latestValue, []);
+
+  const restore = useCallback((initial: T, write: (value: T) => void): void => {
+    const snapshot = committed.current;
+    if (!snapshot.controlled && !Object.is(snapshot.latestValue, initial)) {
+      snapshot.latestValue = initial;
+      setLocal({ origin: snapshot.origin, value: initial });
+    }
+    write(snapshot.latestValue);
+  }, []);
+
+  const propose = useCallback((next: T, write?: (value: T) => void): void => {
     const active = deliveries.current;
+    const snapshot = committed.current;
     if (active.some((candidate) => Object.is(candidate, next))) {
+      write?.(snapshot.latestValue);
       return;
     }
 
-    const snapshot = committed.current;
-    if (!snapshot.controlled) {
-      if (Object.is(snapshot.latestValue, next)) {
-        return;
-      }
+    const unchanged = !snapshot.controlled && Object.is(snapshot.latestValue, next);
+    if (!snapshot.controlled && !unchanged) {
       snapshot.latestValue = next;
       // A queued update can apply only under the authority that accepted it.
       setLocal({ origin: snapshot.origin, value: next });
     }
 
-    if (snapshot.onChange) {
+    // Repair native edits and publish local commits before external code can read the form.
+    write?.(snapshot.latestValue);
+    if (!unchanged && snapshot.onChange) {
       active.push(next);
       try {
         snapshot.onChange(next);
@@ -121,5 +148,5 @@ export function useControllableState<T>({
     }
   }, []);
 
-  return [current, setValue];
+  return [current, { read, propose, restore }];
 }

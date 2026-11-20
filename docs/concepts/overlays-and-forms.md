@@ -43,18 +43,20 @@ Anchored panels pair native `popover` promotion with a lightweight positioning a
 Every Unica data-entry control (`Input`, `Textarea`, `NumberInput`, `Checkbox`, `Radio`, `Switch`, `Select`, `Combobox`, `Autocomplete`, `DatePicker`, `DateRangePicker`, `Slider`, `RangeSlider`, `SegmentedControl`, `TagsInput`, `FileInput`, and `*Card` choices) behaves as a native `<form>` participant:
 
 1. **`FormData` & constraint validation**
-   Controls render a real native `<input>`, `<textarea>`, or `<select>` (or a synchronized hidden form association for composite multi-value widgets) carrying `name`, `value`, and HTML constraint attributes (`required`, `min`, `max`, `pattern`). `new FormData(form)` always reads the exact committed value.
+   Controls use a native `<input>`, `<textarea>`, or `<select>` with the applicable `name`, `form`, and constraint attributes. A composite keeps its visually hidden native control mounted when its popup closes or its visible options change. An empty single selection omits the name. Multiple selections produce repeated entries in committed order. A selected option that becomes unavailable still contributes its value until it is replaced.
+
+   `checkValidity()` leaves focus in place. During interactive validation, the browser chooses the first invalid control in form order. When it focuses a visually hidden control, focus moves to that control's visible field or trigger.
 
 2. **Deterministic `<form>` `reset`**
-   Uncontrolled controls restore their current `defaultValue` / `defaultChecked` when their owning `<form>` fires `reset` — including composite pickers (`Select`, `TagsInput`, `DatePicker`, `Slider`). Controlled controls preserve the caller's `value` / `checked` prop authority across native resets.
+   A completed native reset of the current owning form restores the uncontrolled control's mount-time `defaultValue` or `defaultChecked`. Controlled controls retain the latest committed `value` or `checked`. A cancelled reset or a script-dispatched `reset` event preserves the committed value. Reset never emits a user change callback.
 
 3. **Availability states (`disabled`, `readOnly`, `loading`)**
-   - `disabled`: Removes the control from tab order, pointer activation, value mutation, and `FormData` submission.
+   - `disabled` excludes the control from tab order, activation, mutation, validation, and submission. A disabled fieldset also disables its descendants, with the native exception for its first legend.
    - `readOnly`: Preserves focusability, assistive reading, text selection, and `FormData` inclusion while blocking edits and picker mutations.
    - `loading`: Sets `aria-busy="true"`, suppresses duplicate submit or clear actions, and locks resting box dimensions so forms and toolbars never shift.
 
 4. **Controlled vs uncontrolled authority**
-   Passing `value` / `checked` makes the caller authoritative on every render; interactions emit `onChange` proposals without mutating internal DOM state ahead of React commits. Omitting `value` / `checked` (`defaultValue` / `defaultChecked`) delegates state to the component and native DOM. Switching modes on a mounted instance triggers a development warning.
+   With `value` or `checked`, a change callback proposes a candidate. `FormData` read inside that callback contains the latest value committed by the caller. With `defaultValue` or `defaultChecked`, the control commits an accepted edit before invoking the callback, so the same read sees the new value. Switching modes on a mounted instance triggers a development warning.
 
 ```tsx
 <form
