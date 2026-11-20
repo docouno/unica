@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import type { HTMLAttributes, KeyboardEvent, ReactElement } from 'react';
 import { CaretLeftIcon, CaretRightIcon } from '@phosphor-icons/react';
 import type { ControlSize } from '../input/input.proto.js';
@@ -190,6 +190,25 @@ export function Calendar({
   const year = date.getUTCFullYear();
   const monthIndex = date.getUTCMonth();
   const count = layout === 'year' ? 12 : Math.min(12, Math.max(1, numberOfMonths));
+  const dayLabel = useMemo(
+    () =>
+      new Intl.DateTimeFormat(locale, {
+        weekday: 'long',
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+        timeZone: 'UTC',
+      }),
+    [locale],
+  );
+  const weekdays = useMemo(() => {
+    const long = new Intl.DateTimeFormat(locale, { weekday: 'long', timeZone: 'UTC' });
+    const short = new Intl.DateTimeFormat(locale, { weekday: 'short', timeZone: 'UTC' });
+    return Array.from({ length: 7 }, (_, col) => {
+      const day = dateObject(addDays('2026-09-06', (weekStartsOn + col) % 7));
+      return { label: long.format(day), short: short.format(day).slice(0, 2) };
+    });
+  }, [locale, weekStartsOn]);
   const navigation =
     view === 'years'
       ? { step: 144, label: '12 years' }
@@ -487,24 +506,14 @@ export function Calendar({
           aria-label={dateLabel(base, locale, { day: undefined, month: 'long', year: 'numeric' })}
         >
           <div role="row" className="calendar-week-proto calendar-weekdays-proto">
-            {Array.from({ length: 7 }, (_, col) => (
+            {weekdays.map((weekday, col) => (
               <span
                 role="columnheader"
                 key={col}
                 className="calendar-weekday-proto"
-                aria-label={dateLabel(addDays('2026-09-06', (weekStartsOn + col) % 7), locale, {
-                  day: undefined,
-                  month: undefined,
-                  year: undefined,
-                  weekday: 'long',
-                })}
+                aria-label={weekday.label}
               >
-                {dateLabel(addDays('2026-09-06', (weekStartsOn + col) % 7), locale, {
-                  day: undefined,
-                  month: undefined,
-                  year: undefined,
-                  weekday: 'short',
-                }).slice(0, 2)}
+                {weekday.short}
               </span>
             ))}
           </div>
@@ -570,7 +579,7 @@ export function Calendar({
                             ? tooltipId
                             : undefined
                         }
-                        aria-label={`${dateLabel(day, locale, { weekday: 'long' })}${isFixed && (anchor || !currentRange) ? ', start date' : ''}${unavailableReason ? `, ${unavailableReason}` : ''}${indicators.includes(day) ? ', has events' : ''}`}
+                        aria-label={`${dayLabel.format(dateObject(day))}${isFixed && (anchor || !currentRange) ? ', start date' : ''}${unavailableReason ? `, ${unavailableReason}` : ''}${indicators.includes(day) ? ', has events' : ''}`}
                         tabIndex={
                           day === active ||
                           (!(active >= visibleStart && active < visibleEnd) &&

@@ -1,12 +1,4 @@
-import {
-  Fragment,
-  startTransition,
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react';
+import { memo, startTransition, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactElement, ReactNode } from 'react';
 import {
   buildFull,
@@ -169,6 +161,43 @@ function ValuePicker({
     </label>
   );
 }
+
+const MatrixSample = memo(function MatrixSample({
+  component,
+  theme,
+  assignment,
+  identity,
+  view,
+  renderSubject,
+}: Pick<MatrixViewProps, 'component' | 'view' | 'renderSubject'> & {
+  readonly theme: WorkbenchTheme;
+  readonly assignment: Values;
+  readonly identity: string;
+}): ReactElement {
+  const decision = evaluate(component.constraints, assignment);
+  return (
+    <>
+      {decision.valid && renderSubject(theme, assignment, identity, view)}
+      <RuleNotes rules={decision.matches} />
+    </>
+  );
+});
+
+const MatrixReference = memo(function MatrixReference({
+  theme,
+  view,
+  renderReference,
+}: Pick<MatrixProps, 'renderReference'> & {
+  readonly theme: WorkbenchTheme;
+  readonly view: MatrixView;
+}): ReactElement {
+  return (
+    <div className="wb-matrix-reference">
+      <h3 className="wb-matrix-group-label">Reference example</h3>
+      {renderReference(theme, view)}
+    </div>
+  );
+});
 
 function RuleNotes({ rules }: { readonly rules: readonly Constraint[] }): ReactElement | null {
   if (rules.length === 0) {
@@ -441,15 +470,17 @@ function MatrixContent({
   const labelValue = (key: string | undefined, value: PropValue | undefined): string =>
     key === undefined || value === undefined ? '' : showValue(props[key], value);
 
-  const sample = (theme: WorkbenchTheme, assignment: Values, id: string): ReactNode => {
-    const decision = evaluate(component.constraints, assignment);
-    return (
-      <Fragment key={JSON.stringify([id, assignment])}>
-        {decision.valid && renderSubject(theme, assignment, id, view)}
-        <RuleNotes rules={decision.matches} />
-      </Fragment>
-    );
-  };
+  const sample = (theme: WorkbenchTheme, assignment: Values, id: string): ReactNode => (
+    <MatrixSample
+      key={JSON.stringify([id, assignment])}
+      component={component}
+      theme={theme}
+      assignment={assignment}
+      identity={id}
+      view={view}
+      renderSubject={renderSubject}
+    />
+  );
 
   function reset(): void {
     setAxes(initialAxes);
@@ -656,10 +687,7 @@ function MatrixContent({
               <MoreRows visible={visible} total={rowCount} onMore={showMore} />
             )}
             {modeShown === 'slice' && view?.reference && (
-              <div className="wb-matrix-reference">
-                <h3 className="wb-matrix-group-label">Reference example</h3>
-                {renderReference(theme, view)}
-              </div>
+              <MatrixReference theme={theme} view={view} renderReference={renderReference} />
             )}
           </div>
         ))}

@@ -1,6 +1,7 @@
 import { Buffer } from 'node:buffer';
-import { mkdir, writeFile } from 'node:fs/promises';
-import { resolve } from 'node:path';
+import { constants } from 'node:fs';
+import { mkdir, realpath, writeFile } from 'node:fs/promises';
+import { basename, dirname, resolve, sep } from 'node:path';
 import process from 'node:process';
 import { devkitWorkspaceSource } from '@docouno/env/vite';
 import react from '@vitejs/plugin-react';
@@ -49,6 +50,11 @@ const outName = process.env.VISUAL_OUT || `${nameParts.join('_')}.png`;
 const appRoot = resolve(import.meta.dirname, '..');
 const outDir = resolve(appRoot, '../../.artifacts/visual');
 await mkdir(outDir, { recursive: true });
+const output = resolve(outDir, outName);
+const outPath = resolve(await realpath(dirname(output)), basename(output));
+if (!outPath.startsWith((await realpath(outDir)) + sep)) {
+  throw new Error('out must name a file inside .artifacts/visual/.');
+}
 
 const t0 = performance.now();
 
@@ -169,7 +175,6 @@ try {
     throw new Error(`Runtime errors:\n${errors.join('\n')}`);
   }
 
-  const outPath = resolve(outDir, outName);
   const layoutViewport = page.viewportSize();
   const captureSize = await page.evaluate(() => ({
     width: Math.max(window.innerWidth, document.documentElement.scrollWidth),
@@ -194,7 +199,9 @@ try {
   if (errors.length > 0) {
     throw new Error(`Runtime errors:\n${errors.join('\n')}`);
   }
-  await writeFile(outPath, Buffer.from(capture.data, 'base64'));
+  await writeFile(outPath, Buffer.from(capture.data, 'base64'), {
+    flag: constants.O_WRONLY | constants.O_CREAT | constants.O_TRUNC | constants.O_NOFOLLOW,
+  });
   const elapsedMs = Math.round(performance.now() - t0);
   process.stdout.write(`visual: wrote ${outPath} (${String(elapsedMs)} ms)\n`);
 } finally {

@@ -1,7 +1,7 @@
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import type { ReactElement } from 'react';
 import { useState } from 'react';
-import { afterEach, expect, it } from 'vitest';
+import { afterEach, expect, it, vi } from 'vitest';
 import { Matrix } from './Matrix.js';
 import { defineComponent } from './types.js';
 import type { ComponentDefinition, MatrixMode, MatrixView, WorkbenchTheme } from './types.js';
@@ -228,8 +228,14 @@ it('keeps slice focus and releases a named pin when it becomes a free axis', asy
   expect(await screen.findByText(/12 \/ 12 compatible pairs/)).toBeTruthy();
 });
 
-it('reveals every row of a large slice and includes all rows in a capture', () => {
-  const definition = wide(9, 2);
+it('renders each valid sample once while revealing a large slice and captures all rows', () => {
+  const sample = vi.fn(() => <span data-wb-subject="" />);
+  const reference = vi.fn(() => <span>Reference</span>);
+  const definition = {
+    ...wide(9, 2),
+    render: sample,
+    matrixViews: [{ id: 'all', title: 'All', rows: 'a', cols: 'b', reference }],
+  };
   const { container } = render(<MatrixFixture definition={definition} />);
   const rows = () => container.querySelectorAll('tbody tr').length;
   expect(rows()).toBeLessThan(9);
@@ -239,6 +245,8 @@ it('reveals every row of a large slice and includes all rows in a capture', () =
     expect(rows()).toBeGreaterThan(previous);
   }
   expect(rows()).toBe(9);
+  expect(sample).toHaveBeenCalledTimes(17);
+  expect(reference).toHaveBeenCalledTimes(1);
   cleanup();
   const capture = render(<MatrixFixture definition={definition} raw />);
   expect(capture.container.querySelectorAll('tbody tr')).toHaveLength(9);

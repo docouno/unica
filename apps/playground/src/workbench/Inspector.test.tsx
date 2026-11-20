@@ -148,6 +148,55 @@ it('shares valid controls across themes while keeping the last valid Subject and
   expect(screen.getAllByRole('button', { name: 'Submit choice' })).toHaveLength(2);
 });
 
+it('preserves retained live event rows when the oldest entry expires', () => {
+  showInspector(
+    defineComponent({
+      id: 'events',
+      title: 'Events example',
+      category: 'Examples',
+      status: 'Proto',
+      props: {
+        change: {
+          kind: 'action',
+          group: 'Events',
+          description: 'Reports a change.',
+          code: 'onChange',
+        },
+      },
+      render: ({ ctx }) => (
+        <div {...ctx.subject}>
+          <button
+            type="button"
+            onClick={() => {
+              for (let i = 0; i < 100; i++) {
+                ctx.action('change')(i);
+              }
+            }}
+          >
+            Fill log
+          </button>
+          <button type="button" onClick={() => ctx.action('change')(100)}>
+            Append
+          </button>
+        </div>
+      ),
+    }),
+  );
+  const board = within(screen.getByRole('region', { name: 'Example Light' }));
+  fireEvent.click(board.getByRole('button', { name: 'Fill log' }));
+  fireEvent.click(screen.getByRole('tab', { name: 'Events' }));
+  const panel = within(screen.getByRole('tabpanel', { name: 'Events' }));
+  const before = panel.getAllByRole('listitem');
+  fireEvent.click(board.getByRole('button', { name: 'Append' }));
+  const after = panel.getAllByRole('listitem');
+  expect(after).toHaveLength(100);
+  expect(after.slice(0, -1).every((node, index) => node === before[index + 1])).toBe(true);
+  expect(after[99]?.textContent).toContain('100');
+  expect(panel.getByText('1 earlier event omitted.')).toBeTruthy();
+  fireEvent.click(panel.getByRole('button', { name: 'Clear' }));
+  expect(panel.getByText('No events yet.')).toBeTruthy();
+});
+
 function NativeForm({
   marker,
 }: {

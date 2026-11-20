@@ -272,14 +272,16 @@ function EventsPanel({
           Clear
         </button>
       </div>
+      {events.omitted > 0 && (
+        <p className="wb-inspector-note">
+          {events.omitted} earlier {events.omitted === 1 ? 'event' : 'events'} omitted.
+        </p>
+      )}
       <div aria-live="polite">
-        {events.omitted > 0 && (
-          <p className="wb-inspector-note">{events.omitted} earlier events omitted.</p>
-        )}
         {events.entries.length ? (
-          <ol className="wb-inspector-events">
+          <ol className="wb-inspector-events" start={events.omitted + 1}>
             {events.entries.map(({ theme, name, detail }, index) => (
-              <li key={index}>
+              <li key={events.omitted + index}>
                 <span>{theme.label}</span> <code>{name}</code>
                 {detail !== undefined && <code className="wb-event-detail">{detail}</code>}
               </li>
