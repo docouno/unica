@@ -133,15 +133,16 @@ function handleReset(event: Event): void {
   const epochs = formEpochs.get(form) ?? { issued: 0, restored: 0 };
   formEpochs.set(form, epochs);
   const epoch = ++epochs.issued;
-  const endpoint = path.at(-1);
   let pending: PendingReset | undefined;
   let active = true;
 
   const cleanup = (): void => {
     active = false;
     dispatches.delete(event);
-    form.removeEventListener('reset', observeTail);
-    endpoint?.removeEventListener('reset', observeTail);
+    for (const node of path) {
+      node.removeEventListener('reset', observeTail, true);
+      node.removeEventListener('reset', observeTail);
+    }
     if (pending) {
       pendingResets.delete(pending);
       pending.witness.confirmReset = undefined;
@@ -213,11 +214,12 @@ function handleReset(event: Event): void {
 
   dispatches.set(event, cleanup);
   prepare();
-  // A reset handler can change associations before the default action runs.
-  // Take the final cohort during propagation so a delayed witness cannot
-  // grant reset authority to controls added after the browser acted.
-  form.addEventListener('reset', observeTail);
-  endpoint?.addEventListener('reset', observeTail);
+  // Observe changes on the same node when an earlier reset handler stops propagation.
+  // The final cohort is recorded before the native action, independently of its witness.
+  for (const node of path) {
+    node.addEventListener('reset', observeTail, true);
+    node.addEventListener('reset', observeTail);
+  }
 
   queueMicrotask(() => {
     if (event.eventPhase === 0) {

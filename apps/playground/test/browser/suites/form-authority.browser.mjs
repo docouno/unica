@@ -258,6 +258,29 @@ export default {
     assert.deepEqual(result, { owned: true, entries: [['local', 'a']] });
     assert.equal(await page.getByTestId('local-value').textContent(), 'a');
   },
+  'a native reset follows its new owner when a listener stops propagation': async ({
+    page,
+    mount,
+  }) => {
+    for (const capture of [true, false]) {
+      await mount('form-authority');
+      await button(page, 'Change local to B').click();
+      const result = await page.locator('#second').evaluate((form, capture) => {
+        const local = document.querySelector('select[name=local]');
+        form.parentElement.addEventListener(
+          'reset',
+          (event) => {
+            local.setAttribute('form', 'second');
+            event.stopPropagation();
+          },
+          { capture, once: true },
+        );
+        form.reset();
+        return [...new FormData(form)];
+      }, capture);
+      assert.deepEqual(result, [['local', 'a']]);
+    }
+  },
   'moving a mounted carrier subtree into Shadow DOM preserves synchronous native reset': async ({
     page,
     mount,
