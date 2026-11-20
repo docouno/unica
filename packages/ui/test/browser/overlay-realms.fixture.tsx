@@ -1,6 +1,10 @@
 import { useLayoutEffect, useRef } from 'react';
 import type { JSX } from 'react';
-import { registerOverlay, resolveToastPortalHost } from '../../src/core/overlay/runtime.js';
+import {
+  registerOverlay,
+  resolveToastPortalHost,
+  subscribeToModalChanges,
+} from '../../src/core/overlay/runtime.js';
 import type * as Runtime from '../../src/core/overlay/runtime.js';
 
 export default function OverlayRealmsFixture(): JSX.Element {
@@ -81,6 +85,50 @@ export default function OverlayRealmsFixture(): JSX.Element {
     const checkShadow = () => {
       root.dataset.shadowProjection = String(resolveToastPortalHost(shadowHost) === modal);
     };
+    let destination: HTMLDivElement | undefined;
+    const unsubscribe = subscribeToModalChanges(document, () => {
+      root.dataset.modalHost = resolveToastPortalHost(document.body)?.id || 'body';
+    });
+    const moveOwnedDialog = () => {
+      const source = root.appendChild(document.createElement('div'));
+      destination = root.appendChild(document.createElement('div'));
+      const dialog = source.appendChild(document.createElement('dialog'));
+      dialog.id = 'moved-dialog';
+      dialog.style.cssText = 'width:0;height:0;box-sizing:border-box;padding:0;border:0';
+      const handle = registerOverlay({ element: dialog, kind: 'modal', onOpenChange() {} });
+      registered.add(handle);
+      handle.setOpen(true);
+      destination.moveBefore(dialog, null);
+      root.dataset.preservedModal = String(
+        dialog.matches(':modal') && dialog.getBoundingClientRect().height === 0,
+      );
+    };
+    const adoptPopover = () => {
+      const element = root.appendChild(document.createElement('div'));
+      element.id = 'adopted';
+      const button = element.appendChild(document.createElement('button'));
+      button.textContent = 'Adopted action';
+      const oldOwner = registerOverlay({
+        element,
+        kind: 'manual',
+        onOpenChange(_open, reason) {
+          root.dataset.oldOwnerDismiss = reason;
+        },
+      });
+      registered.add(oldOwner);
+      oldOwner.setOpen(true);
+      childDocument.body.appendChild(element);
+      const newOwner = registerOverlay({
+        element,
+        kind: 'manual',
+        onOpenChange(open, reason) {
+          root.dataset.newOwnerDismiss = reason;
+          newOwner.setOpen(open);
+        },
+      });
+      registered.add(newOwner);
+      newOwner.setOpen(true);
+    };
     const start = () => {
       openCopies().catch((error: unknown) => window.reportError(error));
     };
@@ -89,7 +137,11 @@ export default function OverlayRealmsFixture(): JSX.Element {
     root.addEventListener('open-shadow', prepareShadow);
     root.addEventListener('remove-shadow', moveShadow);
     root.addEventListener('check-shadow', checkShadow);
+    root.addEventListener('move-owned-dialog', moveOwnedDialog);
+    root.addEventListener('remove-moved-dialog', () => destination?.remove());
+    root.addEventListener('adopt-popover', adoptPopover);
     return () => {
+      unsubscribe();
       registered.forEach((handle) => handle.dispose());
       Reflect.deleteProperty(window, registryKey);
     };

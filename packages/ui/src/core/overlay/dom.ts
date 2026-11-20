@@ -24,9 +24,10 @@ export function deepFocus(document: Document): Element | null {
   return active;
 }
 
-export function focusElement(element: Element | null): void {
+export function focusElement(element: Element | null, document: Document): void {
   if (
     element?.isConnected &&
+    element.ownerDocument === document &&
     'focus' in element &&
     !element.matches(':disabled') &&
     !Array.from(composedAncestors(element)).some((ancestor) =>

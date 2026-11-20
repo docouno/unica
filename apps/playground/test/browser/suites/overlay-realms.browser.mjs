@@ -58,4 +58,36 @@ export default {
       'false',
     );
   },
+  'a state-preserving dialog move updates the ancestors observed for removal': async ({
+    page,
+    mount,
+  }) => {
+    await mount('overlay-realms');
+    await dispatch(page, 'move-owned-dialog');
+    const fixture = page.locator('#overlay-realms');
+    assert.equal(await fixture.getAttribute('data-preserved-modal'), 'true');
+    assert.equal(await fixture.getAttribute('data-modal-host'), 'moved-dialog');
+    await page.evaluate(() => new Promise((resolve) => requestAnimationFrame(resolve)));
+    await dispatch(page, 'remove-moved-dialog');
+    await page.waitForFunction(() => document.documentElement.style.overflow === '');
+    assert.equal(await fixture.getAttribute('data-modal-host'), 'body');
+  },
+
+  'a previous document releases an adopted carrier without closing it in the new document': async ({
+    page,
+    mount,
+  }) => {
+    await mount('overlay-realms');
+    await dispatch(page, 'adopt-popover');
+    await page.waitForFunction(
+      () => document.querySelector('#overlay-realms').dataset.oldOwnerDismiss === 'lost',
+    );
+    const fixture = page.locator('#overlay-realms');
+    const adopted = page.frameLocator('iframe').locator('#adopted');
+    assert.equal(await adopted.evaluate((element) => element.matches(':popover-open')), true);
+    assert.equal(await fixture.getAttribute('data-new-owner-dismiss'), null);
+    await adopted.getByRole('button').press('Escape');
+    assert.equal(await fixture.getAttribute('data-new-owner-dismiss'), 'escape');
+    assert.equal(await adopted.evaluate((element) => element.matches(':popover-open')), false);
+  },
 };

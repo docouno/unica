@@ -156,6 +156,29 @@ export default {
     await visibleLayer(page, 'dialog', ':modal');
   },
 
+  'Escape in a foreign manual popover leaves the underlying native owners open': async ({
+    page,
+    mount,
+  }) => {
+    await mount('overlay');
+    await command(page, 'open-a', 'foreign-manual');
+    await page.locator('#foreign-manual-action').focus();
+    await page.keyboard.press('Escape');
+    await statistic(page, 'escapes', 1);
+    await visibleLayer(page, 'foreign-manual');
+    await visibleLayer(page, 'p1');
+    await statistic(page, 'p1Changes', 0);
+
+    await mount('overlay');
+    await command(page, 'open-dialog', 'foreign-manual-in-dialog');
+    await page.locator('#foreign-manual-action').focus();
+    await page.keyboard.press('Escape');
+    await statistic(page, 'escapes', 1);
+    await visibleLayer(page, 'foreign-manual');
+    await visibleLayer(page, 'dialog', ':modal');
+    await statistic(page, 'guard', 0);
+  },
+
   'modal lease preserves auto and interleaved manual order through stacked dialogs': async ({
     page,
     mount,
@@ -345,6 +368,23 @@ export default {
       await assertHitTarget(action, point);
       await page.mouse.click(point.x, point.y);
       await statistic(page, 'positionedClicks', 1);
+
+      const alignTo = async (dir) => {
+        const left = dir === 'ltr' ? anchor.x : anchor.x + anchor.width - box.width;
+        await page.locator('html').evaluate((html, dir) => {
+          html.dir = dir;
+        }, dir);
+        await page.waitForFunction(
+          (expected) =>
+            Math.abs(
+              document.querySelector('#positioned').getBoundingClientRect().left - expected,
+            ) <= 1,
+          left,
+        );
+        assert.deepEqual(await getBox(page.locator('#anchor')), anchor);
+      };
+      await alignTo(direction === 'ltr' ? 'rtl' : 'ltr');
+      await alignTo(direction);
 
       const originalClip = await page.locator('#clip').evaluate((clip, dir) => {
         const style = clip.style.cssText;

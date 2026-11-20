@@ -1,5 +1,6 @@
 import { autoUpdate, computePosition, flip, offset, platform, shift, size } from '@floating-ui/dom';
 import type { Placement } from '@floating-ui/dom';
+import { composedAncestors } from './dom.js';
 
 type Side = 'top' | 'bottom' | 'start' | 'end';
 type Align = 'start' | 'center' | 'end';
@@ -52,6 +53,8 @@ export function positionOverlay({
 
   let active = true;
   let revision = 0;
+  let lastRTL: boolean | undefined;
+  const isRTL = (): boolean => view.getComputedStyle(anchor).direction === 'rtl';
   const update = (): void => {
     const current = ++revision;
     const valid = (): boolean =>
@@ -65,7 +68,8 @@ export function positionOverlay({
     if (!valid()) {
       return;
     }
-    const rtl = view.getComputedStyle(anchor).direction === 'rtl';
+    const rtl = isRTL();
+    lastRTL = rtl;
     const physical =
       side === 'start'
         ? rtl
@@ -114,12 +118,23 @@ export function positionOverlay({
   };
 
   const stop = autoUpdate(anchor, floating, update);
+  const direction = new view.MutationObserver(() => {
+    // A cascade change can move the logical edge without changing either box.
+    if (anchor.ownerDocument === document && isRTL() !== lastRTL) {
+      update();
+    }
+  });
+  for (const ancestor of composedAncestors(anchor)) {
+    direction.observe(ancestor, { attributes: true, attributeFilter: ['dir', 'class', 'style'] });
+  }
+
   const cleanup = (): void => {
     if (!active) {
       return;
     }
     active = false;
     stop();
+    direction.disconnect();
     updates.delete(floating);
     style.removeProperty('inset');
     style.removeProperty('margin');

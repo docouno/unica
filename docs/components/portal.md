@@ -5,6 +5,7 @@ Use `Portal` to render dialog content or other detached UI into a host while kee
 ```tsx
 import { useState } from 'react';
 import { Portal, PortalProvider } from '@docouno/unica';
+import '@docouno/unica/styles.css';
 
 export function PanelScope() {
   const [host, setHost] = useState<HTMLDivElement | null>(null);

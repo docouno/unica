@@ -65,6 +65,7 @@ function restoreAttribute(element: HTMLElement, name: string, value: string | nu
 let generatedId = 0;
 
 class Layer {
+  readonly document: Document;
   phase: Phase = 'closed';
   order = 0;
   runtime: OverlayRuntime | undefined;
@@ -81,6 +82,7 @@ class Layer {
 
   constructor(readonly options: Registration) {
     const { element, kind, trigger } = options;
+    this.document = element.ownerDocument;
     if (kind !== 'modal') {
       element.popover = kind;
     }
@@ -104,6 +106,10 @@ class Layer {
     return this.phase === 'open';
   }
 
+  get ownsCarrier(): boolean {
+    return this.options.element.ownerDocument === this.document;
+  }
+
   setTrigger = (trigger: HTMLElement | null): void => {
     if (this.disposed || this.trigger === trigger) {
       return;
@@ -118,8 +124,10 @@ class Layer {
       trigger.addEventListener('click', this.onClick);
       this.unbindTrigger = () => {
         trigger.removeEventListener('click', this.onClick);
-        restoreAttribute(trigger, 'popovertarget', target);
-        restoreAttribute(trigger, 'aria-expanded', expanded);
+        if (trigger.ownerDocument === this.document) {
+          restoreAttribute(trigger, 'popovertarget', target);
+          restoreAttribute(trigger, 'aria-expanded', expanded);
+        }
       };
       this.updateTrigger();
     }
@@ -130,11 +138,11 @@ class Layer {
 
   updateTrigger(): void {
     const { trigger } = this;
-    if (trigger && this.options.kind === 'auto') {
+    if (trigger?.ownerDocument === this.document && this.options.kind === 'auto') {
       restoreAttribute(
         trigger,
         'popovertarget',
-        this.phase === 'exiting' ? null : this.options.element.id,
+        this.phase === 'exiting' || !this.ownsCarrier ? null : this.options.element.id,
       );
       trigger.setAttribute('aria-expanded', String(this.active));
     }
@@ -145,24 +153,27 @@ class Layer {
       return;
     }
     this.runtime?.reconcile();
+    if (!this.ownsCarrier) {
+      return;
+    }
     if (!open) {
       this.finishExit();
       return;
     }
     if (this.phase === 'closed' && !this.dismissed) {
-      runtimeFor(this.options.element.ownerDocument)?.open(this);
+      runtimeFor(this.document)?.open(this);
     }
   };
 
   requestOpen = (): void => {
-    if (!this.disposed && this.phase !== 'exiting') {
+    if (!this.disposed && this.ownsCarrier && this.phase !== 'exiting') {
       this.dismissed = false;
       this.options.onOpenChange(true, 'trigger');
     }
   };
 
   beginExit = (): void => {
-    if (this.active) {
+    if (this.active && this.ownsCarrier) {
       this.phase = 'exiting';
       this.updateTrigger();
       this.previousInert = this.options.element.inert;
@@ -173,7 +184,9 @@ class Layer {
 
   resetExit(): void {
     if (this.previousInert !== undefined) {
-      this.options.element.inert = this.previousInert;
+      if (this.ownsCarrier) {
+        this.options.element.inert = this.previousInert;
+      }
       this.previousInert = undefined;
     }
   }
@@ -208,6 +221,9 @@ class Layer {
   }
 
   hide(): void {
+    if (!this.ownsCarrier) {
+      return;
+    }
     const { options } = this;
     this.operate(() => {
       if (options.kind === 'modal') {
@@ -232,7 +248,7 @@ class Layer {
   }
 
   private beforeToggle = (event: ToggleEvent): void => {
-    if (this.internal || this.moving || event.newState !== 'closed') {
+    if (!this.ownsCarrier || this.internal || this.moving || event.newState !== 'closed') {
       return;
     }
     if (this.options.kind === 'modal') {
@@ -248,7 +264,7 @@ class Layer {
   };
 
   private onCancel = (event: Event): void => {
-    if (event.defaultPrevented || this.phase === 'closed') {
+    if (!this.ownsCarrier || event.defaultPrevented || this.phase === 'closed') {
       return;
     }
     event.preventDefault();
@@ -258,7 +274,11 @@ class Layer {
   };
 
   private onClick = (event: MouseEvent): void => {
-    if (event.defaultPrevented) {
+    if (
+      !this.ownsCarrier ||
+      this.trigger?.ownerDocument !== this.document ||
+      event.defaultPrevented
+    ) {
       return;
     }
     event.preventDefault();
@@ -275,6 +295,7 @@ interface Lease {
   readonly start: number;
   readonly popovers: readonly Layer[];
   readonly modal: Layer;
+  readonly focus: Element | null;
 }
 
 class OverlayRuntime {
@@ -331,7 +352,7 @@ class OverlayRuntime {
       if (layer.options.kind === 'modal') {
         this.acquireLease(layer);
       }
-      if (!layer.disposed && layer.phase === 'opening') {
+      if (!layer.disposed && layer.phase === 'opening' && this.alive(layer)) {
         this.show(layer);
         if (layer.runtime === this) {
           this.admit();
@@ -469,7 +490,9 @@ class OverlayRuntime {
     layer.resetExit();
     if (layer.leased) {
       layer.leased = false;
-      layer.options.element.popover = 'auto';
+      if (layer.ownsCarrier) {
+        layer.options.element.popover = 'auto';
+      }
     }
     if (!layer.disposed) {
       layer.updateTrigger();
@@ -511,14 +534,15 @@ class OverlayRuntime {
   }
 
   private onMutations = (records: MutationRecord[]): void => {
-    if (
-      records.some(
-        (record) =>
-          record.type === 'attributes' ||
-          Array.from(record.removedNodes).some((node) => this.modalAncestors.has(node as Element)),
-      )
-    ) {
+    const moved = records.some((record) =>
+      Array.from(record.removedNodes).some((node) => this.modalAncestors.has(node as Element)),
+    );
+    if (moved || records.some(({ type }) => type === 'attributes')) {
       this.reconcile();
+    }
+    // A state-preserving move can keep :modal while changing the structural owners.
+    if (moved) {
+      this.watchModals();
     }
   };
 
@@ -541,7 +565,7 @@ class OverlayRuntime {
     ) {
       return;
     }
-    focusElement(layer.trigger ?? layer.previousFocus);
+    focusElement(layer.trigger ?? layer.previousFocus, this.document);
   }
 
   private finalDismiss(layer: Layer, reason: DismissReason, browserClosing = false): void {
@@ -593,7 +617,7 @@ class OverlayRuntime {
     const popovers = interval.filter(
       (layer) => layer.active && layer.options.kind === 'auto' && !layer.leased,
     );
-    this.leases.push({ start: interval[0]!.order, popovers, modal });
+    this.leases.push({ start: interval[0]!.order, popovers, modal, focus: modal.previousFocus });
     const promoted = new Set(popovers);
     this.replay(interval, promoted, true);
   }
@@ -623,9 +647,9 @@ class OverlayRuntime {
       composedContains(options.element, focused),
     );
     if (!focused || focused === this.document.body || focusWasInInterval) {
-      const original = ready[0]!.modal.previousFocus;
+      const original = ready[0]!.focus;
       if (focusWasInInterval || current === this.document.body) {
-        focusElement(focusWasInInterval ? focused : original);
+        focusElement(focusWasInInterval ? focused : original, this.document);
       }
     }
   }
@@ -643,12 +667,15 @@ class OverlayRuntime {
         if (layer.runtime !== this) {
           continue;
         }
+        if (!this.alive(layer)) {
+          this.finalDismiss(layer, 'lost');
+          continue;
+        }
         if (changed.has(layer)) {
           layer.leased = leased;
           layer.options.element.popover = leased ? 'manual' : 'auto';
         }
         if (
-          this.alive(layer) &&
           !Array.from(composedAncestors(layer.options.element)).some((element) =>
             element.matches('dialog:not([open])'),
           )
@@ -751,6 +778,14 @@ class OverlayRuntime {
           !own.has(element) &&
           !composedContains(element, candidate.options.element)
         ) {
+          // Foreign manual popovers have no native Escape watcher of their own.
+          if (
+            element.matches(':popover-open') &&
+            'popover' in element &&
+            element.popover === 'manual'
+          ) {
+            event.preventDefault();
+          }
           return;
         }
       }
@@ -821,7 +856,7 @@ function runtimeFor(document: Document): OverlayRuntime | undefined {
   return runtime;
 }
 
-/** Register a family-owned carrier. The family commits controlled state via setOpen. */
+/** Register a carrier in its owner document. Re-register if that document changes. */
 export function registerOverlay(options: Registration): OverlayHandle {
   return new Layer(options);
 }

@@ -31,6 +31,7 @@ export default function OverlayFixture(): JSX.Element {
     const dialog = get<HTMLDialogElement>('dialog');
     const confirm = get<HTMLDialogElement>('confirm');
     const guarded = get('guarded');
+    const foreignManual = get('foreign-manual');
     const positioned = get('positioned');
     const trigger2 = get('trigger2');
     const nestedTrigger = get('nested-trigger');
@@ -131,6 +132,11 @@ export default function OverlayFixture(): JSX.Element {
         guard = false;
       },
       'foreign-modal': () => get<HTMLDialogElement>('foreign').showModal(),
+      'foreign-manual': () => foreignManual.showPopover(),
+      'foreign-manual-in-dialog': () => {
+        dialog.appendChild(foreignManual);
+        foreignManual.showPopover();
+      },
       'remove-trigger': () => trigger2.remove(),
       'replace-trigger': () => b.setTrigger(get('replacement')),
       'move-panel': () => p1.appendChild(p2),
@@ -300,6 +306,11 @@ export default function OverlayFixture(): JSX.Element {
           Foreign
         </button>
       </dialog>
+      <div id="foreign-manual" popover="manual">
+        <button id="foreign-manual-action" type="button">
+          Foreign manual action
+        </button>
+      </div>
       <div
         id="clip"
         style={{
