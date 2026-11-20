@@ -167,6 +167,27 @@ describe('FocusOrigin', () => {
     expect(report.mock.calls).toEqual([['keyboard']]);
   });
 
+  it('mounts another binding during blur without interrupting the focused owner', () => {
+    const owner = document.createElement('div');
+    const first = document.createElement('input');
+    const next = document.createElement('input');
+    owner.append(first, next);
+    document.body.append(owner);
+    const { report } = bind(owner);
+    key(first, 'Tab');
+    first.focus();
+    first.addEventListener('blur', () => {
+      const added = document.createElement('input');
+      document.body.append(added);
+      bind(added);
+    });
+
+    next.focus();
+
+    expect(document.activeElement).toBe(next);
+    expect(report.mock.calls).toEqual([['keyboard']]);
+  });
+
   it('never reports focus for a proposed destination that disappears during focusout', async () => {
     const from = document.createElement('input');
     const wrapper = document.createElement('label');

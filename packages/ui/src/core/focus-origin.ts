@@ -168,11 +168,16 @@ function createTracker(doc: Document, view: Window): FocusTracker {
         }
       };
 
-      try {
-        syncActiveElement();
-      } catch (error) {
-        detach();
-        throw error;
+      // Mounting a sibling during blur must not interrupt an existing focus transfer.
+      if (element.contains(doc.activeElement)) {
+        focused.add(binding);
+        binding.reported = origin;
+        try {
+          notify(origin);
+        } catch (error) {
+          detach();
+          throw error;
+        }
       }
       return detach;
     },
