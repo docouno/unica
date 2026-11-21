@@ -35,9 +35,12 @@ function isUnsupportedSlotType(type: unknown): boolean {
   }
 }
 
-function requireChild<T extends Element>(children: ReactNode): ReactElement<SlotProps<T>> {
+export function requireSlotChild<T extends Element>(
+  children: ReactNode,
+  owner = 'Slot',
+): ReactElement<SlotProps<T>> {
   if (!isValidElement<SlotProps<T>>(children) || isUnsupportedSlotType(children.type)) {
-    throw new Error('Slot requires exactly one React element that accepts props and a ref.');
+    throw new Error(`${owner} requires exactly one React element that accepts props and a ref.`);
   }
   return children;
 }
@@ -55,7 +58,7 @@ export function Slot<T extends Element = HTMLElement>({
   ref,
   ...slotProps
 }: SlotProps<T>): ReactElement {
-  const child = requireChild<T>(children);
+  const child = requireSlotChild<T>(children);
   const childProps = child.props;
   const mergedRef = useSlotRef(ref, childProps.ref);
 

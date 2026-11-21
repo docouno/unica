@@ -1,3 +1,4 @@
+import { Link } from '@docouno/unica';
 import { useId, useRef, useState } from 'react';
 import type { ReactElement } from 'react';
 import {
@@ -23,7 +24,6 @@ import {
 } from '../dialog/dialog.proto.js';
 import { Empty, EmptyDescription, EmptyMedia, EmptyTitle } from '../empty/empty.proto.js';
 import { Input } from '../input/input.proto.js';
-import { Link } from '../link/link.proto.js';
 import { ContextMenu } from '../menu/context-menu.proto.js';
 import { Menu } from '../menu/menu.live.js';
 import { Pagination } from '../pagination/pagination.proto.js';

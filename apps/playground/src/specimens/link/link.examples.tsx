@@ -1,14 +1,14 @@
-import { useId, useSyncExternalStore } from 'react';
-import type { ReactElement, ReactNode } from 'react';
+import { useId, useState, useSyncExternalStore } from 'react';
+import type { ComponentPropsWithRef, ReactElement, ReactNode } from 'react';
 import { ArrowRightIcon, FileTextIcon } from '@phosphor-icons/react';
-import { Icon, Text, Title } from '@docouno/unica';
-import { Link } from './link.proto.js';
-import type { LinkSize } from './link.proto.js';
-import type { LinkProps } from './link.proto.js';
+import { Icon, Link, Text, Title } from '@docouno/unica';
+import type { LinkProps } from '@docouno/unica';
+import { Alert, AlertTitle } from '../../prototypes/alert/alert.proto.js';
+import { Card } from '../../prototypes/card/card.proto.js';
 import './link.examples.css';
 
 const reference = 'https://www.w3.org/WAI/';
-const sizes: readonly Exclude<LinkSize, 'inherit'>[] = [
+const sizes: readonly NonNullable<LinkProps['size']>[] = [
   'body-l',
   'body-m',
   'body-s',
@@ -72,7 +72,7 @@ export function ReadingExamples(): ReactElement {
         </Text>
       </blockquote>
       <div className="link-study-standalone">
-        <Link href={reference} size="body-s">
+        <Link className="link-study-target" href={reference} size="body-s">
           Explore the handbook{'\u00a0'}
           <Icon usage="slot" icon={ArrowRightIcon} directional />
         </Link>
@@ -94,13 +94,11 @@ export function TypographyExamples(): ReactElement {
           </div>
         </div>
       ))}
-      <div className="link-study-divider" />
       <div className="link-study-group">
         <Label>Leading document glyph · inherited baseline</Label>
         <Text size="body-s">
-          <Link href={reference}>
-            <Icon usage="slot" icon={FileTextIcon} />
-            {'\u00a0'}Release notes
+          <Link href={reference} iconLeft={FileTextIcon}>
+            Release notes
           </Link>
         </Text>
       </div>
@@ -124,15 +122,6 @@ export function TypographyExamples(): ReactElement {
   );
 }
 
-const states: readonly { label: string; props: Partial<LinkProps> }[] = [
-  { label: 'Rest / visited', props: { previewState: 'rest' } },
-  { label: 'Hover', props: { previewState: 'hover' } },
-  { label: 'Held press', props: { previewState: 'active' } },
-  { label: 'Keyboard focus', props: { previewState: 'rest', previewFocus: true } },
-  { label: 'Focus + press', props: { previewState: 'active', previewFocus: true } },
-  { label: 'Unavailable', props: { disabled: true } },
-];
-
 export function StateExamples(): ReactElement {
   return (
     <div className="link-study">
@@ -140,16 +129,21 @@ export function StateExamples(): ReactElement {
         <div className="link-study-group" key={tone}>
           <Label>{tone}</Label>
           <div className="link-study-state-grid">
-            {states.map(({ label, props }) => (
-              <div className="link-study-state" key={label}>
-                <Text size="body-s">
-                  <Link tone={tone} href={reference} external {...props}>
-                    Read the guide
-                  </Link>
-                </Text>
-                <Label>{label}</Label>
-              </div>
-            ))}
+            <Text size="body-s">
+              <Link tone={tone} href={reference} external>
+                Read the guide
+              </Link>
+            </Text>
+            <Text size="body-s">
+              <Link tone={tone} href={reference} aria-current="page">
+                Current guide
+              </Link>
+            </Text>
+            <Text size="body-s">
+              <Link tone={tone} disabled external>
+                Archived guide
+              </Link>
+            </Text>
           </div>
         </div>
       ))}
@@ -163,76 +157,35 @@ export function NavigationExamples(): ReactElement {
       {(['always', 'hover', 'none'] as const).map((underline) => (
         <div className="link-study-group" key={underline}>
           <Label>Underline · {underline}</Label>
-          <div className="link-study-nav" aria-label={`${underline} underline previews`}>
-            <Link href={reference} tone="neutral" underline={underline} previewState="rest">
+          <nav className="link-study-nav" aria-label={`${underline} underline examples`}>
+            <Link
+              className="link-study-target"
+              href={reference}
+              tone="neutral"
+              underline={underline}
+            >
               Overview
             </Link>
-            <Link href={reference} tone="neutral" underline={underline} previewState="hover">
+            <Link
+              className="link-study-target"
+              href={reference}
+              tone="inherit"
+              underline={underline}
+            >
               Changelog
             </Link>
             <Link
+              className="link-study-target"
               href={reference}
               tone="neutral"
               underline={underline}
               aria-current="page"
-              previewState="hover"
             >
               Guides
             </Link>
-          </div>
+          </nav>
         </div>
       ))}
-      <div className="link-study-divider" />
-      <Label>Inherited ink without a line · live / pinned hover / pinned press</Label>
-      <div className="link-study-state-grid">
-        <div>
-          <Link href={reference} tone="inherit" underline="none">
-            Handbook
-          </Link>
-        </div>
-        <div>
-          <Link href={reference} tone="inherit" underline="none" previewState="hover">
-            Handbook
-          </Link>
-        </div>
-        <div>
-          <Link href={reference} tone="inherit" underline="none" previewState="active">
-            Handbook
-          </Link>
-        </div>
-      </div>
-      <Label>Current · rest / hover / focus + press</Label>
-      <div className="link-study-state-grid">
-        <div>
-          <Link href={reference} aria-current="page" previewState="rest">
-            Guides
-          </Link>
-        </div>
-        <div>
-          <Link href={reference} aria-current="page" previewState="hover">
-            Guides
-          </Link>
-        </div>
-        <div>
-          <Link href={reference} aria-current="page" previewState="active" previewFocus>
-            Guides
-          </Link>
-        </div>
-      </div>
-      <Text size="caption-l" color="secondary">
-        Hover-only and unlined links belong in clear navigation groups. Running prose always keeps
-        its underline.
-      </Text>
-      <div className="link-study-group">
-        <Text size="body-s">
-          <Link href={reference} disabled external>
-            Download archive
-          </Link>
-        </Text>
-        <Text size="caption-l" color="secondary">
-          Available after your workspace export finishes.
-        </Text>
-      </div>
     </div>
   );
 }
@@ -241,10 +194,10 @@ export function WrappingExamples(): ReactElement {
   return (
     <div className="link-study link-study-measure">
       <div className="link-study-group">
-        <Label>Long reference · pinned focus</Label>
+        <Label>Long reference</Label>
         <Text size="body-m">
           Continue with{' '}
-          <Link href={reference} external previewFocus>
+          <Link href={reference} external>
             practical guidance for writing clear and accessible documentation
           </Link>{' '}
           before sharing your draft.
@@ -306,7 +259,7 @@ export function SurfaceExamples({ overlay = false }: { readonly overlay?: boolea
           </Text>
           <div className="link-study-state-grid">
             <div>
-              <Link href={reference} external previewFocus>
+              <Link href={reference} external>
                 Read source
               </Link>
             </div>
@@ -324,6 +277,38 @@ export function SurfaceExamples({ overlay = false }: { readonly overlay?: boolea
         </div>
       ))}
     </div>
+  );
+}
+
+export function ContextExamples(): ReactElement {
+  return (
+    <Alert status="danger">
+      <AlertTitle>The source is unavailable</AlertTitle>
+      <Text color="secondary">
+        <Link href={reference} tone="inherit">
+          Read recovery guidance
+        </Link>
+      </Text>
+      <Card size="s">
+        <Text color="secondary">
+          <Link href={reference} tone="inherit">
+            Inspect the neutral card
+          </Link>
+        </Text>
+      </Card>
+      <div className="link-study-surface" data-link-surface="overlay" data-surface="overlay">
+        <Text color="secondary">
+          <Link href={reference} tone="inherit">
+            Inspect the floating surface
+          </Link>
+        </Text>
+      </div>
+      <Text color="secondary">
+        <Link href={reference} tone="inherit">
+          Return to recovery guidance
+        </Link>
+      </Text>
+    </Alert>
   );
 }
 
@@ -351,6 +336,7 @@ export function LiveExamples(): ReactElement {
         {['summary', 'details'].map((part) => (
           <Link
             key={part}
+            className="link-study-target"
             href={`#${id}-${part}`}
             underline="hover"
             aria-current={location === part ? 'location' : undefined}
@@ -391,6 +377,53 @@ export function LiveExamples(): ReactElement {
           Export in progress. This destination is unavailable and skipped by Tab.
         </Text>
       </div>
+    </div>
+  );
+}
+
+export function RouteAnchor({
+  to,
+  ...props
+}: Omit<ComponentPropsWithRef<'a'>, 'href'> & { readonly to: string }): ReactElement {
+  return <a {...props} href={to} />;
+}
+
+export function DestinationExamples(): ReactElement {
+  const id = useId();
+  const [disabled, setDisabled] = useState(false);
+  return (
+    <div className="link-study">
+      <label>
+        <input
+          type="checkbox"
+          checked={disabled}
+          onChange={(event) => setDisabled(event.currentTarget.checked)}
+        />{' '}
+        Disable release notes
+      </label>
+      <Text>
+        <Link asChild disabled={disabled} iconLeft={FileTextIcon}>
+          <RouteAnchor to={`#${id}-release`} aria-describedby={`${id}-availability`}>
+            Release notes
+          </RouteAnchor>
+        </Link>{' '}
+        <span id={`${id}-availability`}>
+          {disabled ? 'Available after review.' : 'Read the latest revision.'}
+        </span>
+      </Text>
+      <p id={`${id}-release`} tabIndex={-1}>
+        Release notes for the current revision.
+      </p>
+      <Text>
+        <Link href="data:text/plain,Release%20notes" download="release-notes.txt" target="_blank">
+          Download release notes
+        </Link>
+      </Text>
+      <Text>
+        <Link href={reference} target="_blank" newTabHint="Se abre en una pestaña nueva">
+          Recursos de accesibilidad
+        </Link>
+      </Text>
     </div>
   );
 }

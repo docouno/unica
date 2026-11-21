@@ -1,11 +1,15 @@
 import { createContext, use, useMemo } from 'react';
 import type { JSX, ReactNode } from 'react';
 import type { IconSize } from '../components/Icon/Icon.js';
+import type { LinkSize } from '../components/Link/Link.js';
 import type { ThemePreset } from './themes.js';
 
 interface ComponentDefaultAxes {
   readonly Icon: {
     readonly size: IconSize;
+  };
+  readonly Link: {
+    readonly size: LinkSize;
   };
 }
 

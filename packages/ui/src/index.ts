@@ -46,6 +46,9 @@ export type {
 export { Kbd, KbdGroup } from './components/Kbd/Kbd.js';
 export type { KbdGroupProps, KbdProps, KbdSize } from './components/Kbd/Kbd.js';
 
+export { Link } from './components/Link/Link.js';
+export type { LinkProps } from './components/Link/Link.js';
+
 export { Progress } from './components/Progress/Progress.js';
 export type {
   ProgressProps,

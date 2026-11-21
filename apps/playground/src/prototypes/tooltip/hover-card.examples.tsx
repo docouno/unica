@@ -2,8 +2,7 @@ import { useId, useState } from 'react';
 import type { ReactElement } from 'react';
 import { FileTextIcon, GitCommitIcon, LockSimpleIcon, TicketIcon } from '@phosphor-icons/react';
 import { Avatar } from '../avatar/avatar.proto.js';
-import { Badge, Icon, Text, Title } from '@docouno/unica';
-import { Link } from '../link/link.proto.js';
+import { Badge, Icon, Link, Text, Title } from '@docouno/unica';
 import { SkeletonText } from '../skeleton/skeleton.proto.js';
 import { Study } from './tooltip.study.js';
 import { HoverCard } from './tooltip.proto.js';
@@ -361,17 +360,13 @@ export function HoverContextExamples(): ReactElement {
   return (
     <div className="hint-demo-stack">
       <p className="hint-demo-copy">
-        Maintained by{' '}
-        <Link href="#maintainer" previewState="hover">
-          Database reliability
-        </Link>
-        .
+        Maintained by <Link href="#maintainer">Database reliability</Link>.
       </p>
       <HoverCard>
         <TeamPreview />
       </HoverCard>
       <Text dir="auto" size="caption-l" color="secondary">
-        Pinned preview. The source remains a link; the card has no actions or close button.
+        The card is pinned open. Hover or Tab to the source to inspect the live link.
       </Text>
     </div>
   );

@@ -1,4 +1,4 @@
-import { Link } from '../../prototypes/link/link.proto.js';
+import { Link } from '@docouno/unica';
 import { HintPreview } from '../../prototypes/tooltip/tooltip.preview.js';
 import { defineComponent } from '../../workbench/types.js';
 

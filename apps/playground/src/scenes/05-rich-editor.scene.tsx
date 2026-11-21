@@ -1,4 +1,15 @@
-import { Badge, Blockquote, Code, Divider, Icon, Kbd, Spinner, Text, Title } from '@docouno/unica';
+import {
+  Badge,
+  Blockquote,
+  Code,
+  Divider,
+  Icon,
+  Kbd,
+  Link,
+  Spinner,
+  Text,
+  Title,
+} from '@docouno/unica';
 import { useId, useRef, useState } from 'react';
 import type { ReactElement } from 'react';
 import {
@@ -16,7 +27,6 @@ import { Subbar } from '../prototypes/app-shell/app-shell.proto.js';
 import { Button, IconButton } from '../prototypes/button/button.proto.js';
 import { ToastCard } from '../prototypes/toast/toast.proto.js';
 import { Input } from '../prototypes/input/input.proto.js';
-import { Link } from '../prototypes/link/link.proto.js';
 import {
   PopoverBody,
   PopoverClose,

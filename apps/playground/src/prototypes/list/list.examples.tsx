@@ -1,4 +1,4 @@
-import { Code } from '@docouno/unica';
+import { Code, Link } from '@docouno/unica';
 import { useId, useState } from 'react';
 import type { ComponentPropsWithoutRef, ReactElement } from 'react';
 import {
@@ -15,7 +15,6 @@ import { Badge } from '@docouno/unica';
 import { Switch } from '../binary-controls/binary-controls.proto.js';
 import { Button, IconButton } from '../button/button.proto.js';
 import { Card } from '../card/card.proto.js';
-import { Link } from '../link/link.proto.js';
 import { Menu } from '../menu/menu.live.js';
 import { PopoverContent } from '../popover/popover.proto.js';
 import { Text, Title } from '@docouno/unica';

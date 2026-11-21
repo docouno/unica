@@ -1,12 +1,11 @@
 import '@fontsource-variable/inter';
 import '@fontsource-variable/jetbrains-mono';
 import type { JSX, ReactNode } from 'react';
-import { Blockquote, Code, defineGlyph, IconProvider, Text, Title } from '@docouno/unica';
+import { Blockquote, Code, defineGlyph, IconProvider, Link, Text, Title } from '@docouno/unica';
 import type { GlyphSource, GlyphSvgProps } from '@docouno/unica';
 import { Alert } from '../../../src/prototypes/alert/alert.proto.js';
 import { Button } from '../../../src/prototypes/button/button.proto.js';
 import { Card } from '../../../src/prototypes/card/card.proto.js';
-import { Link } from '../../../src/prototypes/link/link.proto.js';
 import { PopoverContent } from '../../../src/prototypes/popover/popover.proto.js';
 import { unicaWorkbenchBase } from '../../../src/unica.workbench.shared.js';
 
