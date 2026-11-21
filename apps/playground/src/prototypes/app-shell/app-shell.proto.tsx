@@ -1,20 +1,15 @@
-import {
-  AccountGlyph,
-  BackGlyph,
-  BooksGlyph,
-  BranchGlyph,
-  CaretDownGlyph,
-  CaretRightGlyph,
-  CloseGlyph,
-  FileTextGlyph,
-  FolderGlyph,
-  NotificationGlyph,
-  PlusGlyph,
-  SearchGlyph,
-  SidebarGlyph,
-  SlidersGlyph,
-  TrashGlyph,
-} from '../control-glyphs.js';
+import { createContext, useContext, useId, useLayoutEffect, useRef, useState } from 'react';
+import type {
+  ComponentPropsWithRef,
+  CSSProperties,
+  MouseEvent,
+  ReactElement,
+  ReactNode,
+  Ref,
+  RefObject,
+} from 'react';
+import { Divider, Icon, Indicator, defineGlyph } from '@docouno/unica';
+import type { GlyphSource } from '@docouno/unica';
 import {
   BookOpenIcon,
   GearIcon,
@@ -24,10 +19,31 @@ import {
   SquaresFourIcon,
   UsersIcon,
 } from '@phosphor-icons/react/ssr';
-import { useId, useRef, useState } from 'react';
-import type { ComponentPropsWithRef, CSSProperties, ReactElement, ReactNode } from 'react';
-import { Icon, Indicator, Kbd, defineGlyph } from '@docouno/unica';
-import type { GlyphDefinition } from '@docouno/unica';
+import {
+  AccountGlyph,
+  BackGlyph,
+  BooksGlyph,
+  BranchGlyph,
+  CaretDownGlyph,
+  CloseGlyph,
+  FileTextGlyph,
+  FolderGlyph,
+  NotificationGlyph,
+  SearchGlyph,
+  SidebarGlyph,
+  SlidersGlyph,
+  TrashGlyph,
+} from '../control-glyphs.js';
+import { Button, IconButton } from '../button/button.proto.js';
+import { Input } from '../input/input.proto.js';
+import type { InputProps } from '../input/input.proto.js';
+import { PopoverContent } from '../popover/popover.proto.js';
+import { useShellPopoverPosition, windowBounds } from './app-shell-position.js';
+import { HintPreview } from '../tooltip/tooltip.preview.js';
+import { NavList, TreeView } from './navigation.proto.js';
+import type { NavigationSection } from './navigation.proto.js';
+export { DocumentTabs } from './document-tabs.proto.js';
+import '../dialog/dialog.css';
 import './app-shell.css';
 
 const AccessKeyGlyph = defineGlyph(KeyIcon, 'phosphor');
@@ -46,10 +62,210 @@ export interface AppShellProps extends ComponentPropsWithRef<'div'> {
   readonly header?: ReactNode;
   readonly subbar?: ReactNode;
   readonly minHeight?: number;
-  readonly navigationCollapsed?: boolean;
+  readonly viewportHeight?: number | string;
+  readonly canvasAs?: 'main' | 'section';
+  readonly defaultNavigationCollapsed?: boolean;
+  readonly defaultInspectorCollapsed?: boolean;
 }
 
-// A visual composition frame. Production navigation and modal focus ship separately.
+const DockControls = createContext<{
+  readonly start?: ReactNode;
+  readonly end?: ReactNode;
+}>({});
+const InspectorDockControl = createContext<ReactNode>(null);
+
+function DockToggle({
+  side,
+  name,
+  controls,
+  expanded,
+  onToggle,
+  buttonRef,
+}: {
+  readonly side: 'start' | 'end';
+  readonly name: string;
+  readonly controls: string;
+  readonly expanded: boolean;
+  readonly onToggle: () => void;
+  readonly buttonRef?: RefObject<HTMLButtonElement | null>;
+}): ReactElement {
+  const label = `${expanded ? 'Hide' : 'Show'} ${name}`;
+  return (
+    <HintPreview
+      side="bottom"
+      trigger={(bindings) => (
+        <IconButton
+          {...bindings}
+          ref={(button) => {
+            bindings.ref(button);
+            if (buttonRef) {
+              buttonRef.current = button;
+            }
+          }}
+          className={`app-shell-dock-toggle app-shell-dock-${side}`}
+          icon={SidebarGlyph}
+          size="s"
+          variant="ghost"
+          tone="neutral"
+          aria-label={label}
+          aria-controls={controls}
+          aria-expanded={expanded}
+          onClick={(event) => {
+            bindings.onClick?.(event);
+            onToggle();
+          }}
+        />
+      )}
+    >
+      {label}
+    </HintPreview>
+  );
+}
+
+interface PanelProps {
+  readonly id: string;
+  readonly side: 'start' | 'end';
+  readonly label: string;
+  readonly children: ReactNode;
+  readonly dialogRef: Ref<HTMLDialogElement>;
+}
+
+// The same panel stays mounted while it moves between docked and modal layouts.
+function ShellPanel({ id, side, label, children, dialogRef }: PanelProps): ReactElement {
+  const pressedBackdrop = useRef(false);
+
+  function isBackdrop(event: MouseEvent<HTMLDialogElement>): boolean {
+    if (event.target !== event.currentTarget || !event.currentTarget.open) {
+      return false;
+    }
+    const { left, right, top, bottom } = event.currentTarget.getBoundingClientRect();
+    return (
+      event.clientX < left ||
+      event.clientX >= right ||
+      event.clientY < top ||
+      event.clientY >= bottom
+    );
+  }
+
+  return (
+    <dialog
+      ref={dialogRef}
+      id={id}
+      className={`app-shell-panel app-shell-sheet app-shell-panel-${side} unica-scrollbar unica-scrollbar--compact`}
+      role="presentation"
+      onPointerDown={(event) => {
+        pressedBackdrop.current =
+          side === 'start' && event.isPrimary && event.button === 0 && isBackdrop(event);
+      }}
+      onPointerCancel={() => {
+        pressedBackdrop.current = false;
+      }}
+      onClick={(event) => {
+        if (pressedBackdrop.current && isBackdrop(event)) {
+          event.currentTarget.close();
+        }
+        pressedBackdrop.current = false;
+      }}
+    >
+      <div className="app-shell-sheet-preview">
+        <h2 tabIndex={-1}>{label}</h2>
+        <IconButton
+          size="s"
+          variant="ghost"
+          icon={CloseGlyph}
+          className="app-shell-panel-close"
+          aria-label={`Close ${label.toLowerCase()}`}
+          onClick={(event) => event.currentTarget.closest('dialog')?.close()}
+        />
+      </div>
+      {children}
+    </dialog>
+  );
+}
+
+function openShellPanel(panel: HTMLDialogElement | null, trigger: HTMLButtonElement): void {
+  const shell = trigger.closest<HTMLElement>('.app-shell-proto');
+  if (!panel || !shell || panel.open) {
+    return;
+  }
+  const body = panel.querySelector<HTMLElement>('.app-shell-aside-body');
+  const chrome = Array.from(
+    panel.querySelectorAll<HTMLElement>(
+      '.app-shell-sheet-preview, .app-shell-sheet-rail, .app-shell-aside-header, .app-shell-aside-footer',
+    ),
+  );
+  function position(): void {
+    if (!shell || !panel) {
+      return;
+    }
+    if (!trigger.getClientRects().length) {
+      panel.close();
+      shell.querySelector<HTMLElement>('.app-shell-main')?.focus({ preventScroll: true });
+      return;
+    }
+    const frame = shell.getBoundingClientRect();
+    const viewport = windowBounds();
+    const left = Math.max(viewport.left, frame.left);
+    const right = Math.min(viewport.right, frame.right);
+    const alignToFrame = right - left >= Math.min(240, viewport.right - viewport.left);
+    panel.style.setProperty('--shell-sheet-left', `${alignToFrame ? left : viewport.left}px`);
+    panel.style.setProperty(
+      '--shell-sheet-right',
+      `${window.innerWidth - (alignToFrame ? right : viewport.right)}px`,
+    );
+    panel.style.setProperty('--shell-sheet-top', `${viewport.top}px`);
+    panel.style.setProperty('--shell-sheet-height', `${viewport.bottom - viewport.top}px`);
+    if (!body) {
+      panel.setAttribute('data-whole-scroll', '');
+      return;
+    }
+    const padding = getComputedStyle(panel);
+    const inset = getComputedStyle(body);
+    const chromeHeight = chrome.reduce((total, part) => total + part.offsetHeight, 0);
+    const available =
+      panel.clientHeight -
+      chromeHeight -
+      parseFloat(padding.paddingBlockStart) -
+      parseFloat(padding.paddingBlockEnd) -
+      parseFloat(inset.marginBlockStart) -
+      parseFloat(inset.marginBlockEnd);
+    panel.toggleAttribute('data-whole-scroll', available < 96);
+  }
+  const heading = panel.querySelector<HTMLElement>('.app-shell-sheet-preview > h2');
+  const title = heading?.textContent ?? '';
+  panel.setAttribute('role', 'dialog');
+  if (title) {
+    panel.setAttribute('aria-label', title);
+  }
+  panel.dataset.surface = 'overlay';
+  panel.showModal();
+  position();
+  heading?.focus({ preventScroll: true });
+  const observer = new ResizeObserver(position);
+  observer.observe(shell);
+  for (const part of chrome) {
+    observer.observe(part);
+  }
+  window.visualViewport?.addEventListener('resize', position);
+  window.visualViewport?.addEventListener('scroll', position);
+  panel.addEventListener(
+    'close',
+    () => {
+      observer.disconnect();
+      window.visualViewport?.removeEventListener('resize', position);
+      window.visualViewport?.removeEventListener('scroll', position);
+      panel.setAttribute('role', 'presentation');
+      panel.removeAttribute('aria-label');
+      panel.removeAttribute('data-whole-scroll');
+      delete panel.dataset.surface;
+      if (trigger.getClientRects().length) {
+        trigger.focus({ preventScroll: true });
+      }
+    },
+    { once: true },
+  );
+}
+
 export function AppShell({
   topRail,
   leftRail,
@@ -58,33 +274,70 @@ export function AppShell({
   header,
   subbar,
   minHeight = 900,
-  navigationCollapsed = false,
+  viewportHeight,
+  canvasAs: Canvas = 'main',
+  defaultNavigationCollapsed = false,
+  defaultInspectorCollapsed = false,
   children,
   className = '',
   style,
-  onKeyDown,
   ...props
 }: AppShellProps): ReactElement {
-  const [navigationOpen, setNavigationOpen] = useState(false);
-  const [inspectorOpen, setInspectorOpen] = useState(false);
   const navigationId = useId();
   const inspectorId = useId();
-  const navigationTrigger = useRef<HTMLButtonElement>(null);
-  const inspectorTrigger = useRef<HTMLButtonElement>(null);
+  const mainId = useId();
+  const navigationPanel = useRef<HTMLDialogElement>(null);
+  const inspectorPanel = useRef<HTMLDialogElement>(null);
+  const main = useRef<HTMLElement>(null);
+  const [navigationCollapsed, setNavigationCollapsed] = useState(defaultNavigationCollapsed);
+  const [inspectorCollapsed, setInspectorCollapsed] = useState(defaultInspectorCollapsed);
+  const inspectorToggle = useRef<HTMLButtonElement>(null);
+  const transferInspectorFocus = useRef(false);
+
+  useLayoutEffect(() => {
+    if (transferInspectorFocus.current) {
+      transferInspectorFocus.current = false;
+      const target = inspectorToggle.current;
+      (target?.getClientRects().length ? target : main.current)?.focus({ preventScroll: true });
+    }
+  }, [inspectorCollapsed]);
+
+  const inspectorControl = rightAside && (
+    <DockToggle
+      side="end"
+      name="inspector"
+      controls={inspectorId}
+      expanded={!inspectorCollapsed}
+      onToggle={() => {
+        transferInspectorFocus.current = true;
+        setInspectorCollapsed((value) => !value);
+      }}
+      buttonRef={inspectorToggle}
+    />
+  );
+  const dockControls = {
+    start: leftAside && (
+      <DockToggle
+        side="start"
+        name="navigation"
+        controls={navigationId}
+        expanded={!navigationCollapsed}
+        onToggle={() => setNavigationCollapsed((value) => !value)}
+      />
+    ),
+    end: inspectorCollapsed && inspectorControl && (
+      <div className="app-shell-inspector-control" data-reopen="">
+        <Divider className="app-shell-inspector-divider" orientation="vertical" />
+        {inspectorControl}
+      </div>
+    ),
+  };
   const frameStyle = {
     '--shell-min-height': `${minHeight}px`,
+    '--shell-viewport-height':
+      typeof viewportHeight === 'number' ? `${viewportHeight}px` : viewportHeight,
     ...style,
   } as CSSProperties;
-
-  function closeNavigation(): void {
-    setNavigationOpen(false);
-    navigationTrigger.current?.focus();
-  }
-
-  function closeInspector(): void {
-    setInspectorOpen(false);
-    inspectorTrigger.current?.focus();
-  }
 
   return (
     <div
@@ -92,91 +345,106 @@ export function AppShell({
       className={`app-shell-proto ${className}`}
       data-top-rail={Boolean(topRail) || undefined}
       data-left-rail={Boolean(leftRail) || undefined}
+      data-left-aside={Boolean(leftAside) || undefined}
+      data-right-aside={Boolean(rightAside) || undefined}
       data-navigation-collapsed={navigationCollapsed || undefined}
+      data-inspector-collapsed={inspectorCollapsed || undefined}
+      data-bounded={Boolean(viewportHeight) || undefined}
       style={frameStyle}
-      onKeyDown={(event) => {
-        onKeyDown?.(event);
-        if (!event.defaultPrevented && event.key === 'Escape') {
-          if (inspectorOpen) {
-            closeInspector();
-          } else if (navigationOpen) {
-            closeNavigation();
-          }
-        }
-      }}
     >
+      <a
+        className="app-shell-skip"
+        href={`#${mainId}`}
+        onClick={(event) => {
+          event.preventDefault();
+          main.current?.focus();
+        }}
+      >
+        Skip to content
+      </a>
       {topRail && <div className="app-shell-top-region">{topRail}</div>}
       <div className="app-shell-body">
         {leftRail && <div className="app-shell-rail-region">{leftRail}</div>}
         <div className="app-shell-stage">
-          {leftAside && (
-            <div
-              className="app-shell-left-region"
+          {(leftAside || leftRail) && (
+            <ShellPanel
               id={navigationId}
-              data-open={navigationOpen || undefined}
+              side="start"
+              label="Navigation"
+              dialogRef={navigationPanel}
             >
-              <button
-                type="button"
-                className="app-shell-panel-close app-shell-navigation-close"
-                aria-label="Close navigation"
-                onClick={closeNavigation}
-              >
-                <Icon usage="slot" icon={CloseGlyph} />
-              </button>
+              {leftRail && (
+                <div className="app-shell-sheet-rail">
+                  {leftAside ? (
+                    <details>
+                      <summary>Workspace sections</summary>
+                      {leftRail}
+                    </details>
+                  ) : (
+                    leftRail
+                  )}
+                </div>
+              )}
               {leftAside}
-            </div>
+            </ShellPanel>
           )}
           <div className="app-shell-canvas">
-            {(leftAside || rightAside) && (
+            {(leftAside || leftRail || rightAside) && (
               <div className="app-shell-mobile-bar">
-                {leftAside && (
-                  <button
-                    ref={navigationTrigger}
-                    type="button"
+                {(leftAside || leftRail) && (
+                  <Button
+                    size="s"
+                    variant="secondary"
+                    tone="neutral"
+                    iconLeft={SidebarGlyph}
                     className="app-shell-panel-toggle app-shell-navigation-toggle"
-                    aria-expanded={navigationOpen}
+                    aria-haspopup="dialog"
                     aria-controls={navigationId}
-                    onClick={() => setNavigationOpen(!navigationOpen)}
+                    onClick={(event) =>
+                      openShellPanel(navigationPanel.current, event.currentTarget)
+                    }
                   >
-                    <Icon usage="slot" icon={SidebarGlyph} />
                     Navigation
-                  </button>
+                  </Button>
                 )}
                 {rightAside && (
-                  <button
-                    ref={inspectorTrigger}
-                    type="button"
+                  <Button
+                    size="s"
+                    variant="secondary"
+                    tone="neutral"
+                    iconLeft={SidebarGlyph}
                     className="app-shell-panel-toggle app-shell-inspector-toggle"
-                    aria-expanded={inspectorOpen}
+                    aria-haspopup="dialog"
                     aria-controls={inspectorId}
-                    onClick={() => setInspectorOpen(!inspectorOpen)}
+                    onClick={(event) => openShellPanel(inspectorPanel.current, event.currentTarget)}
                   >
-                    <Icon usage="slot" icon={SidebarGlyph} className="app-shell-inspector-glyph" />
                     Inspector
-                  </button>
+                  </Button>
                 )}
               </div>
             )}
-            {header}
+            <div className="app-shell-header-slot">
+              <DockControls value={dockControls}>
+                {header ?? ((leftAside || rightAside) && <Header data-dock-only />)}
+              </DockControls>
+            </div>
             {subbar}
-            <main className="app-shell-main">{children}</main>
+            <Canvas
+              id={mainId}
+              ref={main}
+              tabIndex={-1}
+              aria-label={Canvas === 'section' ? 'Workspace canvas' : undefined}
+              className="app-shell-main unica-scrollbar unica-scrollbar--compact"
+            >
+              {children}
+            </Canvas>
           </div>
           {rightAside && (
-            <div
-              className="app-shell-right-region"
-              id={inspectorId}
-              data-open={inspectorOpen || undefined}
-            >
-              <button
-                type="button"
-                className="app-shell-panel-close app-shell-inspector-close"
-                aria-label="Close inspector"
-                onClick={closeInspector}
-              >
-                <Icon usage="slot" icon={CloseGlyph} />
-              </button>
-              {rightAside}
-            </div>
+            <ShellPanel id={inspectorId} side="end" label="Inspector" dialogRef={inspectorPanel}>
+              <InspectorDockControl value={!inspectorCollapsed && inspectorControl}>
+                {rightAside}
+              </InspectorDockControl>
+            </ShellPanel>
           )}
         </div>
       </div>
@@ -185,12 +453,14 @@ export function AppShell({
 }
 
 export interface BrandMarkProps extends ComponentPropsWithRef<'span'> {
-  readonly decorative?: boolean | undefined;
+  readonly label?: string;
+  readonly decorative?: boolean;
 }
 
 export function BrandMark({
-  className = '',
+  label = 'Workspace',
   decorative = false,
+  className = '',
   ...props
 }: BrandMarkProps): ReactElement {
   return (
@@ -198,7 +468,7 @@ export function BrandMark({
       {decorative ? (
         <Icon usage="slot" icon={BooksGlyph} size="inherit" />
       ) : (
-        <Icon icon={BooksGlyph} size="inherit" aria-label="Folio" />
+        <Icon icon={BooksGlyph} size="inherit" aria-label={label} />
       )}
     </span>
   );
@@ -219,7 +489,7 @@ export function TopRail({
   return (
     <header {...props} className={`app-shell-top-rail ${className}`}>
       <div className="app-shell-top-lead">
-        <div className="app-shell-top-brand">{brand}</div>
+        {brand && <div className="app-shell-top-brand">{brand}</div>}
         <div className="app-shell-top-content">{children}</div>
       </div>
       {actions && <div className="app-shell-top-actions">{actions}</div>}
@@ -227,21 +497,23 @@ export function TopRail({
   );
 }
 
-export interface GlobalSearchProps extends ComponentPropsWithRef<'input'> {
-  readonly shortcut?: string;
-}
+export type GlobalSearchProps = Omit<InputProps, 'size' | 'type' | 'iconLeft'>;
 
 export function GlobalSearch({
-  shortcut = '⌘K',
   placeholder = 'Search runbooks, ADRs, services…',
+  className = '',
   ...props
 }: GlobalSearchProps): ReactElement {
   return (
-    <label className="app-shell-search">
-      <Icon usage="slot" icon={SearchGlyph} />
-      <input {...props} type="search" aria-label="Search workspace" placeholder={placeholder} />
-      <Kbd>{shortcut}</Kbd>
-    </label>
+    <Input
+      aria-label="Search workspace"
+      placeholder={placeholder}
+      {...props}
+      className={`app-shell-search ${className}`}
+      type="search"
+      size="s"
+      iconLeft={SearchGlyph}
+    />
   );
 }
 
@@ -257,68 +529,13 @@ export function WorkspaceStatus(): ReactElement {
   );
 }
 
-export interface DocumentTab {
-  readonly value: string;
-  readonly label: string;
-  readonly dirty?: boolean;
-}
-
-export interface DocumentTabsProps {
-  readonly items?: readonly DocumentTab[];
-  readonly defaultValue?: string;
-  readonly onValueChange?: (value: string) => void;
-}
-
-const documentTabs: readonly DocumentTab[] = [
-  { value: 'runbook', label: 'Zero-Downtime PG Failover' },
-  { value: 'adr', label: 'ADR-014 Traffic Draining', dirty: true },
-];
-
-export function DocumentTabs({
-  items = documentTabs,
-  defaultValue = 'adr',
-  onValueChange,
-}: DocumentTabsProps): ReactElement {
-  const [current, setCurrent] = useState(defaultValue);
-  return (
-    <nav
-      className="app-shell-document-tabs unica-scrollbar unica-scrollbar--compact"
-      aria-label="Open documents"
-    >
-      {items.map((item) => (
-        <button
-          type="button"
-          key={item.value}
-          className="app-shell-document-tab"
-          aria-current={current === item.value ? 'page' : undefined}
-          onClick={() => {
-            setCurrent(item.value);
-            onValueChange?.(item.value);
-          }}
-        >
-          <Icon usage="slot" icon={item.dirty ? BranchGlyph : FileTextGlyph} />
-          <span>{item.label}</span>
-          {item.dirty ? (
-            <span className="app-shell-dirty-dot" />
-          ) : (
-            <Icon usage="slot" icon={CloseGlyph} />
-          )}
-        </button>
-      ))}
-      <button type="button" className="app-shell-new-tab" aria-label="Open another document">
-        <Icon usage="slot" icon={PlusGlyph} />
-      </button>
-    </nav>
-  );
-}
-
 export type RailDestination =
   'overview' | 'notifications' | 'documents' | 'extensions' | 'search' | 'admin' | 'preferences';
 
 interface RailItem {
   readonly value: RailDestination;
   readonly label: string;
-  readonly icon: GlyphDefinition;
+  readonly icon: GlyphSource;
   readonly count?: number;
 }
 
@@ -338,6 +555,7 @@ export interface LeftRailProps extends ComponentPropsWithRef<'nav'> {
   readonly showBrand?: boolean;
   readonly profile?: ReactNode;
   readonly onNavigate?: (value: RailDestination) => void;
+  readonly links?: Partial<Record<RailDestination, string>>;
 }
 
 export function LeftRail({
@@ -345,22 +563,21 @@ export function LeftRail({
   showBrand = false,
   profile = 'PE',
   onNavigate,
+  links,
   className = '',
   ...props
 }: LeftRailProps): ReactElement {
+  const accountId = useId();
+  const accountTrigger = useRef<HTMLButtonElement>(null);
+  const accountPanel = useRef<HTMLDivElement>(null);
+  useShellPopoverPosition(accountTrigger, accountPanel, 186, 'account');
+
   function item(entry: RailItem): ReactElement {
-    return (
-      <button
-        key={entry.value}
-        type="button"
-        className="app-shell-rail-item"
-        aria-label={
-          entry.count === undefined ? entry.label : `${entry.label}, ${entry.count} unread`
-        }
-        aria-current={active === entry.value ? 'page' : undefined}
-        title={entry.label}
-        onClick={() => onNavigate?.(entry.value)}
-      >
+    const href = links?.[entry.value];
+    const accessibleName =
+      entry.count === undefined ? entry.label : `${entry.label}, ${entry.count} unread`;
+    const contents = (
+      <>
         {entry.count === undefined ? (
           <Icon usage="slot" icon={entry.icon} />
         ) : (
@@ -368,7 +585,35 @@ export function LeftRail({
             <Icon usage="slot" icon={entry.icon} />
           </Indicator>
         )}
-      </button>
+        <span className="app-shell-rail-label">{entry.label}</span>
+      </>
+    );
+    return (
+      <HintPreview
+        key={entry.value}
+        side="end"
+        canShow={(anchor) => !anchor.closest('.app-shell-sheet-rail')}
+        trigger={(bindings) => {
+          const itemProps = {
+            ...bindings,
+            className: 'app-shell-rail-item',
+            'aria-current': active === entry.value ? ('page' as const) : undefined,
+            'aria-label': accessibleName,
+            onClick: () => onNavigate?.(entry.value),
+          };
+          return href ? (
+            <a {...itemProps} href={href}>
+              {contents}
+            </a>
+          ) : (
+            <button {...itemProps} type="button">
+              {contents}
+            </button>
+          );
+        }}
+      >
+        {entry.label}
+      </HintPreview>
     );
   }
   return (
@@ -389,9 +634,27 @@ export function LeftRail({
       </div>
       <div className="app-shell-rail-items">
         {utilityRailItems.map(item)}
-        <button type="button" className="app-shell-profile" aria-label="Account menu">
-          {profile}
+        <button
+          type="button"
+          className="app-shell-profile"
+          aria-label="Account"
+          ref={accountTrigger}
+          popoverTarget={accountId}
+        >
+          <span>{profile}</span>
+          <span className="app-shell-rail-label">Account</span>
         </button>
+        <PopoverContent
+          id={accountId}
+          ref={accountPanel}
+          size="s"
+          popover="auto"
+          role="region"
+          aria-label="Account details"
+          className="app-shell-popover"
+        >
+          <AccountLabel />
+        </PopoverContent>
       </div>
     </nav>
   );
@@ -401,6 +664,7 @@ export interface AsidePanelProps extends ComponentPropsWithRef<'aside'> {
   readonly side?: 'left' | 'right';
   readonly width?: number;
   readonly title?: string;
+  readonly headerContent?: ReactNode;
   readonly leading?: ReactNode;
   readonly actions?: ReactNode;
   readonly footer?: ReactNode;
@@ -410,6 +674,7 @@ export function AsidePanel({
   side = 'left',
   width = side === 'left' ? 243 : 296,
   title,
+  headerContent,
   leading,
   actions,
   footer,
@@ -418,6 +683,8 @@ export function AsidePanel({
   style,
   ...props
 }: AsidePanelProps): ReactElement {
+  const dockControl = useContext(InspectorDockControl);
+  const hasHeaderContent = Boolean(title || headerContent || actions);
   return (
     <aside
       aria-label={title}
@@ -426,23 +693,38 @@ export function AsidePanel({
       data-side={side}
       style={{ '--aside-width': `${width}px`, ...style } as CSSProperties}
     >
-      {title && (
-        <div className="app-shell-aside-header">
-          <span className="app-shell-aside-title">
-            {leading}
-            {title}
-          </span>
-          {actions}
+      {(hasHeaderContent || dockControl) && (
+        <div className="app-shell-aside-header" data-dock-only={!hasHeaderContent || undefined}>
+          {headerContent ? (
+            <div className="app-shell-aside-header-content">{headerContent}</div>
+          ) : title ? (
+            <span className="app-shell-aside-title">
+              {leading}
+              {title}
+            </span>
+          ) : null}
+          {actions && <div className="app-shell-aside-header-actions">{actions}</div>}
+          {dockControl && <div className="app-shell-inspector-control">{dockControl}</div>}
         </div>
       )}
-      <div className="app-shell-aside-body">{children}</div>
+      <div className="app-shell-aside-body unica-scrollbar unica-scrollbar--compact">
+        {children}
+      </div>
       {footer && <div className="app-shell-aside-footer">{footer}</div>}
     </aside>
   );
 }
 
-export function WorkspaceBadge(): ReactElement {
-  return <span className="app-shell-workspace-badge">PE</span>;
+export function WorkspaceBadge({
+  children = 'PE',
+}: {
+  readonly children?: ReactNode;
+}): ReactElement {
+  return (
+    <span className="app-shell-workspace-badge" aria-hidden="true">
+      {children}
+    </span>
+  );
 }
 
 export interface HeaderProps extends ComponentPropsWithRef<'header'> {
@@ -450,10 +732,15 @@ export interface HeaderProps extends ComponentPropsWithRef<'header'> {
 }
 
 export function Header({ actions, children, className = '', ...props }: HeaderProps): ReactElement {
+  const dock = useContext(DockControls);
   return (
     <header {...props} className={`app-shell-header ${className}`}>
-      <div className="app-shell-header-content">{children}</div>
+      <div className="app-shell-header-content">
+        {dock.start}
+        {children}
+      </div>
       {actions && <div className="app-shell-header-actions">{actions}</div>}
+      {dock.end}
     </header>
   );
 }
@@ -469,19 +756,6 @@ export function Subbar({ actions, children, className = '', ...props }: SubbarPr
       {actions && <div className="app-shell-subbar-actions">{actions}</div>}
     </div>
   );
-}
-
-interface NavigationItem {
-  readonly value: string;
-  readonly label: string;
-  readonly icon?: GlyphDefinition;
-  readonly count?: number;
-  readonly children?: readonly NavigationItem[];
-}
-
-interface NavigationSection {
-  readonly label: string;
-  readonly items: readonly NavigationItem[];
 }
 
 const documentSections: readonly NavigationSection[] = [
@@ -576,116 +850,26 @@ export interface WorkspaceNavigationProps {
   readonly onNavigate?: (value: string) => void;
 }
 
-interface NavigationProps {
-  readonly sections: readonly NavigationSection[];
-  readonly defaultActive: string;
-  readonly expanded?: readonly string[] | undefined;
-  readonly tree?: boolean;
-  readonly onNavigate?: ((value: string) => void) | undefined;
-}
-
-function Navigation({
-  sections,
-  defaultActive,
-  expanded = [],
-  tree = false,
-  onNavigate,
-}: NavigationProps): ReactElement {
-  const [current, setCurrent] = useState(defaultActive);
-  function row(entry: NavigationItem, nested = false): ReactElement {
-    return (
-      <button
-        type="button"
-        key={entry.value}
-        className="app-shell-nav-row"
-        data-nested={nested || undefined}
-        aria-current={current === entry.value ? 'page' : undefined}
-        onClick={() => {
-          setCurrent(entry.value);
-          onNavigate?.(entry.value);
-        }}
-      >
-        {tree && !nested && (
-          <Icon
-            usage="slot"
-            icon={CaretRightGlyph}
-            className="app-shell-nav-glyph app-shell-group-caret"
-            directional
-          />
-        )}
-        <Icon
-          className="app-shell-nav-glyph"
-          usage="slot"
-          icon={entry.icon ?? (nested ? FileTextGlyph : FolderGlyph)}
-        />
-        <span className="app-shell-nav-label">{entry.label}</span>
-        {entry.count !== undefined && <span className="app-shell-nav-count">{entry.count}</span>}
-      </button>
-    );
-  }
-  return (
-    <nav
-      className="app-shell-navigation"
-      aria-label="Workspace pages"
-      data-tree={tree || undefined}
-    >
-      {sections.map((section) => (
-        <div className="app-shell-nav-section" key={section.label}>
-          <div className="app-shell-nav-section-label">
-            <span>{section.label}</span>
-            {section.label === 'Documents' && (
-              <div className="app-shell-nav-tools">
-                <Icon usage="slot" icon={SlidersGlyph} />
-                <Icon usage="slot" icon={PlusGlyph} />
-              </div>
-            )}
-          </div>
-          {section.items.map((entry) =>
-            entry.children ? (
-              <details
-                className="app-shell-nav-group"
-                key={entry.value}
-                open={expanded.includes(entry.value)}
-              >
-                <summary>
-                  <Icon
-                    usage="slot"
-                    icon={CaretRightGlyph}
-                    className="app-shell-nav-glyph app-shell-group-caret"
-                    directional
-                  />
-                  <Icon usage="slot" icon={FolderGlyph} className="app-shell-nav-glyph" />
-                  <span className="app-shell-nav-label">{entry.label}</span>
-                  <span className="app-shell-nav-count">{entry.count}</span>
-                </summary>
-                <div className="app-shell-nav-children">
-                  {entry.children.map((child) => row(child, true))}
-                </div>
-              </details>
-            ) : (
-              row(entry)
-            ),
-          )}
-        </div>
-      ))}
-    </nav>
-  );
-}
-
 export function WorkspaceNavigation({
   kind = 'documents',
   defaultActive = 'adr-014',
   expanded = ['architecture', 'runbooks'],
   onNavigate,
 }: WorkspaceNavigationProps): ReactElement {
-  const sections =
-    kind === 'admin' ? adminSections : kind === 'extensions' ? extensionSections : documentSections;
-  return (
-    <Navigation
+  const sections = kind === 'admin' ? adminSections : extensionSections;
+  return kind === 'documents' ? (
+    <TreeView
+      label="Workspace documents"
+      items={documentSections.flatMap((section) => section.items)}
+      defaultActive={defaultActive}
+      defaultExpanded={expanded}
+      onNavigate={onNavigate}
+    />
+  ) : (
+    <NavList
+      label="Workspace pages"
       sections={sections}
       defaultActive={defaultActive}
-      expanded={expanded}
-      tree={kind === 'documents'}
       onNavigate={onNavigate}
     />
   );
@@ -701,7 +885,12 @@ export function SettingsNavigation({
   onNavigate,
 }: SettingsNavigationProps): ReactElement {
   return (
-    <Navigation sections={settingsSections} defaultActive={defaultActive} onNavigate={onNavigate} />
+    <NavList
+      label="Preferences sections"
+      sections={settingsSections}
+      defaultActive={defaultActive}
+      onNavigate={onNavigate}
+    />
   );
 }
 
@@ -710,7 +899,7 @@ export type WorkspaceUtilityProps = ComponentPropsWithRef<'button'>;
 export function WorkspaceTrash({ className = '', ...props }: WorkspaceUtilityProps): ReactElement {
   return (
     <button type="button" {...props} className={`app-shell-nav-row ${className}`}>
-      <Icon usage="slot" icon={TrashGlyph} className="app-shell-nav-glyph" />
+      <Icon usage="slot" icon={TrashGlyph} className="app-shell-nav-icon" />
       <span className="app-shell-nav-label">Trash</span>
       <span className="app-shell-nav-count">3</span>
     </button>
@@ -733,27 +922,29 @@ export function WorkspaceSwitcher({
   );
 }
 
-export function BackToWorkspace({ className = '', ...props }: WorkspaceUtilityProps): ReactElement {
+export function BackToWorkspace({
+  className = '',
+  ...props
+}: ComponentPropsWithRef<'a'> & { readonly href: string }): ReactElement {
   return (
-    <button
-      type="button"
-      aria-label="Back to workspace"
-      {...props}
-      className={`app-shell-back ${className}`}
-    >
+    <a aria-label="Back to workspace" {...props} className={`app-shell-back ${className}`}>
       <Icon usage="slot" icon={BackGlyph} directional />
-    </button>
+    </a>
   );
 }
 
 export interface PropertyRowProps extends ComponentPropsWithRef<'div'> {
   readonly label: ReactNode;
   readonly description?: ReactNode;
+  readonly status?: ReactNode;
+  readonly controlId?: string;
 }
 
 export function PropertyRow({
   label,
   description,
+  status,
+  controlId,
   children,
   className = '',
   ...props
@@ -761,13 +952,18 @@ export function PropertyRow({
   return (
     <div {...props} className={`app-shell-property-row ${className}`}>
       <div className="app-shell-property-label">
-        <span>{label}</span>
+        <div className="app-shell-property-heading">
+          {controlId ? <label htmlFor={controlId}>{label}</label> : <span>{label}</span>}
+          {status}
+        </div>
         {description && <span className="app-shell-property-description">{description}</span>}
       </div>
       <div className="app-shell-property-control">{children}</div>
     </div>
   );
 }
+
+export const SettingsRow: typeof PropertyRow = PropertyRow;
 
 export interface StickyActionBarProps extends ComponentPropsWithRef<'div'> {
   readonly actions?: ReactNode;
@@ -776,6 +972,7 @@ export interface StickyActionBarProps extends ComponentPropsWithRef<'div'> {
 export function StickyActionBar({
   actions,
   children,
+  'aria-label': label = 'Unsaved changes',
   className = '',
   ...props
 }: StickyActionBarProps): ReactElement {
@@ -783,11 +980,11 @@ export function StickyActionBar({
     <div
       {...props}
       role="region"
-      aria-label="Unsaved changes"
+      aria-label={label}
       className={`app-shell-sticky-bar ${className}`}
     >
       <div>{children}</div>
-      <div className="app-shell-header-actions">{actions}</div>
+      <div className="app-shell-sticky-actions">{actions}</div>
     </div>
   );
 }

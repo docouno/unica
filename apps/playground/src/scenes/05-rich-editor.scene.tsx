@@ -11,6 +11,7 @@ import {
   Title,
 } from '@docouno/unica';
 import { useId, useRef, useState } from 'react';
+import { folioSceneHref } from './folio/folio.routes.js';
 import type { ReactElement } from 'react';
 import {
   ArrowUpRightIcon,
@@ -123,7 +124,9 @@ function EditorScene(): ReactElement {
     <FolioWorkspace
       breadcrumb={
         <Breadcrumb size="s">
-          <BreadcrumbLink href="?item=02-workspace-overview">Platform Eng</BreadcrumbLink>
+          <BreadcrumbLink href={folioSceneHref('02-workspace-overview')}>
+            Platform Eng
+          </BreadcrumbLink>
           <span>Architecture</span>
           <BreadcrumbPage>ADR-014 Traffic Draining</BreadcrumbPage>
         </Breadcrumb>

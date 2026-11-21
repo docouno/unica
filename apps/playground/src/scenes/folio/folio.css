@@ -339,6 +339,12 @@
   font-family: var(--font-family-mono);
   font-size: var(--text-size-caption-l);
 }
+.folio-reader-inspector-tabs {
+  display: contents;
+}
+.folio-reader .folio-workspace-header {
+  padding-block: var(--space-4);
+}
 .folio-inspector-section {
   display: grid;
   gap: var(--space-12);
@@ -401,7 +407,6 @@
 .folio-collection .app-shell-aside[data-side='right'] .app-shell-aside-body {
   padding: 0;
   gap: 0;
-  overflow: visible;
 }
 .folio-owner-profile {
   display: grid;

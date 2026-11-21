@@ -1,5 +1,6 @@
 import { Link } from '@docouno/unica';
 import { useRef, useState } from 'react';
+import { folioSceneHref } from './folio/folio.routes.js';
 import type { ComponentProps, ReactElement } from 'react';
 import {
   CopyIcon,
@@ -285,13 +286,15 @@ function CollectionScene(): ReactElement {
         expandedNavigation={['architecture', 'runbooks']}
         breadcrumb={
           <Breadcrumb size="s">
-            <BreadcrumbLink href="?item=02-workspace-overview">Platform Eng</BreadcrumbLink>
+            <BreadcrumbLink href={folioSceneHref('02-workspace-overview')}>
+              Platform Eng
+            </BreadcrumbLink>
             <BreadcrumbPage>Runbooks</BreadcrumbPage>
           </Breadcrumb>
         }
         minHeight={960}
         actions={
-          <div className="folio-row">
+          <div className="folio-row folio-wrap folio-end">
             <SegmentedControl
               aria-label="Collection layout"
               size="s"
@@ -654,7 +657,7 @@ export default defineScene({
     'date-range-picker',
     'icon',
     'indicator',
-    'kbd',
+    'input',
     'link',
     'pagination',
     'progress',
