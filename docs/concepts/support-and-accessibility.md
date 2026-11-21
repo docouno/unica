@@ -30,7 +30,7 @@ Unica enforces two explicit browser tiers across CSS compilation and runtime beh
 
 ## React 19 & Pure-ESM Package Contract
 
-- **React 19 peer dependencies:** Components accept `ref` as an ordinary prop and support StrictMode, concurrent rendering, server rendering, and hydration. Use `React.useId()` for stable IDs and defer DOM access until an element or its document is available.
+- **React 19 peer dependencies:** Components accept `ref` as an ordinary prop and support StrictMode, concurrent rendering, server rendering, and hydration. Use `React.useId()` for stable IDs and defer DOM access until an element or its document is available. In React Server Components, import runtime UI components and hooks (`UnicaProvider`, `Icon`, `IconProvider`, `Portal`, `PortalProvider`, `usePortalContainer`) from a `'use client'` module; the `react-server` export exposes `THEME_PRESETS`, `defineGlyph`, and TypeScript types only.
 - **Pure ESM & `isolatedDeclarations`:** `@docouno/unica` ships pure ES modules (`"type": "module"`) with explicit TypeScript boundary annotations (`isolatedDeclarations: true`), accurate `sideEffects` metadata for CSS assets, and automated release verification via `publint` and `@arethetypeswrong/core`.
 
 ## WCAG Contrast & Non-Color Differentiation

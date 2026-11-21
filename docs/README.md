@@ -19,5 +19,5 @@ During design, use these constraints to define appearance and the intended acces
 - **Interactive workbench & compositions:** `apps/playground` hosts the component inspector. Catalog entries live in `src/specimens/`. Visual prototypes live in `src/prototypes/` and compositions such as [Folio](compositions/folio.md) in `src/scenes/`.
 - **Specimen authoring:** [Workbench workflow](workbench.md) explains the component schema, live inspection, scene links, and deterministic screenshots.
 - **Browser contracts:** [Browser tests](browser-tests.md) explains offline Chromium runs and how to add scenarios for native browser behavior.
-- **Component contracts:** [Icon](components/icon.md) covers SVG sources, adapters, sizing, and accessibility.
+- **Component contracts:** [Icon](components/icon.md) covers SVG sources, adapters, sizing, and accessibility; [Portal](components/portal.md) covers host resolution, SSR, and hydration.
 - **Contributor workflow:** [`../AGENTS.md`](../AGENTS.md) defines workspace commands, Devkit rules, and Definition of Done gates.

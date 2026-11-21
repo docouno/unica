@@ -13,6 +13,8 @@ export type {
   IconProviderProps,
   IconSize,
   IconUsage,
+  PortalProps,
+  PortalProviderProps,
   ThemeConfig,
   ThemePreset,
   ThemePresetMeta,
