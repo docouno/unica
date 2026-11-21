@@ -1,43 +1,56 @@
-type Realm = Window & typeof globalThis;
+import {
+  addListenerSafe,
+  composedAncestors,
+  composedContains,
+  dispatchEventSafe,
+  getAssignedSlotSafe,
+  getAttributeSafe,
+  getComposedParentElement,
+  getComputedStyleSafe,
+  getDeepActiveElement,
+  getDocumentBody,
+  getDocumentElement,
+  getElementInertSafe,
+  getLiveView,
+  getLocalName,
+  getNodeTypeSafe,
+  getOwnerDocument,
+  getParentElementSafe,
+  getShadowRootSafe,
+  hasAttributeSafe,
+  isConnectedNode,
+  isElementNode,
+  matchesSafe,
+  parentNodeOf,
+  removeAttributeSafe,
+  removeListenerSafe,
+  setAttributeSafe,
+} from '../dom.js';
 
-interface NativeDom {
-  readonly addEventListener: (
-    target: EventTarget,
-    type: string,
-    listener: EventListenerOrEventListenerObject,
-    options?: boolean | AddEventListenerOptions,
-  ) => void;
-  readonly removeEventListener: (
-    target: EventTarget,
-    type: string,
-    listener: EventListenerOrEventListenerObject,
-    options?: boolean | EventListenerOptions,
-  ) => void;
-  readonly dispatchEvent: (target: EventTarget, event: Event) => boolean;
-  readonly nodeType: (node: Node) => number;
-  readonly isConnected: (node: Node) => boolean;
-  readonly ownerDocument: (node: Node) => Document | null;
-  readonly parentNode: (node: Node) => ParentNode | null;
-  readonly parentElement: (node: Node) => HTMLElement | null;
-  readonly contains: (parent: Node, child: Node | null) => boolean;
-  readonly matches: (element: Element, selector: string) => boolean;
-  readonly localName: (element: Element) => string;
+export {
+  addListenerSafe as addListener,
+  composedAncestors,
+  composedContains,
+  dispatchEventSafe as dispatchTargetEvent,
+  getAttributeSafe as getAttr,
+  getDeepActiveElement as deepFocus,
+  getDocumentBody as documentBodyOf,
+  getElementInertSafe as getElementInert,
+  getLiveView as liveViewOf,
+  getOwnerDocument as ownerDocumentOf,
+  isConnectedNode,
+  isElementNode as isElement,
+  matchesSafe as matchesSelector,
+  parentNodeOf,
+  removeAttributeSafe as removeAttr,
+  removeListenerSafe as removeListener,
+  setAttributeSafe as setAttr,
+};
+
+interface OverlayNativeDom {
   readonly clientWidth: (element: Element) => number;
-  readonly getAttribute: (element: Element, name: string) => string | null;
-  readonly setAttribute: (element: Element, name: string, value: string) => void;
-  readonly removeAttribute: (element: Element, name: string) => void;
-  readonly elementSlot: (element: Element) => HTMLSlotElement | null;
-  readonly textSlot: ((text: Text) => HTMLSlotElement | null) | undefined;
-  readonly shadowRoot: (element: Element) => ShadowRoot | null;
-  readonly shadowHost: ((root: Node) => Element) | undefined;
-  readonly shadowActiveElement: ((root: ShadowRoot) => Element | null) | undefined;
-  readonly docActiveElement: (document: Document) => Element | null;
-  readonly docDefaultView: (document: Document) => Realm | null;
-  readonly docElement: (document: Document) => Element | null;
-  readonly docBody: (document: Document) => HTMLElement | null;
   readonly htmlStyle: (element: HTMLElement) => CSSStyleDeclaration;
   readonly svgStyle: ((element: SVGElement) => CSSStyleDeclaration) | undefined;
-  readonly getInert: ((element: HTMLElement) => boolean) | undefined;
   readonly setInert: ((element: HTMLElement, value: boolean) => void) | undefined;
   readonly getPopover: ((element: HTMLElement) => string | null) | undefined;
   readonly setPopover: ((element: HTMLElement, value: string | null) => void) | undefined;
@@ -81,19 +94,15 @@ function setter<T, V>(
     : undefined;
 }
 
-let cached: NativeDom | undefined;
+let cached: OverlayNativeDom | undefined;
 
-function dom(): NativeDom {
+function dom(): OverlayNativeDom {
   if (cached) {
     return cached;
   }
-  const eventTargetProto = EventTarget.prototype;
-  const nodeProto = Node.prototype;
   const elementProto = Element.prototype;
   const htmlProto = HTMLElement.prototype;
   const svgProto = typeof SVGElement === 'undefined' ? undefined : SVGElement.prototype;
-  const docProto = Document.prototype;
-  const shadowProto = typeof ShadowRoot === 'undefined' ? undefined : ShadowRoot.prototype;
   const dialogProto =
     typeof HTMLDialogElement === 'undefined' ? undefined : HTMLDialogElement.prototype;
   const buttonProto =
@@ -102,40 +111,9 @@ function dom(): NativeDom {
     typeof HTMLInputElement === 'undefined' ? undefined : HTMLInputElement.prototype;
 
   cached = {
-    addEventListener: (target, type, listener, options) => {
-      eventTargetProto.addEventListener.call(target, type, listener, options);
-    },
-    removeEventListener: (target, type, listener, options) => {
-      eventTargetProto.removeEventListener.call(target, type, listener, options);
-    },
-    dispatchEvent: (target, event) => eventTargetProto.dispatchEvent.call(target, event),
-    nodeType: getter<Node, number>(nodeProto, 'nodeType')!,
-    isConnected: getter<Node, boolean>(nodeProto, 'isConnected')!,
-    ownerDocument: getter<Node, Document | null>(nodeProto, 'ownerDocument')!,
-    parentNode: getter<Node, ParentNode | null>(nodeProto, 'parentNode')!,
-    parentElement: getter<Node, HTMLElement | null>(nodeProto, 'parentElement')!,
-    contains: (parent, child) => nodeProto.contains.call(parent, child),
-    matches: (element, selector) => elementProto.matches.call(element, selector),
-    localName: getter<Element, string>(elementProto, 'localName')!,
     clientWidth: getter<Element, number>(elementProto, 'clientWidth')!,
-    getAttribute: (element, name) => elementProto.getAttribute.call(element, name),
-    setAttribute: (element, name, value) => elementProto.setAttribute.call(element, name, value),
-    removeAttribute: (element, name) => elementProto.removeAttribute.call(element, name),
-    elementSlot: getter<Element, HTMLSlotElement | null>(elementProto, 'assignedSlot')!,
-    textSlot:
-      typeof Text === 'undefined'
-        ? undefined
-        : getter<Text, HTMLSlotElement | null>(Text.prototype, 'assignedSlot'),
-    shadowRoot: getter<Element, ShadowRoot | null>(elementProto, 'shadowRoot')!,
-    shadowHost: getter<Node, Element>(shadowProto, 'host'),
-    shadowActiveElement: getter<ShadowRoot, Element | null>(shadowProto, 'activeElement'),
-    docActiveElement: getter<Document, Element | null>(docProto, 'activeElement')!,
-    docDefaultView: getter<Document, Realm | null>(docProto, 'defaultView')!,
-    docElement: getter<Document, Element | null>(docProto, 'documentElement')!,
-    docBody: getter<Document, HTMLElement | null>(docProto, 'body')!,
     htmlStyle: getter<HTMLElement, CSSStyleDeclaration>(htmlProto, 'style')!,
     svgStyle: getter<SVGElement, CSSStyleDeclaration>(svgProto, 'style'),
-    getInert: getter<HTMLElement, boolean>(htmlProto, 'inert'),
     setInert: setter<HTMLElement, boolean>(htmlProto, 'inert'),
     getPopover: getter<HTMLElement, string | null>(htmlProto, 'popover'),
     setPopover: setter<HTMLElement, string | null>(htmlProto, 'popover'),
@@ -162,92 +140,6 @@ function dom(): NativeDom {
   return cached;
 }
 
-export function addListener<K extends keyof DocumentEventMap>(
-  target: Document,
-  type: K,
-  listener: (event: DocumentEventMap[K]) => void,
-  options?: boolean | AddEventListenerOptions,
-): void;
-export function addListener<K extends keyof HTMLElementEventMap>(
-  target: HTMLElement,
-  type: K,
-  listener: (event: HTMLElementEventMap[K]) => void,
-  options?: boolean | AddEventListenerOptions,
-): void;
-export function addListener<K extends keyof WindowEventMap>(
-  target: Window,
-  type: K,
-  listener: (event: WindowEventMap[K]) => void,
-  options?: boolean | AddEventListenerOptions,
-): void;
-export function addListener(
-  target: EventTarget,
-  type: string,
-  listener: EventListenerOrEventListenerObject,
-  options?: boolean | AddEventListenerOptions,
-): void;
-export function addListener(
-  target: EventTarget,
-  type: string,
-  listener: EventListenerOrEventListenerObject,
-  options?: boolean | AddEventListenerOptions,
-): void {
-  dom().addEventListener(target, type, listener, options);
-}
-
-export function removeListener<K extends keyof DocumentEventMap>(
-  target: Document,
-  type: K,
-  listener: (event: DocumentEventMap[K]) => void,
-  options?: boolean | EventListenerOptions,
-): void;
-export function removeListener<K extends keyof HTMLElementEventMap>(
-  target: HTMLElement,
-  type: K,
-  listener: (event: HTMLElementEventMap[K]) => void,
-  options?: boolean | EventListenerOptions,
-): void;
-export function removeListener<K extends keyof WindowEventMap>(
-  target: Window,
-  type: K,
-  listener: (event: WindowEventMap[K]) => void,
-  options?: boolean | EventListenerOptions,
-): void;
-export function removeListener(
-  target: EventTarget,
-  type: string,
-  listener: EventListenerOrEventListenerObject,
-  options?: boolean | EventListenerOptions,
-): void;
-export function removeListener(
-  target: EventTarget,
-  type: string,
-  listener: EventListenerOrEventListenerObject,
-  options?: boolean | EventListenerOptions,
-): void {
-  dom().removeEventListener(target, type, listener, options);
-}
-
-export function dispatchTargetEvent(target: EventTarget, event: Event): boolean {
-  return dom().dispatchEvent(target, event);
-}
-
-export function liveViewOf(document: Document): Realm | null {
-  const view = dom().docDefaultView(document);
-  if (!view) {
-    return null;
-  }
-  try {
-    return view.document === document ? view : null;
-  } catch {
-    return null;
-  }
-}
-
-export function documentBodyOf(document: Document): HTMLElement | null {
-  return dom().docBody(document);
-}
-
 export function elementStyle(element: Element): CSSStyleDeclaration | null {
   const api = dom();
   try {
@@ -261,85 +153,21 @@ export function elementStyle(element: Element): CSSStyleDeclaration | null {
   }
 }
 
-export function isElement(node: unknown): node is Element {
-  if (!node || typeof node !== 'object') {
-    return false;
-  }
-  try {
-    return dom().nodeType(node as Node) === 1;
-  } catch {
-    return false;
-  }
-}
-
 export function elementFromTarget(target: EventTarget | null | undefined): Element | null {
   if (!target || typeof target !== 'object') {
     return null;
   }
-  try {
-    const api = dom();
-    const type = api.nodeType(target as Node);
-    if (type === 1) {
-      return target as Element;
-    }
-    if (type === 3) {
-      return api.textSlot?.(target as Text) ?? api.parentElement(target as Node);
-    }
-    return api.parentElement(target as Node);
-  } catch {
-    return null;
+  const type = getNodeTypeSafe(target);
+  if (type === 1) {
+    return target as Element;
   }
-}
-
-function isShadowRoot(node: Node | null): node is ShadowRoot {
-  if (!node) {
-    return false;
+  if (type === 3) {
+    return getAssignedSlotSafe(target as Node) ?? getParentElementSafe(target as Node);
   }
-  const api = dom();
-  if (!api.shadowHost) {
-    return false;
+  if (type !== undefined) {
+    return getParentElementSafe(target as Node);
   }
-  try {
-    if (api.nodeType(node) !== 11) {
-      return false;
-    }
-    return api.shadowHost(node) !== undefined;
-  } catch {
-    return false;
-  }
-}
-
-export function isConnectedNode(node: Node): boolean {
-  return dom().isConnected(node);
-}
-
-export function ownerDocumentOf(node: Node): Document | null {
-  return dom().ownerDocument(node);
-}
-
-export function parentNodeOf(node: Node): ParentNode | null {
-  return dom().parentNode(node);
-}
-
-export function matchesSelector(element: Element, selector: string): boolean {
-  return dom().matches(element, selector);
-}
-
-export function getAttr(element: Element, name: string): string | null {
-  return dom().getAttribute(element, name);
-}
-
-export function setAttr(element: Element, name: string, value: string): void {
-  dom().setAttribute(element, name, value);
-}
-
-export function removeAttr(element: Element, name: string): void {
-  dom().removeAttribute(element, name);
-}
-
-export function getElementInert(element: HTMLElement): boolean {
-  const api = dom();
-  return api.getInert ? api.getInert(element) : api.getAttribute(element, 'inert') !== null;
+  return null;
 }
 
 export function setElementInert(element: HTMLElement, value: boolean): void {
@@ -347,9 +175,9 @@ export function setElementInert(element: HTMLElement, value: boolean): void {
   if (api.setInert) {
     api.setInert(element, value);
   } else if (value) {
-    api.setAttribute(element, 'inert', '');
+    setAttributeSafe(element, 'inert', '');
   } else {
-    api.removeAttribute(element, 'inert');
+    removeAttributeSafe(element, 'inert');
   }
 }
 
@@ -362,7 +190,7 @@ export function getElementPopover(element: Element): string | null {
       return null;
     }
   }
-  return api.getAttribute(element, 'popover');
+  return getAttributeSafe(element, 'popover');
 }
 
 export function setElementPopover(element: HTMLElement, value: 'auto' | 'manual'): void {
@@ -370,13 +198,13 @@ export function setElementPopover(element: HTMLElement, value: 'auto' | 'manual'
   if (api.setPopover) {
     api.setPopover(element, value);
   } else {
-    api.setAttribute(element, 'popover', value);
+    setAttributeSafe(element, 'popover', value);
   }
 }
 
 export function isDialogOpen(dialog: HTMLDialogElement): boolean {
   const api = dom();
-  return api.dialogOpen ? api.dialogOpen(dialog) : api.getAttribute(dialog, 'open') !== null;
+  return api.dialogOpen ? api.dialogOpen(dialog) : hasAttributeSafe(dialog, 'open');
 }
 
 export function showDialogModal(dialog: HTMLDialogElement): void {
@@ -396,7 +224,7 @@ export function hideElementPopover(element: HTMLElement): void {
 }
 
 export function hasShadowRoot(element: Element): boolean {
-  return dom().shadowRoot(element) !== null;
+  return getShadowRootSafe(element) !== null;
 }
 
 export function bindPopoverInvoker(
@@ -404,34 +232,34 @@ export function bindPopoverInvoker(
   target: Element | null,
 ): (() => void) | undefined {
   const api = dom();
-  const tag = api.localName(trigger);
+  const tag = getLocalName(trigger);
   if (tag === 'button' && api.getButtonTarget && api.setButtonTarget) {
     const button = trigger as HTMLButtonElement;
     const previous = api.getButtonTarget(button);
-    const previousAttr = api.getAttribute(button, 'popovertarget');
+    const previousAttr = getAttributeSafe(button, 'popovertarget');
     api.setButtonTarget(button, target);
     return () => {
       if (previousAttr === null) {
-        api.removeAttribute(button, 'popovertarget');
+        removeAttributeSafe(button, 'popovertarget');
         api.setButtonTarget?.(button, previous);
       } else {
         api.setButtonTarget?.(button, null);
-        api.setAttribute(button, 'popovertarget', previousAttr);
+        setAttributeSafe(button, 'popovertarget', previousAttr);
       }
     };
   }
   if (tag === 'input' && api.getInputTarget && api.setInputTarget) {
     const input = trigger as HTMLInputElement;
     const previous = api.getInputTarget(input);
-    const previousAttr = api.getAttribute(input, 'popovertarget');
+    const previousAttr = getAttributeSafe(input, 'popovertarget');
     api.setInputTarget(input, target);
     return () => {
       if (previousAttr === null) {
-        api.removeAttribute(input, 'popovertarget');
+        removeAttributeSafe(input, 'popovertarget');
         api.setInputTarget?.(input, previous);
       } else {
         api.setInputTarget?.(input, null);
-        api.setAttribute(input, 'popovertarget', previousAttr);
+        setAttributeSafe(input, 'popovertarget', previousAttr);
       }
     };
   }
@@ -440,7 +268,7 @@ export function bindPopoverInvoker(
 
 export function setPopoverInvokerTarget(trigger: HTMLElement, target: Element | null): boolean {
   const api = dom();
-  const tag = api.localName(trigger);
+  const tag = getLocalName(trigger);
   if (tag === 'button' && api.setButtonTarget) {
     api.setButtonTarget(trigger as HTMLButtonElement, target);
     return true;
@@ -452,62 +280,16 @@ export function setPopoverInvokerTarget(trigger: HTMLElement, target: Element | 
   return false;
 }
 
-function composedParent(element: Element): Element | null {
-  const api = dom();
-  const slot = api.elementSlot(element);
-  if (slot) {
-    return slot;
-  }
-  const parent = api.parentElement(element);
-  if (parent) {
-    return parent;
-  }
-  const parentNode = api.parentNode(element);
-  return isShadowRoot(parentNode) && api.shadowHost ? api.shadowHost(parentNode) : null;
-}
-
-export function* composedAncestors(node: Element | null): Iterable<Element> {
-  for (let element = node; element; element = composedParent(element)) {
-    yield element;
-  }
-}
-
-export function composedContains(parent: Element, child: Element | null): boolean {
-  if (!child) {
-    return false;
-  }
-  if (parent === child || dom().contains(parent, child)) {
-    return true;
-  }
-  for (let current = composedParent(child); current; current = composedParent(current)) {
-    if (current === parent) {
-      return true;
-    }
-  }
-  return false;
-}
-
-export function deepFocus(document: Document): Element | null {
-  const api = dom();
-  let active = api.docActiveElement(document);
-  while (active) {
-    const shadow = api.shadowRoot(active);
-    const inner = shadow && api.shadowActiveElement ? api.shadowActiveElement(shadow) : null;
-    if (!inner || inner === active) {
-      break;
-    }
-    active = inner;
-  }
-  return active;
-}
-
 export function hasHiddenAncestor(element: Element, includeSelf: boolean): boolean {
-  const api = dom();
-  if (includeSelf && api.matches(element, '[hidden]')) {
+  if (includeSelf && matchesSafe(element, '[hidden]')) {
     return true;
   }
-  for (let ancestor = composedParent(element); ancestor; ancestor = composedParent(ancestor)) {
-    if (api.matches(ancestor, `${HIDDEN_TOP_LAYER}, [hidden]`)) {
+  for (
+    let ancestor = getComposedParentElement(element);
+    ancestor;
+    ancestor = getComposedParentElement(ancestor)
+  ) {
+    if (matchesSafe(ancestor, `${HIDDEN_TOP_LAYER}, [hidden]`)) {
       return true;
     }
   }
@@ -518,23 +300,34 @@ export function focusElement(element: Element | null, document: Document): boole
   if (!element) {
     return false;
   }
-  const api = dom();
   if (
-    !api.isConnected(element) ||
-    api.ownerDocument(element) !== document ||
-    api.matches(element, ':disabled')
+    !isConnectedNode(element) ||
+    getOwnerDocument(element) !== document ||
+    matchesSafe(element, ':disabled') ||
+    hasHiddenAncestor(element, true)
   ) {
     return false;
   }
-  for (let current: Element | null = element; current; current = composedParent(current)) {
-    if (api.matches(current, '[inert], [hidden]')) {
+  // Check local [inert] and CSS interactivity: inert up to (and stopping at) the nearest
+  // dialog:modal, leaving modal-stack arbitration to the browser's actual focus() outcome.
+  for (
+    let current: Element | null = element;
+    current;
+    current = getComposedParentElement(current)
+  ) {
+    if (
+      getElementInertSafe(current) ||
+      hasAttributeSafe(current, 'inert') ||
+      getComputedStyleSafe(current)?.getPropertyValue('interactivity') === 'inert'
+    ) {
       return false;
     }
-    if (current !== element && api.matches(current, HIDDEN_TOP_LAYER)) {
-      return false;
+    if (matchesSafe(current, 'dialog:modal')) {
+      break;
     }
   }
 
+  const api = dom();
   try {
     api.htmlFocus(element as HTMLElement, { preventScroll: true });
   } catch {
@@ -548,58 +341,100 @@ export function focusElement(element: Element | null, document: Document): boole
       return false;
     }
   }
-  const active = deepFocus(document);
+  const active = getDeepActiveElement(document);
   return active !== null && composedContains(element, active);
+}
+
+interface PropertySnapshot {
+  readonly value: string;
+  readonly priority: string;
+}
+
+function restoreIfUnchanged(
+  style: CSSStyleDeclaration,
+  property: string,
+  expectedValue: string,
+  expectedPriority: string,
+  original: PropertySnapshot,
+): void {
+  if (
+    style.getPropertyValue(property) !== expectedValue ||
+    style.getPropertyPriority(property) !== expectedPriority
+  ) {
+    return;
+  }
+  if (original.value === '') {
+    style.removeProperty(property);
+  } else {
+    style.setProperty(property, original.value, original.priority);
+  }
 }
 
 export function lockDocumentScroll(document: Document): () => void {
   const api = dom();
-  const root = api.docElement(document);
+  const root = getDocumentElement(document);
   const style = root ? elementStyle(root) : null;
-  const view = liveViewOf(document);
+  const view = getLiveView(document);
   if (!root || !style || !view) {
     return () => {};
   }
+
   const scrollX = view.scrollX;
   const scrollY = view.scrollY;
-  const scrollbarWidth = Math.max(0, view.innerWidth - api.clientWidth(root));
-  const computed = scrollbarWidth > 0 ? view.getComputedStyle(root) : null;
-  const compensate = scrollbarWidth > 0 && !(computed?.scrollbarGutter ?? '').includes('stable');
+  const clientWidth = api.clientWidth(root);
+  const scrollbarWidth = clientWidth > 0 ? Math.max(0, view.innerWidth - clientWidth) : 0;
+  const computed = scrollbarWidth > 0 ? getComputedStyleSafe(root) : null;
+  const gutterStable = (computed?.scrollbarGutter ?? '').includes('stable');
+  const overflowYBlocksScrollbar =
+    computed?.overflowY === 'hidden' || computed?.overflowY === 'clip';
+  const compensate = scrollbarWidth > 0 && !gutterStable && !overflowYBlocksScrollbar;
 
-  const properties = [
-    ...(style.getPropertyValue('overflow') ? ['overflow'] : ['overflow-x', 'overflow-y']),
-    ...(compensate ? ['padding-inline-end'] : []),
-  ];
-  const original = properties.map((property) => ({
-    property,
-    value: style.getPropertyValue(property),
-    priority: style.getPropertyPriority(property),
-  }));
+  const originalOverflowX: PropertySnapshot = {
+    value: style.getPropertyValue('overflow-x'),
+    priority: style.getPropertyPriority('overflow-x'),
+  };
+  const originalOverflowY: PropertySnapshot = {
+    value: style.getPropertyValue('overflow-y'),
+    priority: style.getPropertyPriority('overflow-y'),
+  };
+  const originalPadding: PropertySnapshot | null = compensate
+    ? {
+        value: style.getPropertyValue('padding-inline-end'),
+        priority: style.getPropertyPriority('padding-inline-end'),
+      }
+    : null;
 
+  let appliedPadding: string | null = null;
   if (compensate && computed) {
     const existing = Number.parseFloat(computed.paddingInlineEnd) || 0;
-    style.setProperty('padding-inline-end', `${existing + scrollbarWidth}px`);
+    appliedPadding = `${existing + scrollbarWidth}px`;
+    style.setProperty('padding-inline-end', appliedPadding);
   }
-  style.setProperty('overflow', 'hidden', 'important');
+  style.setProperty('overflow-x', 'hidden', 'important');
+  style.setProperty('overflow-y', 'hidden', 'important');
 
   const lockedX = view.scrollX;
   const lockedY = view.scrollY;
   const shiftedOnLock = lockedX !== scrollX || lockedY !== scrollY;
+  let released = false;
 
   return () => {
-    const currentView = liveViewOf(document);
+    if (released) {
+      return;
+    }
+    released = true;
+
+    const currentView = getLiveView(document);
     const unchangedDuringLock =
       currentView !== null &&
       currentView === view &&
       currentView.scrollX === lockedX &&
       currentView.scrollY === lockedY;
 
-    style.removeProperty('overflow');
-    if (compensate) {
-      style.removeProperty('padding-inline-end');
-    }
-    for (const { property, value, priority } of original) {
-      style.setProperty(property, value, priority);
+    restoreIfUnchanged(style, 'overflow-x', 'hidden', 'important', originalOverflowX);
+    restoreIfUnchanged(style, 'overflow-y', 'hidden', 'important', originalOverflowY);
+    if (originalPadding && appliedPadding !== null) {
+      restoreIfUnchanged(style, 'padding-inline-end', appliedPadding, '', originalPadding);
     }
 
     if (

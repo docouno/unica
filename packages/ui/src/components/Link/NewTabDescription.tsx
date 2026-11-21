@@ -1,5 +1,13 @@
-import { Fragment, isValidElement, useLayoutEffect, useRef } from 'react';
+import { Fragment, isValidElement, useRef } from 'react';
 import type { ComponentPropsWithoutRef, ReactElement, ReactNode } from 'react';
+import {
+  getComputedStyleSafe,
+  getLiveView,
+  getOwnerDocument,
+  getRootNodeSafe,
+  reportErrorSafe,
+} from '../../core/dom.js';
+import { useIsoLayoutEffect } from '../../core/useIsoLayoutEffect.js';
 
 interface DescriptionProps {
   readonly id: string;
@@ -13,6 +21,109 @@ interface DescriptionProps {
 }
 
 const nonLabelElements = /* @__PURE__ */ new Set(['script', 'style', 'template']);
+const FULL_TITLE_ATTRIBUTES = [
+  'id',
+  'aria-label',
+  'aria-hidden',
+  'alt',
+  'class',
+  'hidden',
+  'inert',
+  'role',
+  'style',
+  'title',
+];
+
+type WatchMode = 'none' | 'idOnly' | 'fullTitle';
+
+interface DescriptionSubscriber {
+  readonly sync: () => void;
+  readonly watchTitle: boolean;
+}
+
+interface RootWatcher {
+  readonly subscribers: Set<DescriptionSubscriber>;
+  readonly observer: MutationObserver;
+  mode: WatchMode;
+  reconfigure: () => void;
+}
+
+const rootWatchers = new WeakMap<Document | ShadowRoot, RootWatcher>();
+
+function subscribeRootWatcher(
+  scope: Document | ShadowRoot,
+  view: Window & typeof globalThis,
+  subscriber: DescriptionSubscriber,
+): () => void {
+  let watcher = rootWatchers.get(scope);
+  if (!watcher) {
+    const subscribers = new Set<DescriptionSubscriber>();
+    const observer = new view.MutationObserver(() => {
+      for (const entry of [...subscribers]) {
+        try {
+          entry.sync();
+        } catch (error) {
+          reportErrorSafe(view, error);
+        }
+      }
+    });
+    const created: RootWatcher = {
+      subscribers,
+      observer,
+      mode: 'none',
+      reconfigure() {
+        let nextMode: WatchMode = 'none';
+        for (const entry of subscribers) {
+          if (entry.watchTitle) {
+            nextMode = 'fullTitle';
+            break;
+          }
+          nextMode = 'idOnly';
+        }
+        if (nextMode === created.mode) {
+          return;
+        }
+        observer.disconnect();
+        created.mode = nextMode;
+        if (nextMode === 'fullTitle') {
+          observer.observe(scope, {
+            subtree: true,
+            childList: true,
+            characterData: true,
+            attributes: true,
+            attributeFilter: FULL_TITLE_ATTRIBUTES,
+          });
+        } else if (nextMode === 'idOnly') {
+          observer.observe(scope, {
+            subtree: true,
+            childList: true,
+            attributes: true,
+            attributeFilter: ['id'],
+          });
+        }
+      },
+    };
+    watcher = created;
+    rootWatchers.set(scope, watcher);
+  }
+
+  const owned = watcher;
+  owned.subscribers.add(subscriber);
+  owned.reconfigure();
+
+  return () => {
+    owned.subscribers.delete(subscriber);
+    if (owned.subscribers.size === 0) {
+      owned.observer.disconnect();
+      owned.mode = 'none';
+      if (rootWatchers.get(scope) === owned) {
+        rootWatchers.delete(scope);
+      }
+    } else {
+      owned.reconfigure();
+    }
+  };
+}
 
 function isPresentational(role: string | null | undefined): boolean {
   const first = role?.trim().split(/\s+/, 1)[0];
@@ -76,7 +187,7 @@ function titleDescription(
 }
 
 function isHidden(element: Element): boolean {
-  const style = element.ownerDocument.defaultView?.getComputedStyle(element);
+  const style = getComputedStyleSafe(element);
   return (
     element.getAttribute('aria-hidden') === 'true' ||
     element.hasAttribute('inert') ||
@@ -131,6 +242,8 @@ export function NewTabDescription({
   nameIds,
 }: DescriptionProps): ReactElement {
   const fallback = useRef<HTMLSpanElement>(null);
+  const authorIdsKey = authorIds.join(' ');
+  const nameIdsKey = nameIds.join(' ');
   const initialDescription =
     authorIds.length === 0
       ? (authorDescription ??
@@ -142,7 +255,7 @@ export function NewTabDescription({
           )))
       : undefined;
 
-  useLayoutEffect(() => {
+  useIsoLayoutEffect(() => {
     const span = fallback.current;
     const anchor = span?.closest('a');
     if (!span || !anchor || (!authorDescription && !title)) {
@@ -150,14 +263,17 @@ export function NewTabDescription({
     }
 
     // IDREFs resolve in the anchor's tree, including when it lives in a shadow root.
-    const root = anchor.getRootNode();
+    const root = getRootNodeSafe(anchor);
     if (!('getElementById' in root)) {
       return;
     }
     const scope = root as Document | ShadowRoot;
+    const stableAuthorIds = authorIdsKey ? authorIdsKey.split(' ') : [];
+    const stableNameIds = nameIdsKey ? nameIdsKey.split(' ') : [];
+
     const syncDescription = (): void => {
       let text = '';
-      if (!authorIds.some((refId) => scope.getElementById(refId) !== null)) {
+      if (!stableAuthorIds.some((refId) => scope.getElementById(refId) !== null)) {
         if (authorDescription) {
           text = authorDescription;
         } else if (title) {
@@ -167,7 +283,7 @@ export function NewTabDescription({
               anchor.innerText ?? labelText(anchor, false),
               () =>
                 hasExplicitName ||
-                nameIds.some((refId) => hasReferencedName(scope.getElementById(refId))) ||
+                stableNameIds.some((refId) => hasReferencedName(scope.getElementById(refId))) ||
                 Boolean(labelText(anchor, false).trim()),
             ) ?? '';
         }
@@ -181,35 +297,14 @@ export function NewTabDescription({
     syncDescription();
     const watchTitle = Boolean(title && !authorDescription);
     const watchReferences =
-      authorIds.length > 0 || (watchTitle && !hasExplicitName && nameIds.length > 0);
-    const Observer = anchor.ownerDocument.defaultView?.MutationObserver;
-    if (!Observer || (!watchReferences && !watchTitle)) {
+      stableAuthorIds.length > 0 || (watchTitle && !hasExplicitName && stableNameIds.length > 0);
+    const view = getLiveView(getOwnerDocument(anchor));
+    if (!view || typeof view.MutationObserver !== 'function' || (!watchReferences && !watchTitle)) {
       return;
     }
 
-    const observer = new Observer(syncDescription);
-    observer.observe(watchReferences ? scope : anchor, {
-      subtree: true,
-      childList: true,
-      attributes: true,
-      attributeFilter: watchTitle
-        ? [
-            'id',
-            'aria-label',
-            'aria-hidden',
-            'alt',
-            'class',
-            'hidden',
-            'inert',
-            'role',
-            'style',
-            'title',
-          ]
-        : ['id'],
-      characterData: watchTitle,
-    });
-    return () => observer.disconnect();
-  }, [authorIds, authorDescription, title, hasExplicitName, nameIds]);
+    return subscribeRootWatcher(scope, view, { sync: syncDescription, watchTitle });
+  }, [authorIdsKey, authorDescription, title, hasExplicitName, nameIdsKey]);
 
   return (
     <span id={id} hidden>

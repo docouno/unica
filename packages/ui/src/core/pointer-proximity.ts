@@ -1,3 +1,14 @@
+import {
+  addListenerSafe,
+  getLiveView,
+  getLocalName,
+  getOwnerDocument,
+  isConnectedNode,
+  isElementNode,
+  removeListenerSafe,
+  reportErrorSafe,
+} from './dom.js';
+
 export interface PointerPosition {
   readonly x: number;
   readonly y: number;
@@ -39,10 +50,10 @@ const inactive: PointerProximitySubscription = {
 };
 
 function isFrame(target: EventTarget | null): boolean {
-  return !!target && 'localName' in target && target.localName === 'iframe';
+  return isElementNode(target) && getLocalName(target) === 'iframe';
 }
 
-function createSampler(doc: Document, view: Window): PointerSampler {
+function createSampler(doc: Document, view: Window & typeof globalThis): PointerSampler {
   const bindings = new Set<PointerBinding>();
   const enabledBindings = new Set<PointerBinding>();
   const hover = view.matchMedia('(hover: hover) and (pointer: fine)');
@@ -68,7 +79,11 @@ function createSampler(doc: Document, view: Window): PointerSampler {
   function reset(binding: PointerBinding): void {
     if (binding.sampled) {
       binding.sampled = false;
-      binding.observer.reset();
+      try {
+        binding.observer.reset();
+      } catch (error) {
+        reportErrorSafe(view, error);
+      }
     }
   }
 
@@ -78,7 +93,7 @@ function createSampler(doc: Document, view: Window): PointerSampler {
     }
     position = null;
     cancelFrame();
-    for (const binding of enabledBindings) {
+    for (const binding of [...enabledBindings]) {
       reset(binding);
     }
   }
@@ -90,19 +105,27 @@ function createSampler(doc: Document, view: Window): PointerSampler {
       return;
     }
     const writes: { binding: PointerBinding; write: () => void }[] = [];
-    for (const binding of enabledBindings) {
-      if (!binding.element.isConnected || binding.element.ownerDocument !== doc) {
+    for (const binding of [...enabledBindings]) {
+      if (!isConnectedNode(binding.element) || getOwnerDocument(binding.element) !== doc) {
         continue;
       }
       binding.sampled = true;
-      const write = binding.observer.measure(sample);
-      if (write) {
-        writes.push({ binding, write });
+      try {
+        const write = binding.observer.measure(sample);
+        if (write) {
+          writes.push({ binding, write });
+        }
+      } catch (error) {
+        reportErrorSafe(view, error);
       }
     }
     for (const { binding, write } of writes) {
       if (position === sample && enabledBindings.has(binding) && binding.sampled) {
-        write();
+        try {
+          write();
+        } catch (error) {
+          reportErrorSafe(view, error);
+        }
       }
     }
   }
@@ -139,33 +162,33 @@ function createSampler(doc: Document, view: Window): PointerSampler {
     }
   }
 
-  doc.addEventListener('pointermove', pointer, { capture: true, passive: true });
-  doc.addEventListener('pointerdown', pointer, { capture: true, passive: true });
-  doc.addEventListener('pointerleave', clearPosition);
-  doc.addEventListener('pointerover', pointerOver, true);
-  doc.addEventListener('pointerout', pointerOut, true);
-  doc.addEventListener('pointercancel', clearPosition, true);
-  doc.addEventListener('visibilitychange', visibility);
-  doc.addEventListener('scroll', schedule, { capture: true, passive: true });
-  view.addEventListener('resize', schedule);
-  view.addEventListener('blur', clearPosition);
+  addListenerSafe(doc, 'pointermove', pointer, { capture: true, passive: true });
+  addListenerSafe(doc, 'pointerdown', pointer, { capture: true, passive: true });
+  addListenerSafe(doc, 'pointerleave', clearPosition);
+  addListenerSafe(doc, 'pointerover', pointerOver, true);
+  addListenerSafe(doc, 'pointerout', pointerOut, true);
+  addListenerSafe(doc, 'pointercancel', clearPosition, true);
+  addListenerSafe(doc, 'visibilitychange', visibility);
+  addListenerSafe(doc, 'scroll', schedule, { capture: true, passive: true });
+  addListenerSafe(view, 'resize', schedule);
+  addListenerSafe(view, 'blur', clearPosition);
   for (const query of media) {
-    query.addEventListener('change', clearPosition);
+    addListenerSafe(query, 'change', clearPosition);
   }
 
   function dispose(): void {
-    doc.removeEventListener('pointermove', pointer, true);
-    doc.removeEventListener('pointerdown', pointer, true);
-    doc.removeEventListener('pointerleave', clearPosition);
-    doc.removeEventListener('pointerover', pointerOver, true);
-    doc.removeEventListener('pointerout', pointerOut, true);
-    doc.removeEventListener('pointercancel', clearPosition, true);
-    doc.removeEventListener('visibilitychange', visibility);
-    doc.removeEventListener('scroll', schedule, true);
-    view.removeEventListener('resize', schedule);
-    view.removeEventListener('blur', clearPosition);
+    removeListenerSafe(doc, 'pointermove', pointer, true);
+    removeListenerSafe(doc, 'pointerdown', pointer, true);
+    removeListenerSafe(doc, 'pointerleave', clearPosition);
+    removeListenerSafe(doc, 'pointerover', pointerOver, true);
+    removeListenerSafe(doc, 'pointerout', pointerOut, true);
+    removeListenerSafe(doc, 'pointercancel', clearPosition, true);
+    removeListenerSafe(doc, 'visibilitychange', visibility);
+    removeListenerSafe(doc, 'scroll', schedule, true);
+    removeListenerSafe(view, 'resize', schedule);
+    removeListenerSafe(view, 'blur', clearPosition);
     for (const query of media) {
-      query.removeEventListener('change', clearPosition);
+      removeListenerSafe(query, 'change', clearPosition);
     }
     samplers.delete(doc);
   }
@@ -222,9 +245,10 @@ export function subscribePointerProximity(
   observer: PointerProximityObserver,
   enabled = true,
 ): PointerProximitySubscription {
-  const doc = element.ownerDocument;
-  const view = doc.defaultView;
+  const doc = getOwnerDocument(element);
+  const view = getLiveView(doc);
   if (
+    !doc ||
     !view ||
     typeof view.matchMedia !== 'function' ||
     typeof view.requestAnimationFrame !== 'function' ||

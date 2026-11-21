@@ -1,6 +1,7 @@
 import { createContext, useContext, useSyncExternalStore } from 'react';
 import type { JSX, ReactNode } from 'react';
 import { createPortal } from 'react-dom';
+import { getDocumentBody } from './dom.js';
 
 export interface PortalProviderProps {
   readonly children: ReactNode;
@@ -11,23 +12,10 @@ export interface PortalProps extends PortalProviderProps {
   readonly disabled?: boolean | undefined;
 }
 
-type BodyGetter = (this: Document) => HTMLElement | null;
-
 const PortalContext = /* @__PURE__ */ createContext<HTMLElement | null | undefined>(undefined);
 const subscribe = (): (() => void) => () => {};
 const getClientSnapshot = (): boolean => typeof document !== 'undefined';
 const getServerSnapshot = (): boolean => false;
-let bodyGetter: BodyGetter | null | undefined;
-
-function documentBody(): HTMLElement | null {
-  if (bodyGetter === undefined) {
-    const descriptor = Object.getOwnPropertyDescriptor(Document.prototype, 'body');
-    bodyGetter = descriptor
-      ? ((Reflect.get(descriptor, 'get') as BodyGetter | undefined) ?? null)
-      : null;
-  }
-  return bodyGetter ? bodyGetter.call(document) : document.body;
-}
 
 function useContainer(container: PortalProps['container']): HTMLElement | null {
   const inherited = useContext(PortalContext);
@@ -37,7 +25,7 @@ function useContainer(container: PortalProps['container']): HTMLElement | null {
   }
   return container === undefined
     ? inherited === undefined
-      ? documentBody()
+      ? getDocumentBody(document)
       : inherited
     : container;
 }

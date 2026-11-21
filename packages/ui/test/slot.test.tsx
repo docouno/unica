@@ -230,3 +230,37 @@ it('composes user and internal handlers without inventing a canceled event', () 
   fireEvent.click(screen.getByRole('button'));
   expect(internal).toHaveBeenCalledOnce();
 });
+
+it('supports slotDefaults, slotOwned stripping, slotContent, explicit child undefined, and aria-describedby vs aria-labelledby', () => {
+  render(
+    <Slot
+      title="Outer title"
+      aria-describedby="outer-a outer-b"
+      aria-labelledby="outer-name"
+      slotDefaults={{ type: 'button', 'data-fallback': 'yes' }}
+      slotOwned={{ href: undefined, 'data-owned': 'forced' }}
+      slotContent="Replaced content"
+    >
+      <a
+        href="#should-be-stripped"
+        title={undefined}
+        aria-describedby="inner-a outer-a"
+        aria-labelledby="inner-name"
+        data-owned="ignored"
+      >
+        Original content
+      </a>
+    </Slot>,
+  );
+
+  const el = document.querySelector('a')!;
+  expect(el.textContent).toBe('Replaced content');
+  expect(el.hasAttribute('href')).toBe(false);
+  expect(el.getAttribute('title')).toBe('Outer title');
+  expect(el.getAttribute('data-owned')).toBe('forced');
+  expect(el.getAttribute('data-fallback')).toBe('yes');
+  expect(el.getAttribute('type')).toBe('button');
+  // aria-describedby merges child -> outer deduplicated; aria-labelledby overrides without concatenating.
+  expect(el.getAttribute('aria-describedby')).toBe('inner-a outer-a outer-b');
+  expect(el.getAttribute('aria-labelledby')).toBe('inner-name');
+});

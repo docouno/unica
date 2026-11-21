@@ -320,6 +320,16 @@ describe('useFormValue and native reset runtime (jsdom)', () => {
       act(() => result.current.propose('b'));
       expect(result.current.value).toBe('b');
 
+      // Making radioB inert while radioA is disabled blocks the entire group until one control is unblocked.
+      radioB.setAttribute('inert', '');
+      act(() => result.current.propose('a'));
+      expect(result.current.value).toBe('b');
+      radioB.removeAttribute('inert');
+      act(() => result.current.propose('a'));
+      expect(result.current.value).toBe('a');
+      act(() => result.current.propose('b'));
+      expect(result.current.value).toBe('b');
+
       // Removing radioA from getControls keeps reset active via radioB.
       rerender({ dep: 1, includeA: false });
       await act(async () => {

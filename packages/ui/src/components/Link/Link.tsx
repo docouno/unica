@@ -1,12 +1,11 @@
 import { useId } from 'react';
 import type { ComponentPropsWithRef, MouseEvent, ReactElement, ReactNode } from 'react';
-import { Slot, requireSlotChild } from '../../core/Slot.js';
+import { Slot, requireSlotChild, resolveSlotProps } from '../../core/Slot.js';
 import { useComponentDefaults } from '../../core/UnicaProvider.js';
 import { ExternalLinkGlyph } from '../../internal/glyphs/index.js';
 import { Icon } from '../Icon/Icon.js';
 import type { GlyphSource } from '../Icon/glyph.js';
 import { NewTabDescription } from './NewTabDescription.js';
-import { RouterAnchor } from './RouterAnchor.js';
 import { TrailingGlyph } from './TrailingGlyph.js';
 import { markTerminalText } from './terminalText.js';
 import './link.css';
@@ -152,7 +151,15 @@ export function Link({
     throw new Error('An enabled Link requires a string href.');
   }
 
-  const effective = child ? { ...props, ...child.props } : props;
+  // Resolve all 8 navigation/a11y fields once through resolveSlotProps so logic and Slot agree.
+  const effective = (
+    child
+      ? resolveSlotProps({
+          slotProps: props,
+          childProps: child.props as Record<string, unknown>,
+        })
+      : props
+  ) as AnchorProps;
   const label = child ? child.props.children : children;
   const blank = typeof effective.target === 'string' && effective.target.toLowerCase() === '_blank';
   const download = effective.download === true || typeof effective.download === 'string';
@@ -160,6 +167,7 @@ export function Link({
   const showHint = newTab && !disabled;
   const showExternal = external || newTab;
   const authorIds = showHint ? [...new Set(tokens(effective['aria-describedby']))] : [];
+  const nameIds = tokens(effective['aria-labelledby']);
   const content = (
     <>
       {iconLeft && (
@@ -186,7 +194,7 @@ export function Link({
           title={effective.title?.trim() || undefined}
           hasExplicitName={Boolean(effective['aria-label']?.trim())}
           label={label}
-          nameIds={tokens(effective['aria-labelledby'])}
+          nameIds={nameIds}
         />
       )}
     </>
@@ -223,10 +231,14 @@ export function Link({
 
     if (child) {
       return (
-        <Slot<HTMLAnchorElement> {...props} {...unavailable} className={anchorClass} ref={ref}>
-          <a {...fallbackAttributes(child.props)} {...unavailable} ref={child.props.ref}>
-            {content}
-          </a>
+        <Slot<HTMLAnchorElement>
+          {...props}
+          className={anchorClass}
+          ref={ref}
+          slotOwned={unavailable}
+          slotContent={content}
+        >
+          <a {...fallbackAttributes(child.props)} ref={child.props.ref} />
         </Slot>
       );
     }
@@ -239,11 +251,14 @@ export function Link({
 
   if (child) {
     return (
-      <Slot<HTMLAnchorElement> {...props} {...owned} className={anchorClass} ref={ref}>
-        <RouterAnchor {...child.props} {...owned}>
-          {child}
-          {content}
-        </RouterAnchor>
+      <Slot<HTMLAnchorElement>
+        {...props}
+        className={anchorClass}
+        ref={ref}
+        slotOwned={owned}
+        slotContent={content}
+      >
+        {child}
       </Slot>
     );
   }

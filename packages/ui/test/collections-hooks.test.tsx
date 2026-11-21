@@ -261,4 +261,98 @@ describe('collection hooks (jsdom)', () => {
     keyDownHandler!(makeArrowDown());
     expect(proposals).toEqual(['b', 'b', 'b', 'b']);
   });
+
+  it('calls onNavigate only when focus is accepted (including ShadowRoot delegatesFocus) and skips rejected targets', () => {
+    const navigated: string[] = [];
+
+    function RejectedTargetList(): JSX.Element {
+      const roving = useRovingFocus<HTMLButtonElement>({
+        items: [
+          { key: 'a', label: 'Alpha' },
+          { key: 'b', label: 'Beta' },
+        ],
+        entryKey: 'a',
+        orientation: 'horizontal',
+        wrap: false,
+        typeahead: false,
+        onNavigate: (key) => navigated.push(key),
+      });
+      return (
+        <div role="tablist" onKeyDown={roving.onKeyDown} onBlur={roving.onBlur}>
+          <button type="button" role="tab" {...roving.getItemProps('a')}>
+            A
+          </button>
+          <button
+            type="button"
+            role="tab"
+            {...roving.getItemProps('b', {
+              ref: (node) => {
+                if (node) {
+                  // Simulate a browser rejecting focus on a hidden/inert/unfocusable target.
+                  node.focus = () => {};
+                }
+              },
+            })}
+          >
+            B
+          </button>
+        </div>
+      );
+    }
+
+    render(<RejectedTargetList />);
+    const tabA = screen.getByRole('tab', { name: 'A' });
+    act(() => tabA.focus());
+    fireEvent.keyDown(tabA, { key: 'ArrowRight' });
+    expect(document.activeElement).toBe(tabA);
+    expect(navigated).toEqual([]);
+
+    // Now test open ShadowRoot with delegatesFocus: focus lands on an inner shadow button.
+    const hostNavigated: string[] = [];
+    let shadowInner: HTMLButtonElement | null = null;
+    function DelegatesFocusList(): JSX.Element {
+      const roving = useRovingFocus<HTMLElement>({
+        items: [
+          { key: 'a', label: 'Alpha' },
+          { key: 'b', label: 'Beta' },
+        ],
+        entryKey: 'a',
+        orientation: 'horizontal',
+        wrap: false,
+        typeahead: false,
+        onNavigate: (key) => hostNavigated.push(key),
+      });
+      return (
+        <div role="tablist" onKeyDown={roving.onKeyDown} onBlur={roving.onBlur}>
+          <button type="button" role="tab" {...roving.getItemProps('a')}>
+            A
+          </button>
+          <div
+            data-testid="shadow-item"
+            {...roving.getItemProps('b', {
+              ref: (node) => {
+                if (node && !node.shadowRoot) {
+                  const shadow = node.attachShadow({ mode: 'open', delegatesFocus: true });
+                  const inner = document.createElement('button');
+                  inner.type = 'button';
+                  inner.textContent = 'Inner B';
+                  shadow.append(inner);
+                  shadowInner = inner;
+                  node.focus = () => inner.focus();
+                }
+              },
+            })}
+          />
+        </div>
+      );
+    }
+
+    cleanup();
+    render(<DelegatesFocusList />);
+    const first = screen.getByRole('tab', { name: 'A' });
+    act(() => first.focus());
+    fireEvent.keyDown(first, { key: 'ArrowRight' });
+    expect(shadowInner).not.toBeNull();
+    expect(hostNavigated).toEqual(['b']);
+  });
 });

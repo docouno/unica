@@ -554,4 +554,114 @@ export default {
       }
     }
   },
+
+  'Link updates AX name/description on ancestor class hide/show, tracks late TrailingGlyph text, late ShadowRoot ID, and skips redundant observer churn':
+    async ({ page, mount }) => {
+      await mount('link');
+      const session = await page.context().newCDPSession(page);
+      const readAx = async (testId) => {
+        const { root } = await session.send('DOM.getDocument', { depth: -1 });
+        const { nodeId } = await session.send('DOM.querySelector', {
+          nodeId: root.nodeId,
+          selector: `[data-testid="${testId}"]`,
+        });
+        const { nodes: axNodes } = await session.send('Accessibility.getPartialAXTree', {
+          nodeId,
+          fetchRelatives: false,
+        });
+        const linkNode = axNodes.find((node) => node.role?.value === 'link');
+        return [linkNode?.name?.value, linkNode?.description?.value];
+      };
+
+      // 1. Ancestor class hides/shows text inside <Link target="_blank" title="Additional info" aria-describedby="s2-late-desc">
+      assert.deepEqual(await readAx('s2-ancestor-class-link'), [
+        'Details',
+        'Additional info Opens in a new tab',
+      ]);
+      await page.getByRole('button', { name: 'Toggle ancestor hide text' }).click();
+      await page.waitForFunction(() => {
+        const a = document.querySelector('[data-testid="s2-ancestor-class-link"]');
+        const hintId = a.getAttribute('aria-describedby').split(' ').at(-1);
+        return document.getElementById(hintId)?.textContent?.trim() === 'Opens in a new tab';
+      });
+      assert.deepEqual(await readAx('s2-ancestor-class-link'), [
+        'Additional info',
+        'Opens in a new tab',
+      ]);
+      await page.getByRole('button', { name: 'Toggle ancestor hide text' }).click();
+      await page.waitForFunction(() => {
+        const a = document.querySelector('[data-testid="s2-ancestor-class-link"]');
+        const hintId = a.getAttribute('aria-describedby').split(' ').at(-1);
+        return (
+          document.getElementById(hintId)?.textContent?.trim() ===
+          'Additional info Opens in a new tab'
+        );
+      });
+      assert.deepEqual(await readAx('s2-ancestor-class-link'), [
+        'Details',
+        'Additional info Opens in a new tab',
+      ]);
+      await page.getByRole('button', { name: 'Toggle late description id' }).click();
+      assert.deepEqual(await readAx('s2-ancestor-class-link'), [
+        'Details',
+        'Server note Opens in a new tab',
+      ]);
+      await session.detach();
+
+      // 2. Late text in TrailingGlyph after initially empty label keeps glyph on last text line.
+      await page.getByRole('button', { name: 'Populate late link text' }).click();
+      await page.waitForFunction(() => {
+        const link = document.querySelector('[data-testid="s2-late-glyph-link"]');
+        const text = link?.querySelector('.unica-link-terminal-text');
+        const svg = link?.querySelector('svg');
+        if (!text || !svg) {
+          return false;
+        }
+        const lastLine = Array.from(text.getClientRects()).at(-1);
+        const box = svg.getBoundingClientRect();
+        return Boolean(lastLine && box.height && box.top + box.height / 2 <= lastLine.bottom + 1);
+      });
+
+      // 3. Late ID in ShadowRoot clears tooltip fallback in NewTabDescription.
+      const shadowBefore = await page.evaluate(() => {
+        const shadow = document.querySelector('#s2-shadow-desc-host').shadowRoot;
+        const a = shadow.querySelector('[data-testid="shadow-desc-link"]');
+        const hintId = a.getAttribute('aria-describedby').split(' ').at(-1);
+        return shadow.getElementById(hintId)?.textContent?.trim();
+      });
+      assert.equal(shadowBefore, 'Shadow tooltip Opens in a new tab');
+      const shadowAfter = await page.evaluate(async () => {
+        const shadow = document.querySelector('#s2-shadow-desc-host').shadowRoot;
+        const note = document.createElement('span');
+        note.id = 'shadow-late-note';
+        note.textContent = 'Shadow description';
+        shadow.appendChild(note);
+        await Promise.resolve();
+        const a = shadow.querySelector('[data-testid="shadow-desc-link"]');
+        const hintId = a.getAttribute('aria-describedby').split(' ').at(-1);
+        return shadow.getElementById(hintId)?.textContent?.trim();
+      });
+      assert.equal(shadowAfter, 'Opens in a new tab');
+
+      // 4. Equivalent rerender causes 0 MutationObserver/ResizeObserver registrations.
+      const observerChurn = await page.evaluate(async () => {
+        let observes = 0;
+        const origMo = MutationObserver.prototype.observe;
+        const origRo = ResizeObserver.prototype.observe;
+        MutationObserver.prototype.observe = function (...args) {
+          observes++;
+          return origMo.apply(this, args);
+        };
+        ResizeObserver.prototype.observe = function (...args) {
+          observes++;
+          return origRo.apply(this, args);
+        };
+        document.querySelector('[data-testid="s2-link-probes"] button:last-of-type').click();
+        await new Promise((r) => requestAnimationFrame(r));
+        MutationObserver.prototype.observe = origMo;
+        ResizeObserver.prototype.observe = origRo;
+        return observes;
+      });
+      assert.equal(observerChurn, 0);
+    },
 };

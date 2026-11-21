@@ -1,6 +1,8 @@
 import { IconProvider, Link, defineGlyph } from '@docouno/unica';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { ComponentPropsWithRef, ReactElement, RefCallback } from 'react';
+import { createRoot } from 'react-dom/client';
+import type { Root } from 'react-dom/client';
 
 const FileGlyph = defineGlyph((props) => (
   <svg {...props} viewBox="0 0 24 24">
@@ -337,6 +339,82 @@ function DescriptionSample(): ReactElement {
   );
 }
 
+function S2ObserverProbes(): ReactElement {
+  const [hideText, setHideText] = useState(false);
+  const [mountLateId, setMountLateId] = useState(false);
+  const [lateLabel, setLateLabel] = useState('');
+  const [rerenderTick, setRerenderTick] = useState(0);
+  const shadowHostRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const host = shadowHostRef.current;
+    if (!host) {
+      return;
+    }
+    const shadow = host.shadowRoot ?? host.attachShadow({ mode: 'open' });
+    const container = document.createElement('div');
+    shadow.replaceChildren(container);
+    const root: Root = createRoot(container);
+    root.render(
+      <Link
+        href="#target"
+        target="_blank"
+        aria-describedby="shadow-late-note"
+        title="Shadow tooltip"
+        data-testid="shadow-desc-link"
+      >
+        Shadow report
+      </Link>,
+    );
+    return () => {
+      root.unmount();
+    };
+  }, []);
+
+  return (
+    <section data-testid="s2-link-probes" data-tick={rerenderTick}>
+      <style>{'.s2-ancestor-hidden .s2-link-text { display: none; }'}</style>
+      <button type="button" onClick={() => setHideText(!hideText)}>
+        Toggle ancestor hide text
+      </button>
+      <button type="button" onClick={() => setMountLateId(!mountLateId)}>
+        Toggle late description id
+      </button>
+      <button type="button" onClick={() => setLateLabel('Research the handbook')}>
+        Populate late link text
+      </button>
+      <button type="button" onClick={() => setRerenderTick((n) => n + 1)}>
+        Equivalent link rerender
+      </button>
+      {mountLateId && (
+        <span id="s2-late-desc" hidden>
+          Server note
+        </span>
+      )}
+      <div className={hideText ? 's2-ancestor-hidden' : undefined}>
+        <Link
+          href="#target"
+          target="_blank"
+          title="Additional info"
+          aria-describedby="s2-late-desc"
+          data-testid="s2-ancestor-class-link"
+        >
+          <span className="s2-link-text">Details</span>
+        </Link>
+      </div>
+      <p
+        data-testid="s2-late-glyph-line"
+        style={{ font: '24px / 38.4px Arial', inlineSize: 200, blockSize: 160 }}
+      >
+        <Link href="#target" external data-testid="s2-late-glyph-link">
+          {lateLabel}
+        </Link>
+      </p>
+      <div id="s2-shadow-desc-host" ref={shadowHostRef} />
+    </section>
+  );
+}
+
 export default function LinkFixture(): ReactElement {
   const [submits, setSubmits] = useState(0);
   return (
@@ -391,6 +469,7 @@ export default function LinkFixture(): ReactElement {
       <RouterSample />
       <DescriptionSample />
       <FixedLineSample />
+      <S2ObserverProbes />
       <section
         style={{
           fontSize: 24,

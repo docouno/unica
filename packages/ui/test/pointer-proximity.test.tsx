@@ -1,7 +1,7 @@
 import { cleanup, render } from '@testing-library/react';
 import { Profiler } from 'react';
 import type { ReactElement } from 'react';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { subscribePointerProximity } from '../src/core/pointer-proximity.js';
 import type {
   PointerPosition,
@@ -10,10 +10,60 @@ import type {
 } from '../src/core/pointer-proximity.js';
 import { UnicaProvider } from '../src/core/UnicaProvider.js';
 
+interface RecordedListenerCall {
+  readonly target: EventTarget;
+  readonly type: string;
+}
+
+type ListenerFn = (
+  this: EventTarget,
+  type: string,
+  listener: EventListenerOrEventListenerObject | null,
+  options?: boolean | AddEventListenerOptions,
+) => void;
+
 const fineHover = '(hover: hover) and (pointer: fine)';
 const reducedMotion = '(prefers-reduced-motion: reduce)';
 const forcedColors = '(forced-colors: active)';
 const cleanups: (() => void)[] = [];
+const added: RecordedListenerCall[] = [];
+const removed: RecordedListenerCall[] = [];
+let originalAdd: ListenerFn;
+let originalRemove: ListenerFn;
+
+// Wrap EventTarget.prototype once before the first call warms core/dom.ts's descriptor cache.
+beforeAll(() => {
+  const rawAdd: unknown = Reflect.get(EventTarget.prototype, 'addEventListener');
+  const rawRemove: unknown = Reflect.get(EventTarget.prototype, 'removeEventListener');
+  originalAdd = rawAdd as ListenerFn;
+  originalRemove = rawRemove as ListenerFn;
+  EventTarget.prototype.addEventListener = function addEventListener(type, listener, options) {
+    added.push({ target: this, type });
+    Reflect.apply(originalAdd, this, [type, listener, options]);
+  };
+  EventTarget.prototype.removeEventListener = function removeEventListener(
+    type,
+    listener,
+    options,
+  ) {
+    removed.push({ target: this, type });
+    Reflect.apply(originalRemove, this, [type, listener, options]);
+  };
+});
+
+afterAll(() => {
+  Reflect.set(EventTarget.prototype, 'addEventListener', originalAdd);
+  Reflect.set(EventTarget.prototype, 'removeEventListener', originalRemove);
+});
+
+beforeEach(() => {
+  added.length = 0;
+  removed.length = 0;
+});
+
+function listenerTypes(calls: readonly RecordedListenerCall[], target: EventTarget): string[] {
+  return calls.filter((entry) => entry.target === target).map((entry) => entry.type);
+}
 
 function replaceProperty(target: object, key: string, value: unknown): void {
   const descriptor = Object.getOwnPropertyDescriptor(target, key);
@@ -122,8 +172,6 @@ afterEach(() => {
 describe('PointerProximity', () => {
   it('shares one frame across React roots and completes the batch of reads before painting', () => {
     const env = installEnvironment(document);
-    const add = vi.spyOn(document, 'addEventListener');
-    const remove = vi.spyOn(document, 'removeEventListener');
     const commits = vi.fn();
     const delivery: string[] = [];
     const makeObserver = (name: string) => ({
@@ -150,7 +198,7 @@ describe('PointerProximity', () => {
       </UnicaProvider>,
     );
 
-    expect(add.mock.calls.filter(([type]) => type === 'pointermove')).toHaveLength(1);
+    expect(listenerTypes(added, document).filter((type) => type === 'pointermove')).toHaveLength(1);
     expect(env.matchMedia).toHaveBeenCalledTimes(3);
     expect(env.request).not.toHaveBeenCalled();
     move(a.container, 10, 20);
@@ -169,7 +217,9 @@ describe('PointerProximity', () => {
 
     a.unmount();
     expect(first.reset).toHaveBeenCalledTimes(1);
-    expect(remove.mock.calls.filter(([type]) => type === 'pointermove')).toHaveLength(0);
+    expect(listenerTypes(removed, document).filter((type) => type === 'pointermove')).toHaveLength(
+      0,
+    );
     move(b.container, 20, 40);
     env.flush();
     expect(first.measure).toHaveBeenCalledTimes(1);
@@ -178,7 +228,9 @@ describe('PointerProximity', () => {
     move(b.container, 30, 60);
     b.unmount();
     expect(env.cancel).toHaveBeenCalledTimes(1);
-    expect(remove.mock.calls.filter(([type]) => type === 'pointermove')).toHaveLength(1);
+    expect(listenerTypes(removed, document).filter((type) => type === 'pointermove')).toHaveLength(
+      1,
+    );
     move(document.body, 40, 80);
     env.flush();
     expect(second.measure).toHaveBeenCalledTimes(2);
@@ -355,15 +407,61 @@ describe('PointerProximity', () => {
 
   it('does no document work without a browsing context', () => {
     const detached = document.implementation.createHTMLDocument();
-    const add = vi.spyOn(detached, 'addEventListener');
     const observer = { measure: vi.fn(), reset: vi.fn() };
     const subscription = bind(detached.body, observer);
     subscription.refresh();
     subscription.setEnabled(false);
     subscription.setEnabled(true);
     subscription.unsubscribe();
-    expect(add).not.toHaveBeenCalled();
+    expect(listenerTypes(added, detached)).toHaveLength(0);
     expect(observer.measure).not.toHaveBeenCalled();
     expect(observer.reset).not.toHaveBeenCalled();
+  });
+
+  it('isolates throwing measure, write, and reset callbacks via reportError without blocking siblings', () => {
+    const env = installEnvironment(document);
+    const reported: unknown[] = [];
+    replaceProperty(env.view, 'reportError', (error: unknown) => {
+      reported.push(error);
+    });
+
+    const healthyWrite = vi.fn();
+    const healthyReset = vi.fn();
+    const brokenMeasure = new Error('measure failed');
+    const brokenWrite = new Error('write failed');
+    const brokenReset = new Error('reset failed');
+
+    const elA = document.createElement('button');
+    const elB = document.createElement('button');
+    const elC = document.createElement('button');
+    document.body.append(elA, elB, elC);
+
+    bind(elA, {
+      measure: () => {
+        throw brokenMeasure;
+      },
+      reset: () => {
+        throw brokenReset;
+      },
+    });
+    bind(elB, {
+      measure: () => () => {
+        throw brokenWrite;
+      },
+      reset: vi.fn(),
+    });
+    bind(elC, {
+      measure: () => healthyWrite,
+      reset: healthyReset,
+    });
+
+    move(document.body, 15, 25);
+    env.flush();
+    expect(healthyWrite).toHaveBeenCalledTimes(1);
+    expect(reported).toEqual([brokenMeasure, brokenWrite]);
+
+    document.dispatchEvent(new Event('pointerleave'));
+    expect(healthyReset).toHaveBeenCalledTimes(1);
+    expect(reported).toEqual([brokenMeasure, brokenWrite, brokenReset]);
   });
 });

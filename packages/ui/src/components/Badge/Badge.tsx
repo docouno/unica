@@ -1,4 +1,4 @@
-import { Children, Fragment, cloneElement, isValidElement } from 'react';
+import { Children, Fragment, isValidElement } from 'react';
 import type { CSSProperties, HTMLAttributes, ReactElement, ReactNode, Ref } from 'react';
 import { Slot } from '../../core/Slot.js';
 import { Icon } from '../Icon/Icon.js';
@@ -108,11 +108,16 @@ export function Badge({
   );
 
   if (child) {
-    const buttonType =
-      child.type === 'button' && child.props.type === undefined ? { type: 'button' } : {};
     return (
-      <Slot {...props} {...marker} className={rootClass} ref={ref}>
-        {cloneElement(child, { ...buttonType, ...marker }, content)}
+      <Slot
+        {...props}
+        className={rootClass}
+        ref={ref}
+        slotDefaults={child.type === 'button' ? { type: 'button' } : undefined}
+        slotOwned={marker}
+        slotContent={content}
+      >
+        {child}
       </Slot>
     );
   }

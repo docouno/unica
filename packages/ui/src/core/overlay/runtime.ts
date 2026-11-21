@@ -1,4 +1,11 @@
 import { devWarningsEnabled } from '../devWarningsEnabled.js';
+import {
+  OVERLAY_RUNTIME_KEY,
+  deleteFallbackOverlayRuntime,
+  resolveOverlayRuntime,
+  setFallbackOverlayRuntime,
+} from '../overlay-protocol.js';
+import type { OverlayRuntimeProtocol } from '../overlay-protocol.js';
 import { PACKAGE_VERSION } from '../version.js';
 import {
   addListener,
@@ -69,27 +76,28 @@ export interface OverlayHandle {
 const RUNTIME_PROTOCOL = 1;
 const MAX_SYNC_PASSES = 64;
 const SUPPRESS_CLICK_TIMEOUT_MS = 500;
-const runtimeKey = Symbol.for(`@docouno/unica/OverlayRuntime@${RUNTIME_PROTOCOL}`);
 const versionsKey = Symbol.for('@docouno/unica/OverlayRuntimeVersions');
+const triggerRegistryKey = Symbol.for(`@docouno/unica/OverlayTriggerRegistry@${RUNTIME_PROTOCOL}`);
 const modalChange = `@docouno/unica/modalchange@${RUNTIME_PROTOCOL}`;
 
 type Realm = Window & typeof globalThis;
 
-const fallbackRuntimes = new WeakMap<Document, OverlayRuntime>();
-const joinedRuntimes = new WeakSet<OverlayRuntime>();
-const triggerRegistries = new WeakMap<Document, Set<Layer>>();
-const foreignEscapes = new WeakMap<KeyboardEvent, 'manual' | 'other'>();
-
-function isRuntimeLike(value: unknown): value is OverlayRuntime {
-  return (
-    typeof value === 'object' &&
-    value !== null &&
-    'open' in value &&
-    typeof (value as OverlayRuntime).open === 'function' &&
-    'resolveModal' in value &&
-    typeof (value as OverlayRuntime).resolveModal === 'function'
-  );
+interface TriggerEntry {
+  readonly triggerPathIndex: (path: readonly EventTarget[]) => number;
+  readonly handleTriggerClick: (event: MouseEvent) => void;
 }
+
+interface TriggerRegistry {
+  readonly protocol: 1;
+  readonly entries: Set<TriggerEntry>;
+  readonly add: (entry: TriggerEntry) => void;
+  readonly delete: (entry: TriggerEntry) => void;
+  readonly dispose: () => void;
+}
+
+const joinedRuntimes = new WeakSet<OverlayRuntimeProtocol>();
+const fallbackTriggerRegistries = new WeakMap<Document, TriggerRegistry>();
+const foreignEscapes = new WeakMap<KeyboardEvent, 'manual' | 'other'>();
 
 function isVersionSet(value: unknown): value is Set<string> {
   return (
@@ -104,16 +112,112 @@ function isVersionSet(value: unknown): value is Set<string> {
   );
 }
 
-function activeRuntime(document: Document): OverlayRuntime | undefined {
+function isTriggerRegistryLike(value: unknown): value is TriggerRegistry {
+  if (typeof value !== 'object' || value === null) {
+    return false;
+  }
+  const entries: unknown = Reflect.get(value, 'entries');
+  return (
+    Reflect.get(value, 'protocol') === 1 &&
+    typeof entries === 'object' &&
+    entries !== null &&
+    typeof Reflect.get(entries, 'size') === 'number' &&
+    typeof Reflect.get(entries, Symbol.iterator) === 'function' &&
+    typeof Reflect.get(value, 'add') === 'function' &&
+    typeof Reflect.get(value, 'delete') === 'function' &&
+    typeof Reflect.get(value, 'dispose') === 'function'
+  );
+}
+
+function resolveTriggerRegistry(document: Document): TriggerRegistry | undefined {
   try {
-    const candidate: unknown = Reflect.get(document, runtimeKey);
-    if (isRuntimeLike(candidate)) {
+    const candidate: unknown = Reflect.get(document, triggerRegistryKey);
+    if (isTriggerRegistryLike(candidate)) {
       return candidate;
     }
   } catch {
     // Fall back when the document host forbids symbol lookup.
   }
-  return fallbackRuntimes.get(document);
+  return fallbackTriggerRegistries.get(document);
+}
+
+function createTriggerRegistry(document: Document): TriggerRegistry {
+  const entries = new Set<TriggerEntry>();
+  let disposed = false;
+
+  const onDocumentClick = (event: MouseEvent): void => {
+    if (event.defaultPrevented || !entries.size) {
+      return;
+    }
+    const path = event.composedPath();
+    let nearest: TriggerEntry | undefined;
+    let nearestIndex = Number.POSITIVE_INFINITY;
+    for (const entry of entries) {
+      const index = entry.triggerPathIndex(path);
+      if (index >= 0 && index < nearestIndex) {
+        nearest = entry;
+        nearestIndex = index;
+      }
+    }
+    nearest?.handleTriggerClick(event);
+  };
+
+  addListener(document, 'click', onDocumentClick);
+
+  const registry: TriggerRegistry = {
+    protocol: 1,
+    entries,
+    add(entry) {
+      if (!disposed) {
+        entries.add(entry);
+      }
+    },
+    delete(entry) {
+      entries.delete(entry);
+      if (!entries.size) {
+        registry.dispose();
+      }
+    },
+    dispose() {
+      if (disposed) {
+        return;
+      }
+      disposed = true;
+      entries.clear();
+      removeListener(document, 'click', onDocumentClick);
+      if (fallbackTriggerRegistries.get(document) === registry) {
+        fallbackTriggerRegistries.delete(document);
+      }
+      try {
+        if (Reflect.get(document, triggerRegistryKey) === registry) {
+          Reflect.deleteProperty(document, triggerRegistryKey);
+        }
+      } catch {
+        // Ignore restricted document proxies on teardown.
+      }
+    },
+  };
+
+  let stored = false;
+  try {
+    if (Reflect.get(document, triggerRegistryKey) === undefined) {
+      stored = Reflect.set(document, triggerRegistryKey, registry);
+    }
+  } catch {
+    stored = false;
+  }
+  if (!stored) {
+    fallbackTriggerRegistries.set(document, registry);
+  }
+  return registry;
+}
+
+function registerTriggerClick(document: Document, entry: TriggerEntry): () => void {
+  const registry = resolveTriggerRegistry(document) ?? createTriggerRegistry(document);
+  registry.add(entry);
+  return () => {
+    registry.delete(entry);
+  };
 }
 
 function inDocument(node: Element, document: Document): boolean {
@@ -130,53 +234,6 @@ function isZeroResize(entry: ResizeObserverEntry): boolean {
     return box.inlineSize === 0 && box.blockSize === 0;
   }
   return entry.contentRect.width === 0 && entry.contentRect.height === 0;
-}
-
-function onDocumentClick(event: MouseEvent): void {
-  if (event.defaultPrevented) {
-    return;
-  }
-  const document = event.currentTarget as Document | null;
-  if (!document) {
-    return;
-  }
-  const layers = triggerRegistries.get(document);
-  if (!layers?.size) {
-    return;
-  }
-  const path = event.composedPath();
-  let nearest: Layer | undefined;
-  let nearestIndex = Number.POSITIVE_INFINITY;
-  for (const layer of layers) {
-    const index = layer.triggerPathIndex(path);
-    if (index >= 0 && index < nearestIndex) {
-      nearest = layer;
-      nearestIndex = index;
-    }
-  }
-  nearest?.handleTriggerClick(event);
-}
-
-function registerTriggerClick(document: Document, layer: Layer): void {
-  let layers = triggerRegistries.get(document);
-  if (!layers) {
-    layers = new Set();
-    triggerRegistries.set(document, layers);
-    addListener(document, 'click', onDocumentClick);
-  }
-  layers.add(layer);
-}
-
-function unregisterTriggerClick(document: Document, layer: Layer): void {
-  const layers = triggerRegistries.get(document);
-  if (!layers) {
-    return;
-  }
-  layers.delete(layer);
-  if (!layers.size) {
-    removeListener(document, 'click', onDocumentClick);
-    triggerRegistries.delete(document);
-  }
 }
 
 class Layer {
@@ -257,9 +314,9 @@ class Layer {
         trigger,
         this.phase === 'exiting' || !this.ownsCarrier ? null : this.options.element,
       );
-      registerTriggerClick(this.document, this);
+      const unregisterClick = registerTriggerClick(this.document, this);
       this.unbindTrigger = () => {
-        unregisterTriggerClick(this.document, this);
+        unregisterClick();
         if (ownerDocumentOf(trigger) === this.document) {
           restoreInvoker?.();
         }
@@ -511,7 +568,7 @@ class Layer {
   };
 }
 
-class OverlayRuntime {
+class OverlayRuntime implements OverlayRuntimeProtocol {
   private readonly pending = new Set<Layer>();
   private readonly deferredOpens = new Set<Layer>();
   private readonly stack: Layer[] = [];
@@ -550,6 +607,16 @@ class OverlayRuntime {
 
   trackVersion(version: string): void {
     this.registeredVersions.add(version);
+  }
+
+  isTrackedModal(dialog: Element): boolean {
+    for (let index = this.stack.length - 1; index >= 0; index--) {
+      const layer = this.stack[index]!;
+      if (layer.options.kind === 'modal' && layer.options.element === dialog) {
+        return true;
+      }
+    }
+    return false;
   }
 
   open(layer: Layer): void {
@@ -1190,12 +1257,14 @@ class OverlayRuntime {
       }
       removeListener(view, 'blur', this.clearPointer);
     }
-    if (activeRuntime(this.document) !== this) {
+    if (resolveOverlayRuntime(this.document) !== this) {
       return;
     }
-    fallbackRuntimes.delete(this.document);
+    deleteFallbackOverlayRuntime(this.document, this);
     try {
-      Reflect.deleteProperty(this.document, runtimeKey);
+      if (Reflect.get(this.document, OVERLAY_RUNTIME_KEY) === this) {
+        Reflect.deleteProperty(this.document, OVERLAY_RUNTIME_KEY);
+      }
       const versions: unknown = Reflect.get(this.document, versionsKey);
       if (isVersionSet(versions)) {
         for (const version of this.registeredVersions) {
@@ -1211,7 +1280,7 @@ class OverlayRuntime {
   }
 }
 
-function recordVersion(document: Document, runtime: OverlayRuntime): void {
+function recordVersion(document: Document, runtime: OverlayRuntimeProtocol): void {
   try {
     const existing: unknown = Reflect.get(document, versionsKey);
     const storedVersions = isVersionSet(existing) ? existing : new Set<string>();
@@ -1233,7 +1302,7 @@ function runtimeFor(document: Document): OverlayRuntime | undefined {
   if (!view) {
     return undefined;
   }
-  const current = activeRuntime(document);
+  const current = resolveOverlayRuntime(document) as OverlayRuntime | undefined;
   if (current) {
     if (!joinedRuntimes.has(current)) {
       joinedRuntimes.add(current);
@@ -1244,14 +1313,17 @@ function runtimeFor(document: Document): OverlayRuntime | undefined {
   const runtime = new OverlayRuntime(document, view);
   joinedRuntimes.add(runtime);
   recordVersion(document, runtime);
-  let stored: boolean;
+  let stored = false;
   try {
-    stored = Reflect.set(document, runtimeKey, runtime);
+    // Never overwrite an unrelated value occupying OVERLAY_RUNTIME_KEY.
+    if (Reflect.get(document, OVERLAY_RUNTIME_KEY) === undefined) {
+      stored = Reflect.set(document, OVERLAY_RUNTIME_KEY, runtime);
+    }
   } catch {
     stored = false;
   }
   if (!stored) {
-    fallbackRuntimes.set(document, runtime);
+    setFallbackOverlayRuntime(document, runtime);
   }
   return runtime;
 }
@@ -1269,7 +1341,7 @@ export function resolveToastPortalHost(container: HTMLElement | null): HTMLEleme
   if (!document) {
     return null;
   }
-  const modal = activeRuntime(document)?.resolveModal();
+  const modal = resolveOverlayRuntime(document)?.resolveModal();
   if (!modal) {
     return container;
   }

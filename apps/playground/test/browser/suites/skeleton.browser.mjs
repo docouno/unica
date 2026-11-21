@@ -667,6 +667,7 @@ scenarios['Skeleton sweeps in English RTL and nested LTR without :dir(rtl) CSS']
 }) => {
   await mount('skeleton', { direction: 'rtl' });
   const shape = page.getByTestId('motion');
+  await shape.scrollIntoViewIfNeeded();
   await page.waitForFunction(
     () =>
       parseFloat(
@@ -699,6 +700,202 @@ scenarios['Skeleton sweeps in English RTL and nested LTR without :dir(rtl) CSS']
   }));
   assert.ok(nestedLtr.start < nestedLtr.end, 'Nested LTR sweep moves from left to right');
   assert.ok(nestedLtr.slope < 0, 'Nested LTR sweep tilts toward inline end');
+};
+
+scenarios[
+  'Skeleton targeted observers ignore unrelated mutations and track >64 siblings, display:contents, and dir=auto'
+] = async ({ page, mount }) => {
+  await mount('skeleton', { direction: 'ltr' });
+  await page.getByRole('button', { name: 'Mount observer probes' }).click();
+  const probes = page.getByTestId('observer-probes');
+  await probes.waitFor();
+  await probes.scrollIntoViewIfNeeded();
+  await page.evaluate(
+    () => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))),
+  );
+
+  // Wait for all probe skeletons to receive their initial sweep geometry.
+  await page.waitForFunction(() =>
+    [
+      'probe-overridden-ltr',
+      'probe-many-skel',
+      'probe-contents-skel',
+      'probe-dir-auto-skel',
+      'probe-text-skel',
+    ].every((id) => {
+      const el = document.querySelector(`[data-testid="${id}"]`);
+      return el && Boolean(el.style.getPropertyValue('--_skeleton-sweep-start'));
+    }),
+  );
+
+  // Pause all running sweep animations so earlier skeletons cannot expire and probes stay active.
+  await page.evaluate(async () => {
+    for (const anim of document.getAnimations()) {
+      anim.pause();
+    }
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+  });
+
+  // 1. Unrelated mutation inside overridden <div dir="auto"><div unrelated/><main dir="ltr"><Skeleton/></main></div> -> 0 reads,
+  //    while a real mutation on its own parent <main> -> >0 reads (proves it IS actively observed).
+  const overriddenReads = await page.evaluate(async () => {
+    const skel = document.querySelector('[data-testid="probe-overridden-ltr"]');
+    const orig = skel.getBoundingClientRect.bind(skel);
+    let reads = 0;
+    skel.getBoundingClientRect = () => {
+      reads++;
+      return orig();
+    };
+    const nextFrames = () =>
+      new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+
+    const unrelated = document.querySelector('[data-testid="unrelated-subtree"]');
+    unrelated.textContent = 'Mutated unrelated text 12345';
+    unrelated.setAttribute('data-noise', '1');
+    unrelated.appendChild(document.createElement('span')).textContent = 'extra';
+    await nextFrames();
+    const unrelatedCount = reads;
+
+    document.querySelector('[data-testid="overridden-ltr-main"]').setAttribute('data-touched', '1');
+    await nextFrames();
+    const relevantCount = reads - unrelatedCount;
+
+    skel.getBoundingClientRect = orig;
+    return { unrelatedCount, relevantCount };
+  });
+  assert.equal(
+    overriddenReads.unrelatedCount,
+    0,
+    'Unrelated mutation outside ancestors triggers 0 layout reads',
+  );
+  assert.ok(
+    overriddenReads.relevantCount > 0,
+    'Positive control: mutation on active parent triggers layout read',
+  );
+
+  // 2. >64 siblings: expanding sibling #0 shifts probe-many-skel by 80px.
+  const manyDelta = await page.evaluate(async () => {
+    const skel = document.querySelector('[data-testid="probe-many-skel"]');
+    const before = parseFloat(skel.style.getPropertyValue('--_skeleton-sweep-start'));
+    document.querySelector('[data-probe-sibling="0"]').style.inlineSize = '84px';
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+    const after = parseFloat(skel.style.getPropertyValue('--_skeleton-sweep-start'));
+    return before - after;
+  });
+  assert.ok(
+    Math.abs(manyDelta - 80) <= 2,
+    `Expected ~80px shift past 64 siblings, got ${manyDelta}`,
+  );
+
+  // 3. display: contents: 100px shift from child behind display:contents, dynamic insertion into display:contents,
+  //    and toggling a sibling to display:contents mid-sweep.
+  const contentsShifts = await page.evaluate(async () => {
+    const skel = document.querySelector('[data-testid="probe-contents-skel"]');
+    const read = () => parseFloat(skel.style.getPropertyValue('--_skeleton-sweep-start'));
+    const nextFrames = () =>
+      new Promise((r) =>
+        requestAnimationFrame(() => requestAnimationFrame(() => requestAnimationFrame(r))),
+      );
+
+    const s0 = read();
+    document.querySelector('[data-testid="probe-contents-child"]').style.inlineSize = '120px';
+    await nextFrames();
+    const s1 = read();
+
+    const added = document.createElement('div');
+    added.style.cssText = 'inline-size: 40px; block-size: 16px; flex: none';
+    document.querySelector('[data-testid="probe-contents-wrap"]').appendChild(added);
+    await nextFrames();
+    const s2 = read();
+
+    const toggleWrap = document.querySelector('[data-testid="probe-toggle-wrap"]');
+    toggleWrap.style.display = 'contents';
+    await nextFrames();
+    document.querySelector('[data-testid="probe-toggle-inner"]').style.inlineSize = '70px';
+    await nextFrames();
+    const s3 = read();
+
+    return {
+      growBehindContents: s0 - s1,
+      insertInsideContents: s1 - s2,
+      toggledToContents: s2 - s3,
+    };
+  });
+  assert.ok(
+    Math.abs(contentsShifts.growBehindContents - 100) <= 2,
+    `Expected ~100px shift behind display:contents, got ${contentsShifts.growBehindContents}`,
+  );
+  assert.ok(
+    Math.abs(contentsShifts.insertInsideContents - 40) <= 2,
+    `Expected ~40px shift after inserting into display:contents, got ${contentsShifts.insertInsideContents}`,
+  );
+  assert.ok(
+    Math.abs(contentsShifts.toggledToContents - 50) <= 2,
+    `Expected ~50px shift after toggling display->contents, got ${contentsShifts.toggledToContents}`,
+  );
+
+  // 4. dir="auto": changing nested text Abc -> שלום flips sweep direction and band angle sign.
+  const dirAutoFlip = await page.evaluate(async () => {
+    const skel = document.querySelector('[data-testid="probe-dir-auto-skel"]');
+    const snap = () => ({
+      start: parseFloat(skel.style.getPropertyValue('--_skeleton-sweep-start')),
+      end: parseFloat(skel.style.getPropertyValue('--_skeleton-sweep-end')),
+      angle: parseFloat(skel.style.getPropertyValue('--_skeleton-band-angle')),
+    });
+    const ltr = snap();
+    document.querySelector('[data-testid="probe-dir-auto-text"]').textContent = 'שלום';
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+    const rtl = snap();
+    return { ltr, rtl };
+  });
+  assert.ok(dirAutoFlip.ltr.start < dirAutoFlip.ltr.end && dirAutoFlip.ltr.angle < 0);
+  assert.ok(dirAutoFlip.rtl.start > dirAutoFlip.rtl.end && dirAutoFlip.rtl.angle > 0);
+
+  // 5. Direct Text node mutation + sibling margin change shift probe-text-skel.
+  const textAndMargin = await page.evaluate(async () => {
+    const row = document.querySelector('[data-testid="probe-text-row"]');
+    const skel = document.querySelector('[data-testid="probe-text-skel"]');
+    const read = () => parseFloat(skel.style.getPropertyValue('--_skeleton-sweep-start'));
+    const nextFrames = () =>
+      new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+    const s0 = read();
+    row.firstChild.data = 'Much longer direct text node content';
+    await nextFrames();
+    const s1 = read();
+    document.querySelector('[data-testid="probe-margin-sibling"]').style.marginInlineStart = '40px';
+    await nextFrames();
+    const s2 = read();
+    return { textShift: s0 - s1, marginShift: s1 - s2 };
+  });
+  assert.ok(
+    textAndMargin.textShift > 20,
+    `Expected text node shift > 20, got ${textAndMargin.textShift}`,
+  );
+  assert.ok(
+    Math.abs(textAndMargin.marginShift - 40) <= 2,
+    `Expected ~40px sibling margin shift, got ${textAndMargin.marginShift}`,
+  );
+
+  // 6. Leaving viewport retains written --_skeleton-* geometry without clearing; finishing animation cleans up (idle = 0).
+  const offscreenAndIdle = await page.evaluate(async () => {
+    const skel = document.querySelector('[data-testid="probe-many-skel"]');
+    window.scrollTo(0, 0);
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+    const retainedStart = skel.style.getPropertyValue('--_skeleton-sweep-start');
+
+    for (const el of document.querySelectorAll(
+      '.unica-skeleton, .unica-skeleton-text > span > span',
+    )) {
+      for (const anim of el.getAnimations({ subtree: true })) {
+        anim.finish();
+      }
+    }
+    await new Promise((r) => setTimeout(r, 50));
+    const clearedStart = skel.style.getPropertyValue('--_skeleton-sweep-start');
+    return { retainedStart, clearedStart };
+  });
+  assert.ok(Boolean(offscreenAndIdle.retainedStart), 'Offscreen exit keeps --_skeleton-* geometry');
+  assert.equal(offscreenAndIdle.clearedStart, '', 'Animation finish clears --_skeleton-* at idle');
 };
 
 export default scenarios;

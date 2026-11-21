@@ -1,8 +1,20 @@
-import { useCallback, useRef } from 'react';
+import { useCallback, useMemo } from 'react';
 import type { Ref, RefCallback } from 'react';
-import { isRTL } from '../../core/dom.js';
+import {
+  addListenerSafe,
+  composedContains,
+  getAttributeSafe,
+  getComposedParentElement,
+  getComputedStyleSafe,
+  getLiveView,
+  getLocalName,
+  getOwnerDocument,
+  isConnectedNode,
+  isElementNode,
+  isRTL,
+  removeListenerSafe,
+} from '../../core/dom.js';
 import { mergeRefs } from '../../core/mergeRefs.js';
-import { useIsoLayoutEffect } from '../../core/useIsoLayoutEffect.js';
 
 const sweepName = 'unica-skeleton-sweep';
 const animationProperty = '--_skeleton-sweep-animation';
@@ -48,6 +60,42 @@ function isPlaying(animation: Animation): boolean {
   return animation.pending || animation.playState === 'running';
 }
 
+function findDefiningAutoDirAncestor(node: Element): Element | null {
+  for (let current: Element | null = node; current; current = getComposedParentElement(current)) {
+    const rawDir = getAttributeSafe(current, 'dir');
+    if (rawDir !== null) {
+      const normalized = rawDir.toLowerCase();
+      if (normalized === 'auto') {
+        return current;
+      }
+      if (normalized === 'ltr' || normalized === 'rtl') {
+        return null;
+      }
+    }
+    if (getLocalName(current) === 'bdi') {
+      return current;
+    }
+  }
+  return null;
+}
+
+function collectLayoutChildren(
+  container: Element,
+  siblings: Set<Element>,
+  wrappers: Set<Element>,
+): void {
+  for (const child of container.children) {
+    if (getComputedStyleSafe(child)?.display === 'contents') {
+      if (!wrappers.has(child)) {
+        wrappers.add(child);
+        collectLayoutChildren(child, siblings, wrappers);
+      }
+    } else {
+      siblings.add(child);
+    }
+  }
+}
+
 interface Sweep {
   readonly end: number;
   readonly add: (node: HTMLElement, animation: CSSAnimation) => void;
@@ -59,49 +107,136 @@ const sweeps = new WeakMap<Document, Sweep>();
 function createSweep(view: BrowserWindow, start: number, duration: number): Sweep {
   const { document } = view;
   const paints = new Map<HTMLElement, CSSAnimation>();
+  const visiblePaints = new Set<HTMLElement>();
+  const measuredOnce = new Set<HTMLElement>();
+  const pendingInvisible = new Set<HTMLElement>();
   const writtenStyles = new WeakMap<HTMLElement, string | null>();
-  let layoutParents = new Set<Element>();
-  let observed = new Set<Element>();
+  const pendingDisplayChecks = new Set<Element>();
+  let visibleLayoutParents = new Set<Element>();
+  let contentsWrappers = new Set<Element>();
+  let layoutSiblings = new Set<Element>();
+  let observedResize = new Set<Element>();
+  const pendingInitialResize = new Set<Element>();
   let moving: Animation[] = [];
   let layoutDirty = true;
   let motionDirty = true;
   let frame: number | undefined;
 
   function observeLayout(): void {
-    const boxes = new Set<Element>([document.documentElement]);
     const parents = new Set<Element>();
-    for (const node of paints.keys()) {
-      boxes.add(node);
-      // A sibling's intrinsic size can move a placeholder whose own size stays fixed.
+    const wrappers = new Set<Element>();
+    const siblings = new Set<Element>();
+    const autoDirs = new Set<Element>();
+    const resizeBoxes = new Set<Element>();
+
+    if (visiblePaints.size > 0 && document.documentElement) {
+      resizeBoxes.add(document.documentElement);
+    }
+
+    for (const node of visiblePaints) {
+      resizeBoxes.add(node);
+      const autoDir = findDefiningAutoDirAncestor(node);
+      if (autoDir) {
+        autoDirs.add(autoDir);
+      }
+      // A sibling's intrinsic size (including children behind display: contents) can move a placeholder.
       for (
-        let parent = node.parentElement;
+        let parent = getComposedParentElement(node);
         parent && !parents.has(parent);
-        parent = parent.parentElement
+        parent = getComposedParentElement(parent)
       ) {
         parents.add(parent);
-        for (const child of parent.children) {
-          boxes.add(child);
+        resizeBoxes.add(parent);
+        if (getComputedStyleSafe(parent)?.display === 'contents') {
+          wrappers.add(parent);
         }
+        collectLayoutChildren(parent, siblings, wrappers);
       }
     }
-    for (const box of observed) {
-      if (!boxes.has(box)) {
+    for (const sibling of siblings) {
+      resizeBoxes.add(sibling);
+    }
+
+    for (const box of observedResize) {
+      if (!resizeBoxes.has(box)) {
         resize.unobserve(box);
+        pendingInitialResize.delete(box);
       }
     }
-    for (const box of boxes) {
-      if (!observed.has(box)) {
+    for (const box of resizeBoxes) {
+      if (!observedResize.has(box)) {
+        pendingInitialResize.add(box);
         resize.observe(box);
       }
     }
-    observed = boxes;
-    layoutParents = parents;
+    observedResize = resizeBoxes;
+    visibleLayoutParents = parents;
+    contentsWrappers = wrappers;
+    layoutSiblings = siblings;
+
+    // Register each unique target once in strict priority order (per DOM Standard, repeated
+    // observe() calls on the same target replace earlier options).
+    mutations.disconnect();
+    if (visiblePaints.size > 0) {
+      const registered = new Set<Node>();
+      // Priority 1: nearest defining dir="auto" / <bdi> ancestors
+      for (const ancestor of autoDirs) {
+        if (!registered.has(ancestor)) {
+          registered.add(ancestor);
+          mutations.observe(ancestor, {
+            subtree: true,
+            childList: true,
+            characterData: true,
+            attributes: true,
+          });
+        }
+      }
+      // Priority 2: (visibleLayoutParents U contentsWrappers) \ autoDirAncestors
+      const containers = new Set<Element>([...parents, ...wrappers]);
+      for (const container of containers) {
+        if (!registered.has(container)) {
+          registered.add(container);
+          mutations.observe(container, { attributes: true, childList: true });
+        }
+      }
+      // Priority 3: (visiblePaints U layoutSiblings) \ (autoDirAncestors U containers)
+      for (const item of [...visiblePaints, ...siblings]) {
+        if (!registered.has(item)) {
+          registered.add(item);
+          mutations.observe(item, { attributes: true });
+        }
+      }
+      // Priority 4: direct Text children of containers outside autoDirAncestors
+      for (const container of containers) {
+        if (autoDirs.has(container)) {
+          continue;
+        }
+        for (let child = container.firstChild; child; child = child.nextSibling) {
+          if (child.nodeType === 3 && !registered.has(child)) {
+            registered.add(child);
+            mutations.observe(child, { characterData: true });
+          }
+        }
+      }
+      // Priority 5: documentElement dir attribute (only when not already covered)
+      const docEl = document.documentElement;
+      if (docEl && !registered.has(docEl)) {
+        registered.add(docEl);
+        mutations.observe(docEl, { attributes: true, attributeFilter: ['dir'] });
+      }
+    }
+
     layoutDirty = false;
     motionDirty = true;
   }
 
   function readMovingSurfaces(): void {
-    const hosts = new Set([...layoutParents, ...paints.keys()]);
+    if (visiblePaints.size === 0) {
+      moving = [];
+      motionDirty = false;
+      return;
+    }
+    const hosts = new Set([...visibleLayoutParents, ...visiblePaints]);
     moving = [...hosts].flatMap((element) =>
       element.getAnimations().filter((animation) => {
         if (
@@ -124,18 +259,32 @@ function createSweep(view: BrowserWindow, start: number, duration: number): Swee
 
   function update(): void {
     frame = undefined;
+    if (pendingDisplayChecks.size > 0) {
+      for (const el of pendingDisplayChecks) {
+        const isContents = isConnectedNode(el) && getComputedStyleSafe(el)?.display === 'contents';
+        if (contentsWrappers.has(el) !== isContents) {
+          layoutDirty = true;
+          break;
+        }
+      }
+      pendingDisplayChecks.clear();
+    }
     if (layoutDirty) {
       observeLayout();
     }
     if (motionDirty) {
       readMovingSurfaces();
     }
+    if (visiblePaints.size === 0) {
+      return;
+    }
+
     const { clientWidth, clientHeight } = document.documentElement;
     const band = Math.max(64, Math.min(320, 64 + (clientWidth - 480) * 0.27));
     const middleY = clientHeight / 2;
     const overhang = middleY * bandSlope;
     // Read the whole batch before writing. Normal animation frames need no DOM reads.
-    const positions = Array.from(paints.keys(), (node) => {
+    const positions = Array.from(visiblePaints, (node) => {
       const rect = node.getBoundingClientRect();
       const style = view.getComputedStyle(node);
       const borderLeft = parseFloat(style.borderLeftWidth) || 0;
@@ -163,6 +312,7 @@ function createSweep(view: BrowserWindow, start: number, duration: number): Swee
       };
     });
     for (const { node, values } of positions) {
+      measuredOnce.add(node);
       let changed = false;
       for (const [property, value] of values) {
         if (node.style.getPropertyValue(property) !== value) {
@@ -174,47 +324,146 @@ function createSweep(view: BrowserWindow, start: number, duration: number): Swee
         writtenStyles.set(node, node.getAttribute('style'));
       }
     }
-    if (moving.some(isPlaying)) {
+
+    if (pendingInvisible.size > 0) {
+      let detachedOffscreen = false;
+      for (const node of pendingInvisible) {
+        if (measuredOnce.has(node) && visiblePaints.delete(node)) {
+          detachedOffscreen = true;
+        }
+      }
+      pendingInvisible.clear();
+      if (detachedOffscreen) {
+        // Keep written --_skeleton-* geometry on offscreen nodes; only stop observing them.
+        observeLayout();
+        if (motionDirty) {
+          readMovingSurfaces();
+        }
+      }
+    }
+
+    if (visiblePaints.size > 0 && moving.some(isPlaying)) {
       schedule();
     }
   }
 
   function schedule(): void {
-    frame ??= view.requestAnimationFrame(update);
+    if (visiblePaints.size > 0) {
+      frame ??= view.requestAnimationFrame(update);
+    }
   }
 
-  const resize = new view.ResizeObserver(schedule);
-  const mutations = new view.MutationObserver((records) => {
-    if (records.some(({ type }) => type === 'childList')) {
-      layoutDirty = true;
+  const resize = new view.ResizeObserver((entries) => {
+    let resized = false;
+    for (let index = 0; index < entries.length; index++) {
+      const target = entries[index]!.target;
+      if (pendingInitialResize.delete(target)) {
+        continue;
+      }
+      resized = true;
     }
-    if (
-      records.some(
-        ({ target, attributeName }) =>
-          attributeName !== 'style' ||
-          !(target instanceof view.HTMLElement) ||
-          writtenStyles.get(target) !== target.getAttribute('style'),
-      )
-    ) {
+    if (resized) {
       schedule();
     }
   });
-  mutations.observe(document.documentElement, {
-    subtree: true,
-    childList: true,
-    characterData: true,
-    attributes: true,
+  const intersection =
+    typeof view.IntersectionObserver === 'function'
+      ? new view.IntersectionObserver((entries) => {
+          let visibilityChanged = false;
+          for (let index = 0; index < entries.length; index++) {
+            const entry = entries[index]!;
+            const node = entry.target as HTMLElement;
+            if (!paints.has(node)) {
+              continue;
+            }
+            if (entry.isIntersecting) {
+              pendingInvisible.delete(node);
+              if (!visiblePaints.has(node)) {
+                visiblePaints.add(node);
+                visibilityChanged = true;
+              }
+            } else if (measuredOnce.has(node)) {
+              if (visiblePaints.delete(node)) {
+                visibilityChanged = true;
+              }
+            } else {
+              // Defer detaching until after the initial geometry write completes.
+              pendingInvisible.add(node);
+            }
+          }
+          if (visibilityChanged) {
+            layoutDirty = true;
+            if (visiblePaints.size > 0) {
+              schedule();
+            } else {
+              if (frame !== undefined) {
+                view.cancelAnimationFrame(frame);
+                frame = undefined;
+              }
+              observeLayout();
+              moving = [];
+            }
+          }
+        })
+      : undefined;
+
+  const mutations = new view.MutationObserver((records) => {
+    let shouldSchedule = false;
+    for (let index = 0; index < records.length; index++) {
+      const record = records[index]!;
+      const { type, target, attributeName } = record;
+      if (
+        type === 'attributes' &&
+        attributeName === 'style' &&
+        target instanceof view.HTMLElement &&
+        paints.has(target) &&
+        writtenStyles.get(target) === target.getAttribute('style')
+      ) {
+        continue;
+      }
+      shouldSchedule = true;
+      if (type === 'childList' || (type === 'attributes' && attributeName === 'dir')) {
+        layoutDirty = true;
+      } else if (type === 'attributes' && isElementNode(target)) {
+        pendingDisplayChecks.add(target);
+      }
+    }
+    if (shouldSchedule) {
+      schedule();
+    }
   });
+
+  function onScroll(event: Event): void {
+    if (visiblePaints.size === 0) {
+      return;
+    }
+    const { target } = event;
+    if (target === document || target === view) {
+      schedule();
+      return;
+    }
+    if (isElementNode(target)) {
+      for (const paint of visiblePaints) {
+        if (composedContains(target, paint)) {
+          schedule();
+          return;
+        }
+      }
+    }
+  }
+
   function onSurfaceMotion(event: Event): void {
     const { target } = event;
     if (
-      target instanceof view.Element &&
-      (layoutParents.has(target) || (target instanceof view.HTMLElement && paints.has(target)))
+      isElementNode(target) &&
+      (visibleLayoutParents.has(target) ||
+        (target instanceof view.HTMLElement && visiblePaints.has(target)))
     ) {
       motionDirty = true;
       schedule();
     }
   }
+
   const motionEvents = [
     'transitionrun',
     'transitionend',
@@ -223,10 +472,10 @@ function createSweep(view: BrowserWindow, start: number, duration: number): Swee
     'animationend',
     'animationcancel',
   ] as const;
-  view.addEventListener('resize', schedule);
-  view.addEventListener('scroll', schedule, { capture: true, passive: true });
+  addListenerSafe(view, 'resize', schedule);
+  addListenerSafe(view, 'scroll', onScroll, { capture: true, passive: true });
   for (const event of motionEvents) {
-    view.addEventListener(event, onSurfaceMotion, true);
+    addListenerSafe(view, event, onSurfaceMotion, true);
   }
 
   function clear(node: HTMLElement): void {
@@ -239,19 +488,31 @@ function createSweep(view: BrowserWindow, start: number, duration: number): Swee
   function stop(): void {
     sweeps.delete(document);
     resize.disconnect();
+    intersection?.disconnect();
     mutations.disconnect();
-    view.removeEventListener('resize', schedule);
-    view.removeEventListener('scroll', schedule, true);
+    removeListenerSafe(view, 'resize', schedule);
+    removeListenerSafe(view, 'scroll', onScroll, true);
     for (const event of motionEvents) {
-      view.removeEventListener(event, onSurfaceMotion, true);
+      removeListenerSafe(view, event, onSurfaceMotion, true);
     }
     if (frame !== undefined) {
       view.cancelAnimationFrame(frame);
+      frame = undefined;
     }
     for (const node of paints.keys()) {
       clear(node);
     }
     paints.clear();
+    visiblePaints.clear();
+    measuredOnce.clear();
+    pendingInvisible.clear();
+    pendingDisplayChecks.clear();
+    visibleLayoutParents.clear();
+    contentsWrappers.clear();
+    layoutSiblings.clear();
+    observedResize.clear();
+    pendingInitialResize.clear();
+    moving = [];
   }
 
   function add(node: HTMLElement, animation: CSSAnimation): void {
@@ -259,6 +520,9 @@ function createSweep(view: BrowserWindow, start: number, duration: number): Swee
       return;
     }
     paints.set(node, animation);
+    visiblePaints.add(node);
+    pendingInvisible.delete(node);
+    intersection?.observe(node);
     layoutDirty = true;
     animation.startTime = start;
     schedule();
@@ -267,13 +531,21 @@ function createSweep(view: BrowserWindow, start: number, duration: number): Swee
       if (paints.get(node) !== animation) {
         return;
       }
+      intersection?.unobserve(node);
       paints.delete(node);
+      visiblePaints.delete(node);
+      measuredOnce.delete(node);
+      pendingInvisible.delete(node);
       clear(node);
       if (paints.size === 0) {
         stop();
       } else {
         layoutDirty = true;
-        schedule();
+        if (visiblePaints.size > 0) {
+          schedule();
+        } else {
+          observeLayout();
+        }
       }
     };
     void animation.finished.then(remove, remove);
@@ -283,8 +555,12 @@ function createSweep(view: BrowserWindow, start: number, duration: number): Swee
 }
 
 function attachSweep(root: HTMLElement): () => void {
-  const { ownerDocument } = root;
-  const view = ownerDocument.defaultView;
+  const ownerDocument = getOwnerDocument(root);
+  if (!ownerDocument) {
+    return () => {};
+  }
+  const doc: Document = ownerDocument;
+  const view = getLiveView(doc);
   function onStart(event: AnimationEvent): void {
     const node = event.target;
     if (!view || event.animationName !== sweepName || !(node instanceof view.HTMLElement)) {
@@ -297,31 +573,30 @@ function attachSweep(root: HTMLElement): () => void {
           'animationName' in candidate && candidate.animationName === sweepName,
       );
     const duration = animation?.effect?.getComputedTiming().endTime;
-    const now = ownerDocument.timeline.currentTime;
+    const now = doc.timeline.currentTime;
     if (!animation || typeof duration !== 'number' || duration <= 0 || typeof now !== 'number') {
       return;
     }
 
-    let sweep = sweeps.get(ownerDocument);
+    let sweep = sweeps.get(doc);
     if (!sweep || now >= sweep.end) {
       sweep?.stop();
       const start = typeof animation.startTime === 'number' ? animation.startTime : now;
       sweep = createSweep(view, start, duration);
-      sweeps.set(ownerDocument, sweep);
+      sweeps.set(doc, sweep);
     }
     sweep.add(node, animation);
   }
 
-  root.addEventListener('animationstart', onStart);
+  addListenerSafe(root, 'animationstart', onStart);
   root.style.setProperty(animationProperty, sweepName);
   return () => {
     root.style.removeProperty(animationProperty);
-    root.removeEventListener('animationstart', onStart);
+    removeListenerSafe(root, 'animationstart', onStart);
   };
 }
 
 export function useSkeletonSweep<T extends HTMLElement>(ref: Ref<T> | undefined): RefCallback<T> {
-  const root = useRef<T>(null);
-  useIsoLayoutEffect(() => (root.current ? attachSweep(root.current) : undefined), []);
-  return useCallback((node: T | null) => mergeRefs(root, ref)(node), [ref]);
+  const attach = useCallback((node: T | null) => (node ? attachSweep(node) : undefined), []);
+  return useMemo(() => mergeRefs(attach, ref), [attach, ref]);
 }
