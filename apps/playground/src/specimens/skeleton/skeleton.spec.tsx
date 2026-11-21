@@ -1,23 +1,25 @@
+import { Skeleton, Text, Title } from '@docouno/unica';
 import { defineComponent } from '../../workbench/types.js';
 import { Card } from '../../prototypes/card/card.proto.js';
 import { PopoverContent } from '../../prototypes/popover/popover.proto.js';
-import { Text, Title } from '@docouno/unica';
-import { Skeleton } from '../../prototypes/skeleton/skeleton.proto.js';
+import { previewProps } from '../preview-code.js';
+import { dimension, propValues, widthControl } from './skeleton.controls.js';
 import {
   DocumentRows,
   LifecycleExample,
+  loadingSummaryCode,
   MediaExample,
   MotionExample,
   ShapeExamples,
   SkeletonCase,
-  TypographyExample,
-} from '../../prototypes/skeleton/skeleton.examples.js';
+  SummaryExample,
+} from './skeleton.examples.js';
 
 export default defineComponent({
   id: 'skeleton',
   title: 'Skeleton',
   category: 'Feedback & Status',
-  status: 'Proto',
+  status: 'UI',
   summary:
     'Quiet silhouettes that hold the place of arriving content. Known structure stays visible.',
   componentName: 'Skeleton',
@@ -26,15 +28,16 @@ export default defineComponent({
       kind: 'enum',
       group: 'Geometry',
       default: 'rect',
-      description: 'Choose a rectangular or circular placeholder.',
+      description: 'Choose a rectangular block or a theme-shaped avatar silhouette.',
       choices: [{ value: 'rect' }, { value: 'circle' }],
     },
-    width: {
-      kind: 'number',
+    width: widthControl,
+    height: {
+      kind: 'string',
       group: 'Geometry',
-      default: 96,
-      description: 'Inline size of the placeholder in CSS pixels.',
-      examples: [32, 96, 180],
+      default: '',
+      description: 'Block size. Enter pixels or a CSS size. Leave blank for the shape default.',
+      examples: ['', '32', '60%'],
     },
     hidden: {
       kind: 'boolean',
@@ -43,9 +46,19 @@ export default defineComponent({
       description: 'Hide the placeholder after its content is available.',
     },
   },
-  render: ({ ctx, values }) => <Skeleton {...ctx.subject} {...values} />,
-  code: ({ shape, width, hidden }) =>
-    `<Skeleton${shape === 'circle' ? ' shape="circle"' : ''} width={${width}}${hidden ? ' hidden' : ''} />`,
+  constraints: [
+    {
+      kind: 'ignored',
+      when: { hidden: true },
+      affects: ['shape', 'width', 'height'],
+      reason: 'A hidden placeholder has no visible geometry and takes up no space.',
+    },
+  ],
+  render: ({ ctx, values: { width, height, ...values } }) => (
+    <Skeleton {...ctx.subject} {...values} width={dimension(width)} height={dimension(height)} />
+  ),
+  code: (values) =>
+    `<Skeleton${previewProps(propValues(values), { shape: 'rect', hidden: false })} />`,
   matrixViews: [
     {
       id: 'geometry',
@@ -102,7 +115,11 @@ export default defineComponent({
         'Static panel preview. Its title and material are ready; only the unknown content is loading.',
       kind: 'surface',
       render: () => (
-        <PopoverContent role="presentation" className="skeleton-demo-overlay">
+        <PopoverContent
+          role="presentation"
+          className="skeleton-demo-overlay"
+          data-skeleton-demo-static
+        >
           <Title as="h3" size="heading-s">
             Related documents
           </Title>
@@ -124,11 +141,9 @@ export default defineComponent({
   usage: [
     {
       id: 'typography',
-      code: `<article aria-busy={loading}>
-  {loading ? <SkeletonText size="body-m" lines={3} /> : <Text>{summary}</Text>}
-</article>`,
-      title: 'Text & Title parity',
-      render: () => <TypographyExample />,
+      code: loadingSummaryCode,
+      title: 'Reserve space for a loading summary',
+      render: () => <SummaryExample />,
     },
   ],
 });

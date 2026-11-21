@@ -12,10 +12,9 @@ import {
   StackIcon,
 } from '@phosphor-icons/react';
 import { defineComponent } from '../../workbench/types.js';
-import { Badge, Icon, Text } from '@docouno/unica';
+import { Badge, Icon, Skeleton, SkeletonText, Text } from '@docouno/unica';
 import { Button, IconButton } from '../../prototypes/button/button.proto.js';
 import { Checkbox } from '../../prototypes/binary-controls/binary-controls.proto.js';
-import { Skeleton, SkeletonText } from '../../prototypes/skeleton/skeleton.proto.js';
 import { PopoverContent } from '../../prototypes/popover/popover.proto.js';
 import {
   Card,
@@ -581,14 +580,14 @@ function Availability(): ReactElement {
                   Be clear. Make room. Keep the important things close.
                 </Text>
               </div>
-              <div
-                className="card-example-loading-placeholder"
-                aria-hidden="true"
-                style={{ visibility: loaded ? 'hidden' : 'visible' }}
-              >
-                <Skeleton className="card-example-skeleton-title" />
-                <SkeletonText size="body-s" lines={2} />
-                <SkeletonText size="body-s" lines={2} />
+              <div className="card-example-loading-placeholder" aria-hidden="true">
+                {!loaded && (
+                  <>
+                    <Skeleton className="card-example-skeleton-title" />
+                    <SkeletonText size="body-s" lines={2} />
+                    <SkeletonText size="body-s" lines={2} />
+                  </>
+                )}
               </div>
             </div>
             <CardFooter>

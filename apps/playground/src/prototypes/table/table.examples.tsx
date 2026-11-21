@@ -1,4 +1,4 @@
-import { Link } from '@docouno/unica';
+import { Link, SkeletonText, Text } from '@docouno/unica';
 import { useId, useRef, useState } from 'react';
 import type { ReactElement } from 'react';
 import {
@@ -28,8 +28,6 @@ import { ContextMenu } from '../menu/context-menu.proto.js';
 import { Menu } from '../menu/menu.live.js';
 import { Pagination } from '../pagination/pagination.proto.js';
 import { Select } from '../select/select-control.proto.js';
-import { SkeletonText } from '../skeleton/skeleton.proto.js';
-import { Text } from '@docouno/unica';
 import {
   Table,
   TableBody,
