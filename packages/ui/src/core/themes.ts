@@ -1,5 +1,31 @@
+import type { UnicaComponentDefaults } from './defaults.js';
+
 export type ThemePreset =
   'soft-dark' | 'soft-light' | 'frost-dark' | 'frost-light' | 'pixel-dark' | 'pixel-light';
+
+export interface ThemeConfig {
+  readonly preset: ThemePreset;
+  readonly defaults?: UnicaComponentDefaults | undefined;
+}
+
+export interface UnicaRootAttributes {
+  readonly 'data-theme'?: ThemePreset | undefined;
+}
+
+/**
+ * Returns DOM root attributes for synchronizing a CSS theme preset with `UnicaProvider`.
+ * Omitting `theme` returns an empty object with no own `data-theme` key.
+ */
+export function getUnicaRootProps(options?: {
+  readonly theme?: ThemePreset | ThemeConfig | undefined;
+}): UnicaRootAttributes {
+  const theme = options?.theme;
+  if (theme === undefined) {
+    return {};
+  }
+  const preset = typeof theme === 'string' ? theme : theme.preset;
+  return { 'data-theme': preset };
+}
 
 export interface ThemePresetMeta {
   readonly id: ThemePreset;

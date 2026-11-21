@@ -1,4 +1,4 @@
-import { IconProvider, Link, defineGlyph } from '@docouno/unica';
+import { Link, UnicaProvider, defineGlyph } from '@docouno/unica';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { ComponentPropsWithRef, ReactElement, RefCallback } from 'react';
 import { createRoot } from 'react-dom/client';
@@ -35,13 +35,13 @@ function FixedLineSample(): ReactElement {
         data-testid="fixed-line"
         style={{ font: '24px / 38.4px Arial', inlineSize: 120, blockSize: 160 }}
       >
-        <IconProvider
-          adapter={(_glyph, { svgProps }) =>
+        <UnicaProvider
+          iconAdapter={(_glyph, { svgProps }) =>
             showGlyph ? <svg {...svgProps} viewBox="0 0 24 24" /> : null
           }
         >
           {fixedLine}
-        </IconProvider>
+        </UnicaProvider>
       </p>
     </section>
   );
@@ -573,7 +573,7 @@ export default function LinkFixture(): ReactElement {
             </Link>
           </p>
         </div>
-        <IconProvider adapter={() => null}>
+        <UnicaProvider iconAdapter={() => null}>
           <div>
             <Link href="#target" iconLeft={NullGlyph} iconRight={NullGlyph} data-testid="no-glyph">
               Plain text
@@ -589,7 +589,7 @@ export default function LinkFixture(): ReactElement {
               Plain text
             </Link>
           </div>
-        </IconProvider>
+        </UnicaProvider>
       </section>
       <p id="target" tabIndex={-1} style={{ marginBlock: '500px' }}>
         Fragment destination

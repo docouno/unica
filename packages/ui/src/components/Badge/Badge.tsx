@@ -1,8 +1,8 @@
 import { Children, Fragment, isValidElement } from 'react';
 import type { CSSProperties, HTMLAttributes, ReactElement, ReactNode, Ref } from 'react';
 import { Slot } from '../../core/Slot.js';
+import type { GlyphSource } from '../../core/glyph.js';
 import { Icon } from '../Icon/Icon.js';
-import type { GlyphSource } from '../Icon/glyph.js';
 import './badge.css';
 
 export type BadgeStatus = 'neutral' | 'accent' | 'info' | 'success' | 'warning' | 'danger';

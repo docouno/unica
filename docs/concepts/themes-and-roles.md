@@ -25,7 +25,7 @@ export type ThemePreset =
 | **Frost** | `frost-dark`, `frost-light` | Obsidian (`Dark`) and crystalline alabaster (`Light`) neutrals, deep violet CTAs with a vertical contact edge and diffuse ambient light, quiet neutral and danger solids, `1px`-rimmed jewel badges, and `backdrop-filter` frosted glass exclusively on floating overlays. |
 | **Pixel** | `pixel-dark`, `pixel-light` | Carbon-phosphor (`Dark`) and drafting-paper (`Light`) surfaces, `0px` sharp corners (`--radius-factor: 0`), `JetBrains Mono` base typography, `1px` structural borders, `8px` corner registration ticks, coordinate grids, flat signal buttons, and crisp `{6px, 6px}` `blur: 0` block shadows on floating panels. |
 
-`THEME_PRESETS` exposes the six presets and their display metadata. React Server Components can import the same catalogue from the package root under the `react-server` condition. Use `UnicaProvider` inside a client boundary. Custom product themes can override semantic `--*` variables on a DOM subtree.
+`THEME_PRESETS` exposes the six presets and their display metadata, and `getUnicaRootProps` builds the matching `data-theme` attribute for server or client root containers. React Server Components can import `THEME_PRESETS`, `defineGlyph`, and `getUnicaRootProps` from the package root under the `react-server` condition. Use `UnicaProvider` inside a client boundary. Custom product themes can override semantic `--*` variables on a DOM subtree.
 
 In-flow Alert surfaces use status soft backgrounds and readable status ink without shadow or backdrop filtering. `--alert-border-width` is 0px in Soft and 1px in Frost/Pixel. `--alert-edge-width` is 0px in Soft/Frost and 2px in Pixel, setting the total logical leading-border width to the larger of the perimeter and edge recipes. The leading edge uses the semantic border color and mirrors in RTL. Status glyphs use the readable soft foreground rather than the general signal color; the latter is not calibrated for every tinted ground. An enclosing overlay owns all glass and elevation.
 
@@ -78,11 +78,11 @@ also stay outside the scroll owner so they cannot create phantom scrollbars.
 
 ## Structural Component Defaults
 
-`UnicaProvider` supplies React configuration to its descendants and renders its children directly. `ThemeConfig.preset` identifies a preset, and `ThemeConfig.defaults` supplies structural defaults for that configuration. Set `data-theme={theme.preset}` on the DOM container to apply the CSS preset. CSS-only usage can set the attribute on its own.
+`UnicaProvider` is the single wrapper-less provider for Unica React configuration (`theme`, `overrides`, `portalContainer`, and `iconAdapter`) and renders its children directly without emitting DOM nodes. Pass either a preset string (`theme="frost-light"`) or a `ThemeConfig` object (`{ preset, defaults }`). Apply the matching CSS preset to your DOM container with `getUnicaRootProps({ theme })` (or `data-theme` directly in CSS-only usage). Omitting `theme` returns `{}` with no own `data-theme` key so spreading never clears an existing attribute.
 
 ```tsx
 import '@docouno/unica/styles.css';
-import { UnicaProvider, type ThemeConfig } from '@docouno/unica';
+import { UnicaProvider, getUnicaRootProps, type ThemeConfig } from '@docouno/unica';
 import type { ReactNode } from 'react';
 
 const theme = { preset: 'frost-light', defaults: { Icon: { size: 'm' } } } satisfies ThemeConfig;
@@ -90,7 +90,7 @@ const theme = { preset: 'frost-light', defaults: { Icon: { size: 'm' } } } satis
 export function ThemedArea({ children }: { children: ReactNode }) {
   return (
     <UnicaProvider theme={theme} overrides={{ Icon: { size: 's' } }}>
-      <main data-theme={theme.preset}>{children}</main>
+      <main {...getUnicaRootProps({ theme })}>{children}</main>
     </UnicaProvider>
   );
 }
@@ -104,9 +104,11 @@ For each configurable property the first defined value wins, in this order.
 4. The active theme configuration's `defaults`.
 5. The component's built-in default.
 
-A nested provider inherits the parent's theme configuration unless it supplies a complete replacement. Overrides inherit by family and property, with defined inner values winning. Without a provider, React uses the built-in `soft-dark` configuration and component defaults. The server and client can use the same configuration because resolution uses React inputs. Use the existing DOM container to keep the CSS theme aligned with that configuration.
+A nested provider inherits the parent's theme configuration unless it supplies a replacement (`theme="pixel-dark"` replaces `ThemeConfig` as a whole and resets theme defaults). Overrides inherit by family and property, with defined inner values winning. `portalContainer` and `iconAdapter` also inherit when omitted. Without a provider, React uses the built-in `soft-dark` configuration, `document.body` for portals, the `phosphor` icon adapter, and component defaults.
 
-`UnicaComponentDefaults` contains only properties declared configurable by each family. Standalone [Icon](../components/icon.md) resolves `size` (`inherit`, `s`, `m`, `l`) through these defaults. A slot glyph uses the size supplied by its owner or inherits the owner's text size. [Link](../components/link.md) resolves its `size` through the same defaults, with `inherit` as its built-in value. Behavior, accessibility attributes, and content remain the responsibility of each component and its caller.
+When nesting a different `[data-theme]` inside an outer theme, pass a local `portalContainer` inside that themed DOM subtree (`<UnicaProvider theme="pixel-dark" portalContainer={scopedHost}>`) so portaled surfaces inherit the nested CSS custom properties and `color-scheme` rather than falling back to `document.body`. See [Portal](../components/portal.md#nested-themes-and-portals).
+
+`UnicaComponentDefaults` contains only properties declared configurable by each family. Standalone [Icon](../components/icon.md) resolves `size` (`inherit`, `s`, `m`, `l`) through these defaults. A slot glyph uses the size supplied by its owner or inherits the owner's text size. [Link](../components/link.md) resolves its `size` (`LinkSize`) through the same defaults, with `inherit` as its built-in value. Behavior, accessibility attributes, and content remain the responsibility of each component and its caller.
 
 ## CSS Layers
 

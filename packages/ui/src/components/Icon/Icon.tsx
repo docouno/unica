@@ -1,26 +1,25 @@
-import { Children, Fragment, createContext, isValidElement, use } from 'react';
+import { Children, Fragment, isValidElement, use } from 'react';
 import type {
   AriaAttributes,
   CSSProperties,
   ComponentPropsWithRef,
   DOMAttributes,
-  JSX,
   ReactElement,
   ReactNode,
 } from 'react';
 import { useComponentDefaults } from '../../core/UnicaProvider.js';
-import { isGlyphDefinition, renderGlyph } from './glyph.js';
+import type { IconSize } from '../../core/defaults.js';
+import { isGlyphDefinition, renderGlyph } from '../../core/glyph.js';
 import type {
-  BuiltinIconAdapterName,
   GlyphComponent,
   GlyphDefinition,
   GlyphSource,
   GlyphSvgProps,
-  IconAdapter,
-} from './glyph.js';
+} from '../../core/glyph.js';
+import { IconAdapterContext } from '../../core/icon-adapter.js';
 import './icon.css';
 
-export type IconSize = 'inherit' | 's' | 'm' | 'l';
+export type { IconSize } from '../../core/defaults.js';
 
 export type IconColor =
   | 'inherit'
@@ -36,17 +35,6 @@ export type IconColor =
   | 'danger';
 
 export type IconUsage = 'standalone' | 'slot';
-
-export interface IconProviderProps {
-  readonly adapter: BuiltinIconAdapterName | IconAdapter;
-  readonly children: ReactNode;
-}
-
-const IconContext = /* @__PURE__ */ createContext<BuiltinIconAdapterName | IconAdapter>('phosphor');
-
-export function IconProvider({ adapter, children }: IconProviderProps): JSX.Element {
-  return <IconContext value={adapter}>{children}</IconContext>;
-}
 
 type IconTitle = ReactElement<
   {
@@ -322,7 +310,7 @@ export function Icon<G extends GlyphSource>({
   children,
   ...props
 }: IconProps<G>): ReactElement | null {
-  const providerAdapter = isGlyphDefinition(icon) ? 'native' : use(IconContext);
+  const providerAdapter = isGlyphDefinition(icon) ? 'native' : use(IconAdapterContext);
   const frameSize = useComponentDefaults('Icon', 'size', {
     instance: size,
     group: usage === 'slot' ? 'inherit' : undefined,

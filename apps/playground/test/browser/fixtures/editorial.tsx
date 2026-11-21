@@ -1,7 +1,7 @@
 import '@fontsource-variable/inter';
 import '@fontsource-variable/jetbrains-mono';
 import type { JSX, ReactNode } from 'react';
-import { Blockquote, Code, defineGlyph, IconProvider, Link, Text, Title } from '@docouno/unica';
+import { Blockquote, Code, defineGlyph, Link, Text, Title, UnicaProvider } from '@docouno/unica';
 import type { GlyphSource, GlyphSvgProps } from '@docouno/unica';
 import { Alert } from '../../../src/prototypes/alert/alert.proto.js';
 import { Button } from '../../../src/prototypes/button/button.proto.js';
@@ -220,7 +220,7 @@ export default function EditorialFixture(): JSX.Element {
         <textarea aria-label="Clipboard destination" />
       </div>
       <ContextSample />
-      <IconProvider adapter="native">
+      <UnicaProvider iconAdapter="native">
         <div data-testid="quote-layout" style={{ display: 'grid', justifyItems: 'center' }}>
           <Quote id="both" start={Mark} end={fixedMark} />
           <Quote id="end-only" end={fixedMark} />
@@ -238,7 +238,7 @@ export default function EditorialFixture(): JSX.Element {
             Hidden body.
           </Blockquote>
         </div>
-      </IconProvider>
+      </UnicaProvider>
       <SurfaceSample />
     </>
   );

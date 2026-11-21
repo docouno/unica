@@ -1,8 +1,8 @@
 import type { ReactElement, ReactNode } from 'react';
 import { passiveRootAttributes } from '../../core/passiveRoot.js';
 import type { PassiveRootProps } from '../../core/passiveRoot.js';
+import type { GlyphSource } from '../../core/glyph.js';
 import { Icon } from '../Icon/Icon.js';
-import type { GlyphSource } from '../Icon/glyph.js';
 import './blockquote.css';
 
 export type BlockquoteTone = 'neutral' | 'info' | 'success' | 'warning' | 'danger';

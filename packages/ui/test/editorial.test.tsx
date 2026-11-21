@@ -3,7 +3,7 @@ import { createRef } from 'react';
 import type { MouseEvent } from 'react';
 import { renderToString } from 'react-dom/server';
 import { afterEach, expect, it, vi } from 'vitest';
-import { Blockquote, Code, defineGlyph, IconProvider } from '../src/index.js';
+import { Blockquote, Code, defineGlyph, UnicaProvider } from '../src/index.js';
 import type { GlyphSvgProps } from '../src/index.js';
 
 afterEach(cleanup);
@@ -47,7 +47,7 @@ it('renders a figure with mixed quoted content and a separate optional source', 
   const ref = createRef<HTMLElement>();
   const onClick = vi.fn((event: MouseEvent<HTMLElement>) => event.preventDefault());
   render(
-    <IconProvider adapter="native">
+    <UnicaProvider iconAdapter="native">
       <Blockquote
         ref={ref}
         citeUrl="/guide"
@@ -64,7 +64,7 @@ it('renders a figure with mixed quoted content and a separate optional source', 
           <li>Check the source.</li>
         </ul>
       </Blockquote>
-    </IconProvider>,
+    </UnicaProvider>,
   );
 
   const figure = screen.getByRole('figure', { name: 'Excerpt' });

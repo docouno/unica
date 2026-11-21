@@ -5,7 +5,7 @@ import { memo, StrictMode, useLayoutEffect } from 'react';
 import { hydrateRoot } from 'react-dom/client';
 import { renderToString } from 'react-dom/server';
 import { afterEach, expect, expectTypeOf, it, vi } from 'vitest';
-import { Portal, PortalProvider, UnicaProvider, usePortalContainer } from '../src/index.js';
+import { Portal, UnicaProvider, usePortalContainer } from '../src/index.js';
 import type { PortalProps } from '../src/index.js';
 import { useComponentDefaults } from '../src/core/UnicaProvider.js';
 import { PACKAGE_VERSION } from '../src/core/version.js';
@@ -79,13 +79,13 @@ it('renders into the effective host without wrappers, switches hosts cleanly, an
     </div>
   );
   const { rerender } = render(
-    <PortalProvider container={first}>
-      <PortalProvider>
+    <UnicaProvider portalContainer={first}>
+      <UnicaProvider>
         <div onClick={click}>
           <Portal container={second}>{content}</Portal>
         </div>
-      </PortalProvider>
-    </PortalProvider>,
+      </UnicaProvider>
+    </UnicaProvider>,
   );
   expect(first.children).toHaveLength(0);
   expect(second.children).toHaveLength(2);
@@ -96,11 +96,11 @@ it('renders into the effective host without wrappers, switches hosts cleanly, an
 
   // Direct host switch A -> B remounts cleanly without leaving a duplicate node.
   rerender(
-    <PortalProvider container={first}>
+    <UnicaProvider portalContainer={first}>
       <div onClick={click}>
         <Portal container={first}>{content}</Portal>
       </div>
-    </PortalProvider>,
+    </UnicaProvider>,
   );
   expect(second.children).toHaveLength(0);
   expect(first.children).toHaveLength(2);
@@ -108,19 +108,19 @@ it('renders into the effective host without wrappers, switches hosts cleanly, an
   expect(unmounts).toBe(1);
 
   rerender(
-    <PortalProvider container={first}>
+    <UnicaProvider portalContainer={first}>
       <Portal container={null}>{content}</Portal>
-    </PortalProvider>,
+    </UnicaProvider>,
   );
   expect(document.body.querySelector('button')).toBeNull();
   expect(unmounts).toBe(2);
 
   rerender(
-    <PortalProvider container={first}>
+    <UnicaProvider portalContainer={first}>
       <Portal container={second} disabled>
         {content}
       </Portal>
-    </PortalProvider>,
+    </UnicaProvider>,
   );
   expect(first.textContent).toBe('Nested');
   expect(second.children).toHaveLength(0);
@@ -131,14 +131,14 @@ it('honors a waiting provider, explicit overrides, body fallback, and a foreign 
   const iframe = document.body.appendChild(document.createElement('iframe'));
   const foreign = iframe.contentDocument!.body;
   const { rerender } = render(
-    <PortalProvider container={null}>
+    <UnicaProvider portalContainer={null}>
       <Portal>
         <span>Waiting</span>
       </Portal>
       <Portal container={foreign}>
         <span>Foreign</span>
       </Portal>
-    </PortalProvider>,
+    </UnicaProvider>,
   );
   expect(document.body.textContent).toBe('');
   expect(foreign.textContent).toBe('Foreign');
@@ -199,12 +199,12 @@ it.each(['body', 'explicit', 'waiting'] as const)(
     function tree(container: PortalProps['container']) {
       return (
         <StrictMode>
-          <PortalProvider container={container}>
+          <UnicaProvider portalContainer={container}>
             <Status />
             <Portal>
               <Child />
             </Portal>
-          </PortalProvider>
+          </UnicaProvider>
         </StrictMode>
       );
     }

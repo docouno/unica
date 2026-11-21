@@ -4,7 +4,7 @@ import type { ComponentPropsWithRef } from 'react';
 import { hydrateRoot } from 'react-dom/client';
 import { renderToString } from 'react-dom/server';
 import { afterEach, expect, it, vi } from 'vitest';
-import { Icon, IconProvider, UnicaProvider, defineGlyph } from '../src/index.js';
+import { Icon, UnicaProvider, defineGlyph } from '../src/index.js';
 import type { GlyphSvgProps, IconAdapter, IconProps } from '../src/index.js';
 import { defineGlyph as serverDefineGlyph } from '../src/server.js';
 
@@ -40,17 +40,17 @@ it('resolves the nearest adapter and keeps an immutable definition on its own ad
 
   render(
     <>
-      <IconProvider adapter={first}>
+      <UnicaProvider iconAdapter={first}>
         <Icon icon={Mark} data-testid="first" />
-        <IconProvider adapter={second}>
+        <UnicaProvider iconAdapter={second}>
           <Icon icon={Mark} usage="slot" data-testid="second" ref={ref} />
           <Icon icon={fixed} data-testid="fixed" />
           <Icon icon={fixedMark} data-testid="native" />
-        </IconProvider>
-      </IconProvider>
-      <IconProvider adapter={first}>
+        </UnicaProvider>
+      </UnicaProvider>
+      <UnicaProvider iconAdapter={first}>
         <Icon icon={Mark} data-testid="sibling" />
-      </IconProvider>
+      </UnicaProvider>
     </>,
   );
 
@@ -106,9 +106,9 @@ it('passes optional source props including on, oneTone, stroke, and strokeWidth'
   render(
     <>
       <Icon icon={project} on oneTone stroke={1.5} strokeWidth={2} data-testid="native-extra" />
-      <IconProvider adapter={inspect}>
+      <UnicaProvider iconAdapter={inspect}>
         <Icon icon={Project} on oneTone stroke={1.5} strokeWidth={2} data-testid="adapted-extra" />
-      </IconProvider>
+      </UnicaProvider>
     </>,
   );
   for (const id of ['native-extra', 'adapted-extra']) {
@@ -352,9 +352,9 @@ it('recognizes Flight-serialized descriptors and rejects invalid adapters or non
     adapter: 'native' as const,
   };
   const { container } = render(
-    <IconProvider adapter={() => null}>
+    <UnicaProvider iconAdapter={() => null}>
       <Icon icon={serialized} data-testid="serialized" />
-    </IconProvider>,
+    </UnicaProvider>,
   );
   expect(container.querySelector('[data-testid="serialized"]')?.getAttribute('data-shape')).toBe(
     'mark',
@@ -364,9 +364,9 @@ it('recognizes Flight-serialized descriptors and rejects invalid adapters or non
     expect(() => defineGlyph(Mark, badAdapter as never)).toThrow(TypeError);
     expect(() =>
       renderToString(
-        <IconProvider adapter={badAdapter as never}>
+        <UnicaProvider iconAdapter={badAdapter as never}>
           <Icon icon={Mark} />
-        </IconProvider>,
+        </UnicaProvider>,
       ),
     ).toThrow(TypeError);
   }
@@ -405,9 +405,9 @@ it('omits own children key on unnamed svgProps so cloneElement adapters keep SVG
     return cloneElement(prebuilt, svgProps);
   };
   const { container } = render(
-    <IconProvider adapter={cloneAdapter}>
+    <UnicaProvider iconAdapter={cloneAdapter}>
       <Icon icon={Mark} />
-    </IconProvider>,
+    </UnicaProvider>,
   );
   expect(hasOwnChildren).toBe(false);
   expect(container.querySelector('svg > path')).not.toBeNull();
@@ -442,21 +442,20 @@ it('avoids context fan-out rerenders on slots, sized icons, and pinned glyphs', 
     const [tick, setTick] = useState(0);
     const [adapter, setAdapter] = useState<'phosphor' | 'native'>('phosphor');
     return (
-      <UnicaProvider overrides={{ Icon: { size: tick % 2 === 0 ? 's' : 'l' } }}>
-        <IconProvider adapter={adapter}>
-          <button type="button" onClick={() => setTick((n) => n + 1)}>
-            Flip theme
-          </button>
-          <button
-            type="button"
-            onClick={() =>
-              setAdapter((current) => (current === 'phosphor' ? 'native' : 'phosphor'))
-            }
-          >
-            Flip adapter
-          </button>
-          <Frozen />
-        </IconProvider>
+      <UnicaProvider
+        overrides={{ Icon: { size: tick % 2 === 0 ? 's' : 'l' } }}
+        iconAdapter={adapter}
+      >
+        <button type="button" onClick={() => setTick((n) => n + 1)}>
+          Flip theme
+        </button>
+        <button
+          type="button"
+          onClick={() => setAdapter((current) => (current === 'phosphor' ? 'native' : 'phosphor'))}
+        >
+          Flip adapter
+        </button>
+        <Frozen />
       </UnicaProvider>
     );
   }
@@ -472,30 +471,24 @@ it('switches cleanly between pinned and provider-resolved sources and sizes on o
   const custom: IconAdapter = (source, { svgProps }) =>
     createElement(source, { ...svgProps, 'data-via': 'custom' });
   const view = render(
-    <UnicaProvider overrides={{ Icon: { size: 's' } }}>
-      <IconProvider adapter={custom}>
-        <Icon icon={fixedMark} size="l" data-testid="dynamic" />
-      </IconProvider>
+    <UnicaProvider overrides={{ Icon: { size: 's' } }} iconAdapter={custom}>
+      <Icon icon={fixedMark} size="l" data-testid="dynamic" />
     </UnicaProvider>,
   );
   expect(screen.getByTestId('dynamic').getAttribute('data-via')).toBeNull();
   expect(screen.getByTestId('dynamic').getAttribute('data-unica-icon-size')).toBe('l');
 
   view.rerender(
-    <UnicaProvider overrides={{ Icon: { size: 's' } }}>
-      <IconProvider adapter={custom}>
-        <Icon icon={Mark} data-testid="dynamic" />
-      </IconProvider>
+    <UnicaProvider overrides={{ Icon: { size: 's' } }} iconAdapter={custom}>
+      <Icon icon={Mark} data-testid="dynamic" />
     </UnicaProvider>,
   );
   expect(screen.getByTestId('dynamic').getAttribute('data-via')).toBe('custom');
   expect(screen.getByTestId('dynamic').getAttribute('data-unica-icon-size')).toBe('s');
 
   view.rerender(
-    <UnicaProvider overrides={{ Icon: { size: 'm' } }}>
-      <IconProvider adapter={custom}>
-        <Icon icon={fixedMark} size="inherit" data-testid="dynamic" />
-      </IconProvider>
+    <UnicaProvider overrides={{ Icon: { size: 'm' } }} iconAdapter={custom}>
+      <Icon icon={fixedMark} size="inherit" data-testid="dynamic" />
     </UnicaProvider>,
   );
   expect(screen.getByTestId('dynamic').getAttribute('data-via')).toBeNull();
@@ -511,16 +504,16 @@ it('lets a custom adapter replace a drawing, then clears the owner ref on null',
   const original = ref.current;
   expect(original?.dataset.shape).toBe('mark');
   view.rerender(
-    <IconProvider adapter={replacement}>
+    <UnicaProvider iconAdapter={replacement}>
       <Icon icon={Mark} ref={ref} />
-    </IconProvider>,
+    </UnicaProvider>,
   );
   expect(ref.current?.dataset.shape).toBe('other');
   expect(ref.current).not.toBe(original);
   view.rerender(
-    <IconProvider adapter={() => null}>
+    <UnicaProvider iconAdapter={() => null}>
       <Icon icon={Mark} ref={ref} />
-    </IconProvider>,
+    </UnicaProvider>,
   );
   expect(ref.current).toBeNull();
   expect(view.container.querySelector('svg')).toBeNull();
@@ -535,10 +528,10 @@ it('keeps request-local adapters, SVG nodes and generated IDs through SSR and hy
     };
   const ref = createRef<SVGSVGElement>();
   const view = (via: IconAdapter) => (
-    <IconProvider adapter={via}>
+    <UnicaProvider iconAdapter={via}>
       <Icon icon={Mark} ref={ref} />
       <Icon icon={fixedMark} />
-    </IconProvider>
+    </UnicaProvider>
   );
   const status = 'ready';
   const named = renderToString(

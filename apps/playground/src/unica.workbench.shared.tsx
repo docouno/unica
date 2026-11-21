@@ -1,6 +1,6 @@
 import '@docouno/unica/styles.css';
 import type { ReactElement } from 'react';
-import { PortalProvider, THEME_PRESETS, UnicaProvider } from '@docouno/unica';
+import { THEME_PRESETS, UnicaProvider } from '@docouno/unica';
 import type { ThemeConfig } from '@docouno/unica';
 import { OverlayStage } from './workbench/WorkbenchApp.js';
 import './unica.workbench.css';
@@ -358,8 +358,8 @@ function renderUnicaArtboard({ theme, host, children }: WorkbenchArtboardContext
     throw new Error(`Unknown Unica theme preset: ${theme.id}`);
   }
   return (
-    <UnicaProvider theme={themeConfig}>
-      <PortalProvider container={host}>{children}</PortalProvider>
+    <UnicaProvider theme={themeConfig} portalContainer={host}>
+      {children}
     </UnicaProvider>
   );
 }

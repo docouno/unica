@@ -10,7 +10,7 @@ import type {
 import { hydrateRoot } from 'react-dom/client';
 import { renderToString } from 'react-dom/server';
 import { afterEach, expect, it, vi } from 'vitest';
-import { IconProvider, Link, UnicaProvider, defineGlyph } from '../src/index.js';
+import { Link, UnicaProvider, defineGlyph } from '../src/index.js';
 import type { GlyphSvgProps, LinkProps } from '../src/index.js';
 
 type RouterProps = Omit<ComponentPropsWithRef<'a'>, 'href'> & { to: string; prefetch?: boolean };
@@ -273,11 +273,11 @@ it('keeps the download request and still protects the target without an automati
   expect(anchor.querySelector('svg')).toBeNull();
 
   rerender(
-    <IconProvider adapter={() => null}>
+    <UnicaProvider iconAdapter={() => null}>
       <Link href="/report.pdf" download target="_blank" external iconLeft={Mark} iconRight={Mark}>
         Report
       </Link>
-    </IconProvider>,
+    </UnicaProvider>,
   );
   const external = screen.getByRole('link');
   expect(external.querySelectorAll('svg')).toHaveLength(1);

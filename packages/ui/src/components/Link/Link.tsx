@@ -2,16 +2,16 @@ import { useId } from 'react';
 import type { ComponentPropsWithRef, MouseEvent, ReactElement, ReactNode } from 'react';
 import { Slot, requireSlotChild, resolveSlotProps } from '../../core/Slot.js';
 import { useComponentDefaults } from '../../core/UnicaProvider.js';
+import type { LinkSize } from '../../core/defaults.js';
+import type { GlyphSource } from '../../core/glyph.js';
 import { ExternalLinkGlyph } from '../../internal/glyphs/index.js';
 import { Icon } from '../Icon/Icon.js';
-import type { GlyphSource } from '../Icon/glyph.js';
 import { NewTabDescription } from './NewTabDescription.js';
 import { TrailingGlyph } from './TrailingGlyph.js';
 import { markTerminalText } from './terminalText.js';
 import './link.css';
 
-export type LinkSize =
-  'inherit' | 'body-l' | 'body-m' | 'body-s' | 'caption-l' | 'caption-m' | 'caption-s';
+export type { LinkSize } from '../../core/defaults.js';
 
 type AnchorProps = ComponentPropsWithRef<'a'>;
 type OwnedAttribute = 'aria-disabled' | 'dangerouslySetInnerHTML';

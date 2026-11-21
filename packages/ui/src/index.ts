@@ -1,12 +1,16 @@
 import './styles.css';
 
-export { THEME_PRESETS } from './core/themes.js';
-export type { ThemePreset, ThemePresetMeta } from './core/themes.js';
+export { THEME_PRESETS, getUnicaRootProps } from './core/themes.js';
+export type {
+  ThemeConfig,
+  ThemePreset,
+  ThemePresetMeta,
+  UnicaRootAttributes,
+} from './core/themes.js';
 export { UnicaProvider } from './core/UnicaProvider.js';
-export type { ThemeConfig } from './core/UnicaProvider.js';
 export type { UnicaComponentDefaults, UnicaProviderProps } from './core/UnicaProvider.js';
-export { Portal, PortalProvider, usePortalContainer } from './core/Portal.js';
-export type { PortalProps, PortalProviderProps } from './core/Portal.js';
+export { Portal, usePortalContainer } from './core/Portal.js';
+export type { PortalProps } from './core/Portal.js';
 
 export { Badge } from './components/Badge/Badge.js';
 export type { BadgeProps, BadgeStatus } from './components/Badge/Badge.js';
@@ -17,15 +21,9 @@ export type { CodeProps, CodeTone } from './components/Code/Code.js';
 export { Divider } from './components/Divider/Divider.js';
 export type { DividerProps } from './components/Divider/Divider.js';
 
-export { Icon, IconProvider } from './components/Icon/Icon.js';
-export type {
-  IconColor,
-  IconProps,
-  IconProviderProps,
-  IconSize,
-  IconUsage,
-} from './components/Icon/Icon.js';
-export { defineGlyph } from './components/Icon/glyph.js';
+export { Icon } from './components/Icon/Icon.js';
+export type { IconColor, IconProps, IconSize, IconUsage } from './components/Icon/Icon.js';
+export { defineGlyph } from './core/glyph.js';
 export type {
   BuiltinIconAdapterName,
   GlyphComponent,
@@ -34,7 +32,7 @@ export type {
   GlyphSvgProps,
   IconAdapter,
   IconAdapterRenderContext,
-} from './components/Icon/glyph.js';
+} from './core/glyph.js';
 
 export { Indicator } from './components/Indicator/Indicator.js';
 export type {
@@ -58,7 +56,7 @@ export type {
 export type { Responsive } from './components/Layout/responsive.js';
 
 export { Link } from './components/Link/Link.js';
-export type { LinkProps } from './components/Link/Link.js';
+export type { LinkProps, LinkSize } from './components/Link/Link.js';
 
 export { Progress } from './components/Progress/Progress.js';
 export type {

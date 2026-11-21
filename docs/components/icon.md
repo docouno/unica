@@ -35,7 +35,7 @@ The source's `viewBox` controls drawing proportions inside the square. Use `curr
 ## Sources and adapters
 
 ```tsx
-import { Icon, IconProvider, defineGlyph } from '@docouno/unica';
+import { Icon, UnicaProvider, defineGlyph } from '@docouno/unica';
 import type { GlyphSvgProps } from '@docouno/unica';
 
 function ProjectMark({ children, ...props }: GlyphSvgProps) {
@@ -49,14 +49,14 @@ function ProjectMark({ children, ...props }: GlyphSvgProps) {
 
 const ProjectGlyph = defineGlyph(ProjectMark);
 
-<IconProvider adapter="phosphor">
+<UnicaProvider iconAdapter="phosphor">
   <Icon icon={ProjectGlyph} size="l"><title>Project mark</title></Icon>
-</IconProvider>
+</UnicaProvider>
 ```
 
 Every accepted source can render with just the Icon frame props. TypeScript infers extra options from the final call signature of an overloaded component. Give that signature the union of supported option shapes to expose every mode through Icon.
 
-A bare component uses the nearest `IconProvider`, with `phosphor` as the default. A module-scoped `defineGlyph(source, adapter?)` wraps a source in an immutable descriptor and pins its adapter, defaulting to `native`. Sources with repeated clip paths, masks, or gradients should create instance IDs with React's `useId`.
+A bare component uses the nearest `UnicaProvider` `iconAdapter`, with `phosphor` as the default. A module-scoped `defineGlyph(source, adapter?)` wraps a source in an immutable descriptor and pins its adapter, defaulting to `native`. Sources with repeated clip paths, masks, or gradients should create instance IDs with React's `useId`.
 
 The built-in Phosphor adapter defaults standalone icons to `regular`, including when `weight={undefined}`. A slot may inherit its weight from the application's Phosphor `IconContext`. An explicit weight takes precedence. Icon owns frame size, root paint, reflection, and accessibility fields, including competing `role`, `aria-hidden`, `aria-label`, `aria-labelledby`, `focusable`, `tabIndex`, and `style` in Phosphor `IconContext`. Set `ref` on `Icon`, geometry such as `viewBox` and `preserveAspectRatio` in the source, and event handlers on the surrounding control. Keep these fields out of the vendor context.
 
@@ -78,6 +78,6 @@ Icon skips keyboard focus and has no form value or reset behavior. Put actions o
 
 ## Package entry
 
-The normal ESM entry exports `Icon`, `IconProvider`, `defineGlyph` and the types `BuiltinIconAdapterName`, `GlyphComponent`, `GlyphDefinition`, `GlyphSource`, `GlyphSvgProps`, `IconAdapter`, `IconAdapterRenderContext`, `IconColor`, `IconProps`, `IconProviderProps`, `IconSize`, and `IconUsage`. It works with React DOM SSR and hydration.
+The normal ESM entry exports `Icon`, `UnicaProvider`, `defineGlyph`, and the types `BuiltinIconAdapterName`, `GlyphComponent`, `GlyphDefinition`, `GlyphSource`, `GlyphSvgProps`, `IconAdapter`, `IconAdapterRenderContext`, `IconColor`, `IconProps`, `IconSize`, `IconUsage`, and `UnicaProviderProps`. It works with React DOM SSR and hydration.
 
-In React Server Components, render `Icon` and `IconProvider` inside a `'use client'` module boundary. The `react-server` entry exposes `THEME_PRESETS`, `defineGlyph`, and all type exports so shared icon registries can define descriptors without loading client hooks or stylesheets. Applications install their chosen icon library separately.
+In React Server Components, render `Icon` and `UnicaProvider` inside a `'use client'` module boundary. The `react-server` entry exposes `THEME_PRESETS`, `defineGlyph`, `getUnicaRootProps`, and all type exports so shared icon registries can define descriptors without loading client hooks or stylesheets. Applications install their chosen icon library separately.

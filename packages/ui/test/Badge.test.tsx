@@ -2,7 +2,7 @@ import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { createRef } from 'react';
 import type { ComponentPropsWithRef, ReactNode } from 'react';
 import { afterEach, expect, it } from 'vitest';
-import { Badge, IconProvider, defineGlyph } from '../src/index.js';
+import { Badge, UnicaProvider, defineGlyph } from '../src/index.js';
 import type { BadgeProps } from '../src/index.js';
 
 afterEach(cleanup);
@@ -95,11 +95,11 @@ it.each([Check, defineGlyph(Check)])(
   'gives both glyph sources priority over the dot',
   (iconLeft) => {
     const { container } = render(
-      <IconProvider adapter="native">
+      <UnicaProvider iconAdapter="native">
         <Badge dot size="s" iconLeft={iconLeft}>
           99+
         </Badge>
-      </IconProvider>,
+      </UnicaProvider>,
     );
     const root = container.firstElementChild;
     expect(root?.hasAttribute('data-unica-badge-numeric')).toBe(false);

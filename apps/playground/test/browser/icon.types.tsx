@@ -1,6 +1,6 @@
 import {
   Icon,
-  IconProvider,
+  UnicaProvider,
   defineGlyph,
   type BuiltinIconAdapterName,
   type GlyphComponent,
@@ -11,9 +11,9 @@ import {
   type IconAdapterRenderContext,
   type IconColor,
   type IconProps,
-  type IconProviderProps,
   type IconSize,
   type IconUsage,
+  type UnicaProviderProps,
 } from '@docouno/unica';
 import { ArrowRightIcon } from '@phosphor-icons/react';
 import {
@@ -222,7 +222,7 @@ const optional = defineGlyph(OptionalGlyph, adapter);
 const iconSize: IconSize = 'm';
 const iconColor: IconColor = 'accent';
 const iconUsage: IconUsage = 'standalone';
-const providerProps: IconProviderProps = { adapter, children: null };
+const providerProps: UnicaProviderProps = { iconAdapter: adapter, children: null };
 const svgPropsSample: GlyphSvgProps = { className: 'unica-icon', width: '16', height: '16' };
 const props: IconProps = {
   icon: source,
@@ -268,9 +268,9 @@ const valid = [
   </Icon>,
   <Icon icon={ProjectSvg}>{showTitle && <title>Conditional</title>}</Icon>,
   <Icon icon={ProjectSvg}>{showTitle ? <title>Conditional</title> : null}</Icon>,
-  <IconProvider {...providerProps}>
+  <UnicaProvider {...providerProps}>
     <Icon icon={optional} compact usage="slot" />
-  </IconProvider>,
+  </UnicaProvider>,
 ];
 
 const closed = { role: 'img', 'aria-hidden': true, 'aria-describedby': 'hint', tabIndex: 0 };
