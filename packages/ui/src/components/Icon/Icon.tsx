@@ -96,6 +96,11 @@ const reservedInputProps = /* @__PURE__ */ new Set([
   '__proto__',
   'class',
   'classname',
+  'style',
+  'id',
+  'ref',
+  'children',
+  'key',
   'role',
   'alt',
   'title',
@@ -207,8 +212,10 @@ type LiteralKey<K> = K extends string
       : never;
 
 type OwnVendorKey<Props> = {
-  [K in Exclude<keyof Props, OwnedKey>]-?: IsInheritedSvgKey<Props, K> extends true
-    ? never
+  [K in Exclude<keyof Props, OwnedKey>]-?: 'xmlns' extends keyof Props
+    ? IsInheritedSvgKey<Props, K> extends true
+      ? never
+      : LiteralKey<K>
     : LiteralKey<K>;
 }[Exclude<keyof Props, OwnedKey>];
 
@@ -293,8 +300,12 @@ function svgTitle(child: IconTitle | false | null | undefined): IconTitle | unde
   );
 }
 
-export function Icon(props: IconFrame<GlyphSource> & IconName & ClosedProps): ReactElement | null;
+type FrameKey = keyof IconFrame<GlyphSource> | keyof IconName | ClosedSvgKey;
+
 export function Icon<G extends GlyphSource>(props: IconProps<G>): ReactElement | null;
+export function Icon<P extends IconFrame<GlyphSource> & IconName & ClosedProps>(
+  props: P & ([Exclude<keyof P, FrameKey>] extends [never] ? unknown : never),
+): ReactElement | null;
 export function Icon<G extends GlyphSource>({
   icon,
   size,

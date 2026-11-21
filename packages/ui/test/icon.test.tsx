@@ -231,6 +231,19 @@ it('handles built-in phosphor adapter defaults, mirrored, and style pass-through
     'data-unica-icon-mirrored': '',
     style: { color: 'rgb(10, 20, 30)' },
   });
+  const parsedProto = JSON.parse('{"__proto__":{"weight":"fill","mirrored":true}}') as Record<
+    string,
+    unknown
+  >;
+  const phosphorProto = {
+    icon: FakePhosphor,
+    ...parsedProto,
+  } as unknown as IconProps<typeof FakePhosphor>;
+  render(<Icon {...phosphorProto} data-testid="proto" />);
+  expect(received[3]).toMatchObject({
+    weight: 'regular',
+    'data-unica-icon-mirrored': undefined,
+  });
 });
 
 it('sanitizes naming, focus, prototype keys, and competing attributes before handing props to a source', () => {
@@ -252,6 +265,8 @@ it('sanitizes naming, focus, prototype keys, and competing attributes before han
     alt: 'Vendor name',
     title: 'Leaked tooltip',
     class: 'hijack',
+    STYLE: 'position:fixed',
+    ID: 'spoofed',
     dir: 'rtl',
     innerText: 'leaked',
     'data-UNICA-icon-size': 'l',
@@ -317,16 +332,34 @@ it('sanitizes naming, focus, prototype keys, and competing attributes before han
   expect(click).not.toHaveBeenCalled();
   expect(container.querySelectorAll('svg')).toHaveLength(6);
 
-  const ssrSlot = renderToString(<Icon {...untyped} />);
+  const ssrSlot = renderToString(<Icon {...untyped} id="real" style={{ opacity: 0.5 }} />);
   expect(ssrSlot).not.toContain('class="hijack"');
+  expect(ssrSlot).not.toContain('STYLE=');
+  expect(ssrSlot).not.toContain('ID=');
   expect(ssrSlot).not.toContain('data-UNICA-icon-size');
   expect(ssrSlot).not.toContain('innerText');
   expect(ssrSlot).not.toContain('title="Leaked tooltip"');
   expect(ssrSlot).not.toContain('dir="rtl"');
   expect(ssrSlot).toContain('class="unica-icon"');
+  expect(ssrSlot).toContain('id="real"');
+  expect(ssrSlot).toContain('style="opacity:0.5"');
 });
 
-it('rejects prototype names, unknown adapters, and non-callable glyphs loudly', () => {
+it('recognizes Flight-serialized descriptors and rejects invalid adapters or non-callable glyphs loudly', () => {
+  const serialized = {
+    '~unica.glyph': true as const,
+    source: Mark,
+    adapter: 'native' as const,
+  };
+  const { container } = render(
+    <IconProvider adapter={() => null}>
+      <Icon icon={serialized} data-testid="serialized" />
+    </IconProvider>,
+  );
+  expect(container.querySelector('[data-testid="serialized"]')?.getAttribute('data-shape')).toBe(
+    'mark',
+  );
+
   for (const badAdapter of ['toString', 'constructor', 'valueOf', '__proto__', 'lucide']) {
     expect(() => defineGlyph(Mark, badAdapter as never)).toThrow(TypeError);
     expect(() =>
@@ -337,9 +370,20 @@ it('rejects prototype names, unknown adapters, and non-callable glyphs loudly', 
       ),
     ).toThrow(TypeError);
   }
-  for (const badSource of [null, undefined, 'Arrow', 42]) {
+  for (const badSource of [
+    null,
+    undefined,
+    'Arrow',
+    42,
+    {},
+    <Mark key="el" />,
+    fixedMark,
+    { '~unica.glyph': true, source: null, adapter: 'native' },
+  ]) {
     expect(() => defineGlyph(badSource as never)).toThrow(TypeError);
-    expect(() => renderToString(<Icon icon={badSource as never} />)).toThrow(TypeError);
+    if (badSource !== fixedMark) {
+      expect(() => renderToString(<Icon icon={badSource as never} />)).toThrow(TypeError);
+    }
   }
 });
 
@@ -416,6 +460,40 @@ it('avoids context fan-out rerenders on slots, sized icons, and pinned glyphs', 
   expect([slotRenders, sizedRenders, fixedRenders]).toEqual([1, 1, 1]);
   fireEvent.click(screen.getByRole('button', { name: 'Flip adapter' }));
   expect([slotRenders, sizedRenders, fixedRenders]).toEqual([1, 1, 1]);
+});
+
+it('switches cleanly between pinned and provider-resolved sources and sizes on one instance', () => {
+  const custom: IconAdapter = (source, { svgProps }) =>
+    createElement(source, { ...svgProps, 'data-via': 'custom' });
+  const view = render(
+    <UnicaProvider overrides={{ Icon: { size: 's' } }}>
+      <IconProvider adapter={custom}>
+        <Icon icon={fixedMark} size="l" data-testid="dynamic" />
+      </IconProvider>
+    </UnicaProvider>,
+  );
+  expect(screen.getByTestId('dynamic').getAttribute('data-via')).toBeNull();
+  expect(screen.getByTestId('dynamic').getAttribute('data-unica-icon-size')).toBe('l');
+
+  view.rerender(
+    <UnicaProvider overrides={{ Icon: { size: 's' } }}>
+      <IconProvider adapter={custom}>
+        <Icon icon={Mark} data-testid="dynamic" />
+      </IconProvider>
+    </UnicaProvider>,
+  );
+  expect(screen.getByTestId('dynamic').getAttribute('data-via')).toBe('custom');
+  expect(screen.getByTestId('dynamic').getAttribute('data-unica-icon-size')).toBe('s');
+
+  view.rerender(
+    <UnicaProvider overrides={{ Icon: { size: 'm' } }}>
+      <IconProvider adapter={custom}>
+        <Icon icon={fixedMark} size="inherit" data-testid="dynamic" />
+      </IconProvider>
+    </UnicaProvider>,
+  );
+  expect(screen.getByTestId('dynamic').getAttribute('data-via')).toBeNull();
+  expect(screen.getByTestId('dynamic').getAttribute('data-unica-icon-size')).toBeNull();
 });
 
 it('lets a custom adapter replace a drawing, then clears the owner ref on null', () => {

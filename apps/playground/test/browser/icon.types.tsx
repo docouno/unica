@@ -21,6 +21,7 @@ import {
   createElement,
   createRef,
   type CSSProperties,
+  type ComponentProps,
   type ComponentPropsWithRef,
   type FC,
   type ForwardRefExoticComponent,
@@ -100,6 +101,18 @@ function ModeGlyph({ mode, ...props }: SvgProps & { readonly mode?: 'outline' | 
 
 function ToggleGlyph({ on, ...props }: SvgProps & { readonly on?: boolean }) {
   return <svg {...props} data-on={on} />;
+}
+
+function SpriteGlyph({
+  name,
+  stroke,
+  ...props
+}: GlyphSvgProps & { readonly name?: string; readonly stroke?: string }) {
+  return (
+    <svg {...props} stroke={stroke}>
+      <use href={`#${name ?? ''}`} />
+    </svg>
+  );
 }
 
 function LooseGlyph(props: SvgProps & Record<string, unknown>) {
@@ -222,6 +235,7 @@ const valid = [
   <Icon icon={NarrowSvg} />,
   <Icon icon={ModeGlyph} mode="solid" />,
   <Icon icon={ToggleGlyph} on />,
+  <Icon icon={SpriteGlyph} name="check" stroke="currentColor" />,
   <Icon icon={brand} detail="brand" monochrome />,
   <Icon icon={OverloadedReport} />,
   <Icon icon={overloadedReport} plotType={undefined} />,
@@ -243,10 +257,29 @@ const valid = [
 
 const closed = { role: 'img', 'aria-hidden': true, 'aria-describedby': 'hint', tabIndex: 0 };
 const named = { 'aria-label': 'Open' };
+const badWeight = { weight: 'heavy' as const };
+const badChart = { plotType: 'chart' as const };
+const badBrand = { detail: 'shared' as const, monochrome: true as const };
+const badSpreadObj = { icon: ArrowRightIcon, weight: 'heavy' as const };
+const componentPropsCheck: ComponentProps<typeof Icon> = {
+  icon: ArrowRightIcon,
+  size: 'm',
+  'data-check': true,
+};
 // @ts-expect-error key is not part of spreadable IconProps.
 const spreadKey: IconProps = { icon: ArrowRightIcon, key: 'k1' };
 
 const invalid = [
+  // @ts-expect-error Spread options cannot bypass SourceOptions validation.
+  <Icon icon={ArrowRightIcon} {...badWeight} />,
+  // @ts-expect-error Spread object with invalid vendor option must be rejected.
+  <Icon {...badSpreadObj} />,
+  // @ts-expect-error Spread chart mode still requires series.
+  <Icon icon={report} {...badChart} />,
+  // @ts-expect-error Spread discriminated union still enforces shared branch rules.
+  <Icon icon={brand} {...badBrand} />,
+  // @ts-expect-error SpriteGlyph custom string option rejects numbers.
+  <Icon icon={SpriteGlyph} name={123} />,
   // @ts-expect-error Selecting the chart overload requires its series.
   <Icon icon={overloadedReport} plotType="chart" />,
   // @ts-expect-error Chart mode requires its data.
@@ -297,4 +330,4 @@ const invalid = [
   <Icon icon={HeroArrow} title="Open" />,
 ];
 
-void [valid, invalid, svgrComponent, svgPropsSample, spreadKey];
+void [valid, invalid, svgrComponent, svgPropsSample, spreadKey, componentPropsCheck];

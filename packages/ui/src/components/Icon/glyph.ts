@@ -1,4 +1,4 @@
-import { createElement } from 'react';
+import { createElement, isValidElement } from 'react';
 import type { AriaRole, CSSProperties, ReactElement, ReactNode, Ref } from 'react';
 
 export type GlyphSvgProps = {
@@ -33,8 +33,6 @@ export type IconAdapter = (
   context: IconAdapterRenderContext,
 ) => ReactElement | null;
 
-const glyphDefinition = /* @__PURE__ */ Symbol.for('@docouno/unica/GlyphDefinition');
-
 export interface GlyphDefinition<G extends GlyphComponent = GlyphComponent> {
   readonly '~unica.glyph': true;
   readonly source: G;
@@ -44,7 +42,13 @@ export interface GlyphDefinition<G extends GlyphComponent = GlyphComponent> {
 export type GlyphSource = GlyphComponent | GlyphDefinition;
 
 function assertCallableGlyph(source: unknown, origin: string): void {
-  if (typeof source !== 'function' && (typeof source !== 'object' || source === null)) {
+  if (
+    typeof source !== 'function' &&
+    (typeof source !== 'object' ||
+      source === null ||
+      isValidElement(source) ||
+      typeof (source as { $$typeof?: unknown }).$$typeof !== 'symbol')
+  ) {
     throw new TypeError(`${origin} requires a callable React SVG component.`);
   }
 }
@@ -105,20 +109,19 @@ export function defineGlyph<G extends GlyphComponent>(
 ): GlyphDefinition<G> {
   assertCallableGlyph(source, 'defineGlyph');
   resolveAdapter(adapter);
-  return Object.freeze({
-    [glyphDefinition]: true,
-    '~unica.glyph': true as const,
+  return Object.freeze<GlyphDefinition<G>>({
+    '~unica.glyph': true,
     source,
     adapter,
-  }) as GlyphDefinition<G>;
+  });
 }
 
 export function isGlyphDefinition(glyph: unknown): glyph is GlyphDefinition {
   return (
     typeof glyph === 'object' &&
     glyph !== null &&
-    Object.hasOwn(glyph, glyphDefinition) &&
-    (glyph as Record<symbol, unknown>)[glyphDefinition] === true
+    Object.hasOwn(glyph, '~unica.glyph') &&
+    (glyph as Record<string, unknown>)['~unica.glyph'] === true
   );
 }
 
@@ -133,9 +136,9 @@ export function renderGlyph(
     source = glyph.source;
     adapter = glyph.adapter;
   } else {
-    assertCallableGlyph(glyph, 'Icon');
     source = glyph;
     adapter = provider;
   }
+  assertCallableGlyph(source, 'Icon');
   return resolveAdapter(adapter)(source, context);
 }
