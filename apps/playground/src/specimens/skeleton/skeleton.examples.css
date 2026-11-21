@@ -202,8 +202,7 @@
   gap: var(--space-8);
 }
 
-[data-skeleton-demo-static] .skeleton-proto::after {
-  display: none;
+[data-skeleton-demo-static] *::after {
   animation: none;
 }
 

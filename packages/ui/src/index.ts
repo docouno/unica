@@ -68,6 +68,10 @@ export type {
 } from './components/Progress/Progress.js';
 export { ProgressCircle } from './components/Progress/ProgressCircle.js';
 export type { ProgressCircleProps } from './components/Progress/ProgressCircle.js';
+
+export { Skeleton, SkeletonText } from './components/Skeleton/Skeleton.js';
+export type { SkeletonProps, SkeletonTextProps } from './components/Skeleton/Skeleton.js';
+
 export { Spinner } from './components/Progress/Spinner.js';
 export type { SpinnerProps, SpinnerSize, SpinnerTone } from './components/Progress/Spinner.js';
 

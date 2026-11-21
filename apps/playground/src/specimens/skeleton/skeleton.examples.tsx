@@ -1,14 +1,57 @@
 import { useEffect, useId, useRef, useState } from 'react';
 import type { ReactElement, ReactNode } from 'react';
 import { ArrowClockwiseIcon, FileTextIcon, WarningCircleIcon } from '@phosphor-icons/react';
-import { Avatar } from '../avatar/avatar.proto.js';
-import { Button } from '../button/button.proto.js';
-import { Card, CardMedia } from '../card/card.proto.js';
-import { Icon, Text, Title } from '@docouno/unica';
+import { Avatar } from '../../prototypes/avatar/avatar.proto.js';
+import { Button } from '../../prototypes/button/button.proto.js';
+import { Card, CardMedia } from '../../prototypes/card/card.proto.js';
+import { Icon, Skeleton, SkeletonText, Text, Title } from '@docouno/unica';
 import type { TextSize, TitleSize } from '@docouno/unica';
-import { Skeleton, SkeletonText } from './skeleton.proto.js';
-import type { SkeletonTextSize } from './skeleton.proto.js';
+import { textSizes } from './skeleton.controls.js';
+import type { TextStep } from './skeleton.controls.js';
 import './skeleton.examples.css';
+
+export const loadingSummaryCode = `<>
+  <article aria-busy={loading} style={{ minBlockSize: 'calc(3 * var(--text-size-body-m-lh))' }}>
+    {loading ? (
+      <SkeletonText size="body-m" lines={3} />
+    ) : (
+      <p style={{ margin: 0, fontSize: 'var(--text-size-body-m)', lineHeight: 'var(--text-size-body-m-lh)' }}>
+        {summary}
+      </p>
+    )}
+  </article>
+  <p role="status">{loading ? 'Loading the summary…' : 'Summary loaded.'}</p>
+</>`;
+
+export function SummaryExample(): ReactElement {
+  const [loading, setLoading] = useState(true);
+
+  return (
+    <div className="skeleton-demo-stack">
+      <div>
+        <Button size="s" variant="secondary" tone="neutral" onClick={() => setLoading(!loading)}>
+          {loading ? 'Reveal summary' : 'Show placeholder'}
+        </Button>
+      </div>
+      <article aria-busy={loading} style={{ minBlockSize: 'calc(3 * var(--text-size-body-m-lh))' }}>
+        {loading ? (
+          <SkeletonText size="body-m" lines={3} />
+        ) : (
+          <p
+            style={{
+              margin: 0,
+              fontSize: 'var(--text-size-body-m)',
+              lineHeight: 'var(--text-size-body-m-lh)',
+            }}
+          >
+            Observations on quieter, more thoughtful interfaces.
+          </p>
+        )}
+      </article>
+      <p role="status">{loading ? 'Loading the summary…' : 'Summary loaded.'}</p>
+    </div>
+  );
+}
 
 export function SkeletonCase({
   title,
@@ -50,27 +93,11 @@ export function ShapeExamples(): ReactElement {
   );
 }
 
-const textSizes: readonly SkeletonTextSize[] = [
-  'display-l',
-  'display-m',
-  'display-s',
-  'heading-xl',
-  'heading-l',
-  'heading-m',
-  'heading-s',
-  'body-l',
-  'body-m',
-  'body-s',
-  'caption-l',
-  'caption-m',
-  'caption-s',
-];
-
-function MetricText({
+export function MetricText({
   size,
   lines,
 }: {
-  readonly size: SkeletonTextSize;
+  readonly size: TextStep;
   readonly lines: number;
 }): ReactElement {
   const words =
@@ -97,12 +124,12 @@ function MetricText({
 }
 
 export function TypographyExample(): ReactElement {
-  const [size, setSize] = useState<SkeletonTextSize>('body-m');
+  const [size, setSize] = useState<TextStep>('body-m');
   return (
     <div className="skeleton-demo-stack">
       <label className="skeleton-demo-control">
         <span>Text size</span>
-        <select value={size} onChange={(event) => setSize(event.target.value as SkeletonTextSize)}>
+        <select value={size} onChange={(event) => setSize(event.target.value as TextStep)}>
           {textSizes.map((value) => (
             <option key={value}>{value}</option>
           ))}
@@ -139,8 +166,12 @@ function ReportCard({
   readonly mediaOnly?: boolean;
 }): ReactElement {
   return (
-    <Card className="skeleton-demo-report" aria-busy={loading}>
-      <CardMedia className="skeleton-demo-media" style={{ marginBlock: 0 }}>
+    <Card className="skeleton-demo-report" aria-busy={(loading && !mediaOnly) || undefined}>
+      <CardMedia
+        className="skeleton-demo-media"
+        style={{ marginBlock: 0 }}
+        aria-busy={(loading && mediaOnly) || undefined}
+      >
         {loading ? (
           <Skeleton className="skeleton-demo-media-fill" />
         ) : (
@@ -210,13 +241,14 @@ export function MediaExample(): ReactElement {
         </label>
       </div>
       <div className="skeleton-demo-pair">
-        <SkeletonCase
-          title={
-            loaded ? 'Content arrived' : mediaOnly ? 'Waiting for image' : 'Waiting for content'
-          }
-        >
+        <figure className="skeleton-demo-case">
+          <figcaption>
+            <span role="status">
+              {loaded ? 'Content arrived' : mediaOnly ? 'Waiting for image' : 'Waiting for content'}
+            </span>
+          </figcaption>
           <ReportCard loading={!loaded} mediaOnly={mediaOnly} />
-        </SkeletonCase>
+        </figure>
         <SkeletonCase title="Ready reference">
           <ReportCard loading={false} />
         </SkeletonCase>
@@ -307,7 +339,9 @@ export function LifecycleExample(): ReactElement {
   function choose(value: LoadState): void {
     clearTimers();
     setRequestAction(null);
-    setRun((value) => value + 1);
+    if (value === 'initial') {
+      setRun((value) => value + 1);
+    }
     setState(value);
   }
 
@@ -451,8 +485,8 @@ export function MotionExample(): ReactElement {
         </Button>
       </div>
       <Text size="caption-l" color="muted">
-        4.4 seconds total; the silhouette never fades away. Reduced motion and frozen captures are
-        completely static. RTL mirrors the sweep with reading direction.
+        A soft diagonal band crosses wide and short silhouettes twice, then the fill rests. Reduced
+        motion and frozen captures show the static fill. RTL mirrors the sweep.
       </Text>
     </div>
   );

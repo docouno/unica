@@ -40,6 +40,8 @@ export type {
   ProgressSize,
   ProgressStatus,
   Responsive,
+  SkeletonProps,
+  SkeletonTextProps,
   SpinnerProps,
   SpinnerSize,
   SpinnerTone,

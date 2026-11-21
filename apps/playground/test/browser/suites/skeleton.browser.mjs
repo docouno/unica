@@ -1,0 +1,642 @@
+import assert from 'node:assert/strict';
+import { assertBox, assertFocused, assertHitTarget, getBox } from '../helpers.mjs';
+
+const themes = [
+  'soft-dark',
+  'soft-light',
+  'frost-dark',
+  'frost-light',
+  'pixel-dark',
+  'pixel-light',
+];
+
+function closeTo(actual, expected, context, tolerance = 0.1) {
+  assert.ok(Math.abs(actual - expected) <= tolerance, `${context}: ${actual} ≈ ${expected}`);
+}
+
+function measureLines(page) {
+  return page.locator('[data-metric]').evaluateAll((rows) => {
+    function box(node) {
+      const { x, y, width, height } = node.getBoundingClientRect();
+      return { x, y, width, height };
+    }
+    return rows.map((row) => {
+      const [content, beside, below] = row.children;
+      const rowBox = box(row);
+      return {
+        key: row.dataset.metric,
+        content: box(content),
+        besideOffset: box(beside).x - rowBox.x,
+        belowOffset: box(below).y - rowBox.y,
+        overflow: content.scrollWidth > content.clientWidth,
+        lines: [...content.children].map((line) => ({
+          line: box(line),
+          bar: box(line.firstChild),
+        })),
+      };
+    });
+  });
+}
+
+async function checkMetrics(page, direction) {
+  const before = await measureLines(page);
+  assert.equal(before.length, 26);
+  // Use the actual ready Text/Title elements for independent font sizes and line boxes.
+  await page.getByRole('button', { name: 'Show text' }).click();
+  await page.locator('[data-ready="true"]').waitFor();
+  const ready = await page.locator('[data-metric]').evaluateAll((rows) =>
+    rows.map((row) => {
+      const [content, beside, below] = row.children;
+      const style = getComputedStyle(content);
+      const rowBox = row.getBoundingClientRect();
+      return {
+        height: content.getBoundingClientRect().height,
+        fontSize: parseFloat(style.fontSize),
+        lineHeight: parseFloat(style.lineHeight),
+        besideOffset: beside.getBoundingClientRect().x - rowBox.x,
+        belowOffset: below.getBoundingClientRect().y - rowBox.y,
+        overflow: content.scrollWidth > content.clientWidth,
+      };
+    }),
+  );
+  for (const [
+    index,
+    { key, content, besideOffset, belowOffset, overflow, lines },
+  ] of before.entries()) {
+    const after = ready[index];
+    assert.equal(overflow || after.overflow, false, key);
+    closeTo(content.height, after.height, `${key} replacement height`);
+    closeTo(besideOffset, after.besideOffset, `${key} inline neighbor`);
+    closeTo(belowOffset, after.belowOffset, `${key} following neighbor`);
+    assert.equal(lines.length, Number(key.split('/')[1]));
+    for (const [lineIndex, { line, bar }] of lines.entries()) {
+      const short = lines.length > 1 && lineIndex === lines.length - 1;
+      closeTo(line.height, after.lineHeight, `${key} line box`);
+      closeTo(bar.height, 0.72 * after.fontSize, `${key} bar height`);
+      closeTo(bar.y + bar.height / 2, line.y + line.height / 2, `${key} vertical centering`);
+      closeTo(bar.width, content.width * (short ? 0.6 : 1), `${key} bar width`);
+      const inlineStart = (bounds) => (direction === 'rtl' ? bounds.x + bounds.width : bounds.x);
+      closeTo(inlineStart(bar), inlineStart(content), `${key} inline start`);
+    }
+  }
+}
+
+async function surfacePixels(page) {
+  const surfaces = page.getByTestId('surfaces');
+  const screenshot = await surfaces.screenshot();
+  return surfaces.evaluate(
+    async (element, bytes) => {
+      const bitmap = await createImageBitmap(
+        new Blob([Uint8Array.from(bytes)], { type: 'image/png' }),
+      );
+      const canvas = new OffscreenCanvas(bitmap.width, bitmap.height);
+      const context = canvas.getContext('2d');
+      context.drawImage(bitmap, 0, 0);
+      const origin = element.getBoundingClientRect();
+      function sample(node, edge = false) {
+        const { x, y, width, height } = node.getBoundingClientRect();
+        const offsetX = Math.floor(x - origin.x + (edge ? -2 : width / 2));
+        const offsetY = Math.floor(y - origin.y + height / 2);
+        return [...context.getImageData(offsetX, offsetY, 1, 1).data].slice(0, 3);
+      }
+
+      return Array.from(element.querySelectorAll('[data-test-surface]'), (surface) => {
+        const swatches = Object.fromEntries(
+          Array.from(surface.querySelectorAll('[data-sample]'), (node) => [
+            node.dataset.sample,
+            sample(node),
+          ]),
+        );
+        const statusColor = getComputedStyle(surface.querySelector('[role="status"]')).color;
+        context.fillStyle = statusColor;
+        context.fillRect(0, 0, 1, 1);
+        return {
+          name: surface.dataset.testSurface,
+          ...swatches,
+          status: [...context.getImageData(0, 0, 1, 1).data].slice(0, 3),
+          beside: sample(surface.querySelector('[data-sample="actual"]'), true),
+        };
+      });
+    },
+    [...screenshot],
+  );
+}
+
+function luminance(color) {
+  const linear = color.map((channel) => {
+    const value = channel / 255;
+    return value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4;
+  });
+  return 0.2126 * linear[0] + 0.7152 * linear[1] + 0.0722 * linear[2];
+}
+
+function paints(page) {
+  return page
+    .locator('[data-testid="motion"], [data-testid="motion-text"] > span > span')
+    .evaluateAll((nodes) =>
+      nodes.map((node) => {
+        const style = getComputedStyle(node);
+        const sweep = getComputedStyle(node, '::after');
+        return {
+          fill: style.backgroundColor,
+          outline: style.outlineColor,
+          width: style.outlineWidth,
+          offset: style.outlineOffset,
+          content: sweep.content,
+          animation: sweep.animationName,
+          box: node.getBoundingClientRect().toJSON(),
+        };
+      }),
+    );
+}
+
+const scenarios = {};
+
+for (const theme of themes) {
+  scenarios[`SkeletonText matches all 13 Text/Title steps in ${theme} at 100% and 120% RTL`] =
+    async ({ page, mount }) => {
+      await mount('skeleton-metrics', { theme });
+      await checkMetrics(page, 'ltr');
+      await page.setViewportSize({ width: 360, height: 640 });
+      await mount('skeleton-metrics', { theme, textScale: 120, direction: 'rtl' });
+      await checkMetrics(page, 'rtl');
+    };
+
+  scenarios[`Skeleton neutral fill and readable status on Canvas, Card and Overlay in ${theme}`] =
+    async ({ page, mount }) => {
+      await mount('skeleton', { theme, reducedMotion: 'reduce' });
+      const pixels = await surfacePixels(page);
+      assert.deepEqual(
+        pixels.map(({ name }) => name),
+        ['canvas', 'card', 'overlay'],
+      );
+      for (const { name, actual, expected, background, beside, status } of pixels) {
+        for (let channel = 0; channel < 3; channel += 1) {
+          closeTo(actual[channel], expected[channel], `${name} fill channel ${channel}`, 2);
+          closeTo(beside[channel], background[channel], `${name} background channel ${channel}`, 2);
+        }
+        assert.notDeepEqual(actual, background, `${name} has a visible silhouette`);
+        const light = luminance(status) + 0.05;
+        const dark = luminance(background) + 0.05;
+        const contrast = Math.max(light, dark) / Math.min(light, dark);
+        assert.ok(contrast >= 4.5, `${name} status contrast is ${contrast.toFixed(2)}:1`);
+      }
+
+      const avatarRadius = theme.startsWith('pixel') ? '0px' : '9999px';
+      const blockRadius = theme.startsWith('pixel') ? '0px' : '8px';
+      const radii = await page.getByTestId('shapes').evaluate((node) =>
+        Array.from(node.children, (shape) => {
+          const paint = shape.querySelector('span > span') ?? shape;
+          return getComputedStyle(paint).borderRadius;
+        }),
+      );
+      assert.deepEqual(radii.slice(0, 7), [blockRadius, ...Array(6).fill(avatarRadius)]);
+      assert.equal(radii[7], radii[8], 'The media override and text bars share the small radius');
+      assert.equal(radii[8], theme.startsWith('pixel') ? '0px' : '4px');
+    };
+}
+
+for (const direction of ['ltr', 'rtl']) {
+  scenarios[`Skeleton reserves the Avatar flex slot and hidden layouts in ${direction}`] = async ({
+    page,
+    mount,
+  }) => {
+    await mount('skeleton', { direction });
+    for (const [id, width, height] of [
+      ['rect', 160, 16],
+      ['avatar-default', 40, 40],
+      ['avatar-width', 32, 32],
+      ['avatar-height', 40, 24],
+      ['avatar-both', 32, 24],
+      ['avatar-constrained', 160, 160],
+      ['avatar-percentage', 96, 96],
+    ]) {
+      await assertBox(page.getByTestId(id), { width, height });
+    }
+    const avatarRows = page.locator('[data-avatar-row]');
+    const measureRows = () =>
+      avatarRows.evaluateAll((rows) =>
+        rows.map((row) => {
+          const [avatar, copy] = row.children;
+          const rowBox = row.getBoundingClientRect();
+          const avatarBox = avatar.getBoundingClientRect();
+          const copyBox = copy.getBoundingClientRect();
+          const rtl = getComputedStyle(row).direction === 'rtl';
+          return {
+            width: avatarBox.width,
+            height: avatarBox.height,
+            top: avatarBox.top - rowBox.top,
+            copyWidth: copyBox.width,
+            copyInset: rtl ? rowBox.right - copyBox.right : copyBox.left - rowBox.left,
+          };
+        }),
+      );
+    const before = await measureRows();
+    assert.deepEqual(before, [
+      { width: 40, height: 40, top: 0, copyWidth: 132, copyInset: 48 },
+      { width: 40, height: 40, top: 20, copyWidth: 132, copyInset: 48 },
+    ]);
+    await page.getByRole('button', { name: 'Show avatar' }).click();
+    assert.deepEqual(await measureRows(), before);
+
+    const rows = page.locator('[data-hidden-row]');
+    const readHidden = () =>
+      rows.evaluateAll((elements) =>
+        elements.map((row) => {
+          const [subject, next] = row.children;
+          return {
+            display: getComputedStyle(subject).display,
+            rects: subject.getClientRects().length,
+            width: subject.getBoundingClientRect().width,
+            next: next.getBoundingClientRect().x,
+          };
+        }),
+      );
+    const shown = await readHidden();
+    assert.equal(shown.length, 4);
+    for (const state of shown) {
+      assert.equal(state.display, 'grid');
+      assert.equal(state.rects, 1);
+      assert.equal(state.width, 64);
+    }
+    const toggle = page.getByRole('button', { name: 'Toggle hidden' });
+    await toggle.click();
+    for (const [index, state] of (await readHidden()).entries()) {
+      assert.deepEqual(state, {
+        display: 'none',
+        rects: 0,
+        width: 0,
+        next: shown[index].next + (direction === 'rtl' ? 72 : -72),
+      });
+    }
+    await toggle.click();
+    assert.deepEqual(await readHidden(), shown);
+  };
+
+  scenarios[
+    `Skeleton sweeps twice toward inline end in ${direction} and maintains phase on rerender`
+  ] = async ({ page, mount }) => {
+    await mount('skeleton', { direction });
+    const shape = page.getByTestId('motion');
+    const bar = page.getByTestId('motion-text').locator('span > span');
+    const animationSign = direction === 'ltr' ? 1 : -1;
+    await page.waitForFunction(() =>
+      [
+        ...document.querySelectorAll(
+          '[data-testid="motion"], [data-testid="motion-text"] > span > span',
+        ),
+      ].every((node) => parseFloat(getComputedStyle(node, '::after').width) > 0),
+    );
+    for (const paint of [shape, bar]) {
+      const sweep = await paint.evaluate((node) => {
+        const animation = node.getAnimations({ subtree: true })[0];
+        animation.pause();
+        const { left, top } = node.getBoundingClientRect();
+        const { clientWidth, clientHeight } = document.documentElement;
+        const positions = [0, 600, 1250, 2050].map((time) => {
+          animation.currentTime = time;
+          const style = getComputedStyle(node, '::after');
+          const { m41: shift, m21: slope } = new DOMMatrix(style.transform);
+          const width = parseFloat(style.width);
+          const atTop = left + shift - top * slope;
+          const atBottom = atTop + clientHeight * slope;
+          return {
+            left: Math.min(atTop, atBottom),
+            right: Math.max(atTop, atBottom) + width,
+            center: (atTop + atBottom + width) / 2,
+          };
+        });
+        const { duration, iterations, endTime } = animation.effect.getComputedTiming();
+        return {
+          positions,
+          slope: new DOMMatrix(getComputedStyle(node, '::after').transform).m21,
+          duration,
+          iterations,
+          endTime,
+          viewport: clientWidth,
+        };
+      });
+      assert.equal(sweep.duration, 2200);
+      assert.equal(sweep.iterations, 2);
+      assert.equal(sweep.endTime, 4400);
+      assert.ok(Math.abs(sweep.slope * animationSign + Math.tan(Math.PI / 15)) < 0.001);
+      const [first, early, late, last] = sweep.positions;
+      const outsideLeft = ({ right }) => right < 0.05;
+      const outsideRight = ({ left }) => left > sweep.viewport - 0.05;
+      assert.ok(direction === 'ltr' ? outsideLeft(first) : outsideRight(first));
+      assert.ok(direction === 'ltr' ? outsideRight(last) : outsideLeft(last));
+      assert.ok(early.center * animationSign < late.center * animationSign);
+    }
+
+    const original = await shape.evaluateHandle((node) => node.getAnimations({ subtree: true })[0]);
+    await page.getByRole('button', { name: 'Update 0' }).click();
+    await page.getByRole('button', { name: 'Update 1' }).waitFor();
+    assert.equal(
+      await shape.evaluate(
+        (node, animation) =>
+          node.getAnimations({ subtree: true })[0] === animation && animation.currentTime === 2050,
+        original,
+      ),
+      true,
+    );
+    for (const paint of [shape, bar]) {
+      const rest = await paint.evaluate(async (node) => {
+        const animation = node.getAnimations({ subtree: true })[0];
+        animation.finish();
+        await animation.finished;
+        const sweep = getComputedStyle(node, '::after');
+        return {
+          count: node.getAnimations({ subtree: true }).length,
+          width: sweep.width,
+        };
+      });
+      assert.deepEqual(rest, { count: 0, width: '0px' });
+    }
+    await original.dispose();
+  };
+}
+
+scenarios['Skeleton shares a diagonal band and phase with a late Frost overlay and nested scroll'] =
+  async ({ page, mount }) => {
+    let releaseImage;
+    const imageReady = new Promise((resolve) => {
+      releaseImage = resolve;
+    });
+    await page.route('**/wave-intrinsic.svg', async (route) => {
+      await imageReady;
+      await route.fulfill({
+        contentType: 'image/svg+xml',
+        body: '<svg xmlns="http://www.w3.org/2000/svg" width="64" height="16"></svg>',
+      });
+    });
+    await mount('skeleton-wave', { theme: 'frost-dark' });
+    const samples =
+      '[data-wave-sample], [data-wave-text] > span > span, [data-wave-intrinsic], [data-wave-overlay]';
+    const overlay = page.getByRole('dialog', { name: 'Frost overlay' });
+    const toggle = page.getByRole('button', { name: 'Toggle overlay' });
+    await page.waitForFunction((selector) => {
+      const paint = document.querySelector(selector);
+      const animation = paint.getAnimations({ subtree: true })[0];
+      return (
+        animation?.currentTime >= 250 && parseFloat(getComputedStyle(paint, '::after').width) > 0
+      );
+    }, samples);
+    const firstStart = await page
+      .locator(samples)
+      .first()
+      .evaluate((node) => node.getAnimations({ subtree: true })[0].startTime);
+
+    await toggle.evaluate((button) => button.click());
+    await overlay.waitFor();
+    assert.notEqual(
+      await overlay.evaluate((node) => getComputedStyle(node).backdropFilter),
+      'none',
+    );
+    await page.waitForFunction(() => {
+      const paint = document.querySelector('[data-wave-overlay]');
+      return parseFloat(getComputedStyle(paint, '::after').width) > 0;
+    });
+
+    const starts = await page.locator(samples).evaluateAll((nodes) =>
+      nodes.map((node) => {
+        const animation = node.getAnimations({ subtree: true })[0];
+        const start = animation.startTime;
+        animation.pause();
+        animation.currentTime = 850;
+        return start;
+      }),
+    );
+    assert.equal(starts.length, 6);
+    assert.deepEqual(starts, Array(6).fill(firstStart));
+
+    const coordinates = (selector) =>
+      Array.from(document.querySelectorAll(selector), (node) => {
+        const rect = node.getBoundingClientRect();
+        const style = getComputedStyle(node);
+        const scaleX = rect.width / parseFloat(style.width);
+        const scaleY = rect.height / parseFloat(style.height);
+        const layer = getComputedStyle(node, '::after');
+        const matrix = new DOMMatrix(layer.transform);
+        const width = parseFloat(layer.width) * scaleX;
+        const slope = (matrix.m21 * scaleX) / scaleY;
+        // Compare each diagonal at the same viewport Y, regardless of the paint box's position.
+        const center = rect.left + matrix.m41 * scaleX + width / 2 - slope * rect.top;
+        return { left: rect.left, top: rect.top, center, slope, width };
+      });
+    const aligned = (positions) =>
+      positions.every(
+        ({ center, slope, width }) =>
+          Math.abs(center - positions[0].center) <= 0.15 &&
+          Math.abs(slope + Math.tan(Math.PI / 15)) < 0.001 &&
+          Math.abs(width - positions[0].width) <= 0.15,
+      );
+    const settleLayout = () =>
+      page.evaluate(
+        () => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))),
+      );
+    const before = await page.evaluate(coordinates, samples);
+    assert.ok(aligned(before), JSON.stringify(before));
+
+    const scroll = page.getByTestId('wave-scroll');
+    await scroll.evaluate((node) => {
+      node.scrollLeft = 64;
+      node.scrollTop = 24;
+    });
+    await page.waitForFunction(() => {
+      const node = document.querySelector('[data-testid="wave-scroll"]');
+      return node.scrollLeft === 64 && node.scrollTop === 24;
+    });
+    await settleLayout();
+    const afterScroll = await page.evaluate(coordinates, samples);
+    assert.ok(afterScroll.some(({ left }, index) => Math.abs(left - before[index].left) >= 60));
+    assert.ok(afterScroll.some(({ top }, index) => Math.abs(top - before[index].top) >= 20));
+    assert.ok(aligned(afterScroll), JSON.stringify(afterScroll));
+    closeTo(
+      afterScroll[0].center,
+      before[0].center,
+      'nested scroll leaves the viewport wave fixed',
+    );
+
+    await page.setViewportSize({ width: 680, height: 600 });
+    await settleLayout();
+    const resized = await page.evaluate(coordinates, samples);
+    assert.ok(aligned(resized), JSON.stringify(resized));
+    assert.ok(Math.abs(resized[0].center - afterScroll[0].center) > 10);
+
+    const card = page.getByTestId('wave-card');
+    await card.evaluate((node) => {
+      node.style.transform = 'translateX(56px) scale(1.125, 0.875)';
+    });
+    await settleLayout();
+    const moved = await page.evaluate(coordinates, samples);
+    closeTo(moved[0].left - resized[0].left, 32, 'position-only layout change');
+    assert.ok(aligned(moved), JSON.stringify(moved));
+    closeTo(moved[0].center, resized[0].center, 'layout change leaves the viewport wave fixed');
+
+    await card.evaluate((node) => {
+      node.dataset.waveShifted = '';
+    });
+    await settleLayout();
+    const shifted = await page.evaluate(coordinates, samples);
+    closeTo(shifted[0].left - moved[0].left, 32, 'attribute-driven layout change');
+    assert.ok(aligned(shifted), JSON.stringify(shifted));
+
+    releaseImage();
+    await page.getByTestId('wave-image').evaluate((node) => node.decode());
+    await settleLayout();
+    const loaded = await page.evaluate(coordinates, samples);
+    closeTo(
+      loaded[4].left - shifted[4].left,
+      64,
+      'intrinsic sibling moves a fixed-width placeholder',
+    );
+    assert.ok(aligned(loaded), JSON.stringify(loaded));
+
+    for (const [attribute, name] of [
+      ['data-wave-moving', 'wave-fixture-enter'],
+      ['data-wave-inset-moving', 'wave-fixture-inset'],
+    ]) {
+      await card.evaluate((node, attribute) => node.setAttribute(attribute, ''), attribute);
+      await page.waitForFunction((name) => {
+        const node = document.querySelector('[data-testid="wave-card"]');
+        return (
+          node.getAnimations().find((animation) => animation.animationName === name)?.currentTime >=
+          120
+        );
+      }, name);
+      const entering = await page.evaluate(coordinates, samples);
+      const traveled = entering[0].left - loaded[0].left;
+      assert.ok(
+        traveled > 5 && traveled < 48,
+        `Expected to sample during ${name}, traveled ${traveled}px`,
+      );
+      if (name === 'wave-fixture-inset') {
+        assert.ok(entering[0].top - loaded[0].top > 4);
+      }
+      assert.ok(aligned(entering), JSON.stringify(entering));
+      await card.evaluate((node, attribute) => node.removeAttribute(attribute), attribute);
+    }
+
+    await page.locator(samples).evaluateAll(async (nodes) => {
+      const animations = nodes.map((node) => node.getAnimations({ subtree: true })[0]);
+      for (const animation of animations) {
+        animation.finish();
+      }
+      await Promise.all(animations.map((animation) => animation.finished));
+    });
+    await toggle.evaluate((button) => button.click());
+    await overlay.waitFor({ state: 'hidden' });
+    await toggle.evaluate((button) => button.click());
+    await page.waitForFunction(() => {
+      const paint = document.querySelector('[data-wave-overlay]');
+      return parseFloat(getComputedStyle(paint, '::after').width) > 0;
+    });
+    const nextStart = await page
+      .locator('[data-wave-overlay]')
+      .evaluate((node) => node.getAnimations({ subtree: true })[0].startTime);
+    assert.ok(nextStart > firstStart);
+    const oldMotion = await page
+      .locator('[data-wave-sample]')
+      .evaluateAll((nodes) => nodes.map((node) => getComputedStyle(node, '::after').width));
+    assert.deepEqual(oldMotion, ['0px', '0px']);
+  };
+
+scenarios[
+  'Skeleton uses static system colors without changing geometry and removes reduced-motion shine'
+] = async ({ page, mount }) => {
+  await mount('skeleton');
+  const normal = await paints(page);
+  assert.equal(normal.length, 2);
+  for (const shape of normal) {
+    assert.equal(shape.animation, 'unica-skeleton-sweep');
+  }
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  for (const [index, shape] of (await paints(page)).entries()) {
+    assert.equal(shape.content, 'none');
+    assert.equal(shape.animation, 'none');
+    assert.deepEqual(shape.box, normal[index].box);
+  }
+  await page.emulateMedia({ forcedColors: 'active', reducedMotion: 'no-preference' });
+  const reference = await page.getByTestId('forced-colors-reference').evaluate((node) => {
+    const style = getComputedStyle(node);
+    return { fill: style.backgroundColor, outline: style.outlineColor };
+  });
+  for (const [index, shape] of (await paints(page)).entries()) {
+    assert.equal(shape.content, 'none');
+    assert.equal(shape.animation, 'none');
+    assert.deepEqual(shape.box, normal[index].box);
+    assert.deepEqual({ fill: shape.fill, outline: shape.outline }, reference);
+    assert.equal(shape.width, '1px');
+    assert.equal(shape.offset, '-1px');
+  }
+};
+
+scenarios[
+  'Skeleton stays out of the accessibility tree, editing and Tab order while retaining hit testing'
+] = async ({ page, mount }) => {
+  await mount('skeleton');
+  const host = page.getByTestId('focus-host');
+  const next = host.getByRole('button', { name: 'Next action' });
+  const first = host.getByRole('button', { name: 'Update 0' });
+  await first.focus();
+  await assertFocused(first);
+  await page.keyboard.press('Tab');
+  await assertFocused(next);
+  const aria = await host.ariaSnapshot();
+  assert.doesNotMatch(aria, /Decorative placeholder|generic|progressbar/u);
+  for (const id of ['motion', 'motion-text']) {
+    const placeholder = page.getByTestId(id);
+    assert.deepEqual(
+      await placeholder.evaluate((node) => ({
+        ariaHidden: node.getAttribute('aria-hidden'),
+        cursor: getComputedStyle(node).cursor,
+        select: getComputedStyle(node).userSelect,
+        hit: getComputedStyle(node).pointerEvents,
+      })),
+      { ariaHidden: 'true', cursor: 'progress', select: 'none', hit: 'auto' },
+    );
+  }
+
+  assert.equal(
+    await page.getByTestId('edit-host').evaluate((node) => node.isContentEditable),
+    true,
+  );
+  for (const id of ['editable-shape', 'editable-text']) {
+    assert.equal(await page.getByTestId(id).evaluate((node) => node.isContentEditable), false);
+  }
+
+  const shape = page.getByTestId('motion');
+  await shape.scrollIntoViewIfNeeded();
+  const { x, y, width, height } = await getBox(shape);
+  await assertHitTarget(shape, { x: x + width / 2, y: y + height / 2 });
+};
+
+scenarios['Skeleton SSR markup hydrates both existing roots without changing their geometry'] =
+  async ({ page, mount, renderFixture }) => {
+    const html = await renderFixture('skeleton-ssr');
+    await mount('skeleton-hydration');
+    const before = await page.evaluateHandle((markup) => {
+      const host = document.createElement('div');
+      host.dataset.ssrHost = '';
+      host.innerHTML = markup;
+      document.body.append(host);
+      return [...host.children];
+    }, html);
+    const shape = page.locator('#ssr-shape');
+    const text = page.locator('#ssr-text');
+    await assertBox(shape, { width: 32, height: 32 });
+    const textBox = await getBox(text);
+    assert.equal(await text.locator(':scope > span').count(), 2);
+    await page.getByRole('button', { name: 'Hydrate placeholders' }).click();
+    await page.getByTestId('hydration').getByText('Hydrated').waitFor();
+    assert.equal(
+      await before.evaluate((nodes) =>
+        nodes.every((node) => node === document.getElementById(node.id)),
+      ),
+      true,
+    );
+    await assertBox(text, textBox);
+    await before.dispose();
+  };
+
+export default scenarios;
