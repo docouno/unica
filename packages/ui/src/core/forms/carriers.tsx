@@ -109,12 +109,13 @@ export function writeInputValue(
   value: string,
   options?: CarrierWriteOptions,
 ): void {
-  if (options?.syncDefault && input.defaultValue !== value) {
-    input.defaultValue = value;
-  }
-  // Force assignment on native reset/repair so React's _valueTracker stays in sync.
+  // Write value before defaultValue so a false dirty-value flag never lets defaultValue
+  // update input.value silently and bypass React's _valueTracker setter.
   if (options?.force || input.value !== value) {
     input.value = value;
+  }
+  if (options?.syncDefault && input.defaultValue !== value) {
+    input.defaultValue = value;
   }
 }
 
@@ -123,11 +124,11 @@ export function writeTextareaValue(
   value: string,
   options?: CarrierWriteOptions,
 ): void {
-  if (options?.syncDefault && textarea.defaultValue !== value) {
-    textarea.defaultValue = value;
-  }
   if (options?.force || textarea.value !== value) {
     textarea.value = value;
+  }
+  if (options?.syncDefault && textarea.defaultValue !== value) {
+    textarea.defaultValue = value;
   }
 }
 
@@ -136,11 +137,11 @@ export function writeInputChecked(
   checked: boolean,
   options?: CarrierWriteOptions,
 ): void {
-  if (options?.syncDefault && input.defaultChecked !== checked) {
-    input.defaultChecked = checked;
-  }
   if (options?.force || input.checked !== checked) {
     input.checked = checked;
+  }
+  if (options?.syncDefault && input.defaultChecked !== checked) {
+    input.defaultChecked = checked;
   }
 }
 

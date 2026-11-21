@@ -60,7 +60,9 @@ export function useControllableState<T>({
   isEqual,
 }: ControllableStateOptions<T>): [T, (next: T) => void] {
   const [current, { propose }] = useStateAuthority({ value, defaultValue, onChange, isEqual });
-  return [current, propose];
+  // Wrap propose so passing the setter to multi-argument callbacks never supplies the internal write arg.
+  const setValue = useCallback((next: T): void => propose(next), [propose]);
+  return [current, setValue];
 }
 
 export interface StateAuthority<T> {

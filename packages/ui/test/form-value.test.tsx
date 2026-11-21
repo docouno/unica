@@ -1,14 +1,17 @@
 import { act, cleanup, fireEvent, render, renderHook, screen } from '@testing-library/react';
 import { Component, startTransition, Suspense, use, useRef, useState } from 'react';
 import type { JSX, ReactElement, ReactNode } from 'react';
+import { flushSync } from 'react-dom';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   FormInput,
   FormSelect,
+  FormTextarea,
   writeInputChecked,
   writeInputValue,
   writeRadioGroup,
   writeSelectValue,
+  writeTextareaValue,
 } from '../src/core/forms/carriers.js';
 import { subscribeNativeReset } from '../src/core/forms/NativeResetWitness.js';
 import { useFormValue } from '../src/core/forms/useFormValue.js';
@@ -430,17 +433,28 @@ describe('useFormValue and native reset runtime (jsdom)', () => {
     }
   });
 
-  it('allows urgent writes after a suspended uncontrolled startTransition without swallowing them', async () => {
+  it('allows urgent writes and unrelated rerenders during a suspended uncontrolled startTransition without rollback or swallowing', async () => {
+    const form = document.createElement('form');
     const input = document.createElement('input');
+    input.name = 'queued';
+    input.defaultValue = 'local';
+    form.append(input);
+    document.body.append(form);
     const pending = new Promise<never>(() => undefined);
     const changed = vi.fn<(value: string) => void>();
+    const writes = vi.fn<(value: string) => void>();
 
-    function Editor(): ReactElement {
+    function Editor({ tick }: { tick: number }): ReactElement {
+      void tick;
       const field = useFormValue<string>({
         defaultValue: 'local',
         getControl: () => input,
-        write: (next) => writeInputValue(input, next),
-        onChange: changed,
+        write: (next, ctx) => {
+          writes(next);
+          writeInputValue(input, next, { syncDefault: ctx.controlled, force: ctx.force });
+        },
+        // Inline callback ensures useControllableState's useInsertionEffect re-runs on unrelated rerenders.
+        onChange: (next) => changed(next),
       });
       if (field.value === 'queued') {
         use(pending);
@@ -461,36 +475,206 @@ describe('useFormValue and native reset runtime (jsdom)', () => {
       );
     }
 
-    render(
-      <Suspense fallback={<output data-testid="fallback">Pending</output>}>
-        <Editor />
-      </Suspense>,
-    );
+    try {
+      const { rerender } = render(
+        <Suspense fallback={<output data-testid="fallback">Pending</output>}>
+          <Editor tick={0} />
+        </Suspense>,
+      );
 
+      await act(async () => {
+        fireEvent.click(screen.getByText('Queue'));
+        await Promise.resolve();
+      });
+      expect(screen.getByTestId('val').textContent).toBe('local');
+      expect(input.value).toBe('queued');
+      expect(changed.mock.calls).toEqual([['queued']]);
+
+      // Unrelated parent rerender while local update remains uncommitted must preserve latestValue ('queued')
+      // in useControllableState's useInsertionEffect without writing 'local' back into the DOM.
+      const writesBeforeRerender = writes.mock.calls.length;
+      await act(async () => {
+        rerender(
+          <Suspense fallback={<output data-testid="fallback">Pending</output>}>
+            <Editor tick={1} />
+          </Suspense>,
+        );
+        await Promise.resolve();
+      });
+      expect(screen.getByTestId('val').textContent).toBe('local');
+      expect(input.value).toBe('queued');
+      expect(writes).toHaveBeenCalledTimes(writesBeforeRerender);
+
+      // Urgent write to a new value commits cleanly.
+      await act(async () => {
+        fireEvent.click(screen.getByText('Urgent'));
+        await Promise.resolve();
+      });
+      expect(screen.getByTestId('val').textContent).toBe('urgent');
+      expect(input.value).toBe('urgent');
+
+      // Re-queue suspended transition, then repeat the same value urgently: upgrades lane without duplicate onChange.
+      await act(async () => {
+        fireEvent.click(screen.getByText('Queue'));
+        await Promise.resolve();
+      });
+      expect(changed.mock.calls).toEqual([['queued'], ['urgent'], ['queued']]);
+      await act(async () => {
+        fireEvent.click(screen.getByText('Retry queued'));
+        await Promise.resolve();
+      });
+      expect(screen.getByTestId('fallback').textContent).toBe('Pending');
+      expect(changed.mock.calls).toEqual([['queued'], ['urgent'], ['queued']]);
+    } finally {
+      form.remove();
+    }
+  });
+
+  it('syncs _valueTracker on empty controlled FormInput/FormTextarea after programmatic updates and skips unmounted reset siblings', async () => {
+    function EmptyControlledEditors(): ReactElement {
+      const inputRef = useRef<HTMLInputElement>(null);
+      const areaRef = useRef<HTMLTextAreaElement>(null);
+      const [inputVal, setInputVal] = useState('');
+      const [areaVal, setAreaVal] = useState('');
+      const inputField = useFormValue<string>({
+        value: inputVal,
+        defaultValue: '',
+        commitMode: 'deferred',
+        getControl: () => inputRef.current,
+        write: (next, ctx) => {
+          if (inputRef.current) {
+            writeInputValue(inputRef.current, next, {
+              syncDefault: ctx.controlled,
+              force: ctx.force,
+            });
+          }
+        },
+        onChange: setInputVal,
+      });
+      const areaField = useFormValue<string>({
+        value: areaVal,
+        defaultValue: '',
+        commitMode: 'deferred',
+        getControl: () => areaRef.current,
+        write: (next, ctx) => {
+          if (areaRef.current) {
+            writeTextareaValue(areaRef.current, next, {
+              syncDefault: ctx.controlled,
+              force: ctx.force,
+            });
+          }
+        },
+        onChange: setAreaVal,
+      });
+      return (
+        <form>
+          <FormInput
+            ref={inputRef}
+            controlled={inputField.controlled}
+            aria-label="Empty controlled input"
+            defaultValue={inputField.value}
+            onChange={(e) => inputField.propose(e.currentTarget.value)}
+          />
+          <FormTextarea
+            ref={areaRef}
+            controlled={areaField.controlled}
+            aria-label="Empty controlled textarea"
+            defaultValue={areaField.value}
+            onChange={(e) => areaField.propose(e.currentTarget.value)}
+          />
+          <button
+            type="button"
+            onClick={() => {
+              setInputVal('preset');
+              setAreaVal('draft');
+            }}
+          >
+            Fill presets
+          </button>
+          <output data-testid="empty-input-val">{inputVal}</output>
+          <output data-testid="empty-area-val">{areaVal}</output>
+        </form>
+      );
+    }
+
+    render(<EmptyControlledEditors />);
+    fireEvent.click(screen.getByText('Fill presets'));
+    expect(screen.getByTestId('empty-input-val').textContent).toBe('preset');
+    expect(screen.getByTestId('empty-area-val').textContent).toBe('draft');
+
+    // Clearing back to '' (initial value) must fire React onChange rather than being swallowed by a stale _valueTracker.
+    fireEvent.change(screen.getByLabelText('Empty controlled input'), { target: { value: '' } });
+    fireEvent.change(screen.getByLabelText('Empty controlled textarea'), { target: { value: '' } });
+    expect(screen.getByTestId('empty-input-val').textContent).toBe('');
+    expect(screen.getByTestId('empty-area-val').textContent).toBe('');
+
+    // Sibling unmounted during Field A's onReset must not receive post-unmount write() or onReset().
+    const siblingWrite = vi.fn();
+    const siblingReset = vi.fn();
+
+    function SiblingField(): ReactElement {
+      const ref = useRef<HTMLInputElement>(null);
+      const field = useFormValue<string>({
+        defaultValue: 'b0',
+        getControl: () => ref.current,
+        write: (next, ctx) => {
+          siblingWrite(next);
+          if (ref.current) {
+            writeInputValue(ref.current, next, { syncDefault: ctx.controlled, force: ctx.force });
+          }
+        },
+        onReset: siblingReset,
+      });
+      return (
+        <FormInput
+          ref={ref}
+          controlled={field.controlled}
+          name="b"
+          defaultValue={field.value}
+          onChange={(e) => field.propose(e.currentTarget.value)}
+        />
+      );
+    }
+
+    function ResetUnmountsSibling(): ReactElement {
+      const refA = useRef<HTMLInputElement>(null);
+      const [showB, setShowB] = useState(true);
+      const fieldA = useFormValue<string>({
+        defaultValue: 'a0',
+        getControl: () => refA.current,
+        write: (next, ctx) => {
+          if (refA.current) {
+            writeInputValue(refA.current, next, { syncDefault: ctx.controlled, force: ctx.force });
+          }
+        },
+        onReset: () => {
+          flushSync(() => setShowB(false));
+        },
+      });
+      return (
+        <form data-testid="unmount-reset-form">
+          <FormInput
+            ref={refA}
+            controlled={fieldA.controlled}
+            name="a"
+            defaultValue={fieldA.value}
+            onChange={(e) => fieldA.propose(e.currentTarget.value)}
+          />
+          {showB && <SiblingField />}
+        </form>
+      );
+    }
+
+    render(<ResetUnmountsSibling />);
+    const writesBeforeReset = siblingWrite.mock.calls.length;
     await act(async () => {
-      fireEvent.click(screen.getByText('Queue'));
+      HTMLFormElement.prototype.reset.call(
+        screen.getByTestId<HTMLFormElement>('unmount-reset-form'),
+      );
       await Promise.resolve();
     });
-    expect(screen.getByTestId('val').textContent).toBe('local');
-    expect(changed.mock.calls).toEqual([['queued']]);
-
-    // Urgent write to a new value commits cleanly.
-    fireEvent.click(screen.getByText('Urgent'));
-    expect(screen.getByTestId('val').textContent).toBe('urgent');
-    expect(input.value).toBe('urgent');
-
-    // Re-queue suspended transition, then repeat the same value urgently: upgrades lane without duplicate onChange.
-    await act(async () => {
-      fireEvent.click(screen.getByText('Queue'));
-      await Promise.resolve();
-    });
-    expect(changed.mock.calls).toEqual([['queued'], ['urgent'], ['queued']]);
-    await act(async () => {
-      fireEvent.click(screen.getByText('Retry queued'));
-      await Promise.resolve();
-    });
-    expect(screen.getByTestId('fallback').textContent).toBe('Pending');
-    expect(changed.mock.calls).toEqual([['queued'], ['urgent'], ['queued']]);
+    expect(siblingReset).not.toHaveBeenCalled();
+    expect(siblingWrite).toHaveBeenCalledTimes(writesBeforeReset);
   });
 
   it('keeps React and DOM synchronized if uncontrolled write throws', () => {

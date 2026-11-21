@@ -138,6 +138,14 @@ describe('collection navigation', () => {
     const prevented = new KeyboardEvent('keydown', { key: 'ArrowDown', cancelable: true });
     prevented.preventDefault();
     expect(navigateCollection(prevented, defaults, null, 0).handled).toBe(false);
+
+    // Non-KeyboardEvent keydown (e.g. browser autofill with key === undefined) must not throw.
+    const autofill = new Event('keydown') as unknown as KeyboardEvent;
+    expect(navigateCollection(autofill, defaults, activeBuffer, 10)).toEqual({
+      handled: false,
+      key: 'a',
+      buffer: activeBuffer,
+    });
   });
 
   it('validates family recovery and falls back to the nearest surviving neighbor', () => {

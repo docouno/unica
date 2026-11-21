@@ -1,5 +1,5 @@
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
-import { useCallback, useRef, useState } from 'react';
+import { StrictMode, useCallback, useRef, useState } from 'react';
 import type { FocusEvent, JSX, KeyboardEvent, RefCallback } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { useActiveDescendant } from '../src/core/collections/useActiveDescendant.js';
@@ -8,7 +8,7 @@ import { useRovingFocus } from '../src/core/collections/useRovingFocus.js';
 afterEach(cleanup);
 
 describe('collection hooks (jsdom)', () => {
-  it('keeps merged refs, composed focus handlers, and container callbacks referentially stable across rerenders', () => {
+  it('keeps merged refs, composed focus handlers, and container callbacks referentially stable across rerenders under StrictMode', () => {
     const seenRefs: RefCallback<HTMLButtonElement>[] = [];
     const seenFocus: ((event: FocusEvent<HTMLButtonElement>) => void)[] = [];
     const seenKeyDown: ((event: KeyboardEvent<HTMLElement>) => void)[] = [];
@@ -55,19 +55,35 @@ describe('collection hooks (jsdom)', () => {
       );
     }
 
-    const { rerender, unmount } = render(<StableList tick={0} />);
-    rerender(<StableList tick={1} />);
-    rerender(<StableList tick={2} />);
+    const { rerender, unmount } = render(
+      <StrictMode>
+        <StableList tick={0} />
+      </StrictMode>,
+    );
+    const mountsAfterInitial = userRefMounts.mock.calls.length;
+    const unmountsAfterInitial = userRefUnmounts.mock.calls.length;
+
+    rerender(
+      <StrictMode>
+        <StableList tick={1} />
+      </StrictMode>,
+    );
+    rerender(
+      <StrictMode>
+        <StableList tick={2} />
+      </StrictMode>,
+    );
 
     expect(new Set(seenRefs).size).toBe(1);
     expect(new Set(seenFocus).size).toBe(1);
     expect(new Set(seenKeyDown).size).toBe(1);
     expect(new Set(seenBlur).size).toBe(1);
-    expect(userRefMounts).toHaveBeenCalledTimes(1);
-    expect(userRefUnmounts).not.toHaveBeenCalled();
+    // Rerenders must cause zero extra ref detach/reattach cycles even after StrictMode mount checks.
+    expect(userRefMounts).toHaveBeenCalledTimes(mountsAfterInitial);
+    expect(userRefUnmounts).toHaveBeenCalledTimes(unmountsAfterInitial);
 
     unmount();
-    expect(userRefUnmounts).toHaveBeenCalledTimes(1);
+    expect(userRefUnmounts).toHaveBeenCalledTimes(unmountsAfterInitial + 1);
   });
 
   it('publishes new items before child autoFocus runs (useInsertionEffect)', () => {
@@ -111,7 +127,7 @@ describe('collection hooks (jsdom)', () => {
     expect(tabC.getAttribute('tabindex')).toBe('0');
   });
 
-  it('survives DOM clobbering of contains on a <form> roving container and non-Node relatedTarget', () => {
+  it('survives DOM clobbering of contains and nodeType on a <form> roving container and non-Node relatedTarget', () => {
     let blurHandler: ((event: FocusEvent<HTMLElement>) => void) | null = null;
     let formEl: HTMLFormElement | null = null;
 
@@ -132,10 +148,12 @@ describe('collection hooks (jsdom)', () => {
             formEl = node;
           }}
           role="tablist"
+          tabIndex={-1}
           onKeyDown={roving.onKeyDown}
           onBlur={roving.onBlur}
         >
           <input name="contains" aria-label="Clobber contains" />
+          <input name="nodeType" aria-label="Clobber nodeType" />
           <button type="button" role="tab" {...roving.getItemProps('a')}>
             A
           </button>
@@ -149,9 +167,22 @@ describe('collection hooks (jsdom)', () => {
     render(<ClobberedFormList />);
     const tabA = screen.getByRole('tab', { name: 'A' });
     const tabB = screen.getByRole('tab', { name: 'B' });
-    tabA.focus();
-    // Moving focus between items inside a <form> with <input name="contains"> must not throw.
-    expect(() => fireEvent.blur(tabA, { relatedTarget: tabB })).not.toThrow();
+
+    // Focus non-default tabB and blur toward tabA: containsSafe must genuinely return true and keep focusedKey='b'.
+    act(() => {
+      tabB.focus();
+    });
+    expect(tabB.getAttribute('tabindex')).toBe('0');
+    fireEvent.blur(tabB, { relatedTarget: tabA });
+    expect(tabB.getAttribute('tabindex')).toBe('0');
+
+    // Focusing the clobbered <form> container and pressing ArrowRight exercises isElementNode(event.target).
+    act(() => {
+      formEl!.focus();
+    });
+    fireEvent.keyDown(formEl!, { key: 'ArrowRight' });
+    expect(document.activeElement).toBe(tabA);
+
     // Non-Node relatedTarget (for example Window or custom EventTarget) must not throw in roving.onBlur.
     expect(() =>
       act(() =>

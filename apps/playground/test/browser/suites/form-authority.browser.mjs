@@ -521,6 +521,7 @@ export default {
       ['multi', 'b'],
       ['multi', 'a'],
       ['checked', 'yes'],
+      ['hydratedText', 'hello'],
     ];
     assert.deepEqual(before.entries, expected);
     assert.deepEqual(before.selected, [['a'], ['b', 'a'], ['']]);
@@ -546,6 +547,16 @@ export default {
     assert.equal(await form.getAttribute('data-changes'), '0');
     assert.equal(await page.getByTestId('hydration-errors').textContent(), '');
 
+    // Programmatic update on SSR-hydrated controlled FormInput followed by reverting to initial SSR value
+    // must still fire React onChange (dirty value flag & _valueTracker synced on hydration).
+    const hydratedText = page.getByRole('textbox', { name: 'Hydrated controlled text' });
+    await button(page, 'Set hydrated text world').click();
+    assert.equal(await hydratedText.inputValue(), 'world');
+    assert.equal(await page.getByTestId('hydrated-text-value').textContent(), 'world');
+    await hydratedText.fill('hello');
+    assert.equal(await page.getByTestId('hydrated-text-value').textContent(), 'hello');
+    assert.equal(await hydratedText.inputValue(), 'hello');
+
     await button(page, 'Commit C').click();
     await button(page, 'Propose multi C').click();
     await button(page, 'Propose single B').click();
@@ -554,6 +565,7 @@ export default {
       ['single', 'c'],
       ['multi', 'c'],
       ['empty', 'b'],
+      ['hydratedText', 'hello'],
     ]);
     const settled = [['single', 'c'], ...expected.slice(1)];
     assert.deepEqual(

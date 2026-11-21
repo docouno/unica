@@ -193,6 +193,9 @@ export function useFormValue<T>(options: FormValueOptions<T>): FormValueState<T>
       binding.current = null;
       previous?.unsubscribe();
       const subscription = subscribeNativeReset(controls, (result) => {
+        if (!mountedRef.current) {
+          return;
+        }
         if (result === 'reset') {
           restore(initial, forceWrite);
           config.current.onReset?.();
@@ -208,15 +211,17 @@ export function useFormValue<T>(options: FormValueOptions<T>): FormValueState<T>
     const current = read();
     const prevWritten = lastWritten.current;
     const eq = config.current.isEqual ?? defaultIsEqual;
+    const controlsChanged = !prevWritten || !sameList(prevWritten.controls, controls);
     const needsWrite =
-      !prevWritten ||
+      controlsChanged ||
       prevWritten.controlled !== controlledRef.current ||
       !eq(prevWritten.value, current) ||
-      !sameList(prevWritten.controls, controls) ||
       !sameList(prevWritten.writeDeps, config.current.writeDeps);
 
     if (needsWrite) {
-      writeWith(current, false, controls);
+      // Force the JS setter once on mount/hydration/control swap so the HTML dirty value/checkedness
+      // flag is set and later defaultValue syncs never bypass React's _valueTracker.
+      writeWith(current, controlsChanged, controls);
     }
   });
 

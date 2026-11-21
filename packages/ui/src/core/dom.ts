@@ -11,7 +11,7 @@ type ListenerMethod = (
   options?: boolean | AddEventListenerOptions | EventListenerOptions,
 ) => void;
 
-const EMPTY_ARGS: readonly [] = Object.freeze([]);
+const EMPTY_ARGS: readonly [] = [];
 
 function makeGetter<T, R>(proto: object | undefined, key: PropertyKey): Getter<T, R> | undefined {
   const desc = proto ? Object.getOwnPropertyDescriptor(proto, key) : undefined;
@@ -76,6 +76,9 @@ interface DescriptorCache {
   readonly contains: OneArgMethod<Node, Node | null, boolean> | undefined;
   readonly localName: Getter<Element, string> | undefined;
   readonly namespaceURI: Getter<Element, string | null> | undefined;
+  readonly shadowRoot: Getter<Element, ShadowRoot | null> | undefined;
+  readonly shadowHost: Getter<Node, Element | null> | undefined;
+  readonly isContentEditable: Getter<HTMLElement, boolean> | undefined;
   readonly defaultView: Getter<Document, (Window & typeof globalThis) | null> | undefined;
   readonly docActiveElement: Getter<Document, Element | null> | undefined;
   readonly shadowActiveElement: Getter<Node, Element | null> | undefined;
@@ -95,6 +98,7 @@ function getCache(): DescriptorCache {
   }
   const nodeProto = typeof Node !== 'undefined' ? Node.prototype : undefined;
   const elementProto = typeof Element !== 'undefined' ? Element.prototype : undefined;
+  const htmlElementProto = typeof HTMLElement !== 'undefined' ? HTMLElement.prototype : undefined;
   const documentProto = typeof Document !== 'undefined' ? Document.prototype : undefined;
   const shadowProto = typeof ShadowRoot !== 'undefined' ? ShadowRoot.prototype : undefined;
   const formProto = typeof HTMLFormElement !== 'undefined' ? HTMLFormElement.prototype : undefined;
@@ -108,6 +112,9 @@ function getCache(): DescriptorCache {
     contains: makeOneArgMethod<Node, Node | null, boolean>(nodeProto, 'contains'),
     localName: makeGetter<Element, string>(elementProto, 'localName'),
     namespaceURI: makeGetter<Element, string | null>(elementProto, 'namespaceURI'),
+    shadowRoot: makeGetter<Element, ShadowRoot | null>(elementProto, 'shadowRoot'),
+    shadowHost: makeGetter<Node, Element | null>(shadowProto, 'host'),
+    isContentEditable: makeGetter<HTMLElement, boolean>(htmlElementProto, 'isContentEditable'),
     defaultView: makeGetter<Document, (Window & typeof globalThis) | null>(
       documentProto,
       'defaultView',
@@ -160,6 +167,45 @@ export function getOwnerDocument(node: Node): Document | null {
 export function getParentElement(node: Node): HTMLElement | null {
   const fn = getCache().parentElement;
   return fn ? fn(node) : node.parentElement;
+}
+
+export function getShadowRootSafe(element: Element): ShadowRoot | null {
+  const fn = getCache().shadowRoot;
+  return fn ? fn(element) : element.shadowRoot;
+}
+
+export function getShadowHostSafe(node: Node): Element | null {
+  const fn = getCache().shadowHost;
+  if (fn) {
+    try {
+      return fn(node);
+    } catch {
+      return null;
+    }
+  }
+  return 'host' in node && isElementNode((node as ShadowRoot).host)
+    ? (node as ShadowRoot).host
+    : null;
+}
+
+export function getComposedParentElement(node: Node): Element | null {
+  const parent = getParentElement(node);
+  if (parent) {
+    return parent;
+  }
+  return getShadowHostSafe(getRootNodeSafe(node));
+}
+
+export function isContentEditableSafe(element: Element): boolean {
+  const fn = getCache().isContentEditable;
+  if (fn) {
+    try {
+      return fn(element as HTMLElement);
+    } catch {
+      return false;
+    }
+  }
+  return (element as HTMLElement).isContentEditable === true;
 }
 
 export function getRootNodeSafe(node: Node): Node {
@@ -223,6 +269,22 @@ export function getRootActiveElement(root: Node, doc: Document): Element | null 
     }
   }
   return getDocumentActiveElement(doc);
+}
+
+export function getDeepActiveElement(doc: Document): Element | null {
+  let active = getDocumentActiveElement(doc);
+  while (active) {
+    const shadow = getShadowRootSafe(active);
+    if (!shadow) {
+      break;
+    }
+    const nested = getRootActiveElement(shadow, doc);
+    if (!nested || nested === active) {
+      break;
+    }
+    active = nested;
+  }
+  return active;
 }
 
 export function isHtmlForm(target: EventTarget | null): target is HTMLFormElement {

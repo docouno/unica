@@ -25,7 +25,7 @@ function RovingFixture(): JSX.Element {
   const [autoFocusD, setAutoFocusD] = useState(false);
   const [navigates, setNavigates] = useState<string[]>([]);
   const [tick, setTick] = useState(0);
-  const [removeOnBlur, setRemoveOnBlur] = useState(false);
+  const [blurMutation, setBlurMutation] = useState<'none' | 'remove-b' | 'reorder'>('none');
   const handleItemARef = useCallback((node: HTMLElement | null) => {
     void node;
   }, []);
@@ -94,10 +94,16 @@ function RovingFixture(): JSX.Element {
         style={{ direction: rtl ? 'rtl' : 'ltr' }}
         onKeyDown={roving.onKeyDown}
         onBlur={(event) => {
-          roving.onBlur(event);
-          if (removeOnBlur && event.relatedTarget === null) {
-            setItems((current) => current.filter((item) => item !== 'B'));
+          // Enqueue state mutation before roving.onBlur so React commits before roving's microtask runs,
+          // verifying useIsoLayoutEffect checks origin.blurredWhileLive for lost, replaced, and orderChanged.
+          if (event.relatedTarget === null) {
+            if (blurMutation === 'remove-b') {
+              setItems((current) => current.filter((item) => item !== 'B'));
+            } else if (blurMutation === 'reorder') {
+              setItems(['C', 'B', 'A']);
+            }
           }
+          roving.onBlur(event);
         }}
       >
         {items.map((item) => {
@@ -182,8 +188,11 @@ function RovingFixture(): JSX.Element {
       <button type="button" onClick={() => setTick((value) => value + 1)}>
         Rerender tabs
       </button>
-      <button type="button" onClick={() => setRemoveOnBlur(true)}>
+      <button type="button" onClick={() => setBlurMutation('remove-b')}>
         Enable remove B on blur
+      </button>
+      <button type="button" onClick={() => setBlurMutation('reorder')}>
+        Enable reorder on blur
       </button>
       <button
         type="button"

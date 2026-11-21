@@ -1,12 +1,14 @@
 import {
   addListenerSafe,
-  containsSafe,
+  getComposedParentElement,
+  getDeepActiveElement,
   getDefaultView,
-  getDocumentActiveElement,
   getLocalName,
   getNamespaceURI,
   getOwnerDocument,
-  getParentElement,
+  getRootNodeSafe,
+  getShadowHostSafe,
+  isContentEditableSafe,
   isElementNode,
   removeListenerSafe,
 } from './dom.js';
@@ -55,6 +57,19 @@ function elementOf(target: EventTarget | null | undefined): Element | null {
   return isElementNode(target) ? target : null;
 }
 
+function isSingleCodePoint(key: string): boolean {
+  return key.length === 1 || (key.length === 2 && (key.codePointAt(0) ?? 0) > 0xffff);
+}
+
+function composedContains(owner: Element, active: Element | null): boolean {
+  for (let node: Element | null = active; node; node = getComposedParentElement(node)) {
+    if (node === owner) {
+      return true;
+    }
+  }
+  return false;
+}
+
 function editsText(target: Element | null, key: string): boolean {
   if (
     !target ||
@@ -72,11 +87,12 @@ function editsText(target: Element | null, key: string): boolean {
     }
     return key !== 'Enter' && textInputTypes.has(type);
   }
-  return name === 'textarea' || (target as HTMLElement).isContentEditable;
+  return name === 'textarea' || isContentEditableSafe(target);
 }
 
 function createTracker(doc: Document, view: Window): FocusTracker {
   const bindings = new Map<Element, Set<FocusBinding>>();
+  const shadowRoots = new Map<Node, number>();
   let focused = new Set<FocusBinding>();
   let origin: FocusOrigin = 'unknown';
   let pendingFocusCheck: number | undefined;
@@ -84,17 +100,34 @@ function createTracker(doc: Document, view: Window): FocusTracker {
   function sync(target: Element | null): void {
     const affected = focused;
     focused = new Set<FocusBinding>();
-    for (let owner: Element | null = target; owner; owner = getParentElement(owner)) {
-      for (const binding of bindings.get(owner) ?? []) {
-        focused.add(binding);
-        affected.add(binding);
+    for (let owner: Element | null = target; owner; owner = getComposedParentElement(owner)) {
+      const ownerBindings = bindings.get(owner);
+      if (ownerBindings) {
+        for (const binding of ownerBindings) {
+          focused.add(binding);
+          affected.add(binding);
+        }
       }
     }
+    let failure: { error: unknown } | undefined;
     for (const binding of affected) {
       const next = focused.has(binding) ? origin : null;
       if (binding.attached && binding.reported !== next) {
         binding.reported = next;
-        binding.notify(next);
+        try {
+          binding.notify(next);
+        } catch (error) {
+          failure ??= { error };
+        }
+      }
+    }
+    if (failure) {
+      if (typeof view.reportError === 'function') {
+        view.reportError(failure.error);
+      } else if (typeof reportError === 'function') {
+        reportError(failure.error);
+      } else {
+        throw failure.error;
       }
     }
   }
@@ -102,7 +135,7 @@ function createTracker(doc: Document, view: Window): FocusTracker {
   function setOrigin(next: FocusOrigin): void {
     if (origin !== next) {
       origin = next;
-      sync(getDocumentActiveElement(doc));
+      sync(getDeepActiveElement(doc));
     }
   }
 
@@ -111,14 +144,19 @@ function createTracker(doc: Document, view: Window): FocusTracker {
   }
 
   function keyboard(event: Event): void {
+    if (origin === 'keyboard') {
+      return;
+    }
     const keyEvent = event as KeyboardEvent;
     const { key } = keyEvent;
     if (
+      typeof key !== 'string' ||
       keyEvent.isComposing ||
+      keyEvent.keyCode === 229 ||
       keyEvent.altKey ||
       keyEvent.ctrlKey ||
       keyEvent.metaKey ||
-      (!navigationKeys.has(key) && [...key].length !== 1) ||
+      (!navigationKeys.has(key) && !isSingleCodePoint(key)) ||
       editsText(elementOf(keyEvent.composedPath()[0]), key)
     ) {
       return;
@@ -135,7 +173,7 @@ function createTracker(doc: Document, view: Window): FocusTracker {
 
   function syncActiveElement(): void {
     cancelFocusCheck();
-    sync(getDocumentActiveElement(doc));
+    sync(getDeepActiveElement(doc));
   }
 
   function focusOut(event: Event): void {
@@ -172,6 +210,19 @@ function createTracker(doc: Document, view: Window): FocusTracker {
       const binding: FocusBinding = { notify, reported: null, attached: true };
       owners.add(binding);
 
+      const root = getRootNodeSafe(element);
+      // Focus transfers within the same ShadowRoot stop propagating focusin/focusout at
+      // the shadow boundary (retargeted target === relatedTarget), so listen on the root too.
+      const shadowRoot = root !== doc && getShadowHostSafe(root) ? root : null;
+      if (shadowRoot) {
+        const count = shadowRoots.get(shadowRoot) ?? 0;
+        if (count === 0) {
+          addListenerSafe(shadowRoot, 'focusin', syncActiveElement, true);
+          addListenerSafe(shadowRoot, 'focusout', focusOut, true);
+        }
+        shadowRoots.set(shadowRoot, count + 1);
+      }
+
       const detach = (): void => {
         if (!binding.attached) {
           return;
@@ -181,6 +232,16 @@ function createTracker(doc: Document, view: Window): FocusTracker {
         owners.delete(binding);
         if (!owners.size) {
           bindings.delete(element);
+        }
+        if (shadowRoot) {
+          const remaining = (shadowRoots.get(shadowRoot) ?? 1) - 1;
+          if (remaining <= 0) {
+            shadowRoots.delete(shadowRoot);
+            removeListenerSafe(shadowRoot, 'focusin', syncActiveElement, true);
+            removeListenerSafe(shadowRoot, 'focusout', focusOut, true);
+          } else {
+            shadowRoots.set(shadowRoot, remaining);
+          }
         }
         if (!bindings.size) {
           cancelFocusCheck();
@@ -194,7 +255,7 @@ function createTracker(doc: Document, view: Window): FocusTracker {
       };
 
       // Mounting a sibling during blur must not interrupt an existing focus transfer.
-      if (containsSafe(element, getDocumentActiveElement(doc))) {
+      if (composedContains(element, getDeepActiveElement(doc))) {
         focused.add(binding);
         binding.reported = origin;
         try {

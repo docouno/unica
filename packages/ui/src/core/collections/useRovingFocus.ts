@@ -75,6 +75,7 @@ export function useRovingFocus<T extends HTMLElement>(options: RovingFocusOption
   } | null>(null);
   const previous = useRef(items);
   const optionsRef = useRef(options);
+  const committing = useRef(false);
   const navigating = useRef(false);
   const [maps] = useState(() => ({
     nodes: new Map<string, T>(),
@@ -112,22 +113,15 @@ export function useRovingFocus<T extends HTMLElement>(options: RovingFocusOption
     },
   );
 
-  // Publish before child refs, autoFocus, or child layout effects run.
+  // Publish before child refs, autoFocus, or child layout effects run, and mark
+  // the commitMutationEffects window so DOM-mutation blurs are not treated as user blurs.
   useInsertionEffect(() => {
+    committing.current = true;
     optionsRef.current = options;
   });
 
   useIsoLayoutEffect(() => {
-    return () => {
-      maps.nodes.clear();
-      maps.refCallbacks.clear();
-      maps.focusHandlers.clear();
-      maps.mergedRefs.clear();
-      maps.composedFocus.clear();
-    };
-  }, [maps]);
-
-  useIsoLayoutEffect(() => {
+    committing.current = false;
     const before = previous.current;
     previous.current = items;
 
@@ -190,7 +184,7 @@ export function useRovingFocus<T extends HTMLElement>(options: RovingFocusOption
     const target = lost ? recoverRovingKey(items, before, origin.key, recoveryKey) : origin.key;
     if (
       target !== null &&
-      !((lost || replaced) && origin.blurredWhileLive) &&
+      !origin.blurredWhileLive &&
       canRecoverFocus(origin.root, doc, origin.node)
     ) {
       maps.nodes.get(target)?.focus();
@@ -340,7 +334,7 @@ export function useRovingFocus<T extends HTMLElement>(options: RovingFocusOption
 
       const origin = focused.current;
       if (related === null && origin) {
-        if (origin.node.isConnected && !origin.node.matches(':disabled')) {
+        if (!committing.current && origin.node.isConnected && !origin.node.matches(':disabled')) {
           origin.blurredWhileLive = true;
         }
         // Removal or reorder can blur without a related target. Layout gets the first

@@ -165,6 +165,7 @@ export function navigateCollection(
   const preserveBuffer = { handled: false, key: activeKey, buffer };
   if (
     event.defaultPrevented ||
+    typeof event.key !== 'string' ||
     event.altKey ||
     event.ctrlKey ||
     event.metaKey ||

@@ -79,18 +79,15 @@ function handleReset(event: Event): void {
     }
   };
 
-  const finish = (forceCleanup: boolean): void => {
+  const finish = (): void => {
     if (!active) {
       return;
     }
     const result = operation.finish();
+    cleanup();
     if (!result) {
-      if (forceCleanup) {
-        cleanup();
-      }
       return;
     }
-    cleanup();
     const targets = collectFormSubscriptions(form);
     if (targets.size === 0) {
       return;
@@ -120,7 +117,7 @@ function handleReset(event: Event): void {
       return;
     }
     if (event.eventPhase === 0) {
-      finish(true);
+      finish();
       return;
     }
     // A user-initiated reset button click runs microtasks while eventPhase !== 0.
@@ -131,7 +128,7 @@ function handleReset(event: Event): void {
         channel.port1.onmessage = null;
         channel.port1.close();
         channel.port2.close();
-        finish(true);
+        finish();
       };
       cancelFallback = () => {
         channel.port1.onmessage = null;
@@ -140,10 +137,10 @@ function handleReset(event: Event): void {
       };
       channel.port2.postMessage(undefined);
     } else if (view) {
-      const timer = view.setTimeout(() => finish(true), 0);
+      const timer = view.setTimeout(finish, 0);
       cancelFallback = () => view.clearTimeout(timer);
     } else {
-      const timer = setTimeout(() => finish(true), 0);
+      const timer = setTimeout(finish, 0);
       cancelFallback = () => clearTimeout(timer);
     }
   });
@@ -184,9 +181,15 @@ export function subscribeNativeReset(
   const controls: FormControl[] = Array.isArray(input)
     ? Array.from(new Set<FormControl>(input as readonly FormControl[]))
     : [input as FormControl];
-  const subscription: Subscription = { notify };
-  const rootUnbinds = new Map<Node, () => void>();
   let active = true;
+  const subscription: Subscription = {
+    notify(result) {
+      if (active) {
+        notify(result);
+      }
+    },
+  };
+  const rootUnbinds = new Map<Node, () => void>();
 
   function syncRoots(): void {
     if (!active) {

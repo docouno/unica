@@ -138,13 +138,26 @@ const suite = {
       0,
     );
   },
-  'intentional blur to background followed by synchronous item removal does not steal focus back':
+  'intentional blur to background followed by synchronous item removal or reorder does not steal focus back':
     async ({ page, mount }) => {
       await mount('collections');
       await activate(page, 'Enable remove B on blur');
       await tab(page, 'B').focus();
       await tab(page, 'B').evaluate((node) => node.blur());
       assert.equal(await tab(page, 'B').count(), 0);
+      assert.equal(await page.evaluate(() => document.activeElement === document.body), true);
+
+      await mount('collections');
+      await activate(page, 'Enable reorder on blur');
+      await tab(page, 'B').focus();
+      await tab(page, 'B').evaluate((node) => node.blur());
+      assert.deepEqual(
+        await page
+          .getByRole('tablist', { name: 'Tabs', exact: true })
+          .getByRole('tab')
+          .allTextContents(),
+        ['C', 'B', 'A'],
+      );
       assert.equal(await page.evaluate(() => document.activeElement === document.body), true);
     },
   'positional recovery chooses the previous row when the last row disappears': async ({

@@ -79,11 +79,13 @@ function bind(owner: HTMLElement): { detach: () => void; report: ReturnType<type
 }
 
 function key(target: Element, value: string, modifiers: KeyboardEventInit = {}): void {
-  target.dispatchEvent(new KeyboardEvent('keydown', { key: value, bubbles: true, ...modifiers }));
+  target.dispatchEvent(
+    new KeyboardEvent('keydown', { key: value, bubbles: true, composed: true, ...modifiers }),
+  );
 }
 
 function pointer(target: Element): void {
-  target.dispatchEvent(new Event('pointerdown', { bubbles: true }));
+  target.dispatchEvent(new Event('pointerdown', { bubbles: true, composed: true }));
 }
 
 function frameDocument(): Document {
@@ -357,9 +359,17 @@ describe('FocusOrigin', () => {
     expect(report).not.toHaveBeenCalled();
   });
 
-  it('is immune to HTMLFormElement DOM clobbering on parentElement, ownerDocument, nodeType, and contains', () => {
+  it('is immune to HTMLFormElement DOM clobbering on parentElement, ownerDocument, nodeType, localName, isContentEditable, and contains', () => {
     const form = document.createElement('form');
-    for (const name of ['parentElement', 'ownerDocument', 'nodeType', 'contains', 'localName']) {
+    form.tabIndex = -1;
+    for (const name of [
+      'parentElement',
+      'ownerDocument',
+      'nodeType',
+      'contains',
+      'localName',
+      'isContentEditable',
+    ]) {
       const clobber = document.createElement('input');
       clobber.name = name;
       Element.prototype.append.call(form, clobber);
@@ -377,5 +387,91 @@ describe('FocusOrigin', () => {
     markKeyboardNavigation(target);
     expect(form.dataset.focusOrigin).toBe('keyboard');
     expect(report.mock.calls).toEqual([['pointer'], ['keyboard']]);
+
+    // Non-editable clobbered <form> with <input name="isContentEditable"> must still flip to keyboard on ArrowDown.
+    pointer(form);
+    form.focus();
+    expect(form.dataset.focusOrigin).toBe('pointer');
+    key(form, 'ArrowDown');
+    expect(form.dataset.focusOrigin).toBe('keyboard');
+
+    // Editable clobbered <form> exercises prototype-safe nodeType/localName/isContentEditable during keydown.
+    Object.defineProperty(form, 'isContentEditable', { value: true, configurable: true });
+    pointer(form);
+    form.focus();
+    key(form, 'a');
+    expect(form.dataset.focusOrigin).toBe('pointer');
+  });
+
+  it('tracks focus origin and markKeyboardNavigation inside open Shadow DOM', () => {
+    const host = document.createElement('div');
+    const shadow = host.attachShadow({ mode: 'open' });
+    const shadowInput = document.createElement('input');
+    const shadowButton = document.createElement('button');
+    shadowButton.type = 'button';
+    shadow.append(shadowInput, shadowButton);
+    document.body.append(host);
+
+    const hostBinding = bind(host);
+    shadowInput.focus();
+    // Subscribing after shadowInput is already focused must report initial focus via composed ancestor walk.
+    const inputBinding = bind(shadowInput);
+    expect(hostBinding.report.mock.calls).toEqual([['unknown']]);
+    expect(inputBinding.report.mock.calls).toEqual([['unknown']]);
+
+    pointer(shadowInput);
+    expect(shadowInput.dataset.focusOrigin).toBe('pointer');
+    expect(host.dataset.focusOrigin).toBe('pointer');
+
+    markKeyboardNavigation(shadowInput);
+    expect(shadowInput.dataset.focusOrigin).toBe('keyboard');
+    expect(host.dataset.focusOrigin).toBe('keyboard');
+
+    pointer(shadowButton);
+    shadowButton.focus();
+    expect(shadowInput.dataset.focusOrigin).toBeUndefined();
+    expect(host.dataset.focusOrigin).toBe('pointer');
+
+    inputBinding.detach();
+    expect(listenerTypes(removed, shadow)).toEqual(['focusin', 'focusout']);
+  });
+
+  it('ignores non-KeyboardEvent keydown, Safari IME keyCode 229, and isolates throwing subscribers', () => {
+    const first = document.createElement('input');
+    const second = document.createElement('button');
+    second.type = 'button';
+    document.body.append(first, second);
+    bind(first);
+
+    pointer(first);
+    first.focus();
+    // Plain Event('keydown') (e.g. Chrome autofill with key === undefined) must not throw or change origin.
+    expect(() => first.dispatchEvent(new Event('keydown', { bubbles: true }))).not.toThrow();
+    expect(first.dataset.focusOrigin).toBe('pointer');
+
+    // Safari IME Enter fires isComposing: false with keyCode === 229; must keep pointer origin.
+    const safariIme = new KeyboardEvent('keydown', { key: 'Enter', bubbles: true });
+    Object.defineProperty(safariIme, 'keyCode', { value: 229 });
+    first.dispatchEvent(safariIme);
+    expect(first.dataset.focusOrigin).toBe('pointer');
+
+    // A throwing subscriber during sync() must not block healthy sibling subscribers.
+    const healthy = bind(second);
+    const throwingDetach = subscribeFocusOrigin(first, (origin) => {
+      if (origin === null) {
+        throw new Error('broken focus listener');
+      }
+    });
+    cleanups.push(throwingDetach);
+
+    const reportSpy = vi.fn();
+    vi.stubGlobal('reportError', reportSpy);
+    try {
+      second.focus();
+    } finally {
+      vi.unstubAllGlobals();
+    }
+    expect(healthy.report).toHaveBeenCalledWith('pointer');
+    expect(reportSpy).toHaveBeenCalledTimes(1);
   });
 });
