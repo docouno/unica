@@ -1,6 +1,6 @@
 import type { ComponentPropsWithRef, ReactElement, ReactNode } from 'react';
 import { CheckCircleIcon, InfoIcon, WarningIcon, XCircleIcon, XIcon } from '@phosphor-icons/react';
-import { statusStyle } from '../badge/badge.styles.js';
+import '@docouno/unica/styles.css';
 import './alert.css';
 
 export type AlertStatus = 'neutral' | 'info' | 'success' | 'warning' | 'danger';
@@ -25,7 +25,6 @@ export function Alert({
   closeLabel = 'Dismiss message',
   previewClose,
   className = '',
-  style,
   children,
   ...props
 }: AlertProps): ReactElement {
@@ -41,10 +40,10 @@ export function Alert({
   return (
     <div
       {...props}
-      className={`alert-proto ${className}`}
+      className={`alert-proto unica-mark ${className}`}
       data-status={status}
+      data-unica-mark-status={status}
       data-size={size}
-      style={{ ...statusStyle(status), ...style }}
     >
       {leading && (
         <span className="alert-icon-proto" aria-hidden="true">

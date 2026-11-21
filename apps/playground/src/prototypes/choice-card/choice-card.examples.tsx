@@ -1,7 +1,7 @@
 import { useId, useState } from 'react';
 import type { ReactElement, ReactNode } from 'react';
 import { LockSimpleIcon, WarningCircleIcon } from '@phosphor-icons/react';
-import { Badge } from '../badge/badge.proto.js';
+import { Badge } from '@docouno/unica';
 import { Button } from '../button/button.proto.js';
 import { Link } from '../link/link.proto.js';
 import { PopoverContent } from '../popover/popover.proto.js';

@@ -17,9 +17,8 @@ import type {
   ReactElement,
   ReactNode,
 } from 'react';
-import { Badge } from '../badge/badge.proto.js';
 import { IconButton } from '../button/button.proto.js';
-import { Icon } from '@docouno/unica';
+import { Badge, Icon } from '@docouno/unica';
 import type { GlyphSource } from '@docouno/unica';
 import { HintPreview } from '../tooltip/tooltip.preview.js';
 import type { HintTriggerBindings } from '../tooltip/tooltip.preview.js';

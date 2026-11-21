@@ -1,6 +1,8 @@
 export { THEME_PRESETS } from './core/themes.js';
 export { defineGlyph } from './components/Icon/glyph.js';
 export type {
+  BadgeProps,
+  BadgeStatus,
   BlockquoteProps,
   BlockquoteTone,
   BuiltinIconAdapterName,

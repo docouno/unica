@@ -11,7 +11,7 @@ import {
   ShieldCheckIcon,
 } from '@phosphor-icons/react';
 import { Avatar } from '../avatar/avatar.proto.js';
-import { Badge } from '../badge/badge.proto.js';
+import { Badge } from '@docouno/unica';
 import { Switch } from '../binary-controls/binary-controls.proto.js';
 import { Button, IconButton } from '../button/button.proto.js';
 import { Card } from '../card/card.proto.js';

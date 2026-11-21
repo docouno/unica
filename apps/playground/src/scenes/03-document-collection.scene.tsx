@@ -8,7 +8,7 @@ import {
   PlusIcon,
 } from '@phosphor-icons/react';
 import { AsidePanel } from '../prototypes/app-shell/app-shell.proto.js';
-import { Badge } from '../prototypes/badge/badge.proto.js';
+import { Badge } from '@docouno/unica';
 import { Button, IconButton } from '../prototypes/button/button.proto.js';
 import { DatePicker, DateRangePicker } from '../prototypes/date-picker/date-picker.proto.js';
 import { dateLabel, dateObject } from '../prototypes/date-picker/date-utils.proto.js';

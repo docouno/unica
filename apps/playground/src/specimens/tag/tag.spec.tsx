@@ -13,8 +13,8 @@ import {
   WarningIcon,
 } from '@phosphor-icons/react';
 import { defineComponent } from '../../workbench/types.js';
-import type { DisplayStatus } from '../../prototypes/badge/badge.styles.js';
-import { Badge } from '../../prototypes/badge/badge.proto.js';
+import type { BadgeStatus } from '@docouno/unica';
+import { Badge } from '@docouno/unica';
 import { Button } from '../../prototypes/button/button.proto.js';
 import { Input } from '../../prototypes/input/input.proto.js';
 import { Tag, TagGroup } from '../../prototypes/tag/tag.proto.js';
@@ -128,7 +128,7 @@ function SizeFit(): ReactElement {
 
 function Palette(): ReactElement {
   const roles: readonly {
-    status: DisplayStatus;
+    status: BadgeStatus;
     label: string;
     icon: NonNullable<TagProps['iconLeft']>;
   }[] = [

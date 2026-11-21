@@ -3,7 +3,7 @@ import type { ReactElement } from 'react';
 import { ArrowLeftIcon } from '@phosphor-icons/react';
 import { defineScene } from '../workbench/types.js';
 import { AppShell, Header, LeftRail } from '../prototypes/app-shell/app-shell.proto.js';
-import { Badge } from '../prototypes/badge/badge.proto.js';
+import { Badge } from '@docouno/unica';
 import {
   Breadcrumb,
   BreadcrumbLink,

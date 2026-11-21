@@ -9,7 +9,7 @@ import {
   ArrowCounterClockwiseIcon,
 } from '@phosphor-icons/react';
 import { Alert, AlertDescription, AlertTitle } from '../alert/alert.proto.js';
-import { Badge } from '../badge/badge.proto.js';
+import { Badge } from '@docouno/unica';
 import { Checkbox } from '../binary-controls/binary-controls.proto.js';
 import { Button, IconButton } from '../button/button.proto.js';
 import { Card } from '../card/card.proto.js';

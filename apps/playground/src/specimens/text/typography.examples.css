@@ -95,18 +95,6 @@
   background-image: linear-gradient(to top, var(--border-default) 1px, transparent 1px);
   background-size: 100% var(--text-size-heading-m-lh);
 }
-.type-inline-badge {
-  display: inline-block;
-  vertical-align: baseline;
-  padding-inline: var(--space-8);
-  background: var(--status-info-soft-bg);
-  color: var(--status-info-soft-fg);
-  border: var(--pill-border-width) solid var(--status-info-border);
-  border-radius: var(--radius-full);
-  font-size: var(--text-size-caption-l);
-  line-height: var(--text-size-caption-l-lh);
-  letter-spacing: normal;
-}
 .type-inline-link {
   color: var(--accent-soft-fg);
   text-underline-offset: 0.15em;

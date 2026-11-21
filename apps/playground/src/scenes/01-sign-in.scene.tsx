@@ -3,7 +3,7 @@ import type { ReactElement } from 'react';
 import { GithubLogoIcon, KeyIcon } from '@phosphor-icons/react';
 import { Divider } from '@docouno/unica';
 import { BrandMark } from '../prototypes/app-shell/app-shell.proto.js';
-import { Badge } from '../prototypes/badge/badge.proto.js';
+import { Badge } from '@docouno/unica';
 import { Button } from '../prototypes/button/button.proto.js';
 import { Card } from '../prototypes/card/card.proto.js';
 import { FormField, Input } from '../prototypes/input/input.proto.js';

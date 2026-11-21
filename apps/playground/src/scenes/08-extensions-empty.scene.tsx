@@ -19,7 +19,6 @@ import {
 } from '../prototypes/breadcrumb/breadcrumb.proto.js';
 import { defineScene } from '../workbench/types.js';
 import { AsidePanel, WorkspaceNavigation } from '../prototypes/app-shell/app-shell.proto.js';
-import { Badge } from '../prototypes/badge/badge.proto.js';
 import { Button } from '../prototypes/button/button.proto.js';
 import { Card } from '../prototypes/card/card.proto.js';
 import {
@@ -30,7 +29,7 @@ import {
   EmptyTitle,
 } from '../prototypes/empty/empty.proto.js';
 import { ToastCard } from '../prototypes/toast/toast.proto.js';
-import { Icon, Spinner, Text, Title } from '@docouno/unica';
+import { Badge, Icon, Spinner, Text, Title } from '@docouno/unica';
 import { Input } from '../prototypes/input/input.proto.js';
 import { List, ListItem } from '../prototypes/list/list.proto.js';
 import { FolioScene, FolioWorkspace, PageIntro, SectionHeading } from './folio/folio.shared.js';
