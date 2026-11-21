@@ -130,6 +130,7 @@ export default function OverlayFixture(): JSX.Element {
 
     const toastHost = get('modal-host');
     const realBody = document.body;
+    const realHtml = document.documentElement;
     const unsubscribe = subscribeToModalChanges(document, () => {
       stats.dataset.toastHost = resolveToastPortalHost(toastHost)?.id ?? 'none';
       const bodyHost = resolveToastPortalHost(realBody);
@@ -226,6 +227,22 @@ export default function OverlayFixture(): JSX.Element {
           fixture.appendChild(el);
           clobberedDocNodes.push(el);
         }
+      },
+      'check-body-toast-outside-body': () => {
+        const rootDialog = realHtml.appendChild(document.createElement('dialog'));
+        rootDialog.id = 'root-dialog';
+        const rootHandle = registerOverlay({
+          kind: 'modal',
+          element: rootDialog,
+          onOpenChange(open) {
+            rootHandle.setOpen(open);
+          },
+        });
+        rootHandle.setOpen(true);
+        stats.dataset.rootDialogToastHost =
+          resolveToastPortalHost(realBody) === rootDialog ? 'root-dialog' : 'none';
+        rootHandle.dispose();
+        rootDialog.remove();
       },
       'open-foreign-auto-combo': () => {
         foreignAuto.showPopover();

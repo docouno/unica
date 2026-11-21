@@ -172,9 +172,12 @@ export default function OverlayRealmsFixture(): JSX.Element {
       handle.setTrigger(boundForeignButton);
       handle.setOpen(true);
       handle.beginExit();
+      const boundPreservedWhileActive = boundForeignButton.popoverTargetElement === ownPopover;
       handle.dispose();
-      const boundPreserved = boundForeignButton.popoverTargetElement === ownPopover;
-      root.dataset.foreignTriggerMutated = String(cleanMutated || !boundPreserved);
+      const boundPreservedAfterDispose = boundForeignButton.popoverTargetElement === ownPopover;
+      root.dataset.foreignTriggerMutated = String(
+        cleanMutated || !boundPreservedWhileActive || !boundPreservedAfterDispose,
+      );
     };
 
     const checkProtocolJoinWarning = async () => {

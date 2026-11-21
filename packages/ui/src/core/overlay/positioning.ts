@@ -216,7 +216,11 @@ export function positionOverlay({
       return;
     }
     active = false;
-    stop();
+    try {
+      stop();
+    } catch {
+      // Ignore cross-origin frame teardown.
+    }
     direction.disconnect();
     updates.delete(floating);
     style.removeProperty('inset');

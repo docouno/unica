@@ -395,7 +395,7 @@ class Layer {
     this.cancelSuppressClick = () => {
       removeListener(this.document, 'pointerdown', clear, true);
       removeListener(this.document, 'keydown', clear, true);
-      if (view && timer !== undefined) {
+      if (view && timer !== undefined && liveViewOf(this.document) === view) {
         try {
           view.clearTimeout(timer);
         } catch {
@@ -1088,7 +1088,8 @@ class OverlayRuntime {
         (options.kind !== 'manual' || !entry.passive) &&
         (!barrier ||
           entry === barrier ||
-          (index > barrierIndex &&
+          (barrier.active &&
+            index > barrierIndex &&
             (composedContains(barrier.options.element, options.element) ||
               (options.kind !== 'modal' &&
                 entry.trigger !== null &&

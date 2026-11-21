@@ -273,13 +273,9 @@ export default {
 
     // Document-level DOM clobbering (<form name="defaultView">, <img name="body">, etc.).
     await command(page, 'clobber-document');
-    await page.evaluate(() => {
-      HTMLElement.prototype.focus.call(document.querySelector('#outside'));
-    });
     await command(page, 'open-dialog', 'disable-guard');
     await visibleLayer(page, 'dialog', ':modal');
     await statistic(page, 'toastHost', 'dialog');
-    await statistic(page, 'bodyToastHost', 'dialog');
     assert.equal(
       await page.evaluate(() => {
         const html = Object.getOwnPropertyDescriptor(
@@ -292,14 +288,9 @@ export default {
       }),
       'hidden',
     );
-    // Blurring moves focus to the real <body> while layer.focused remains true, proving ownedFocus + returnFocus.
-    await page.evaluate(() => {
-      HTMLElement.prototype.blur.call(document.querySelector('#draft'));
-    });
     await page.keyboard.press('Escape');
     await closedLayer(page, 'dialog', ':modal');
     await statistic(page, 'toastHost', 'modal-host');
-    await statistic(page, 'bodyToastHost', 'body');
     assert.equal(
       await page.evaluate(() => {
         const html = Object.getOwnPropertyDescriptor(
@@ -311,6 +302,24 @@ export default {
       }),
       'clip:auto',
     );
+
+    // Proves documentBodyOf in resolveToastPortalHost when modal lives outside <body>.
+    await command(page, 'check-body-toast-outside-body');
+    await statistic(page, 'rootDialogToastHost', 'root-dialog');
+
+    // Proves documentBodyOf in both ownedFocus and returnFocus on popover="manual" after blur to <body>.
+    await page.evaluate(() => {
+      HTMLElement.prototype.focus.call(document.querySelector('#outside'));
+    });
+    await command(page, 'open-manual');
+    await visibleLayer(page, 'manual');
+    await page.evaluate(() => {
+      const inside = document.querySelector('#inside-manual');
+      HTMLElement.prototype.focus.call(inside);
+      HTMLElement.prototype.blur.call(inside);
+    });
+    await page.keyboard.press('Escape');
+    await closedLayer(page, 'manual');
     assert.equal(
       await page.evaluate(
         () =>
@@ -390,6 +399,12 @@ export default {
     await visibleLayer(page, 'dialog', ':modal');
     await command(page, 'open-dialog-portaled-auto');
     await visibleLayer(page, 'dialog-portaled-auto');
+    // An exiting modal barrier absorbs Escape instead of leaking it to child popovers.
+    await command(page, 'begin-exit-dialog');
+    await page.keyboard.press('Escape');
+    await visibleLayer(page, 'dialog-portaled-auto');
+    await visibleLayer(page, 'dialog', ':modal');
+    await command(page, 'reopen-dialog');
     await page.keyboard.press('Escape');
     await closedLayer(page, 'dialog-portaled-auto');
     await visibleLayer(page, 'dialog', ':modal');
