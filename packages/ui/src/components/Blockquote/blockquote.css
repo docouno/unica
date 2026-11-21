@@ -1,0 +1,162 @@
+@layer unica.components {
+  .unica-blockquote {
+    --_quote-rail: var(--border-strong);
+    --_quote-glyph: var(--fg-muted);
+    --_quote-py: var(--space-16);
+    --_quote-px: var(--space-24);
+    --_quote-icon: var(--size-m-icon);
+    --_quote-leading: 0px;
+    --_quote-trailing: 0px;
+    position: relative;
+    container: unica-quote / inline-size;
+    /* Inline-size containment removes intrinsic width in centered layouts. */
+    inline-size: 100%;
+    min-inline-size: 0;
+    margin: 0;
+    padding: var(--_quote-py) var(--_quote-px);
+    color: var(--fg-secondary);
+    font-family: var(--font-family-base);
+    font-size: var(--text-size-body-m);
+    line-height: var(--text-size-body-m-lh);
+    font-weight: 400;
+    font-style: normal;
+    text-align: start;
+    overflow-wrap: anywhere;
+  }
+  .unica-blockquote::before {
+    content: '';
+    position: absolute;
+    inset-block: var(--space-8);
+    inset-inline-start: 0;
+    border-inline-start: var(--blockquote-rail-width) var(--blockquote-rail-style)
+      var(--_quote-rail);
+    border-radius: var(--blockquote-rail-radius);
+    pointer-events: none;
+  }
+  .unica-blockquote[data-unica-blockquote-size='s'] {
+    --_quote-py: var(--space-12);
+    --_quote-px: var(--space-16);
+    --_quote-icon: var(--size-s-icon);
+    font-size: var(--text-size-body-s);
+    line-height: var(--text-size-body-s-lh);
+  }
+  .unica-blockquote[data-unica-blockquote-size='l'] {
+    --_quote-py: var(--space-24);
+    --_quote-px: var(--space-32);
+    --_quote-icon: var(--size-l-icon);
+    font-size: var(--text-size-body-l);
+    line-height: var(--text-size-body-l-lh);
+  }
+  .unica-blockquote[data-unica-blockquote-tone='info'] {
+    --_quote-rail: var(--status-info-signal);
+    --_quote-glyph: var(--status-info-soft-fg);
+  }
+  .unica-blockquote[data-unica-blockquote-tone='success'] {
+    --_quote-rail: var(--status-success-signal);
+    --_quote-glyph: var(--status-success-soft-fg);
+  }
+  .unica-blockquote[data-unica-blockquote-tone='warning'] {
+    --_quote-rail: var(--status-warning-signal);
+    --_quote-glyph: var(--status-warning-soft-fg);
+  }
+  .unica-blockquote[data-unica-blockquote-tone='danger'] {
+    --_quote-rail: var(--status-danger-signal);
+    --_quote-glyph: var(--status-danger-soft-fg);
+  }
+  .unica-blockquote__body {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-12);
+    min-inline-size: 0;
+  }
+  .unica-blockquote__body > blockquote {
+    flex: 1;
+    min-inline-size: 0;
+    margin: 0;
+  }
+  .unica-blockquote__body > blockquote > * {
+    margin-block: 0;
+  }
+  .unica-blockquote__body > blockquote > * + * {
+    margin-block-start: var(--space-12);
+  }
+  .unica-blockquote__body > blockquote > :is(ul, ol) {
+    padding-inline-start: var(--space-24);
+  }
+  .unica-blockquote__body li + li {
+    margin-block-start: var(--space-4);
+  }
+  .unica-blockquote__glyph {
+    display: inline-flex;
+    flex: none;
+    padding-block-start: calc((1lh - var(--_quote-icon)) / 2);
+    color: var(--_quote-glyph);
+  }
+  /* Null glyphs render an empty slot. Keep it out of the layout and caption offsets. */
+  .unica-blockquote__glyph:empty,
+  .unica-blockquote > figcaption:empty {
+    display: none;
+  }
+  .unica-blockquote__glyph--end {
+    align-self: flex-end;
+    padding-block-start: 0;
+    padding-block-end: calc((1lh - var(--_quote-icon)) / 2);
+  }
+  .unica-blockquote:has(> .unica-blockquote__body > .unica-blockquote__glyph--start:not(:empty)) {
+    --_quote-leading: calc(var(--_quote-icon) + var(--space-12));
+  }
+  .unica-blockquote:has(> .unica-blockquote__body > .unica-blockquote__glyph--end:not(:empty)) {
+    --_quote-trailing: calc(var(--_quote-icon) + var(--space-12));
+  }
+  .unica-blockquote > figcaption {
+    margin-block-start: var(--space-8);
+    margin-inline: var(--_quote-leading) var(--_quote-trailing);
+    color: var(--fg-muted);
+    font-size: var(--text-size-body-s);
+    line-height: var(--text-size-body-s-lh);
+  }
+  .unica-blockquote > figcaption cite {
+    font-style: normal;
+  }
+  /* A nested excerpt keeps its rail with a smaller vertical inset. */
+  .unica-blockquote .unica-blockquote {
+    padding-block: var(--space-4);
+    padding-inline-end: 0;
+  }
+  .unica-blockquote .unica-blockquote::before {
+    inset-block: 0;
+  }
+  /* Move optional marks out of the text measure when the quote itself is narrow. */
+  @container unica-quote (inline-size <= 20rem) {
+    .unica-blockquote__body {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      gap: var(--space-8);
+    }
+    .unica-blockquote__glyph {
+      padding-block: 0;
+    }
+    .unica-blockquote__glyph--end {
+      justify-self: end;
+    }
+    .unica-blockquote > figcaption {
+      margin-inline: 0;
+    }
+  }
+  .unica-blockquote[hidden],
+  .unica-blockquote:has(> .unica-blockquote__body > blockquote:empty) {
+    display: none;
+  }
+  @media (forced-colors: active) {
+    .unica-blockquote {
+      color: CanvasText;
+    }
+    .unica-blockquote::before {
+      border-color: CanvasText;
+    }
+    .unica-blockquote > figcaption,
+    .unica-blockquote__glyph {
+      color: CanvasText;
+    }
+  }
+}

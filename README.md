@@ -38,13 +38,13 @@ export function ThemePreview() {
 }
 ```
 
-The library currently ships theme tokens, preset metadata, `UnicaProvider`, native scrollbar utilities, the [Icon](docs/components/icon.md) glyph protocol (`Icon`, `IconProvider`, `defineGlyph`), [Portal](docs/components/portal.md) (`Portal`, `PortalProvider`, `usePortalContainer`), [Spinner](docs/components/spinner.md), and [Progress and ProgressCircle](docs/components/progress.md). The `data-theme` attribute applies the CSS preset, and `UnicaProvider` supplies structural component defaults through React context. See [Structural Component Defaults](docs/concepts/themes-and-roles.md#structural-component-defaults), [Native Scrollbars](docs/concepts/scrollbars.md), [Icon](docs/components/icon.md), and [Portal](docs/components/portal.md).
+The library ships theme tokens, preset metadata, `UnicaProvider`, [native scrollbar utilities](docs/concepts/scrollbars.md), the [Icon](docs/components/icon.md) glyph protocol, [Portal](docs/components/portal.md), the typography primitives [Code](docs/components/code.md) and [Blockquote](docs/components/blockquote.md), [Spinner](docs/components/spinner.md), and [Progress and ProgressCircle](docs/components/progress.md). The `data-theme` attribute applies the CSS preset. `UnicaProvider` supplies [structural component defaults](docs/concepts/themes-and-roles.md#structural-component-defaults) through React context.
 
-New component families are reviewed as live prototypes in the playground before their public package APIs ship. Playground scenes use the shipped package for Icon, Spinner, and Progress alongside families still in design.
+New component families are reviewed as live prototypes in the playground before their public package APIs ship. Playground scenes use the shipped package for Icon, Code, Blockquote, Spinner, and Progress alongside families still in design.
 
 The [Workbench](docs/workbench.md) has Playground, Matrix, Cases, and Usage views for each component. Choose Family and Scheme to compare themes or isolate one artboard, then inspect actual component bounds and interactions at different widths, text scales, and reading directions.
 
-The playground also includes ten [Folio scenes](docs/compositions/folio.md) assembled from shared visual prototypes. Open `/?item=02-workspace-overview` for the workspace, `/?item=05-rich-editor` for the editor, or `/?item=09-user-preferences` for settings. Component Usage views link to scenes that render the component. Scene interactions update local preview state.
+The playground also includes ten [Folio scenes](docs/compositions/folio.md) assembled from shared components and visual prototypes. Open `/?item=02-workspace-overview` for the workspace, `/?item=05-rich-editor` for the editor, or `/?item=09-user-preferences` for settings. Component Usage views link to scenes that render the component. Scene interactions update local preview state.
 
 ## Repository Structure
 

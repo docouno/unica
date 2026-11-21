@@ -1,3 +1,4 @@
+import { Code } from '@docouno/unica';
 import { useEffect, useState } from 'react';
 import type { ReactElement } from 'react';
 import { StarIcon } from '@phosphor-icons/react';
@@ -5,7 +6,7 @@ import { defineComponent } from '../../workbench/types.js';
 import { Checkbox } from '../../prototypes/binary-controls/binary-controls.proto.js';
 import { Button, IconButton } from '../../prototypes/button/button.proto.js';
 import { Card } from '../../prototypes/card/card.proto.js';
-import { Code, CodeBlock } from '../../prototypes/code/code.proto.js';
+import { CodeBlock } from '../../prototypes/code-block/code-block.proto.js';
 import type { IconProps as PhosphorIconProps } from '@phosphor-icons/react';
 import {
   PopoverBody,

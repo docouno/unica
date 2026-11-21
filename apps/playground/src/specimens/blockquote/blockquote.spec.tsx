@@ -1,10 +1,9 @@
+import { Blockquote, Code } from '@docouno/unica';
 import { previewProps, previewText } from '../preview-code.js';
 import type { ReactElement } from 'react';
 import type { IconProps as PhosphorIconProps } from '@phosphor-icons/react';
 import { QuotesIcon } from '@phosphor-icons/react';
 import { defineComponent } from '../../workbench/types.js';
-import { Blockquote } from '../../prototypes/blockquote/blockquote.proto.js';
-import { Code } from '../../prototypes/code/code.proto.js';
 import { Card } from '../../prototypes/card/card.proto.js';
 import { Link } from '../../prototypes/link/link.proto.js';
 import {
@@ -13,10 +12,17 @@ import {
   PopoverTitle,
 } from '../../prototypes/popover/popover.proto.js';
 import { Text } from '../../prototypes/text/text.proto.js';
-import '../../prototypes/blockquote/blockquote.examples.css';
+import './blockquote.examples.css';
 
 const sourceUrl =
   'https://html.spec.whatwg.org/multipage/grouping-content.html#the-blockquote-element';
+const defaultAttribution = 'On-call handbook';
+const defaultPassage = 'Write the decision down while you still have the context.';
+
+const glyphChoices = [
+  { value: 'none', label: 'None' },
+  { value: 'quotes', label: 'Quotation marks' },
+] as const;
 
 function OpeningQuotes(props: PhosphorIconProps): ReactElement {
   return <QuotesIcon {...props} style={{ ...props.style, transform: 'rotate(180deg)' }} />;
@@ -26,7 +32,7 @@ export default defineComponent({
   id: 'blockquote',
   title: 'Blockquote',
   category: 'Typography',
-  status: 'Proto',
+  status: 'UI',
   summary: 'Give another voice room, without interrupting the reading rhythm.',
   componentName: 'Blockquote',
   props: {
@@ -53,23 +59,69 @@ export default defineComponent({
     attribution: {
       kind: 'string',
       group: 'Content',
-      default: 'On-call handbook',
+      default: defaultAttribution,
       description: 'Optional source credit below the quote.',
+      examples: [defaultAttribution, ''],
+    },
+    citeUrl: {
+      kind: 'string',
+      group: 'Content',
+      default: '',
+      description: 'The source URL recorded on the native blockquote.',
+      examples: ['', sourceUrl],
+    },
+    iconLeft: {
+      kind: 'slot',
+      group: 'Glyphs',
+      default: 'none',
+      description: 'Decorative mark at the logical start.',
+      choices: glyphChoices,
+    },
+    iconRight: {
+      kind: 'slot',
+      group: 'Glyphs',
+      default: 'none',
+      description: 'Decorative mark at the logical end.',
+      choices: glyphChoices,
     },
     children: {
       kind: 'string',
       group: 'Content',
-      default: 'Write the decision down while you still have the context.',
+      default: defaultPassage,
       description: 'Text of the quotation.',
+      examples: [defaultPassage, '', 'A concise excerpt.'],
     },
   },
-  render: ({ ctx, values: { children, ...props } }) => (
-    <Blockquote {...ctx.subject} {...props}>
+  render: ({ ctx, values: { children, citeUrl, iconLeft, iconRight, ...props } }) => (
+    <Blockquote
+      {...ctx.subject}
+      {...props}
+      citeUrl={citeUrl || undefined}
+      iconLeft={iconLeft === 'quotes' ? QuotesIcon : undefined}
+      iconRight={iconRight === 'quotes' ? QuotesIcon : undefined}
+    >
       {children}
     </Blockquote>
   ),
-  code: ({ children, ...props }) =>
-    `<Blockquote${previewProps(props, { size: 'm', tone: 'neutral', attribution: '' })}>${previewText(children)}</Blockquote>`,
+  code: ({ children, iconLeft, iconRight, ...props }) => {
+    const attributes = previewProps(props, {
+      size: 'm',
+      tone: 'neutral',
+      attribution: '',
+      citeUrl: '',
+    });
+    const leading = iconLeft === 'quotes' ? ' iconLeft={QuotesIcon}' : '';
+    const trailing = iconRight === 'quotes' ? ' iconRight={QuotesIcon}' : '';
+    return `<Blockquote${attributes}${leading}${trailing}>${previewText(children)}</Blockquote>`;
+  },
+  constraints: [
+    {
+      kind: 'ignored',
+      when: { children: '' },
+      affects: ['attribution', 'iconLeft', 'iconRight'],
+      reason: 'Attribution and glyphs appear with a quotation.',
+    },
+  ],
   matrixViews: [
     {
       id: 'sizes',

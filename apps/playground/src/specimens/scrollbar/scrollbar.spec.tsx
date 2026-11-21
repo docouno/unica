@@ -2,7 +2,7 @@ import { useId, useState } from 'react';
 import type { ReactElement } from 'react';
 import { defineComponent } from '../../workbench/types.js';
 import { Card, CardAction, CardHeader } from '../../prototypes/card/card.proto.js';
-import { CodeBlock } from '../../prototypes/code/code.proto.js';
+import { CodeBlock } from '../../prototypes/code-block/code-block.proto.js';
 import {
   PopoverBody,
   PopoverClose,

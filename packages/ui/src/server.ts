@@ -1,7 +1,11 @@
 export { THEME_PRESETS } from './core/themes.js';
 export { defineGlyph } from './components/Icon/glyph.js';
 export type {
+  BlockquoteProps,
+  BlockquoteTone,
   BuiltinIconAdapterName,
+  CodeProps,
+  CodeTone,
   GlyphComponent,
   GlyphDefinition,
   GlyphSource,

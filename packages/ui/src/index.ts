@@ -8,6 +8,10 @@ export type { UnicaComponentDefaults, UnicaProviderProps } from './core/UnicaPro
 export { Portal, PortalProvider, usePortalContainer } from './core/Portal.js';
 export type { PortalProps, PortalProviderProps } from './core/Portal.js';
 
+export { Blockquote } from './components/Blockquote/Blockquote.js';
+export type { BlockquoteProps, BlockquoteTone } from './components/Blockquote/Blockquote.js';
+export { Code } from './components/Code/Code.js';
+export type { CodeProps, CodeTone } from './components/Code/Code.js';
 export { Icon, IconProvider } from './components/Icon/Icon.js';
 export type {
   IconColor,
