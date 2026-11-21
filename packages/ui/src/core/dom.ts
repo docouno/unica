@@ -164,28 +164,31 @@ export function getOwnerDocument(node: Node): Document | null {
   return fn ? fn(node) : node.ownerDocument;
 }
 
-export function getParentElement(node: Node): HTMLElement | null {
+function getParentElement(node: Node): HTMLElement | null {
   const fn = getCache().parentElement;
   return fn ? fn(node) : node.parentElement;
 }
 
-export function getShadowRootSafe(element: Element): ShadowRoot | null {
+function getShadowRootSafe(element: Element): ShadowRoot | null {
   const fn = getCache().shadowRoot;
   return fn ? fn(element) : element.shadowRoot;
 }
 
 export function getShadowHostSafe(node: Node): Element | null {
-  const fn = getCache().shadowHost;
-  if (fn) {
-    try {
-      return fn(node);
-    } catch {
+  const { nodeType, shadowHost } = getCache();
+  if (!shadowHost) {
+    return null;
+  }
+  try {
+    // Every ShadowRoot inherits DocumentFragment (nodeType === 11); short-circuit
+    // Document/Element roots to avoid throwing TypeError on routine light-DOM walks.
+    if (nodeType && nodeType(node) !== 11) {
       return null;
     }
+    return shadowHost(node);
+  } catch {
+    return null;
   }
-  return 'host' in node && isElementNode((node as ShadowRoot).host)
-    ? (node as ShadowRoot).host
-    : null;
 }
 
 export function getComposedParentElement(node: Node): Element | null {
@@ -260,10 +263,12 @@ export function getRootActiveElement(root: Node, doc: Document): Element | null 
   if (root === doc) {
     return getDocumentActiveElement(doc);
   }
-  const fn = getCache().shadowActiveElement;
-  if (fn) {
+  const { nodeType, shadowActiveElement } = getCache();
+  if (shadowActiveElement) {
     try {
-      return fn(root);
+      if (!nodeType || nodeType(root) === 11) {
+        return shadowActiveElement(root);
+      }
     } catch {
       // Detached element or DocumentFragment without ShadowRoot slot.
     }
@@ -272,13 +277,22 @@ export function getRootActiveElement(root: Node, doc: Document): Element | null 
 }
 
 export function getDeepActiveElement(doc: Document): Element | null {
+  const { shadowActiveElement } = getCache();
   let active = getDocumentActiveElement(doc);
+  if (!shadowActiveElement) {
+    return active;
+  }
   while (active) {
     const shadow = getShadowRootSafe(active);
     if (!shadow) {
       break;
     }
-    const nested = getRootActiveElement(shadow, doc);
+    let nested: Element | null;
+    try {
+      nested = shadowActiveElement(shadow);
+    } catch {
+      break;
+    }
     if (!nested || nested === active) {
       break;
     }
