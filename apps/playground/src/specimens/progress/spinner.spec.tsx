@@ -57,10 +57,19 @@ export default defineComponent({
   render: ({ ctx, values: { labelledByText, ...props } }) => {
     const id = `${ctx.id}-operation`;
     const reference = activityNameReference(id, labelledByText);
+    const frozen =
+      typeof window !== 'undefined' &&
+      (document.documentElement.dataset.wbFreeze === '1' ||
+        new URLSearchParams(window.location.search).get('freeze') === '1');
     return (
       <>
         {reference}
-        <Spinner {...ctx.subject} {...props} aria-labelledby={reference ? id : undefined} />
+        <Spinner
+          {...ctx.subject}
+          {...props}
+          delay={frozen ? 0 : props.delay}
+          aria-labelledby={reference ? id : undefined}
+        />
       </>
     );
   },

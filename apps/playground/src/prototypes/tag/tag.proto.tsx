@@ -65,7 +65,7 @@ export function Tag({
   return (
     <span
       {...props}
-      className={`tag-proto unica-mark ${className}`}
+      className={`tag-proto ${className}`}
       data-size={size}
       data-status={status}
       data-unica-mark-status={status}

@@ -149,7 +149,7 @@ const examples: Record<string, () => ReactElement> = {
   lifecycle: () => <SpinnerLifecycle />,
   placement: () => (
     <div className="activity-study">
-      <div className="activity-label activity-muted">
+      <div className="activity-label activity-muted" data-glyph-size="s">
         <Spinner size="s" />
         <span>Checking whether this workspace address is available…</span>
       </div>

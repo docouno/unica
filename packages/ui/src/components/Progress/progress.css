@@ -74,7 +74,7 @@
     inline-size: min(48px, 100%);
     block-size: calc(var(--_progress-height) + 12px);
     opacity: calc(var(--progress-tip-opacity) * var(--_progress-tip-strength));
-    transform: translateY(-50%);
+    transform: translateY(-50%) scaleX(var(--_dir-mirror, 1));
     transition: opacity 600ms ease-out;
   }
 
@@ -98,8 +98,14 @@
     animation: var(--progress-tip-motion);
   }
 
-  .unica-progress:dir(rtl) .unica-progress-tip {
-    transform: translateY(-50%) scaleX(-1);
+  @supports selector(:dir(rtl)) {
+    .unica-progress:dir(ltr) .unica-progress-tip {
+      transform: translateY(-50%) scaleX(1);
+    }
+
+    .unica-progress:dir(rtl) .unica-progress-tip {
+      transform: translateY(-50%) scaleX(-1);
+    }
   }
 
   .unica-progress[data-full] .unica-progress-tip {
@@ -110,7 +116,7 @@
     transition: none;
   }
 
-  @keyframes activity-tip-breathe {
+  @keyframes unica-progress-tip-breathe {
     0%,
     100% {
       opacity: 0.55;
@@ -151,7 +157,7 @@
   .unica-progress[data-paused] .unica-progress-wait {
     animation: none;
   }
-  .unica-progress[hidden] {
+  .unica-progress[hidden]:not([hidden='until-found' i]) {
     display: none;
   }
 

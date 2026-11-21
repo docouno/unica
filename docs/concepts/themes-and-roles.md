@@ -112,6 +112,8 @@ A nested provider inherits the parent's theme configuration unless it supplies a
 
 Import `@docouno/unica/styles.css` once at the application entry. The stylesheet declares the order `unica.base`, `unica.tokens`, `unica.components`, `unica.utilities`. These layers hold the base reset, theme and context tokens, colocated component rules, and shared utilities, respectively. For normal declarations a later layer wins over an earlier layer. Unlayered application styles can override library styles.
 
+Production CSS builds lower vendor prefixes and nested rules for the Baseline browser floor (`Chrome/Edge 114+`, `Firefox 125+`, `Safari/iOS 17+`) while preserving `:dir()` selectors under `@supports selector(:dir(rtl))` instead of rewriting them into language heuristics. Shared mark-status tokens bind directly on `[data-unica-mark-status]` inside `@layer unica.tokens`.
+
 ## Role-Based API Over Decorative `appearance`
 
 Exposing low-level material switches (`solid`, `soft`, `glass`, `lamp`, `outline`) on components couples product code to a single visual style and breaks cross-theme portability. Unica replaces decorative `appearance` props with strict role contracts:

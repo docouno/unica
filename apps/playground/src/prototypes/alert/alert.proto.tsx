@@ -40,7 +40,7 @@ export function Alert({
   return (
     <div
       {...props}
-      className={`alert-proto unica-mark ${className}`}
+      className={`alert-proto ${className}`}
       data-status={status}
       data-unica-mark-status={status}
       data-size={size}

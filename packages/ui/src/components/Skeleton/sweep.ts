@@ -1,5 +1,6 @@
 import { useCallback, useRef } from 'react';
 import type { Ref, RefCallback } from 'react';
+import { isRTL } from '../../core/dom.js';
 import { mergeRefs } from '../../core/mergeRefs.js';
 import { useIsoLayoutEffect } from '../../core/useIsoLayoutEffect.js';
 
@@ -7,11 +8,11 @@ const sweepName = 'unica-skeleton-sweep';
 const animationProperty = '--_skeleton-sweep-animation';
 const geometryProperties = [
   '--_skeleton-band-width',
-  '--_skeleton-band-before',
-  '--_skeleton-band-after',
+  '--_skeleton-sweep-start',
+  '--_skeleton-sweep-end',
   '--_skeleton-band-angle',
 ] as const;
-const [bandWidth, bandBefore, bandAfter, bandAngle] = geometryProperties;
+const [bandWidth, sweepStart, sweepEnd, bandAngle] = geometryProperties;
 const bandSlope = Math.tan((12 * Math.PI) / 180);
 const positionMotion = new Set([
   'transform',
@@ -144,16 +145,19 @@ function createSweep(view: BrowserWindow, start: number, duration: number): Swee
       const localHeight = borderBox ? parseFloat(style.height) : node.offsetHeight;
       const scaleX = rect.width > 0 && localWidth > 0 ? rect.width / localWidth : 1;
       const scaleY = rect.height > 0 && localHeight > 0 ? rect.height / localHeight : 1;
-      const slope = node.matches(':dir(rtl)') ? bandSlope : -bandSlope;
+      const rtl = isRTL(node, style);
+      const slope = rtl ? bandSlope : -bandSlope;
       const top = rect.top + borderTop * scaleY;
       // Project the viewport band onto the top edge of this paint box.
       const offset = (slope * (top - middleY) - rect.left) / scaleX - borderLeft;
+      const before = `${offset - (band + overhang) / scaleX}px`;
+      const after = `${offset + (clientWidth + overhang) / scaleX}px`;
       return {
         node,
         values: [
           [bandWidth, `${band / scaleX}px`],
-          [bandBefore, `${offset - (band + overhang) / scaleX}px`],
-          [bandAfter, `${offset + (clientWidth + overhang) / scaleX}px`],
+          [sweepStart, rtl ? after : before],
+          [sweepEnd, rtl ? before : after],
           [bandAngle, `${Math.atan((slope * scaleY) / scaleX)}rad`],
         ] as const,
       };

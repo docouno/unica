@@ -236,6 +236,27 @@ export function getDefaultView(doc: Document | null): (Window & typeof globalThi
   return fn ? fn(doc) : doc.defaultView;
 }
 
+export function getComputedStyleSafe(element: Element): CSSStyleDeclaration | null {
+  const view = getDefaultView(getOwnerDocument(element));
+  if (!view) {
+    return null;
+  }
+  try {
+    const fn: unknown = Reflect.get(view, 'getComputedStyle');
+    if (typeof fn !== 'function') {
+      return null;
+    }
+    return Reflect.apply(fn as (el: Element) => CSSStyleDeclaration, view, [element]);
+  } catch {
+    return null;
+  }
+}
+
+export function isRTL(element: Element, computed?: CSSStyleDeclaration | null): boolean {
+  const style = computed ?? getComputedStyleSafe(element);
+  return style?.direction === 'rtl';
+}
+
 export function getDocumentBody(doc: Document): HTMLElement | null {
   const fn = getCache().docBody;
   return fn ? fn(doc) : doc.body;

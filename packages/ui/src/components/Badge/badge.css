@@ -104,7 +104,7 @@
     color: inherit;
     box-shadow: none;
   }
-  .unica-badge[hidden]:not([hidden='until-found']) {
+  .unica-badge[hidden]:not([hidden='until-found' i]) {
     display: none;
   }
   @media (forced-colors: active) {

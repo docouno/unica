@@ -80,7 +80,7 @@
     border-color: var(--code-context-border, var(--_code-edge));
   }
 
-  .unica-code[hidden] {
+  .unica-code[hidden]:not([hidden='until-found' i]) {
     display: none;
   }
 

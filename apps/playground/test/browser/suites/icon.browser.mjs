@@ -318,4 +318,59 @@ export default {
     ]);
     assert.notEqual(warningColor[0], warningColor[1]);
   },
+
+  'Icon resolves directional reflection for English RTL, nested LTR, and dir="auto"': async ({
+    page,
+    mount,
+  }) => {
+    await mount('icon', { direction: 'rtl' });
+    const result = await page.evaluate(() => {
+      document.documentElement.lang = 'en';
+      const logical = document.querySelector('[data-testid="logical"]');
+      const nestedLtr = document.querySelector('[data-testid="nested-ltr"]');
+      const rtlToken = getComputedStyle(logical).getPropertyValue('--_dir-scale').trim();
+      const rtlScale = getComputedStyle(logical).scale;
+      const rtlCtm = logical.getScreenCTM().a;
+      const nestedToken = getComputedStyle(nestedLtr).getPropertyValue('--_dir-scale').trim();
+      const nestedScale = getComputedStyle(nestedLtr).scale;
+      const nestedCtm = nestedLtr.getScreenCTM().a;
+
+      const wrapper = document.createElement('span');
+      wrapper.setAttribute('dir', 'auto');
+      const text = document.createTextNode('שלום ');
+      const clone = logical.cloneNode(true);
+      wrapper.append(text, clone);
+      document.body.append(wrapper);
+      const autoRtlCtm = clone.getScreenCTM().a;
+      const autoRtlScale = getComputedStyle(clone).scale;
+
+      text.data = 'Hello ';
+      const autoLtrCtm = clone.getScreenCTM().a;
+      const autoLtrScale = getComputedStyle(clone).scale;
+      wrapper.remove();
+
+      return {
+        rtlToken,
+        rtlScale,
+        rtlCtm,
+        nestedToken,
+        nestedScale,
+        nestedCtm,
+        autoRtlCtm,
+        autoRtlScale,
+        autoLtrCtm,
+        autoLtrScale,
+      };
+    });
+    assert.equal(result.rtlToken, '-1 1');
+    assert.equal(result.rtlScale, '-1 1');
+    assert.ok(result.rtlCtm < 0);
+    assert.equal(result.nestedToken, 'none');
+    assert.equal(result.nestedScale, 'none');
+    assert.ok(result.nestedCtm > 0);
+    assert.ok(result.autoRtlCtm < 0);
+    assert.equal(result.autoRtlScale, '-1 1');
+    assert.ok(result.autoLtrCtm > 0);
+    assert.equal(result.autoLtrScale, 'none');
+  },
 };

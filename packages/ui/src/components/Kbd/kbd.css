@@ -67,7 +67,7 @@
     font-size: 0.8em;
     font-weight: 400;
   }
-  :is(.unica-kbd, .unica-kbd-group)[hidden] {
+  :is(.unica-kbd, .unica-kbd-group)[hidden]:not([hidden='until-found' i]) {
     display: none;
   }
   @media (forced-colors: active) {

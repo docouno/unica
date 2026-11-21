@@ -1,17 +1,9 @@
 @layer unica.components {
-  :where([data-surface='base']) {
-    --_unica-divider-overlay-share: 0%;
-  }
-
-  :where([data-surface='overlay']) {
-    --_unica-divider-overlay-share: 100%;
-  }
-
   .unica-divider {
     /* Inherit the surface choice and resolve both tokens in the local theme. */
     --_unica-divider-line-color: color-mix(
       in srgb,
-      var(--border-default) var(--_unica-divider-overlay-share, 0%),
+      var(--border-default) var(--_divider-overlay-share, 0%),
       var(--border-subtle)
     );
 
@@ -23,7 +15,7 @@
     margin: 0;
   }
 
-  .unica-divider[hidden] {
+  .unica-divider[hidden]:not([hidden='until-found' i]) {
     display: none;
   }
 

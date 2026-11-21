@@ -65,16 +65,18 @@
     scale: -1 1;
   }
 
-  [dir='rtl' i] {
-    --unica-icon-direction: -1 1;
-  }
-
-  [dir='ltr' i] {
-    --unica-icon-direction: none;
-  }
-
   .unica-icon[data-unica-icon-directional] {
-    scale: var(--unica-icon-direction, none);
+    scale: var(--_dir-scale, none);
+  }
+
+  @supports selector(:dir(rtl)) {
+    .unica-icon[data-unica-icon-directional]:dir(ltr) {
+      scale: none;
+    }
+
+    .unica-icon[data-unica-icon-directional]:dir(rtl) {
+      scale: -1 1;
+    }
   }
 
   @media (forced-colors: active) {

@@ -49,7 +49,7 @@
     inline-size: 60%;
   }
 
-  :is(.unica-skeleton, .unica-skeleton-text)[hidden] {
+  :is(.unica-skeleton, .unica-skeleton-text)[hidden]:not([hidden='until-found' i]) {
     display: none !important;
   }
 
@@ -70,7 +70,7 @@
         transparent 90%
       );
       transform-origin: top left;
-      transform: translateX(var(--_skeleton-sweep-start, var(--_skeleton-band-before, 0px)))
+      transform: translateX(var(--_skeleton-sweep-start, 0px))
         skewX(var(--_skeleton-band-angle, 0deg));
       animation: var(--_skeleton-sweep-animation, none) 2200ms ease-in-out 2;
       pointer-events: none;
@@ -81,23 +81,18 @@
         --_skeleton-band-rise: 20%;
       }
     }
-
-    :is(.unica-skeleton, .unica-skeleton-text__bar):dir(rtl) {
-      --_skeleton-sweep-start: var(--_skeleton-band-after, 0px);
-      --_skeleton-sweep-end: var(--_skeleton-band-before, 0px);
-    }
   }
 
   @keyframes unica-skeleton-sweep {
     0%,
     12% {
-      transform: translateX(var(--_skeleton-sweep-start, var(--_skeleton-band-before, 0px)))
+      transform: translateX(var(--_skeleton-sweep-start, 0px))
         skewX(var(--_skeleton-band-angle, 0deg));
     }
 
     78%,
     100% {
-      transform: translateX(var(--_skeleton-sweep-end, var(--_skeleton-band-after, 0px)))
+      transform: translateX(var(--_skeleton-sweep-end, 0px))
         skewX(var(--_skeleton-band-angle, 0deg));
     }
   }

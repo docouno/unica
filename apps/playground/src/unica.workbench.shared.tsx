@@ -345,7 +345,7 @@ function renderUnicaStage({
           pointerEvents: 'none',
         }}
       />
-      <div className="unica-stage-content" data-surface="overlay">
+      <div data-stage-content="" data-surface="overlay">
         {children}
       </div>
     </OverlayStage>

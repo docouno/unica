@@ -318,6 +318,25 @@ suite['Badge respects native focus, hidden, disabled, keyboard activation, and f
     await pressKeys(page, 'Tab');
     await assertFocused(version);
 
+    const untilFound = await page.evaluate(() => {
+      const node = document.querySelector('[data-testid="passive"]');
+      node.id = 'until-found-badge';
+      node.setAttribute('hidden', 'UNTIL-FOUND');
+      const style = getComputedStyle(node);
+      return {
+        display: style.display,
+        contentVisibility: style.contentVisibility,
+      };
+    });
+    assert.deepEqual(untilFound, { display: 'inline-flex', contentVisibility: 'hidden' });
+    await page.evaluate(() => {
+      window.location.hash = '#until-found-badge';
+    });
+    await page.waitForFunction(
+      () => !document.getElementById('until-found-badge')?.hasAttribute('hidden'),
+    );
+    assert.ok((await getBox(page.locator('#until-found-badge'))).width > 0);
+
     const form = page.getByRole('form', { name: 'Submit options' });
     for (const label of ['Omitted type', 'Undefined type']) {
       const button = form.getByRole('button', { name: label });

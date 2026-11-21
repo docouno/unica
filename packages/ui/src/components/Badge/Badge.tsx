@@ -91,7 +91,7 @@ export function Badge({
     'data-unica-badge-size': size,
     'data-unica-badge-numeric': numeric || undefined,
   };
-  const rootClass = className ? `unica-badge unica-mark ${className}` : 'unica-badge unica-mark';
+  const rootClass = className ? `unica-badge ${className}` : 'unica-badge';
   const content = (
     <>
       {iconLeft ? (

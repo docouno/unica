@@ -1,18 +1,18 @@
-.wb-overlay-stage:has(> .unica-stage-content > .dialog-study) {
+.wb-overlay-stage:has(> [data-stage-content] > .dialog-study) {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   grid-template-rows: auto auto;
   align-content: start;
   padding: 0;
 }
-.wb-overlay-stage:has(> .unica-stage-content > .dialog-study) > [data-unica-underlay] {
+.wb-overlay-stage:has(> [data-stage-content] > .dialog-study) > [data-unica-underlay] {
   grid-area: 2 / 1;
 }
-.wb-overlay-stage:has(> .unica-stage-content > .dialog-study) > [data-unica-stage-scrim] {
+.wb-overlay-stage:has(> [data-stage-content] > .dialog-study) > [data-unica-stage-scrim] {
   display: none;
 }
-.unica-stage-content:has(> .dialog-study),
-.unica-stage-content > .dialog-study {
+[data-stage-content]:has(> .dialog-study),
+[data-stage-content] > .dialog-study {
   display: contents;
 }
 .dialog-study {

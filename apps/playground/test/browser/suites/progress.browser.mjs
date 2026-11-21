@@ -301,7 +301,7 @@ export default {
           .map((animation) => animation.effect.getTiming().duration),
       }));
     assert.ok((await inspect()).opacity > 0);
-    assert.equal((await inspect()).motion, 'activity-tip-breathe');
+    assert.equal((await inspect()).motion, 'unica-progress-tip-breathe');
     assert.ok((await inspect()).animations.includes(2400));
 
     await page.getByRole('button', { name: 'Toggle active' }).click();
@@ -564,5 +564,43 @@ export default {
     assert.equal(await archive.getAttribute('aria-labelledby'), archiveId);
     assert.equal(await preview.getAttribute('aria-labelledby'), previewId);
     assert.equal(await original.evaluate((node) => node.isConnected), true);
+  },
+
+  'Progress mirrors the active tip for Baseline dir attributes and Guarantee dir="auto"': async ({
+    page,
+    mount,
+  }) => {
+    await mount('progress', { theme: 'frost-dark', direction: 'rtl' });
+    const result = await page.evaluate(() => {
+      document.documentElement.lang = 'en';
+      const linear = document.querySelector('[data-testid="linear"]');
+      const tipEl = linear.querySelector('.unica-progress-tip');
+      const read = (node) => ({
+        mirror: getComputedStyle(node).getPropertyValue('--_dir-mirror').trim(),
+        scaleX: new DOMMatrix(getComputedStyle(node).transform).a,
+      });
+
+      const englishRtl = read(tipEl);
+
+      linear.setAttribute('dir', 'ltr');
+      const nestedLtr = read(tipEl);
+
+      const labelEl = linear.querySelector('.unica-progress-label');
+      const originalText = labelEl.textContent;
+      linear.setAttribute('dir', 'auto');
+      labelEl.textContent = 'שלום עולם';
+      const autoRtl = read(tipEl);
+
+      labelEl.textContent = originalText;
+      const autoLtr = read(tipEl);
+
+      return { englishRtl, nestedLtr, autoRtl, autoLtr };
+    });
+    assert.equal(result.englishRtl.mirror, '-1');
+    assert.equal(result.englishRtl.scaleX, -1);
+    assert.equal(result.nestedLtr.mirror, '1');
+    assert.equal(result.nestedLtr.scaleX, 1);
+    assert.equal(result.autoRtl.scaleX, -1);
+    assert.equal(result.autoLtr.scaleX, 1);
   },
 };

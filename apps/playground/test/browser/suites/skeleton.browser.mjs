@@ -271,6 +271,28 @@ for (const direction of ['ltr', 'rtl']) {
     }
     await toggle.click();
     assert.deepEqual(await readHidden(), shown);
+
+    // hidden="until-found" must not be forced to display: none by the [hidden] rule.
+    const untilFound = await page.evaluate(() => {
+      const shape = document.querySelector('[data-testid="rect"]');
+      const text = document.querySelector('[data-testid="text-shape"]');
+      shape.setAttribute('hidden', 'until-found');
+      text.setAttribute('hidden', 'UNTIL-FOUND');
+      const result = [shape, text].map((node) => {
+        const style = getComputedStyle(node);
+        return {
+          display: style.display,
+          contentVisibility: style.contentVisibility,
+        };
+      });
+      shape.removeAttribute('hidden');
+      text.removeAttribute('hidden');
+      return result;
+    });
+    assert.deepEqual(untilFound, [
+      { display: 'block', contentVisibility: 'hidden' },
+      { display: 'grid', contentVisibility: 'hidden' },
+    ]);
   };
 
   scenarios[
@@ -638,5 +660,45 @@ scenarios['Skeleton SSR markup hydrates both existing roots without changing the
     await assertBox(text, textBox);
     await before.dispose();
   };
+
+scenarios['Skeleton sweeps in English RTL and nested LTR without :dir(rtl) CSS'] = async ({
+  page,
+  mount,
+}) => {
+  await mount('skeleton', { direction: 'rtl' });
+  const shape = page.getByTestId('motion');
+  await page.waitForFunction(
+    () =>
+      parseFloat(
+        getComputedStyle(document.querySelector('[data-testid="motion"]'), '::after').width,
+      ) > 0,
+  );
+  const rtlSweep = await shape.evaluate((node) => {
+    document.documentElement.lang = 'en';
+    const start = parseFloat(node.style.getPropertyValue('--_skeleton-sweep-start'));
+    const end = parseFloat(node.style.getPropertyValue('--_skeleton-sweep-end'));
+    const slope = new DOMMatrix(getComputedStyle(node, '::after').transform).m21;
+    return { start, end, slope };
+  });
+  assert.ok(rtlSweep.start > rtlSweep.end, 'RTL sweep moves from right to left');
+  assert.ok(rtlSweep.slope > 0, 'RTL sweep tilts toward inline end');
+
+  await shape.evaluate((node) => {
+    node.setAttribute('dir', 'ltr');
+  });
+  await page.waitForFunction(() => {
+    const node = document.querySelector('[data-testid="motion"]');
+    const start = parseFloat(node.style.getPropertyValue('--_skeleton-sweep-start'));
+    const end = parseFloat(node.style.getPropertyValue('--_skeleton-sweep-end'));
+    return start < end;
+  });
+  const nestedLtr = await shape.evaluate((node) => ({
+    start: parseFloat(node.style.getPropertyValue('--_skeleton-sweep-start')),
+    end: parseFloat(node.style.getPropertyValue('--_skeleton-sweep-end')),
+    slope: new DOMMatrix(getComputedStyle(node, '::after').transform).m21,
+  }));
+  assert.ok(nestedLtr.start < nestedLtr.end, 'Nested LTR sweep moves from left to right');
+  assert.ok(nestedLtr.slope < 0, 'Nested LTR sweep tilts toward inline end');
+};
 
 export default scenarios;

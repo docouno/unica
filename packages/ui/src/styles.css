@@ -497,7 +497,7 @@
     --spinner-pixel-display: none;
     --progress-wait-base: var(--accent-signal);
     --progress-wait-stripe: color-mix(in oklab, var(--accent-signal) 84%, var(--_base-control-bg));
-    --progress-tip-motion: activity-tip-breathe 2400ms ease-in-out infinite;
+    --progress-tip-motion: unica-progress-tip-breathe 2400ms ease-in-out infinite;
     --progress-fill-light: linear-gradient(
       to bottom,
       rgb(255 255 255 / 0.3),
@@ -715,7 +715,7 @@
     --spinner-pixel-display: none;
     --progress-wait-base: var(--accent-signal);
     --progress-wait-stripe: color-mix(in oklab, var(--accent-signal) 84%, var(--_base-control-bg));
-    --progress-tip-motion: activity-tip-breathe 2400ms ease-in-out infinite;
+    --progress-tip-motion: unica-progress-tip-breathe 2400ms ease-in-out infinite;
     --progress-fill-light: linear-gradient(
       to bottom,
       rgb(255 255 255 / 0.12),
@@ -1463,45 +1463,63 @@
     --text-size-heading-xl: calc(var(--_base-text-size-heading-xl) * var(--font-scale, 1));
     --text-size-heading-xl-lh: calc(var(--_base-text-size-heading-xl-lh) * var(--font-scale, 1));
   }
-}
 
-@layer unica.components {
-  .unica-mark[data-unica-mark-status='neutral'] {
+  :root,
+  [dir='ltr' i] {
+    --_dir-mirror: 1;
+    --_dir-scale: none;
+  }
+
+  [dir='rtl' i] {
+    --_dir-mirror: -1;
+    --_dir-scale: -1 1;
+  }
+
+  :root,
+  [data-surface='base'] {
+    --_divider-overlay-share: 0%;
+  }
+
+  [data-surface='overlay'] {
+    --_divider-overlay-share: 100%;
+  }
+
+  [data-unica-mark-status='neutral'] {
     --mark-bg: var(--neutral-soft-bg);
     --mark-fg: var(--neutral-soft-fg);
     --mark-border: var(--neutral-border);
     --mark-signal: var(--neutral-signal);
   }
 
-  .unica-mark[data-unica-mark-status='accent'] {
+  [data-unica-mark-status='accent'] {
     --mark-bg: var(--accent-soft-bg);
     --mark-fg: var(--accent-soft-fg);
     --mark-border: var(--accent-border);
     --mark-signal: var(--accent-signal);
   }
 
-  .unica-mark[data-unica-mark-status='info'] {
+  [data-unica-mark-status='info'] {
     --mark-bg: var(--status-info-soft-bg);
     --mark-fg: var(--status-info-soft-fg);
     --mark-border: var(--status-info-border);
     --mark-signal: var(--status-info-signal);
   }
 
-  .unica-mark[data-unica-mark-status='success'] {
+  [data-unica-mark-status='success'] {
     --mark-bg: var(--status-success-soft-bg);
     --mark-fg: var(--status-success-soft-fg);
     --mark-border: var(--status-success-border);
     --mark-signal: var(--status-success-signal);
   }
 
-  .unica-mark[data-unica-mark-status='warning'] {
+  [data-unica-mark-status='warning'] {
     --mark-bg: var(--status-warning-soft-bg);
     --mark-fg: var(--status-warning-soft-fg);
     --mark-border: var(--status-warning-border);
     --mark-signal: var(--status-warning-signal);
   }
 
-  .unica-mark[data-unica-mark-status='danger'] {
+  [data-unica-mark-status='danger'] {
     --mark-bg: var(--status-danger-soft-bg);
     --mark-fg: var(--status-danger-soft-fg);
     --mark-border: var(--status-danger-border);
