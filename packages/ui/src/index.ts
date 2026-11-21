@@ -47,3 +47,21 @@ export { ProgressCircle } from './components/Progress/ProgressCircle.js';
 export type { ProgressCircleProps } from './components/Progress/ProgressCircle.js';
 export { Spinner } from './components/Progress/Spinner.js';
 export type { SpinnerProps, SpinnerSize, SpinnerTone } from './components/Progress/Spinner.js';
+
+export { Text } from './components/Text/Text.js';
+export type {
+  TextAlign,
+  TextColor,
+  TextProps,
+  TextSize,
+  TextTag,
+  TextWeight,
+} from './components/Text/Text.js';
+export { Title } from './components/Title/Title.js';
+export type {
+  HeadingTag,
+  TitleProps,
+  TitleSize,
+  TitleTextWrap,
+  TitleWeight,
+} from './components/Title/Title.js';

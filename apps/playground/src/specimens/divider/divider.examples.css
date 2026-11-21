@@ -49,11 +49,6 @@
   min-inline-size: 0;
 }
 
-.divider-demo-row > .text-proto {
-  min-inline-size: 0;
-  overflow-wrap: anywhere;
-}
-
 .divider-demo-columns {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 1px minmax(0, 1fr);

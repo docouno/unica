@@ -118,14 +118,14 @@
   line-height: var(--text-size-body-m-lh);
 }
 
-.empty-example-reports > .title-proto:focus-visible {
+.empty-example-reports-title:focus-visible {
   border-radius: var(--radius-xs);
   outline: 2px solid var(--focus-ring-color);
   outline-offset: 3px;
 }
 
 @media (forced-colors: active) {
-  .empty-example-reports > .title-proto:focus-visible {
+  .empty-example-reports-title:focus-visible {
     outline-color: Highlight;
   }
 }
@@ -139,7 +139,7 @@
   border-block-start: 1px solid var(--border-subtle);
 }
 
-.empty-example-reset > .text-proto {
+.empty-example-reset > [role='status'] {
   flex: 1 1 8ch;
   min-inline-size: 0;
 }

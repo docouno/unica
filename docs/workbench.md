@@ -61,14 +61,14 @@ Place each catalog entry under `apps/playground/src/specimens/<family>/*.spec.ts
 Use a stable `id`, a `title`, a catalog `category`, and a `status`. The same props drive Playground controls and Matrix. This minimal Title example demonstrates an author-declared rule.
 
 ```tsx
-import { Title } from '../../prototypes/title/title.proto.js';
+import { Title } from '@docouno/unica';
 import { defineComponent } from '../../workbench/types.js';
 
 export default defineComponent({
   id: 'article-title',
   title: 'Article title',
   category: 'Typography',
-  status: 'Proto',
+  status: 'UI',
   componentName: 'Title',
   props: {
     truncate: {
@@ -151,16 +151,6 @@ Prototype styles use semantic CSS custom properties. Do not branch on theme name
 
 Use the system's structural roles and established vocabulary when describing the design. Illustrative JSX and prototype controls help explain anatomy and use; exact TypeScript signatures, internal state architecture, and complete reusable focus/form/ARIA mechanisms are resolved during library implementation. Record expected user outcomes separately from mechanisms not yet implemented. Identify native stand-ins for adjacent unfinished families.
 
-After visual approval, implement the family in `packages/ui` in a separate change. Preserve approved appearance and interaction and resolve any new product or visual conflict explicitly. Keep the same specimen ID. Once the package exports the component, switch the import and status as shown for the Title example.
-
-```diff
--import { Title } from '../../prototypes/title/title.proto.js';
-+import { Title } from '@docouno/unica';
-
- export default defineComponent({
-   id: 'article-title',
--  status: 'Proto',
-+  status: 'UI',
-```
+After visual approval, implement the family in `packages/ui` in a separate change. Preserve approved appearance and interaction and resolve any new product or visual conflict explicitly. Keep the same specimen ID. When the component ships, import it from `@docouno/unica` and set `status: 'UI'`.
 
 Update the schema, examples, and JSX readout to match the shipped API. Switch scene imports to the package, remove the temporary prototype and its component CSS, and retain example layout styles. Record the public contract in `docs/components/<family>.md`. Run the repository checks, tests, build, package verification, and visual inspection before handoff.

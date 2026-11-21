@@ -1,4 +1,4 @@
-import { Blockquote, Code, Icon } from '@docouno/unica';
+import { Blockquote, Code, Icon, Text, Title } from '@docouno/unica';
 import { useState } from 'react';
 import type { ReactElement, ReactNode } from 'react';
 import { CopyIcon, FileTextIcon, PlusIcon, SidebarSimpleIcon } from '@phosphor-icons/react';
@@ -33,8 +33,6 @@ import {
   TableRowHeader,
   TableScroll,
 } from '../../prototypes/table/table.proto.js';
-import { Text } from '../../prototypes/text/text.proto.js';
-import { Title } from '../../prototypes/title/title.proto.js';
 import './folio.css';
 
 export interface FolioSceneProps {

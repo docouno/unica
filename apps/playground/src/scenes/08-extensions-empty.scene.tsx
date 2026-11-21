@@ -30,11 +30,9 @@ import {
   EmptyTitle,
 } from '../prototypes/empty/empty.proto.js';
 import { ToastCard } from '../prototypes/toast/toast.proto.js';
-import { Spinner, Icon } from '@docouno/unica';
+import { Icon, Spinner, Text, Title } from '@docouno/unica';
 import { Input } from '../prototypes/input/input.proto.js';
 import { List, ListItem } from '../prototypes/list/list.proto.js';
-import { Text } from '../prototypes/text/text.proto.js';
-import { Title } from '../prototypes/title/title.proto.js';
 import { FolioScene, FolioWorkspace, PageIntro, SectionHeading } from './folio/folio.shared.js';
 import './folio/folio.settings.css';
 
@@ -156,7 +154,7 @@ function ExtensionsScene(): ReactElement {
                         v2.4 · GitOps
                       </Text>
                     </div>
-                    <Text size="body-s" color="secondary">
+                    <Text size="body-xs" color="secondary">
                       Syncs ADR pull requests and runbook frontmatter with default branch commits.
                     </Text>
                   </div>
@@ -211,7 +209,7 @@ function ExtensionsScene(): ReactElement {
                         v1.9 · On-call
                       </Text>
                     </div>
-                    <Text size="body-s" color="secondary">
+                    <Text size="body-xs" color="secondary">
                       Attaches verified Tier-0 playbooks automatically to high-urgency service
                       alerts.
                     </Text>

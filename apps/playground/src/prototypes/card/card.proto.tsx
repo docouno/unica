@@ -1,6 +1,6 @@
 import type { ComponentPropsWithRef, CSSProperties, ReactElement } from 'react';
-import { Title } from '../title/title.proto.js';
-import type { TitleProps } from '../title/title.proto.js';
+import { Title } from '@docouno/unica';
+import type { TitleProps } from '@docouno/unica';
 import './card.css';
 
 export interface CardProps extends ComponentPropsWithRef<'div'> {

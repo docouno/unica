@@ -84,9 +84,6 @@
   flex-wrap: wrap;
   gap: var(--space-8);
 }
-.folio-auth-compliance > .text-proto {
-  font-size: var(--text-size-caption-l);
-}
 .folio-content {
   container: folio-content / inline-size;
   min-inline-size: 0;
@@ -222,10 +219,6 @@
 .folio-document-copy {
   display: grid;
   gap: 6px;
-}
-.folio-document-description.text-proto {
-  --text-size-body-s: var(--text-size-body-xs);
-  --text-size-body-s-lh: var(--text-size-body-xs-lh);
 }
 .folio-document-title {
   --text-size-body-m: var(--text-size-body-s);
@@ -666,9 +659,6 @@
   .folio-auth-topbar > .folio-row:last-child {
     inline-size: 100%;
     justify-content: end;
-  }
-  .folio-auth-topbar .text-proto {
-    font-size: var(--text-size-caption-l);
   }
   .folio-auth-card.card-proto {
     padding: var(--space-24);

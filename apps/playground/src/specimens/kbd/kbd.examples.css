@@ -100,7 +100,7 @@
   padding: var(--space-16);
   min-inline-size: 0;
 }
-.kbd-example-overlay > .text-proto {
+.kbd-example-overlay > p {
   padding: var(--space-8);
   border-radius: var(--radius-xs);
   background: var(--bg-canvas);

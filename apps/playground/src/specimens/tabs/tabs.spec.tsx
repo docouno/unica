@@ -12,7 +12,7 @@ import { defineComponent } from '../../workbench/types.js';
 import { Card } from '../../prototypes/card/card.proto.js';
 import { Input } from '../../prototypes/input/input.proto.js';
 import { PopoverContent } from '../../prototypes/popover/popover.proto.js';
-import { Text } from '../../prototypes/text/text.proto.js';
+import { Text } from '@docouno/unica';
 import { Tabs, TabsContent, TabsList, TabsTab } from '../../prototypes/tabs/tabs.proto.js';
 import type { TabsListProps, TabsProps, TabsTabProps } from '../../prototypes/tabs/tabs.proto.js';
 import '../../prototypes/tabs/tabs.examples.css';

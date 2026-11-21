@@ -1,4 +1,4 @@
-import { Code } from '@docouno/unica';
+import { Code, Text, Title } from '@docouno/unica';
 import { previewProps, previewText } from '../preview-code.js';
 import { defineComponent } from '../../workbench/types.js';
 import { Button } from '../../prototypes/button/button.proto.js';
@@ -10,8 +10,6 @@ import {
   PopoverBody,
   PopoverTitle,
 } from '../../prototypes/popover/popover.proto.js';
-import { Text } from '../../prototypes/text/text.proto.js';
-import { Title } from '../../prototypes/title/title.proto.js';
 import './code.examples.css';
 
 const defaultLiteral = 'git status --short';

@@ -10,7 +10,7 @@ import {
 import { IconButton } from '../button/button.proto.js';
 import { Kbd, KbdGroup } from '@docouno/unica';
 import { Link } from '../link/link.proto.js';
-import { Text } from '../text/text.proto.js';
+import { Text } from '@docouno/unica';
 import { Tooltip } from './tooltip.proto.js';
 import type { HintAlign, HintSide } from './tooltip.proto.js';
 import { HintPreview } from './tooltip.preview.js';

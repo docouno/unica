@@ -2,7 +2,7 @@ import { useId, useLayoutEffect, useRef, useState } from 'react';
 import type { ReactElement } from 'react';
 import { Button } from '../button/button.proto.js';
 import { Input } from '../input/input.proto.js';
-import { Text } from '../text/text.proto.js';
+import { Text } from '@docouno/unica';
 import {
   PopoverBody,
   PopoverClose,

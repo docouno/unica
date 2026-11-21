@@ -16,8 +16,7 @@ import { defineComponent } from '../../workbench/types.js';
 import { Badge } from '../../prototypes/badge/badge.proto.js';
 import type { BadgeStatus } from '../../prototypes/badge/badge.proto.js';
 import type { GlyphSource } from '@docouno/unica';
-import { Text } from '../../prototypes/text/text.proto.js';
-import { Title } from '../../prototypes/title/title.proto.js';
+import { Text, Title } from '@docouno/unica';
 import '../../prototypes/badge/badge.examples.css';
 
 const statuses: readonly {

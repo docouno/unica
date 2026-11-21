@@ -1,3 +1,5 @@
+import '@fontsource-variable/inter/wght-italic.css';
+import '@fontsource-variable/jetbrains-mono/wght-italic.css';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { WorkbenchApp } from './workbench/WorkbenchApp.js';

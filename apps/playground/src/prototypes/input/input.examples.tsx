@@ -7,7 +7,7 @@ import {
   MagnifyingGlassIcon,
 } from '@phosphor-icons/react';
 import { Button } from '../button/button.proto.js';
-import { Text } from '../text/text.proto.js';
+import { Text } from '@docouno/unica';
 import { Input } from './input.proto.js';
 import type { FieldStatus } from './input.proto.js';
 import './input.examples.css';

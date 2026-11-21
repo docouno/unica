@@ -1,6 +1,5 @@
 import type { CSSProperties, ReactElement, Ref } from 'react';
-import type { TextSize } from '../text/text.proto.js';
-import type { TitleSize } from '../title/title.proto.js';
+import type { TextSize, TitleSize } from '@docouno/unica';
 import './skeleton.css';
 
 // Visual primitives only. Timing, request state, and announcements belong to the host.
@@ -42,7 +41,7 @@ export function Skeleton({
   );
 }
 
-export type SkeletonTextSize = TextSize | TitleSize;
+export type SkeletonTextSize = Exclude<TextSize, 'body-xs'> | TitleSize;
 
 export interface SkeletonTextProps extends PlaceholderProps {
   readonly ref?: Ref<HTMLDivElement>;

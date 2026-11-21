@@ -40,7 +40,7 @@ import {
   TableRowHeader,
   TableScroll,
 } from '../prototypes/table/table.proto.js';
-import { Text } from '../prototypes/text/text.proto.js';
+import { Text } from '@docouno/unica';
 import { FolioScene, SectionHeading } from './folio/folio.shared.js';
 import './folio/folio.settings.css';
 
@@ -126,7 +126,7 @@ function PreferencesScene(): ReactElement {
                   <Text size="body-s" weight="medium">
                     Interface color mode
                   </Text>
-                  <Text size="body-s" className="folio-preference-description" color="muted">
+                  <Text size="body-xs" color="muted">
                     Follow operating system polarity or lock workspace theme.
                   </Text>
                 </div>
@@ -147,7 +147,7 @@ function PreferencesScene(): ReactElement {
                   <Text size="body-s" weight="medium">
                     Code &amp; terminal typeface
                   </Text>
-                  <Text size="body-s" className="folio-preference-description" color="muted">
+                  <Text size="body-xs" color="muted">
                     Monospace family rendered inside runbook snippets and SQL probes.
                   </Text>
                 </div>
@@ -171,7 +171,7 @@ function PreferencesScene(): ReactElement {
                   <Text size="body-s" weight="medium">
                     Editorial prose measure
                   </Text>
-                  <Text size="body-s" className="folio-preference-description" color="muted">
+                  <Text size="body-xs" color="muted">
                     Maximum reading column width for long-form architecture decisions and
                     postmortems.
                   </Text>
@@ -198,7 +198,7 @@ function PreferencesScene(): ReactElement {
                   <Text size="body-s" weight="medium">
                     Typography scale &amp; draft autosave
                   </Text>
-                  <Text size="body-s" className="folio-preference-description" color="muted">
+                  <Text size="body-xs" color="muted">
                     Adjust reading zoom and local snapshot frequency while editing.
                   </Text>
                 </div>
@@ -235,7 +235,7 @@ function PreferencesScene(): ReactElement {
                   <Text size="body-s" weight="medium">
                     Inline diff context window
                   </Text>
-                  <Text size="body-s" className="folio-preference-description" color="muted">
+                  <Text size="body-xs" color="muted">
                     Unchanged surrounding lines shown around each revision hunk.
                   </Text>
                 </div>

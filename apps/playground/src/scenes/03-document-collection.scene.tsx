@@ -35,8 +35,7 @@ import {
 } from '../prototypes/table/table.proto.js';
 import { TagGroup } from '../prototypes/tag/tag.proto.js';
 import type { TagGroupItem } from '../prototypes/tag/tag.proto.js';
-import { Text } from '../prototypes/text/text.proto.js';
-import { Title } from '../prototypes/title/title.proto.js';
+import { Text, Title } from '@docouno/unica';
 import {
   Breadcrumb,
   BreadcrumbLink,

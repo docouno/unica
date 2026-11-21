@@ -1,5 +1,5 @@
 import type { ReactElement, ReactNode } from 'react';
-import { Text } from '../text/text.proto.js';
+import { Text } from '@docouno/unica';
 import './combobox.examples.css';
 
 export function Study({

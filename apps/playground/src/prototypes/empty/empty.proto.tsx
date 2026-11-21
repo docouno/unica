@@ -1,8 +1,7 @@
 import { Children, createElement } from 'react';
 import type { ComponentPropsWithRef, ReactElement, ReactNode } from 'react';
 import { Icon } from '@docouno/unica';
-import type { GlyphSource } from '@docouno/unica';
-import type { HeadingTag } from '../title/title.proto.js';
+import type { GlyphSource, HeadingTag } from '@docouno/unica';
 import './empty.css';
 
 export interface EmptyProps extends ComponentPropsWithRef<'div'> {

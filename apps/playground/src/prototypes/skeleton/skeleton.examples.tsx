@@ -4,11 +4,8 @@ import { ArrowClockwiseIcon, FileTextIcon, WarningCircleIcon } from '@phosphor-i
 import { Avatar } from '../avatar/avatar.proto.js';
 import { Button } from '../button/button.proto.js';
 import { Card, CardMedia } from '../card/card.proto.js';
-import { Icon } from '@docouno/unica';
-import { Text } from '../text/text.proto.js';
-import type { TextSize } from '../text/text.proto.js';
-import { Title } from '../title/title.proto.js';
-import type { TitleSize } from '../title/title.proto.js';
+import { Icon, Text, Title } from '@docouno/unica';
+import type { TextSize, TitleSize } from '@docouno/unica';
 import { Skeleton, SkeletonText } from './skeleton.proto.js';
 import type { SkeletonTextSize } from './skeleton.proto.js';
 import './skeleton.examples.css';
@@ -89,11 +86,13 @@ function MetricText({
       </>
     );
   return size.startsWith('display') || size.startsWith('heading') ? (
-    <Title as="h3" size={size as TitleSize}>
+    <Title as="h3" size={size as TitleSize} className="skeleton-demo-metric-text">
       {words}
     </Title>
   ) : (
-    <Text size={size as TextSize}>{words}</Text>
+    <Text size={size as TextSize} className="skeleton-demo-metric-text">
+      {words}
+    </Text>
   );
 }
 

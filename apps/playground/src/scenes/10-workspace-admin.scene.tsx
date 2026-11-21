@@ -23,8 +23,7 @@ import {
 import type { FileItemStatus } from '../prototypes/file-input/file-input.proto.js';
 import { RadioCard } from '../prototypes/choice-card/choice-card.proto.js';
 import { Stepper, StepperStep } from '../prototypes/stepper/stepper.proto.js';
-import { Text } from '../prototypes/text/text.proto.js';
-import { Title } from '../prototypes/title/title.proto.js';
+import { Text, Title } from '@docouno/unica';
 import { FolioScene, PageIntro } from './folio/folio.shared.js';
 import './folio/folio.settings.css';
 
@@ -70,7 +69,7 @@ function WorkspaceAdminScene(): ReactElement {
   const feedbackRegion = useRef<HTMLDivElement>(null);
   const sourceHeading = useRef<HTMLHeadingElement>(null);
   const verificationHeading = useRef<HTMLHeadingElement>(null);
-  const commitStatus = useRef<HTMLElement>(null);
+  const commitStatus = useRef<HTMLParagraphElement>(null);
   useLayoutEffect(() => {
     if (currentStep === 'commit') {
       commitStatus.current?.focus();

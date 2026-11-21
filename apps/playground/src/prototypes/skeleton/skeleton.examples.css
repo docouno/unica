@@ -89,7 +89,7 @@
   border-block: 1px solid var(--border-default);
 }
 
-.skeleton-demo-metric-cell > .type-proto {
+.skeleton-demo-metric-text {
   white-space: nowrap;
 }
 

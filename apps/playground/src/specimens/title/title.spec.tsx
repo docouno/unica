@@ -1,16 +1,17 @@
 import { Kbd } from '@docouno/unica';
 import { previewProps, previewText } from '../preview-code.js';
 import { defineComponent } from '../../workbench/types.js';
-import { Text } from '../../prototypes/text/text.proto.js';
+import { Text, Title } from '@docouno/unica';
 import {
   EditorCopy,
   Example,
   longHeading,
   OverlayCopy,
   SignInCopy,
-} from '../../prototypes/text/typography.examples.js';
-import { Title } from '../../prototypes/title/title.proto.js';
-import type { HeadingTag, TitleSize } from '../../prototypes/title/title.proto.js';
+} from '../text/typography.examples.js';
+import type { HeadingTag, TitleSize } from '@docouno/unica';
+import type { Constraint } from '../../workbench/types.js';
+import { clampPrecedence, clampSteps, typographyControls } from '../text/typography.controls.js';
 
 const sizes: readonly TitleSize[] = [
   'display-l',
@@ -27,7 +28,7 @@ export default defineComponent({
   id: 'title',
   title: 'Title',
   category: 'Typography',
-  status: 'Proto',
+  status: 'UI',
   summary: 'Semantic h1–h6, independent visual sizes, and browser-native heading wraps.',
   componentName: 'Title',
   props: {
@@ -69,6 +70,7 @@ export default defineComponent({
       description: 'Visual weight of the heading.',
       choices: [{ value: 'medium' }, { value: 'semibold' }, { value: 'bold' }],
     },
+    ...typographyControls,
     textWrap: {
       kind: 'enum',
       group: 'Overflow',
@@ -82,69 +84,57 @@ export default defineComponent({
       default: 'A shared place for the knowledge that moves your team forward',
       description: 'Heading to measure or wrap.',
     },
-    lineClamp: {
-      kind: 'slot',
-      group: 'Overflow',
-      default: 'off',
-      description: 'Limit the text to a fixed number of lines.',
-      choices: [
-        { value: 'off', label: 'Off' },
-        { value: '2', label: '2 lines' },
-        { value: '3', label: '3 lines' },
-      ],
-    },
-    truncate: {
-      kind: 'boolean',
-      group: 'Overflow',
-      default: false,
-      description: 'Keep the content on one line and indicate overflow with an ellipsis.',
-    },
   },
   constraints: [
-    {
-      kind: 'precedence',
-      when: { lineClamp: '2' },
-      affects: [{ key: 'truncate', value: true }],
-      reason: 'A two-line clamp takes precedence over single-line truncation.',
-    },
-    {
-      kind: 'precedence',
-      when: { lineClamp: '3' },
-      affects: [{ key: 'truncate', value: true }],
-      reason: 'A three-line clamp takes precedence over single-line truncation.',
-    },
+    ...clampPrecedence,
     {
       kind: 'ignored',
       when: { truncate: true, lineClamp: 'off' },
       affects: ['textWrap'],
       reason: 'Single-line truncation sets its own wrapping behavior.',
     },
-    {
+    ...clampSteps.map((lineClamp): Constraint => ({
       kind: 'ignored',
-      when: { lineClamp: '2' },
+      when: { lineClamp },
       affects: ['textWrap'],
-      reason: 'A line clamp sets its own wrapping behavior.',
-    },
-    {
-      kind: 'ignored',
-      when: { lineClamp: '3' },
-      affects: ['textWrap'],
-      reason: 'A line clamp sets its own wrapping behavior.',
-    },
+      reason: 'Line clamp sets its own wrapping behavior.',
+    })),
   ],
-  render: ({ ctx, values: { children, size, lineClamp, ...props } }) => (
+  render: ({ ctx, values: { children, size, lineClamp, align, italic, ...props } }) => (
     <Title
       {...ctx.subject}
       {...props}
-      {...(size === 'auto' ? {} : { size })}
-      {...(lineClamp === 'off' ? {} : { lineClamp: Number(lineClamp) })}
-      style={{ maxInlineSize: '26rem' }}
+      size={size === 'auto' ? undefined : size}
+      lineClamp={lineClamp === 'off' ? undefined : Number(lineClamp)}
+      align={align === 'inherit' ? undefined : align}
+      italic={italic === 'auto' ? undefined : italic === 'italic'}
+      style={{ maxInlineSize: 'min(100%, 26rem)' }}
     >
       {children}
     </Title>
   ),
-  code: ({ children, size, lineClamp, ...props }) =>
-    `<Title${previewProps({ ...props, size }, { as: 'h1', size: 'auto', weight: 'semibold', textWrap: 'wrap', truncate: false })}${lineClamp === 'off' ? '' : ` lineClamp={${lineClamp}}`}>${previewText(children)}</Title>`,
+  code: ({ children, size, lineClamp, align, italic, ...props }) => {
+    const attributes = previewProps(
+      {
+        ...props,
+        size,
+        align,
+        ...(italic === 'auto' ? {} : { italic: italic === 'italic' }),
+        ...(lineClamp === 'off' ? {} : { lineClamp: Number(lineClamp) }),
+      },
+      {
+        as: 'h1',
+        size: 'auto',
+        weight: 'semibold',
+        color: 'inherit',
+        align: 'inherit',
+        tabularNums: false,
+        textWrap: 'wrap',
+        truncate: false,
+      },
+    );
+    return `<Title${attributes}>${previewText(children)}</Title>`;
+  },
   matrixViews: [
     {
       id: 'scale',
@@ -255,23 +245,23 @@ export default defineComponent({
     {
       id: 'auth',
       code: `<header>
-  <Title as="h1">Sign in to Folio</Title>
-  <Text color="secondary">Use your work email to continue.</Text>
+  <Title textWrap="balance">Good work starts with shared context.</Title>
+  <Text color="secondary">Bring your notes, decisions, and people together in one calm workspace.</Text>
 </header>`,
       title: 'Folio · Sign-in introduction',
       render: () => <SignInCopy />,
     },
     {
       id: 'editor',
-      code: `<Title as="h1" size="heading-xl" textWrap="balance">Service recovery plan</Title>`,
+      code: `<Title textWrap="balance">Make room for the next good idea</Title>`,
       title: 'Folio · Editor, 760px maximum measure',
       render: () => <EditorCopy />,
     },
     {
       id: 'drawer',
       code: `<header>
-  <Title as="h2" size="heading-m">Page properties</Title>
-  <Text color="secondary">Manage this page’s details.</Text>
+  <Title as="h2" size="heading-xl" textWrap="balance">Everything this page connects</Title>
+  <Text color="secondary">Keep ownership, review dates, and related decisions close to the document.</Text>
 </header>`,
       title: 'Folio · 520px drawer copy',
       surface: 'overlay',
@@ -281,8 +271,8 @@ export default defineComponent({
     {
       id: 'modal',
       code: `<header>
-  <Title as="h2" size="heading-m">Invite people</Title>
-  <Text color="secondary">Choose an access level.</Text>
+  <Title as="h2" size="heading-xl" textWrap="balance">Invite your team to the workspace</Title>
+  <Text color="secondary">Give people the context and access they need to contribute with confidence.</Text>
 </header>`,
       title: 'Folio · 548px invitation copy',
       surface: 'overlay',

@@ -1,0 +1,94 @@
+@layer unica.components {
+  :is(.unica-text, .unica-title) {
+    margin: 0;
+    min-inline-size: 0;
+    font-family: var(--font-family-base);
+    font-size: var(--unica-type-size);
+    line-height: var(--unica-type-line-height);
+    font-weight: var(--unica-type-weight);
+    letter-spacing: normal;
+    color: inherit;
+    overflow-wrap: anywhere;
+  }
+
+  :is(.unica-text, .unica-title)[data-unica-type-color='primary'] {
+    color: var(--fg-primary);
+  }
+
+  :is(.unica-text, .unica-title)[data-unica-type-color='secondary'] {
+    color: var(--fg-secondary);
+  }
+
+  :is(.unica-text, .unica-title)[data-unica-type-color='muted'] {
+    color: var(--fg-muted);
+  }
+
+  :is(.unica-text, .unica-title)[data-unica-type-color='subtle'] {
+    color: var(--fg-subtle);
+  }
+
+  :is(.unica-text, .unica-title)[data-unica-type-color='accent'] {
+    color: var(--accent-soft-fg);
+  }
+
+  :is(.unica-text, .unica-title)[data-unica-type-color='info'] {
+    color: var(--status-info-soft-fg);
+  }
+
+  :is(.unica-text, .unica-title)[data-unica-type-color='success'] {
+    color: var(--status-success-soft-fg);
+  }
+
+  :is(.unica-text, .unica-title)[data-unica-type-color='warning'] {
+    color: var(--status-warning-soft-fg);
+  }
+
+  :is(.unica-text, .unica-title)[data-unica-type-color='danger'] {
+    color: var(--status-danger-soft-fg);
+  }
+
+  :is(.unica-text, .unica-title)[data-unica-type-align='start'] {
+    text-align: start;
+  }
+
+  :is(.unica-text, .unica-title)[data-unica-type-align='center'] {
+    text-align: center;
+  }
+
+  :is(.unica-text, .unica-title)[data-unica-type-align='end'] {
+    text-align: end;
+  }
+
+  :is(.unica-text, .unica-title)[data-unica-type-style='italic'] {
+    font-style: italic;
+  }
+
+  :is(.unica-text, .unica-title)[data-unica-type-style='normal'] {
+    font-style: normal;
+  }
+
+  :is(.unica-text, .unica-title)[data-unica-type-numeric] {
+    font-variant-numeric: tabular-nums;
+  }
+
+  :is(.unica-text, .unica-title)[data-unica-type-overflow='truncate']:not([hidden]) {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    max-inline-size: 100%;
+  }
+
+  :is(.unica-text, .unica-title)[data-unica-type-overflow='clamp']:not([hidden]) {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    white-space: normal;
+    text-wrap: wrap;
+  }
+
+  @media (forced-colors: active) {
+    :is(.unica-text, .unica-title)[data-unica-type-color] {
+      color: inherit;
+    }
+  }
+}

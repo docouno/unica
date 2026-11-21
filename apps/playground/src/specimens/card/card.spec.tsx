@@ -12,11 +12,10 @@ import {
   StackIcon,
 } from '@phosphor-icons/react';
 import { defineComponent } from '../../workbench/types.js';
-import { Text } from '../../prototypes/text/text.proto.js';
+import { Icon, Text } from '@docouno/unica';
 import { Badge } from '../../prototypes/badge/badge.proto.js';
 import { Button, IconButton } from '../../prototypes/button/button.proto.js';
 import { Checkbox } from '../../prototypes/binary-controls/binary-controls.proto.js';
-import { Icon } from '@docouno/unica';
 import { Skeleton, SkeletonText } from '../../prototypes/skeleton/skeleton.proto.js';
 import { PopoverContent } from '../../prototypes/popover/popover.proto.js';
 import {

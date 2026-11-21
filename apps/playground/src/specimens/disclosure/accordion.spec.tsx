@@ -14,8 +14,7 @@ import {
   PopoverHeader,
   PopoverTitle,
 } from '../../prototypes/popover/popover.proto.js';
-import { Text } from '../../prototypes/text/text.proto.js';
-import { Title } from '../../prototypes/title/title.proto.js';
+import { Text, Title } from '@docouno/unica';
 import {
   Accordion,
   AccordionContent,

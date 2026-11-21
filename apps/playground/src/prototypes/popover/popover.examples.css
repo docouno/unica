@@ -12,7 +12,7 @@
   padding: var(--space-8);
 }
 
-.popover-demo-sample > .text-proto {
+.popover-demo-sample > p {
   justify-self: center;
   padding: var(--space-4) var(--space-8);
   border-radius: var(--radius-xs);
@@ -327,7 +327,7 @@
   }
 }
 
-.popover-demo-disabled > .text-proto {
+.popover-demo-disabled > p {
   padding: var(--space-4) var(--space-8);
   border-radius: var(--radius-xs);
   background: var(--bg-canvas);

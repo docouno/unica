@@ -24,7 +24,7 @@ import { TeamPreview } from '../prototypes/tooltip/hover-card.content.js';
 import { Link } from '../prototypes/link/link.proto.js';
 import { Switch } from '../prototypes/binary-controls/binary-controls.proto.js';
 import { Tabs, TabsContent, TabsList, TabsTab } from '../prototypes/tabs/tabs.proto.js';
-import { Text } from '../prototypes/text/text.proto.js';
+import { Text } from '@docouno/unica';
 import {
   Breadcrumb,
   BreadcrumbLink,

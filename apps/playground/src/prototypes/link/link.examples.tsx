@@ -1,16 +1,14 @@
 import { useId, useSyncExternalStore } from 'react';
 import type { ReactElement, ReactNode } from 'react';
 import { ArrowRightIcon, FileTextIcon } from '@phosphor-icons/react';
-import { Icon } from '@docouno/unica';
-import { Text } from '../text/text.proto.js';
-import type { TextSize } from '../text/text.proto.js';
-import { Title } from '../title/title.proto.js';
+import { Icon, Text, Title } from '@docouno/unica';
 import { Link } from './link.proto.js';
+import type { LinkSize } from './link.proto.js';
 import type { LinkProps } from './link.proto.js';
 import './link.examples.css';
 
 const reference = 'https://www.w3.org/WAI/';
-const sizes: readonly TextSize[] = [
+const sizes: readonly Exclude<LinkSize, 'inherit'>[] = [
   'body-l',
   'body-m',
   'body-s',

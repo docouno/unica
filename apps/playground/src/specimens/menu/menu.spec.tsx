@@ -12,7 +12,7 @@ import {
   TrashIcon,
 } from '@phosphor-icons/react';
 import { Button, IconButton } from '../../prototypes/button/button.proto.js';
-import { Text } from '../../prototypes/text/text.proto.js';
+import { Text } from '@docouno/unica';
 import { defineComponent } from '../../workbench/types.js';
 import { Menu } from '../../prototypes/menu/menu.live.js';
 import { MenuBack, MenuPreview, MenuRows, MenuSurface } from '../../prototypes/menu/menu.proto.js';

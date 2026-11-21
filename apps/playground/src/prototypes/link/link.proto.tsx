@@ -2,14 +2,16 @@ import { useId } from 'react';
 import type { ComponentPropsWithRef, ReactElement } from 'react';
 import { ArrowUpRightIcon } from '@phosphor-icons/react/ssr';
 import { Icon, defineGlyph } from '@docouno/unica';
-import type { TextSize } from '../text/text.proto.js';
+import type { TextSize } from '@docouno/unica';
 import './link.css';
 
 const ExternalGlyph = defineGlyph(ArrowUpRightIcon, 'phosphor');
 
+export type LinkSize = Exclude<TextSize, 'body-xs'> | 'inherit';
+
 export interface LinkProps extends ComponentPropsWithRef<'a'> {
   readonly tone?: 'accent' | 'neutral' | 'inherit';
-  readonly size?: TextSize | 'inherit';
+  readonly size?: LinkSize;
   readonly underline?: 'always' | 'hover' | 'none';
   readonly external?: boolean;
   readonly newTabHint?: string;

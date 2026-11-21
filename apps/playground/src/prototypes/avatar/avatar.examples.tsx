@@ -5,8 +5,7 @@ import { Avatar, AvatarGroup } from './avatar.proto.js';
 import type { AvatarGroupMember, AvatarGroupSize, AvatarSize } from './avatar.proto.js';
 import { Button } from '../button/button.proto.js';
 import type { ButtonProps } from '../button/button.proto.js';
-import { Icon } from '@docouno/unica';
-import { Text } from '../text/text.proto.js';
+import { Icon, Text } from '@docouno/unica';
 import { Tooltip } from '../tooltip/tooltip.proto.js';
 import './avatar.examples.css';
 

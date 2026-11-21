@@ -31,12 +31,6 @@
   gap: var(--space-12);
 }
 
-.input-demo-sample > .text-proto,
-.input-demo-stack > .text-proto,
-.input-demo-live > .text-proto {
-  overflow-wrap: anywhere;
-}
-
 .input-demo-live,
 .input-demo-live-pair {
   inline-size: min(100%, 32rem);
