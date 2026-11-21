@@ -34,7 +34,10 @@ export function HydratedControls(): JSX.Element {
     getControl: () => checkbox.current,
     write: (checked, context) => {
       if (checkbox.current) {
-        writeInputChecked(checkbox.current, checked, { syncDefault: context.controlled });
+        writeInputChecked(checkbox.current, checked, {
+          syncDefault: context.controlled,
+          force: context.force,
+        });
       }
     },
     onChange: () => changes.current++,
@@ -56,25 +59,26 @@ export function HydratedControls(): JSX.Element {
         ref={singleCarrier}
         name="single"
         initialValue={single.value}
-        options={catalog}
+        initialOptions={catalog}
         getFocusTarget={() => trigger.current}
       />
       <FormSelect
         ref={multiCarrier}
         name="multi"
         initialValue={multi.value}
-        options={catalog}
+        initialOptions={catalog}
         getFocusTarget={() => trigger.current}
       />
       <FormSelect
         ref={emptyCarrier}
         name="empty"
         initialValue={empty.value}
-        options={catalog}
+        initialOptions={catalog}
         getFocusTarget={() => trigger.current}
       />
       <FormInput
         ref={checkbox}
+        controlled={check.controlled}
         name="checked"
         type="checkbox"
         defaultChecked={check.value}

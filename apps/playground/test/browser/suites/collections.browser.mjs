@@ -80,60 +80,71 @@ const suite = {
       await pressKeys(page, 'ArrowRight');
       await expectTab(page, 'A');
 
-      // Unrelated rerenders must keep item ref callbacks stable (zero ref detach/attach churn).
+      // Unrelated rerenders must keep merged item refs and handlers stable (zero detach/reattach churn).
       await activate(page, 'Rerender tabs');
       await activate(page, 'Rerender tabs');
       assert.equal(await page.getByTestId('roving-ref-changes').textContent(), '0');
+      assert.equal(await page.getByTestId('roving-handler-changes').textContent(), '0');
 
       // Blurring to empty background (relatedTarget === null) resets tabStop to entryKey.
       await pressKeys(page, 'ArrowLeft');
       await expectTab(page, 'C');
       await tab(page, 'C').evaluate((node) => node.blur());
-      await page.waitForTimeout(0);
+      await page.waitForFunction(() => {
+        const list = document.querySelector('[role="tablist"][aria-label="Tabs"]');
+        return list?.querySelector('[tabindex="0"]')?.textContent === 'A';
+      });
       assert.equal(await tab(page, 'A').getAttribute('tabindex'), '0');
       assert.equal(await tab(page, 'C').getAttribute('tabindex'), '-1');
-    },
-  'roving axes, wrap, empty, aria-disabled, blur-mutation race, and reordered collections stay in sync':
-    async ({ page, mount }) => {
-      await mount('collections');
-      await tab(page, 'A').focus();
-      await activate(page, 'Vertical tabs');
-      await pressKeys(page, 'ArrowRight');
-      await expectTab(page, 'A');
-      await pressKeys(page, 'ArrowUp');
-      await expectTab(page, 'A');
-      await activate(page, 'Toggle wrap');
-      await pressKeys(page, 'ArrowUp');
-      await expectTab(page, 'C');
-      await activate(page, 'Both axes');
-      await pressKeys(page, 'ArrowRight', 'ArrowDown');
-      await expectTab(page, 'B');
-      await activate(page, 'Reorder tabs');
-      await expectTab(page, 'B');
-      await pressKeys(page, 'ArrowRight');
-      await expectTab(page, 'A');
 
-      // Clicking a non-navigable aria-disabled item clears stale focusedKey to entryKey.
-      await activate(page, 'Aria disable B');
-      await tab(page, 'C').focus();
-      await tab(page, 'B').focus();
-      assert.equal(await tab(page, 'A').getAttribute('tabindex'), '0');
-
-      await activate(page, 'Remove all');
-      assert.equal(
-        await page
-          .getByRole('tablist', { name: 'Tabs', exact: true })
-          .locator('[tabindex="0"]')
-          .count(),
-        0,
-      );
+      // Newly appended item with autoFocus keeps focusedKey and tabIndex="0" (useInsertionEffect).
+      await button(page, 'Add autoFocus tab D').click();
+      await expectTab(page, 'D');
     },
+  'roving axes, wrap, empty, aria-disabled, and reordered collections stay in sync': async ({
+    page,
+    mount,
+  }) => {
+    await mount('collections');
+    await tab(page, 'A').focus();
+    await activate(page, 'Vertical tabs');
+    await pressKeys(page, 'ArrowRight');
+    await expectTab(page, 'A');
+    await pressKeys(page, 'ArrowUp');
+    await expectTab(page, 'A');
+    await activate(page, 'Toggle wrap');
+    await pressKeys(page, 'ArrowUp');
+    await expectTab(page, 'C');
+    await activate(page, 'Both axes');
+    await pressKeys(page, 'ArrowRight', 'ArrowDown');
+    await expectTab(page, 'B');
+    await activate(page, 'Reorder tabs');
+    await expectTab(page, 'B');
+    await pressKeys(page, 'ArrowRight');
+    await expectTab(page, 'A');
+
+    // Clicking a non-navigable aria-disabled item clears stale focusedKey to entryKey.
+    await activate(page, 'Aria disable B');
+    await tab(page, 'C').focus();
+    await tab(page, 'B').focus();
+    assert.equal(await tab(page, 'A').getAttribute('tabindex'), '0');
+
+    await activate(page, 'Remove all');
+    assert.equal(
+      await page
+        .getByRole('tablist', { name: 'Tabs', exact: true })
+        .locator('[tabindex="0"]')
+        .count(),
+      0,
+    );
+  },
   'intentional blur to background followed by synchronous item removal does not steal focus back':
     async ({ page, mount }) => {
       await mount('collections');
       await activate(page, 'Enable remove B on blur');
       await tab(page, 'B').focus();
       await tab(page, 'B').evaluate((node) => node.blur());
+      assert.equal(await tab(page, 'B').count(), 0);
       assert.equal(await page.evaluate(() => document.activeElement === document.body), true);
     },
   'positional recovery chooses the previous row when the last row disappears': async ({
@@ -335,17 +346,31 @@ const suite = {
       await activate(page, 'Toggle typeahead listbox');
       assert.equal(await page.getByTestId('typeahead-active').textContent(), '');
     },
-  'Shadow DOM roving focus does not steal focus from an external input on collection mutation':
+  'Shadow DOM roving recovers focus internally and preserves external focus during live removal':
     async ({ page, mount }) => {
       await mount('collections');
       const host = page.locator('#shadow-roving-host');
       const outside = page.getByRole('textbox', { name: 'Outside shadow input' });
+
+      // 1. Positive Shadow DOM focus recovery: removing focused S1 moves focus to S2 inside shadowRoot.
       await host.getByRole('tab', { name: 'S1', exact: true }).focus();
-      await outside.focus();
       await host
         .getByRole('button', { name: 'Remove S1', exact: true })
         .evaluate((node) => node.click());
+      assert.equal(
+        await host.evaluate((node) => node.shadowRoot?.activeElement?.textContent),
+        'S2',
+      );
+
+      // 2. Negative guard (canRecoverFocus): if external focus takes over during S1 unmount while
+      // focused.current is still live, shadow roving sees docActive !== body and must not steal focus.
+      await host.getByRole('button', { name: 'Restore shadow items', exact: true }).click();
+      await host.getByRole('tab', { name: 'S1', exact: true }).focus();
+      await host
+        .getByRole('button', { name: 'Remove S1 and focus outside', exact: true })
+        .evaluate((node) => node.click());
       await assertFocused(outside);
+      assert.equal(await host.evaluate((node) => node.shadowRoot?.activeElement), null);
     },
 };
 

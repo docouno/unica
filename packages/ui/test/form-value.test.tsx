@@ -1,10 +1,61 @@
 import { act, cleanup, fireEvent, render, renderHook, screen } from '@testing-library/react';
-import { startTransition, Suspense, use, useRef, useState } from 'react';
-import type { JSX, ReactElement } from 'react';
-import { afterEach, describe, expect, it, vi } from 'vitest';
-import { FormInput, writeInputValue, writeRadioGroup } from '../src/core/forms/carriers.js';
+import { Component, startTransition, Suspense, use, useRef, useState } from 'react';
+import type { JSX, ReactElement, ReactNode } from 'react';
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import {
+  FormInput,
+  FormSelect,
+  writeInputChecked,
+  writeInputValue,
+  writeRadioGroup,
+  writeSelectValue,
+} from '../src/core/forms/carriers.js';
 import { subscribeNativeReset } from '../src/core/forms/NativeResetWitness.js';
 import { useFormValue } from '../src/core/forms/useFormValue.js';
+
+type RemoveListenerFn = (
+  this: EventTarget,
+  type: string,
+  listener: EventListenerOrEventListenerObject | null,
+  options?: boolean | EventListenerOptions,
+) => void;
+
+const removedListeners: { target: EventTarget; type: string }[] = [];
+let originalRemoveListener: RemoveListenerFn;
+
+beforeAll(() => {
+  const rawRemove: unknown = Reflect.get(EventTarget.prototype, 'removeEventListener');
+  originalRemoveListener = rawRemove as RemoveListenerFn;
+  EventTarget.prototype.removeEventListener = function removeEventListener(
+    type,
+    listener,
+    options,
+  ) {
+    removedListeners.push({ target: this, type });
+    Reflect.apply(originalRemoveListener, this, [type, listener, options]);
+  };
+});
+
+afterAll(() => {
+  Reflect.set(EventTarget.prototype, 'removeEventListener', originalRemoveListener);
+});
+
+beforeEach(() => {
+  removedListeners.length = 0;
+});
+
+class TestErrorBoundary extends Component<
+  { children: ReactNode; fallback: ReactNode },
+  { hasError: boolean }
+> {
+  override state = { hasError: false };
+  static getDerivedStateFromError(): { hasError: boolean } {
+    return { hasError: true };
+  }
+  override render(): ReactNode {
+    return this.state.hasError ? this.props.fallback : this.props.children;
+  }
+}
 
 afterEach(cleanup);
 
@@ -68,7 +119,10 @@ describe('useFormValue and native reset runtime (jsdom)', () => {
         getControl: () => localRef.current,
         write: (next, ctx) => {
           if (localRef.current) {
-            writeInputValue(localRef.current, next, { syncDefault: ctx.controlled });
+            writeInputValue(localRef.current, next, {
+              syncDefault: ctx.controlled,
+              force: ctx.force,
+            });
           }
         },
         onReset: onResetLocal,
@@ -79,7 +133,10 @@ describe('useFormValue and native reset runtime (jsdom)', () => {
         getControl: () => controlledRef.current,
         write: (next, ctx) => {
           if (controlledRef.current) {
-            writeInputValue(controlledRef.current, next, { syncDefault: ctx.controlled });
+            writeInputValue(controlledRef.current, next, {
+              syncDefault: ctx.controlled,
+              force: ctx.force,
+            });
           }
         },
         onReset: onResetControlled,
@@ -88,13 +145,15 @@ describe('useFormValue and native reset runtime (jsdom)', () => {
         <form data-testid="form">
           <FormInput
             ref={localRef}
+            controlled={local.controlled}
             name="local"
+            aria-label="Local input"
             defaultValue={local.value}
             onChange={(e) => local.propose(e.currentTarget.value)}
           />
           <FormInput
             ref={controlledRef}
-            controlled
+            controlled={ext.controlled}
             name="controlled"
             defaultValue={ext.value}
             onChange={(e) => ext.propose(e.currentTarget.value)}
@@ -129,12 +188,19 @@ describe('useFormValue and native reset runtime (jsdom)', () => {
     expect(new FormData(form).get('controlled')).toBe('committed');
     expect(onResetLocal).toHaveBeenCalledTimes(1);
     expect(onResetControlled).toHaveBeenCalledTimes(1);
+
+    // Re-entering the exact pre-reset value must still trigger React's onChange (_valueTracker synced).
+    fireEvent.change(screen.getByLabelText('Local input'), { target: { value: 'edited' } });
+    expect(screen.getByTestId('local').textContent).toBe('edited');
+    expect(new FormData(form).get('local')).toBe('edited');
   });
 
   it('is immune to HTMLFormElement DOM clobbering during reset', async () => {
     const form = document.createElement('form');
     const clobbers = [
+      'nodeType',
       'parentNode',
+      'parentElement',
       'append',
       'ownerDocument',
       'addEventListener',
@@ -144,12 +210,12 @@ describe('useFormValue and native reset runtime (jsdom)', () => {
     for (const name of clobbers) {
       const el = document.createElement('input');
       el.name = name;
-      form.append(el);
+      Element.prototype.append.call(form, el);
     }
     const target = document.createElement('input');
     target.name = 'field';
     target.defaultValue = 'initial';
-    form.append(target);
+    Element.prototype.append.call(form, target);
     document.body.append(form);
 
     try {
@@ -157,7 +223,8 @@ describe('useFormValue and native reset runtime (jsdom)', () => {
         useFormValue<string>({
           defaultValue: 'initial',
           getControl: () => target,
-          write: (next, ctx) => writeInputValue(target, next, { syncDefault: ctx.controlled }),
+          write: (next, ctx) =>
+            writeInputValue(target, next, { syncDefault: ctx.controlled, force: ctx.force }),
         }),
       );
 
@@ -296,15 +363,84 @@ describe('useFormValue and native reset runtime (jsdom)', () => {
     }
   });
 
-  it('reconciles suspended uncontrolled startTransition so urgent writes are not swallowed', async () => {
+  it('preserves pending uncontrolled non-discrete updates without rollback, duplicate onChange, or DOM thrash', async () => {
+    const input = document.createElement('input');
+    const form = document.createElement('form');
+    input.name = 'slider';
+    input.defaultValue = 'A';
+    form.append(input);
+    document.body.append(form);
+    const changed = vi.fn<(value: string) => void>();
+    const writes = vi.fn<(value: string) => void>();
+
+    try {
+      const { result, rerender } = renderHook(
+        ({ tick }: { tick: number }) => {
+          void tick;
+          return useFormValue<string>({
+            defaultValue: 'A',
+            getControl: () => input,
+            write: (next, ctx) => {
+              writes(next);
+              writeInputValue(input, next, { syncDefault: ctx.controlled, force: ctx.force });
+            },
+            onChange: changed,
+          });
+        },
+        { initialProps: { tick: 0 } },
+      );
+
+      expect(writes.mock.calls).toEqual([['A']]);
+
+      // Non-discrete DefaultEventPriority update (Promise.then / setTimeout without flushSync).
+      await act(async () => {
+        await Promise.resolve().then(() => {
+          result.current.propose('B');
+          // Duplicate proposal before macrotask commits must not emit duplicate onChange.
+          result.current.propose('B');
+        });
+      });
+
+      expect(result.current.value).toBe('B');
+      expect(input.value).toBe('B');
+      expect(changed.mock.calls).toEqual([['B']]);
+      // No rollback back to 'A' and no 3x thrash.
+      expect(writes.mock.calls.filter(([v]) => v === 'A')).toHaveLength(1);
+
+      // Unrelated parent rerender while a non-discrete update is pending preserves latestValue.
+      await act(async () => {
+        setTimeout(() => {
+          result.current.propose('C');
+        }, 0);
+        await new Promise((resolve) => setTimeout(resolve, 10));
+        rerender({ tick: 1 });
+      });
+      expect(result.current.value).toBe('C');
+      expect(input.value).toBe('C');
+
+      // Native form.reset() restores 'A' cleanly even after non-discrete updates.
+      await act(async () => {
+        HTMLFormElement.prototype.reset.call(form);
+        await Promise.resolve();
+      });
+      expect(result.current.value).toBe('A');
+      expect(input.value).toBe('A');
+    } finally {
+      form.remove();
+    }
+  });
+
+  it('allows urgent writes after a suspended uncontrolled startTransition without swallowing them', async () => {
     const input = document.createElement('input');
     const pending = new Promise<never>(() => undefined);
+    const changed = vi.fn<(value: string) => void>();
 
     function Editor(): ReactElement {
       const field = useFormValue<string>({
         defaultValue: 'local',
         getControl: () => input,
         write: (next) => writeInputValue(input, next),
+        onChange: changed,
       });
       if (field.value === 'queued') {
         use(pending);
@@ -315,6 +451,9 @@ describe('useFormValue and native reset runtime (jsdom)', () => {
           <button type="button" onClick={() => startTransition(() => field.propose('queued'))}>
             Queue
           </button>
+          <button type="button" onClick={() => field.propose('queued')}>
+            Retry queued
+          </button>
           <button type="button" onClick={() => field.propose('urgent')}>
             Urgent
           </button>
@@ -323,7 +462,7 @@ describe('useFormValue and native reset runtime (jsdom)', () => {
     }
 
     render(
-      <Suspense fallback="Pending">
+      <Suspense fallback={<output data-testid="fallback">Pending</output>}>
         <Editor />
       </Suspense>,
     );
@@ -332,13 +471,26 @@ describe('useFormValue and native reset runtime (jsdom)', () => {
       fireEvent.click(screen.getByText('Queue'));
       await Promise.resolve();
     });
-    // Suspended transition reconciled back to committed 'local'.
     expect(screen.getByTestId('val').textContent).toBe('local');
-    expect(input.value).toBe('local');
+    expect(changed.mock.calls).toEqual([['queued']]);
 
+    // Urgent write to a new value commits cleanly.
     fireEvent.click(screen.getByText('Urgent'));
     expect(screen.getByTestId('val').textContent).toBe('urgent');
     expect(input.value).toBe('urgent');
+
+    // Re-queue suspended transition, then repeat the same value urgently: upgrades lane without duplicate onChange.
+    await act(async () => {
+      fireEvent.click(screen.getByText('Queue'));
+      await Promise.resolve();
+    });
+    expect(changed.mock.calls).toEqual([['queued'], ['urgent'], ['queued']]);
+    await act(async () => {
+      fireEvent.click(screen.getByText('Retry queued'));
+      await Promise.resolve();
+    });
+    expect(screen.getByTestId('fallback').textContent).toBe('Pending');
+    expect(changed.mock.calls).toEqual([['queued'], ['urgent'], ['queued']]);
   });
 
   it('keeps React and DOM synchronized if uncontrolled write throws', () => {
@@ -372,5 +524,181 @@ describe('useFormValue and native reset runtime (jsdom)', () => {
     expect(result.current.value).toBe('next');
     expect(input.value).toBe('next');
     expect(changed).toHaveBeenCalledExactlyOnceWith('next');
+  });
+
+  it('cleans up reset listeners if initial write throws, guards deferred post-unmount/throwing edits, and prunes FormSelect options without insertBefore churn', async () => {
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    try {
+      const brokenInput = document.createElement('input');
+      const form = document.createElement('form');
+      form.append(brokenInput);
+      document.body.append(form);
+      const writeAttempt = vi.fn(() => {
+        throw new Error('initial write failed');
+      });
+
+      function BrokenWriter(): ReactElement {
+        useFormValue<string>({
+          defaultValue: 'a',
+          getControl: () => brokenInput,
+          write: writeAttempt,
+        });
+        return <div />;
+      }
+
+      removedListeners.length = 0;
+      render(
+        <TestErrorBoundary fallback={<output data-testid="caught">caught</output>}>
+          <BrokenWriter />
+        </TestErrorBoundary>,
+      );
+      expect(screen.getByTestId('caught').textContent).toBe('caught');
+      const removedResets = removedListeners.filter(
+        (entry) => entry.target === document && entry.type === 'reset',
+      );
+      expect(removedResets).toHaveLength(1);
+
+      // Resetting the form after error unmount must not invoke the discarded subscription.
+      const attemptsBeforeReset = writeAttempt.mock.calls.length;
+      await act(async () => {
+        HTMLFormElement.prototype.reset.call(form);
+        await Promise.resolve();
+      });
+      expect(writeAttempt).toHaveBeenCalledTimes(attemptsBeforeReset);
+      form.remove();
+    } finally {
+      errorSpy.mockRestore();
+    }
+
+    // Deferred commitMode: throwing onChange still repairs DOM, unmount skips post-unmount write, accepted skips duplicate write.
+    const liveInput = document.createElement('input');
+    liveInput.value = 'a';
+    const writeSpy = vi.fn((next: string, ctx: { controlled: boolean; force: boolean }) => {
+      writeInputValue(liveInput, next, { syncDefault: ctx.controlled, force: ctx.force });
+    });
+    let mode: 'throw' | 'accept' | 'unmount' = 'throw';
+    let triggerUnmount = (): void => undefined;
+
+    const { result, unmount } = renderHook(() => {
+      const [val, setVal] = useState('a');
+      return useFormValue<string>({
+        value: val,
+        defaultValue: 'a',
+        commitMode: 'deferred',
+        getControl: () => liveInput,
+        write: writeSpy,
+        onChange: (next) => {
+          if (mode === 'throw') {
+            throw new Error('deferred onChange failed');
+          }
+          if (mode === 'accept') {
+            setVal(next);
+          }
+          if (mode === 'unmount') {
+            triggerUnmount();
+          }
+        },
+      });
+    });
+    triggerUnmount = unmount;
+
+    expect(writeSpy).toHaveBeenCalledTimes(1);
+
+    // 1. Throwing onChange in deferred mode still repairs mutated DOM in microtask.
+    liveInput.value = 'bad';
+    expect(() => act(() => result.current.propose('bad'))).toThrow('deferred onChange failed');
+    await act(async () => {
+      await Promise.resolve();
+    });
+    expect(liveInput.value).toBe('a');
+    expect(writeSpy).toHaveBeenCalledTimes(2);
+
+    // 2. Accepted deferred edit runs write ONCE (on commit), not twice (microtask sees writeEpoch changed).
+    mode = 'accept';
+    liveInput.value = 'good';
+    act(() => {
+      result.current.propose('good');
+    });
+    await act(async () => {
+      await Promise.resolve();
+    });
+    expect(liveInput.value).toBe('good');
+    expect(writeSpy).toHaveBeenCalledTimes(3);
+
+    // 3. Unmount during deferred onChange does not execute a post-unmount write.
+    mode = 'unmount';
+    liveInput.value = 'ghost';
+    await act(async () => {
+      result.current.propose('ghost');
+      await Promise.resolve();
+    });
+    expect(writeSpy).toHaveBeenCalledTimes(3);
+
+    // 4. Removing a leading option in writeSelectValue prunes first with zero insertBefore churn on trailing options.
+    const selectRef = { current: null as HTMLSelectElement | null };
+    const options = [{ value: 'a' }, { value: 'b' }, { value: 'c' }, { value: 'd' }];
+    render(
+      <FormSelect
+        ref={(node) => {
+          selectRef.current = node;
+        }}
+        name="list"
+        initialValue="b"
+        initialOptions={options}
+        getFocusTarget={() => null}
+      />,
+    );
+    const select = selectRef.current!;
+    const group = select.querySelector('optgroup')!;
+    const insertSpy = vi.spyOn(group, 'insertBefore');
+    writeSelectValue(select, 'b', options.slice(1), { controlled: false, defaultValue: 'b' });
+    expect(insertSpy).not.toHaveBeenCalled();
+    expect([...group.children].map((opt) => (opt as HTMLOptionElement).value)).toEqual([
+      'b',
+      'c',
+      'd',
+    ]);
+    insertSpy.mockRestore();
+
+    // 5. Checkbox writeInputChecked with force: true syncs React _valueTracker after native form.reset().
+    function CheckboxReset(): ReactElement {
+      const boxRef = useRef<HTMLInputElement>(null);
+      const box = useFormValue<boolean>({
+        defaultValue: true,
+        getControl: () => boxRef.current,
+        write: (next, ctx) => {
+          if (boxRef.current) {
+            writeInputChecked(boxRef.current, next, {
+              syncDefault: ctx.controlled,
+              force: ctx.force,
+            });
+          }
+        },
+      });
+      return (
+        <form data-testid="box-form">
+          <FormInput
+            ref={boxRef}
+            controlled={box.controlled}
+            type="checkbox"
+            aria-label="Reset box"
+            defaultChecked={box.value}
+            onChange={(e) => box.propose(e.currentTarget.checked)}
+          />
+          <output data-testid="box-val">{String(box.value)}</output>
+        </form>
+      );
+    }
+    render(<CheckboxReset />);
+    const checkbox = screen.getByLabelText<HTMLInputElement>('Reset box');
+    fireEvent.click(checkbox);
+    expect(screen.getByTestId('box-val').textContent).toBe('false');
+    await act(async () => {
+      HTMLFormElement.prototype.reset.call(screen.getByTestId<HTMLFormElement>('box-form'));
+      await Promise.resolve();
+    });
+    expect(screen.getByTestId('box-val').textContent).toBe('true');
+    fireEvent.click(checkbox);
+    expect(screen.getByTestId('box-val').textContent).toBe('false');
   });
 });

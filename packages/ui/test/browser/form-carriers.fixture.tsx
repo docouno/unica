@@ -50,7 +50,7 @@ function Choice({
         disabled={disabled}
         required={required}
         initialValue={choice.value}
-        options={options}
+        initialOptions={options}
         getFocusTarget={() => trigger.current}
       />
       {open && (
@@ -91,7 +91,10 @@ function NativeInputs(): JSX.Element {
     getControl: () => text.current,
     write: (value, context) => {
       if (text.current) {
-        writeInputValue(text.current, value, { syncDefault: context.controlled });
+        writeInputValue(text.current, value, {
+          syncDefault: context.controlled,
+          force: context.force,
+        });
       }
     },
   });
@@ -100,7 +103,10 @@ function NativeInputs(): JSX.Element {
     getControl: () => check.current,
     write: (checked, context) => {
       if (check.current) {
-        writeInputChecked(check.current, checked, { syncDefault: context.controlled });
+        writeInputChecked(check.current, checked, {
+          syncDefault: context.controlled,
+          force: context.force,
+        });
       }
     },
   });
@@ -108,6 +114,7 @@ function NativeInputs(): JSX.Element {
     <>
       <FormInput
         ref={text}
+        controlled={field.controlled}
         name="text"
         aria-label="Text"
         defaultValue={field.value}
@@ -115,6 +122,7 @@ function NativeInputs(): JSX.Element {
       />
       <FormInput
         ref={check}
+        controlled={toggle.controlled}
         type="checkbox"
         name="check"
         aria-label="Check"
@@ -151,7 +159,7 @@ export default function FormCarriersFixture(): JSX.Element {
           ref={multiCarrier}
           name="multi"
           initialValue={multi.value}
-          options={multiCatalog}
+          initialOptions={multiCatalog}
           getFocusTarget={() => multiTrigger.current}
         />
         {multiOpen && (
@@ -247,7 +255,7 @@ function RequiredMultiple(): JSX.Element {
         name="multiple"
         required
         initialValue={multi.value}
-        options={catalog}
+        initialOptions={catalog}
         getFocusTarget={() => trigger.current}
       />
     </>
@@ -262,7 +270,10 @@ function RequiredInput(): JSX.Element {
     getControl: () => input.current,
     write: (value, context) => {
       if (input.current) {
-        writeInputValue(input.current, value, { syncDefault: context.controlled });
+        writeInputValue(input.current, value, {
+          syncDefault: context.controlled,
+          force: context.force,
+        });
       }
     },
   });
@@ -276,6 +287,7 @@ function RequiredInput(): JSX.Element {
       </button>
       <FormInput
         ref={input}
+        controlled={field.controlled}
         name="code"
         required
         pattern="[0-9]{3}"

@@ -5,7 +5,7 @@ import {
   getOwnerDocument,
   getRootActiveElement,
   getRootNodeSafe,
-} from './dom.js';
+} from '../dom.js';
 
 const hiddenClass = 'unica-visually-hidden';
 
@@ -35,11 +35,12 @@ function delegateFocus(event: FocusEvent<HTMLElement>, getFocusTarget: FocusTarg
 
 export interface CarrierWriteOptions {
   readonly syncDefault?: boolean | undefined;
+  readonly force?: boolean | undefined;
 }
 
 export type FormInputProps = Omit<ComponentPropsWithRef<'input'>, 'checked'> & {
-  controlled?: boolean | undefined;
-  getFocusTarget?: FocusTarget | undefined;
+  readonly controlled: boolean;
+  readonly getFocusTarget?: FocusTarget | undefined;
 };
 
 export function FormInput({
@@ -59,19 +60,21 @@ export function FormInput({
       defaultValue={controlled ? defaultValue : initial.defaultValue}
       defaultChecked={controlled ? defaultChecked : initial.defaultChecked}
       {...(getFocusTarget && { 'aria-hidden': true, tabIndex: -1 })}
-      onFocus={(event) => {
-        if (getFocusTarget) {
-          delegateFocus(event, getFocusTarget);
-        }
-        onFocus?.(event);
-      }}
+      onFocus={
+        getFocusTarget
+          ? (event) => {
+              delegateFocus(event, getFocusTarget);
+              onFocus?.(event);
+            }
+          : onFocus
+      }
     />
   );
 }
 
 export type FormTextareaProps = Omit<ComponentPropsWithRef<'textarea'>, 'value'> & {
-  controlled?: boolean | undefined;
-  getFocusTarget?: FocusTarget | undefined;
+  readonly controlled: boolean;
+  readonly getFocusTarget?: FocusTarget | undefined;
 };
 
 export function FormTextarea({
@@ -89,12 +92,14 @@ export function FormTextarea({
       className={getFocusTarget ? joinClassName(className, hiddenClass) : className}
       defaultValue={controlled ? defaultValue : initial.defaultValue}
       {...(getFocusTarget && { 'aria-hidden': true, tabIndex: -1 })}
-      onFocus={(event) => {
-        if (getFocusTarget) {
-          delegateFocus(event, getFocusTarget);
-        }
-        onFocus?.(event);
-      }}
+      onFocus={
+        getFocusTarget
+          ? (event) => {
+              delegateFocus(event, getFocusTarget);
+              onFocus?.(event);
+            }
+          : onFocus
+      }
     />
   );
 }
@@ -107,7 +112,8 @@ export function writeInputValue(
   if (options?.syncDefault && input.defaultValue !== value) {
     input.defaultValue = value;
   }
-  if (input.value !== value) {
+  // Force assignment on native reset/repair so React's _valueTracker stays in sync.
+  if (options?.force || input.value !== value) {
     input.value = value;
   }
 }
@@ -120,7 +126,7 @@ export function writeTextareaValue(
   if (options?.syncDefault && textarea.defaultValue !== value) {
     textarea.defaultValue = value;
   }
-  if (textarea.value !== value) {
+  if (options?.force || textarea.value !== value) {
     textarea.value = value;
   }
 }
@@ -133,7 +139,7 @@ export function writeInputChecked(
   if (options?.syncDefault && input.defaultChecked !== checked) {
     input.defaultChecked = checked;
   }
-  if (input.checked !== checked) {
+  if (options?.force || input.checked !== checked) {
     input.checked = checked;
   }
 }
@@ -144,9 +150,15 @@ export function writeRadioGroup(
   options?: CarrierWriteOptions,
 ): void {
   const checked = radios.find((radio) => radio.value === selected);
+  // Always run the JS setter on unselected peers so native radio-group unchecking
+  // never leaves a stale React _valueTracker on previously checked siblings.
+  const uncheckedOptions: CarrierWriteOptions = {
+    syncDefault: options?.syncDefault,
+    force: true,
+  };
   for (const radio of radios) {
     if (radio !== checked) {
-      writeInputChecked(radio, false, options);
+      writeInputChecked(radio, false, uncheckedOptions);
     }
   }
   if (checked) {
@@ -157,13 +169,14 @@ export function writeRadioGroup(
 export type SelectValue = string | null | readonly string[];
 
 export interface CarrierOption {
-  value: string;
-  label?: string;
-  disabled?: boolean;
+  readonly value: string;
+  readonly label?: string | undefined;
+  readonly disabled?: boolean | undefined;
 }
 
-export interface SelectWriteOptions {
-  readonly defaultValue?: SelectValue | undefined;
+export interface SelectWriteContext {
+  readonly controlled: boolean;
+  readonly defaultValue: SelectValue;
 }
 
 interface OptionRow {
@@ -250,26 +263,27 @@ export type FormSelectProps = Omit<
   ComponentPropsWithRef<'select'>,
   'children' | 'value' | 'defaultValue' | 'onFocus'
 > & {
-  initialValue: SelectValue;
-  options?: readonly CarrierOption[] | undefined;
-  getFocusTarget: FocusTarget;
+  /** Mount/SSR snapshot value. Subsequent updates are written via writeSelectValue. */
+  readonly initialValue: SelectValue;
+  /** Mount/SSR snapshot catalog. Reactive catalog updates pass through writeSelectValue + writeDeps. */
+  readonly initialOptions?: readonly CarrierOption[] | undefined;
+  readonly getFocusTarget: FocusTarget;
 };
 
 export function FormSelect({
   initialValue,
   multiple,
-  options = [],
+  initialOptions = [],
   getFocusTarget,
   className,
   ...props
 }: FormSelectProps): JSX.Element {
-  // React renders the initial options for SSR. Subsequent option writes mutate
-  // the existing optgroup in place so hydration keeps DOM node identity without
-  // stranding detached option elements in React fibers.
+  // React renders the initial options for SSR. Subsequent writes update the existing
+  // optgroup in place so hydration keeps DOM node identity.
   const [initial] = useState(() => {
     const isMultiple = multiple ?? Array.isArray(initialValue);
     const hasPlaceholder = !isMultiple && initialValue === null;
-    const rows = optionRows(initialValue, options, isMultiple, initialValue);
+    const rows = optionRows(initialValue, initialOptions, isMultiple, initialValue);
     return {
       multiple: isMultiple,
       value: isMultiple ? toValueList(initialValue) : (initialValue ?? ''),
@@ -306,11 +320,11 @@ export function FormSelect({
 export function writeSelectValue(
   select: HTMLSelectElement,
   value: SelectValue,
-  options: readonly CarrierOption[] = [],
-  writeOptions?: SelectWriteOptions,
+  options: readonly CarrierOption[],
+  context: SelectWriteContext,
 ): void {
   const multiple = select.multiple;
-  const defaultValue = writeOptions?.defaultValue !== undefined ? writeOptions.defaultValue : value;
+  const defaultValue = context.controlled ? value : context.defaultValue;
   const rows = optionRows(value, options, multiple, defaultValue);
   const needPlaceholder = !multiple && (value === null || defaultValue === null);
   const doc = getOwnerDocument(select) ?? select.ownerDocument;
@@ -353,12 +367,19 @@ export function writeSelectValue(
     select.append(group);
   }
 
+  const nextValues = new Set<string>();
+  for (const row of rows) {
+    nextValues.add(row.value);
+  }
+
+  // Prune removed or duplicate children before placing rows so removing a leading option
+  // never causes O(N) insertBefore churn across all subsequent options.
   const existingByValue = new Map<string, HTMLOptionElement>();
   const stale: Element[] = [];
   for (let child = group.firstElementChild; child; child = child.nextElementSibling) {
     if (child.localName === 'option') {
       const opt = child as HTMLOptionElement;
-      if (!existingByValue.has(opt.value)) {
+      if (nextValues.has(opt.value) && !existingByValue.has(opt.value)) {
         existingByValue.set(opt.value, opt);
         continue;
       }
@@ -369,7 +390,6 @@ export function writeSelectValue(
     node.remove();
   }
 
-  const used = new Set<HTMLOptionElement>();
   let cursor: Element | null = group.firstElementChild;
   for (const row of rows) {
     let opt = existingByValue.get(row.value);
@@ -386,17 +406,10 @@ export function writeSelectValue(
         opt.disabled = row.disabled;
       }
     }
-    used.add(opt);
     if (cursor === opt) {
       cursor = cursor.nextElementSibling;
     } else {
       group.insertBefore(opt, cursor);
-    }
-  }
-
-  for (const opt of existingByValue.values()) {
-    if (!used.has(opt)) {
-      opt.remove();
     }
   }
 

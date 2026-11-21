@@ -8,6 +8,7 @@ import type { FormControl, NativeResetSubscription } from './NativeResetWitness.
 export interface FormWriteContext<T> {
   readonly controlled: boolean;
   readonly defaultValue: T;
+  readonly force: boolean;
 }
 
 export interface FormValueOptions<T> extends ControllableStateOptions<T> {
@@ -22,8 +23,9 @@ export interface FormValueOptions<T> extends ControllableStateOptions<T> {
 }
 
 export interface FormValueState<T> {
-  value: T;
-  propose: (next: T, source?: FormControl) => void;
+  readonly value: T;
+  readonly controlled: boolean;
+  readonly propose: (next: T, source?: FormControl) => void;
 }
 
 function defaultIsEqual<T>(a: T, b: T): boolean {
@@ -97,6 +99,8 @@ export function useFormValue<T>(options: FormValueOptions<T>): FormValueState<T>
   });
   const config = useRef(options);
   const controlledRef = useRef(controlled);
+  const mountedRef = useRef(true);
+  const writeEpoch = useRef(0);
   const binding = useRef<(NativeResetSubscription & { controls: readonly FormControl[] }) | null>(
     null,
   );
@@ -107,14 +111,29 @@ export function useFormValue<T>(options: FormValueOptions<T>): FormValueState<T>
     controlledRef.current = controlled;
   });
 
-  const write = useCallback(
-    (next: T): void => {
+  // Register unmount cleanup before the sync effect so a throwing initial write
+  // can never strand a document-level reset subscription.
+  useIsoLayoutEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+      const current = binding.current;
+      binding.current = null;
+      lastWritten.current = null;
+      current?.unsubscribe();
+    };
+  }, []);
+
+  const writeWith = useCallback(
+    (next: T, force: boolean, preReadControls?: readonly FormControl[]): void => {
       const currentOptions = config.current;
-      const controls = readControls(currentOptions);
+      const controls = preReadControls ?? readControls(currentOptions);
       currentOptions.write(next, {
         controlled: controlledRef.current,
         defaultValue: initial,
+        force,
       });
+      writeEpoch.current += 1;
       lastWritten.current = {
         value: next,
         controlled: controlledRef.current,
@@ -125,6 +144,9 @@ export function useFormValue<T>(options: FormValueOptions<T>): FormValueState<T>
     [initial],
   );
 
+  const write = useCallback((next: T): void => writeWith(next, false), [writeWith]);
+  const forceWrite = useCallback((next: T): void => writeWith(next, true), [writeWith]);
+
   const request = useCallback(
     (next: T, source?: FormControl): void => {
       const currentOptions = config.current;
@@ -133,25 +155,28 @@ export function useFormValue<T>(options: FormValueOptions<T>): FormValueState<T>
         ? source.matches(':disabled')
         : controls.length > 0 && controls.every((control) => control.matches(':disabled'));
       if (currentOptions.readOnly || disabled) {
-        write(read());
+        writeWith(read(), true, controls);
         return;
       }
 
       if (currentOptions.commitMode === 'deferred' && controlledRef.current) {
         // Live text inputs keep browser selection, undo stack, and IME intact while
         // the controlled owner decides; rejected proposals repair right after commit.
+        const epochBefore = writeEpoch.current;
         try {
           propose(next);
         } finally {
           queueMicrotask(() => {
-            write(read());
+            if (mountedRef.current && writeEpoch.current === epochBefore) {
+              writeWith(read(), true);
+            }
           });
         }
         return;
       }
       propose(next, write);
     },
-    [propose, read, write],
+    [propose, read, write, writeWith],
   );
 
   useIsoLayoutEffect(() => {
@@ -159,6 +184,7 @@ export function useFormValue<T>(options: FormValueOptions<T>): FormValueState<T>
     const previous = binding.current;
     if (controls.length === 0) {
       binding.current = null;
+      lastWritten.current = null;
       previous?.unsubscribe();
       return;
     }
@@ -168,10 +194,10 @@ export function useFormValue<T>(options: FormValueOptions<T>): FormValueState<T>
       previous?.unsubscribe();
       const subscription = subscribeNativeReset(controls, (result) => {
         if (result === 'reset') {
-          restore(initial, write);
+          restore(initial, forceWrite);
           config.current.onReset?.();
         } else {
-          write(read());
+          forceWrite(read());
         }
       });
       binding.current = { controls, ...subscription };
@@ -190,18 +216,9 @@ export function useFormValue<T>(options: FormValueOptions<T>): FormValueState<T>
       !sameList(prevWritten.writeDeps, config.current.writeDeps);
 
     if (needsWrite) {
-      write(current);
+      writeWith(current, false, controls);
     }
   });
 
-  useIsoLayoutEffect(
-    () => () => {
-      const current = binding.current;
-      binding.current = null;
-      current?.unsubscribe();
-    },
-    [],
-  );
-
-  return { value, propose: request };
+  return { value, controlled, propose: request };
 }

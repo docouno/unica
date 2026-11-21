@@ -1,8 +1,7 @@
-import { useCallback, useRef } from 'react';
+import { useCallback, useInsertionEffect, useMemo, useRef } from 'react';
 import type { KeyboardEvent } from 'react';
 import { markKeyboardNavigation } from '../focus-origin.js';
-import { getDefaultView, getOwnerDocument } from '../forms/dom.js';
-import { useIsoLayoutEffect } from '../useIsoLayoutEffect.js';
+import { getDefaultView, getOwnerDocument } from '../dom.js';
 import { navigateCollection } from './navigation.js';
 import type { NavigationOptions, TypeaheadBuffer } from './navigation.js';
 
@@ -20,7 +19,7 @@ export function useCollectionNavigation(
   const buffer = useRef<TypeaheadBuffer | null>(null);
   const latest = useRef({ options, onNavigate });
 
-  useIsoLayoutEffect(() => {
+  useInsertionEffect(() => {
     latest.current = { options, onNavigate };
   });
 
@@ -63,5 +62,5 @@ export function useCollectionNavigation(
     [],
   );
 
-  return { onKeyDown, clearTypeahead };
+  return useMemo(() => ({ onKeyDown, clearTypeahead }), [onKeyDown, clearTypeahead]);
 }

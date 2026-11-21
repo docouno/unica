@@ -82,7 +82,10 @@ function AuthorityFixture(): JSX.Element {
     getControl: () => check.current,
     write: (next, context) => {
       if (check.current) {
-        writeInputChecked(check.current, next, { syncDefault: context.controlled });
+        writeInputChecked(check.current, next, {
+          syncDefault: context.controlled,
+          force: context.force,
+        });
       }
     },
   });
@@ -103,7 +106,7 @@ function AuthorityFixture(): JSX.Element {
           name="local"
           form={associated ? owner : 'missing'}
           initialValue={local.value}
-          options={catalog}
+          initialOptions={catalog}
           getFocusTarget={() => trigger.current}
           onChange={(event) => local.propose(event.currentTarget.value)}
         />
@@ -117,7 +120,7 @@ function AuthorityFixture(): JSX.Element {
         name="controlled"
         form={owner}
         initialValue={stable.value}
-        options={catalog}
+        initialOptions={catalog}
         getFocusTarget={() => controlledTrigger.current}
         onChange={(event) => stable.propose(event.currentTarget.value)}
       />
@@ -141,7 +144,7 @@ function AuthorityFixture(): JSX.Element {
         name="multi"
         form={owner}
         initialValue={multi.value}
-        options={catalog}
+        initialOptions={catalog}
         getFocusTarget={() => multiTrigger.current}
       />
       <button ref={multiTrigger} type="button" onClick={() => multi.propose(['c'])}>
@@ -150,6 +153,7 @@ function AuthorityFixture(): JSX.Element {
       <label>
         <FormInput
           ref={check}
+          controlled={checked.controlled}
           type="checkbox"
           name="checked"
           value="yes"
@@ -160,6 +164,7 @@ function AuthorityFixture(): JSX.Element {
         />
         <span data-testid="adjacent-indicator">Adjacent</span>
       </label>
+      <output data-testid="checked-value">{String(checked.value)}</output>
       <button type="button" onClick={() => setLocalDefault('d')}>
         Change defaults
       </button>
@@ -210,7 +215,10 @@ function RadioFixture({ local, record }: RadioFixtureProps): JSX.Element {
         (node): node is HTMLInputElement => node !== null,
       );
       if (radios.length > 0 && radios.every((node) => node.form === radios[0]!.form)) {
-        writeRadioGroup(radios, next, { syncDefault: context.controlled });
+        writeRadioGroup(radios, next, {
+          syncDefault: context.controlled,
+          force: context.force,
+        });
       }
     },
     onChange: (next) => {
@@ -277,9 +285,11 @@ function RadioFixture({ local, record }: RadioFixtureProps): JSX.Element {
 
 function LiveTextFixture(): JSX.Element {
   const inputRef = useRef<HTMLInputElement>(null);
+  const localInputRef = useRef<HTMLInputElement>(null);
   const areaRef = useRef<HTMLTextAreaElement>(null);
   const [text, setText] = useState('hello');
   const [acceptText, setAcceptText] = useState(true);
+  const [proposals, setProposals] = useState<string[]>([]);
   const [resetCount, setResetCount] = useState(0);
 
   const controlledText = useFormValue<string>({
@@ -289,12 +299,31 @@ function LiveTextFixture(): JSX.Element {
     getControl: () => inputRef.current,
     write: (next, context) => {
       if (inputRef.current) {
-        writeInputValue(inputRef.current, next, { syncDefault: context.controlled });
+        writeInputValue(inputRef.current, next, {
+          syncDefault: context.controlled,
+          force: context.force,
+        });
       }
     },
     onChange: (next) => {
+      setProposals((prev) => [...prev, next]);
       if (acceptText) {
         setText(next);
+      }
+    },
+    onReset: () => setResetCount((count) => count + 1),
+  });
+
+  const localText = useFormValue<string>({
+    defaultValue: 'initial text',
+    commitMode: 'deferred',
+    getControl: () => localInputRef.current,
+    write: (next, context) => {
+      if (localInputRef.current) {
+        writeInputValue(localInputRef.current, next, {
+          syncDefault: context.controlled,
+          force: context.force,
+        });
       }
     },
     onReset: () => setResetCount((count) => count + 1),
@@ -306,7 +335,10 @@ function LiveTextFixture(): JSX.Element {
     getControl: () => areaRef.current,
     write: (next, context) => {
       if (areaRef.current) {
-        writeTextareaValue(areaRef.current, next, { syncDefault: context.controlled });
+        writeTextareaValue(areaRef.current, next, {
+          syncDefault: context.controlled,
+          force: context.force,
+        });
       }
     },
     onReset: () => setResetCount((count) => count + 1),
@@ -316,14 +348,23 @@ function LiveTextFixture(): JSX.Element {
     <form id="live-text">
       <FormInput
         ref={inputRef}
-        controlled
+        controlled={controlledText.controlled}
         name="live"
         aria-label="Live controlled input"
         defaultValue={controlledText.value}
         onChange={(event) => controlledText.propose(event.currentTarget.value)}
       />
+      <FormInput
+        ref={localInputRef}
+        controlled={localText.controlled}
+        name="localText"
+        aria-label="Local text input"
+        defaultValue={localText.value}
+        onChange={(event) => localText.propose(event.currentTarget.value)}
+      />
       <FormTextarea
         ref={areaRef}
+        controlled={localArea.controlled}
         name="notes"
         aria-label="Local textarea"
         defaultValue={localArea.value}
@@ -334,6 +375,8 @@ function LiveTextFixture(): JSX.Element {
       </button>
       <button type="reset">Reset live text</button>
       <output data-testid="live-text-value">{controlledText.value}</output>
+      <output data-testid="live-text-proposals">{proposals.join(',')}</output>
+      <output data-testid="local-text-value">{localText.value}</output>
       <output data-testid="local-area-value">{localArea.value}</output>
       <output data-testid="live-reset-count">{resetCount}</output>
     </form>
@@ -358,7 +401,7 @@ function ShadowFormInner(): JSX.Element {
         name="shadowChoice"
         required
         initialValue={choice.value}
-        options={catalog}
+        initialOptions={catalog}
         getFocusTarget={() => triggerRef.current}
       />
       <button type="button" onClick={() => choice.propose(null)}>

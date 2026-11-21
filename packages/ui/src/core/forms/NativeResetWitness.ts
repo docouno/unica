@@ -6,7 +6,7 @@ import {
   getRootNodeSafe,
   isHtmlForm,
   removeListenerSafe,
-} from './dom.js';
+} from '../dom.js';
 
 export type FormControl = HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement;
 export type ResetResult = 'reset' | 'repair';
@@ -14,7 +14,7 @@ export type ResetResult = 'reset' | 'repair';
 type ResetEvent = Pick<Event, 'isTrusted' | 'defaultPrevented' | 'eventPhase'>;
 
 export interface ResetOperation {
-  finish: (confirmed: boolean) => ResetResult | undefined;
+  finish: () => ResetResult | undefined;
 }
 
 // Trust belongs to this dispatch. The same Event can later be dispatched by script.
@@ -22,12 +22,12 @@ export function createResetOperation(event: ResetEvent): ResetOperation {
   const trusted = event.isTrusted;
   let sealed = false;
   return {
-    finish(confirmed) {
+    finish() {
       if (sealed || event.eventPhase !== 0) {
         return undefined;
       }
       sealed = true;
-      return confirmed && trusted && !event.defaultPrevented ? 'reset' : 'repair';
+      return trusted && !event.defaultPrevented ? 'reset' : 'repair';
     },
   };
 }
@@ -59,46 +59,35 @@ function handleReset(event: Event): void {
     return;
   }
   const form = event.target;
-  const ownerRoot = getRootNodeSafe(form);
-  if (roots.has(ownerRoot)) {
-    if (event.currentTarget !== ownerRoot) {
-      return;
-    }
-  } else {
-    const path = event.composedPath();
-    if (event.currentTarget !== path.findLast((node) => roots.has(node as Node))) {
-      return;
-    }
+  if (event.currentTarget !== getRootNodeSafe(form)) {
+    return;
   }
 
   // Dispatch can reuse an Event object before the previous cleanup microtask.
   dispatches.get(event)?.();
   const operation = createResetOperation(event);
-  const currentTarget = event.currentTarget;
   const view = getDefaultView(getOwnerDocument(form));
   let active = true;
-  let bubbleBound = false;
   let cancelFallback: (() => void) | undefined;
 
   const cleanup = (): void => {
     active = false;
     dispatches.delete(event);
-    if (bubbleBound) {
-      bubbleBound = false;
-      removeListenerSafe(currentTarget, 'reset', onBubble, false);
-    }
     if (cancelFallback) {
       cancelFallback();
       cancelFallback = undefined;
     }
   };
 
-  const finish = (): void => {
+  const finish = (forceCleanup: boolean): void => {
     if (!active) {
       return;
     }
-    const result = operation.finish(true);
+    const result = operation.finish();
     if (!result) {
+      if (forceCleanup) {
+        cleanup();
+      }
       return;
     }
     cleanup();
@@ -125,35 +114,24 @@ function handleReset(event: Event): void {
     }
   };
 
-  const onBubble = (observed: Event): void => {
-    if (observed === event && active) {
-      if (bubbleBound) {
-        bubbleBound = false;
-        removeListenerSafe(currentTarget, 'reset', onBubble, false);
-      }
-      queueMicrotask(finish);
-    }
-  };
-
   dispatches.set(event, cleanup);
   queueMicrotask(() => {
     if (!active) {
       return;
     }
     if (event.eventPhase === 0) {
-      finish();
+      finish(true);
       return;
     }
-    // A user-initiated reset button click can run microtasks between listeners.
-    // Re-check right after bubble, with a cancelable zero-delay task fallback.
-    bubbleBound = true;
-    addListenerSafe(currentTarget, 'reset', onBubble, false);
+    // A user-initiated reset button click runs microtasks while eventPhase !== 0.
+    // Finish right after native dispatch completes via a zero-delay cancelable task.
     if (typeof MessageChannel !== 'undefined') {
       const channel = new MessageChannel();
       channel.port1.onmessage = () => {
+        channel.port1.onmessage = null;
         channel.port1.close();
         channel.port2.close();
-        finish();
+        finish(true);
       };
       cancelFallback = () => {
         channel.port1.onmessage = null;
@@ -162,10 +140,10 @@ function handleReset(event: Event): void {
       };
       channel.port2.postMessage(undefined);
     } else if (view) {
-      const timer = view.setTimeout(finish, 0);
+      const timer = view.setTimeout(() => finish(true), 0);
       cancelFallback = () => view.clearTimeout(timer);
     } else {
-      const timer = setTimeout(finish, 0);
+      const timer = setTimeout(() => finish(true), 0);
       cancelFallback = () => clearTimeout(timer);
     }
   });
@@ -214,6 +192,24 @@ export function subscribeNativeReset(
     if (!active) {
       return;
     }
+    // Zero-allocation fast path for single-control fields on an unchanged root.
+    if (controls.length === 1) {
+      const root = getRootNodeSafe(controls[0]!);
+      if (rootUnbinds.size === 1 && rootUnbinds.has(root)) {
+        return;
+      }
+      for (const [existing, unbind] of rootUnbinds) {
+        if (existing !== root) {
+          rootUnbinds.delete(existing);
+          unbind();
+        }
+      }
+      if (!rootUnbinds.has(root)) {
+        rootUnbinds.set(root, bindRoot(root, subscription));
+      }
+      return;
+    }
+
     const nextRoots = new Set<Node>();
     for (const control of controls) {
       nextRoots.add(getRootNodeSafe(control));

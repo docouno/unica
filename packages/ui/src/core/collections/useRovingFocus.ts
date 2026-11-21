@@ -1,14 +1,16 @@
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useInsertionEffect, useRef, useState } from 'react';
 import type { FocusEvent, KeyboardEvent, Ref, RefCallback } from 'react';
 import { composeEventHandlers } from '../composeEventHandlers.js';
 import {
+  containsSafe,
   documentHasFocusSafe,
   getDocumentActiveElement,
   getDocumentBody,
   getOwnerDocument,
   getRootActiveElement,
   getRootNodeSafe,
-} from '../forms/dom.js';
+  isElementNode,
+} from '../dom.js';
 import { mergeRefs } from '../mergeRefs.js';
 import { useIsoLayoutEffect } from '../useIsoLayoutEffect.js';
 import { findNavigable, isNavigable, recoverRovingKey } from './navigation.js';
@@ -38,6 +40,8 @@ export interface RovingFocus<T extends HTMLElement> {
   onBlur: (event: FocusEvent<HTMLElement>) => void;
   clearTypeahead: () => void;
 }
+
+type FocusHandler<T extends HTMLElement> = (event: FocusEvent<T>) => void;
 
 function canRecoverFocus(root: Node, doc: Document, originNode: HTMLElement): boolean {
   if (!documentHasFocusSafe(doc)) {
@@ -76,37 +80,98 @@ export function useRovingFocus<T extends HTMLElement>(options: RovingFocusOption
     nodes: new Map<string, T>(),
     nodeKeys: new WeakMap<Element, string>(),
     refCallbacks: new Map<string, RefCallback<T>>(),
-    focusHandlers: new Map<string, (event: FocusEvent<T>) => void>(),
+    focusHandlers: new Map<string, FocusHandler<T>>(),
+    mergedRefs: new Map<
+      string,
+      { userRef: Ref<T>; baseRef: RefCallback<T>; merged: RefCallback<T> }
+    >(),
+    composedFocus: new Map<
+      string,
+      { userOnFocus: FocusHandler<T>; baseFocus: FocusHandler<T>; composed: FocusHandler<T> }
+    >(),
   }));
 
   const current = findNavigable(items, focusedKey);
   const tabStop =
     current?.key ?? (findNavigable(items, entryKey) ?? items.find(isNavigable))?.key ?? null;
 
-  const navigation = useCollectionNavigation({ ...options, activeKey: tabStop }, (key) => {
-    const target = maps.nodes.get(key);
-    if (!target) {
-      return;
-    }
-    navigating.current = true;
-    try {
-      target.focus();
-      optionsRef.current.onNavigate?.(key);
-    } finally {
-      navigating.current = false;
-    }
+  const { onKeyDown: navigateKeyDown, clearTypeahead } = useCollectionNavigation(
+    { ...options, activeKey: tabStop },
+    (key) => {
+      const target = maps.nodes.get(key);
+      if (!target) {
+        return;
+      }
+      navigating.current = true;
+      try {
+        target.focus();
+        optionsRef.current.onNavigate?.(key);
+      } finally {
+        navigating.current = false;
+      }
+    },
+  );
+
+  // Publish before child refs, autoFocus, or child layout effects run.
+  useInsertionEffect(() => {
+    optionsRef.current = options;
   });
 
   useIsoLayoutEffect(() => {
-    optionsRef.current = options;
+    return () => {
+      maps.nodes.clear();
+      maps.refCallbacks.clear();
+      maps.focusHandlers.clear();
+      maps.mergedRefs.clear();
+      maps.composedFocus.clear();
+    };
+  }, [maps]);
+
+  useIsoLayoutEffect(() => {
     const before = previous.current;
     previous.current = items;
+
+    if (
+      maps.refCallbacks.size > items.length ||
+      maps.focusHandlers.size > items.length ||
+      maps.mergedRefs.size > items.length ||
+      maps.composedFocus.size > items.length
+    ) {
+      const liveKeys = new Set<string>();
+      for (const item of items) {
+        liveKeys.add(item.key);
+      }
+      for (const key of maps.refCallbacks.keys()) {
+        if (!liveKeys.has(key) && !maps.nodes.has(key)) {
+          maps.refCallbacks.delete(key);
+        }
+      }
+      for (const key of maps.focusHandlers.keys()) {
+        if (!liveKeys.has(key) && !maps.nodes.has(key)) {
+          maps.focusHandlers.delete(key);
+        }
+      }
+      for (const key of maps.mergedRefs.keys()) {
+        if (!liveKeys.has(key) && !maps.nodes.has(key)) {
+          maps.mergedRefs.delete(key);
+        }
+      }
+      for (const key of maps.composedFocus.keys()) {
+        if (!liveKeys.has(key) && !maps.nodes.has(key)) {
+          maps.composedFocus.delete(key);
+        }
+      }
+    }
+
     const origin = focused.current;
     if (!origin) {
       return;
     }
 
-    const doc = getOwnerDocument(origin.node) ?? origin.node.ownerDocument;
+    const doc = getOwnerDocument(origin.node);
+    if (!doc) {
+      return;
+    }
     const active = getRootActiveElement(origin.root, doc);
     const lost = !findNavigable(items, origin.key);
     const replaced = maps.nodes.get(origin.key) !== origin.node;
@@ -125,7 +190,7 @@ export function useRovingFocus<T extends HTMLElement>(options: RovingFocusOption
     const target = lost ? recoverRovingKey(items, before, origin.key, recoveryKey) : origin.key;
     if (
       target !== null &&
-      !(lost && origin.blurredWhileLive) &&
+      !((lost || replaced) && origin.blurredWhileLive) &&
       canRecoverFocus(origin.root, doc, origin.node)
     ) {
       maps.nodes.get(target)?.focus();
@@ -136,7 +201,7 @@ export function useRovingFocus<T extends HTMLElement>(options: RovingFocusOption
     ) {
       focused.current = null;
       setFocusedKey(null);
-      navigation.clearTypeahead();
+      clearTypeahead();
     }
   });
 
@@ -150,12 +215,9 @@ export function useRovingFocus<T extends HTMLElement>(options: RovingFocusOption
           }
           maps.nodes.set(key, node);
           maps.nodeKeys.set(node, key);
-          maps.refCallbacks.set(key, callback!);
           return () => {
             if (maps.nodes.get(key) === node) {
               maps.nodes.delete(key);
-              maps.refCallbacks.delete(key);
-              maps.focusHandlers.delete(key);
             }
           };
         };
@@ -167,7 +229,7 @@ export function useRovingFocus<T extends HTMLElement>(options: RovingFocusOption
   );
 
   const getBaseFocus = useCallback(
-    (key: string): ((event: FocusEvent<T>) => void) => {
+    (key: string): FocusHandler<T> => {
       let handler = maps.focusHandlers.get(key);
       if (!handler) {
         handler = (event: FocusEvent<T>) => {
@@ -177,7 +239,7 @@ export function useRovingFocus<T extends HTMLElement>(options: RovingFocusOption
           if (findNavigable(optionsRef.current.items, key)) {
             const node = event.currentTarget;
             if (!navigating.current && focused.current?.key !== key) {
-              navigation.clearTypeahead();
+              clearTypeahead();
             }
             focused.current = {
               key,
@@ -189,34 +251,59 @@ export function useRovingFocus<T extends HTMLElement>(options: RovingFocusOption
           } else {
             focused.current = null;
             setFocusedKey(null);
-            navigation.clearTypeahead();
+            clearTypeahead();
           }
         };
         maps.focusHandlers.set(key, handler);
       }
       return handler;
     },
-    [maps, navigation],
+    [clearTypeahead, maps],
   );
 
   const getItemProps = useCallback(
     (key: string, userProps?: RovingItemUserProps<T>): RovingItemProps<T> => {
       const baseRef = getBaseRef(key);
       const baseFocus = getBaseFocus(key);
+
+      let ref: RefCallback<T> = baseRef;
+      const userRef = userProps?.ref;
+      if (userRef) {
+        const cached = maps.mergedRefs.get(key);
+        if (cached && cached.userRef === userRef && cached.baseRef === baseRef) {
+          ref = cached.merged;
+        } else {
+          const merged = mergeRefs(baseRef, userRef);
+          maps.mergedRefs.set(key, { userRef, baseRef, merged });
+          ref = merged;
+        }
+      }
+
+      let onFocus: FocusHandler<T> = baseFocus;
+      const userOnFocus = userProps?.onFocus;
+      if (userOnFocus) {
+        const cached = maps.composedFocus.get(key);
+        if (cached && cached.userOnFocus === userOnFocus && cached.baseFocus === baseFocus) {
+          onFocus = cached.composed;
+        } else {
+          const composed = composeEventHandlers(userOnFocus, baseFocus);
+          maps.composedFocus.set(key, { userOnFocus, baseFocus, composed });
+          onFocus = composed;
+        }
+      }
+
       return {
         tabIndex: key === tabStop ? 0 : -1,
-        ref: userProps?.ref ? mergeRefs(baseRef, userProps.ref) : baseRef,
-        onFocus: userProps?.onFocus
-          ? composeEventHandlers(userProps.onFocus, baseFocus)
-          : baseFocus,
+        ref,
+        onFocus,
       };
     },
-    [getBaseFocus, getBaseRef, tabStop],
+    [getBaseFocus, getBaseRef, maps, tabStop],
   );
 
   const onKeyDown = useCallback(
     (event: KeyboardEvent<HTMLElement>): void => {
-      const target = event.target as Element | null;
+      const target = isElementNode(event.target) ? event.target : null;
       const isContainer = target === event.currentTarget;
       const targetKey = target ? maps.nodeKeys.get(target) : undefined;
       const isRegisteredItem = targetKey !== undefined && maps.nodes.get(targetKey) === target;
@@ -228,16 +315,16 @@ export function useRovingFocus<T extends HTMLElement>(options: RovingFocusOption
       if (activeKey === null && isRegisteredItem && targetKey !== undefined) {
         activeKey = findNavigable(optionsRef.current.items, targetKey)?.key ?? null;
       }
-      navigation.onKeyDown(event, activeKey);
+      navigateKeyDown(event, activeKey);
     },
-    [maps, navigation],
+    [maps, navigateKeyDown],
   );
 
   const onBlur = useCallback(
     (event: FocusEvent<HTMLElement>): void => {
       const related = event.relatedTarget;
-      if (related && event.currentTarget.contains(related)) {
-        const relatedKey = maps.nodeKeys.get(related);
+      if (containsSafe(event.currentTarget, related)) {
+        const relatedKey = isElementNode(related) ? maps.nodeKeys.get(related) : undefined;
         if (
           relatedKey !== undefined &&
           maps.nodes.get(relatedKey) === related &&
@@ -247,7 +334,7 @@ export function useRovingFocus<T extends HTMLElement>(options: RovingFocusOption
         }
         focused.current = null;
         setFocusedKey(null);
-        navigation.clearTypeahead();
+        clearTypeahead();
         return;
       }
 
@@ -259,14 +346,16 @@ export function useRovingFocus<T extends HTMLElement>(options: RovingFocusOption
         // Removal or reorder can blur without a related target. Layout gets the first
         // chance to distinguish it from an ordinary or window blur and recover focus.
         queueMicrotask(() => {
-          const doc = getOwnerDocument(origin.node) ?? origin.node.ownerDocument;
+          const doc = getOwnerDocument(origin.node);
           if (
             focused.current === origin &&
-            (!documentHasFocusSafe(doc) || getRootActiveElement(origin.root, doc) !== origin.node)
+            (!doc ||
+              !documentHasFocusSafe(doc) ||
+              getRootActiveElement(origin.root, doc) !== origin.node)
           ) {
             focused.current = null;
             setFocusedKey(null);
-            navigation.clearTypeahead();
+            clearTypeahead();
           }
         });
         return;
@@ -274,9 +363,9 @@ export function useRovingFocus<T extends HTMLElement>(options: RovingFocusOption
 
       focused.current = null;
       setFocusedKey(null);
-      navigation.clearTypeahead();
+      clearTypeahead();
     },
-    [maps, navigation],
+    [clearTypeahead, maps],
   );
 
   return {
@@ -284,6 +373,6 @@ export function useRovingFocus<T extends HTMLElement>(options: RovingFocusOption
     getItemProps,
     onKeyDown,
     onBlur,
-    clearTypeahead: navigation.clearTypeahead,
+    clearTypeahead,
   };
 }

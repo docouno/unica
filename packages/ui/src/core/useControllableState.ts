@@ -21,6 +21,7 @@ interface LocalState<T> {
 interface CommittedState<T> {
   readonly controlled: boolean;
   readonly origin: LocalOrigin<T>;
+  readonly local: LocalState<T> | null;
   readonly onChange: ((value: T) => void) | undefined;
   readonly isEqual: (a: T, b: T) => boolean;
   readonly committedValue: T;
@@ -86,6 +87,7 @@ export function useStateAuthority<T>({
   const committed = useRef<CommittedState<T>>({
     controlled,
     origin,
+    local,
     onChange,
     isEqual,
     committedValue: current,
@@ -100,13 +102,21 @@ export function useStateAuthority<T>({
     if (controlled) {
       history.accept(current);
     }
+    // Preserve pending local latestValue across unrelated parent rerenders (for example
+    // while a Continuous/Default/Transition update is queued), and sync it to current
+    // once local actually commits or authority changes.
+    const nextLatest =
+      controlled || previous.controlled || previous.origin !== origin || previous.local !== local
+        ? current
+        : previous.latestValue;
     committed.current = {
       controlled,
       origin,
+      local,
       onChange,
       isEqual,
       committedValue: current,
-      latestValue: current,
+      latestValue: nextLatest,
     };
     if (controlled !== previous.controlled && !warned.current && devWarningsEnabled()) {
       warned.current = true;
@@ -114,7 +124,7 @@ export function useStateAuthority<T>({
         `useControllableState switched to ${controlled ? 'controlled' : 'uncontrolled'} mode.`,
       );
     }
-  }, [controlled, history, origin, onChange, isEqual, current]);
+  }, [controlled, history, origin, local, onChange, isEqual, current]);
 
   const read = useCallback((): T => committed.current.latestValue, []);
 
@@ -123,6 +133,11 @@ export function useStateAuthority<T>({
     if (!snapshot.controlled && !snapshot.isEqual(snapshot.latestValue, initial)) {
       write?.(initial);
       snapshot.latestValue = initial;
+      setLocal({ origin: snapshot.origin, value: initial });
+      return;
+    }
+    if (!snapshot.controlled && !snapshot.isEqual(snapshot.committedValue, initial)) {
+      write?.(initial);
       setLocal({ origin: snapshot.origin, value: initial });
       return;
     }
@@ -144,16 +159,11 @@ export function useStateAuthority<T>({
       snapshot.latestValue = next;
       // A queued update can apply only under the authority that accepted it.
       setLocal({ origin: snapshot.origin, value: next });
-      queueMicrotask(() => {
-        // Reconcile if setLocal stayed pending in a transition or suspended render.
-        if (
-          committed.current === snapshot &&
-          !snapshot.isEqual(snapshot.latestValue, snapshot.committedValue)
-        ) {
-          snapshot.latestValue = snapshot.committedValue;
-          write?.(snapshot.committedValue);
-        }
-      });
+    } else if (!snapshot.controlled && !snapshot.isEqual(snapshot.committedValue, next)) {
+      // A prior setLocal(next) stayed pending (e.g. suspended transition); re-queue on the
+      // current priority lane without emitting a duplicate onChange.
+      write?.(snapshot.latestValue);
+      setLocal({ origin: snapshot.origin, value: next });
     } else {
       // Repair native edits before external code can read the form.
       write?.(snapshot.latestValue);

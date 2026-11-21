@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { resetForm } from '../helpers.mjs';
+import { assertFocused, resetForm } from '../helpers.mjs';
 
 const button = (page, name) => page.getByRole('button', { name, exact: true });
 const entries = (form) => form.evaluate((node) => [...new FormData(node)]);
@@ -104,6 +104,25 @@ export default {
     assert.deepEqual(await entries(form), b);
     await resetForm(form);
     assert.deepEqual(await entries(form), a);
+
+    // Re-selecting the same pre-reset radio (and switching back to Radio A) must still fire onChange.
+    const logLenAfterReset = (await log(page)).length;
+    await radioB.click();
+    assert.equal((await log(page)).length, logLenAfterReset + 1);
+    assert.deepEqual((await log(page)).at(-1), {
+      phase: 'local radio',
+      value: 'b',
+      entries: b,
+      checked: [false, true],
+    });
+    await page.getByRole('radio', { name: 'Radio A', exact: true }).click();
+    assert.equal((await log(page)).length, logLenAfterReset + 2);
+    assert.deepEqual((await log(page)).at(-1), {
+      phase: 'local radio',
+      value: 'a',
+      entries: a,
+      checked: [true, false],
+    });
 
     // Disabling or unmounting Radio A must leave Radio B operational and resettable.
     await button(page, 'Toggle disable radio A').click();
@@ -210,6 +229,13 @@ export default {
     assert.deepEqual(await entries(form), reset);
     await resetForm(form);
     assert.deepEqual(await entries(form), reset);
+
+    // Re-toggling uncontrolled checkbox to its pre-reset unchecked state must still fire React onChange.
+    assert.equal(await page.getByTestId('checked-value').textContent(), 'true');
+    await page.getByRole('checkbox', { name: 'Authority checkbox' }).uncheck();
+    assert.equal(await page.getByTestId('checked-value').textContent(), 'false');
+    assert.deepEqual(await entries(form), reset.slice(0, -1));
+
     assert.deepEqual(
       (await log(page)).map(({ value }) => value),
       ['b', 'c', 'b', 'c'],
@@ -321,11 +347,24 @@ export default {
         assert.deepEqual(result, [['local', 'a']]);
         assert.equal(await page.getByTestId('local-value').textContent(), 'a');
       }
+
+      // User click on <button type="reset"> with stopPropagation exercises the macrotask fallback.
+      await mount('form-authority');
+      await button(page, 'Change local to B').click();
+      await page.locator('#first').evaluate((form) => {
+        form.addEventListener('reset', (event) => event.stopPropagation(), { once: true });
+      });
+      await button(page, 'Reset first').click();
+      await page.waitForFunction(
+        () => document.querySelector('[data-testid="local-value"]')?.textContent === 'a',
+      );
+      assert.deepEqual(await entries(page.locator('#first')), initial);
     },
   'controlled live text input and textarea preserve caret position, reject cleanly, and fire onReset':
     async ({ page, mount }) => {
       await mount('form-authority');
       const input = page.getByRole('textbox', { name: 'Live controlled input' });
+      const localInput = page.getByRole('textbox', { name: 'Local text input' });
       const area = page.getByRole('textbox', { name: 'Local textarea' });
 
       // Insert in the middle of a controlled input: caret must stay right after the typed character.
@@ -336,20 +375,40 @@ export default {
       assert.equal(await input.evaluate((node) => node.selectionStart), 4);
       assert.equal(await page.getByTestId('live-text-value').textContent(), 'heXYllo');
 
-      // Rejecting controlled edits restores the committed DOM value after commit.
+      // Rejecting controlled edits must receive the rejected candidate and restore DOM after commit.
       await button(page, 'Toggle accept live text').click();
+      await input.focus();
+      await assertFocused(input);
+      await input.evaluate((node) => node.setSelectionRange(node.value.length, node.value.length));
       await page.keyboard.type('Z');
+      await page.waitForFunction(
+        () =>
+          document
+            .querySelector('[data-testid="live-text-proposals"]')
+            ?.textContent?.endsWith(',heXYlloZ') === true,
+      );
       assert.equal(await input.inputValue(), 'heXYllo');
       assert.equal(await page.getByTestId('live-text-value').textContent(), 'heXYllo');
 
-      // Uncontrolled textarea edits and resets back to mount default; both fire onReset.
+      // Uncontrolled input and textarea reset back to mount defaults and remain reactive to re-entering pre-reset values.
+      await localInput.fill('draft text');
       await area.fill('draft notes');
+      assert.equal(await page.getByTestId('local-text-value').textContent(), 'draft text');
       assert.equal(await page.getByTestId('local-area-value').textContent(), 'draft notes');
       await button(page, 'Reset live text').click();
+      await page.waitForFunction(
+        () => document.querySelector('[data-testid="live-reset-count"]')?.textContent === '3',
+      );
       assert.equal(await input.inputValue(), 'heXYllo');
+      assert.equal(await localInput.inputValue(), 'initial text');
+      assert.equal(await page.getByTestId('local-text-value').textContent(), 'initial text');
       assert.equal(await area.inputValue(), 'initial notes');
       assert.equal(await page.getByTestId('local-area-value').textContent(), 'initial notes');
-      assert.equal(await page.getByTestId('live-reset-count').textContent(), '2');
+
+      await localInput.fill('draft text');
+      await area.fill('draft notes');
+      assert.equal(await page.getByTestId('local-text-value').textContent(), 'draft text');
+      assert.equal(await page.getByTestId('local-area-value').textContent(), 'draft notes');
     },
   'Shadow DOM mounted forms support native reset and validation focus delegation': async ({
     page,
@@ -360,7 +419,12 @@ export default {
     await host.locator('button', { hasText: 'Shadow choose B' }).click();
     assert.equal(await host.getByTestId('shadow-value').textContent(), 'b');
     await host.locator('button', { hasText: 'Shadow reset' }).click();
-    await page.evaluate(() => new Promise((resolve) => setTimeout(resolve, 0)));
+    await page.waitForFunction(
+      () =>
+        document
+          .querySelector('#shadow-reset-host')
+          ?.shadowRoot?.querySelector('[data-testid="shadow-value"]')?.textContent === 'a',
+    );
     assert.equal(await host.getByTestId('shadow-value').textContent(), 'a');
 
     // Required validation inside Shadow DOM delegates focus to the shadow trigger.
@@ -385,7 +449,9 @@ export default {
     const form = page.locator('#first');
     const result = await form.evaluate(async (node) => {
       for (const name of [
+        'nodeType',
         'parentNode',
+        'parentElement',
         'append',
         'ownerDocument',
         'addEventListener',

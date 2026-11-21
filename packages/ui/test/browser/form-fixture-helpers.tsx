@@ -14,6 +14,7 @@ interface FixtureSelectOptions<T> {
 
 interface FixtureSelect<T> {
   value: T;
+  controlled: boolean;
   propose: (value: T) => void;
 }
 
@@ -21,18 +22,16 @@ export function useFixtureSelect<T extends SelectValue>(
   ref: RefObject<HTMLSelectElement | null>,
   options: FixtureSelectOptions<T>,
 ): FixtureSelect<T> {
-  const { value, propose } = useFormValue<T>({
+  const { value, controlled, propose } = useFormValue<T>({
     ...options,
     readOnly: options.readOnly ?? false,
     getControl: () => ref.current,
     writeDeps: [options.catalog],
     write: (next, context) => {
       if (ref.current) {
-        writeSelectValue(ref.current, next, options.catalog, {
-          defaultValue: context.controlled ? next : context.defaultValue,
-        });
+        writeSelectValue(ref.current, next, options.catalog ?? [], context);
       }
     },
   });
-  return { value, propose };
+  return { value, controlled, propose };
 }

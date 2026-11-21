@@ -31,55 +31,69 @@ it('imports and renders the private React core in Node without a DOM', () => {
   expect(effect).not.toHaveBeenCalled();
 });
 
-it('renders form carriers and collection hooks in Node SSR without DOM globals or inline styles', () => {
-  function ServerSurface(): ReactElement {
-    const input = useRef<HTMLInputElement>(null);
-    const select = useRef<HTMLSelectElement>(null);
-    const field = useFormValue<string>({
-      defaultValue: 'hello',
-      getControl: () => input.current,
-      write: () => undefined,
-    });
-    const roving = useRovingFocus<HTMLButtonElement>({
-      items: [
-        { key: 'a', label: 'Alpha' },
-        { key: 'b', label: 'Beta' },
-      ],
-      entryKey: 'b',
-      orientation: 'horizontal',
-      wrap: true,
-      typeahead: false,
-    });
-    const virtual = useActiveDescendant({
-      items: [{ key: 'a', id: 'opt-a', label: 'Alpha' }],
-      activeKey: 'a',
-      orientation: 'vertical',
-      wrap: false,
-      typeahead: false,
-      open: true,
-      onActiveChange: () => undefined,
-    });
-    return (
-      <form>
-        <FormInput ref={input} name="text" defaultValue={field.value} />
-        <FormTextarea name="notes" defaultValue="note" />
-        <FormSelect ref={select} name="choice" initialValue={null} getFocusTarget={() => null} />
-        <div role="tablist" onKeyDown={roving.onKeyDown} onBlur={roving.onBlur}>
-          <button type="button" {...roving.getItemProps('a')}>
-            A
-          </button>
-          <button type="button" {...roving.getItemProps('b')}>
-            B
-          </button>
-        </div>
-        <input role="combobox" aria-activedescendant={virtual['aria-activedescendant']} />
-      </form>
-    );
-  }
+it('renders form carriers and collection hooks in Node SSR without DOM globals, warnings, or inline styles', () => {
+  const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+  const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+  try {
+    function ServerSurface(): ReactElement {
+      const input = useRef<HTMLInputElement>(null);
+      const select = useRef<HTMLSelectElement>(null);
+      const field = useFormValue<string>({
+        defaultValue: 'hello',
+        getControl: () => input.current,
+        write: () => undefined,
+      });
+      const roving = useRovingFocus<HTMLButtonElement>({
+        items: [
+          { key: 'a', label: 'Alpha' },
+          { key: 'b', label: 'Beta' },
+        ],
+        entryKey: 'b',
+        orientation: 'horizontal',
+        wrap: true,
+        typeahead: false,
+      });
+      const virtual = useActiveDescendant({
+        items: [{ key: 'a', id: 'opt-a', label: 'Alpha' }],
+        activeKey: 'a',
+        orientation: 'vertical',
+        wrap: false,
+        typeahead: false,
+        open: true,
+        onActiveChange: () => undefined,
+      });
+      return (
+        <form>
+          <FormInput
+            ref={input}
+            controlled={field.controlled}
+            name="text"
+            defaultValue={field.value}
+          />
+          <FormTextarea controlled={false} name="notes" defaultValue="note" />
+          <FormSelect ref={select} name="choice" initialValue={null} getFocusTarget={() => null} />
+          <div role="tablist" onKeyDown={roving.onKeyDown} onBlur={roving.onBlur}>
+            <button type="button" {...roving.getItemProps('a')}>
+              A
+            </button>
+            <button type="button" {...roving.getItemProps('b')}>
+              B
+            </button>
+          </div>
+          <input role="combobox" aria-activedescendant={virtual['aria-activedescendant']} />
+        </form>
+      );
+    }
 
-  const html = renderToString(<ServerSurface />);
-  expect(html).toContain('class="unica-visually-hidden"');
-  expect(html).not.toContain('style=');
-  expect(html).toContain('aria-activedescendant="opt-a"');
-  expect(html).toContain('tabindex="0">B</button>');
+    const html = renderToString(<ServerSurface />);
+    expect(html).toContain('class="unica-visually-hidden"');
+    expect(html).not.toContain('style=');
+    expect(html).toContain('aria-activedescendant="opt-a"');
+    expect(html).toContain('tabindex="0">B</button>');
+    expect(errorSpy).not.toHaveBeenCalled();
+    expect(warnSpy).not.toHaveBeenCalled();
+  } finally {
+    errorSpy.mockRestore();
+    warnSpy.mockRestore();
+  }
 });

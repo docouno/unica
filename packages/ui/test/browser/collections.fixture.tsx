@@ -1,5 +1,5 @@
-import { useEffect, useId, useRef, useState } from 'react';
-import type { JSX, RefCallback } from 'react';
+import { useCallback, useEffect, useId, useRef, useState } from 'react';
+import type { FocusEvent, JSX, KeyboardEvent, RefCallback } from 'react';
 import { createRoot } from 'react-dom/client';
 import type { Root } from 'react-dom/client';
 import { subscribeFocusOrigin } from '../../src/core/focus-origin.js';
@@ -22,12 +22,24 @@ function RovingFixture(): JSX.Element {
   const [wrap, setWrap] = useState(false);
   const [rtl, setRtl] = useState(false);
   const [link, setLink] = useState(false);
+  const [autoFocusD, setAutoFocusD] = useState(false);
   const [navigates, setNavigates] = useState<string[]>([]);
   const [tick, setTick] = useState(0);
   const [removeOnBlur, setRemoveOnBlur] = useState(false);
+  const handleItemARef = useCallback((node: HTMLElement | null) => {
+    void node;
+  }, []);
+  const handleItemAFocus = useCallback(() => undefined, []);
   const refChanges = useRef(0);
+  const handlerChanges = useRef(0);
   const refChangesOutput = useRef<HTMLOutputElement>(null);
+  const handlerChangesOutput = useRef<HTMLOutputElement>(null);
   const firstRef = useRef<RefCallback<HTMLElement> | null>(null);
+  const prevHandlers = useRef<{
+    onKeyDown: (event: KeyboardEvent<HTMLElement>) => void;
+    onBlur: (event: FocusEvent<HTMLElement>) => void;
+    onFocus: (event: FocusEvent<HTMLElement>) => void;
+  } | null>(null);
 
   const roving = useRovingFocus<HTMLElement>({
     items: items.map((key) => ({
@@ -43,14 +55,33 @@ function RovingFixture(): JSX.Element {
     onNavigate: (key) => setNavigates((prev) => [...prev, key]),
   });
 
-  const itemAProps = roving.getItemProps('A');
+  const itemAProps = roving.getItemProps('A', {
+    ref: handleItemARef,
+    onFocus: handleItemAFocus,
+  });
   useEffect(() => {
     if (firstRef.current && firstRef.current !== itemAProps.ref) {
       refChanges.current += 1;
     }
     firstRef.current = itemAProps.ref;
+    if (
+      prevHandlers.current &&
+      (prevHandlers.current.onKeyDown !== roving.onKeyDown ||
+        prevHandlers.current.onBlur !== roving.onBlur ||
+        prevHandlers.current.onFocus !== itemAProps.onFocus)
+    ) {
+      handlerChanges.current += 1;
+    }
+    prevHandlers.current = {
+      onKeyDown: roving.onKeyDown,
+      onBlur: roving.onBlur,
+      onFocus: itemAProps.onFocus,
+    };
     if (refChangesOutput.current) {
       refChangesOutput.current.textContent = String(refChanges.current);
+    }
+    if (handlerChangesOutput.current) {
+      handlerChangesOutput.current.textContent = String(handlerChanges.current);
     }
   });
 
@@ -90,6 +121,7 @@ function RovingFixture(): JSX.Element {
               key={item}
               role="tab"
               type="button"
+              autoFocus={autoFocusD && item === 'D'}
               aria-selected={item === selected}
               disabled={item === disabled}
               aria-disabled={ariaDisabledB && item === 'B' ? true : undefined}
@@ -105,6 +137,9 @@ function RovingFixture(): JSX.Element {
       <output data-testid="selected-tab">{selected}</output>
       <output data-testid="roving-navigates">{navigates.join(',')}</output>
       <output data-testid="roving-ref-changes" ref={refChangesOutput}>
+        0
+      </output>
+      <output data-testid="roving-handler-changes" ref={handlerChangesOutput}>
         0
       </output>
       <output data-testid="roving-tick">{tick}</output>
@@ -149,6 +184,15 @@ function RovingFixture(): JSX.Element {
       </button>
       <button type="button" onClick={() => setRemoveOnBlur(true)}>
         Enable remove B on blur
+      </button>
+      <button
+        type="button"
+        onClick={() => {
+          setAutoFocusD(true);
+          setItems((current) => (current.includes('D') ? current : [...current, 'D']));
+        }}
+      >
+        Add autoFocus tab D
       </button>
     </section>
   );
@@ -424,14 +468,29 @@ function ActiveTypeaheadFixture(): JSX.Element {
   );
 }
 
-function ShadowRovingInner(): JSX.Element {
+function ShadowRovingInner({ focusOutside }: { focusOutside: () => void }): JSX.Element {
   const [items, setItems] = useState(['S1', 'S2']);
+  const focusOutsideOnUnmount = useRef(false);
   const roving = useRovingFocus<HTMLButtonElement>({
     items: items.map((key) => ({ key, label: key })),
     orientation: 'horizontal',
     wrap: false,
     typeahead: false,
   });
+  const s1UnmountRef = useCallback(
+    (node: HTMLButtonElement | null) => {
+      if (!node) {
+        return;
+      }
+      return () => {
+        if (focusOutsideOnUnmount.current) {
+          focusOutsideOnUnmount.current = false;
+          focusOutside();
+        }
+      };
+    },
+    [focusOutside],
+  );
   return (
     <div>
       <div
@@ -441,7 +500,12 @@ function ShadowRovingInner(): JSX.Element {
         onBlur={roving.onBlur}
       >
         {items.map((item) => (
-          <button key={item} role="tab" type="button" {...roving.getItemProps(item)}>
+          <button
+            key={item}
+            role="tab"
+            type="button"
+            {...roving.getItemProps(item, item === 'S1' ? { ref: s1UnmountRef } : undefined)}
+          >
             {item}
           </button>
         ))}
@@ -449,12 +513,25 @@ function ShadowRovingInner(): JSX.Element {
       <button type="button" onClick={() => setItems(['S2'])}>
         Remove S1
       </button>
+      <button type="button" onClick={() => setItems(['S1', 'S2'])}>
+        Restore shadow items
+      </button>
+      <button
+        type="button"
+        onClick={() => {
+          focusOutsideOnUnmount.current = true;
+          setItems(['S2']);
+        }}
+      >
+        Remove S1 and focus outside
+      </button>
     </div>
   );
 }
 
 function ShadowRovingHost(): JSX.Element {
   const hostRef = useRef<HTMLDivElement>(null);
+  const outsideRef = useRef<HTMLInputElement>(null);
   useEffect(() => {
     const host = hostRef.current;
     if (!host) {
@@ -464,7 +541,7 @@ function ShadowRovingHost(): JSX.Element {
     const mount = document.createElement('div');
     shadow.replaceChildren(mount);
     const root: Root = createRoot(mount);
-    root.render(<ShadowRovingInner />);
+    root.render(<ShadowRovingInner focusOutside={() => outsideRef.current?.focus()} />);
     return () => {
       root.unmount();
     };
@@ -472,7 +549,7 @@ function ShadowRovingHost(): JSX.Element {
   return (
     <section aria-label="Shadow roving">
       <div id="shadow-roving-host" ref={hostRef} />
-      <input aria-label="Outside shadow input" />
+      <input ref={outsideRef} aria-label="Outside shadow input" />
     </section>
   );
 }
