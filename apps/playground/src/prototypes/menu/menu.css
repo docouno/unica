@@ -69,9 +69,6 @@
 }
 
 .menu-rows-proto {
-  --scrollbar-width: thin;
-  --scrollbar-size: 10px;
-
   min-inline-size: 0;
   min-block-size: 0;
   margin: var(--space-4);

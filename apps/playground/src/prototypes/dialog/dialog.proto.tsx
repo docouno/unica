@@ -19,7 +19,6 @@ import type {
 import { Button, IconButton } from '../button/button.proto.js';
 import type { ButtonProps } from '../button/button.proto.js';
 import './dialog.css';
-import '../scrollbar/scrollbar.css';
 
 export type DialogSize = 's' | 'm' | 'l';
 export type DrawerSide = 'start' | 'end' | 'top' | 'bottom';
@@ -292,7 +291,7 @@ function DialogSurface({
         <section
           ref={panel}
           data-wb-subject={subject}
-          className="dialog-surface scrollbar-proto"
+          className="dialog-surface unica-scrollbar unica-scrollbar--compact"
           data-surface="overlay"
           data-dialog-size={size}
           data-dialog-width={width}
@@ -367,7 +366,7 @@ function DialogDescription({
 
 function DialogBody({ children }: { readonly children: ReactNode }): ReactElement {
   return (
-    <div className="dialog-body scrollbar-proto">
+    <div className="dialog-body unica-scrollbar unica-scrollbar--compact">
       <div className="dialog-body-content">{children}</div>
     </div>
   );

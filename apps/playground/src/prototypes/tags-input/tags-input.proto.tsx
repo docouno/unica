@@ -5,7 +5,6 @@ import type { ControlSize, FieldStatus, FieldVariant } from '../input/input.prot
 import { useInputFocus } from '../input/input-focus.proto.js';
 import { Tag } from '../tag/tag.proto.js';
 import './tags-input.css';
-import '../scrollbar/scrollbar.css';
 
 export interface TagsInputProps extends Omit<
   ComponentPropsWithRef<'textarea'>,
@@ -369,7 +368,7 @@ export function TagsInput({
               ref={editorRef}
               id={editorId}
               rows={1}
-              className="tags-draft-proto scrollbar-proto"
+              className="tags-draft-proto unica-scrollbar unica-scrollbar--compact"
               value={projection}
               readOnly={readOnly}
               disabled={disabled}

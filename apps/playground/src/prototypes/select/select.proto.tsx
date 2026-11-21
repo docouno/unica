@@ -8,7 +8,6 @@ import { Listbox } from './listbox.proto.js';
 import type { SelectOption } from './listbox.proto.js';
 import { SelectPanel } from './select-control.proto.js';
 import './select.css';
-import '../scrollbar/scrollbar.css';
 
 export { Listbox, ListboxGroup, ListboxOption } from './listbox.proto.js';
 export type {

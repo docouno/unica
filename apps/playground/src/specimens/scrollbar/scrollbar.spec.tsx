@@ -1,6 +1,7 @@
 import { useId, useState } from 'react';
-import type { ReactElement } from 'react';
+import type { CSSProperties, ReactElement } from 'react';
 import { defineComponent } from '../../workbench/types.js';
+import type { PreviewContext } from '../../workbench/types.js';
 import { Card, CardAction, CardHeader } from '../../prototypes/card/card.proto.js';
 import { CodeBlock } from '../../prototypes/code-block/code-block.proto.js';
 import {
@@ -13,8 +14,12 @@ import {
 } from '../../prototypes/popover/popover.proto.js';
 import { Button } from '../../prototypes/button/button.proto.js';
 import { Text, Title } from '@docouno/unica';
-import '../../prototypes/scrollbar/scrollbar.css';
-import '../../prototypes/scrollbar/scrollbar.examples.css';
+import './scrollbar.examples.css';
+
+const densityClasses = {
+  ordinary: 'unica-scrollbar',
+  compact: 'unica-scrollbar unica-scrollbar--compact',
+};
 
 const topics = [
   ['Overview', 'A short introduction and the essentials.'],
@@ -31,24 +36,69 @@ const topics = [
   ['Exporting', 'Keep a portable copy of your work.'],
 ] as const;
 
+const topicListStyle = {
+  listStyle: 'none',
+  margin: 0,
+  padding: 0,
+  display: 'grid',
+  fontFamily: 'var(--font-family-base)',
+  fontStyle: 'normal',
+  letterSpacing: 'normal',
+  overflowWrap: 'anywhere',
+} satisfies CSSProperties;
+
+const topicRowStyle = {
+  display: 'grid',
+  gap: 'var(--space-4)',
+  padding: 'var(--space-12) var(--space-8)',
+} satisfies CSSProperties;
+
+const topicRowBorder = '1px solid var(--border-subtle)';
+const dividedTopicRowStyle = { ...topicRowStyle, borderBlockStart: topicRowBorder };
+
+const topicTitleStyle = {
+  minInlineSize: 0,
+  fontSize: 'var(--text-size-body-s)',
+  lineHeight: 'var(--text-size-body-s-lh)',
+  fontWeight: 700,
+} satisfies CSSProperties;
+
+const topicDescriptionStyle = {
+  margin: 0,
+  minInlineSize: 0,
+  fontSize: 'var(--text-size-caption-l)',
+  lineHeight: 'var(--text-size-caption-l-lh)',
+  fontWeight: 400,
+  color: 'var(--fg-secondary)',
+} satisfies CSSProperties;
+
+const scrollportFrame = {
+  minBlockSize: 0,
+  overscrollBehavior: 'contain',
+  padding: 'var(--space-4)',
+  margin: 'calc(-1 * var(--space-4))',
+} satisfies CSSProperties;
+
+const readingScrollportStyle = {
+  ...scrollportFrame,
+  blockSize: 240,
+  overflow: 'auto',
+} satisfies CSSProperties;
+
 function TopicList({ short = false }: { readonly short?: boolean }): ReactElement {
   return (
-    <ol className="scrollbar-demo-list">
-      {(short ? topics.slice(0, 2) : topics).map(([title, description]) => (
-        <li key={title}>
-          <Text as="strong" size="body-s">
-            {title}
-          </Text>
-          <Text size="caption-l" color="secondary">
-            {description}
-          </Text>
+    <ol style={topicListStyle}>
+      {(short ? topics.slice(0, 2) : topics).map(([title, description], index) => (
+        <li key={title} style={index ? dividedTopicRowStyle : topicRowStyle}>
+          <strong style={topicTitleStyle}>{title}</strong>
+          <p style={topicDescriptionStyle}>{description}</p>
         </li>
       ))}
     </ol>
   );
 }
 
-function BaseExample(): ReactElement {
+function BaseExample({ ctx }: { readonly ctx: PreviewContext }): ReactElement {
   const id = useId();
   return (
     <div className="scrollbar-demo-stack">
@@ -63,14 +113,15 @@ function BaseExample(): ReactElement {
             </Text>
           </CardAction>
         </CardHeader>
-        <div
-          className="scrollbar-proto scrollbar-demo-body"
+        <section
+          {...ctx.subject}
+          className="unica-scrollbar scrollbar-demo-body"
           tabIndex={0}
-          role="region"
           aria-labelledby={id}
+          style={readingScrollportStyle}
         >
           <TopicList />
-        </div>
+        </section>
       </Card>
       <Text className="scrollbar-demo-note" size="caption-l" color="secondary">
         The title stays in place. Scroll the content with a wheel, touch or the keyboard.
@@ -79,7 +130,7 @@ function BaseExample(): ReactElement {
   );
 }
 
-function OverlayExample(): ReactElement {
+function OverlayExample({ ctx }: { readonly ctx: PreviewContext }): ReactElement {
   const id = useId();
   const [open, setOpen] = useState(true);
   return (
@@ -91,7 +142,7 @@ function OverlayExample(): ReactElement {
             <PopoverDescription>Keep the guide close while you work.</PopoverDescription>
           </PopoverHeader>
           <PopoverClose onClick={() => setOpen(false)} />
-          <PopoverBody tabIndex={0} role="region" aria-label="Reference topics">
+          <PopoverBody {...ctx.subject} tabIndex={0} role="region" aria-label="Reference topics">
             <TopicList />
           </PopoverBody>
         </PopoverContent>
@@ -108,7 +159,7 @@ function OverlayExample(): ReactElement {
   );
 }
 
-function StateExample(): ReactElement {
+function StateExample({ ctx }: { readonly ctx: PreviewContext }): ReactElement {
   const id = useId();
   const [overflow, setOverflow] = useState(false);
   return (
@@ -126,10 +177,12 @@ function StateExample(): ReactElement {
           Reading list
         </Title>
         <div
-          className="scrollbar-proto scrollbar-demo-body"
+          {...ctx.subject}
+          className="unica-scrollbar scrollbar-demo-body"
           tabIndex={0}
           role="region"
           aria-labelledby={id}
+          style={readingScrollportStyle}
         >
           <TopicList short={!overflow} />
         </div>
@@ -142,7 +195,7 @@ function StateExample(): ReactElement {
   );
 }
 
-function HorizontalExample(): ReactElement {
+function HorizontalExample({ ctx }: { readonly ctx: PreviewContext }): ReactElement {
   return (
     <div className="scrollbar-demo-stack">
       <CodeBlock language="Query" tabIndex={0} role="region" aria-label="Scrollable query">
@@ -151,6 +204,7 @@ function HorizontalExample(): ReactElement {
         }
       </CodeBlock>
       <CodeBlock
+        {...ctx.subject}
         className="scrollbar-demo-code"
         language="Activity"
         tabIndex={0}
@@ -171,19 +225,66 @@ function HorizontalExample(): ReactElement {
   );
 }
 
+const guidePath = 'Guide / Getting started / Permissions / Notification delivery';
+const wideContentStyle = { minInlineSize: '32rem' } satisfies CSSProperties;
+const guidePathStyle = {
+  fontFamily: 'var(--font-family-base)',
+  fontSize: 'var(--text-size-body-s)',
+  lineHeight: 'var(--text-size-body-s-lh)',
+} satisfies CSSProperties;
+
+function scrollportStyle(axis: 'vertical' | 'horizontal' | 'both', height: number) {
+  return {
+    ...scrollportFrame,
+    inlineSize: 'min(100%, 22rem)',
+    blockSize: height,
+    overflowX: axis === 'vertical' ? 'hidden' : 'auto',
+    overflowY: axis === 'horizontal' ? 'hidden' : 'auto',
+  } satisfies CSSProperties;
+}
+
+function styleCode(style: CSSProperties): string {
+  const entries = Object.entries(style).map(([name, value]) => `${name}: ${JSON.stringify(value)}`);
+  return `{ ${entries.join(', ')} }`;
+}
+
+function topicListCode(items: readonly (readonly [string, string])[]): string {
+  return [
+    `<ol style={${styleCode(topicListStyle)}}>`,
+    '  {[',
+    ...items.map((entry) => `    ${JSON.stringify(entry)},`),
+    '  ].map(([title, description], index) => (',
+    `    <li key={title} style={{ ...${styleCode(topicRowStyle)}, borderBlockStart: index ? ${JSON.stringify(topicRowBorder)} : undefined }}>`,
+    `      <strong style={${styleCode(topicTitleStyle)}}>{title}</strong>`,
+    `      <p style={${styleCode(topicDescriptionStyle)}}>{description}</p>`,
+    '    </li>',
+    '  ))}',
+    '</ol>',
+  ].join('\n');
+}
+
 export default defineComponent({
   id: 'scrollbar',
   title: 'Scrollbar',
   category: 'Layout',
-  status: 'Proto',
+  status: 'UI',
   summary: 'Native scrolling, a transparent track and a quiet thumb in the surface palette.',
   defaultSurface: 'base',
   componentName: 'div',
   props: {
+    density: {
+      kind: 'enum',
+      group: 'Scrollbar',
+      default: 'ordinary',
+      demo: true,
+      description: 'Add the compact modifier for a smaller native gutter.',
+      choices: [{ value: 'ordinary' }, { value: 'compact' }],
+    },
     axis: {
       kind: 'enum',
       group: 'Viewport',
       default: 'vertical',
+      demo: true,
       description: 'Choose the overflowing axis to inspect.',
       choices: [{ value: 'vertical' }, { value: 'horizontal' }, { value: 'both' }],
     },
@@ -191,6 +292,7 @@ export default defineComponent({
       kind: 'number',
       group: 'Viewport',
       default: 160,
+      demo: true,
       description: 'Block size of the scroll container in CSS pixels.',
       examples: [96, 160, 240],
     },
@@ -208,54 +310,54 @@ export default defineComponent({
       description: 'Records the native scroll position.',
     },
   },
-  render: ({ ctx, values: { axis, height, longContent } }) => (
+  render: ({ ctx, values: { axis, density, height, longContent } }) => (
     <div
       {...ctx.subject}
-      className="scrollbar-proto scrollbar-demo-body"
+      className={`${densityClasses[density]} scrollbar-demo-body`}
       tabIndex={0}
       role="region"
       aria-label="Workspace guide"
-      style={{
-        inlineSize: 'min(100%, 22rem)',
-        blockSize: height,
-        overflowX: axis === 'vertical' ? 'hidden' : 'auto',
-        overflowY: axis === 'horizontal' ? 'hidden' : 'auto',
-      }}
+      style={scrollportStyle(axis, height)}
       onScroll={({ currentTarget }) => {
         ctx.action('onScroll')({ left: currentTarget.scrollLeft, top: currentTarget.scrollTop });
       }}
     >
-      <div style={longContent && axis !== 'vertical' ? { minInlineSize: '32rem' } : undefined}>
+      <div style={longContent && axis !== 'vertical' ? wideContentStyle : undefined}>
         {axis === 'horizontal' ? (
-          <Text>
-            {longContent
-              ? 'Guide / Getting started / Permissions / Notification delivery'
-              : 'Guide'}
-          </Text>
+          <p style={guidePathStyle}>{longContent ? guidePath : 'Guide'}</p>
         ) : (
           <TopicList short={!longContent} />
         )}
       </div>
     </div>
   ),
-  code: ({ axis, height, longContent }) => {
-    const overflowX = axis === 'vertical' ? 'hidden' : 'auto';
-    const overflowY = axis === 'horizontal' ? 'hidden' : 'auto';
-    const guide = longContent
-      ? 'Guide / Getting started / Permissions / Notification delivery'
-      : 'Guide';
+  code: ({ axis, density, height, longContent }) => {
     const contents =
       axis === 'horizontal'
-        ? `<Text>${guide}</Text>`
-        : `<TopicList${longContent ? '' : ' short'} />`;
-    const sized =
-      longContent && axis !== 'vertical'
-        ? `<div style={{ minInlineSize: '32rem' }}>${contents}</div>`
-        : contents;
-    return `<div\n  className="scrollbar-proto"\n  tabIndex={0}\n  role="region"\n  aria-label="Workspace guide"\n  style={{ inlineSize: 'min(100%, 22rem)', blockSize: ${height}, overflowX: '${overflowX}', overflowY: '${overflowY}' }}\n  onScroll={handleScroll}\n>\n  ${sized}\n</div>`;
+        ? `<p style={${styleCode(guidePathStyle)}}>${longContent ? guidePath : 'Guide'}</p>`
+        : topicListCode(longContent ? topics : topics.slice(0, 2));
+    const innerStyle =
+      longContent && axis !== 'vertical' ? ` style={${styleCode(wideContentStyle)}}` : '';
+    return `import '@docouno/unica/styles.css';
+
+<div
+  className="${densityClasses[density]}"
+  tabIndex={0}
+  role="region"
+  aria-label="Workspace guide"
+  style={${styleCode(scrollportStyle(axis, height))}}
+  onScroll={({ currentTarget }) => {
+    console.log({ left: currentTarget.scrollLeft, top: currentTarget.scrollTop });
+  }}
+>
+  <div${innerStyle}>
+${contents.replace(/^/gm, '    ')}
+  </div>
+</div>`;
   },
   matrixViews: [
     { id: 'overflow', title: 'Scrolling axes and content', rows: 'axis', cols: 'longContent' },
+    { id: 'density', title: 'Density and scrolling axes', rows: 'density', cols: 'axis' },
   ],
   cases: [
     {
@@ -267,7 +369,7 @@ export default defineComponent({
       caption:
         'Compact width in a tight panel. Only the body scrolls; the header and Close stay available.',
       kind: 'surface',
-      render: () => <OverlayExample />,
+      render: OverlayExample,
     },
     {
       id: 'states',
@@ -277,7 +379,7 @@ export default defineComponent({
       caption:
         'The thumb becomes clearer on hover and drag. The region has its own keyboard focus; touch keeps system scrolling.',
       kind: 'behavior',
-      render: () => <StateExample />,
+      render: StateExample,
     },
     {
       id: 'axes',
@@ -286,22 +388,26 @@ export default defineComponent({
       surface: 'base',
       caption: 'Code stays LTR inside RTL layouts. No extra scroll wrapper or synthetic thumb.',
       kind: 'behavior',
-      render: () => <HorizontalExample />,
+      render: HorizontalExample,
     },
   ],
   usage: [
     {
       id: 'base',
-      code: `<Card>
-  <CardHeader><Title as="h3">Workspace guide</Title></CardHeader>
-  <div className="scrollbar-proto" role="region" aria-label="Topics" tabIndex={0} style={{ blockSize: 240, overflow: 'auto' }}>
-    <TopicList />
-  </div>
-</Card>`,
+      code: `import '@docouno/unica/styles.css';
+
+<section
+  aria-label="Workspace guide"
+  className="unica-scrollbar"
+  tabIndex={0}
+  style={${styleCode(readingScrollportStyle)}}
+>
+${topicListCode(topics).replace(/^/gm, '  ')}
+</section>`,
       title: 'Ordinary surfaces',
       surface: 'base',
       caption: 'A quiet position indicator for reading areas, sidebars and page scrolling.',
-      render: () => <BaseExample />,
+      render: BaseExample,
     },
   ],
 });

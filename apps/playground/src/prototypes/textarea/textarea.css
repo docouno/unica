@@ -55,8 +55,6 @@
 }
 
 .textarea-proto {
-  --scrollbar-width: thin;
-  --scrollbar-size: 10px;
   box-sizing: border-box;
   display: block;
   inline-size: 100%;

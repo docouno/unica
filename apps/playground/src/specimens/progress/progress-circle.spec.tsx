@@ -2,8 +2,7 @@ import { ProgressCircle } from '@docouno/unica';
 import { previewProps } from '../preview-code.js';
 import { defineComponent } from '../../workbench/types.js';
 import { activityNameReference, labelledByText, withActivityNameCode } from './activity-name.js';
-
-const { default: Study } = await import('./progress-circle.examples.js');
+import Study from './progress-circle.examples.js';
 
 export default defineComponent({
   id: 'progress-circle',

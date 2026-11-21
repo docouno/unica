@@ -3,7 +3,6 @@ import { XIcon } from '@phosphor-icons/react';
 import { Text, Title } from '@docouno/unica';
 import type { TextProps, TitleProps } from '@docouno/unica';
 import './popover.css';
-import '../scrollbar/scrollbar.css';
 
 export type PopoverSize = 's' | 'm' | 'l';
 export type PopoverSide = 'top' | 'bottom' | 'start' | 'end';
@@ -63,7 +62,12 @@ export function PopoverBody({
   className = '',
   ...props
 }: ComponentPropsWithRef<'div'>): ReactElement {
-  return <div {...props} className={`popover-body-proto scrollbar-proto ${className}`} />;
+  return (
+    <div
+      {...props}
+      className={`popover-body-proto unica-scrollbar unica-scrollbar--compact ${className}`}
+    />
+  );
 }
 
 export function PopoverFooter({

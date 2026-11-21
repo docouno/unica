@@ -51,8 +51,6 @@
 
 .tooltip-body-proto,
 .hover-card-body-proto {
-  --scrollbar-width: thin;
-  --scrollbar-size: 10px;
   flex: 1 1 auto;
   min-block-size: 0;
   min-inline-size: 0;

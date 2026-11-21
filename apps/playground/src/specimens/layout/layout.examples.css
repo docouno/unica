@@ -1,0 +1,83 @@
+.layout-example,
+.layout-cases {
+  display: grid;
+  gap: var(--space-m);
+  min-inline-size: 0;
+}
+
+.layout-example {
+  inline-size: 100%;
+  padding: var(--space-xs);
+  border: 1px dashed var(--border-default);
+}
+
+.layout-example [data-wb-subject],
+.layout-example .layout-outline {
+  outline: 1px solid var(--accent-border);
+  outline-offset: -1px;
+}
+
+.layout-example :where(span, section, article, aside, nav, header, footer) {
+  overflow-wrap: anywhere;
+}
+
+.layout-flow > span,
+.layout-cell > span,
+.layout-example span.layout-demo-tile {
+  padding: var(--space-xs);
+  border: 1px solid var(--border-default);
+  background: var(--bg-surface-raised);
+}
+
+.layout-flow > span:nth-child(2) {
+  font-size: var(--text-size-caption-l);
+}
+
+.layout-example p {
+  margin: 0;
+}
+
+.layout-example hr {
+  align-self: stretch;
+  flex: none;
+  min-inline-size: 1px;
+  min-block-size: 1px;
+  margin: 0;
+  border: 0;
+  background: var(--border-default);
+}
+
+.layout-example input {
+  max-inline-size: 100%;
+}
+
+.layout-cell {
+  min-inline-size: 0;
+}
+
+.layout-cell > span {
+  display: block;
+  block-size: 100%;
+}
+
+.layout-track-markers {
+  align-items: end;
+}
+
+.layout-track-markers > div {
+  min-block-size: 2rem;
+  background: var(--bg-surface-raised);
+}
+
+.layout-container-frame {
+  display: block;
+  padding: 0;
+}
+
+.layout-container-frame section > * + * {
+  margin-block-start: var(--space-xs);
+}
+
+.layout-container-frame .layout-demo-tile {
+  display: block;
+}

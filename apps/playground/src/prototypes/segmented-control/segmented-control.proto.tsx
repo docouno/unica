@@ -13,7 +13,6 @@ import type { HTMLAttributes, ReactElement, ReactNode, Ref } from 'react';
 import { Icon } from '@docouno/unica';
 import type { GlyphSource } from '@docouno/unica';
 import type { ControlSize } from '../input/input.proto.js';
-import '../scrollbar/scrollbar.css';
 import './segmented-control.css';
 
 export interface SegmentItem {
@@ -153,7 +152,7 @@ export function SegmentedControl({
         aria-readonly={readOnly || undefined}
         aria-disabled={disabled || undefined}
         aria-invalid={invalid || undefined}
-        className={`segmented-control-proto scrollbar-proto ${className}`}
+        className={`segmented-control-proto unica-scrollbar unica-scrollbar--compact ${className}`}
         data-size={size}
         data-orientation={orientation}
         data-width={width}

@@ -272,7 +272,7 @@ export function Listbox({
         tabIndex={disabled || externalFocus ? -1 : 0}
         data-pointer-inside={pointerInside || undefined}
         onPointerLeave={() => setPointerInside(false)}
-        className="choice-list-proto scrollbar-proto"
+        className="choice-list-proto unica-scrollbar unica-scrollbar--compact"
         data-focus-origin={keyboard ? 'keyboard' : 'pointer'}
         data-external-focus={externalFocus || undefined}
         data-no-active={!active || undefined}

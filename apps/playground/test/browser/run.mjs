@@ -19,6 +19,9 @@ for (const file of scenarioFiles) {
 }
 assert.ok(scenarios.length, 'No browser tests found in suites/**/*.browser.mjs');
 
+// Cold Vite transforms for a fixture can compete with build processes in nearby worktrees.
+const fixtureStartupTimeout = 20_000;
+
 async function runScenario(t, browser, origin, renderFixture, scenario) {
   const context = await browser.newContext({ viewport: { width: 800, height: 600 } });
   t.after(() => context.close());
@@ -60,8 +63,9 @@ async function runScenario(t, browser, origin, renderFixture, scenario) {
       direction,
     }).toString();
     await page.goto(url.href, { waitUntil: 'commit' });
-    // A cold Vite fixture has to load and compile its modules before React can mount.
-    await page.locator('[data-browser-ready]').waitFor({ state: 'attached', timeout: 15_000 });
+    await page
+      .locator('[data-browser-ready]')
+      .waitFor({ state: 'attached', timeout: fixtureStartupTimeout });
   }
 
   try {

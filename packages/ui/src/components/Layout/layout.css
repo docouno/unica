@@ -1,0 +1,374 @@
+@layer unica.components {
+  /* Each root resets the slots. A missing value falls back through earlier breakpoints.
+     Inline props override individual slots and media queries select the active slot. */
+  :where(.unica-box) {
+    --_box-display-mobile: initial;
+    --_box-display-tablet: var(--_box-display-mobile);
+    --_box-display-desktop: var(--_box-display-tablet);
+    --_box-display-wide: var(--_box-display-desktop);
+    --_box-display: var(--_box-display-mobile);
+    --_box-padding-mobile: initial;
+    --_box-padding-tablet: var(--_box-padding-mobile);
+    --_box-padding-desktop: var(--_box-padding-tablet);
+    --_box-padding-wide: var(--_box-padding-desktop);
+    --_box-padding: var(--_box-padding-mobile);
+    --_box-padding-inline-mobile: initial;
+    --_box-padding-inline-tablet: var(--_box-padding-inline-mobile);
+    --_box-padding-inline-desktop: var(--_box-padding-inline-tablet);
+    --_box-padding-inline-wide: var(--_box-padding-inline-desktop);
+    --_box-padding-inline: var(--_box-padding-inline-mobile);
+    --_box-padding-block-mobile: initial;
+    --_box-padding-block-tablet: var(--_box-padding-block-mobile);
+    --_box-padding-block-desktop: var(--_box-padding-block-tablet);
+    --_box-padding-block-wide: var(--_box-padding-block-desktop);
+    --_box-padding-block: var(--_box-padding-block-mobile);
+    --_box-padding-inline-start-mobile: initial;
+    --_box-padding-inline-start-tablet: var(--_box-padding-inline-start-mobile);
+    --_box-padding-inline-start-desktop: var(--_box-padding-inline-start-tablet);
+    --_box-padding-inline-start-wide: var(--_box-padding-inline-start-desktop);
+    --_box-padding-inline-start: var(--_box-padding-inline-start-mobile);
+    --_box-padding-inline-end-mobile: initial;
+    --_box-padding-inline-end-tablet: var(--_box-padding-inline-end-mobile);
+    --_box-padding-inline-end-desktop: var(--_box-padding-inline-end-tablet);
+    --_box-padding-inline-end-wide: var(--_box-padding-inline-end-desktop);
+    --_box-padding-inline-end: var(--_box-padding-inline-end-mobile);
+    --_box-padding-block-start-mobile: initial;
+    --_box-padding-block-start-tablet: var(--_box-padding-block-start-mobile);
+    --_box-padding-block-start-desktop: var(--_box-padding-block-start-tablet);
+    --_box-padding-block-start-wide: var(--_box-padding-block-start-desktop);
+    --_box-padding-block-start: var(--_box-padding-block-start-mobile);
+    --_box-padding-block-end-mobile: initial;
+    --_box-padding-block-end-tablet: var(--_box-padding-block-end-mobile);
+    --_box-padding-block-end-desktop: var(--_box-padding-block-end-tablet);
+    --_box-padding-block-end-wide: var(--_box-padding-block-end-desktop);
+    --_box-padding-block-end: var(--_box-padding-block-end-mobile);
+    --_box-margin-mobile: initial;
+    --_box-margin-tablet: var(--_box-margin-mobile);
+    --_box-margin-desktop: var(--_box-margin-tablet);
+    --_box-margin-wide: var(--_box-margin-desktop);
+    --_box-margin: var(--_box-margin-mobile);
+    --_box-margin-inline-mobile: initial;
+    --_box-margin-inline-tablet: var(--_box-margin-inline-mobile);
+    --_box-margin-inline-desktop: var(--_box-margin-inline-tablet);
+    --_box-margin-inline-wide: var(--_box-margin-inline-desktop);
+    --_box-margin-inline: var(--_box-margin-inline-mobile);
+    --_box-margin-block-mobile: initial;
+    --_box-margin-block-tablet: var(--_box-margin-block-mobile);
+    --_box-margin-block-desktop: var(--_box-margin-block-tablet);
+    --_box-margin-block-wide: var(--_box-margin-block-desktop);
+    --_box-margin-block: var(--_box-margin-block-mobile);
+    --_box-margin-inline-start-mobile: initial;
+    --_box-margin-inline-start-tablet: var(--_box-margin-inline-start-mobile);
+    --_box-margin-inline-start-desktop: var(--_box-margin-inline-start-tablet);
+    --_box-margin-inline-start-wide: var(--_box-margin-inline-start-desktop);
+    --_box-margin-inline-start: var(--_box-margin-inline-start-mobile);
+    --_box-margin-inline-end-mobile: initial;
+    --_box-margin-inline-end-tablet: var(--_box-margin-inline-end-mobile);
+    --_box-margin-inline-end-desktop: var(--_box-margin-inline-end-tablet);
+    --_box-margin-inline-end-wide: var(--_box-margin-inline-end-desktop);
+    --_box-margin-inline-end: var(--_box-margin-inline-end-mobile);
+    --_box-margin-block-start-mobile: initial;
+    --_box-margin-block-start-tablet: var(--_box-margin-block-start-mobile);
+    --_box-margin-block-start-desktop: var(--_box-margin-block-start-tablet);
+    --_box-margin-block-start-wide: var(--_box-margin-block-start-desktop);
+    --_box-margin-block-start: var(--_box-margin-block-start-mobile);
+    --_box-margin-block-end-mobile: initial;
+    --_box-margin-block-end-tablet: var(--_box-margin-block-end-mobile);
+    --_box-margin-block-end-desktop: var(--_box-margin-block-end-tablet);
+    --_box-margin-block-end-wide: var(--_box-margin-block-end-desktop);
+    --_box-margin-block-end: var(--_box-margin-block-end-mobile);
+  }
+
+  :where(.unica-flex, .unica-stack) {
+    --_flow-direction-mobile: initial;
+    --_flow-direction-tablet: var(--_flow-direction-mobile);
+    --_flow-direction-desktop: var(--_flow-direction-tablet);
+    --_flow-direction-wide: var(--_flow-direction-desktop);
+    --_flow-direction: var(--_flow-direction-mobile);
+    --_flow-align-mobile: initial;
+    --_flow-align-tablet: var(--_flow-align-mobile);
+    --_flow-align-desktop: var(--_flow-align-tablet);
+    --_flow-align-wide: var(--_flow-align-desktop);
+    --_flow-align: var(--_flow-align-mobile);
+    --_flow-gap-mobile: initial;
+    --_flow-gap-tablet: var(--_flow-gap-mobile);
+    --_flow-gap-desktop: var(--_flow-gap-tablet);
+    --_flow-gap-wide: var(--_flow-gap-desktop);
+    --_flow-gap: var(--_flow-gap-mobile);
+  }
+
+  :where(.unica-flex) {
+    --_flex-wrap-mobile: initial;
+    --_flex-wrap-tablet: var(--_flex-wrap-mobile);
+    --_flex-wrap-desktop: var(--_flex-wrap-tablet);
+    --_flex-wrap-wide: var(--_flex-wrap-desktop);
+    --_flex-wrap: var(--_flex-wrap-mobile);
+    --_flex-justify-mobile: initial;
+    --_flex-justify-tablet: var(--_flex-justify-mobile);
+    --_flex-justify-desktop: var(--_flex-justify-tablet);
+    --_flex-justify-wide: var(--_flex-justify-desktop);
+    --_flex-justify: var(--_flex-justify-mobile);
+  }
+
+  :where(.unica-grid) {
+    --_grid-columns-mobile: initial;
+    --_grid-columns-tablet: var(--_grid-columns-mobile);
+    --_grid-columns-desktop: var(--_grid-columns-tablet);
+    --_grid-columns-wide: var(--_grid-columns-desktop);
+    --_grid-columns: var(--_grid-columns-mobile);
+    --_grid-gap-mobile: initial;
+    --_grid-gap-tablet: var(--_grid-gap-mobile);
+    --_grid-gap-desktop: var(--_grid-gap-tablet);
+    --_grid-gap-wide: var(--_grid-gap-desktop);
+    --_grid-gap: var(--_grid-gap-mobile);
+    --_grid-area-width: initial;
+    --_grid-areas: initial;
+    --_grid-flow: initial;
+  }
+
+  :where(.unica-grid-item) {
+    --_grid-item-span-mobile: initial;
+    --_grid-item-span-tablet: var(--_grid-item-span-mobile);
+    --_grid-item-span-desktop: var(--_grid-item-span-tablet);
+    --_grid-item-span-wide: var(--_grid-item-span-desktop);
+    --_grid-item-span: var(--_grid-item-span-mobile);
+    --_grid-item-area-start: initial;
+    --_grid-item-area-end: initial;
+  }
+
+  :where(.unica-container) {
+    --_container-width-mobile: initial;
+    --_container-width-tablet: var(--_container-width-mobile);
+    --_container-width-desktop: var(--_container-width-tablet);
+    --_container-width-wide: var(--_container-width-desktop);
+    --_container-width: var(--_container-width-mobile);
+    --_container-gutter-mobile: initial;
+    --_container-gutter-tablet: var(--_container-gutter-mobile);
+    --_container-gutter-desktop: var(--_container-gutter-tablet);
+    --_container-gutter-wide: var(--_container-gutter-desktop);
+    --_container-gutter: var(--_container-gutter-mobile);
+  }
+
+  @media (min-width: 768px) {
+    :where(.unica-box) {
+      --_box-display: var(--_box-display-tablet);
+      --_box-padding: var(--_box-padding-tablet);
+      --_box-padding-inline: var(--_box-padding-inline-tablet);
+      --_box-padding-block: var(--_box-padding-block-tablet);
+      --_box-padding-inline-start: var(--_box-padding-inline-start-tablet);
+      --_box-padding-inline-end: var(--_box-padding-inline-end-tablet);
+      --_box-padding-block-start: var(--_box-padding-block-start-tablet);
+      --_box-padding-block-end: var(--_box-padding-block-end-tablet);
+      --_box-margin: var(--_box-margin-tablet);
+      --_box-margin-inline: var(--_box-margin-inline-tablet);
+      --_box-margin-block: var(--_box-margin-block-tablet);
+      --_box-margin-inline-start: var(--_box-margin-inline-start-tablet);
+      --_box-margin-inline-end: var(--_box-margin-inline-end-tablet);
+      --_box-margin-block-start: var(--_box-margin-block-start-tablet);
+      --_box-margin-block-end: var(--_box-margin-block-end-tablet);
+    }
+
+    :where(.unica-flex, .unica-stack) {
+      --_flow-direction: var(--_flow-direction-tablet);
+      --_flow-align: var(--_flow-align-tablet);
+      --_flow-gap: var(--_flow-gap-tablet);
+    }
+
+    :where(.unica-flex) {
+      --_flex-wrap: var(--_flex-wrap-tablet);
+      --_flex-justify: var(--_flex-justify-tablet);
+    }
+
+    :where(.unica-grid) {
+      --_grid-columns: var(--_grid-columns-tablet);
+      --_grid-gap: var(--_grid-gap-tablet);
+    }
+
+    :where(.unica-grid-item) {
+      --_grid-item-span: var(--_grid-item-span-tablet);
+    }
+
+    :where(.unica-container) {
+      --_container-width: var(--_container-width-tablet);
+      --_container-gutter: var(--_container-gutter-tablet);
+    }
+  }
+
+  @media (min-width: 1024px) {
+    :where(.unica-box) {
+      --_box-display: var(--_box-display-desktop);
+      --_box-padding: var(--_box-padding-desktop);
+      --_box-padding-inline: var(--_box-padding-inline-desktop);
+      --_box-padding-block: var(--_box-padding-block-desktop);
+      --_box-padding-inline-start: var(--_box-padding-inline-start-desktop);
+      --_box-padding-inline-end: var(--_box-padding-inline-end-desktop);
+      --_box-padding-block-start: var(--_box-padding-block-start-desktop);
+      --_box-padding-block-end: var(--_box-padding-block-end-desktop);
+      --_box-margin: var(--_box-margin-desktop);
+      --_box-margin-inline: var(--_box-margin-inline-desktop);
+      --_box-margin-block: var(--_box-margin-block-desktop);
+      --_box-margin-inline-start: var(--_box-margin-inline-start-desktop);
+      --_box-margin-inline-end: var(--_box-margin-inline-end-desktop);
+      --_box-margin-block-start: var(--_box-margin-block-start-desktop);
+      --_box-margin-block-end: var(--_box-margin-block-end-desktop);
+    }
+
+    :where(.unica-flex, .unica-stack) {
+      --_flow-direction: var(--_flow-direction-desktop);
+      --_flow-align: var(--_flow-align-desktop);
+      --_flow-gap: var(--_flow-gap-desktop);
+    }
+
+    :where(.unica-flex) {
+      --_flex-wrap: var(--_flex-wrap-desktop);
+      --_flex-justify: var(--_flex-justify-desktop);
+    }
+
+    :where(.unica-grid) {
+      --_grid-columns: var(--_grid-columns-desktop);
+      --_grid-gap: var(--_grid-gap-desktop);
+    }
+
+    :where(.unica-grid-item) {
+      --_grid-item-span: var(--_grid-item-span-desktop);
+    }
+
+    :where(.unica-container) {
+      --_container-width: var(--_container-width-desktop);
+      --_container-gutter: var(--_container-gutter-desktop);
+    }
+  }
+
+  @media (min-width: 1440px) {
+    :where(.unica-box) {
+      --_box-display: var(--_box-display-wide);
+      --_box-padding: var(--_box-padding-wide);
+      --_box-padding-inline: var(--_box-padding-inline-wide);
+      --_box-padding-block: var(--_box-padding-block-wide);
+      --_box-padding-inline-start: var(--_box-padding-inline-start-wide);
+      --_box-padding-inline-end: var(--_box-padding-inline-end-wide);
+      --_box-padding-block-start: var(--_box-padding-block-start-wide);
+      --_box-padding-block-end: var(--_box-padding-block-end-wide);
+      --_box-margin: var(--_box-margin-wide);
+      --_box-margin-inline: var(--_box-margin-inline-wide);
+      --_box-margin-block: var(--_box-margin-block-wide);
+      --_box-margin-inline-start: var(--_box-margin-inline-start-wide);
+      --_box-margin-inline-end: var(--_box-margin-inline-end-wide);
+      --_box-margin-block-start: var(--_box-margin-block-start-wide);
+      --_box-margin-block-end: var(--_box-margin-block-end-wide);
+    }
+
+    :where(.unica-flex, .unica-stack) {
+      --_flow-direction: var(--_flow-direction-wide);
+      --_flow-align: var(--_flow-align-wide);
+      --_flow-gap: var(--_flow-gap-wide);
+    }
+
+    :where(.unica-flex) {
+      --_flex-wrap: var(--_flex-wrap-wide);
+      --_flex-justify: var(--_flex-justify-wide);
+    }
+
+    :where(.unica-grid) {
+      --_grid-columns: var(--_grid-columns-wide);
+      --_grid-gap: var(--_grid-gap-wide);
+    }
+
+    :where(.unica-grid-item) {
+      --_grid-item-span: var(--_grid-item-span-wide);
+    }
+
+    :where(.unica-container) {
+      --_container-width: var(--_container-width-wide);
+      --_container-gutter: var(--_container-gutter-wide);
+    }
+  }
+
+  :where(.unica-box:not([hidden])) {
+    display: var(--_box-display, revert-layer);
+  }
+
+  :where(.unica-box) {
+    padding-block-start: var(
+      --_box-padding-block-start,
+      var(--_box-padding-block, var(--_box-padding, revert-layer))
+    );
+    padding-block-end: var(
+      --_box-padding-block-end,
+      var(--_box-padding-block, var(--_box-padding, revert-layer))
+    );
+    padding-inline-start: var(
+      --_box-padding-inline-start,
+      var(--_box-padding-inline, var(--_box-padding, revert-layer))
+    );
+    padding-inline-end: var(
+      --_box-padding-inline-end,
+      var(--_box-padding-inline, var(--_box-padding, revert-layer))
+    );
+    margin-block-start: var(
+      --_box-margin-block-start,
+      var(--_box-margin-block, var(--_box-margin, revert-layer))
+    );
+    margin-block-end: var(
+      --_box-margin-block-end,
+      var(--_box-margin-block, var(--_box-margin, revert-layer))
+    );
+    margin-inline-start: var(
+      --_box-margin-inline-start,
+      var(--_box-margin-inline, var(--_box-margin, revert-layer))
+    );
+    margin-inline-end: var(
+      --_box-margin-inline-end,
+      var(--_box-margin-inline, var(--_box-margin, revert-layer))
+    );
+  }
+
+  :where(.unica-flex:not([hidden]), .unica-stack:not([hidden])) {
+    display: flex;
+  }
+
+  :where(.unica-flex, .unica-stack) {
+    gap: var(--_flow-gap, 0);
+    align-items: var(--_flow-align, stretch);
+  }
+
+  :where(.unica-flex) {
+    flex-direction: var(--_flow-direction, row);
+    flex-wrap: var(--_flex-wrap, nowrap);
+    justify-content: var(--_flex-justify, flex-start);
+  }
+
+  :where(.unica-stack) {
+    flex-direction: var(--_flow-direction, column);
+  }
+
+  :where(.unica-grid:not([hidden])) {
+    display: grid;
+  }
+
+  :where(.unica-grid) {
+    grid-template-columns: repeat(var(--_grid-columns, var(--_grid-area-width, 1)), minmax(0, 1fr));
+    grid-template-areas: var(--_grid-areas, none);
+    grid-auto-flow: var(--_grid-flow, row);
+    gap: var(--_grid-gap, 0);
+  }
+
+  :where(.unica-grid-item) {
+    grid-row-start: var(--_grid-item-area-start, auto);
+    grid-row-end: var(--_grid-item-area-end, auto);
+    grid-column-start: var(--_grid-item-area-start, auto);
+    grid-column-end: var(--_grid-item-area-end, var(--_grid-item-span, auto));
+  }
+
+  :where(.unica-container) {
+    box-sizing: border-box;
+    inline-size: 100%;
+    max-inline-size: var(--_container-width, 960px);
+    padding-inline: min(var(--_container-gutter, var(--space-m)), 50%);
+    margin-inline: auto;
+  }
+
+  :where(.unica-container--start) {
+    margin-inline-start: 0;
+  }
+}

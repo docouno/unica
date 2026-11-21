@@ -42,7 +42,7 @@ Close has a quiet secondary glyph at rest, a neutral hover fill, a stronger neut
 
 The live framed area deliberately acts as a small available viewport even with a single artboard. It demonstrates flip/shift and a native top layer. The Overflow case pins a 360px height limit for repeatable body-scroll inspection. It is not a claim of complete mobile keyboard, safe-area, zoom or production positioning coverage.
 
-The body uses the shared [native scrollbar recipe](../scrollbar/README.md), with a transparent track and compact width. The outer panel does not scroll in the normal layout. Its decorative layers do not extend the scrollable bounds; the browser's default `overflow: auto` on `[popover]` is explicitly reset.
+The body uses the shared [native scrollbar recipe](../../../../../docs/components/scrollbar.md), with a transparent track and compact width. The outer panel does not scroll in the normal layout. Its decorative layers do not extend the scrollable bounds; the browser's default `overflow: auto` on `[popover]` is explicitly reset.
 
 ## Expected focus and dismissal
 

@@ -84,16 +84,16 @@ Buttons, inputs, selects, date pickers, and segmented controls of the same `size
 
 ## Responsive Layout Primitives
 
-Structural layout composes through `AppShell`, `Box`, `Flex`, `Stack`, `Grid` (`GridItem`), and `Container` (`s: 720px`, `m: 960px`, `l: 1280px`) across mobile-first CSS breakpoints (`mobile: 0px`, `tablet: 768px`, `desktop: 1024px`, `wide: 1440px`):
+The package provides `Box`, `Flex`, `Stack`, `Grid`, `GridItem`, and `Container` (`s: 720px`, `m: 960px`, `l: 1280px`) across mobile-first CSS breakpoints (`mobile: 0px`, `tablet: 768px`, `desktop: 1024px`, `wide: 1440px`):
 
 ```tsx
 <Container size="l">
   <Grid columns={{ mobile: 1, tablet: 2, desktop: 3 }} gap={{ mobile: 's', desktop: 'm' }}>
-    <Card>Overview</Card>
-    <Card>Throughput</Card>
-    <Card>Incidents</Card>
+    <GridItem>Overview</GridItem>
+    <GridItem>Throughput</GridItem>
+    <GridItem>Incidents</GridItem>
   </Grid>
 </Container>
 ```
 
-Responsive props compile to CSS custom properties and media queries with zero `matchMedia` hydration jitter. Primitives declare root `display` at zero specificity (`:where(...)`) and preserve native `[hidden]` semantics regardless of stylesheet import order.
+Responsive props compile to CSS custom properties and viewport media queries. Each root resets its responsive values, so nested layouts keep their own defaults. Library display rules use zero specificity and apply only to visible roots, leaving native `hidden` behavior to the browser. See [Layout](../components/layout.md) for the full component API.

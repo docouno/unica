@@ -31,7 +31,7 @@ The owning surface shows through. A table uses horizontal 1px rules, with a stro
 
 Sticky headers belong to a bounded table viewport and travel with it on the inline axis. The table keeps an opaque ground below the entire header and a single hairline below the labels. On canvas the ground matches the canvas. Inside a Card it matches the card role. In an overlay it uses an opaque ground matched to the panel. Frost uses a calibrated solid tone close to the glass. Text from scrolling rows stays fully covered. A visible caption scrolls away. The footer stays at the end of the data.
 
-Table uses the [compact native scrollbar](../scrollbar/README.md#native-geometry-and-density) on both axes. On desktop Chromium and WebKit, a 4px thumb sits in a transparent 10px gutter. Firefox and touch-primary browsers use the native `thin` width. The browser displays the bar for actual overflow and places it according to the current direction.
+Table uses the [compact native scrollbar](../../../../../docs/components/scrollbar.md#native-geometry-and-density) on both axes. On desktop Chromium and WebKit, a 4px thumb sits in a transparent 10px gutter. Firefox and touch-primary browsers use the native `thin` width. The browser displays the bar for actual overflow and places it according to the current direction.
 
 ## Interaction and state
 

@@ -2,7 +2,6 @@ import { useLayoutEffect, useRef, useState } from 'react';
 import type { ComponentPropsWithRef, ReactElement } from 'react';
 import { CaretDownIcon, CaretUpDownIcon, CaretUpIcon } from '@phosphor-icons/react';
 import './table.css';
-import '../scrollbar/scrollbar.css';
 
 export type TableSize = 's' | 'm' | 'l';
 export type TableAlign = 'start' | 'center' | 'end';
@@ -202,7 +201,7 @@ export function TableScroll({
     <div
       {...props}
       ref={viewport}
-      className={`table-scroll-proto scrollbar-proto ${className}`}
+      className={`table-scroll-proto unica-scrollbar unica-scrollbar--compact ${className}`}
       tabIndex={overflowing ? 0 : undefined}
       role={overflowing ? 'region' : undefined}
       aria-label={overflowing ? label : undefined}

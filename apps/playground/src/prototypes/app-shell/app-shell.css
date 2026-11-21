@@ -202,8 +202,6 @@
 }
 
 .app-shell-document-tabs {
-  --scrollbar-width: thin;
-  --scrollbar-size: 10px;
   display: flex;
   align-items: center;
   gap: var(--space-4);

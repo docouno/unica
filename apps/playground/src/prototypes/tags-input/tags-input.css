@@ -149,8 +149,6 @@
 }
 
 .tags-draft-row-proto {
-  --scrollbar-size: 10px;
-  --scrollbar-width: thin;
   --tags-scroll-outset: min(
     max(0px, calc(var(--tags-padding-x) - var(--space-4))),
     var(--tags-native-gutter, 0px)
