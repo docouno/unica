@@ -386,6 +386,7 @@ export default defineScene({
     'card',
     'empty',
     'icon',
+    'indicator',
     'input',
     'list',
     'spinner',

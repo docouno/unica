@@ -7,14 +7,13 @@ import {
   GearIcon,
   TrayIcon,
 } from '@phosphor-icons/react';
-import { Avatar } from '../avatar/avatar.proto.js';
-import { Button, IconButton } from '../button/button.proto.js';
-import { Badge, Icon } from '@docouno/unica';
-import { Indicator } from './indicator.proto.js';
-import type { IndicatorPlacement, IndicatorSize, IndicatorStatus } from './indicator.proto.js';
+import { Avatar } from '../../prototypes/avatar/avatar.proto.js';
+import { Button, IconButton } from '../../prototypes/button/button.proto.js';
+import { Badge, Icon, Indicator } from '@docouno/unica';
+import type { IndicatorPosition, IndicatorProps, IndicatorStatus } from '@docouno/unica';
 import './indicator.examples.css';
 
-const sizes: readonly IndicatorSize[] = ['s', 'm', 'l'];
+const sizes: readonly NonNullable<IndicatorProps['size']>[] = ['s', 'm', 'l'];
 const statuses: readonly IndicatorStatus[] = [
   'neutral',
   'accent',
@@ -23,7 +22,7 @@ const statuses: readonly IndicatorStatus[] = [
   'warning',
   'danger',
 ];
-const corners: readonly IndicatorPlacement[] = [
+const corners: readonly IndicatorPosition[] = [
   'top-start',
   'top-end',
   'bottom-start',
@@ -62,7 +61,7 @@ export function IndicatorOverview(): ReactElement {
       </div>
       <div className="indicator-example-use">
         <div className="indicator-example-object">
-          <Indicator dot status="success" overlap="circular" placement="bottom-end">
+          <Indicator dot status="success" overlap="circular" position="bottom-end">
             <Avatar src="/assets/avatar-portrait-wide.png" alt="Sample collaborator" />
           </Indicator>
         </div>
@@ -105,7 +104,7 @@ export function IndicatorScale(): ReactElement {
             </Indicator>
           </Sample>
           <Sample label="Presence">
-            <Indicator dot size={size} status="success" overlap="circular" placement="bottom-end">
+            <Indicator dot size={size} status="success" overlap="circular" position="bottom-end">
               <Avatar size={size} fallback="AL" alt="Sample collaborator, available" />
             </Indicator>
           </Sample>
@@ -128,7 +127,7 @@ export function IndicatorStatuses(): ReactElement {
               aria-label={`${status} counter example, 8 items`}
             />
           </Indicator>
-          <Indicator dot status={status} overlap="circular" placement="bottom-end">
+          <Indicator dot status={status} overlap="circular" position="bottom-end">
             <Avatar size="s" fallback="AL" alt={`${status} presence example`} />
           </Indicator>
         </div>
@@ -151,15 +150,20 @@ export function IndicatorCorners(): ReactElement {
             {overlap === 'circular' ? 'Avatar contour' : 'Control corners'}
           </span>
           <div className="indicator-example-corners">
-            {corners.map((placement) => (
-              <Sample key={placement} label={placement}>
-                <Indicator dot={dot} count={3} size="s" overlap={overlap} placement={placement}>
+            {corners.map((position) => (
+              <Sample key={position} label={position}>
+                <Indicator
+                  {...(dot ? { dot: true } : { count: 3 })}
+                  size="s"
+                  overlap={overlap}
+                  position={position}
+                >
                   {overlap === 'circular' ? (
-                    <Avatar fallback="AL" alt={`Avatar, ${placement} marker`} />
+                    <Avatar fallback="AL" alt={`Avatar, ${position} marker`} />
                   ) : (
                     <IconButton
                       icon={BellIcon}
-                      aria-label={`Notifications, ${placement} marker, 3 unread`}
+                      aria-label={dot ? 'Notifications, new activity' : 'Notifications, 3 unread'}
                     />
                   )}
                 </Indicator>
@@ -188,6 +192,7 @@ export function IndicatorData(): ReactElement {
       <div className="indicator-example-data-grid">
         {[
           { label: 'No data', count: null },
+          { label: 'Invalid count', count: -1 },
           { label: 'Zero · hidden', count: 0 },
           { label: 'Zero · shown', count: 0, showZero: true },
           { label: 'One digit', count: 9 },
@@ -205,7 +210,11 @@ export function IndicatorData(): ReactElement {
             >
               <IconButton
                 icon={BellIcon}
-                aria-label={`Notifications, ${sample.count ?? 'unknown'} unread`}
+                aria-label={
+                  sample.count === null || sample.count < 0
+                    ? 'Notifications, count unavailable'
+                    : `Notifications, ${sample.count} unread`
+                }
               />
             </Indicator>
           </Sample>
@@ -290,7 +299,7 @@ function SurfacePair({ withBorder = true }: { readonly withBorder?: boolean }): 
         dot
         status="success"
         overlap="circular"
-        placement="bottom-end"
+        position="bottom-end"
         withBorder={withBorder}
       >
         <Avatar src="/assets/avatar-portrait-wide.png" alt="Sample collaborator, available" />
@@ -330,7 +339,7 @@ export function IndicatorOverlay(): ReactElement {
       <p className="indicator-example-note">Compact markers on a floating surface.</p>
       <SurfacePair />
       <div className="indicator-example-use">
-        <Indicator dot status="success" overlap="circular" placement="bottom-end">
+        <Indicator dot status="success" overlap="circular" position="bottom-end">
           <Avatar src="/assets/avatar-portrait-tall.png" alt="Sample collaborator" />
         </Indicator>
         <div>
@@ -339,7 +348,7 @@ export function IndicatorOverlay(): ReactElement {
         </div>
       </div>
       <div className="indicator-example-use">
-        <Indicator dot status="warning" overlap="circular" placement="bottom-end">
+        <Indicator dot status="warning" overlap="circular" position="bottom-end">
           <Avatar fallback="AL" alt="Sample collaborator" />
         </Indicator>
         <div>
@@ -348,7 +357,7 @@ export function IndicatorOverlay(): ReactElement {
         </div>
       </div>
       <div className="indicator-example-use">
-        <Indicator dot visible={false} status="neutral" overlap="circular" placement="bottom-end">
+        <Indicator dot visible={false} status="neutral" overlap="circular" position="bottom-end">
           <Avatar fallback="RK" alt="Sample collaborator" />
         </Indicator>
         <div>
@@ -438,7 +447,6 @@ export function IndicatorBoundaries(): ReactElement {
           <Button
             variant="secondary"
             tone="neutral"
-            width="full"
             aria-label="Review all incoming collaboration requests, 105 unread"
           >
             Review all incoming collaboration requests

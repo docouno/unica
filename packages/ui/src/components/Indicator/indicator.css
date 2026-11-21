@@ -1,0 +1,155 @@
+@layer unica.components {
+  .unica-indicator {
+    --_indicator-height: max(20px, var(--text-size-body-s-lh));
+    --_indicator-font-size: var(--text-size-body-s);
+    --_indicator-dot-size: 8px;
+    --_indicator-inset: 0%;
+    --_indicator-solid: var(--accent-solid);
+    --_indicator-signal: var(--accent-signal);
+    --_indicator-ink: var(--fg-on-accent);
+    position: relative;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    inline-size: fit-content;
+    block-size: fit-content;
+    min-inline-size: 0;
+    vertical-align: middle;
+  }
+
+  .unica-indicator:not([hidden]) {
+    display: inline-flex;
+  }
+
+  /* Blockify the native inline span for fragment reveal without overriding UA display: none. */
+  .unica-indicator[hidden='until-found' i] {
+    position: absolute;
+  }
+
+  .unica-indicator[data-size='s'] {
+    --_indicator-height: max(16px, var(--text-size-caption-l-lh));
+    --_indicator-font-size: var(--text-size-caption-l);
+    --_indicator-dot-size: 6px;
+  }
+
+  .unica-indicator[data-size='l'] {
+    --_indicator-height: max(24px, var(--text-size-body-m-lh));
+    --_indicator-font-size: var(--text-size-body-m);
+    --_indicator-dot-size: 12px;
+  }
+
+  .unica-indicator[data-status='neutral'] {
+    --_indicator-solid: var(--neutral-solid);
+    --_indicator-signal: var(--neutral-signal);
+    --_indicator-ink: var(--fg-on-neutral);
+  }
+
+  .unica-indicator[data-status='info'] {
+    --_indicator-solid: var(--status-info-solid);
+    --_indicator-signal: var(--status-info-signal);
+    --_indicator-ink: var(--fg-on-info);
+  }
+
+  .unica-indicator[data-status='success'] {
+    --_indicator-solid: var(--status-success-solid);
+    --_indicator-signal: var(--status-success-signal);
+    --_indicator-ink: var(--fg-on-success);
+  }
+
+  .unica-indicator[data-status='warning'] {
+    --_indicator-solid: var(--status-warning-solid);
+    --_indicator-signal: var(--status-warning-signal);
+    --_indicator-ink: var(--fg-on-warning);
+  }
+
+  .unica-indicator[data-status='danger'] {
+    --_indicator-solid: var(--status-danger-solid);
+    --_indicator-signal: var(--status-danger-signal);
+    --_indicator-ink: var(--fg-on-danger);
+  }
+
+  .unica-indicator[data-overlap='circular'] {
+    --_indicator-inset: calc(14.64466% * var(--radius-factor));
+  }
+
+  .unica-indicator[data-width='full'],
+  .unica-indicator[data-width='full'] > :first-child {
+    inline-size: 100%;
+  }
+
+  .unica-indicator-anchor {
+    position: absolute;
+    inset-block-start: var(--_indicator-inset);
+    inset-inline-end: var(--_indicator-inset);
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    inline-size: 0;
+    block-size: 0;
+    pointer-events: none;
+    user-select: none;
+  }
+
+  .unica-indicator[data-position$='start'] > .unica-indicator-anchor {
+    inset-inline-start: var(--_indicator-inset);
+    inset-inline-end: auto;
+  }
+
+  .unica-indicator[data-position^='bottom'] > .unica-indicator-anchor {
+    inset-block-start: auto;
+    inset-block-end: var(--_indicator-inset);
+  }
+
+  .unica-indicator:has(> :first-child[hidden]) > .unica-indicator-anchor {
+    display: none;
+  }
+
+  .unica-indicator-marker {
+    box-sizing: border-box;
+    display: flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    min-inline-size: var(--_indicator-height);
+    block-size: var(--_indicator-height);
+    padding-inline: var(--space-4);
+    border-radius: var(--radius-full);
+    background: var(--_indicator-solid);
+    color: var(--_indicator-ink);
+    font-family: var(--font-family-base);
+    font-size: var(--_indicator-font-size);
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    font-kerning: none;
+    line-height: 1;
+    white-space: nowrap;
+  }
+
+  .unica-indicator-marker[data-mode='dot'] {
+    min-inline-size: 0;
+    inline-size: var(--_indicator-dot-size);
+    block-size: var(--_indicator-dot-size);
+    padding: 0;
+    background: var(--_indicator-signal);
+  }
+
+  .unica-indicator-marker[data-border] {
+    box-shadow: 0 0 0 var(--space-2)
+      var(--indicator-separator-color, var(--_indicator-surface-separator));
+  }
+
+  @media (forced-colors: active) {
+    .unica-indicator-marker {
+      forced-color-adjust: none;
+      background: CanvasText;
+      color: Canvas;
+      outline: 1px solid Canvas;
+    }
+
+    .unica-indicator-marker[data-border] {
+      outline-width: var(--space-2);
+      box-shadow: none;
+    }
+  }
+}

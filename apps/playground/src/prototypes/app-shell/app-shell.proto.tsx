@@ -26,9 +26,8 @@ import {
 } from '@phosphor-icons/react/ssr';
 import { useId, useRef, useState } from 'react';
 import type { ComponentPropsWithRef, CSSProperties, ReactElement, ReactNode } from 'react';
-import { Icon, Kbd, defineGlyph } from '@docouno/unica';
+import { Icon, Indicator, Kbd, defineGlyph } from '@docouno/unica';
 import type { GlyphDefinition } from '@docouno/unica';
-import { Indicator } from '../indicator/indicator.proto.js';
 import './app-shell.css';
 import '../scrollbar/scrollbar.css';
 

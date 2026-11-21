@@ -36,6 +36,13 @@ export type {
   IconAdapterRenderContext,
 } from './components/Icon/glyph.js';
 
+export { Indicator } from './components/Indicator/Indicator.js';
+export type {
+  IndicatorPosition,
+  IndicatorProps,
+  IndicatorStatus,
+} from './components/Indicator/Indicator.js';
+
 export { Kbd, KbdGroup } from './components/Kbd/Kbd.js';
 export type { KbdGroupProps, KbdProps, KbdSize } from './components/Kbd/Kbd.js';
 

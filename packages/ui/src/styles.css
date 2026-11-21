@@ -1351,6 +1351,8 @@
   :root,
   [data-theme],
   [data-surface='base'] {
+    --indicator-separator-color: initial;
+    --_indicator-surface-separator: var(--bg-canvas);
     --table-sticky-header-bg: initial;
     --action-context-ink: initial;
     --code-context-bg: initial;
@@ -1373,6 +1375,8 @@
   }
 
   [data-surface='overlay'] {
+    --indicator-separator-color: initial;
+    --_indicator-surface-separator: var(--bg-overlay);
     --table-sticky-header-bg: var(--table-overlay-header-bg);
     --action-context-ink: initial;
     --code-context-bg: color-mix(
@@ -1396,6 +1400,12 @@
     --control-bg: var(--_overlay-control-bg);
     --control-border: var(--_overlay-control-border);
     --control-border-hover: var(--_overlay-control-border-hover);
+  }
+
+  @supports (color: rgb(from white r g b / 1)) {
+    [data-surface='overlay'] {
+      --_indicator-surface-separator: rgb(from var(--bg-overlay) r g b / 1);
+    }
   }
 
   [data-text-scale='100'] {

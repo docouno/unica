@@ -324,6 +324,7 @@ export default defineScene({
     'checkbox-card',
     'form-field',
     'icon',
+    'indicator',
     'input',
     'modal',
     'select',

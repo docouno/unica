@@ -218,6 +218,7 @@ export default defineScene({
     'drawer',
     'form-field',
     'icon',
+    'indicator',
     'radio-card',
     'table',
     'text',

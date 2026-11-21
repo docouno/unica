@@ -464,6 +464,7 @@ export default defineScene({
     'dropzone',
     'file-input',
     'icon',
+    'indicator',
     'progress',
     'radio-card',
     'stepper',
