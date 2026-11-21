@@ -300,11 +300,12 @@ function svgTitle(child: IconTitle | false | null | undefined): IconTitle | unde
   );
 }
 
-type FrameKey = keyof IconFrame<GlyphSource> | keyof IconName | ClosedSvgKey;
+type FrameKey = keyof IconFrame<GlyphSource> | keyof IconName | ClosedSvgKey | 'key';
+type AllKeys<T> = T extends unknown ? keyof T : never;
 
 export function Icon<G extends GlyphSource>(props: IconProps<G>): ReactElement | null;
 export function Icon<P extends IconFrame<GlyphSource> & IconName & ClosedProps>(
-  props: P & ([Exclude<keyof P, FrameKey>] extends [never] ? unknown : never),
+  props: P & ([Exclude<AllKeys<P>, FrameKey>] extends [never] ? unknown : never),
 ): ReactElement | null;
 export function Icon<G extends GlyphSource>({
   icon,
@@ -327,7 +328,10 @@ export function Icon<G extends GlyphSource>({
     group: usage === 'slot' ? 'inherit' : undefined,
     builtIn: 'inherit',
   });
-  const dimension = fallbackDimensions[frameSize];
+  const resolvedSize: IconSize = Object.hasOwn(fallbackDimensions, frameSize)
+    ? frameSize
+    : 'inherit';
+  const dimension = fallbackDimensions[resolvedSize];
   const standalone = usage === 'standalone';
   const name = standalone ? textName(label) : undefined;
   const nameIds = standalone ? textName(labelledBy) : undefined;
@@ -372,8 +376,8 @@ export function Icon<G extends GlyphSource>({
   if (style !== undefined) {
     svgProps.style = style;
   }
-  if (frameSize !== 'inherit') {
-    svgProps['data-unica-icon-size'] = frameSize;
+  if (resolvedSize !== 'inherit') {
+    svgProps['data-unica-icon-size'] = resolvedSize;
   }
   if (color !== 'inherit') {
     svgProps['data-unica-icon-color'] = color;

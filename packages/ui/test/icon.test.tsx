@@ -385,6 +385,12 @@ it('recognizes Flight-serialized descriptors and rejects invalid adapters or non
       expect(() => renderToString(<Icon icon={badSource as never} />)).toThrow(TypeError);
     }
   }
+  for (const badSize of ['__proto__', 'toString', 'xl']) {
+    const html = renderToString(<Icon icon={fixedMark} size={badSize as never} />);
+    expect(html).toContain('width="1em"');
+    expect(html).toContain('height="1em"');
+    expect(html).not.toContain('data-unica-icon-size');
+  }
 });
 
 it('omits own children key on unnamed svgProps so cloneElement adapters keep SVG drawing', () => {

@@ -64,6 +64,18 @@ export function GenericSlotWrapper<G extends GlyphSource>({ icon }: { icon: G })
   return <Icon icon={icon} usage="slot" />;
 }
 
+export function GenericIconList<G extends GlyphSource>({
+  items,
+}: {
+  items: readonly { id: string; icon: G }[];
+}) {
+  return [
+    ...items.map((item) => <Icon key={item.id} icon={item.icon} />),
+    ...items.map((item) => <Icon key={item.id} icon={item.icon} usage="slot" />),
+    ...items.map((item) => <Icon key={item.id} icon={item.icon} size="m" aria-label={item.id} />),
+  ];
+}
+
 export function StyledIcon({ style }: { style?: CSSProperties }) {
   return <Icon icon={ArrowRightIcon} style={style} />;
 }
@@ -222,10 +234,16 @@ const props: IconProps = {
 };
 const cssStyle: CSSProperties = { opacity: 0.5 };
 const showTitle = true as boolean;
+const unionCond = true as boolean;
+const okSize = { size: 'm' as const };
 
 const valid = [
   <Icon {...props} style={cssStyle} />,
   <Icon {...props} style={{ '--project-icon-ink': 'currentColor' }} />,
+  <Icon
+    icon={ArrowRightIcon}
+    {...(unionCond ? { size: 's' as const } : { color: 'accent' as const })}
+  />,
   <Icon icon={ArrowRightIcon} weight="bold" mirrored ref={svgRef} />,
   <Icon icon={arrow} weight={undefined} />,
   <Icon icon={SvgrIcon} />,
@@ -272,10 +290,16 @@ const spreadKey: IconProps = { icon: ArrowRightIcon, key: 'k1' };
 const invalid = [
   // @ts-expect-error Spread options cannot bypass SourceOptions validation.
   <Icon icon={ArrowRightIcon} {...badWeight} />,
+  // @ts-expect-error Conditional union spread cannot bypass SourceOptions validation.
+  <Icon icon={ArrowRightIcon} {...(unionCond ? badWeight : okSize)} />,
   // @ts-expect-error Spread object with invalid vendor option must be rejected.
   <Icon {...badSpreadObj} />,
+  // @ts-expect-error Union spread object with invalid vendor option must be rejected.
+  <Icon {...(unionCond ? { icon: ArrowRightIcon, size: 'm' as const } : badSpreadObj)} />,
   // @ts-expect-error Spread chart mode still requires series.
   <Icon icon={report} {...badChart} />,
+  // @ts-expect-error Conditional union chart spread still requires series.
+  <Icon icon={report} {...(unionCond ? badChart : okSize)} />,
   // @ts-expect-error Spread discriminated union still enforces shared branch rules.
   <Icon icon={brand} {...badBrand} />,
   // @ts-expect-error SpriteGlyph custom string option rejects numbers.
