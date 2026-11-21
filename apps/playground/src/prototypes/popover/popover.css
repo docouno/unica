@@ -85,8 +85,6 @@
 }
 
 .popover-body-proto {
-  --scrollbar-width: thin;
-  --scrollbar-size: 10px;
   display: grid;
   gap: var(--popover-gap);
   min-block-size: 0;

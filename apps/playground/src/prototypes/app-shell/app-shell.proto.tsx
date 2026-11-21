@@ -29,7 +29,6 @@ import type { ComponentPropsWithRef, CSSProperties, ReactElement, ReactNode } fr
 import { Icon, Indicator, Kbd, defineGlyph } from '@docouno/unica';
 import type { GlyphDefinition } from '@docouno/unica';
 import './app-shell.css';
-import '../scrollbar/scrollbar.css';
 
 const AccessKeyGlyph = defineGlyph(KeyIcon, 'phosphor');
 const ArchiveGlyph = defineGlyph(BookOpenIcon, 'phosphor');
@@ -282,7 +281,10 @@ export function DocumentTabs({
 }: DocumentTabsProps): ReactElement {
   const [current, setCurrent] = useState(defaultValue);
   return (
-    <nav className="app-shell-document-tabs scrollbar-proto" aria-label="Open documents">
+    <nav
+      className="app-shell-document-tabs unica-scrollbar unica-scrollbar--compact"
+      aria-label="Open documents"
+    >
       {items.map((item) => (
         <button
           type="button"

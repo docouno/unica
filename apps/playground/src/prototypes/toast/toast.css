@@ -137,13 +137,15 @@
 }
 .toast-viewport {
   --toast-dock-gap: 10px;
+  --toast-inline-inset: 24px;
+  --toast-inline-end-inset: var(--toast-inline-inset);
   position: absolute;
-  inset-inline-end: 24px;
+  inset-inline-end: var(--toast-inline-end-inset);
   inset-block-end: 24px;
   display: flex;
   flex-direction: column;
   gap: var(--toast-dock-gap);
-  inline-size: min(384px, calc(100% - 48px));
+  inline-size: min(384px, calc(100% - var(--toast-inline-inset) - var(--toast-inline-end-inset)));
   max-block-size: calc(100% - 48px);
   min-block-size: 0;
   pointer-events: none;
@@ -153,10 +155,10 @@
 }
 .toast-viewport[data-placement$='start'] {
   inset-inline-end: auto;
-  inset-inline-start: 24px;
+  inset-inline-start: var(--toast-inline-inset);
 }
 .toast-viewport[data-placement$='center'] {
-  inset-inline: 0;
+  inset-inline: var(--toast-inline-inset) var(--toast-inline-end-inset);
   margin-inline: auto;
 }
 .toast-viewport[data-placement^='top'] {
@@ -230,7 +232,6 @@
   --toast-edge-gutter: 20px;
   --toast-dock-gutter: 10px;
   --toast-dock-overhang: calc(var(--toast-dock-gap) - 4px);
-  --toast-scrollbar-size: 8px;
   position: relative;
   display: flex;
   flex-direction: column;
@@ -242,6 +243,7 @@
   padding-block: var(--toast-dock-gap) 0;
 }
 .toast-list {
+  --toast-shadow-gutter-end: var(--toast-shadow-gutter);
   --toast-list-padding-start: var(--toast-edge-gutter);
   --toast-list-padding-end: var(--toast-dock-gutter);
   --toast-list-overhang-start: var(--toast-edge-gutter);
@@ -258,15 +260,15 @@
   margin-block: calc(-1 * var(--toast-list-overhang-start))
     calc(-1 * var(--toast-list-overhang-end));
   margin-inline: calc(-1 * var(--toast-shadow-gutter));
-  margin-inline-end: calc(-1 * (var(--toast-shadow-gutter) + var(--toast-scrollbar-size)));
+  margin-inline-end: calc(
+    -1 * (var(--toast-shadow-gutter-end) + var(--toast-scrollbar-gutter, 0px))
+  );
   padding-block: var(--toast-list-padding-start) var(--toast-list-padding-end);
-  padding-inline: var(--toast-shadow-gutter);
+  padding-inline: var(--toast-shadow-gutter) var(--toast-shadow-gutter-end);
   overflow: auto;
   overscroll-behavior: contain;
   overflow-anchor: none;
   scroll-padding-block: var(--space-16);
-  --scrollbar-width: thin;
-  --scrollbar-size: var(--toast-scrollbar-size);
 }
 .toast-viewport[data-placement^='top'] .toast-list {
   --toast-list-padding-start: var(--toast-dock-gutter);
@@ -578,6 +580,17 @@
   }
 }
 @media (forced-colors: active) {
+  .toast-viewport {
+    --toast-inline-end-inset: max(var(--toast-inline-inset), var(--toast-scrollbar-gutter, 0px));
+  }
+  .toast-list {
+    /* Shadows are suppressed here. Keep the system track inside the positioning host. */
+    --toast-shadow-gutter-end: clamp(
+      0px,
+      calc(var(--toast-inline-end-inset) - var(--toast-scrollbar-gutter, 0px)),
+      var(--toast-shadow-gutter)
+    );
+  }
   .toast-card,
   .toast-plate,
   .toast-dock {

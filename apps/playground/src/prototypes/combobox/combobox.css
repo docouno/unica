@@ -95,8 +95,6 @@
 }
 
 .suggestion-scroll-proto {
-  --scrollbar-width: thin;
-  --scrollbar-size: 10px;
   min-block-size: 0;
   max-block-size: 22rem;
   overflow: auto;

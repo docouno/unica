@@ -4,7 +4,6 @@ import type { ComponentPropsWithRef, ReactElement } from 'react';
 import { menuRows } from './menu.entries.js';
 import type { MenuEntry, MenuRow, MenuSize } from './menu.entries.js';
 import { Icon, Kbd } from '@docouno/unica';
-import '../scrollbar/scrollbar.css';
 import './menu.css';
 
 export function MenuSurface({
@@ -176,7 +175,7 @@ export function MenuRows({
   return (
     <div
       {...props}
-      className={`menu-rows-proto scrollbar-proto ${className}`}
+      className={`menu-rows-proto unica-scrollbar unica-scrollbar--compact ${className}`}
       data-marks={
         rows.some((item) => item.type === 'checkbox' || item.type === 'radio') || undefined
       }

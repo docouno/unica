@@ -5,8 +5,6 @@
   --segment-font: var(--text-size-body-s);
   --segment-gap: var(--size-m-gap);
   --thumb-inset: 3px;
-  --scrollbar-size: 10px;
-  --scrollbar-width: thin;
   display: inline-grid;
   grid-auto-flow: column;
   grid-auto-columns: minmax(max-content, 1fr);

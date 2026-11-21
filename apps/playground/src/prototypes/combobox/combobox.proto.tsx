@@ -570,7 +570,7 @@ function SuggestionField({
             {replacement && <RestoreButton inPanel onClick={restore} />}
           </div>
         )}
-        <div className="suggestion-scroll-proto scrollbar-proto">
+        <div className="suggestion-scroll-proto unica-scrollbar unica-scrollbar--compact">
           {notice}
           <SuggestionRows
             id={listId}

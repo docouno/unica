@@ -5,7 +5,6 @@ import { Icon } from '@docouno/unica';
 import type { ControlSize, FieldStatus, FieldVariant } from '../input/input.proto.js';
 import { useInputFocus } from '../input/input-focus.proto.js';
 import '../input/input.css';
-import '../scrollbar/scrollbar.css';
 import './textarea.css';
 
 const statusLabels: Record<Exclude<FieldStatus, 'neutral'>, string> = {
@@ -106,7 +105,7 @@ export function Textarea({
         required={required}
         disabled={disabled}
         hidden={hidden}
-        className={`textarea-proto scrollbar-proto ${className}`}
+        className={`textarea-proto unica-scrollbar unica-scrollbar--compact ${className}`}
         data-autosize={autosize || undefined}
         data-bounded={maxRows !== undefined || undefined}
         data-resize={autosize || disabled ? 'none' : resize}

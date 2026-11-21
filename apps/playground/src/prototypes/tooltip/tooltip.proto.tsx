@@ -1,7 +1,6 @@
 import type { ComponentPropsWithRef, ReactElement, ReactNode } from 'react';
 import { Kbd } from '@docouno/unica';
 import './tooltip.css';
-import '../scrollbar/scrollbar.css';
 
 export type HintSide = 'top' | 'bottom' | 'start' | 'end';
 export type HintAlign = 'start' | 'center' | 'end';
@@ -31,7 +30,7 @@ export function Tooltip({
   }
   return (
     <span {...props} role="tooltip" data-surface="overlay" className={`tooltip-proto ${className}`}>
-      <span className="tooltip-body-proto scrollbar-proto">
+      <span className="tooltip-body-proto unica-scrollbar unica-scrollbar--compact">
         <span className="tooltip-label-proto" dir="auto">
           {children}
         </span>
@@ -60,7 +59,9 @@ export function HoverCard({
 }: HoverCardProps): ReactElement {
   return (
     <div {...props} data-surface="overlay" className={`hover-card-proto ${className}`}>
-      <div className="hover-card-body-proto scrollbar-proto">{children}</div>
+      <div className="hover-card-body-proto unica-scrollbar unica-scrollbar--compact">
+        {children}
+      </div>
       {previewBridge}
     </div>
   );

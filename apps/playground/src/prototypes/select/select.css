@@ -39,8 +39,6 @@
 }
 
 .choice-list-proto {
-  --scrollbar-width: thin;
-  --scrollbar-size: 10px;
   min-block-size: 0;
   min-inline-size: 0;
   overflow: auto;
@@ -427,8 +425,6 @@
 }
 
 .combobox-panel-proto {
-  --scrollbar-width: thin;
-  --scrollbar-size: 10px;
   position: absolute;
   inset-inline: 0;
   inset-block-start: calc(100% + var(--space-8));

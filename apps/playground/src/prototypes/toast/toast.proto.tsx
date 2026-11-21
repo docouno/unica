@@ -10,7 +10,6 @@ import { Fragment, useId, useLayoutEffect, useRef, useState } from 'react';
 import type { ComponentPropsWithRef, CSSProperties, ReactElement, ReactNode } from 'react';
 import { Button, IconButton } from '../button/button.proto.js';
 import { Divider, Icon, Spinner } from '@docouno/unica';
-import '../scrollbar/scrollbar.css';
 import './toast.css';
 
 export type ToastStatus = 'neutral' | 'info' | 'success' | 'warning' | 'danger';
@@ -341,11 +340,18 @@ export function ToastViewport({
   }, [reading, top]);
   useLayoutEffect(() => {
     const node = list.current;
-    if (!node || !reading) {
+    const root = viewport.current;
+    if (!node || !root || !reading) {
       return;
     }
     const rows = [...node.querySelectorAll<HTMLElement>('.toast-list-item')];
     const update = (): void => {
+      // The borderless scrollport extends past the card edge by the native gutter.
+      // Overlay scrollbars and content that fits occupy no layout space.
+      const gutter = `${node.offsetWidth - node.clientWidth}px`;
+      if (root.style.getPropertyValue('--toast-scrollbar-gutter') !== gutter) {
+        root.style.setProperty('--toast-scrollbar-gutter', gutter);
+      }
       const { paddingBlockStart, paddingBlockEnd } = getComputedStyle(node);
       const readableHeight =
         node.clientHeight -
@@ -386,13 +392,28 @@ export function ToastViewport({
       readingEdge.current.max = max;
       alignStickyCovers(node);
     };
-    const observer = new ResizeObserver(update);
+    // Gutter compensation can resize the observed scrollport. Apply it outside observer delivery.
+    let frame: number | undefined;
+    const observer = new ResizeObserver(() => {
+      if (frame === undefined) {
+        frame = requestAnimationFrame(() => {
+          frame = undefined;
+          update();
+        });
+      }
+    });
     observer.observe(node);
     for (const row of rows) {
       observer.observe(row, { box: 'border-box' });
     }
     update();
-    return () => observer.disconnect();
+    return () => {
+      observer.disconnect();
+      if (frame !== undefined) {
+        cancelAnimationFrame(frame);
+      }
+      root.style.removeProperty('--toast-scrollbar-gutter');
+    };
   }, [items, reading, top]);
   const changeExpanded = (value: boolean): void => {
     setHeldId(value ? null : (items.at(-1)?.id ?? null));
@@ -486,7 +507,7 @@ export function ToastViewport({
       {reading ? (
         <div className="toast-reading">
           <div
-            className="toast-list scrollbar-proto"
+            className="toast-list unica-scrollbar unica-scrollbar--compact"
             id={id}
             ref={list}
             style={
@@ -564,7 +585,7 @@ export function ToastViewport({
       ) : front ? (
         <div
           id={id}
-          className="toast-stack scrollbar-proto"
+          className={grouped ? 'toast-stack' : 'toast-stack unica-scrollbar'}
           data-plates={grouped ? Math.min(2, items.length - 1) : 0}
         >
           {items.length > 2 && <ToastPlate depth={2} />}

@@ -2,12 +2,13 @@ import { validateCatalog } from './workbench/schema.js';
 import type { ComponentDefinition, SceneDefinition, WorkbenchConfig } from './workbench/types.js';
 import { unicaWorkbenchBase } from './unica.workbench.shared.js';
 
-const componentModules = import.meta.glob<ComponentDefinition>('./specimens/**/*.spec.tsx', {
-  eager: true,
-  import: 'default',
-});
+// Type the results separately so Vitest detects glob calls and refreshes the catalog.
+const componentModules: Record<string, ComponentDefinition> = import.meta.glob(
+  './specimens/**/*.spec.tsx',
+  { eager: true, import: 'default' },
+);
 
-const sceneModules = import.meta.glob<SceneDefinition>('./scenes/**/*.scene.tsx', {
+const sceneModules: Record<string, SceneDefinition> = import.meta.glob('./scenes/**/*.scene.tsx', {
   eager: true,
   import: 'default',
 });

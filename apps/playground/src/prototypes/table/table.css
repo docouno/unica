@@ -1,6 +1,4 @@
 .table-scroll-proto {
-  --scrollbar-size: 10px;
-  --scrollbar-width: thin;
   min-inline-size: 0;
   max-inline-size: 100%;
   overflow: auto;

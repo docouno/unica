@@ -130,11 +130,6 @@
   min-block-size: 44px;
 }
 
-.dialog-body,
-.dialog-surface[data-whole-scroll] {
-  --scrollbar-size: 10px;
-  --scrollbar-width: thin;
-}
 .dialog-body {
   min-block-size: 0;
   margin: var(--dialog-scroll-inset);

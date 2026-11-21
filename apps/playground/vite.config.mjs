@@ -22,6 +22,7 @@ export default defineConfig({
             {
               name: 'specimens',
               test: /\/src\/specimens\//,
+              // Statically import examples within this group so a chunk never awaits itself.
               // Keep each declaration's prototype dependencies in the native module graph.
               includeDependenciesRecursively: false,
               maxSize: 300_000,
