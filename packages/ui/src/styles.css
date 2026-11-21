@@ -90,7 +90,7 @@
     --spinner-round-display: inline;
     --spinner-pixel-display: none;
     --progress-wait-base: var(--accent-signal);
-    --progress-wait-stripe: color-mix(in oklab, var(--accent-signal) 84%, var(--control-bg));
+    --progress-wait-stripe: color-mix(in oklab, var(--accent-signal) 84%, var(--_base-control-bg));
     --progress-tip-motion: none;
     --progress-fill-light: none;
     --progress-fill-shadow: none;
@@ -291,7 +291,7 @@
     --spinner-round-display: inline;
     --spinner-pixel-display: none;
     --progress-wait-base: var(--accent-signal);
-    --progress-wait-stripe: color-mix(in oklab, var(--accent-signal) 84%, var(--control-bg));
+    --progress-wait-stripe: color-mix(in oklab, var(--accent-signal) 84%, var(--_base-control-bg));
     --progress-tip-motion: none;
     --progress-fill-light: none;
     --progress-fill-shadow: none;
@@ -496,7 +496,7 @@
     --spinner-round-display: inline;
     --spinner-pixel-display: none;
     --progress-wait-base: var(--accent-signal);
-    --progress-wait-stripe: color-mix(in oklab, var(--accent-signal) 84%, var(--control-bg));
+    --progress-wait-stripe: color-mix(in oklab, var(--accent-signal) 84%, var(--_base-control-bg));
     --progress-tip-motion: activity-tip-breathe 2400ms ease-in-out infinite;
     --progress-fill-light: linear-gradient(
       to bottom,
@@ -714,7 +714,7 @@
     --spinner-round-display: inline;
     --spinner-pixel-display: none;
     --progress-wait-base: var(--accent-signal);
-    --progress-wait-stripe: color-mix(in oklab, var(--accent-signal) 84%, var(--control-bg));
+    --progress-wait-stripe: color-mix(in oklab, var(--accent-signal) 84%, var(--_base-control-bg));
     --progress-tip-motion: activity-tip-breathe 2400ms ease-in-out infinite;
     --progress-fill-light: linear-gradient(
       to bottom,
@@ -936,7 +936,7 @@
     --spinner-round-display: none;
     --spinner-pixel-display: inline;
     --progress-wait-base: var(--accent-signal);
-    --progress-wait-stripe: color-mix(in oklab, var(--accent-signal) 84%, var(--control-bg));
+    --progress-wait-stripe: color-mix(in oklab, var(--accent-signal) 84%, var(--_base-control-bg));
     --progress-tip-motion: none;
     --progress-fill-light: none;
     --progress-fill-shadow: none;
@@ -1144,7 +1144,7 @@
     --spinner-round-display: none;
     --spinner-pixel-display: inline;
     --progress-wait-base: var(--accent-signal);
-    --progress-wait-stripe: color-mix(in oklab, var(--accent-signal) 84%, var(--control-bg));
+    --progress-wait-stripe: color-mix(in oklab, var(--accent-signal) 84%, var(--_base-control-bg));
     --progress-tip-motion: none;
     --progress-fill-light: none;
     --progress-fill-shadow: none;

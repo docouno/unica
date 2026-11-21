@@ -1,9 +1,8 @@
 import { useId, useState } from 'react';
 import type { ReactElement } from 'react';
 import { CheckCircleIcon, PauseCircleIcon, WarningCircleIcon } from '@phosphor-icons/react';
-import { Icon } from '@docouno/unica';
-import { Button } from '../button/button.proto.js';
-import { Progress } from './progress.proto.js';
+import { Icon, Progress } from '@docouno/unica';
+import { Button } from '../../prototypes/button/button.proto.js';
 import './progress.examples.css';
 
 const states = [
@@ -185,7 +184,7 @@ const examples: Record<string, () => ReactElement> = {
         </div>
       ))}
       <div className="activity-divider">
-        <Progress value={null} label="Static waiting preview" previewStatic />
+        <Progress value={null} label="Static waiting preview" className="activity-static" />
       </div>
       <span className="activity-caption">
         Preparing and transferring share the same accent paint. The broad candy stripe changes the

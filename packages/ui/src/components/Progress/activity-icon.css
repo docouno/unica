@@ -1,0 +1,178 @@
+@layer unica.components {
+  .unica-activity-icon {
+    --_activity-dimension: 1em;
+    display: inline-block;
+    flex: none;
+    inline-size: var(--_activity-dimension);
+    block-size: var(--_activity-dimension);
+    overflow: visible;
+    border-radius: var(--radius-circular);
+    color: inherit;
+    stroke: currentColor;
+    stroke-width: 2.5;
+    vertical-align: -0.125em;
+  }
+
+  .unica-activity-icon[hidden] {
+    display: none;
+  }
+
+  .unica-activity-icon[data-spinner] > .unica-activity-icon-drawing {
+    /* Backwards fill hides only the paint before the delay. Updating the delay
+       keeps the same CSS animation timeline while the SVG remains in layout. */
+    animation: unica-spinner-reveal 0s var(--_activity-delay) both;
+  }
+
+  .unica-activity-icon[data-size='s'] {
+    --_activity-dimension: var(--size-s-icon);
+  }
+
+  .unica-activity-icon[data-size='m'] {
+    --_activity-dimension: var(--size-m-icon);
+  }
+
+  .unica-activity-icon[data-size='l'] {
+    --_activity-dimension: var(--size-l-icon);
+    stroke-width: 2.4;
+  }
+
+  .unica-activity-icon[data-tone='neutral'] {
+    color: var(--fg-primary);
+  }
+
+  .unica-activity-icon[data-tone='muted'] {
+    color: var(--fg-muted);
+  }
+
+  .unica-activity-icon[data-tone='accent'] {
+    color: var(--accent-signal);
+  }
+
+  .unica-activity-icon-round {
+    display: var(--spinner-round-display);
+  }
+
+  .unica-activity-icon-pixels {
+    display: var(--spinner-pixel-display);
+  }
+
+  .unica-activity-icon-track,
+  .unica-activity-icon-cell-track {
+    opacity: 0.14;
+  }
+
+  .unica-activity-icon-orbit {
+    transform-origin: center;
+    animation: unica-spinner-orbit 2400ms linear infinite;
+  }
+
+  .unica-activity-icon-wait-arc,
+  .unica-activity-icon-fill {
+    stroke-linecap: round;
+    transform: rotate(-90deg);
+    transform-origin: center;
+  }
+
+  .unica-activity-icon-wait-arc {
+    animation: unica-spinner-arc 1600ms cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  }
+
+  .unica-activity-icon-wait-cell {
+    opacity: var(--_activity-cell-rest);
+    animation: unica-spinner-cell 960ms steps(1, end) infinite;
+    animation-delay: calc(var(--_activity-cell) * 120ms - 960ms);
+  }
+
+  .unica-activity-icon-fill {
+    transition: stroke-dasharray var(--progress-value-duration) ease-out;
+  }
+
+  .unica-activity-icon[data-empty] .unica-activity-icon-fill {
+    visibility: hidden;
+    transition: none;
+  }
+
+  @keyframes unica-spinner-reveal {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes unica-spinner-orbit {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  @keyframes unica-spinner-arc {
+    0% {
+      stroke-dasharray: 16 84;
+      stroke-dashoffset: 0;
+    }
+    50% {
+      stroke-dasharray: 64 36;
+      stroke-dashoffset: -18;
+    }
+    100% {
+      stroke-dasharray: 16 84;
+      stroke-dashoffset: -100;
+    }
+  }
+
+  @keyframes unica-spinner-cell {
+    0% {
+      opacity: 1;
+    }
+    12.5% {
+      opacity: 0.55;
+    }
+    25% {
+      opacity: 0.3;
+    }
+    37.5%,
+    100% {
+      opacity: 0.14;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .unica-activity-icon-orbit,
+    .unica-activity-icon-wait-arc,
+    .unica-activity-icon-wait-cell {
+      animation: none;
+    }
+
+    .unica-activity-icon-fill {
+      transition: none;
+    }
+  }
+
+  @media (forced-colors: active) {
+    .unica-activity-icon {
+      forced-color-adjust: none;
+    }
+    .unica-activity-icon-track {
+      opacity: 1;
+      stroke: GrayText;
+    }
+    .unica-activity-icon-wait-arc {
+      stroke: CanvasText;
+    }
+    .unica-activity-icon-wait-cell {
+      fill: CanvasText;
+    }
+    .unica-activity-icon-cell-track {
+      opacity: 1;
+      fill: GrayText;
+    }
+    .unica-activity-icon-fill {
+      stroke: Highlight;
+    }
+    .unica-activity-icon-cell-fill {
+      fill: Highlight;
+    }
+  }
+}

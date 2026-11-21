@@ -7,9 +7,8 @@ import type {
   ReactElement,
   ReactNode,
 } from 'react';
-import { Icon } from '@docouno/unica';
+import { Icon, Progress, Spinner } from '@docouno/unica';
 import { Button, IconButton } from '../button/button.proto.js';
-import { Progress, Spinner } from '../progress/progress.proto.js';
 import { FormField } from '../input/input.proto.js';
 import { useInputFocus } from '../input/input-focus.proto.js';
 import type { ControlSize, FieldStatus, FieldVariant } from '../input/input.proto.js';

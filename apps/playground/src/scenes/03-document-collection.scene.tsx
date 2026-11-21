@@ -15,7 +15,7 @@ import { dateLabel, dateObject } from '../prototypes/date-picker/date-utils.prot
 import type { DateRange } from '../prototypes/date-picker/date-utils.proto.js';
 import { Card, CardMedia } from '../prototypes/card/card.proto.js';
 import { ChipGroup } from '../prototypes/chip/chip.proto.js';
-import { Progress } from '../prototypes/progress/progress.proto.js';
+import { Progress } from '@docouno/unica';
 import { Link } from '../prototypes/link/link.proto.js';
 import { ContextMenu } from '../prototypes/menu/context-menu.proto.js';
 import type { MenuEntry } from '../prototypes/menu/menu.entries.js';

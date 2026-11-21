@@ -26,3 +26,14 @@ export type {
   IconAdapter,
   IconAdapterRenderContext,
 } from './components/Icon/glyph.js';
+
+export { Progress } from './components/Progress/Progress.js';
+export type {
+  ProgressProps,
+  ProgressSize,
+  ProgressStatus,
+} from './components/Progress/Progress.js';
+export { ProgressCircle } from './components/Progress/ProgressCircle.js';
+export type { ProgressCircleProps } from './components/Progress/ProgressCircle.js';
+export { Spinner } from './components/Progress/Spinner.js';
+export type { SpinnerProps, SpinnerSize, SpinnerTone } from './components/Progress/Spinner.js';

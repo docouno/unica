@@ -59,8 +59,9 @@ async function runScenario(t, browser, origin, renderFixture, scenario) {
       textScale,
       direction,
     }).toString();
-    await page.goto(url.href);
-    await page.locator('[data-browser-ready]').waitFor({ state: 'attached' });
+    await page.goto(url.href, { waitUntil: 'commit' });
+    // A cold Vite fixture has to load and compile its modules before React can mount.
+    await page.locator('[data-browser-ready]').waitFor({ state: 'attached', timeout: 15_000 });
   }
 
   try {

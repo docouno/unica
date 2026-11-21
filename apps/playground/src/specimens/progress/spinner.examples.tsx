@@ -1,9 +1,8 @@
 import { useEffect, useState } from 'react';
 import type { ReactElement } from 'react';
 import { CheckIcon, WarningCircleIcon } from '@phosphor-icons/react';
-import { Button } from '../button/button.proto.js';
-import { Icon } from '@docouno/unica';
-import { Spinner } from './progress.proto.js';
+import { Button } from '../../prototypes/button/button.proto.js';
+import { Icon, Spinner } from '@docouno/unica';
 import './progress.examples.css';
 
 function SpinnerLifecycle(): ReactElement {
@@ -135,7 +134,7 @@ const examples: Record<string, () => ReactElement> = {
         <span>Loading preview…</span>
       </div>
       <div className="activity-label">
-        <Spinner size="m" tone="muted" previewStatic />
+        <Spinner size="m" tone="muted" className="activity-static" />
         <span>
           Loading preview… <span className="activity-caption">· static preview</span>
         </span>
