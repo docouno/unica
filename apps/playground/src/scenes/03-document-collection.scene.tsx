@@ -1,3 +1,4 @@
+import { Link } from '@docouno/unica';
 import { useRef, useState } from 'react';
 import type { ComponentProps, ReactElement } from 'react';
 import {
@@ -16,7 +17,6 @@ import type { DateRange } from '../prototypes/date-picker/date-utils.proto.js';
 import { Card, CardMedia } from '../prototypes/card/card.proto.js';
 import { ChipGroup } from '../prototypes/chip/chip.proto.js';
 import { Progress } from '@docouno/unica';
-import { Link } from '../prototypes/link/link.proto.js';
 import { ContextMenu } from '../prototypes/menu/context-menu.proto.js';
 import type { MenuEntry } from '../prototypes/menu/menu.entries.js';
 import { Pagination } from '../prototypes/pagination/pagination.proto.js';

@@ -4,7 +4,16 @@ import { HoverCard, Tooltip } from './tooltip.proto.js';
 import type { HintAlign, HintSide } from './tooltip.proto.js';
 import './tooltip.examples.css';
 
-export interface HintTriggerBindings extends HTMLAttributes<HTMLElement> {
+export interface HintTriggerBindings extends Pick<
+  HTMLAttributes<HTMLElement>,
+  | 'aria-describedby'
+  | 'onPointerEnter'
+  | 'onPointerLeave'
+  | 'onPointerDown'
+  | 'onClick'
+  | 'onFocus'
+  | 'onBlur'
+> {
   readonly ref: RefCallback<HTMLElement>;
 }
 

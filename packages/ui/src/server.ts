@@ -27,6 +27,7 @@ export type {
   KbdGroupProps,
   KbdProps,
   KbdSize,
+  LinkProps,
   PortalProps,
   PortalProviderProps,
   ProgressCircleProps,

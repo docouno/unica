@@ -1,5 +1,4 @@
-import { Text } from '@docouno/unica';
-import { Link } from '../../src/prototypes/link/link.proto.js';
+import { Link, Text } from '@docouno/unica';
 import { SkeletonText } from '../../src/prototypes/skeleton/skeleton.proto.js';
 
 export const supportedScales = (

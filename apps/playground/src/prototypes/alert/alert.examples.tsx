@@ -1,11 +1,10 @@
-import { Code } from '@docouno/unica';
+import { Code, Link } from '@docouno/unica';
 import { useId, useLayoutEffect, useRef, useState } from 'react';
 import type { ReactElement } from 'react';
 import { LightbulbIcon } from '@phosphor-icons/react';
 import { Alert, AlertActions, AlertDescription, AlertTitle } from './alert.proto.js';
 import type { AlertSize, AlertStatus } from './alert.proto.js';
 import { Button } from '../button/button.proto.js';
-import { Link } from '../link/link.proto.js';
 import './alert.examples.css';
 
 const statuses: readonly AlertStatus[] = ['neutral', 'info', 'success', 'warning', 'danger'];

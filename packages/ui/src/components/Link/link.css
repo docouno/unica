@@ -1,0 +1,172 @@
+@layer unica.components {
+  .unica-link {
+    --_link-size: initial;
+    --_link-line-height: initial;
+    --_link-context-active-ink: color-mix(
+      in srgb,
+      var(--action-context-ink) var(--btn-context-ink-strength),
+      var(--fg-primary)
+    );
+    color: var(--accent-soft-fg);
+    font: inherit;
+    font-size: var(--_link-size, inherit);
+    line-height: var(--_link-line-height, inherit);
+    text-decoration-line: underline;
+    text-decoration-color: color-mix(in srgb, currentColor 72%, transparent);
+    text-decoration-thickness: 1px;
+    text-underline-offset: 2px;
+    text-decoration-skip-ink: auto;
+    overflow-wrap: anywhere;
+    border-radius: var(--radius-xs);
+    -webkit-box-decoration-break: clone;
+    box-decoration-break: clone;
+  }
+
+  .unica-link[data-unica-link-size='body-l'] {
+    --_link-size: var(--text-size-body-l);
+    --_link-line-height: var(--text-size-body-l-lh);
+  }
+
+  .unica-link[data-unica-link-size='body-m'] {
+    --_link-size: var(--text-size-body-m);
+    --_link-line-height: var(--text-size-body-m-lh);
+  }
+
+  .unica-link[data-unica-link-size='body-s'] {
+    --_link-size: var(--text-size-body-s);
+    --_link-line-height: var(--text-size-body-s-lh);
+  }
+
+  .unica-link[data-unica-link-size='caption-l'] {
+    --_link-size: var(--text-size-caption-l);
+    --_link-line-height: var(--text-size-caption-l-lh);
+  }
+
+  .unica-link[data-unica-link-size='caption-m'] {
+    --_link-size: var(--text-size-caption-m);
+    --_link-line-height: var(--text-size-caption-m-lh);
+  }
+
+  .unica-link[data-unica-link-size='caption-s'] {
+    --_link-size: var(--text-size-caption-s);
+    --_link-line-height: var(--text-size-caption-s-lh);
+  }
+
+  .unica-link[data-unica-link-tone='neutral'] {
+    color: var(--fg-secondary);
+  }
+
+  .unica-link[data-unica-link-tone='inherit'] {
+    color: inherit;
+  }
+
+  .unica-link:is([data-unica-link-underline='hover'], [data-unica-link-underline='none']) {
+    text-decoration-line: none;
+  }
+
+  @media (hover: hover) {
+    .unica-link:where(:not([aria-disabled='true'])):hover {
+      text-decoration-color: currentColor;
+    }
+
+    .unica-link[data-unica-link-underline='hover']:where(:not([aria-disabled='true'])):hover {
+      text-decoration-line: underline;
+    }
+
+    .unica-link[data-unica-link-underline='none']:where(:not([aria-disabled='true'])):hover {
+      color: var(--fg-primary);
+    }
+
+    .unica-link[data-unica-link-tone='inherit'][data-unica-link-underline='none']:where(
+        :not([aria-disabled='true'])
+      ):hover:not(:active) {
+      color: var(--_link-context-active-ink, var(--accent-soft-fg));
+    }
+  }
+
+  .unica-link:where(:not([aria-disabled='true'])):active {
+    color: var(--fg-primary);
+    text-decoration-color: currentColor;
+  }
+
+  .unica-link[data-unica-link-tone='inherit']:where(:not([aria-disabled='true'])):active {
+    color: var(--_link-context-active-ink, var(--fg-primary));
+  }
+
+  .unica-link:where(:not([aria-disabled='true'])):focus-visible {
+    outline: 2px solid var(--action-context-ink, var(--focus-ring-color));
+    outline-offset: 3px;
+    text-decoration-color: currentColor;
+  }
+
+  .unica-link[data-unica-link-underline='hover']:where(:not([aria-disabled='true'])):is(
+      :active,
+      :focus-visible
+    ) {
+    text-decoration-line: underline;
+  }
+
+  .unica-link[aria-current]:not(
+      [aria-current='false' i],
+      [aria-current=''],
+      [aria-disabled='true']
+    ) {
+    text-decoration-line: underline;
+    text-decoration-thickness: 2px;
+    text-decoration-color: currentColor;
+  }
+
+  .unica-link[aria-disabled='true'] {
+    color: var(--fg-disabled);
+    text-decoration-color: currentColor;
+    cursor: not-allowed;
+  }
+
+  .unica-link[data-unica-link-wrap-terminal] .unica-link-terminal-text {
+    word-break: break-all;
+  }
+
+  .unica-link:has(> .unica-link-glyph-end:not(:empty)) .unica-link-terminal-space {
+    display: none;
+  }
+
+  .unica-link-glyph {
+    white-space: nowrap;
+  }
+
+  .unica-link-glyph:empty {
+    display: none;
+  }
+
+  .unica-link-glyph-start:not(:empty)::after {
+    content: '\00a0\2060';
+  }
+
+  .unica-link-glyph-end:not(:empty)::before {
+    content: '\2060\00a0';
+  }
+
+  .unica-link-glyph > svg {
+    display: inline-block;
+    vertical-align: -0.125em;
+  }
+
+  @media (forced-colors: active) {
+    .unica-link,
+    .unica-link[data-unica-link-tone],
+    .unica-link[data-unica-link-tone][data-unica-link-underline]:where(
+        :not([aria-disabled='true'])
+      ):is(:hover, :active) {
+      color: LinkText;
+      text-decoration-color: currentColor;
+    }
+
+    .unica-link:where(:not([aria-disabled='true'])):focus-visible {
+      outline-color: Highlight;
+    }
+
+    .unica-link[aria-disabled='true'] {
+      color: GrayText;
+    }
+  }
+}

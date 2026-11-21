@@ -1,4 +1,4 @@
-import { Code } from '@docouno/unica';
+import { Code, Link, Text } from '@docouno/unica';
 import { useId, useLayoutEffect, useRef, useState } from 'react';
 import type { ReactElement } from 'react';
 import { ArrowClockwiseIcon } from '@phosphor-icons/react';
@@ -6,8 +6,6 @@ import { Alert, AlertActions, AlertDescription, AlertTitle } from './alert.proto
 import type { AlertSize, AlertStatus } from './alert.proto.js';
 import { Button, IconButton } from '../button/button.proto.js';
 import { Card } from '../card/card.proto.js';
-import { Link } from '../link/link.proto.js';
-import { Text } from '@docouno/unica';
 import './alert.examples.css';
 
 const statuses: readonly AlertStatus[] = ['neutral', 'info', 'success', 'warning', 'danger'];
@@ -189,15 +187,16 @@ export function ContextStateExamples(): ReactElement {
         </label>
       </div>
       <p className="alert-demo-note">
-        Pinned comparisons of the same actions. Use Contextual content or Recovery for working
-        commands. Pending keeps the plate, focus, and width; unavailable actions stay in the
-        message’s color family. Guidance remains available during a retry or an unavailable action.
-        Each focused control is independently pinned for comparison.
+        Button states are pinned for comparison. Hover, press, or Tab to Guidance to inspect the
+        live link with the selected status and underline.
       </p>
       <Alert status={status}>
         <AlertTitle>{messages[status].title}</AlertTitle>
         <AlertDescription>
-          Reference <Code>{messages[status].reference}</Code> keeps its own tonal step.
+          Reference <Code>{messages[status].reference}</Code> keeps its own tonal step.{' '}
+          <Link href="https://example.com/guidance" tone="inherit" underline={underline}>
+            Guidance
+          </Link>
         </AlertDescription>
         <div className="alert-context-state-list">
           {states.map((state) => {
@@ -264,17 +263,6 @@ export function ContextStateExamples(): ReactElement {
                     loading={state === 'pending'}
                     disabled={state === 'disabled'}
                   />
-                  <Link
-                    href="https://example.com/guidance"
-                    tone="inherit"
-                    underline={underline}
-                    previewState={preview === 'hover' || preview === 'active' ? preview : 'rest'}
-                    previewFocus={
-                      state === 'focus' || state === 'hover-focus' || state === 'active-focus'
-                    }
-                  >
-                    Guidance
-                  </Link>
                 </div>
               </div>
             );

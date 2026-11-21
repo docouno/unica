@@ -1,10 +1,9 @@
-import { Code, Text, Title } from '@docouno/unica';
+import { Code, Link, Text, Title } from '@docouno/unica';
 import { previewProps, previewText } from '../preview-code.js';
 import { defineComponent } from '../../workbench/types.js';
 import { Button } from '../../prototypes/button/button.proto.js';
 import { Card } from '../../prototypes/card/card.proto.js';
 import { Alert, AlertTitle, AlertDescription } from '../../prototypes/alert/alert.proto.js';
-import { Link } from '../../prototypes/link/link.proto.js';
 import {
   PopoverContent,
   PopoverBody,

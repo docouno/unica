@@ -1,4 +1,4 @@
-import { Icon, IconProvider, UnicaProvider, defineGlyph } from '@docouno/unica';
+import { Icon, IconProvider, UnicaProvider, defineGlyph, Link } from '@docouno/unica';
 import type { IconAdapter } from '@docouno/unica';
 import { ArrowRightIcon, BellIcon, CheckIcon, IconContext } from '@phosphor-icons/react';
 import { useId, useState } from 'react';
@@ -31,7 +31,6 @@ import {
 } from '../../../src/prototypes/dialog/dialog.proto.js';
 import { Empty, EmptyMedia } from '../../../src/prototypes/empty/empty.proto.js';
 import { Input } from '../../../src/prototypes/input/input.proto.js';
-import { Link } from '../../../src/prototypes/link/link.proto.js';
 import { Tabs, TabsList, TabsTab } from '../../../src/prototypes/tabs/tabs.proto.js';
 
 function ProjectSvg({ children, ...props }: ComponentPropsWithRef<'svg'>) {

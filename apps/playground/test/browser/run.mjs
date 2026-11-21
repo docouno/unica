@@ -99,7 +99,11 @@ try {
     logLevel: 'error',
     plugins: [devkitWorkspaceSource(), react()],
     resolve: { dedupe: ['react', 'react-dom'] },
-    optimizeDeps: { entries: ['test/browser/index.html'] },
+    optimizeDeps: {
+      entries: ['test/browser/index.html'],
+      // Bundle icon entry points before a fixture reaches the navigation timeout.
+      include: ['@phosphor-icons/react', '@phosphor-icons/react/ssr'],
+    },
     server: { host: '127.0.0.1', port: 0, watch: null, hmr: false },
   });
   await server.listen();
