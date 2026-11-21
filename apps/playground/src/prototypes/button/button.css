@@ -27,6 +27,10 @@
   --button-active-shadow: var(--btn-primary-shadow-active);
   --button-active-rim: var(--button-rim);
   --button-press: var(--btn-primary-press-transform);
+  --kbd-fg: currentColor;
+  --kbd-bg: transparent;
+  --kbd-border: color-mix(in oklab, currentColor 28%, transparent);
+  --kbd-shadow: none;
 
   position: relative;
   display: inline-flex;
@@ -409,6 +413,8 @@
   --button-fill: none;
   --button-rim: var(--_button-context-disabled-edge, var(--border-subtle));
   --button-shadow: none;
+  --kbd-fg: var(--fg-disabled);
+  --kbd-border: var(--border-subtle);
 
   color: var(--_button-context-disabled-ink, var(--fg-disabled));
   cursor: not-allowed;
@@ -481,6 +487,7 @@
     outline-color: Highlight;
   }
   .button-proto[data-variant]:disabled {
+    --kbd-forced-fg: GrayText;
     color: GrayText;
     border-color: GrayText;
   }

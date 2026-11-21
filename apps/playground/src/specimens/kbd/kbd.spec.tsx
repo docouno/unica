@@ -1,9 +1,9 @@
-import { previewProps, previewText } from '../preview-code.js';
+import { Kbd, KbdGroup } from '@docouno/unica';
+import type { KbdSize } from '@docouno/unica';
 import { useState } from 'react';
 import type { ReactElement, ReactNode } from 'react';
+import { previewProps, previewText } from '../preview-code.js';
 import { defineComponent } from '../../workbench/types.js';
-import { Kbd, KbdGroup } from '../../prototypes/kbd/kbd.proto.js';
-import type { KbdSize } from '../../prototypes/kbd/kbd.proto.js';
 import { Button } from '../../prototypes/button/button.proto.js';
 import type { ButtonTone, ButtonVariant } from '../../prototypes/button/button.proto.js';
 import { Text } from '../../prototypes/text/text.proto.js';
@@ -11,7 +11,7 @@ import { Title } from '../../prototypes/title/title.proto.js';
 import { GlobalSearch } from '../../prototypes/app-shell/app-shell.proto.js';
 import { MenuPreview } from '../../prototypes/menu/menu.proto.js';
 import { Tooltip } from '../../prototypes/tooltip/tooltip.proto.js';
-import '../../prototypes/kbd/kbd.examples.css';
+import './kbd.examples.css';
 
 function ExampleRow({
   label,
@@ -386,10 +386,10 @@ function Reflow(): ReactElement {
 
 export default defineComponent({
   id: 'kbd',
-  title: 'Kbd & KbdGroup',
+  title: 'Kbd',
   category: 'Typography',
-  status: 'Proto',
-  summary: 'Quiet keycaps, clear chords, and proportional inline rhythm. No shortcut engine.',
+  status: 'UI',
+  summary: 'Keycaps for individual keys and compact keyboard hints.',
   componentName: 'Kbd',
   props: {
     size: {
@@ -404,15 +404,24 @@ export default defineComponent({
       group: 'Content',
       default: '⌘',
       description: 'A key label or a recognized symbol.',
-      examples: ['⌘', 'Enter', 'Esc', '→'],
+      examples: ['⌘', 'Enter', 'Esc', '→', ''],
     },
     label: {
       kind: 'string',
       group: 'Semantics',
       default: '',
       description: 'Spoken label for a custom glyph or localized key.',
+      examples: ['', 'Commande'],
     },
   },
+  constraints: [
+    {
+      kind: 'ignored',
+      when: { children: '' },
+      affects: ['label'],
+      reason: 'An empty keycap has no rendered content to label.',
+    },
+  ],
   render: ({ ctx, values: { children, label, size } }) => (
     <Kbd {...ctx.subject} {...(label ? { label } : {})} size={size}>
       {children}

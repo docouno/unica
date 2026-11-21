@@ -31,6 +31,9 @@ export type {
   IconAdapterRenderContext,
 } from './components/Icon/glyph.js';
 
+export { Kbd, KbdGroup } from './components/Kbd/Kbd.js';
+export type { KbdGroupProps, KbdProps, KbdSize } from './components/Kbd/Kbd.js';
+
 export { Progress } from './components/Progress/Progress.js';
 export type {
   ProgressProps,

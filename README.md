@@ -38,9 +38,9 @@ export function ThemePreview() {
 }
 ```
 
-The library ships theme tokens, preset metadata, `UnicaProvider`, [native scrollbar utilities](docs/concepts/scrollbars.md), the [Icon](docs/components/icon.md) glyph protocol, [Portal](docs/components/portal.md), the typography primitives [Code](docs/components/code.md) and [Blockquote](docs/components/blockquote.md), [Spinner](docs/components/spinner.md), and [Progress and ProgressCircle](docs/components/progress.md). The `data-theme` attribute applies the CSS preset. `UnicaProvider` supplies [structural component defaults](docs/concepts/themes-and-roles.md#structural-component-defaults) through React context.
+The library ships theme tokens, preset metadata, `UnicaProvider`, [native scrollbar utilities](docs/concepts/scrollbars.md), the [Icon](docs/components/icon.md) glyph protocol, [Portal](docs/components/portal.md), the typography primitives [Code](docs/components/code.md) and [Blockquote](docs/components/blockquote.md), keyboard hints [Kbd and KbdGroup](docs/components/kbd.md), [Spinner](docs/components/spinner.md), and [Progress and ProgressCircle](docs/components/progress.md). The `data-theme` attribute applies the CSS preset. `UnicaProvider` supplies [structural component defaults](docs/concepts/themes-and-roles.md#structural-component-defaults) through React context.
 
-New component families are reviewed as live prototypes in the playground before their public package APIs ship. Playground scenes use the shipped package for Icon, Code, Blockquote, Spinner, and Progress alongside families still in design.
+New component families are reviewed as live prototypes in the playground before their public package APIs ship. Playground scenes use the shipped package for Icon, Code, Blockquote, Kbd, KbdGroup, Spinner, and Progress alongside families still in design.
 
 The [Workbench](docs/workbench.md) has Playground, Matrix, Cases, and Usage views for each component. Choose Family and Scheme to compare themes or isolate one artboard, then inspect actual component bounds and interactions at different widths, text scales, and reading directions.
 

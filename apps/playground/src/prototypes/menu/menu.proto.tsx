@@ -3,8 +3,7 @@ import { useId, useLayoutEffect, useRef } from 'react';
 import type { ComponentPropsWithRef, ReactElement } from 'react';
 import { menuRows } from './menu.entries.js';
 import type { MenuEntry, MenuRow, MenuSize } from './menu.entries.js';
-import { Icon } from '@docouno/unica';
-import { Kbd } from '../kbd/kbd.proto.js';
+import { Icon, Kbd } from '@docouno/unica';
 import '../scrollbar/scrollbar.css';
 import './menu.css';
 

@@ -107,14 +107,6 @@
   line-height: var(--text-size-caption-l-lh);
   letter-spacing: normal;
 }
-.type-inline-key {
-  font: inherit;
-  padding-inline: var(--space-4);
-  border: 1px solid var(--kbd-cap-border);
-  border-radius: var(--radius-xs);
-  background: var(--kbd-cap-bg);
-  color: var(--fg-secondary);
-}
 .type-inline-link {
   color: var(--accent-soft-fg);
   text-underline-offset: 0.15em;

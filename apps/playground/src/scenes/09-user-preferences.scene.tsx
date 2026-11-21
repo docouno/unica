@@ -1,3 +1,4 @@
+import { Kbd, KbdGroup } from '@docouno/unica';
 import { useId, useState } from 'react';
 import type { ReactElement } from 'react';
 import { defineScene } from '../workbench/types.js';
@@ -20,7 +21,6 @@ import {
   AccordionTrigger,
 } from '../prototypes/disclosure/disclosure.proto.js';
 import { ToastCard } from '../prototypes/toast/toast.proto.js';
-import { Kbd, KbdGroup } from '../prototypes/kbd/kbd.proto.js';
 import {
   Checkbox,
   Radio,
@@ -423,6 +423,7 @@ export default defineScene({
     'checkbox',
     'icon',
     'kbd',
+    'kbd-group',
     'number-input',
     'radio',
     'segmented-control',

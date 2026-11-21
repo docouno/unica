@@ -1,4 +1,4 @@
-import { Blockquote, Code, Icon, Spinner } from '@docouno/unica';
+import { Blockquote, Code, Icon, Kbd, Spinner } from '@docouno/unica';
 import { useId, useRef, useState } from 'react';
 import type { ReactElement } from 'react';
 import {
@@ -17,7 +17,6 @@ import { Badge } from '../prototypes/badge/badge.proto.js';
 import { Button, IconButton } from '../prototypes/button/button.proto.js';
 import { ToastCard } from '../prototypes/toast/toast.proto.js';
 import { Input } from '../prototypes/input/input.proto.js';
-import { Kbd } from '../prototypes/kbd/kbd.proto.js';
 import { Link } from '../prototypes/link/link.proto.js';
 import {
   PopoverBody,

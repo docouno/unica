@@ -85,11 +85,6 @@
   min-block-size: var(--text-size-body-s-lh);
 }
 
-.tooltip-shortcut-proto .kbd-group-proto {
-  flex-wrap: wrap;
-  white-space: normal;
-}
-
 .hover-card-proto {
   display: flex;
   flex-direction: column;

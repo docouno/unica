@@ -654,6 +654,7 @@ export default defineScene({
     'date-picker',
     'date-range-picker',
     'icon',
+    'kbd',
     'link',
     'pagination',
     'progress',

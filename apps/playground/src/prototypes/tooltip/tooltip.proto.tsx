@@ -1,5 +1,5 @@
 import type { ComponentPropsWithRef, ReactElement, ReactNode } from 'react';
-import { Kbd } from '../kbd/kbd.proto.js';
+import { Kbd } from '@docouno/unica';
 import './tooltip.css';
 import '../scrollbar/scrollbar.css';
 

@@ -1,3 +1,4 @@
+import { Kbd } from '@docouno/unica';
 import { previewProps, previewText } from '../preview-code.js';
 import { defineComponent } from '../../workbench/types.js';
 import { Text } from '../../prototypes/text/text.proto.js';
@@ -229,13 +230,13 @@ export default defineComponent({
       render: () => (
         <div className="type-study">
           <Text size="caption-l" color="secondary">
-            Native stand-ins for future Badge, Kbd, and Link components.
+            Inline alignment with Kbd, a status badge, and a link.
           </Text>
           <Title as="h2" size="heading-m" className="type-baseline">
             Release notes <span className="type-inline-badge">Updated</span>
           </Title>
           <Title as="h2" size="heading-m" className="type-baseline">
-            Quick find <kbd className="type-inline-key">Ctrl K</kbd>
+            Quick find <Kbd>Ctrl K</Kbd>
           </Title>
           <Title as="h2" size="heading-m" className="type-baseline">
             Read the{' '}
