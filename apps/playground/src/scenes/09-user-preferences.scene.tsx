@@ -10,7 +10,7 @@ import {
   SettingsNavigation,
   StickyActionBar,
 } from '../prototypes/app-shell/app-shell.proto.js';
-import { Badge } from '../prototypes/badge/badge.proto.js';
+import { Badge } from '@docouno/unica';
 import { Breadcrumb, BreadcrumbPage } from '../prototypes/breadcrumb/breadcrumb.proto.js';
 import { Button } from '../prototypes/button/button.proto.js';
 import { Card } from '../prototypes/card/card.proto.js';

@@ -1,7 +1,6 @@
-import { Kbd } from '@docouno/unica';
+import { Badge, Kbd, Text, Title } from '@docouno/unica';
 import { previewProps, previewText } from '../preview-code.js';
 import { defineComponent } from '../../workbench/types.js';
-import { Text, Title } from '@docouno/unica';
 import {
   EditorCopy,
   Example,
@@ -220,10 +219,13 @@ export default defineComponent({
       render: () => (
         <div className="type-study">
           <Text size="caption-l" color="secondary">
-            Inline alignment with Kbd, a status badge, and a link.
+            Inline alignment with Kbd, Badge, and a link.
           </Text>
           <Title as="h2" size="heading-m" className="type-baseline">
-            Release notes <span className="type-inline-badge">Updated</span>
+            Release notes{' '}
+            <Badge size="s" status="info">
+              Updated
+            </Badge>
           </Title>
           <Title as="h2" size="heading-m" className="type-baseline">
             Quick find <Kbd>Ctrl K</Kbd>

@@ -8,9 +8,8 @@ import {
   TrayIcon,
 } from '@phosphor-icons/react';
 import { Avatar } from '../avatar/avatar.proto.js';
-import { Badge } from '../badge/badge.proto.js';
 import { Button, IconButton } from '../button/button.proto.js';
-import { Icon } from '@docouno/unica';
+import { Badge, Icon } from '@docouno/unica';
 import { Indicator } from './indicator.proto.js';
 import type { IndicatorPlacement, IndicatorSize, IndicatorStatus } from './indicator.proto.js';
 import './indicator.examples.css';

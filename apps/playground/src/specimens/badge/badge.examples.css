@@ -55,6 +55,25 @@
   gap: var(--space-8);
   padding-block: 4px;
 }
+.badge-example-state > [data-badge-example-state='hover'] {
+  background: color-mix(in oklab, var(--mark-bg), var(--mark-fg) 8%);
+}
+.badge-example-state > [data-badge-example-state='active'] {
+  background: color-mix(in oklab, var(--mark-bg), var(--mark-fg) 11%);
+}
+.badge-example-state > [data-badge-example-state='focus'] {
+  outline: 2px solid var(--focus-ring-color);
+  outline-offset: 2px;
+}
+@media (forced-colors: active) {
+  .badge-example-state > [data-badge-example-state='hover'],
+  .badge-example-state > [data-badge-example-state='active'] {
+    background: Canvas;
+  }
+  .badge-example-state > [data-badge-example-state='focus'] {
+    outline-color: Highlight;
+  }
+}
 .badge-example-detail {
   display: grid;
   gap: var(--space-8);

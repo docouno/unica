@@ -1,0 +1,137 @@
+@layer unica.components {
+  .unica-badge {
+    --badge-height: 24px;
+    --badge-padding: 9px;
+    --badge-line-height: var(--text-size-body-s-lh);
+    --badge-font-size: var(--text-size-body-s);
+    --badge-dot-size: 6px;
+    display: inline-flex;
+    flex: none;
+    align-items: baseline;
+    justify-content: center;
+    gap: 5px;
+    box-sizing: border-box;
+    min-inline-size: max(var(--badge-height), calc(var(--badge-line-height) + 4px));
+    min-block-size: var(--badge-height);
+    max-inline-size: min(100%, var(--badge-max-width, 100%));
+    padding-block: calc(2px - var(--pill-border-width));
+    padding-inline: var(--badge-padding);
+    border: var(--pill-border-width) solid var(--mark-border);
+    border-radius: var(--radius-full);
+    background: var(--mark-bg);
+    color: var(--mark-fg);
+    font-family: var(--font-family-base);
+    font-size: var(--badge-font-size);
+    line-height: var(--badge-line-height);
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+    font-kerning: none;
+    letter-spacing: normal;
+    text-align: center;
+    text-decoration: none;
+    vertical-align: baseline;
+  }
+  .unica-badge[data-unica-badge-size='s'] {
+    --badge-height: 20px;
+    --badge-padding: 7px;
+    --badge-line-height: var(--text-size-caption-l-lh);
+    --badge-font-size: var(--text-size-caption-l);
+    --badge-dot-size: 5px;
+    gap: 4px;
+  }
+  .unica-badge[data-unica-badge-size='l'] {
+    --badge-height: 28px;
+    --badge-padding: 11px;
+    --badge-line-height: var(--text-size-body-m-lh);
+    --badge-font-size: var(--text-size-body-m);
+    --badge-dot-size: 7px;
+    gap: 6px;
+  }
+  .unica-badge[data-unica-badge-numeric] {
+    padding-inline: 5px;
+  }
+  .unica-badge-dot {
+    flex: none;
+    align-self: center;
+    inline-size: var(--badge-dot-size);
+    block-size: var(--badge-dot-size);
+    border-radius: var(--radius-full);
+    color: var(--mark-signal);
+    background: currentColor;
+    box-shadow: var(--badge-dot-shadow);
+  }
+  .unica-badge-icon {
+    align-self: center;
+  }
+  .unica-badge-label {
+    display: inline-flex;
+    align-items: baseline;
+    min-inline-size: 0;
+  }
+  .unica-badge-text {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+  /* Underlined copy distinguishes inspectable metadata even before hover. */
+  .unica-badge:is(a[href], button) .unica-badge-text {
+    text-decoration-line: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 2px;
+  }
+  .unica-badge:is(a[href], button:not(:disabled)) {
+    cursor: pointer;
+  }
+  @media (hover: hover) {
+    .unica-badge:where(a[href], button:not(:disabled)):hover {
+      background: color-mix(in oklab, var(--mark-bg), var(--mark-fg) 8%);
+    }
+  }
+  .unica-badge:where(a[href], button:not(:disabled)):active {
+    background: color-mix(in oklab, var(--mark-bg), var(--mark-fg) 11%);
+  }
+  .unica-badge:is(a[href], button:not(:disabled)):focus-visible {
+    outline: 2px solid var(--focus-ring-color);
+    outline-offset: 2px;
+  }
+  .unica-badge:disabled {
+    background: var(--neutral-soft-bg);
+    border-color: var(--border-subtle);
+    color: var(--fg-disabled);
+    cursor: default;
+  }
+  .unica-badge:disabled :is(.unica-badge-dot, .unica-badge-icon) {
+    color: inherit;
+    box-shadow: none;
+  }
+  .unica-badge[hidden]:not([hidden='until-found']) {
+    display: none;
+  }
+  @media (forced-colors: active) {
+    .unica-badge {
+      forced-color-adjust: none;
+      border: 1px solid CanvasText;
+      padding-block: 1px;
+      background: Canvas;
+      color: CanvasText;
+    }
+    .unica-badge:is(a[href], button:not(:disabled)) {
+      background: Canvas;
+      color: LinkText;
+      border-color: LinkText;
+    }
+    .unica-badge:is(a[href], button:not(:disabled)):focus-visible {
+      outline-color: Highlight;
+    }
+    .unica-badge:disabled {
+      background: Canvas;
+      color: GrayText;
+      border-color: GrayText;
+    }
+    .unica-badge-dot,
+    .unica-badge-icon {
+      color: inherit;
+      box-shadow: none;
+    }
+  }
+}

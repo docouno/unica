@@ -1,8 +1,7 @@
 import type { ReactElement } from 'react';
 import { UsersIcon } from '@phosphor-icons/react';
 import { Avatar } from '../avatar/avatar.proto.js';
-import { Badge } from '../badge/badge.proto.js';
-import { Text, Title } from '@docouno/unica';
+import { Badge, Text, Title } from '@docouno/unica';
 import './hover-card.examples.css';
 
 // Shared entity content keeps scenes independent of the specimen's study controls.

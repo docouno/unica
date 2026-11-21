@@ -4,7 +4,7 @@ import type { ReactElement } from 'react';
 import { BookOpenIcon, FileTextIcon, FolderIcon, StarIcon } from '@phosphor-icons/react';
 import { defineComponent } from '../../workbench/types.js';
 import { Button } from '../../prototypes/button/button.proto.js';
-import { Badge } from '../../prototypes/badge/badge.proto.js';
+import { Badge } from '@docouno/unica';
 import { Tag } from '../../prototypes/tag/tag.proto.js';
 import { Chip, ChipGroup } from '../../prototypes/chip/chip.proto.js';
 import type { ChipOption, ChipPreviewState, ChipSize } from '../../prototypes/chip/chip.proto.js';

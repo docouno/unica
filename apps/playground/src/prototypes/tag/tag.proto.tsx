@@ -2,9 +2,7 @@ import { CloseGlyph } from '../control-glyphs.js';
 import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import type { ComponentPropsWithRef, ReactElement, Ref, RefObject } from 'react';
 import { Icon, Spinner } from '@docouno/unica';
-import type { GlyphSource } from '@docouno/unica';
-import type { DisplayStatus } from '../badge/badge.styles.js';
-import { statusStyle } from '../badge/badge.styles.js';
+import type { BadgeStatus, GlyphSource } from '@docouno/unica';
 import { Tooltip } from '../tooltip/tooltip.proto.js';
 import './tag.css';
 
@@ -12,7 +10,7 @@ export type TagSize = 's' | 'm' | 'l';
 export type TagPreviewState = 'hover' | 'active' | 'focus';
 
 export interface TagProps extends Omit<ComponentPropsWithRef<'span'>, 'onClick'> {
-  readonly status?: DisplayStatus;
+  readonly status?: BadgeStatus;
   readonly size?: TagSize;
   readonly iconLeft?: GlyphSource;
   readonly onRemove: () => void;
@@ -39,7 +37,6 @@ export function Tag({
   removeTabIndex,
   previewState,
   className = '',
-  style,
   children,
   ...props
 }: TagProps): ReactElement {
@@ -68,13 +65,13 @@ export function Tag({
   return (
     <span
       {...props}
-      className={`tag-proto ${className}`}
+      className={`tag-proto unica-mark ${className}`}
       data-size={size}
       data-status={status}
+      data-unica-mark-status={status}
       data-disabled={disabled || undefined}
       data-pending={pending || undefined}
       data-preview={previewState}
-      style={{ ...statusStyle(status), ...style }}
       onPointerEnter={(event) => {
         if (event.pointerType !== 'touch') {
           revealLabel();
@@ -170,7 +167,7 @@ export interface TagGroupItem {
   readonly label: string;
   readonly removeLabel: string;
   readonly iconLeft?: GlyphSource;
-  readonly status?: DisplayStatus;
+  readonly status?: BadgeStatus;
   readonly disabled?: boolean;
   readonly pending?: boolean;
 }

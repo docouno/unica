@@ -1455,6 +1455,50 @@
   }
 }
 
+@layer unica.components {
+  .unica-mark[data-unica-mark-status='neutral'] {
+    --mark-bg: var(--neutral-soft-bg);
+    --mark-fg: var(--neutral-soft-fg);
+    --mark-border: var(--neutral-border);
+    --mark-signal: var(--neutral-signal);
+  }
+
+  .unica-mark[data-unica-mark-status='accent'] {
+    --mark-bg: var(--accent-soft-bg);
+    --mark-fg: var(--accent-soft-fg);
+    --mark-border: var(--accent-border);
+    --mark-signal: var(--accent-signal);
+  }
+
+  .unica-mark[data-unica-mark-status='info'] {
+    --mark-bg: var(--status-info-soft-bg);
+    --mark-fg: var(--status-info-soft-fg);
+    --mark-border: var(--status-info-border);
+    --mark-signal: var(--status-info-signal);
+  }
+
+  .unica-mark[data-unica-mark-status='success'] {
+    --mark-bg: var(--status-success-soft-bg);
+    --mark-fg: var(--status-success-soft-fg);
+    --mark-border: var(--status-success-border);
+    --mark-signal: var(--status-success-signal);
+  }
+
+  .unica-mark[data-unica-mark-status='warning'] {
+    --mark-bg: var(--status-warning-soft-bg);
+    --mark-fg: var(--status-warning-soft-fg);
+    --mark-border: var(--status-warning-border);
+    --mark-signal: var(--status-warning-signal);
+  }
+
+  .unica-mark[data-unica-mark-status='danger'] {
+    --mark-bg: var(--status-danger-soft-bg);
+    --mark-fg: var(--status-danger-soft-fg);
+    --mark-border: var(--status-danger-border);
+    --mark-signal: var(--status-danger-signal);
+  }
+}
+
 @layer unica.utilities {
   :where(.unica-visually-hidden) {
     position: absolute;

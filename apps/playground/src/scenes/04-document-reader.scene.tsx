@@ -8,7 +8,7 @@ import {
   TrashIcon,
 } from '@phosphor-icons/react';
 import { AsidePanel } from '../prototypes/app-shell/app-shell.proto.js';
-import { Badge } from '../prototypes/badge/badge.proto.js';
+import { Badge } from '@docouno/unica';
 import {
   Collapsible,
   CollapsibleContent,

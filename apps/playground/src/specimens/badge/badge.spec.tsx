@@ -1,6 +1,8 @@
 import { previewProps, previewText } from '../preview-code.js';
 import { useId, useState } from 'react';
-import type { CSSProperties, ReactElement } from 'react';
+import type { ReactElement } from 'react';
+import { Badge, Text, Title } from '@docouno/unica';
+import type { BadgeProps, BadgeStatus, GlyphSource } from '@docouno/unica';
 import {
   CheckCircleIcon,
   ClockIcon,
@@ -13,11 +15,7 @@ import {
   WarningIcon,
 } from '@phosphor-icons/react';
 import { defineComponent } from '../../workbench/types.js';
-import { Badge } from '../../prototypes/badge/badge.proto.js';
-import type { BadgeStatus } from '../../prototypes/badge/badge.proto.js';
-import type { GlyphSource } from '@docouno/unica';
-import { Text, Title } from '@docouno/unica';
-import '../../prototypes/badge/badge.examples.css';
+import './badge.examples.css';
 
 const statuses: readonly {
   status: BadgeStatus;
@@ -32,7 +30,8 @@ const statuses: readonly {
   { status: 'danger', label: 'Blocked', icon: WarningCircleIcon },
 ];
 const sizes = ['s', 'm', 'l'] as const;
-const bounded = (width: string): CSSProperties => ({ '--badge-max-width': width }) as CSSProperties;
+const bounded = (width: string): BadgeProps['style'] => ({ '--badge-max-width': width });
+const glyphs = { none: undefined, InfoIcon, CheckCircleIcon } as const;
 
 function Palette(): ReactElement {
   return (
@@ -203,13 +202,10 @@ function Interaction(): ReactElement {
         {(['rest', 'hover', 'active', 'focus', 'disabled'] as const).map((state) => (
           <div className="badge-example-state" key={state}>
             <span className="badge-example-caption">{state}</span>
-            <Badge
-              as="button"
-              status="info"
-              disabled={state === 'disabled'}
-              previewState={state === 'rest' || state === 'disabled' ? undefined : state}
-            >
-              In review
+            <Badge asChild status="info" data-badge-example-state={state}>
+              <button type="button" disabled={state === 'disabled'}>
+                In review
+              </button>
             </Badge>
           </div>
         ))}
@@ -222,19 +218,21 @@ function Interaction(): ReactElement {
         <Badge status="success" dot>
           Verified
         </Badge>
-        <Badge as="a">No destination</Badge>
-        <Badge as="a" href={`#${id}`} status="neutral">
-          v2.8
+        <Badge asChild>
+          <a>No destination</a>
         </Badge>
-        <Badge
-          as="button"
-          status="info"
-          iconLeft={InfoIcon}
-          aria-expanded={details}
-          aria-controls={`${id}-details`}
-          onClick={() => setDetails(!details)}
-        >
-          In review
+        <Badge asChild>
+          <a href={`#${id}`}>v2.8</a>
+        </Badge>
+        <Badge asChild status="info" iconLeft={InfoIcon}>
+          <button
+            type="button"
+            aria-expanded={details}
+            aria-controls={`${id}-details`}
+            onClick={() => setDetails(!details)}
+          >
+            In review
+          </button>
         </Badge>
       </div>
       <div id={`${id}-details`} hidden={!details} className="badge-example-detail">
@@ -310,7 +308,7 @@ export default defineComponent({
   id: 'badge',
   title: 'Badge',
   category: 'Feedback & Status',
-  status: 'Proto',
+  status: 'UI',
   summary: 'Quiet metadata, clear status. One marker, six semantic tones, three compact sizes.',
   componentName: 'Badge',
   props: {
@@ -341,20 +339,142 @@ export default defineComponent({
       default: false,
       description: 'Add a leading status indicator.',
     },
+    iconLeft: {
+      kind: 'slot',
+      group: 'Content',
+      default: 'none',
+      description: 'A decorative GlyphSource in the leading slot.',
+      choices: [
+        { value: 'none', label: 'None' },
+        { value: 'InfoIcon', label: 'Info', code: 'InfoIcon' },
+        { value: 'CheckCircleIcon', label: 'Check', code: 'CheckCircleIcon' },
+      ],
+    },
     children: {
       kind: 'string',
       group: 'Content',
       default: 'Reviewed',
+      examples: ['Reviewed', '0', '99+', ''],
       description: 'The visible badge label or count.',
     },
+    element: {
+      kind: 'enum',
+      group: 'Native element',
+      demo: true,
+      default: 'span',
+      description: 'Compose Badge with a native link or button using asChild.',
+      choices: [
+        { value: 'span', label: 'Passive' },
+        { value: 'a', label: 'Link' },
+        { value: 'button', label: 'Button' },
+      ],
+    },
+    href: {
+      kind: 'enum',
+      group: 'Native element',
+      demo: true,
+      default: 'none',
+      description: 'Add a fragment destination to the anchor.',
+      choices: [
+        { value: 'none', label: 'No destination' },
+        { value: 'details', label: 'Details' },
+      ],
+    },
+    disabled: {
+      kind: 'boolean',
+      group: 'Native element',
+      demo: true,
+      default: false,
+      description: 'Disable the native button.',
+    },
+    onClick: {
+      kind: 'action',
+      group: 'Native element',
+      demo: true,
+      code: 'handleClick',
+      description: 'Record activation of the native link or button.',
+    },
   },
-  render: ({ ctx, values: { children, ...props } }) => (
-    <Badge {...ctx.subject} {...props}>
-      {children}
-    </Badge>
-  ),
-  code: ({ children, ...props }) =>
-    `<Badge${previewProps(props, { status: 'neutral', size: 'm', dot: false })}>${previewText(children)}</Badge>`,
+  constraints: [
+    ...(['InfoIcon', 'CheckCircleIcon'] as const).map((iconLeft) => ({
+      kind: 'precedence' as const,
+      when: { iconLeft },
+      affects: [{ key: 'dot', value: true }],
+      reason: 'A leading glyph takes precedence over the dot.',
+    })),
+    ...(['span', 'button'] as const).map((element) => ({
+      kind: 'ignored' as const,
+      when: { element },
+      affects: [{ key: 'href', value: 'details' }],
+      reason: 'A destination only applies to an anchor.',
+    })),
+    ...(['span', 'a'] as const).map((element) => ({
+      kind: 'ignored' as const,
+      when: { element },
+      affects: [{ key: 'disabled', value: true }],
+      reason: 'Only the button supports native disabled state.',
+    })),
+    {
+      kind: 'ignored',
+      when: { children: '' },
+      affects: ['element', 'dot', 'iconLeft'],
+      reason: 'An empty label renders no badge.',
+    },
+  ],
+  render: ({ ctx, values: { element, href, disabled, children, iconLeft, ...props } }) => {
+    const frame = { ...ctx.subject, ...props, iconLeft: glyphs[iconLeft] };
+    const onClick = (): void => ctx.action('onClick')(children);
+    if (element === 'button') {
+      return (
+        <Badge {...frame} asChild>
+          <button type="button" disabled={disabled} onClick={onClick}>
+            {children}
+          </button>
+        </Badge>
+      );
+    }
+    if (element === 'a') {
+      const hasDestination = href === 'details';
+      const id = `${ctx.id}-destination`;
+      return (
+        <div className="badge-example-row">
+          <Badge {...frame} asChild>
+            <a
+              href={hasDestination ? `#${id}` : undefined}
+              onClick={hasDestination ? onClick : undefined}
+            >
+              {children}
+            </a>
+          </Badge>
+          {hasDestination && children.trim() && (
+            <Text
+              as="span"
+              size="caption-l"
+              id={id}
+              tabIndex={-1}
+              className="badge-example-destination"
+            >
+              Metadata details
+            </Text>
+          )}
+        </div>
+      );
+    }
+    return <Badge {...frame}>{children}</Badge>;
+  },
+  code: ({ element, href, disabled, children, iconLeft, ...props }) => {
+    const attributes = previewProps(props, { status: 'neutral', size: 'm', dot: false });
+    const glyph = iconLeft === 'none' ? '' : ` iconLeft={${iconLeft}}`;
+    const label = previewText(children);
+    if (element === 'span') {
+      return `<Badge${attributes}${glyph}>${label}</Badge>`;
+    }
+    const native =
+      element === 'button'
+        ? `<button type="button"${disabled ? ' disabled' : ''} onClick={handleClick}>${label}</button>`
+        : `<a${href === 'details' ? ' href="#badge-destination" onClick={handleClick}' : ''}>${label}</a>`;
+    return `<Badge asChild${attributes}${glyph}>\n  ${native}\n</Badge>`;
+  },
   matrixViews: [
     {
       id: 'palette',
@@ -391,6 +511,13 @@ export default defineComponent({
       title: 'Changing status',
       kind: 'behavior',
       render: () => <Changes />,
+    },
+    {
+      id: 'surfaces',
+      title: 'Base and overlay',
+      kind: 'surface',
+      compareSurfaces: true,
+      render: Palette,
     },
   ],
   usage: [
