@@ -1,19 +1,30 @@
 import { createElement } from 'react';
-import type { ComponentPropsWithRef, ReactElement, ReactNode } from 'react';
+import type { AriaRole, CSSProperties, ReactElement, ReactNode, Ref } from 'react';
 
-type SvgProps = Omit<ComponentPropsWithRef<'svg'>, 'color'> & { readonly color?: string };
-
-type SvgDataProps = {
+export type GlyphSvgProps = {
+  readonly ref?: Ref<SVGSVGElement>;
+  readonly id?: string;
+  readonly className?: string;
+  readonly style?: CSSProperties;
+  readonly width?: string | number;
+  readonly height?: string | number;
+  readonly color?: string;
+  readonly focusable?: 'false';
+  readonly role?: AriaRole;
+  readonly 'aria-hidden'?: boolean | 'true' | 'false';
+  readonly 'aria-label'?: string;
+  readonly 'aria-labelledby'?: string;
+  readonly children?: ReactNode;
   readonly [data: `data-${string}`]: string | number | boolean | undefined;
 };
 
-export type GlyphComponent = (props: SvgProps) => ReactNode;
+export type GlyphComponent = (props: GlyphSvgProps) => ReactNode | Promise<ReactNode>;
 
 export type BuiltinIconAdapterName = 'native' | 'phosphor';
 
 export interface IconAdapterRenderContext {
   readonly inputProps: Readonly<Record<string, unknown>>;
-  readonly svgProps: Readonly<SvgProps> & SvgDataProps;
+  readonly svgProps: GlyphSvgProps;
   readonly usage: 'standalone' | 'slot';
 }
 
@@ -22,61 +33,109 @@ export type IconAdapter = (
   context: IconAdapterRenderContext,
 ) => ReactElement | null;
 
-const glyphDefinition: unique symbol = Symbol.for('@docouno/unica/GlyphDefinition');
+const glyphDefinition = /* @__PURE__ */ Symbol.for('@docouno/unica/GlyphDefinition');
 
 export interface GlyphDefinition<G extends GlyphComponent = GlyphComponent> {
-  readonly [glyphDefinition]: true;
+  readonly '~unica.glyph': true;
   readonly source: G;
   readonly adapter: BuiltinIconAdapterName | IconAdapter;
 }
 
 export type GlyphSource = GlyphComponent | GlyphDefinition;
 
+function assertCallableGlyph(source: unknown, origin: string): void {
+  if (typeof source !== 'function' && (typeof source !== 'object' || source === null)) {
+    throw new TypeError(`${origin} requires a callable React SVG component.`);
+  }
+}
+
+const nativeAdapter: IconAdapter = (source, { inputProps, svgProps }) => {
+  for (const key in inputProps) {
+    if (Object.hasOwn(inputProps, key)) {
+      return createElement(source, { ...inputProps, ...svgProps });
+    }
+  }
+  return createElement(source, svgProps);
+};
+
+const phosphorAdapter: IconAdapter = (source, { inputProps, svgProps, usage }) => {
+  const props = {
+    ...inputProps,
+    role: undefined,
+    tabIndex: undefined,
+    'aria-hidden': undefined,
+    'aria-label': undefined,
+    'aria-labelledby': undefined,
+    style: undefined,
+    'data-unica-icon-size': undefined,
+    'data-unica-icon-color': undefined,
+    'data-unica-icon-directional': undefined,
+    ...svgProps,
+    size: svgProps.width,
+    weight: inputProps.weight ?? (usage === 'standalone' ? 'regular' : undefined),
+    color: 'currentColor',
+    fill: 'currentColor',
+    alt: undefined,
+    mirrored: false,
+    // Phosphor gives its context an OR fallback for mirrored. Override the
+    // resulting attribute and let CSS handle both kinds of reflection.
+    transform: undefined,
+    'data-unica-icon-mirrored': inputProps.mirrored === true ? '' : undefined,
+  };
+  return createElement(source, props as GlyphSvgProps);
+};
+
+function resolveAdapter(adapter: BuiltinIconAdapterName | IconAdapter): IconAdapter {
+  if (typeof adapter === 'function') {
+    return adapter;
+  }
+  if (adapter === 'phosphor') {
+    return phosphorAdapter;
+  }
+  if (adapter === 'native') {
+    return nativeAdapter;
+  }
+  throw new TypeError(`Unknown Icon adapter: ${String(adapter)}`);
+}
+
+/* @__NO_SIDE_EFFECTS__ */
 export function defineGlyph<G extends GlyphComponent>(
   source: G,
   adapter: BuiltinIconAdapterName | IconAdapter = 'native',
 ): GlyphDefinition<G> {
-  return Object.freeze<GlyphDefinition<G>>({ [glyphDefinition]: true, source, adapter });
+  assertCallableGlyph(source, 'defineGlyph');
+  resolveAdapter(adapter);
+  return Object.freeze({
+    [glyphDefinition]: true,
+    '~unica.glyph': true as const,
+    source,
+    adapter,
+  }) as GlyphDefinition<G>;
 }
 
-function isGlyphDefinition(glyph: GlyphSource): glyph is GlyphDefinition {
-  return glyphDefinition in glyph && glyph[glyphDefinition] === true;
+export function isGlyphDefinition(glyph: unknown): glyph is GlyphDefinition {
+  return (
+    typeof glyph === 'object' &&
+    glyph !== null &&
+    Object.hasOwn(glyph, glyphDefinition) &&
+    (glyph as Record<symbol, unknown>)[glyphDefinition] === true
+  );
 }
-
-const builtinAdapters: Readonly<Record<BuiltinIconAdapterName, IconAdapter>> = {
-  native: (source, { inputProps, svgProps }) =>
-    createElement(source, { ...inputProps, ...svgProps }),
-  phosphor: (source, { inputProps, svgProps, usage }) => {
-    const props = {
-      ...inputProps,
-      ...svgProps,
-      size: svgProps.width,
-      weight: inputProps.weight ?? (usage === 'standalone' ? 'regular' : undefined),
-      color: 'currentColor',
-      fill: 'currentColor',
-      style:
-        svgProps.style?.fill === undefined
-          ? svgProps.style
-          : { ...svgProps.style, fill: 'currentColor' },
-      alt: undefined,
-      mirrored: false,
-      // Phosphor gives its context an OR fallback for mirrored. Override the
-      // resulting attribute and let CSS handle both kinds of reflection.
-      transform: undefined,
-      'data-unica-icon-mirrored': inputProps.mirrored === true ? '' : undefined,
-    };
-    return createElement(source, props);
-  },
-};
 
 export function renderGlyph(
   glyph: GlyphSource,
   provider: BuiltinIconAdapterName | IconAdapter,
   context: IconAdapterRenderContext,
 ): ReactElement | null {
-  const [source, adapter] = isGlyphDefinition(glyph)
-    ? [glyph.source, glyph.adapter]
-    : [glyph, provider];
-  const render = typeof adapter === 'string' ? builtinAdapters[adapter] : adapter;
-  return render(source, context);
+  let source: GlyphComponent;
+  let adapter: BuiltinIconAdapterName | IconAdapter;
+  if (isGlyphDefinition(glyph)) {
+    source = glyph.source;
+    adapter = glyph.adapter;
+  } else {
+    assertCallableGlyph(glyph, 'Icon');
+    source = glyph;
+    adapter = provider;
+  }
+  return resolveAdapter(adapter)(source, context);
 }

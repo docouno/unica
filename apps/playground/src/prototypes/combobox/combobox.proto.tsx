@@ -1,6 +1,10 @@
-import { BusyGlyph, LockGlyph, SearchGlyph, fieldStatusGlyphs } from '../control-glyphs.js';
-import { CaretDownIcon } from '@phosphor-icons/react';
-import type { Icon as PhosphorIcon } from '@phosphor-icons/react';
+import {
+  BusyGlyph,
+  CaretDownGlyph,
+  LockGlyph,
+  SearchGlyph,
+  fieldStatusGlyphs,
+} from '../control-glyphs.js';
 import { useId, useLayoutEffect, useRef, useState } from 'react';
 import type { KeyboardEvent, MouseEvent, ReactElement, ReactNode, RefObject } from 'react';
 import { Icon } from '@docouno/unica';
@@ -261,7 +265,9 @@ function SuggestionRows({
         key={option.value}
       >
         {option.icon && (
-          <Icon usage="slot" icon={option.icon} size="s" className="choice-option-icon-proto" />
+          <span className="choice-option-icon-proto" aria-hidden="true">
+            <Icon usage="slot" icon={option.icon} />
+          </span>
         )}
         <span className="choice-option-copy-proto">
           <span dir="auto">{option.label}</span>
@@ -308,17 +314,17 @@ function SuggestionRows({
 function SuggestionMessage({
   title,
   detail,
-  icon: Glyph,
+  icon,
   warning,
 }: {
   readonly title: ReactNode;
   readonly detail?: ReactNode;
-  readonly icon: PhosphorIcon;
+  readonly icon: GlyphSource;
   readonly warning?: boolean;
 }): ReactElement {
   return (
     <div className="suggestion-notice-proto" role="status" data-warning={warning || undefined}>
-      <Glyph size="1em" aria-hidden="true" />
+      <Icon usage="slot" icon={icon} />
       <div className="suggestion-notice-copy-proto">
         <strong>{title}</strong>
         {detail && <span>{detail}</span>}
@@ -486,7 +492,7 @@ function SuggestionField({
   if (pending) {
     notice = (
       <SuggestionMessage
-        icon={BusyGlyph.source}
+        icon={BusyGlyph}
         title="Searching…"
         detail="Keep typing to refine your search."
       />
@@ -494,7 +500,7 @@ function SuggestionField({
   } else if (searchState === 'error') {
     notice = (
       <SuggestionMessage
-        icon={fieldStatusGlyphs.danger.source}
+        icon={fieldStatusGlyphs.danger}
         warning
         title="Couldn’t load results"
         detail={
@@ -508,7 +514,7 @@ function SuggestionField({
   } else if (belowMinimum) {
     notice = (
       <SuggestionMessage
-        icon={SearchGlyph.source}
+        icon={SearchGlyph}
         title="Type to search"
         detail={listMessage ?? `Enter at least ${minimumQueryLength} characters.`}
       />
@@ -516,7 +522,7 @@ function SuggestionField({
   } else if (results.length === 0) {
     notice = query.trim() ? (
       <SuggestionMessage
-        icon={SearchGlyph.source}
+        icon={SearchGlyph}
         title={catalog ? 'No matches' : 'No matching suggestions'}
         detail={
           listMessage ??
@@ -527,7 +533,7 @@ function SuggestionField({
       />
     ) : (
       <SuggestionMessage
-        icon={SearchGlyph.source}
+        icon={SearchGlyph}
         title={catalog ? 'No options available' : 'No suggestions available'}
         detail={listMessage}
       />
@@ -535,7 +541,7 @@ function SuggestionField({
   } else if (!enabled.length) {
     notice = (
       <SuggestionMessage
-        icon={LockGlyph.source}
+        icon={LockGlyph}
         title="These results are unavailable"
         detail={listMessage}
       />
@@ -623,6 +629,7 @@ function SuggestionField({
                   usage="slot"
                   icon={BusyGlyph}
                   size={size}
+                  color="muted"
                   className="suggestion-spinner-proto control-spinner-proto"
                 />
               )}
@@ -662,7 +669,7 @@ function SuggestionField({
                       }
                     }}
                   >
-                    <CaretDownIcon size="1em" aria-hidden="true" />
+                    <Icon usage="slot" icon={CaretDownGlyph} />
                   </button>
                 )
               )}

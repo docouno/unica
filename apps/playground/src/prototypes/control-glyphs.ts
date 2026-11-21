@@ -2,6 +2,7 @@ import { defineGlyph } from '@docouno/unica';
 import {
   ArrowLeftIcon,
   BellIcon,
+  BooksIcon,
   CaretDownIcon,
   CaretLeftIcon,
   CaretRightIcon,
@@ -9,24 +10,23 @@ import {
   CheckCircleIcon,
   CheckIcon,
   CircleNotchIcon,
+  FileIcon,
+  FileTextIcon,
+  FolderIcon,
+  GitBranchIcon,
   InfoIcon,
   LockSimpleIcon,
   MagnifyingGlassIcon,
   MinusIcon,
   PlusIcon,
-  WarningCircleIcon,
-  WarningIcon,
-  XCircleIcon,
-  BooksIcon,
-  FileIcon,
-  FileTextIcon,
-  FolderIcon,
-  GitBranchIcon,
   SidebarSimpleIcon,
   SlidersHorizontalIcon,
   TrashIcon,
   UserCircleIcon,
   UserIcon,
+  WarningCircleIcon,
+  WarningIcon,
+  XCircleIcon,
   XIcon,
 } from '@phosphor-icons/react/ssr';
 
@@ -45,25 +45,15 @@ export const MinusGlyph = defineGlyph(MinusIcon, 'phosphor');
 export const PlusGlyph = defineGlyph(PlusIcon, 'phosphor');
 export const NotificationGlyph = defineGlyph(BellIcon, 'phosphor');
 export const ErrorGlyph = defineGlyph(XCircleIcon, 'phosphor');
-
 export const BooksGlyph = defineGlyph(BooksIcon, 'phosphor');
-
 export const FileGlyph = defineGlyph(FileIcon, 'phosphor');
-
 export const FileTextGlyph = defineGlyph(FileTextIcon, 'phosphor');
-
 export const FolderGlyph = defineGlyph(FolderIcon, 'phosphor');
-
 export const BranchGlyph = defineGlyph(GitBranchIcon, 'phosphor');
-
 export const SidebarGlyph = defineGlyph(SidebarSimpleIcon, 'phosphor');
-
 export const SlidersGlyph = defineGlyph(SlidersHorizontalIcon, 'phosphor');
-
 export const TrashGlyph = defineGlyph(TrashIcon, 'phosphor');
-
 export const AccountGlyph = defineGlyph(UserCircleIcon, 'phosphor');
-
 export const UserGlyph = defineGlyph(UserIcon, 'phosphor');
 
 export const fieldStatusGlyphs = {

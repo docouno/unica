@@ -29,18 +29,15 @@ export default {
     page,
     mount,
   }) => {
-    await mount('icon-folio');
-    for (const selector of [
-      '.folio-connector-icon > svg',
-      '.folio-connector-sync svg',
-      '.list-leading-proto svg',
-    ]) {
+    await mount('icon-folio', { theme: 'pixel-light' });
+    for (const selector of ['.folio-connector-icon > svg', '.folio-connector-sync svg']) {
       const glyph = page.locator(selector).first();
       await size(
         glyph,
         await glyph.evaluate((svg) => parseFloat(getComputedStyle(svg.parentElement).fontSize)),
       );
     }
+    await size(page.locator('.list-leading-proto svg').first(), 16);
   },
 
   'AppShell disclosure points down when open and toward inline end when closed': async ({
@@ -74,6 +71,9 @@ export default {
         page.getByTestId('inline'),
         await text.evaluate((node) => parseFloat(getComputedStyle(node).fontSize)),
       );
+      const escape = page.getByTestId('styled-escape');
+      await size(escape, 24);
+      assert.equal(await escape.evaluate((node) => getComputedStyle(node).fill), 'rgb(18, 92, 60)');
       const external = page.getByTestId('external');
       await size(
         external.locator('svg'),
@@ -86,6 +86,9 @@ export default {
       [0, 6, 24, 12].forEach((expected, index) =>
         assert.ok(Math.abs(drawing[index] - expected) < 0.1),
       );
+      const listboxes = page.getByTestId('listbox-sizes').locator('.choice-option-icon-proto svg');
+      await size(listboxes.nth(0), 16);
+      await size(listboxes.nth(1), 20);
       const tabs = page.getByRole('tablist');
       const label = (text) => tabs.locator('.tab-label-proto').getByText(text, { exact: true });
       const withIcon = await getBox(label('With icon'));
@@ -155,8 +158,16 @@ export default {
         assert.ok((await xScale('physical')) < 0);
         assert.ok((await xScale('check')) > 0);
         assert.ok((await xScale('nested-ltr')) > 0);
-        assert.ok((await xScale('auto-ltr')) > 0);
-        assert.ok((await xScale('auto-rtl')) < 0);
+        if (direction === 'ltr') {
+          assert.equal(
+            await page.getByTestId('logical').evaluate((svg) => getComputedStyle(svg).scale),
+            'none',
+          );
+        }
+        assert.equal(
+          await page.getByTestId('nested-ltr').evaluate((svg) => getComputedStyle(svg).scale),
+          'none',
+        );
       }
     },
 
@@ -177,6 +188,16 @@ export default {
         const inputColor = await input.evaluate((node) => getComputedStyle(node).color);
         const leading = page.getByTestId('measurements').locator('.input-leading-glyph');
         assert.equal(await leading.evaluate((node) => getComputedStyle(node).fill), inputColor);
+
+        const semanticHost = page.getByTestId('semantic-host');
+        const semanticDanger = page.getByTestId('semantic-danger');
+        const hostColor = await semanticHost.evaluate((node) => getComputedStyle(node).color);
+        const dangerFill = await semanticDanger.evaluate((node) => getComputedStyle(node).fill);
+        if (forcedColors === 'active') {
+          assert.equal(dangerFill, hostColor);
+        } else {
+          assert.notEqual(dangerFill, hostColor);
+        }
       }
     },
 
@@ -211,7 +232,7 @@ export default {
     assert.deepEqual(await checkDrawing(), [true, false, 'rgb(20, 100, 45)']);
   },
 
-  'Application adapters swap Button icons and preserve Modal, Drawer and Switch chrome': async ({
+  'Application adapters swap Button icons and preserve Modal, Drawer and Switch geometry': async ({
     page,
     mount,
   }) => {
@@ -238,9 +259,9 @@ export default {
     for (const [index, dimension] of [14, 16, 20].entries()) {
       const glyph = page.locator('.switch-thumb > svg').nth(index);
       await size(glyph, dimension);
-      assert.equal(await glyph.getAttribute('data-replacement'), null);
     }
   },
+
   'Migrated control chrome keeps its size, ink and RTL submenu placement': async ({
     page,
     mount,
@@ -281,6 +302,7 @@ export default {
     );
     const selectStatus = chrome.locator('svg.select-status-proto');
     await size(selectStatus, 20);
+    assert.equal(await selectStatus.getAttribute('data-replacement'), null);
     const status = await selectStatus.evaluate((node) => {
       const own = getComputedStyle(node);
       return [own.fill, own.color, getComputedStyle(node.parentElement).color];

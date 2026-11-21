@@ -1,11 +1,12 @@
-import { act, cleanup, render, screen } from '@testing-library/react';
-import { createElement, createRef, useId } from 'react';
+import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { createElement, createRef, cloneElement, memo, useId, useState } from 'react';
 import type { ComponentPropsWithRef } from 'react';
 import { hydrateRoot } from 'react-dom/client';
 import { renderToString } from 'react-dom/server';
 import { afterEach, expect, it, vi } from 'vitest';
 import { Icon, IconProvider, UnicaProvider, defineGlyph } from '../src/index.js';
-import type { IconAdapter, IconProps } from '../src/index.js';
+import type { GlyphSvgProps, IconAdapter, IconProps } from '../src/index.js';
+import { defineGlyph as serverDefineGlyph } from '../src/server.js';
 
 type SvgProps = ComponentPropsWithRef<'svg'>;
 
@@ -61,6 +62,7 @@ it('resolves the nearest adapter and keeps an immutable definition on its own ad
   expect(fixedAdapter).toHaveBeenCalledTimes(1);
   expect(Object.isFrozen(fixed)).toBe(true);
   expect(fixed.source).toBe(Mark);
+  expect(serverDefineGlyph).toBe(defineGlyph);
   expect(ref.current).toBe(screen.getByTestId('second'));
   expect(screen.getByTestId('fixed').getAttribute('data-adapter')).toBe('fixed');
   expect(screen.getByTestId('native').getAttribute('data-adapter')).toBeNull();
@@ -79,9 +81,23 @@ it('omits undefined vendor options when the source checks their presence', () =>
   );
 });
 
-it('passes optional source props that share a prefix with event handlers', () => {
-  function Project({ oneTone, ...svg }: SvgProps & { oneTone?: boolean }) {
-    return <svg {...svg} data-tone={oneTone ? 'single' : 'multiple'} />;
+it('passes optional source props including on, oneTone, stroke, and strokeWidth', () => {
+  function Project({
+    on,
+    oneTone,
+    stroke,
+    strokeWidth,
+    ...svg
+  }: GlyphSvgProps & { on?: boolean; oneTone?: boolean; stroke?: number; strokeWidth?: number }) {
+    return (
+      <svg
+        {...svg}
+        data-on={on ? 'yes' : 'no'}
+        data-tone={oneTone ? 'single' : 'multiple'}
+        data-stroke={stroke}
+        data-stroke-width={strokeWidth}
+      />
+    );
   }
   const project = defineGlyph(Project);
   const inspect = vi.fn<IconAdapter>((source, { inputProps, svgProps }) =>
@@ -89,49 +105,140 @@ it('passes optional source props that share a prefix with event handlers', () =>
   );
   render(
     <>
-      <Icon icon={project} oneTone data-testid="native-extra" />
+      <Icon icon={project} on oneTone stroke={1.5} strokeWidth={2} data-testid="native-extra" />
       <IconProvider adapter={inspect}>
-        <Icon icon={Project} oneTone data-testid="adapted-extra" />
+        <Icon icon={Project} on oneTone stroke={1.5} strokeWidth={2} data-testid="adapted-extra" />
       </IconProvider>
     </>,
   );
   for (const id of ['native-extra', 'adapted-extra']) {
-    expect(screen.getByTestId(id).getAttribute('data-tone')).toBe('single');
+    const svg = screen.getByTestId(id);
+    expect(svg.getAttribute('data-on')).toBe('yes');
+    expect(svg.getAttribute('data-tone')).toBe('single');
+    expect(svg.getAttribute('data-stroke')).toBe('1.5');
+    expect(svg.getAttribute('data-stroke-width')).toBe('2');
   }
-  expect(inspect.mock.calls[0]?.[1].inputProps).toEqual({ oneTone: true });
+  expect(inspect.mock.calls[0]?.[1].inputProps).toEqual({
+    on: true,
+    oneTone: true,
+    stroke: 1.5,
+    strokeWidth: 2,
+  });
 });
 
-it('honors standalone defaults, explicit dimensions and owner slot sizing independently', () => {
+it('honors standalone defaults, fallback dimensions, color, directional, className, and slot sizing', () => {
   render(
     <UnicaProvider theme={{ preset: 'soft-dark', defaults: { Icon: { size: 'm' } } }}>
       <Icon icon={fixedMark} data-testid="theme" />
       <UnicaProvider overrides={{ Icon: { size: 's' } }}>
         <Icon icon={fixedMark} data-testid="override" />
+        <UnicaProvider overrides={{ Icon: { size: undefined } }}>
+          <Icon icon={fixedMark} data-testid="inherited-override" />
+        </UnicaProvider>
         <UnicaProvider overrides={{ Icon: { size: 'l' } }}>
-          <Icon icon={fixedMark} data-testid="nearest" />
+          <Icon
+            icon={fixedMark}
+            id="named-id"
+            className="custom-icon"
+            color="danger"
+            directional
+            data-testid="nearest"
+          />
           <Icon icon={fixedMark} data-testid="instance" size="inherit" />
           <Icon icon={fixedMark} data-testid="slot" usage="slot" />
           <Icon icon={fixedMark} data-testid="sized-slot" usage="slot" size="m" />
         </UnicaProvider>
       </UnicaProvider>
+      <UnicaProvider theme={{ preset: 'pixel-dark' }}>
+        <Icon icon={fixedMark} data-testid="replaced-theme" />
+      </UnicaProvider>
     </UnicaProvider>,
   );
+
   expect(
-    ['theme', 'override', 'nearest', 'instance', 'slot', 'sized-slot'].map((id) =>
-      screen.getByTestId(id).getAttribute('width'),
-    ),
+    [
+      'theme',
+      'override',
+      'inherited-override',
+      'nearest',
+      'instance',
+      'slot',
+      'sized-slot',
+      'replaced-theme',
+    ].map((id) => {
+      const node = screen.getByTestId(id);
+      return [
+        node.getAttribute('data-unica-icon-size'),
+        node.getAttribute('width'),
+        node.getAttribute('height'),
+      ];
+    }),
   ).toEqual([
-    'var(--size-m-icon)',
-    'var(--size-s-icon)',
-    'var(--size-l-icon)',
-    '1em',
-    '1em',
-    'var(--size-m-icon)',
+    ['m', '16', '16'],
+    ['s', '14', '14'],
+    ['s', '14', '14'],
+    ['l', '20', '20'],
+    [null, '1em', '1em'],
+    [null, '1em', '1em'],
+    ['m', '16', '16'],
+    [null, '1em', '1em'],
   ]);
+
+  const nearest = screen.getByTestId('nearest');
+  expect(nearest.id).toBe('named-id');
+  expect(nearest.getAttribute('class')).toBe('unica-icon custom-icon');
+  expect(nearest.getAttribute('data-unica-icon-color')).toBe('danger');
+  expect(nearest.hasAttribute('data-unica-icon-directional')).toBe(true);
+  expect(nearest.hasAttribute('color')).toBe(false);
+  expect(screen.getByTestId('theme').hasAttribute('data-unica-icon-color')).toBe(false);
+  expect(screen.getByTestId('theme').hasAttribute('data-unica-icon-directional')).toBe(false);
 });
 
-it('sanitizes naming and focus attributes before handing props to a source', () => {
+it('handles built-in phosphor adapter defaults, mirrored, and style pass-through', () => {
+  const received: Record<string, unknown>[] = [];
+  function FakePhosphor(props: SvgProps & { weight?: string; mirrored?: boolean; size?: string }) {
+    received.push(props as Record<string, unknown>);
+    return <svg data-testid={(props as Record<string, string>)['data-testid']} />;
+  }
+  render(
+    <>
+      <Icon icon={FakePhosphor} data-testid="standalone" />
+      <Icon icon={FakePhosphor} usage="slot" data-testid="slot" />
+      <Icon
+        icon={FakePhosphor}
+        weight="bold"
+        mirrored
+        style={{ color: 'rgb(10, 20, 30)' }}
+        data-testid="styled"
+      />
+    </>,
+  );
+
+  expect(received[0]).toMatchObject({
+    weight: 'regular',
+    color: 'currentColor',
+    fill: 'currentColor',
+    mirrored: false,
+    transform: undefined,
+    alt: undefined,
+    style: undefined,
+    'data-unica-icon-mirrored': undefined,
+  });
+  expect(received[1]?.weight).toBeUndefined();
+  expect(received[2]).toMatchObject({
+    weight: 'bold',
+    mirrored: false,
+    'data-unica-icon-mirrored': '',
+    style: { color: 'rgb(10, 20, 30)' },
+  });
+});
+
+it('sanitizes naming, focus, prototype keys, and competing attributes before handing props to a source', () => {
   const click = vi.fn();
+  const parsedProto = JSON.parse('{"__proto__":{"weight":"fill","mirrored":true}}') as Record<
+    string,
+    unknown
+  >;
   const untyped = {
     icon: fixedMark,
     usage: 'slot',
@@ -143,16 +250,25 @@ it('sanitizes naming and focus attributes before handing props to a source', () 
     tabIndex: 0,
     tabindex: 0,
     alt: 'Vendor name',
+    title: 'Leaked tooltip',
+    class: 'hijack',
+    dir: 'rtl',
+    innerText: 'leaked',
+    'data-UNICA-icon-size': 'l',
     width: 24,
     viewBox: '1 2 3 4',
     onClick: click,
     children: <title>Slot name</title>,
+    ...parsedProto,
   } as unknown as IconProps<typeof fixedMark>;
+  const status = 'ready';
   const { container } = render(
     <>
       <span id="name">Linked name</span>
       <Icon icon={fixedMark} data-testid="title">
-        <title> Project mark </title>
+        <title lang="en" dir="rtl">
+          <> Project {status} </>
+        </title>
       </Icon>
       <Icon icon={fixedMark} data-testid="blank" aria-label="  " aria-labelledby="  ">
         <title>{'  '}</title>
@@ -169,7 +285,10 @@ it('sanitizes naming and focus attributes before handing props to a source', () 
       </Icon>
     </>,
   );
-  expect(screen.getByRole('img', { name: 'Project mark' })).toBe(screen.getByTestId('title'));
+  const titleSvg = screen.getByRole('img', { name: 'Project ready' });
+  expect(titleSvg).toBe(screen.getByTestId('title'));
+  expect(titleSvg.querySelector('title')?.getAttribute('lang')).toBe('en');
+  expect(titleSvg.querySelector('title')?.getAttribute('dir')).toBe('rtl');
   expect(screen.getByRole('img', { name: 'Linked name' }).getAttribute('aria-labelledby')).toBe(
     'name',
   );
@@ -177,8 +296,19 @@ it('sanitizes naming and focus attributes before handing props to a source', () 
     const svg = screen.getByTestId(id);
     expect(svg.getAttribute('aria-hidden')).toBe('true');
     expect(svg.getAttribute('focusable')).toBe('false');
+    expect(svg.getAttribute('class')).toBe('unica-icon');
     expect(svg.getAttribute('viewBox')).toBe('0 0 32 16');
-    for (const key of ['aria-label', 'aria-labelledby', 'role', 'alt', 'tabindex']) {
+    for (const key of [
+      'aria-label',
+      'aria-labelledby',
+      'role',
+      'alt',
+      'title',
+      'dir',
+      'tabindex',
+      'data-unica-icon-size',
+      'data-unica-icon-mirrored',
+    ]) {
       expect(svg.hasAttribute(key)).toBe(false);
     }
     expect(svg.querySelector('title, desc')).toBeNull();
@@ -186,6 +316,106 @@ it('sanitizes naming and focus attributes before handing props to a source', () 
   screen.getByTestId('slot').dispatchEvent(new MouseEvent('click', { bubbles: true }));
   expect(click).not.toHaveBeenCalled();
   expect(container.querySelectorAll('svg')).toHaveLength(6);
+
+  const ssrSlot = renderToString(<Icon {...untyped} />);
+  expect(ssrSlot).not.toContain('class="hijack"');
+  expect(ssrSlot).not.toContain('data-UNICA-icon-size');
+  expect(ssrSlot).not.toContain('innerText');
+  expect(ssrSlot).not.toContain('title="Leaked tooltip"');
+  expect(ssrSlot).not.toContain('dir="rtl"');
+  expect(ssrSlot).toContain('class="unica-icon"');
+});
+
+it('rejects prototype names, unknown adapters, and non-callable glyphs loudly', () => {
+  for (const badAdapter of ['toString', 'constructor', 'valueOf', '__proto__', 'lucide']) {
+    expect(() => defineGlyph(Mark, badAdapter as never)).toThrow(TypeError);
+    expect(() =>
+      renderToString(
+        <IconProvider adapter={badAdapter as never}>
+          <Icon icon={Mark} />
+        </IconProvider>,
+      ),
+    ).toThrow(TypeError);
+  }
+  for (const badSource of [null, undefined, 'Arrow', 42]) {
+    expect(() => defineGlyph(badSource as never)).toThrow(TypeError);
+    expect(() => renderToString(<Icon icon={badSource as never} />)).toThrow(TypeError);
+  }
+});
+
+it('omits own children key on unnamed svgProps so cloneElement adapters keep SVG drawing', () => {
+  const prebuilt = (
+    <svg viewBox="0 0 16 16">
+      <path d="M0 0h16v16H0z" />
+    </svg>
+  );
+  let hasOwnChildren: boolean | undefined;
+  const cloneAdapter: IconAdapter = (_source, { svgProps }) => {
+    hasOwnChildren = Object.hasOwn(svgProps, 'children');
+    return cloneElement(prebuilt, svgProps);
+  };
+  const { container } = render(
+    <IconProvider adapter={cloneAdapter}>
+      <Icon icon={Mark} />
+    </IconProvider>,
+  );
+  expect(hasOwnChildren).toBe(false);
+  expect(container.querySelector('svg > path')).not.toBeNull();
+});
+
+it('avoids context fan-out rerenders on slots, sized icons, and pinned glyphs', () => {
+  let slotRenders = 0;
+  let sizedRenders = 0;
+  let fixedRenders = 0;
+  const SlotGlyph = defineGlyph(function SlotSvg(props: SvgProps) {
+    slotRenders++;
+    return <svg {...props} />;
+  });
+  const SizedGlyph = defineGlyph(function SizedSvg(props: SvgProps) {
+    sizedRenders++;
+    return <svg {...props} />;
+  });
+  const FixedGlyph = defineGlyph(function FixedSvg(props: SvgProps) {
+    fixedRenders++;
+    return <svg {...props} />;
+  });
+  const Frozen = memo(function Frozen() {
+    return (
+      <>
+        <Icon icon={SlotGlyph} usage="slot" />
+        <Icon icon={SizedGlyph} size="m" />
+        <Icon icon={FixedGlyph} size="s" />
+      </>
+    );
+  });
+  function Harness() {
+    const [tick, setTick] = useState(0);
+    const [adapter, setAdapter] = useState<'phosphor' | 'native'>('phosphor');
+    return (
+      <UnicaProvider overrides={{ Icon: { size: tick % 2 === 0 ? 's' : 'l' } }}>
+        <IconProvider adapter={adapter}>
+          <button type="button" onClick={() => setTick((n) => n + 1)}>
+            Flip theme
+          </button>
+          <button
+            type="button"
+            onClick={() =>
+              setAdapter((current) => (current === 'phosphor' ? 'native' : 'phosphor'))
+            }
+          >
+            Flip adapter
+          </button>
+          <Frozen />
+        </IconProvider>
+      </UnicaProvider>
+    );
+  }
+  render(<Harness />);
+  expect([slotRenders, sizedRenders, fixedRenders]).toEqual([1, 1, 1]);
+  fireEvent.click(screen.getByRole('button', { name: 'Flip theme' }));
+  expect([slotRenders, sizedRenders, fixedRenders]).toEqual([1, 1, 1]);
+  fireEvent.click(screen.getByRole('button', { name: 'Flip adapter' }));
+  expect([slotRenders, sizedRenders, fixedRenders]).toEqual([1, 1, 1]);
 });
 
 it('lets a custom adapter replace a drawing, then clears the owner ref on null', () => {

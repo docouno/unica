@@ -87,6 +87,9 @@
   font-size: var(--option-icon);
 }
 
+.choice-option-icon-proto {
+  color: var(--fg-secondary);
+}
 .choice-option-check-proto {
   visibility: hidden;
   color: var(--accent-soft-fg);
@@ -385,7 +388,10 @@
     color: GrayText;
     border-color: GrayText;
   }
-  .choice-option-proto[aria-selected='true'] .choice-option-check-proto {
+  .choice-option-proto[aria-selected='true'] .choice-option-icon-proto {
+    color: var(--fg-secondary);
+  }
+  .choice-option-check-proto {
     color: Highlight;
   }
   .choice-option-proto[data-active] {

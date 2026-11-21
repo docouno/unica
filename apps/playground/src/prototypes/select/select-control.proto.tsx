@@ -1,5 +1,4 @@
-import { fieldStatusGlyphs, SearchGlyph } from '../control-glyphs.js';
-import { CaretDownIcon, LockSimpleIcon } from '@phosphor-icons/react';
+import { CaretDownGlyph, LockGlyph, SearchGlyph, fieldStatusGlyphs } from '../control-glyphs.js';
 import { useId, useLayoutEffect, useRef, useState } from 'react';
 import type { ComponentPropsWithRef, ReactElement, ReactNode } from 'react';
 import { FormField, Input } from '../input/input.proto.js';
@@ -190,8 +189,7 @@ export function Select({
       'Unavailable option',
   );
   const effectiveStatus = disabled ? 'neutral' : status;
-  const StatusIcon =
-    effectiveStatus === 'neutral' ? null : fieldStatusGlyphs[effectiveStatus].source;
+  const statusGlyph = effectiveStatus === 'neutral' ? null : fieldStatusGlyphs[effectiveStatus];
   const filtered = options.filter((option) =>
     `${option.label} ${option.description ?? ''} ${option.group ?? ''}`
       .toLocaleLowerCase()
@@ -405,21 +403,19 @@ export function Select({
             }
           }}
         >
-          {iconLeft && <Icon usage="slot" icon={iconLeft} size={size} />}
+          {iconLeft && <Icon usage="slot" icon={iconLeft} size={size} color="secondary" />}
           <SelectionSummary
             labels={labels}
             placeholder={busy && !labels.length ? 'Loading options…' : placeholder}
           />
-          {StatusIcon && (
-            <StatusIcon className="select-status-proto" size="1em" aria-hidden="true" />
-          )}
+          {statusGlyph && <Icon usage="slot" icon={statusGlyph} className="select-status-proto" />}
           {readOnly && (
-            <LockSimpleIcon className="select-readonly-icon-proto" size="1em" aria-hidden="true" />
+            <Icon usage="slot" icon={LockGlyph} className="select-readonly-icon-proto" />
           )}
           {busy ? (
             <Spinner className="select-spinner-proto" size={size} tone="muted" />
           ) : (
-            <CaretDownIcon className="select-disclosure-proto" size="1em" aria-hidden="true" />
+            <Icon usage="slot" icon={CaretDownGlyph} className="select-disclosure-proto" />
           )}
         </button>
       </div>

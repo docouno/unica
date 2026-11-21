@@ -26,10 +26,7 @@ import {
 import { Text } from '../../prototypes/text/text.proto.js';
 import { Title } from '../../prototypes/title/title.proto.js';
 import { Icon } from '@docouno/unica';
-import type { GlyphComponent, IconProps } from '@docouno/unica';
-
-type IconSize = NonNullable<IconProps['size']>;
-type IconColor = NonNullable<IconProps['color']>;
+import type { GlyphComponent, IconColor, IconSize } from '@docouno/unica';
 import { WideGlyph } from './icon.glyph.js';
 import './icon.examples.css';
 
@@ -79,13 +76,13 @@ export function SizeExamples(): ReactElement {
       </div>
       <div className="icon-stack icon-inline-samples">
         <Text size="body-s" color="muted">
-          <Icon icon={CheckIcon} /> Updated just now
+          <Icon usage="slot" icon={CheckIcon} /> Updated just now
         </Text>
         <Text size="body-m">
-          <Icon icon={ArrowRightIcon} directional /> Open workspace
+          <Icon usage="slot" icon={ArrowRightIcon} directional /> Open workspace
         </Text>
         <Title as="h3" size="heading-l">
-          <Icon icon={FolderIcon} /> Project notes
+          <Icon usage="slot" icon={FolderIcon} /> Project notes
         </Title>
       </div>
       <Text size="caption-l" color="secondary">

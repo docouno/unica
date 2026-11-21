@@ -6,13 +6,30 @@ import {
   type GlyphComponent,
   type GlyphDefinition,
   type GlyphSource,
+  type GlyphSvgProps,
   type IconAdapter,
   type IconAdapterRenderContext,
+  type IconColor,
   type IconProps,
+  type IconProviderProps,
+  type IconSize,
+  type IconUsage,
 } from '@docouno/unica';
 import { ArrowRightIcon } from '@phosphor-icons/react';
-import type { ReactNode } from 'react';
-import { Component, createElement, createRef, type ComponentPropsWithRef } from 'react';
+import {
+  Component,
+  createElement,
+  createRef,
+  type CSSProperties,
+  type ComponentPropsWithRef,
+  type FC,
+  type ForwardRefExoticComponent,
+  type ReactNode,
+  type Ref,
+  type RefAttributes,
+  type SVGAttributes,
+  type SVGProps,
+} from 'react';
 
 type SvgProps = ComponentPropsWithRef<'svg'>;
 
@@ -25,12 +42,68 @@ export function ProjectSvg({ children, ...props }: SvgProps) {
   );
 }
 
+export function NarrowSvg(props: {
+  className?: string;
+  width?: string | number;
+  height?: string | number;
+  ref?: Ref<SVGSVGElement>;
+}) {
+  return <svg {...props} viewBox="0 0 16 16" />;
+}
+
 export function FallbackGlyph({ source }: { source?: GlyphSource }) {
   return <Icon icon={source ?? ArrowRightIcon} usage="slot" size="m" />;
 }
 
+export function GenericStandaloneWrapper<G extends GlyphSource>({ icon }: { icon: G }) {
+  return <Icon icon={icon} />;
+}
+
+export function GenericSlotWrapper<G extends GlyphSource>({ icon }: { icon: G }) {
+  return <Icon icon={icon} usage="slot" />;
+}
+
+export function StyledIcon({ style }: { style?: CSSProperties }) {
+  return <Icon icon={ArrowRightIcon} style={style} />;
+}
+
+declare const SvgrIcon: FC<SVGProps<SVGSVGElement>>;
+
+interface LucideProps extends Omit<SVGAttributes<SVGSVGElement>, 'ref'> {
+  size?: string | number;
+  absoluteStrokeWidth?: boolean;
+  strokeWidth?: string | number;
+  color?: string;
+}
+declare const LucideArrow: ForwardRefExoticComponent<LucideProps & RefAttributes<SVGSVGElement>>;
+
+interface TablerProps extends Omit<SVGAttributes<SVGSVGElement>, 'stroke' | 'ref'> {
+  size?: string | number;
+  stroke?: string | number;
+  color?: string;
+}
+declare const TablerArrow: ForwardRefExoticComponent<TablerProps & RefAttributes<SVGSVGElement>>;
+
+interface HeroProps extends SVGProps<SVGSVGElement> {
+  title?: string;
+  titleId?: string;
+}
+declare const HeroArrow: ForwardRefExoticComponent<HeroProps & RefAttributes<SVGSVGElement>>;
+
 function OptionalGlyph({ compact, ...props }: SvgProps & { readonly compact?: boolean }) {
   return <svg {...props} viewBox={compact ? '0 0 16 16' : '0 0 32 16'} />;
+}
+
+function ModeGlyph({ mode, ...props }: SvgProps & { readonly mode?: 'outline' | 'solid' }) {
+  return <svg {...props} data-mode={mode} />;
+}
+
+function ToggleGlyph({ on, ...props }: SvgProps & { readonly on?: boolean }) {
+  return <svg {...props} data-on={on} />;
+}
+
+function LooseGlyph(props: SvgProps & Record<string, unknown>) {
+  return <svg {...props} />;
 }
 
 function Outline({ detail, ...svg }: SvgProps & { detail?: 'shared' | 'outline' }): ReactNode {
@@ -92,6 +165,11 @@ export function MixedSource({ useBrand }: { useBrand: boolean }) {
   ];
 }
 
+export function LooseUnion({ loose }: { loose: boolean }) {
+  const choice = loose ? LooseGlyph : ArrowRightIcon;
+  return <Icon icon={choice} />;
+}
+
 function RequiresVariant({ variant }: SvgProps & { variant: string }) {
   return <svg data-variant={variant} />;
 }
@@ -108,18 +186,42 @@ class ClassGlyph extends Component<SvgProps> {
 
 const svgRef = createRef<SVGSVGElement>();
 const component: GlyphComponent = ProjectSvg;
+const svgrComponent: GlyphComponent = SvgrIcon;
+const svgrGlyph = defineGlyph(SvgrIcon);
 const source: GlyphSource = defineGlyph(component);
 const builtin: BuiltinIconAdapterName = 'phosphor';
 const arrow: GlyphDefinition<typeof ArrowRightIcon> = defineGlyph(ArrowRightIcon, builtin);
 const adapter: IconAdapter = (glyph: GlyphComponent, ctx: IconAdapterRenderContext) =>
   createElement(glyph, { ...ctx.inputProps, ...ctx.svgProps });
 const optional = defineGlyph(OptionalGlyph, adapter);
-const props: IconProps = { icon: source, ref: svgRef, 'data-probe': 1 };
+const iconSize: IconSize = 'm';
+const iconColor: IconColor = 'accent';
+const iconUsage: IconUsage = 'standalone';
+const providerProps: IconProviderProps = { adapter, children: null };
+const svgPropsSample: GlyphSvgProps = { className: 'unica-icon', width: '16', height: '16' };
+const props: IconProps = {
+  icon: source,
+  size: iconSize,
+  color: iconColor,
+  usage: iconUsage,
+  ref: svgRef,
+  'data-probe': 1,
+};
+const cssStyle: CSSProperties = { opacity: 0.5 };
+const showTitle = true as boolean;
 
 const valid = [
+  <Icon {...props} style={cssStyle} />,
   <Icon {...props} style={{ '--project-icon-ink': 'currentColor' }} />,
   <Icon icon={ArrowRightIcon} weight="bold" mirrored ref={svgRef} />,
   <Icon icon={arrow} weight={undefined} />,
+  <Icon icon={SvgrIcon} />,
+  <Icon icon={svgrGlyph} />,
+  <Icon icon={LucideArrow} strokeWidth={1.5} absoluteStrokeWidth />,
+  <Icon icon={TablerArrow} stroke={1.5} />,
+  <Icon icon={NarrowSvg} />,
+  <Icon icon={ModeGlyph} mode="solid" />,
+  <Icon icon={ToggleGlyph} on />,
   <Icon icon={brand} detail="brand" monochrome />,
   <Icon icon={OverloadedReport} />,
   <Icon icon={overloadedReport} plotType={undefined} />,
@@ -128,15 +230,21 @@ const valid = [
   <Icon icon={report} plotType="chart" series={[1]} />,
   <Icon icon={OptionalGlyph} compact />,
   <Icon icon={ProjectSvg}>
-    <title>Project</title>
+    <title dir="rtl" lang="en">
+      Project
+    </title>
   </Icon>,
-  <IconProvider adapter={adapter}>
+  <Icon icon={ProjectSvg}>{showTitle && <title>Conditional</title>}</Icon>,
+  <Icon icon={ProjectSvg}>{showTitle ? <title>Conditional</title> : null}</Icon>,
+  <IconProvider {...providerProps}>
     <Icon icon={optional} compact usage="slot" />
   </IconProvider>,
 ];
 
 const closed = { role: 'img', 'aria-hidden': true, 'aria-describedby': 'hint', tabIndex: 0 };
 const named = { 'aria-label': 'Open' };
+// @ts-expect-error key is not part of spreadable IconProps.
+const spreadKey: IconProps = { icon: ArrowRightIcon, key: 'k1' };
 
 const invalid = [
   // @ts-expect-error Selecting the chart overload requires its series.
@@ -153,6 +261,8 @@ const invalid = [
   <Icon icon={arrow} weight="heavy" />,
   // @ts-expect-error Native SVG has no vendor weight.
   <Icon icon={ProjectSvg} weight="bold" />,
+  // @ts-expect-error ModeGlyph rejects values outside its union.
+  <Icon icon={ModeGlyph} mode="ghost" />,
   // @ts-expect-error An erased source does not expose arbitrary vendor props.
   <Icon<ReturnType<typeof JSON.parse>> icon={ProjectSvg} unsupported />,
   // @ts-expect-error A class ref cannot receive the rendered SVG.
@@ -175,13 +285,16 @@ const invalid = [
   <Icon icon={arrow} usage="slot">
     <title>Open</title>
   </Icon>,
+  // @ts-expect-error Heroicons title prop cannot leak into a decorative slot.
+  <Icon icon={HeroArrow} usage="slot" title="Leak" />,
   // @ts-expect-error Actions belong to the owner.
   <Icon icon={arrow} onClick={() => undefined} />,
   // @ts-expect-error The source owns its viewBox.
   <Icon icon={arrow} viewBox="0 0 1 1" />,
   // @ts-expect-error Name the public Icon instead of passing vendor alt.
   <Icon icon={arrow} alt="Open" />,
+  // @ts-expect-error Name the public Icon instead of passing vendor title.
+  <Icon icon={HeroArrow} title="Open" />,
 ];
 
-void valid;
-void invalid;
+void [valid, invalid, svgrComponent, svgPropsSample, spreadKey];

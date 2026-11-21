@@ -13,6 +13,7 @@ import { Avatar } from '../../../src/prototypes/avatar/avatar.proto.js';
 import { FileItem, FileList } from '../../../src/prototypes/file-input/file-input.proto.js';
 import { Combobox } from '../../../src/prototypes/combobox/combobox.proto.js';
 import { MenuRows, MenuSurface } from '../../../src/prototypes/menu/menu.proto.js';
+import { Listbox } from '../../../src/prototypes/select/listbox.proto.js';
 import { Select } from '../../../src/prototypes/select/select.proto.js';
 import { Switch } from '../../../src/prototypes/binary-controls/binary-controls.proto.js';
 import { Button } from '../../../src/prototypes/button/button.proto.js';
@@ -65,6 +66,7 @@ const vendor = {
   'aria-labelledby': 'missing',
   tabIndex: 0,
   focusable: true,
+  style: { color: 'red', fill: 'blue', width: 99, height: 99 },
 } as const;
 
 export default function IconFixture() {
@@ -81,14 +83,14 @@ export default function IconFixture() {
         <UnicaProvider overrides={{ Icon: { size: 's' } }}>
           <span data-testid="text">
             <Icon icon={ArrowRightIcon} data-testid="standalone" />
-            <Icon
-              icon={ArrowRightIcon}
-              data-testid="inline"
-              usage="slot"
-              style={{ fontSize: 40, font: '40px serif' }}
-            />{' '}
-            Inline text
+            <Icon icon={ArrowRightIcon} data-testid="inline" usage="slot" /> Inline text
           </span>
+          <Icon
+            icon={ArrowRightIcon}
+            size="inherit"
+            data-testid="styled-escape"
+            style={{ color: 'rgb(18, 92, 60)', fontSize: 24 }}
+          />
           <Link href="#target" external data-testid="external">
             External reference
           </Link>
@@ -102,9 +104,24 @@ export default function IconFixture() {
             Unavailable
           </Button>
           <Input aria-label="Disabled input" disabled iconLeft={BellIcon} />
+          <span data-testid="semantic-host" style={{ color: 'rgb(21, 77, 133)' }}>
+            <Icon icon={ArrowRightIcon} size="m" color="danger" data-testid="semantic-danger" />
+          </span>
         </UnicaProvider>
         <div style={{ '--size-m-icon': '24px' } as React.CSSProperties}>
           <Icon icon={mark} size="m" data-testid="wide" />
+        </div>
+        <div data-testid="listbox-sizes">
+          <Listbox
+            size="m"
+            aria-label="Medium options"
+            options={[{ value: 'm', label: 'Medium', icon: BellIcon }]}
+          />
+          <Listbox
+            size="l"
+            aria-label="Large options"
+            options={[{ value: 'l', label: 'Large', icon: BellIcon }]}
+          />
         </div>
       </section>
 
@@ -119,7 +136,9 @@ export default function IconFixture() {
           <title>Arrow title</title>
         </Icon>
         <Icon icon={mark} aria-labelledby="build-title" aria-label="Fallback">
-          <title id="build-title">Build {buildStatus}</title>
+          <title id="build-title">
+            <>Build {buildStatus}</>
+          </title>
         </Icon>
         <Icon usage="slot" icon={mark} {...slotAttributes} />
         <Icon icon={ArrowRightIcon} data-testid="decorative" aria-label="   " />
@@ -143,15 +162,6 @@ export default function IconFixture() {
             aria-label="Owner label"
             size="m"
             ref={(node) => node?.setAttribute('data-owner-ref', '')}
-            style={{
-              all: 'unset',
-              width: 99,
-              height: 99,
-              inlineSize: 99,
-              maxBlockSize: 2,
-              color: 'red',
-              fill: 'blue',
-            }}
           />
           <Icon icon={ArrowRightIcon} usage="slot" size="m" data-testid="slot-weight" />
           <Icon icon={ArrowRightIcon} directional mirrored size="m" data-testid="logical" />
@@ -161,12 +171,6 @@ export default function IconFixture() {
             <span dir="ltr">
               <Icon icon={ArrowRightIcon} directional data-testid="nested-ltr" />
             </span>
-            <bdi>
-              English <Icon icon={ArrowRightIcon} directional data-testid="auto-ltr" />
-            </bdi>
-          </span>
-          <span dir="auto">
-            مرحبا <Icon icon={ArrowRightIcon} directional data-testid="auto-rtl" />
           </span>
           <button type="button">After vendor icons</button>
         </section>

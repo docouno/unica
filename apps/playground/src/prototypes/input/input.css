@@ -321,17 +321,14 @@
   background: transparent;
 }
 
-.input-shell-proto:has(.input-native-proto:disabled)
-  :is(
-    .input-affix-proto,
-    .input-leading-glyph,
-    .input-trailing-proto,
-    .input-clear-glyph,
-    .input-status-proto svg,
-    .control-spinner-proto
-  ),
+.input-shell-proto:has(.input-native-proto:disabled) :is(.input-affix-proto, .input-trailing-proto),
 .input-native-proto:disabled::placeholder {
-  color: var(--fg-disabled) !important;
+  color: var(--fg-disabled);
+}
+
+.input-shell-proto:has(.input-native-proto:disabled)
+  :is(.input-leading-glyph, .input-clear-glyph, .input-status-proto svg, .control-spinner-proto) {
+  color: inherit;
 }
 
 .input-native-proto:disabled {

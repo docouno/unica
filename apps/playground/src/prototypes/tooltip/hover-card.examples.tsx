@@ -230,7 +230,13 @@ export function HoverContentStates(): ReactElement {
         ) : (
           <div className="hover-demo-unavailable">
             {state === 'restricted' && (
-              <Icon usage="slot" className="hover-demo-glyph" icon={LockSimpleIcon} size="m" />
+              <Icon
+                usage="slot"
+                className="hover-demo-glyph"
+                icon={LockSimpleIcon}
+                size="m"
+                color="secondary"
+              />
             )}
             <Title dir="auto" as="h3" size="body-m">
               {state === 'restricted'

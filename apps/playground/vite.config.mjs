@@ -1,7 +1,6 @@
 import { env } from 'node:process';
 import { devkitWorkspaceSource } from '@docouno/env/vite';
 import react from '@vitejs/plugin-react';
-import { Features } from 'lightningcss';
 import { defineConfig } from 'vite';
 
 export default defineConfig({
@@ -11,8 +10,6 @@ export default defineConfig({
   optimizeDeps: {
     include: ['@phosphor-icons/react'],
   },
-  // A language selector cannot represent nested or automatic HTML direction.
-  css: { lightningcss: { exclude: Features.DirSelector } },
   build: {
     rolldownOptions: {
       output: {

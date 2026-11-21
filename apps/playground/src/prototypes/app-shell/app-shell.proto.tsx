@@ -187,12 +187,22 @@ export function AppShell({
   );
 }
 
-export type BrandMarkProps = ComponentPropsWithRef<'span'>;
+export interface BrandMarkProps extends ComponentPropsWithRef<'span'> {
+  readonly decorative?: boolean | undefined;
+}
 
-export function BrandMark({ className = '', ...props }: BrandMarkProps): ReactElement {
+export function BrandMark({
+  className = '',
+  decorative = false,
+  ...props
+}: BrandMarkProps): ReactElement {
   return (
     <span {...props} className={`app-shell-brand ${className}`}>
-      <Icon icon={BooksGlyph} size="inherit" aria-label="Folio" />
+      {decorative ? (
+        <Icon usage="slot" icon={BooksGlyph} size="inherit" />
+      ) : (
+        <Icon icon={BooksGlyph} size="inherit" aria-label="Folio" />
+      )}
     </span>
   );
 }

@@ -3,10 +3,8 @@
     --unica-icon-frame: 1em;
     display: inline-block;
     flex: none;
-    min-width: var(--unica-icon-frame);
-    max-width: var(--unica-icon-frame);
-    min-height: var(--unica-icon-frame);
-    max-height: var(--unica-icon-frame);
+    width: var(--unica-icon-frame);
+    height: var(--unica-icon-frame);
     vertical-align: -0.125em;
     color: inherit;
   }
@@ -68,29 +66,20 @@
   }
 
   [dir='rtl' i] {
-    --unica-icon-direction: -1;
+    --unica-icon-direction: -1 1;
   }
 
   [dir='ltr' i] {
-    --unica-icon-direction: 1;
-  }
-
-  /* An automatic boundary determines its own direction inside an explicit one. */
-  :where([dir='auto' i], bdi:not([dir])):dir(rtl) {
-    --unica-icon-direction: -1;
-  }
-
-  :where([dir='auto' i], bdi:not([dir])):dir(ltr) {
-    --unica-icon-direction: 1;
+    --unica-icon-direction: none;
   }
 
   .unica-icon[data-unica-icon-directional] {
-    scale: var(--unica-icon-direction, 1) 1;
+    scale: var(--unica-icon-direction, none);
   }
 
   @media (forced-colors: active) {
-    .unica-icon {
-      color: inherit !important;
+    .unica-icon[data-unica-icon-color] {
+      color: inherit;
     }
   }
 }

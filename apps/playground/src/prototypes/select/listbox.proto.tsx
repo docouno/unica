@@ -47,7 +47,9 @@ export function ListboxOption({
         <CheckIcon size="1em" weight="bold" />
       </span>
       {option.icon && (
-        <Icon usage="slot" icon={option.icon} size="s" className="choice-option-icon-proto" />
+        <span className="choice-option-icon-proto" aria-hidden="true">
+          <Icon usage="slot" icon={option.icon} />
+        </span>
       )}
       <span className="choice-option-copy-proto">
         <span className="choice-option-label-proto" dir="auto">

@@ -258,7 +258,7 @@ function OverviewScene(): ReactElement {
                         {item.category}
                       </Text>
                     </div>
-                    <Icon usage="slot" icon={ArrowRightIcon} size="s" />
+                    <Icon usage="slot" icon={ArrowRightIcon} size="s" directional />
                   </div>
                 ))}
               </Card>
