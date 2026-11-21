@@ -1,4 +1,4 @@
-import { Blockquote, Code, Icon, Kbd, Spinner } from '@docouno/unica';
+import { Blockquote, Code, Divider, Icon, Kbd, Spinner } from '@docouno/unica';
 import { useId, useRef, useState } from 'react';
 import type { ReactElement } from 'react';
 import {
@@ -32,7 +32,6 @@ import { Checkbox } from '../prototypes/binary-controls/binary-controls.proto.js
 import { Tabs, TabsContent, TabsList, TabsTab } from '../prototypes/tabs/tabs.proto.js';
 import { Text } from '../prototypes/text/text.proto.js';
 import { Title } from '../prototypes/title/title.proto.js';
-import { Divider } from '../prototypes/divider/divider.proto.js';
 import {
   Breadcrumb,
   BreadcrumbLink,

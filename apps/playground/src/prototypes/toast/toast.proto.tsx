@@ -9,8 +9,7 @@ import {
 import { Fragment, useId, useLayoutEffect, useRef, useState } from 'react';
 import type { ComponentPropsWithRef, CSSProperties, ReactElement, ReactNode } from 'react';
 import { Button, IconButton } from '../button/button.proto.js';
-import { Divider } from '../divider/divider.proto.js';
-import { Icon, Spinner } from '@docouno/unica';
+import { Divider, Icon, Spinner } from '@docouno/unica';
 import '../scrollbar/scrollbar.css';
 import './toast.css';
 
@@ -212,7 +211,7 @@ export function ToastDock({
       >
         Dismiss all
       </Button>
-      <Divider orientation="vertical" />
+      <Divider orientation="vertical" className="toast-dock-divider" />
       <IconButton
         className="toast-stack-toggle"
         variant="ghost"

@@ -218,7 +218,7 @@
   background-image: linear-gradient(var(--bg-overlay), var(--bg-overlay));
   direction: ltr;
 }
-.toast-dock > .divider-proto {
+.toast-dock-divider {
   align-self: center;
   block-size: var(--space-16);
 }

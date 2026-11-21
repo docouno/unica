@@ -1,0 +1,105 @@
+@layer unica.components {
+  :where([data-surface='base']) {
+    --_unica-divider-overlay-share: 0%;
+  }
+
+  :where([data-surface='overlay']) {
+    --_unica-divider-overlay-share: 100%;
+  }
+
+  .unica-divider {
+    /* Inherit the surface choice and resolve both tokens in the local theme. */
+    --_unica-divider-line-color: color-mix(
+      in srgb,
+      var(--border-default) var(--_unica-divider-overlay-share, 0%),
+      var(--border-subtle)
+    );
+
+    display: flex;
+    flex: none;
+    align-items: center;
+    inline-size: 100%;
+    min-inline-size: 0;
+    margin: 0;
+  }
+
+  .unica-divider[hidden] {
+    display: none;
+  }
+
+  .unica-divider-line {
+    flex: 1 1 0%;
+    min-inline-size: 0;
+    block-size: 0;
+    margin: 0;
+    padding: 0;
+    border: 0 solid var(--_unica-divider-line-color);
+    border-block-start-width: 1px;
+  }
+
+  .unica-divider[data-unica-divider-orientation='vertical'] {
+    --_unica-divider-line-color: var(--border-default);
+
+    align-self: stretch;
+    inline-size: 1px;
+    min-block-size: 0;
+
+    > .unica-divider-line {
+      align-self: stretch;
+      inline-size: 0;
+      block-size: auto;
+      border-block-start-width: 0;
+      border-inline-start-width: 1px;
+    }
+  }
+
+  .unica-divider[data-unica-divider-label-position] {
+    --_unica-divider-line-color: var(--border-default);
+
+    gap: var(--space-12);
+    color: var(--fg-muted);
+    font-family: var(--font-family-base);
+    font-size: var(--text-size-caption-l);
+    font-weight: 400;
+    line-height: var(--text-size-caption-l-lh);
+    text-align: center;
+
+    > .unica-divider-line {
+      min-inline-size: var(--space-12);
+    }
+  }
+
+  .unica-divider-label {
+    flex: 0 1 auto;
+    min-inline-size: 0;
+    max-inline-size: calc(100% - 4 * var(--space-12));
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  .unica-divider[data-unica-divider-label-position='start'] {
+    text-align: start;
+  }
+
+  .unica-divider[data-unica-divider-label-position='end'] {
+    text-align: end;
+  }
+
+  .unica-divider:is(
+      [data-unica-divider-label-position='start'],
+      [data-unica-divider-label-position='end']
+    )
+    > .unica-divider-label {
+    max-inline-size: calc(100% - 2 * var(--space-12));
+  }
+
+  @media (forced-colors: active) {
+    .unica-divider[data-unica-divider-label-position] {
+      color: CanvasText;
+    }
+
+    .unica-divider-line {
+      border-color: CanvasText;
+    }
+  }
+}
