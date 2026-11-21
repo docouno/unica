@@ -1,10 +1,11 @@
-import { createContext, useContext, useMemo } from 'react';
+import { createContext, use, useMemo } from 'react';
 import type { JSX, ReactNode } from 'react';
+import type { IconSize } from '../components/Icon/Icon.js';
 import type { ThemePreset } from './themes.js';
 
 interface ComponentDefaultAxes {
   readonly Icon: {
-    readonly size: 'inherit' | 's' | 'm' | 'l';
+    readonly size: IconSize;
   };
 }
 
@@ -44,7 +45,7 @@ const UnicaContext = /* @__PURE__ */ createContext<UnicaScope>({
 });
 
 export function UnicaProvider({ children, theme, overrides }: UnicaProviderProps): JSX.Element {
-  const parent = useContext(UnicaContext);
+  const parent = use(UnicaContext);
   const preset = theme?.preset;
   const defaults = theme?.defaults;
   const effectiveTheme = useMemo<ThemeConfig>(() => {
@@ -56,7 +57,6 @@ export function UnicaProvider({ children, theme, overrides }: UnicaProviderProps
     }
     return defaults === undefined ? { preset } : { preset, defaults };
   }, [parent.theme, preset, defaults]);
-
   const scope = useMemo<UnicaScope>(() => {
     if (effectiveTheme === parent.theme && overrides === undefined) {
       return parent;
@@ -88,7 +88,6 @@ export function useComponentDefaults<
   axis: Axis,
   { instance, group, builtIn }: DefaultInputs<ComponentDefaultAxes[Family][Axis]>,
 ): ComponentDefaultAxes[Family][Axis] {
-  const { theme, overrides } = useContext(UnicaContext);
   if (instance !== undefined) {
     return instance;
   }
@@ -96,6 +95,7 @@ export function useComponentDefaults<
     return group;
   }
 
+  const { theme, overrides } = use(UnicaContext);
   for (let scope = overrides; scope !== undefined; scope = scope.parent) {
     const value = scope.defaults[family]?.[axis];
     if (value !== undefined) {

@@ -15,7 +15,7 @@ import {
   UploadSimpleIcon,
 } from '@phosphor-icons/react';
 import { Text } from '../text/text.proto.js';
-import type { GlyphProps } from '../icon/icon.proto.js';
+import type { IconProps as PhosphorIconProps } from '@phosphor-icons/react';
 import { Button, IconButton } from './button.proto.js';
 import type { ButtonProps, ButtonSize, ButtonTone, ButtonVariant } from './button.proto.js';
 import './button.examples.css';
@@ -30,8 +30,13 @@ const toneActions = {
   danger: { label: 'Delete', icon: TrashIcon },
 } as const;
 
-export function ForwardArrowIcon(props: GlyphProps): ReactElement {
-  return <ArrowRightIcon {...props} data-directional />;
+export function ForwardArrowIcon(props: PhosphorIconProps): ReactElement {
+  return (
+    <ArrowRightIcon
+      {...props}
+      className={`${props.className ?? ''} button-example-forward-glyph`}
+    />
+  );
 }
 
 interface StateSample {

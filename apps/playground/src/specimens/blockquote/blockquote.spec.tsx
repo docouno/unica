@@ -1,6 +1,6 @@
 import { previewProps, previewText } from '../preview-code.js';
 import type { ReactElement } from 'react';
-import type { GlyphProps } from '../../prototypes/icon/icon.proto.js';
+import type { IconProps as PhosphorIconProps } from '@phosphor-icons/react';
 import { QuotesIcon } from '@phosphor-icons/react';
 import { defineComponent } from '../../workbench/types.js';
 import { Blockquote } from '../../prototypes/blockquote/blockquote.proto.js';
@@ -18,7 +18,7 @@ import '../../prototypes/blockquote/blockquote.examples.css';
 const sourceUrl =
   'https://html.spec.whatwg.org/multipage/grouping-content.html#the-blockquote-element';
 
-function OpeningQuotes(props: GlyphProps): ReactElement {
+function OpeningQuotes(props: PhosphorIconProps): ReactElement {
   return <QuotesIcon {...props} style={{ ...props.style, transform: 'rotate(180deg)' }} />;
 }
 

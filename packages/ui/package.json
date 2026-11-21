@@ -48,7 +48,7 @@
     "typecheck": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p tsconfig.test.json",
     "fix": "npm run format && eslint --max-warnings 0 --fix . && npm run format",
     "test": "vitest run --config vitest.config.mjs",
-    "build": "tsdown && devkit-verify --pack && node --conditions=react-server --input-type=module -e \"import { THEME_PRESETS } from '@docouno/unica'\"",
+    "build": "tsdown && devkit-verify --pack && node --conditions=react-server --input-type=module -e \"import { THEME_PRESETS, defineGlyph } from '@docouno/unica'; if (!THEME_PRESETS.length || !defineGlyph(() => null)['~unica.glyph']) process.exit(1)\"",
     "package": "devkit-pack"
   },
   "devDependencies": {

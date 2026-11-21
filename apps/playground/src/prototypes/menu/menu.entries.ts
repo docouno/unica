@@ -1,11 +1,11 @@
-import type { GlyphComponent } from '../icon/icon.proto.js';
+import type { GlyphSource } from '@docouno/unica';
 
 export type MenuSize = 's' | 'm' | 'l';
 
 interface Entry {
   readonly id: string;
   readonly label: string;
-  readonly icon?: GlyphComponent;
+  readonly icon?: GlyphSource;
   readonly description?: string;
   readonly disabled?: boolean;
   readonly preview?: 'hover' | 'pressed' | 'focus' | 'expanded';

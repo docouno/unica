@@ -1,18 +1,16 @@
+import {
+  CaretDownGlyph,
+  CaretUpGlyph,
+  CloseGlyph,
+  ErrorGlyph,
+  NotificationGlyph,
+  fieldStatusGlyphs,
+} from '../control-glyphs.js';
 import { Fragment, useId, useLayoutEffect, useRef, useState } from 'react';
 import type { ComponentPropsWithRef, CSSProperties, ReactElement, ReactNode } from 'react';
-import {
-  BellIcon,
-  CaretDownIcon,
-  CaretUpIcon,
-  CheckCircleIcon,
-  InfoIcon,
-  WarningIcon,
-  XCircleIcon,
-  XIcon,
-} from '@phosphor-icons/react';
 import { Button, IconButton } from '../button/button.proto.js';
 import { Divider } from '../divider/divider.proto.js';
-import { Icon } from '../icon/icon.proto.js';
+import { Icon } from '@docouno/unica';
 import { Spinner } from '../progress/progress.proto.js';
 import '../scrollbar/scrollbar.css';
 import './toast.css';
@@ -93,14 +91,14 @@ export function ToastCard({
   const prefix = status === 'neutral' ? 'neutral' : `status-${status}`;
   const Glyph =
     status === 'success'
-      ? CheckCircleIcon
+      ? fieldStatusGlyphs.success
       : status === 'warning'
-        ? WarningIcon
+        ? fieldStatusGlyphs.warning
         : status === 'danger'
-          ? XCircleIcon
+          ? ErrorGlyph
           : status === 'info'
-            ? InfoIcon
-            : BellIcon;
+            ? fieldStatusGlyphs.info
+            : NotificationGlyph;
   const below = Boolean(children) || actionLayout === 'below' || wrapAction;
   return (
     <div
@@ -118,7 +116,7 @@ export function ToastCard({
         {title}
       </span>
       <span className="toast-glyph" aria-hidden="true">
-        {loading ? <Spinner size="inherit" /> : (icon ?? <Icon icon={Glyph} />)}
+        {loading ? <Spinner size="inherit" /> : (icon ?? <Icon usage="slot" icon={Glyph} />)}
       </span>
       <div className="toast-copy">
         <div className="toast-title" id={`${id}-title`}>
@@ -144,7 +142,7 @@ export function ToastCard({
       {onDismiss && (
         <IconButton
           className="toast-dismiss"
-          icon={XIcon}
+          icon={CloseGlyph}
           size="s"
           variant="ghost"
           tone="neutral"
@@ -193,11 +191,11 @@ export function ToastDock({
 }: ToastDockProps): ReactElement {
   const ToggleGlyph = expanded
     ? top
-      ? CaretUpIcon
-      : CaretDownIcon
+      ? CaretUpGlyph
+      : CaretDownGlyph
     : top
-      ? CaretDownIcon
-      : CaretUpIcon;
+      ? CaretDownGlyph
+      : CaretUpGlyph;
   return (
     <div
       className="toast-dock"

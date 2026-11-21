@@ -5,7 +5,7 @@ import { Avatar, AvatarGroup } from './avatar.proto.js';
 import type { AvatarGroupMember, AvatarGroupSize, AvatarSize } from './avatar.proto.js';
 import { Button } from '../button/button.proto.js';
 import type { ButtonProps } from '../button/button.proto.js';
-import { Icon } from '../icon/icon.proto.js';
+import { Icon } from '@docouno/unica';
 import { Text } from '../text/text.proto.js';
 import { Tooltip } from '../tooltip/tooltip.proto.js';
 import './avatar.examples.css';
@@ -74,7 +74,7 @@ function Fallbacks(): ReactElement {
           <Avatar
             name="Content editor"
             src={lightPortrait}
-            fallback={<Icon icon={UsersIcon} />}
+            fallback={<Icon usage="slot" icon={UsersIcon} />}
             alt="Content editor"
             size="l"
           />
@@ -82,7 +82,7 @@ function Fallbacks(): ReactElement {
         <Sample label="2 · Custom mark">
           <Avatar
             name="Editorial team"
-            fallback={<Icon icon={UsersIcon} />}
+            fallback={<Icon usage="slot" icon={UsersIcon} />}
             alt="Editorial team"
             size="l"
           />
@@ -385,7 +385,11 @@ function Direction(): ReactElement {
             members={[
               members[0]!,
               { id: 'failed', name: 'Workspace writer', src: brokenPortrait },
-              { id: 'unknown', name: 'Unassigned reviewer', fallback: <Icon icon={UsersIcon} /> },
+              {
+                id: 'unknown',
+                name: 'Unassigned reviewer',
+                fallback: <Icon usage="slot" icon={UsersIcon} />,
+              },
               members[1]!,
             ]}
           />

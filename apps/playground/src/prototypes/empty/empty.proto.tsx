@@ -1,7 +1,7 @@
 import { Children, createElement } from 'react';
 import type { ComponentPropsWithRef, ReactElement, ReactNode } from 'react';
-import { Icon } from '../icon/icon.proto.js';
-import type { GlyphComponent } from '../icon/icon.proto.js';
+import { Icon } from '@docouno/unica';
+import type { GlyphSource } from '@docouno/unica';
 import type { HeadingTag } from '../title/title.proto.js';
 import './empty.css';
 
@@ -13,7 +13,7 @@ export interface EmptyProps extends ComponentPropsWithRef<'div'> {
 export type EmptyMediaColor = 'muted' | 'accent' | 'info' | 'success' | 'warning' | 'danger';
 
 export interface EmptyMediaProps extends Omit<ComponentPropsWithRef<'div'>, 'color'> {
-  readonly icon?: GlyphComponent;
+  readonly icon?: GlyphSource;
   readonly color?: EmptyMediaColor;
 }
 
@@ -61,7 +61,7 @@ export function EmptyMedia({
       data-color={color}
       aria-hidden="true"
     >
-      <Icon icon={icon} />
+      <Icon usage="slot" icon={icon} />
     </div>
   );
 }

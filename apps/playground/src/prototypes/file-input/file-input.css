@@ -229,7 +229,7 @@
   overflow-wrap: anywhere;
 }
 
-.dropzone-message-proto > .icon-proto {
+.dropzone-message-proto > .dropzone-message-glyph {
   flex: none;
   margin-block-start: 0.25em;
 }

@@ -19,7 +19,7 @@ import { Blockquote } from '../prototypes/blockquote/blockquote.proto.js';
 import { ToastCard } from '../prototypes/toast/toast.proto.js';
 import { Spinner } from '../prototypes/progress/progress.proto.js';
 import { Input } from '../prototypes/input/input.proto.js';
-import { Icon } from '../prototypes/icon/icon.proto.js';
+import { Icon } from '@docouno/unica';
 import { Kbd } from '../prototypes/kbd/kbd.proto.js';
 import { Link } from '../prototypes/link/link.proto.js';
 import {
@@ -324,7 +324,8 @@ function EditorScene(): ReactElement {
                       toggleReference(event.currentTarget, event.detail === 0);
                     }}
                   >
-                    Zero-Downtime PG Failover <Icon icon={ArrowUpRightIcon} size="inherit" />
+                    Zero-Downtime PG Failover{' '}
+                    <Icon usage="slot" icon={ArrowUpRightIcon} size="inherit" />
                   </Link>
                 ) : (
                   'Zero-Downtime PG Failover'

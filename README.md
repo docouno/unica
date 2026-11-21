@@ -38,7 +38,7 @@ export function ThemePreview() {
 }
 ```
 
-The library currently ships theme tokens, preset metadata, `UnicaProvider`, native scrollbar utilities, and `Portal` with `PortalProvider` and `usePortalContainer`. The `data-theme` attribute applies the CSS preset. `UnicaProvider` supplies structural component defaults through React context. See [Structural Component Defaults](docs/concepts/themes-and-roles.md#structural-component-defaults), [Native Scrollbars](docs/concepts/scrollbars.md), and [Portal](docs/components/portal.md).
+The library currently ships theme tokens, preset metadata, `UnicaProvider`, native scrollbar utilities, the [Icon](docs/components/icon.md) glyph protocol (`Icon`, `IconProvider`, `defineGlyph`), and [Portal](docs/components/portal.md) (`Portal`, `PortalProvider`, `usePortalContainer`). The `data-theme` attribute applies the CSS preset, and `UnicaProvider` supplies structural component defaults through React context. See [Structural Component Defaults](docs/concepts/themes-and-roles.md#structural-component-defaults), [Native Scrollbars](docs/concepts/scrollbars.md), [Icon](docs/components/icon.md), and [Portal](docs/components/portal.md).
 
 New component families are reviewed as live prototypes in the playground before their public package APIs ship.
 

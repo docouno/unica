@@ -106,7 +106,7 @@ For each configurable property the first defined value wins, in this order.
 
 A nested provider inherits the parent's theme configuration unless it supplies a complete replacement. Overrides inherit by family and property, with defined inner values winning. Without a provider, React uses the built-in `soft-dark` configuration and component defaults. The server and client can use the same configuration because resolution uses React inputs. Use the existing DOM container to keep the CSS theme aligned with that configuration.
 
-`UnicaComponentDefaults` contains only properties declared configurable by each family. The foundation defines `Icon.size` (`inherit`, `s`, `m`, `l`) for the upcoming Icon family. A component hosting a glyph can pass an explicit size to preserve the host's geometry. Behavior, accessibility attributes, and content remain the responsibility of each component and its caller.
+`UnicaComponentDefaults` contains only properties declared configurable by each family. Standalone [Icon](../components/icon.md) resolves `size` (`inherit`, `s`, `m`, `l`) through these defaults. A slot glyph uses the size supplied by its owner or inherits the owner's text size. Behavior, accessibility attributes, and content remain the responsibility of each component and its caller.
 
 ## CSS Layers
 

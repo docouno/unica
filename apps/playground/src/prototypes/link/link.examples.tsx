@@ -1,7 +1,7 @@
 import { useId, useSyncExternalStore } from 'react';
 import type { ReactElement, ReactNode } from 'react';
 import { ArrowRightIcon, FileTextIcon } from '@phosphor-icons/react';
-import { Icon } from '../icon/icon.proto.js';
+import { Icon } from '@docouno/unica';
 import { Text } from '../text/text.proto.js';
 import type { TextSize } from '../text/text.proto.js';
 import { Title } from '../title/title.proto.js';
@@ -76,7 +76,7 @@ export function ReadingExamples(): ReactElement {
       <div className="link-study-standalone">
         <Link href={reference} size="body-s">
           Explore the handbook{'\u00a0'}
-          <Icon icon={ArrowRightIcon} directional />
+          <Icon usage="slot" icon={ArrowRightIcon} directional />
         </Link>
       </div>
     </div>
@@ -101,7 +101,7 @@ export function TypographyExamples(): ReactElement {
         <Label>Leading document glyph · inherited baseline</Label>
         <Text size="body-s">
           <Link href={reference}>
-            <Icon icon={FileTextIcon} />
+            <Icon usage="slot" icon={FileTextIcon} />
             {'\u00a0'}Release notes
           </Link>
         </Text>
@@ -280,7 +280,7 @@ export function WrappingExamples(): ReactElement {
         <Text size="body-s">
           <Link href={reference}>
             Continue reading{'\u00a0'}
-            <Icon icon={ArrowRightIcon} directional />
+            <Icon usage="slot" icon={ArrowRightIcon} directional />
           </Link>
         </Text>
       </div>

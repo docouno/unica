@@ -78,7 +78,7 @@
 }
 
 .choice-option-check-proto,
-.choice-option-icon-proto.icon-proto {
+.choice-option-icon-proto {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -87,7 +87,7 @@
   font-size: var(--option-icon);
 }
 
-.choice-option-icon-proto.icon-proto {
+.choice-option-icon-proto {
   color: var(--fg-secondary);
 }
 .choice-option-check-proto {
@@ -388,7 +388,10 @@
     color: GrayText;
     border-color: GrayText;
   }
-  .choice-option-proto[aria-selected='true'] .choice-option-check-proto {
+  .choice-option-proto[aria-selected='true'] .choice-option-icon-proto {
+    color: var(--fg-secondary);
+  }
+  .choice-option-check-proto {
     color: Highlight;
   }
   .choice-option-proto[data-active] {

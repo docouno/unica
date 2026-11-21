@@ -1,28 +1,14 @@
+import { BusyGlyph, CloseGlyph, fieldStatusGlyphs } from '../control-glyphs.js';
 import { useId, useRef } from 'react';
 import type { ComponentPropsWithRef, HTMLAttributes, ReactElement, ReactNode } from 'react';
-import {
-  CheckCircleIcon,
-  CircleNotchIcon,
-  InfoIcon,
-  WarningCircleIcon,
-  WarningIcon,
-  XIcon,
-} from '@phosphor-icons/react';
-import { Icon } from '../icon/icon.proto.js';
-import type { GlyphComponent } from '../icon/icon.proto.js';
+import { Icon } from '@docouno/unica';
+import type { GlyphSource } from '@docouno/unica';
 import { useInputFocus } from './input-focus.proto.js';
 import './input.css';
 
 export type ControlSize = 's' | 'm' | 'l';
 export type FieldStatus = 'neutral' | 'info' | 'success' | 'warning' | 'danger';
 export type FieldVariant = 'default' | 'ghost';
-
-const statusIcons: Record<Exclude<FieldStatus, 'neutral'>, GlyphComponent> = {
-  info: InfoIcon,
-  success: CheckCircleIcon,
-  warning: WarningIcon,
-  danger: WarningCircleIcon,
-};
 
 export interface FormFieldProps extends HTMLAttributes<HTMLDivElement> {
   readonly label?: ReactNode;
@@ -47,7 +33,7 @@ export function FormField({
   children,
   ...props
 }: FormFieldProps): ReactElement {
-  const StatusGlyph = status === 'neutral' ? null : statusIcons[status];
+  const StatusIcon = status === 'neutral' ? null : fieldStatusGlyphs[status].source;
   return (
     <div {...props} className={`form-field-proto ${className}`} data-status={status}>
       {label && (
@@ -76,7 +62,7 @@ export function FormField({
               id={htmlFor ? `${htmlFor}-message` : undefined}
               className="form-field-message-proto"
             >
-              {messageIcon && StatusGlyph && <StatusGlyph size="1em" aria-hidden="true" />}
+              {messageIcon && StatusIcon && <StatusIcon size="1em" aria-hidden="true" />}
               <span>{message}</span>
             </div>
           )}
@@ -91,8 +77,8 @@ export interface InputProps extends Omit<ComponentPropsWithRef<'input'>, 'size' 
   readonly size?: ControlSize | undefined;
   readonly variant?: FieldVariant | undefined;
   readonly status?: FieldStatus | undefined;
-  readonly iconLeft?: GlyphComponent | undefined;
-  readonly iconRight?: GlyphComponent | undefined;
+  readonly iconLeft?: GlyphSource | undefined;
+  readonly iconRight?: GlyphSource | undefined;
   readonly prefix?: ReactNode;
   readonly suffix?: ReactNode;
   readonly loading?: boolean | undefined;
@@ -146,7 +132,7 @@ export function Input({
   const composing = useRef(false);
   const inputId = id ?? generatedId;
   const effectiveStatus = disabled ? 'neutral' : status;
-  const StatusGlyph = effectiveStatus === 'neutral' ? null : statusIcons[effectiveStatus];
+  const StatusGlyph = effectiveStatus === 'neutral' ? null : fieldStatusGlyphs[effectiveStatus];
   const busy = loading && !disabled;
   const describedBy =
     [
@@ -179,7 +165,15 @@ export function Input({
         }
       }}
     >
-      {iconLeft && <Icon icon={iconLeft} size={size} color="secondary" />}
+      {iconLeft && (
+        <Icon
+          className="input-leading-glyph"
+          usage="slot"
+          icon={iconLeft}
+          size={size}
+          color="secondary"
+        />
+      )}
       {prefix && (
         <span className="input-affix-proto" dir="auto">
           {prefix}
@@ -237,19 +231,31 @@ export function Input({
             input.focus();
           }}
         >
-          <Icon icon={XIcon} size={size} />
+          <Icon className="input-clear-glyph" usage="slot" icon={CloseGlyph} size={size} />
         </button>
       )}
       {StatusGlyph && (
         <span className="input-status-proto">
-          <Icon icon={StatusGlyph} size={size} />
+          <Icon usage="slot" icon={StatusGlyph} size={size} />
         </span>
       )}
       {busy && (
-        <Icon icon={CircleNotchIcon} size={size} color="muted" className="control-spinner-proto" />
+        <Icon
+          usage="slot"
+          icon={BusyGlyph}
+          size={size}
+          color="muted"
+          className="control-spinner-proto"
+        />
       )}
       {!StatusGlyph && !busy && iconRight && (
-        <Icon icon={iconRight} size={size} color="secondary" className="input-trailing-proto" />
+        <Icon
+          usage="slot"
+          icon={iconRight}
+          size={size}
+          color="secondary"
+          className="input-trailing-proto"
+        />
       )}
     </span>
   );

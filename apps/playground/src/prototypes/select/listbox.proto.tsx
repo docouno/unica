@@ -1,8 +1,8 @@
 import { useId, useLayoutEffect, useRef, useState } from 'react';
 import type { ComponentPropsWithRef, ReactElement, ReactNode } from 'react';
 import { CheckIcon } from '@phosphor-icons/react';
-import { Icon } from '../icon/icon.proto.js';
-import type { GlyphComponent } from '../icon/icon.proto.js';
+import { Icon } from '@docouno/unica';
+import type { GlyphSource } from '@docouno/unica';
 import type { ControlSize } from '../input/input.proto.js';
 
 export interface SelectOption {
@@ -11,7 +11,7 @@ export interface SelectOption {
   readonly description?: string | undefined;
   readonly group?: string | undefined;
   readonly disabled?: boolean | undefined;
-  readonly icon?: GlyphComponent | undefined;
+  readonly icon?: GlyphSource | undefined;
 }
 
 export interface ListboxOptionProps extends ComponentPropsWithRef<'div'> {
@@ -46,7 +46,11 @@ export function ListboxOption({
       <span className="choice-option-check-proto" aria-hidden="true">
         <CheckIcon size="1em" weight="bold" />
       </span>
-      {option.icon && <Icon icon={option.icon} size="s" className="choice-option-icon-proto" />}
+      {option.icon && (
+        <span className="choice-option-icon-proto" aria-hidden="true">
+          <Icon usage="slot" icon={option.icon} />
+        </span>
+      )}
       <span className="choice-option-copy-proto">
         <span className="choice-option-label-proto" dir="auto">
           {option.label}
