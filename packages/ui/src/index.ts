@@ -12,6 +12,9 @@ export { Blockquote } from './components/Blockquote/Blockquote.js';
 export type { BlockquoteProps, BlockquoteTone } from './components/Blockquote/Blockquote.js';
 export { Code } from './components/Code/Code.js';
 export type { CodeProps, CodeTone } from './components/Code/Code.js';
+export { Divider } from './components/Divider/Divider.js';
+export type { DividerProps } from './components/Divider/Divider.js';
+
 export { Icon, IconProvider } from './components/Icon/Icon.js';
 export type {
   IconColor,

@@ -97,6 +97,6 @@
 }
 
 /* The host owns the optical inset around a stretched toolbar separator. */
-.divider-demo-toolbar-pair > .divider-proto {
+.divider-demo-toolbar-rule {
   margin-block: var(--space-4);
 }

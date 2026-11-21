@@ -6,6 +6,7 @@ export type {
   BuiltinIconAdapterName,
   CodeProps,
   CodeTone,
+  DividerProps,
   GlyphComponent,
   GlyphDefinition,
   GlyphSource,
