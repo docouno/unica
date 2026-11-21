@@ -1,14 +1,15 @@
-import { ProgressCircle } from '../../prototypes/progress/progress-circle.proto.js';
+import { ProgressCircle } from '@docouno/unica';
 import { previewProps } from '../preview-code.js';
 import { defineComponent } from '../../workbench/types.js';
+import { activityNameReference, labelledByText, withActivityNameCode } from './activity-name.js';
 
-const { default: Study } = await import('../../prototypes/progress/progress-circle.examples.js');
+const { default: Study } = await import('./progress-circle.examples.js');
 
 export default defineComponent({
   id: 'progress-circle',
   title: 'ProgressCircle',
   category: 'Feedback & Status',
-  status: 'Proto',
+  status: 'UI',
   summary:
     'The Spinner silhouette adapted to a measured amount. The same small icon slot, with no new visual pattern.',
   componentName: 'ProgressCircle',
@@ -39,33 +40,84 @@ export default defineComponent({
       description: 'Measured completion for a known phase.',
       examples: [0, 45, 100],
     },
+    max: {
+      kind: 'number',
+      group: 'Measurement',
+      default: 100,
+      examples: [80, 100],
+      description: 'Positive total in the same units as the value.',
+    },
     determinate: {
       kind: 'boolean',
       group: 'Measurement',
       default: true,
-      description: 'Turn off while the operation has no known duration.',
+      description: 'Turn off while the operation has no measured total.',
       demo: true,
+    },
+    'aria-label': {
+      kind: 'string',
+      group: 'Semantics',
+      label: 'Accessible name',
+      default: 'Uploading assets',
+      description: 'Text that names the operation.',
+    },
+    labelledByText,
+    'aria-valuetext': {
+      kind: 'string',
+      group: 'Semantics',
+      label: 'Accessible value text',
+      default: '',
+      description: 'Describe the measured amount in its original units.',
     },
   },
   constraints: [
     {
+      kind: 'forbidden',
+      when: { labelledByText: '' },
+      affects: [{ key: 'aria-label', value: '' }],
+      reason: 'Give the operation a name or a referenced label.',
+    },
+    {
       kind: 'ignored',
       when: { determinate: false },
-      affects: ['value'],
+      affects: ['value', 'max', 'aria-valuetext'],
       reason: 'An indeterminate phase has no measured amount.',
     },
   ],
-  render: ({ ctx, values: { determinate, value, size, tone } }) => (
-    <ProgressCircle
-      {...ctx.subject}
-      size={size}
-      tone={tone}
-      value={determinate ? value : null}
-      aria-label="Uploading assets"
-    />
-  ),
-  code: ({ determinate, value, size, tone }) =>
-    `<ProgressCircle aria-label="Uploading assets" value={${determinate ? value : 'null'}}${previewProps({ size, tone }, { size: 'inherit', tone: 'inherit' })} />`,
+  render: ({ ctx, values: { determinate, value, labelledByText, ...props } }) => {
+    const id = `${ctx.id}-operation`;
+    const reference = activityNameReference(id, labelledByText);
+    if (!reference && !props['aria-label'].trim()) {
+      return <span>Give the operation a name.</span>;
+    }
+    return (
+      <>
+        {reference}
+        <ProgressCircle
+          {...ctx.subject}
+          {...props}
+          value={determinate ? value : null}
+          aria-labelledby={reference ? id : undefined}
+        />
+      </>
+    );
+  },
+  code: ({ determinate, value, labelledByText, ...props }) => {
+    const label = labelledByText.trim() ? ' aria-labelledby="operation-label"' : '';
+    if (!label && !props['aria-label'].trim()) {
+      return '';
+    }
+    const attributes = previewProps(props, {
+      size: 'inherit',
+      tone: 'inherit',
+      max: 100,
+      'aria-valuetext': '',
+    });
+    return withActivityNameCode(
+      `<ProgressCircle value={${determinate ? value : 'null'}}${attributes}${label} />`,
+      labelledByText,
+    );
+  },
   matrixViews: [
     {
       id: 'scale',

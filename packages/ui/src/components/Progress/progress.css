@@ -1,0 +1,227 @@
+@layer unica.components {
+  .unica-progress {
+    --_progress-height: 8px;
+    display: grid;
+    gap: var(--space-8);
+    min-inline-size: 0;
+    font-family: var(--font-family-base);
+    font-size: var(--text-size-caption-l);
+    line-height: var(--text-size-caption-l-lh);
+  }
+
+  .unica-progress[data-size='s'] {
+    --_progress-height: 4px;
+  }
+  .unica-progress[data-size='l'] {
+    --_progress-height: 12px;
+  }
+
+  .unica-progress-heading {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    column-gap: var(--space-16);
+    row-gap: var(--space-4);
+    min-inline-size: 0;
+  }
+
+  .unica-progress-label {
+    flex: 1 1 0;
+    min-inline-size: min(100%, 16ch);
+    color: var(--fg-secondary);
+    overflow-wrap: anywhere;
+  }
+
+  .unica-progress-value {
+    max-inline-size: 100%;
+    margin-inline-start: auto;
+    color: var(--fg-muted);
+    font-variant-numeric: tabular-nums;
+    overflow-wrap: anywhere;
+    text-align: end;
+  }
+
+  .unica-progress-track {
+    position: relative;
+    isolation: isolate;
+    clip-path: inset(-16px 0);
+    inline-size: 100%;
+    block-size: var(--_progress-height);
+    border-radius: var(--radius-full);
+    background: var(--control-bg);
+    box-shadow: inset 0 0 0 1px var(--control-border);
+    color: var(--_progress-color);
+  }
+
+  .unica-progress-fill {
+    position: relative;
+    display: block;
+    inline-size: var(--_progress-fraction);
+    block-size: 100%;
+    border-radius: inherit;
+    background-color: currentColor;
+    background-image: var(--progress-fill-light);
+    box-shadow: var(--progress-fill-shadow);
+    transition: inline-size var(--progress-value-duration) ease-out;
+  }
+
+  .unica-progress-tip {
+    position: absolute;
+    pointer-events: none;
+    inset-inline-end: 0;
+    inset-block-start: 50%;
+    inline-size: min(48px, 100%);
+    block-size: calc(var(--_progress-height) + 12px);
+    opacity: calc(var(--progress-tip-opacity) * var(--_progress-tip-strength));
+    transform: translateY(-50%);
+    transition: opacity 600ms ease-out;
+  }
+
+  .unica-progress-tip::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(
+      ellipse at 100% 50%,
+      var(--progress-tip-light),
+      color-mix(in oklab, currentColor 65%, transparent) 24%,
+      transparent 72%
+    );
+    opacity: 0.75;
+    transform-origin: right center;
+    filter: blur(2px);
+    animation: none;
+  }
+
+  .unica-progress[data-active] .unica-progress-tip::after {
+    animation: var(--progress-tip-motion);
+  }
+
+  .unica-progress:dir(rtl) .unica-progress-tip {
+    transform: translateY(-50%) scaleX(-1);
+  }
+
+  .unica-progress[data-full] .unica-progress-tip {
+    opacity: 0;
+  }
+  .unica-progress[data-resting] .unica-progress-tip {
+    visibility: hidden;
+    transition: none;
+  }
+
+  @keyframes activity-tip-breathe {
+    0%,
+    100% {
+      opacity: 0.55;
+      transform: scaleX(0.78);
+    }
+    50% {
+      opacity: 0.9;
+      transform: scaleX(1);
+    }
+  }
+
+  .unica-progress[data-empty] .unica-progress-fill {
+    visibility: hidden;
+    transition: none;
+  }
+
+  .unica-progress-wait {
+    display: block;
+    block-size: 100%;
+    border-radius: inherit;
+    background-color: var(--progress-wait-base);
+    background-image:
+      var(--progress-fill-light),
+      linear-gradient(
+        135deg,
+        var(--progress-wait-stripe) 25%,
+        transparent 25% 50%,
+        var(--progress-wait-stripe) 50% 75%,
+        transparent 75%
+      );
+    background-size:
+      100% 100%,
+      24px 24px;
+    box-shadow: var(--progress-fill-shadow);
+    animation: unica-progress-wait 2200ms linear infinite;
+  }
+
+  .unica-progress[data-paused] .unica-progress-wait {
+    animation: none;
+  }
+  .unica-progress[hidden] {
+    display: none;
+  }
+
+  @keyframes unica-progress-wait {
+    to {
+      background-position:
+        0 0,
+        24px 0;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .unica-progress-fill,
+    .unica-progress-tip {
+      transition: none;
+    }
+    .unica-progress-wait,
+    .unica-progress[data-active] .unica-progress-tip::after {
+      animation: none;
+    }
+  }
+
+  @media (forced-colors: active) {
+    .unica-progress-track {
+      color: Highlight;
+      background: Canvas;
+      outline: 1px solid CanvasText;
+      outline-offset: -1px;
+      box-shadow: none;
+    }
+    .unica-progress-fill {
+      forced-color-adjust: none;
+      background: Highlight;
+      box-shadow: none;
+    }
+    .unica-progress-tip {
+      display: none;
+    }
+    .unica-progress-wait {
+      background: none;
+      box-shadow: none;
+      animation: none;
+    }
+    .unica-progress[data-indeterminate] .unica-progress-track {
+      outline-color: Highlight;
+      outline-style: dashed;
+    }
+  }
+
+  .unica-progress-value:not([data-custom]) {
+    display: inline-grid;
+    min-inline-size: 4ch;
+  }
+
+  /* Reserve the longest percentage even when the percent sign is wider than a digit. */
+  .unica-progress-value:not([data-custom])::before {
+    content: '100%';
+    visibility: hidden;
+  }
+
+  .unica-progress-value:not([data-custom])::before,
+  .unica-progress-value:not([data-custom]) > bdi {
+    grid-area: 1 / 1;
+  }
+
+  .unica-progress-value:not([data-custom]) > bdi {
+    justify-self: end;
+  }
+
+  .unica-progress-value[aria-hidden] {
+    visibility: hidden;
+  }
+}

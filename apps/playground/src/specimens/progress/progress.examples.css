@@ -45,9 +45,9 @@
   overflow-wrap: anywhere;
 }
 
-.activity-label > .activity-spinner {
+.activity-label > .unica-activity-icon {
   align-self: flex-start;
-  margin-block-start: calc((var(--text-size-body-s-lh) - var(--spinner-dimension)) / 2);
+  margin-block-start: calc((var(--text-size-body-s-lh) - var(--_activity-dimension)) / 2);
 }
 
 .activity-divider {
@@ -148,4 +148,14 @@
 .activity-preview-controls > :is(input, select):focus-visible {
   outline: 2px solid var(--focus-ring-color);
   outline-offset: 2px;
+}
+
+.activity-static.unica-activity-icon *,
+.activity-static .unica-progress-wait {
+  animation: none;
+}
+
+/* Workbench snapshots show the revealed frame even when the preview has a delay. */
+html[data-wb-freeze='1'] .unica-activity-icon[data-spinner] > .unica-activity-icon-drawing {
+  animation-delay: 0ms !important;
 }

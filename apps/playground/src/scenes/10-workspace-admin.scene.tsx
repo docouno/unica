@@ -13,7 +13,7 @@ import { Button } from '../prototypes/button/button.proto.js';
 import { Card } from '../prototypes/card/card.proto.js';
 import { Alert, AlertTitle, AlertDescription } from '../prototypes/alert/alert.proto.js';
 import { ToastViewport } from '../prototypes/toast/toast.proto.js';
-import { Progress } from '../prototypes/progress/progress.proto.js';
+import { Progress } from '@docouno/unica';
 import {
   Dropzone,
   FileInput,

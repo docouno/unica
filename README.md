@@ -38,9 +38,9 @@ export function ThemePreview() {
 }
 ```
 
-The library currently ships theme tokens, preset metadata, `UnicaProvider`, native scrollbar utilities, the [Icon](docs/components/icon.md) glyph protocol (`Icon`, `IconProvider`, `defineGlyph`), and [Portal](docs/components/portal.md) (`Portal`, `PortalProvider`, `usePortalContainer`). The `data-theme` attribute applies the CSS preset, and `UnicaProvider` supplies structural component defaults through React context. See [Structural Component Defaults](docs/concepts/themes-and-roles.md#structural-component-defaults), [Native Scrollbars](docs/concepts/scrollbars.md), [Icon](docs/components/icon.md), and [Portal](docs/components/portal.md).
+The library currently ships theme tokens, preset metadata, `UnicaProvider`, native scrollbar utilities, the [Icon](docs/components/icon.md) glyph protocol (`Icon`, `IconProvider`, `defineGlyph`), [Portal](docs/components/portal.md) (`Portal`, `PortalProvider`, `usePortalContainer`), [Spinner](docs/components/spinner.md), and [Progress and ProgressCircle](docs/components/progress.md). The `data-theme` attribute applies the CSS preset, and `UnicaProvider` supplies structural component defaults through React context. See [Structural Component Defaults](docs/concepts/themes-and-roles.md#structural-component-defaults), [Native Scrollbars](docs/concepts/scrollbars.md), [Icon](docs/components/icon.md), and [Portal](docs/components/portal.md).
 
-New component families are reviewed as live prototypes in the playground before their public package APIs ship.
+New component families are reviewed as live prototypes in the playground before their public package APIs ship. Playground scenes use the shipped package for Icon, Spinner, and Progress alongside families still in design.
 
 The [Workbench](docs/workbench.md) has Playground, Matrix, Cases, and Usage views for each component. Choose Family and Scheme to compare themes or isolate one artboard, then inspect actual component bounds and interactions at different widths, text scales, and reading directions.
 

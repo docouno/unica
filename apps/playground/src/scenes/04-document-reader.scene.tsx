@@ -15,7 +15,7 @@ import {
   CollapsibleTrigger,
 } from '../prototypes/disclosure/disclosure.proto.js';
 import { List, ListItem } from '../prototypes/list/list.proto.js';
-import { Progress } from '../prototypes/progress/progress.proto.js';
+import { Progress } from '@docouno/unica';
 import { Menu } from '../prototypes/menu/menu.live.js';
 import type { MenuEntry } from '../prototypes/menu/menu.entries.js';
 import { IconButton } from '../prototypes/button/button.proto.js';

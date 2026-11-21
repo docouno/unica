@@ -1,12 +1,11 @@
 import { CloseGlyph } from '../control-glyphs.js';
 import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import type { ComponentPropsWithRef, ReactElement, Ref, RefObject } from 'react';
-import { Icon } from '@docouno/unica';
+import { Icon, Spinner } from '@docouno/unica';
 import type { GlyphSource } from '@docouno/unica';
 import type { DisplayStatus } from '../badge/badge.styles.js';
 import { statusStyle } from '../badge/badge.styles.js';
 import { Tooltip } from '../tooltip/tooltip.proto.js';
-import { Spinner } from '../progress/progress.proto.js';
 import './tag.css';
 
 export type TagSize = 's' | 'm' | 'l';

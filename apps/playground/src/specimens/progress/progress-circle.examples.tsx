@@ -1,8 +1,7 @@
 import { useId, useState } from 'react';
 import type { ReactElement } from 'react';
-import { Button } from '../button/button.proto.js';
-import { Spinner } from './progress.proto.js';
-import { ProgressCircle } from './progress-circle.proto.js';
+import { Button } from '../../prototypes/button/button.proto.js';
+import { ProgressCircle, Spinner } from '@docouno/unica';
 import './progress.examples.css';
 
 function HandoffStudy(): ReactElement {

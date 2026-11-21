@@ -1,13 +1,15 @@
-import { Spinner } from '../../prototypes/progress/progress.proto.js';
+import { Spinner } from '@docouno/unica';
+import { previewProps } from '../preview-code.js';
 import { defineComponent } from '../../workbench/types.js';
+import { activityNameReference, labelledByText, withActivityNameCode } from './activity-name.js';
 
-const { default: Study } = await import('../../prototypes/progress/spinner.examples.js');
+const { default: Study } = await import('./spinner.examples.js');
 
 export default defineComponent({
   id: 'spinner',
   title: 'Spinner',
   category: 'Feedback & Status',
-  status: 'Proto',
+  status: 'UI',
   summary:
     'Compact activity for work with an unknown duration. The surrounding text tells you what is happening.',
   componentName: 'Spinner',
@@ -35,6 +37,7 @@ export default defineComponent({
       kind: 'number',
       group: 'Activity',
       default: 0,
+      examples: [0, 150],
       description: 'Wait this many milliseconds before showing activity.',
     },
     'aria-label': {
@@ -44,8 +47,35 @@ export default defineComponent({
       label: 'Accessible name',
       description: 'Accessible name for an otherwise silent glyph.',
     },
+    labelledByText,
+    'aria-hidden': {
+      kind: 'boolean',
+      group: 'Semantics',
+      default: false,
+      description: 'Hide a redundant glyph from assistive technology.',
+    },
   },
-  render: ({ ctx, values }) => <Spinner key={values.delay} {...ctx.subject} {...values} />,
+  render: ({ ctx, values: { labelledByText, ...props } }) => {
+    const id = `${ctx.id}-operation`;
+    const reference = activityNameReference(id, labelledByText);
+    return (
+      <>
+        {reference}
+        <Spinner {...ctx.subject} {...props} aria-labelledby={reference ? id : undefined} />
+      </>
+    );
+  },
+  code: ({ labelledByText, ...props }) => {
+    const label = labelledByText.trim() ? ' aria-labelledby="operation-label"' : '';
+    const attributes = previewProps(props, {
+      size: 'inherit',
+      tone: 'inherit',
+      delay: 0,
+      'aria-label': '',
+      'aria-hidden': false,
+    });
+    return withActivityNameCode(`<Spinner${attributes}${label} />`, labelledByText);
+  },
   matrixViews: [
     {
       id: 'scale',

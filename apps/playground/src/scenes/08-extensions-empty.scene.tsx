@@ -30,8 +30,7 @@ import {
   EmptyTitle,
 } from '../prototypes/empty/empty.proto.js';
 import { ToastCard } from '../prototypes/toast/toast.proto.js';
-import { Spinner } from '../prototypes/progress/progress.proto.js';
-import { Icon } from '@docouno/unica';
+import { Spinner, Icon } from '@docouno/unica';
 import { Input } from '../prototypes/input/input.proto.js';
 import { List, ListItem } from '../prototypes/list/list.proto.js';
 import { Text } from '../prototypes/text/text.proto.js';

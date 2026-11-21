@@ -17,9 +17,8 @@ import { Button, IconButton } from '../prototypes/button/button.proto.js';
 import { Code } from '../prototypes/code/code.proto.js';
 import { Blockquote } from '../prototypes/blockquote/blockquote.proto.js';
 import { ToastCard } from '../prototypes/toast/toast.proto.js';
-import { Spinner } from '../prototypes/progress/progress.proto.js';
+import { Spinner, Icon } from '@docouno/unica';
 import { Input } from '../prototypes/input/input.proto.js';
-import { Icon } from '@docouno/unica';
 import { Kbd } from '../prototypes/kbd/kbd.proto.js';
 import { Link } from '../prototypes/link/link.proto.js';
 import {
