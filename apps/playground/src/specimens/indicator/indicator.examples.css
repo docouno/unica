@@ -164,7 +164,6 @@
 }
 
 .indicator-example-overlay {
-  --indicator-separator-color: var(--bg-overlay);
   display: flex;
   flex-direction: column;
   gap: var(--space-20, 20px);
@@ -176,13 +175,6 @@
   background: var(--bg-overlay);
   box-shadow: var(--overlay-shadow-popover);
   backdrop-filter: var(--overlay-backdrop);
-}
-
-/* A translucent panel needs a solid separating edge over the host's image/fill. */
-@supports (color: rgb(from white r g b / 1)) {
-  .indicator-example-overlay {
-    --indicator-separator-color: rgb(from var(--bg-overlay) r g b / 1);
-  }
 }
 
 .indicator-example-long {

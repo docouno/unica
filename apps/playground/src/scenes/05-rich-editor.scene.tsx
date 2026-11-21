@@ -504,6 +504,7 @@ export default defineScene({
     'code',
     'divider',
     'icon',
+    'indicator',
     'input',
     'kbd',
     'link',

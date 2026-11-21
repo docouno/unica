@@ -653,6 +653,7 @@ export default defineScene({
     'date-picker',
     'date-range-picker',
     'icon',
+    'indicator',
     'kbd',
     'link',
     'pagination',

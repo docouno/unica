@@ -305,6 +305,7 @@ export default defineScene({
     'button',
     'card',
     'icon',
+    'indicator',
     'kbd',
     'link',
     'list',
