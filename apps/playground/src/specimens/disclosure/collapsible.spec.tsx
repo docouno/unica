@@ -12,7 +12,7 @@ import {
   PopoverTitle,
 } from '../../prototypes/popover/popover.proto.js';
 import { Table, TableScroll } from '../../prototypes/table/table.proto.js';
-import { Text } from '../../prototypes/text/text.proto.js';
+import { Text } from '@docouno/unica';
 import {
   Collapsible,
   CollapsibleContent,

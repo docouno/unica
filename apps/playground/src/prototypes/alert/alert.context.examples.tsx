@@ -7,7 +7,7 @@ import type { AlertSize, AlertStatus } from './alert.proto.js';
 import { Button, IconButton } from '../button/button.proto.js';
 import { Card } from '../card/card.proto.js';
 import { Link } from '../link/link.proto.js';
-import { Text } from '../text/text.proto.js';
+import { Text } from '@docouno/unica';
 import './alert.examples.css';
 
 const statuses: readonly AlertStatus[] = ['neutral', 'info', 'success', 'warning', 'danger'];

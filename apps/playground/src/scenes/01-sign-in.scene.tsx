@@ -10,8 +10,7 @@ import { FormField, Input } from '../prototypes/input/input.proto.js';
 import { Link } from '../prototypes/link/link.proto.js';
 import { SegmentedControl } from '../prototypes/segmented-control/segmented-control.proto.js';
 import { Checkbox } from '../prototypes/binary-controls/binary-controls.proto.js';
-import { Text } from '../prototypes/text/text.proto.js';
-import { Title } from '../prototypes/title/title.proto.js';
+import { Text, Title } from '@docouno/unica';
 import { defineScene } from '../workbench/types.js';
 import { FolioScene } from './folio/folio.shared.js';
 

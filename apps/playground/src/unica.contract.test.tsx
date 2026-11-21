@@ -4,7 +4,14 @@ import { cleanup, fireEvent, render, screen, within } from '@testing-library/rea
 import { afterEach, beforeAll, expect, it } from 'vitest';
 import { unicaWorkbench } from './unica.workbench.js';
 import { WorkbenchApp } from './workbench/WorkbenchApp.js';
-import { validateCatalog } from './workbench/schema.js';
+import {
+  buildPairwise,
+  componentCode,
+  defaultValues,
+  evaluate,
+  finiteDomain,
+  validateCatalog,
+} from './workbench/schema.js';
 
 beforeAll(() => {
   if (typeof globalThis.ResizeObserver === 'undefined') {
@@ -51,6 +58,43 @@ it('discovers real Proto and scene entries and renders six themed Subjects', () 
 
   fireEvent.click(screen.getByRole('button', { name: 'RTL' }));
   expect(container.querySelectorAll('.wb-artboard[dir="rtl"]')).toHaveLength(6);
+});
+
+it('covers typography controls in Pairwise and renders only valid label bindings', () => {
+  for (const id of ['text', 'title']) {
+    const component = unicaWorkbench.components.find((entry) => entry.id === id)!;
+    expect(component.status).toBe('UI');
+    const search = buildPairwise(component.props, component.constraints, {});
+    let step = search.next();
+    while (!step.done) {
+      step = search.next();
+    }
+    const rows = step.value.rows;
+    for (const [key, prop] of Object.entries(component.props)) {
+      for (const value of finiteDomain(prop)) {
+        expect(
+          rows.some((row) => row[key] === value),
+          `${id}: ${key}=${value}`,
+        ).toBe(true);
+      }
+    }
+
+    expect(rows.every((row) => evaluate(component.constraints, row).valid)).toBe(true);
+    const clamp = rows.find((row) => row.lineClamp === '1' && row.truncate === true)!;
+    const { matches } = evaluate(component.constraints, clamp);
+    expect(matches.some((rule) => rule.kind === 'precedence')).toBe(true);
+    if (id === 'title') {
+      expect(
+        matches.some((rule) => rule.kind === 'ignored' && rule.affects.includes('textWrap')),
+      ).toBe(true);
+    } else {
+      const linked = rows.filter((row) => row.htmlFor === 'field');
+      expect(linked.length).toBeGreaterThan(0);
+      expect(linked.every((row) => row.as === 'label')).toBe(true);
+      const upright = { ...defaultValues(component.props), as: 'em', italic: 'normal' };
+      expect(componentCode(component, upright)).toContain('italic={false}');
+    }
+  }
 });
 
 it('restores the material and case caption of a directly addressed RadioCard preview', () => {

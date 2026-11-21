@@ -3,7 +3,7 @@ import type { ReactElement, ReactNode } from 'react';
 import { CheckIcon, ClockIcon, LinkSimpleIcon, WarningCircleIcon } from '@phosphor-icons/react';
 import { Button } from '../button/button.proto.js';
 import { Input } from '../input/input.proto.js';
-import { Text } from '../text/text.proto.js';
+import { Text } from '@docouno/unica';
 import {
   Popover,
   PopoverBody,

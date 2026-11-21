@@ -21,10 +21,6 @@
   min-inline-size: 0;
 }
 
-.disclosure-study-label.text-proto {
-  margin: 0;
-}
-
 .disclosure-study-card.card-proto {
   inline-size: min(100%, 34rem);
 }
@@ -52,10 +48,6 @@
   gap: var(--space-4) var(--space-12);
 }
 
-.disclosure-study-summary > .text-proto {
-  margin: 0;
-}
-
 .disclosure-study-overlay.popover-content-proto {
   inline-size: min(100%, 25rem);
 }
@@ -75,7 +67,7 @@
   justify-self: start;
 }
 
-.disclosure-study-reason.text-proto {
+.disclosure-study-reason {
   margin: 0;
   padding-inline: var(--disclosure-start) var(--disclosure-inset);
 }

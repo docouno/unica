@@ -2,8 +2,7 @@ import { useState, useSyncExternalStore } from 'react';
 import type { ReactElement, ReactNode } from 'react';
 import { defineComponent } from '../../workbench/types.js';
 import { PopoverContent } from '../../prototypes/popover/popover.proto.js';
-import { Text } from '../../prototypes/text/text.proto.js';
-import { Title } from '../../prototypes/title/title.proto.js';
+import { Text, Title } from '@docouno/unica';
 import { Pagination } from '../../prototypes/pagination/pagination.proto.js';
 import '../../prototypes/pagination/pagination.examples.css';
 

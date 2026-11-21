@@ -1,6 +1,5 @@
 import type { ReactElement, ReactNode } from 'react';
-import { Text } from './text.proto.js';
-import { Title } from '../title/title.proto.js';
+import { Text, Title } from '@docouno/unica';
 import './typography.examples.css';
 
 export const longCopy =
@@ -95,13 +94,19 @@ export function EditorCopy(): ReactElement {
   );
 }
 
-export function SettingsCopy(): ReactElement {
+export function SettingsCopy({ fieldId }: { readonly fieldId: string }): ReactElement {
   return (
     <div className="type-study type-context">
       <Title as="h1" size="heading-xl">
         Workspace preferences
       </Title>
       <Text color="secondary">Choose how your team reads and shares information.</Text>
+      <div className="type-field">
+        <Text as="label" htmlFor={fieldId} weight="medium">
+          Display name
+        </Text>
+        <input className="type-input" id={fieldId} />
+      </div>
       <div className="type-context-divider" />
       <Title as="h2" size="heading-s">
         Reading experience

@@ -14,7 +14,7 @@ import {
   TrashIcon,
   UploadSimpleIcon,
 } from '@phosphor-icons/react';
-import { Text } from '../text/text.proto.js';
+import { Text } from '@docouno/unica';
 import type { IconProps as PhosphorIconProps } from '@phosphor-icons/react';
 import { Button, IconButton } from './button.proto.js';
 import type { ButtonProps, ButtonSize, ButtonTone, ButtonVariant } from './button.proto.js';

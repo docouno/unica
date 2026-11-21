@@ -19,7 +19,7 @@ import {
   ShieldCheckIcon,
 } from '@phosphor-icons/react';
 import { Button } from '../../prototypes/button/button.proto.js';
-import { Text } from '../../prototypes/text/text.proto.js';
+import { Text } from '@docouno/unica';
 import { defineComponent } from '../../workbench/types.js';
 import { Combobox } from '../../prototypes/combobox/combobox.proto.js';
 import type { Suggestion } from '../../prototypes/combobox/combobox.proto.js';

@@ -46,7 +46,7 @@ These are visual compositions with local state. Authentication, publishing, invi
 
 The invitation and properties scenes use the shared [Modal and Drawer design reference](../../apps/playground/src/prototypes/dialog/README.md). The invitation stays centered at narrow widths. The properties panel docks to inline end on wide screens, with square corners and the full available height. At 600px or less, it becomes a bottom sheet without remounting the form.
 
-Scenes import shared families from `src/prototypes/`; their `folio/` helpers contain product content and layout rather than duplicate controls. The shell owns the rail and aside topologies, while the theme owns all materials. The product scenes stay in place as individual prototype imports are replaced by package components later.
+Scenes import shipped families such as [Text](../components/text.md) and [Title](../components/title.md) from `@docouno/unica` and use local prototypes for families still in design. The `folio/` helpers own product content and layout, the shell owns rail and aside structure, and the theme owns materials.
 
 Use `make visual item=02-workspace-overview` for a six-preset capture or `make visual item=07-invite-access-modal family=pixel scheme=light vp=360 scale=120 dir=rtl` for a single-theme stress capture. See [Workbench Workflow](../workbench.md) for the complete controls and screenshot options.
 

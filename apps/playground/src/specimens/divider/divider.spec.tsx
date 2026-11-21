@@ -1,13 +1,12 @@
 import { useState } from 'react';
 import type { ReactElement, ReactNode } from 'react';
 import { TextBIcon, TextItalicIcon, ListBulletsIcon, ListNumbersIcon } from '@phosphor-icons/react';
-import { Divider } from '@docouno/unica';
+import { Divider, Text } from '@docouno/unica';
 import { defineComponent } from '../../workbench/types.js';
 import type { ComponentValues, PreviewContext, PropSchema } from '../../workbench/types.js';
 import { Card } from '../../prototypes/card/card.proto.js';
 import { IconButton } from '../../prototypes/button/button.proto.js';
 import { PopoverContent } from '../../prototypes/popover/popover.proto.js';
-import { Text } from '../../prototypes/text/text.proto.js';
 import { previewProps } from '../preview-code.js';
 import './divider.examples.css';
 

@@ -1,0 +1,46 @@
+@layer unica.components {
+  .unica-title[data-unica-title-size='display-l'] {
+    letter-spacing: calc(-1.5px * var(--font-scale));
+  }
+
+  .unica-title[data-unica-title-size='display-m'] {
+    letter-spacing: calc(-1.2px * var(--font-scale));
+  }
+
+  .unica-title[data-unica-title-size='display-s'] {
+    letter-spacing: calc(-0.9px * var(--font-scale));
+  }
+
+  .unica-title[data-unica-title-size='heading-xl'] {
+    letter-spacing: calc(-0.7px * var(--font-scale));
+  }
+
+  .unica-title[data-unica-title-size='heading-l'] {
+    letter-spacing: calc(-0.5px * var(--font-scale));
+  }
+
+  .unica-title[data-unica-title-size='heading-m'] {
+    letter-spacing: calc(-0.3px * var(--font-scale));
+  }
+
+  .unica-title[data-unica-title-size='heading-s'] {
+    letter-spacing: calc(-0.15px * var(--font-scale));
+  }
+
+  .unica-title[data-unica-title-wrap] {
+    white-space: normal;
+    text-wrap: wrap;
+  }
+
+  .unica-title[data-unica-title-wrap='nowrap'] {
+    white-space: nowrap;
+  }
+
+  .unica-title[data-unica-title-wrap='pretty'] {
+    text-wrap: pretty;
+  }
+
+  .unica-title[data-unica-title-wrap='balance'] {
+    text-wrap: balance;
+  }
+}

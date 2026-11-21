@@ -17,11 +17,6 @@
   min-inline-size: 0;
 }
 
-.folio-connector-copy > .text-proto {
-  --text-size-body-s: var(--text-size-body-xs);
-  --text-size-body-s-lh: var(--text-size-body-xs-lh);
-}
-
 .folio-connector-title.folio-row,
 .folio-connector-link.folio-row {
   gap: var(--space-8);
@@ -54,10 +49,6 @@
   margin-block-start: auto;
   padding-block-start: 10px;
   border-block-start: 1px solid var(--border-subtle);
-}
-
-.folio-connector-footer > .text-proto {
-  min-inline-size: 0;
 }
 
 .folio-connector-result-status {
@@ -156,11 +147,6 @@
 
 .folio-preference-radio-row {
   gap: 20px;
-}
-
-.folio-preference-description.text-proto {
-  --text-size-body-s: var(--text-size-body-xs);
-  --text-size-body-s-lh: var(--text-size-body-xs-lh);
 }
 
 .folio-preference-row > .segmented-control-proto {

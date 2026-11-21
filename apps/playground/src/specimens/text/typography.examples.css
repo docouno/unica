@@ -115,3 +115,24 @@
   outline: 2px solid var(--focus-ring-color);
   outline-offset: 2px;
 }
+
+.type-field {
+  display: grid;
+  justify-items: start;
+  min-inline-size: 0;
+  gap: var(--space-4);
+}
+
+.type-input {
+  inline-size: min(100%, 18rem);
+  min-block-size: var(--size-s-height);
+  padding-inline: var(--size-s-padding-x);
+  border: 1px solid var(--control-border);
+  border-radius: var(--size-s-radius);
+  background: var(--control-bg);
+}
+
+.type-input:focus-visible {
+  outline: 2px solid var(--focus-ring-color);
+  outline-offset: 2px;
+}

@@ -21,8 +21,8 @@
   max-inline-size: 100%;
 }
 
-.menu-study-example > .text-proto,
-.menu-study-live > .text-proto {
+.menu-study-example > p,
+.menu-study-live > p {
   padding: var(--space-2) var(--space-4);
   border-radius: var(--radius-xs);
   background: var(--bg-canvas);

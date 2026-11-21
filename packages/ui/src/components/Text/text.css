@@ -1,0 +1,6 @@
+@layer unica.components {
+  .unica-text:is(span, strong, em, label)[data-unica-type-overflow='truncate']:not([hidden]) {
+    display: inline-block;
+    vertical-align: bottom;
+  }
+}

@@ -23,9 +23,7 @@ import {
   XCircleIcon,
   XIcon,
 } from '@phosphor-icons/react';
-import { Text } from '../../prototypes/text/text.proto.js';
-import { Title } from '../../prototypes/title/title.proto.js';
-import { Icon } from '@docouno/unica';
+import { Icon, Text, Title } from '@docouno/unica';
 import type { GlyphComponent, IconColor, IconSize } from '@docouno/unica';
 import { WideGlyph } from './icon.glyph.js';
 import './icon.examples.css';

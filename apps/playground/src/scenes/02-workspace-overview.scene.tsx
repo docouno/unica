@@ -7,13 +7,11 @@ import { Button } from '../prototypes/button/button.proto.js';
 import { Card } from '../prototypes/card/card.proto.js';
 import { Alert, AlertTitle, AlertDescription } from '../prototypes/alert/alert.proto.js';
 import { ToastCard } from '../prototypes/toast/toast.proto.js';
-import { Icon } from '@docouno/unica';
+import { Icon, Text, Title } from '@docouno/unica';
 import { Tooltip } from '../prototypes/tooltip/tooltip.proto.js';
 import { Link } from '../prototypes/link/link.proto.js';
 import { List, ListItem } from '../prototypes/list/list.proto.js';
 import { SegmentedControl } from '../prototypes/segmented-control/segmented-control.proto.js';
-import { Text } from '../prototypes/text/text.proto.js';
-import { Title } from '../prototypes/title/title.proto.js';
 import { Breadcrumb, BreadcrumbPage } from '../prototypes/breadcrumb/breadcrumb.proto.js';
 import { defineScene } from '../workbench/types.js';
 import {
@@ -173,7 +171,7 @@ function OverviewScene(): ReactElement {
                     <Title as="h3" size="body-m" className="folio-document-title">
                       {document.title}
                     </Title>
-                    <Text className="folio-document-description" size="body-s" color="secondary">
+                    <Text size="body-xs" color="secondary">
                       {document.description}
                     </Text>
                   </div>

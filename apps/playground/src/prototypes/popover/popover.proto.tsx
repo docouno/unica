@@ -1,9 +1,7 @@
 import type { ComponentPropsWithRef, ReactElement } from 'react';
 import { XIcon } from '@phosphor-icons/react';
-import { Text } from '../text/text.proto.js';
-import type { TextProps } from '../text/text.proto.js';
-import { Title } from '../title/title.proto.js';
-import type { TitleProps } from '../title/title.proto.js';
+import { Text, Title } from '@docouno/unica';
+import type { TextProps, TitleProps } from '@docouno/unica';
 import './popover.css';
 import '../scrollbar/scrollbar.css';
 

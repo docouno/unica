@@ -1,39 +1,26 @@
+import { Text } from '@docouno/unica';
+import type { TextSize, TextTag } from '@docouno/unica';
 import { previewProps, previewText } from '../preview-code.js';
 import { defineComponent } from '../../workbench/types.js';
-import { Text } from '../../prototypes/text/text.proto.js';
-import type { TextColor, TextSize } from '../../prototypes/text/text.proto.js';
-import {
-  Example,
-  longCopy,
-  ReaderCopy,
-  SettingsCopy,
-} from '../../prototypes/text/typography.examples.js';
+import { Example, longCopy, ReaderCopy, SettingsCopy } from './typography.examples.js';
+import { clampPrecedence, foregrounds, typographyControls } from './typography.controls.js';
 
 const sizes: readonly TextSize[] = [
   'body-l',
   'body-m',
   'body-s',
+  'body-xs',
   'caption-l',
   'caption-m',
   'caption-s',
 ];
-const colors: readonly TextColor[] = [
-  'primary',
-  'secondary',
-  'muted',
-  'subtle',
-  'accent',
-  'info',
-  'success',
-  'warning',
-  'danger',
-];
+const unlinkedTags = ['p', 'span', 'div', 'strong', 'em'] as const satisfies readonly TextTag[];
 
 export default defineComponent({
   id: 'text',
   title: 'Text',
   category: 'Typography',
-  status: 'Proto',
+  status: 'UI',
   summary:
     'Reading, labels, and metadata. Native wrapping with shared line boxes across six presets.',
   componentName: 'Text',
@@ -43,21 +30,24 @@ export default defineComponent({
       group: 'Semantics',
       default: 'p',
       description: 'Select the element appropriate to the content.',
-      choices: [{ value: 'p' }, { value: 'span' }, { value: 'strong' }, { value: 'em' }],
+      choices: [...unlinkedTags.map((value) => ({ value })), { value: 'label' }],
+    },
+    htmlFor: {
+      kind: 'slot',
+      group: 'Semantics',
+      default: 'unset',
+      description: 'Link the label to a native input.',
+      choices: [
+        { value: 'unset', label: 'Unset' },
+        { value: 'field', label: 'Link to field' },
+      ],
     },
     size: {
       kind: 'enum',
       group: 'Typography',
       default: 'body-m',
       description: 'Scale body text or captions.',
-      choices: [
-        { value: 'body-l' },
-        { value: 'body-m' },
-        { value: 'body-s' },
-        { value: 'caption-l' },
-        { value: 'caption-m' },
-        { value: 'caption-s' },
-      ],
+      choices: sizes.map((value) => ({ value })),
     },
     weight: {
       kind: 'slot',
@@ -73,75 +63,82 @@ export default defineComponent({
         { value: 'bold', label: 'Bold' },
       ],
     },
-    color: {
-      kind: 'enum',
-      group: 'Typography',
-      default: 'inherit',
-      description: 'Inherit surrounding color or use a semantic foreground.',
-      choices: [
-        { value: 'inherit' },
-        { value: 'primary' },
-        { value: 'secondary' },
-        { value: 'muted' },
-        { value: 'subtle' },
-        { value: 'accent' },
-        { value: 'info' },
-        { value: 'success' },
-        { value: 'warning' },
-        { value: 'danger' },
-      ],
-    },
+    ...typographyControls,
     children: {
       kind: 'string',
       group: 'Content',
       default: 'Readable typography gives quieter details room to breathe.',
       description: 'Change the text to inspect wrapping and emphasis.',
     },
-    lineClamp: {
-      kind: 'slot',
-      group: 'Overflow',
-      default: 'off',
-      description: 'Limit the text to a fixed number of lines.',
-      choices: [
-        { value: 'off', label: 'Off' },
-        { value: '2', label: '2 lines' },
-        { value: '3', label: '3 lines' },
-      ],
-    },
-    truncate: {
-      kind: 'boolean',
-      group: 'Overflow',
-      default: false,
-      description: 'Keep the content on one line and indicate overflow with an ellipsis.',
-    },
   },
   constraints: [
     {
-      kind: 'precedence',
-      when: { lineClamp: '2' },
-      affects: [{ key: 'truncate', value: true }],
-      reason: 'A two-line clamp takes precedence over single-line truncation.',
+      kind: 'forbidden',
+      when: { htmlFor: 'field' },
+      affects: unlinkedTags.map((value) => ({ key: 'as', value })),
+      reason: 'Only a native label can be linked to a field.',
     },
-    {
-      kind: 'precedence',
-      when: { lineClamp: '3' },
-      affects: [{ key: 'truncate', value: true }],
-      reason: 'A three-line clamp takes precedence over single-line truncation.',
-    },
+    ...clampPrecedence,
   ],
-  render: ({ ctx, values: { children, weight, lineClamp, ...props } }) => (
-    <Text
-      {...ctx.subject}
-      {...props}
-      {...(weight === 'auto' ? {} : { weight })}
-      {...(lineClamp === 'off' ? {} : { lineClamp: Number(lineClamp) })}
-      style={{ maxInlineSize: '28rem' }}
-    >
-      {children}
-    </Text>
-  ),
-  code: ({ children, weight, lineClamp, ...props }) =>
-    `<Text${previewProps({ ...props, weight }, { as: 'p', size: 'body-m', weight: 'auto', color: 'inherit', truncate: false })}${lineClamp === 'off' ? '' : ` lineClamp={${lineClamp}}`}>${previewText(children)}</Text>`,
+  render: ({
+    ctx,
+    values: { as, htmlFor, children, weight, lineClamp, align, italic, ...props },
+  }) => {
+    const textProps = {
+      ...ctx.subject,
+      ...props,
+      weight: weight === 'auto' ? undefined : weight,
+      lineClamp: lineClamp === 'off' ? undefined : Number(lineClamp),
+      align: align === 'inherit' ? undefined : align,
+      italic: italic === 'auto' ? undefined : italic === 'italic',
+      style: { maxInlineSize: 'min(100%, 28rem)' },
+    };
+
+    if (as === 'label' && htmlFor === 'field') {
+      const fieldId = `${ctx.id}-field`;
+      return (
+        <div className="type-field">
+          <Text {...textProps} as="label" htmlFor={fieldId}>
+            {children}
+          </Text>
+          <input className="type-input" id={fieldId} />
+        </div>
+      );
+    }
+
+    return (
+      <Text {...textProps} as={as}>
+        {children}
+      </Text>
+    );
+  },
+  code: ({ htmlFor, children, weight, lineClamp, align, italic, ...props }) => {
+    const attributes = previewProps(
+      {
+        ...props,
+        weight,
+        align,
+        ...(italic === 'auto' ? {} : { italic: italic === 'italic' }),
+        ...(lineClamp === 'off' ? {} : { lineClamp: Number(lineClamp) }),
+      },
+      {
+        as: 'p',
+        size: 'body-m',
+        weight: 'auto',
+        color: 'inherit',
+        align: 'inherit',
+        tabularNums: false,
+        truncate: false,
+      },
+    );
+    const copy = previewText(children);
+    return htmlFor === 'field' && props.as === 'label'
+      ? `<div>
+  <Text${attributes} htmlFor="text-field">${copy}</Text>
+  <input id="text-field" />
+</div>`
+      : `<Text${attributes}>${copy}</Text>`;
+  },
   matrixViews: [
     {
       id: 'scale',
@@ -201,7 +198,7 @@ export default defineComponent({
               <Text size="caption-l" weight="semibold">
                 {surface}
               </Text>
-              {colors.map((color) => (
+              {foregrounds.map((color) => (
                 <Text key={color} color={color} size="body-s" data-sample-color={color}>
                   {color} · Shared workspace notes
                 </Text>
@@ -243,7 +240,7 @@ export default defineComponent({
               </Text>
             </div>
           </Example>
-          {(['left', 'center', 'right'] as const).map((align) => (
+          {(['start', 'center', 'end'] as const).map((align) => (
             <Example key={align} label={align}>
               <Text align={align}>Ready for review</Text>
             </Example>
@@ -256,8 +253,8 @@ export default defineComponent({
     {
       id: 'reader',
       code: `<article>
-  <Title as="h2">Decision record</Title>
-  <Text>Capture the context for the next person who opens this page.</Text>
+  <Title as="h2" size="heading-m">Before the release</Title>
+  <Text>Start with the outcome. Explain who benefits, what changes, and how the team can verify the result. Keep the supporting decisions beside the work.</Text>
 </article>`,
       title: 'Folio · Document reader',
       render: () => <ReaderCopy />,
@@ -266,10 +263,10 @@ export default defineComponent({
       id: 'settings',
       code: `<div>
   <Text as="label" htmlFor="display-name" weight="medium">Display name</Text>
-  <Input id="display-name" />
+  <input id="display-name" />
 </div>`,
       title: 'Folio · Dense preferences',
-      render: () => <SettingsCopy />,
+      render: ({ ctx }) => <SettingsCopy fieldId={`${ctx.id}-display-name`} />,
     },
   ],
 });

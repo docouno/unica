@@ -15,8 +15,7 @@ import {
 import { Button } from '../button/button.proto.js';
 import { Card, CardTitle } from '../card/card.proto.js';
 import { Input } from '../input/input.proto.js';
-import { Text } from '../text/text.proto.js';
-import { Title } from '../title/title.proto.js';
+import { Text, Title } from '@docouno/unica';
 import { Empty, EmptyActions, EmptyDescription, EmptyMedia, EmptyTitle } from './empty.proto.js';
 import './empty.examples.css';
 
@@ -355,7 +354,13 @@ function EmptyRecovery(): ReactElement {
       <div className="empty-example-recovery-body">
         {phase === 'ready' ? (
           <div className="empty-example-reports">
-            <Title ref={readyTitle} as="h3" size="heading-m" tabIndex={-1}>
+            <Title
+              ref={readyTitle}
+              as="h3"
+              size="heading-m"
+              tabIndex={-1}
+              className="empty-example-reports-title"
+            >
               Reports
             </Title>
             <ul>
