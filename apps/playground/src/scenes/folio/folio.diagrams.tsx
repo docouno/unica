@@ -1,6 +1,6 @@
 import type { ReactElement } from 'react';
 import { ArrowRightIcon } from '@phosphor-icons/react';
-import { Icon } from '../../prototypes/icon/icon.proto.js';
+import { Icon } from '@docouno/unica';
 
 export function DatabaseTopology(): ReactElement {
   return (
@@ -18,7 +18,7 @@ export function DatabaseTopology(): ReactElement {
           <strong>Primary</strong>
           <span>writer · RW</span>
         </div>
-        <Icon icon={ArrowRightIcon} directional />
+        <Icon usage="slot" icon={ArrowRightIcon} directional />
         <div className="folio-topology-node">
           <strong>Replica A</strong>
           <span>sync · 0 ms</span>

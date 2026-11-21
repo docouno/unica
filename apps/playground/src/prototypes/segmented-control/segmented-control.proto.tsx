@@ -10,8 +10,8 @@ import {
   useRef,
 } from 'react';
 import type { HTMLAttributes, ReactElement, ReactNode, Ref } from 'react';
-import { Icon } from '../icon/icon.proto.js';
-import type { GlyphComponent } from '../icon/icon.proto.js';
+import { Icon } from '@docouno/unica';
+import type { GlyphSource } from '@docouno/unica';
 import type { ControlSize } from '../input/input.proto.js';
 import '../scrollbar/scrollbar.css';
 import './segmented-control.css';
@@ -19,7 +19,7 @@ import './segmented-control.css';
 export interface SegmentItem {
   readonly value: string;
   readonly label: ReactNode;
-  readonly iconLeft?: GlyphComponent | undefined;
+  readonly iconLeft?: GlyphSource | undefined;
   readonly disabled?: boolean | undefined;
 }
 
@@ -219,7 +219,7 @@ export function SegmentedControl({
 export interface SegmentedControlItemProps {
   readonly value: string;
   readonly children: ReactNode;
-  readonly iconLeft?: GlyphComponent | undefined;
+  readonly iconLeft?: GlyphSource | undefined;
   readonly iconOnly?: boolean;
   readonly disabled?: boolean | undefined;
   readonly ref?: Ref<HTMLInputElement>;
@@ -272,7 +272,7 @@ export function SegmentedControlItem({
         onChange={() => group.choose(value)}
       />
       <span className="segment-proto-plate">
-        {iconLeft && <Icon icon={iconLeft} size={group.size} />}
+        {iconLeft && <Icon usage="slot" icon={iconLeft} size={group.size} />}
         <span className="segment-proto-label">{children}</span>
       </span>
     </label>

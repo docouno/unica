@@ -23,10 +23,11 @@ import {
   XCircleIcon,
   XIcon,
 } from '@phosphor-icons/react';
-import { Text } from '../text/text.proto.js';
-import { Title } from '../title/title.proto.js';
-import { Icon, VectorGlyph } from './icon.proto.js';
-import type { GlyphComponent, GlyphProps, IconColor, IconSize } from './icon.proto.js';
+import { Text } from '../../prototypes/text/text.proto.js';
+import { Title } from '../../prototypes/title/title.proto.js';
+import { Icon } from '@docouno/unica';
+import type { GlyphComponent, IconColor, IconSize } from '@docouno/unica';
+import { WideGlyph } from './icon.glyph.js';
 import './icon.examples.css';
 
 const tiers: readonly Exclude<IconSize, 'inherit'>[] = ['s', 'm', 'l'];
@@ -43,14 +44,6 @@ const roles: readonly { color: IconColor; glyph: GlyphComponent }[] = [
   { color: 'warning', glyph: WarningCircleIcon },
   { color: 'danger', glyph: XCircleIcon },
 ];
-
-function WideGlyph(props: GlyphProps): ReactElement {
-  return (
-    <VectorGlyph {...props} viewBox="0 0 32 16">
-      <path fill="none" stroke="currentColor" strokeWidth="2" d="M1 1h30v14H1zM7 8h18" />
-    </VectorGlyph>
-  );
-}
 
 export function SizeExamples(): ReactElement {
   return (
@@ -83,13 +76,13 @@ export function SizeExamples(): ReactElement {
       </div>
       <div className="icon-stack icon-inline-samples">
         <Text size="body-s" color="muted">
-          <Icon icon={CheckIcon} /> Updated just now
+          <Icon usage="slot" icon={CheckIcon} /> Updated just now
         </Text>
         <Text size="body-m">
-          <Icon icon={ArrowRightIcon} directional /> Open workspace
+          <Icon usage="slot" icon={ArrowRightIcon} directional /> Open workspace
         </Text>
         <Title as="h3" size="heading-l">
-          <Icon icon={FolderIcon} /> Project notes
+          <Icon usage="slot" icon={FolderIcon} /> Project notes
         </Title>
       </div>
       <Text size="caption-l" color="secondary">
@@ -196,7 +189,7 @@ export function EditorExample(): ReactElement {
           FOLIO / RELEASE PLAYBOOK
         </Text>
         <Text size="caption-l" color="muted">
-          <Icon icon={CheckCircleIcon} color="success" /> Saved
+          <Icon usage="slot" icon={CheckCircleIcon} color="success" /> Saved
         </Text>
       </div>
       <div className="icon-toolbar" role="group" aria-label="Formatting preview">
@@ -215,7 +208,7 @@ export function EditorExample(): ReactElement {
               )
             }
           >
-            <Icon icon={glyph} size="s" />
+            <Icon usage="slot" icon={glyph} size="s" />
           </button>
         ))}
         <button
@@ -224,7 +217,7 @@ export function EditorExample(): ReactElement {
           aria-label="Insert link (unavailable in preview)"
           disabled
         >
-          <Icon icon={LinkIcon} size="s" />
+          <Icon usage="slot" icon={LinkIcon} size="s" />
         </button>
       </div>
       <Title as="h3" size="heading-l">
@@ -247,8 +240,8 @@ export function ConnectorExample(): ReactElement {
     <article className="icon-product icon-study">
       <div className="icon-row icon-between">
         <div className="icon-row">
-          <Icon icon={GithubLogoIcon} size="l" />
-          <Icon icon={ArrowsLeftRightIcon} size="s" color="muted" />
+          <Icon usage="slot" icon={GithubLogoIcon} size="l" />
+          <Icon usage="slot" icon={ArrowsLeftRightIcon} size="s" color="muted" />
           <Text size="caption-l" color="secondary">
             FOLIO
           </Text>
@@ -266,6 +259,7 @@ export function ConnectorExample(): ReactElement {
       <div className="icon-row icon-between icon-connector-footer">
         <div className="icon-row icon-no-wrap">
           <Icon
+            usage="slot"
             icon={connected ? CheckCircleIcon : WarningCircleIcon}
             size="s"
             color={connected ? 'success' : 'warning'}

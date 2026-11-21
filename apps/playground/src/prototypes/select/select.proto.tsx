@@ -3,7 +3,7 @@ import type { HTMLAttributes, ReactElement, ReactNode } from 'react';
 import { CaretDownIcon, MagnifyingGlassIcon } from '@phosphor-icons/react';
 import { Input } from '../input/input.proto.js';
 import type { ControlSize, FieldVariant } from '../input/input.proto.js';
-import type { GlyphComponent } from '../icon/icon.proto.js';
+import type { GlyphSource } from '@docouno/unica';
 import { Listbox } from './listbox.proto.js';
 import type { SelectOption } from './listbox.proto.js';
 import { SelectPanel } from './select-control.proto.js';
@@ -34,7 +34,7 @@ export interface ComboboxProps extends Omit<
   readonly disabled?: boolean | undefined;
   readonly size?: ControlSize | undefined;
   readonly variant?: FieldVariant | undefined;
-  readonly iconLeft?: GlyphComponent | undefined;
+  readonly iconLeft?: GlyphSource | undefined;
 }
 
 export function Combobox({

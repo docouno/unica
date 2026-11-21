@@ -1,35 +1,45 @@
-import { useId, useRef, useState } from 'react';
-import type { ComponentPropsWithRef, CSSProperties, ReactElement, ReactNode } from 'react';
 import {
-  ArrowLeftIcon,
-  BellIcon,
+  AccountGlyph,
+  BackGlyph,
+  BooksGlyph,
+  BranchGlyph,
+  CaretDownGlyph,
+  CaretRightGlyph,
+  CloseGlyph,
+  FileTextGlyph,
+  FolderGlyph,
+  NotificationGlyph,
+  PlusGlyph,
+  SearchGlyph,
+  SidebarGlyph,
+  SlidersGlyph,
+  TrashGlyph,
+} from '../control-glyphs.js';
+import {
   BookOpenIcon,
-  BooksIcon,
-  CaretDownIcon,
-  CaretRightIcon,
-  FileTextIcon,
-  FolderIcon,
   GearIcon,
-  GitBranchIcon,
   KeyIcon,
-  MagnifyingGlassIcon,
-  SidebarSimpleIcon,
-  PlusIcon,
   PuzzlePieceIcon,
   ShieldCheckIcon,
-  SlidersHorizontalIcon,
   SquaresFourIcon,
-  TrashIcon,
-  UserCircleIcon,
   UsersIcon,
-  XIcon,
-} from '@phosphor-icons/react';
-import { Icon } from '../icon/icon.proto.js';
-import type { GlyphComponent } from '../icon/icon.proto.js';
+} from '@phosphor-icons/react/ssr';
+import { useId, useRef, useState } from 'react';
+import type { ComponentPropsWithRef, CSSProperties, ReactElement, ReactNode } from 'react';
+import { Icon, defineGlyph } from '@docouno/unica';
+import type { GlyphDefinition } from '@docouno/unica';
 import { Indicator } from '../indicator/indicator.proto.js';
 import './app-shell.css';
 import '../scrollbar/scrollbar.css';
 import { Kbd } from '../kbd/kbd.proto.js';
+
+const AccessKeyGlyph = defineGlyph(KeyIcon, 'phosphor');
+const ArchiveGlyph = defineGlyph(BookOpenIcon, 'phosphor');
+const AuditGlyph = defineGlyph(ShieldCheckIcon, 'phosphor');
+const ExtensionGlyph = defineGlyph(PuzzlePieceIcon, 'phosphor');
+const MembersGlyph = defineGlyph(UsersIcon, 'phosphor');
+const OverviewGlyph = defineGlyph(SquaresFourIcon, 'phosphor');
+const SettingsGlyph = defineGlyph(GearIcon, 'phosphor');
 
 export interface AppShellProps extends ComponentPropsWithRef<'div'> {
   readonly topRail?: ReactNode;
@@ -114,7 +124,7 @@ export function AppShell({
                 aria-label="Close navigation"
                 onClick={closeNavigation}
               >
-                <Icon icon={XIcon} />
+                <Icon usage="slot" icon={CloseGlyph} />
               </button>
               {leftAside}
             </div>
@@ -131,7 +141,7 @@ export function AppShell({
                     aria-controls={navigationId}
                     onClick={() => setNavigationOpen(!navigationOpen)}
                   >
-                    <Icon icon={SidebarSimpleIcon} />
+                    <Icon usage="slot" icon={SidebarGlyph} />
                     Navigation
                   </button>
                 )}
@@ -144,7 +154,7 @@ export function AppShell({
                     aria-controls={inspectorId}
                     onClick={() => setInspectorOpen(!inspectorOpen)}
                   >
-                    <Icon icon={SidebarSimpleIcon} className="app-shell-inspector-glyph" />
+                    <Icon usage="slot" icon={SidebarGlyph} className="app-shell-inspector-glyph" />
                     Inspector
                   </button>
                 )}
@@ -166,7 +176,7 @@ export function AppShell({
                 aria-label="Close inspector"
                 onClick={closeInspector}
               >
-                <Icon icon={XIcon} />
+                <Icon usage="slot" icon={CloseGlyph} />
               </button>
               {rightAside}
             </div>
@@ -177,12 +187,22 @@ export function AppShell({
   );
 }
 
-export type BrandMarkProps = ComponentPropsWithRef<'span'>;
+export interface BrandMarkProps extends ComponentPropsWithRef<'span'> {
+  readonly decorative?: boolean | undefined;
+}
 
-export function BrandMark({ className = '', ...props }: BrandMarkProps): ReactElement {
+export function BrandMark({
+  className = '',
+  decorative = false,
+  ...props
+}: BrandMarkProps): ReactElement {
   return (
     <span {...props} className={`app-shell-brand ${className}`}>
-      <Icon icon={BooksIcon} aria-label="Folio" />
+      {decorative ? (
+        <Icon usage="slot" icon={BooksGlyph} size="inherit" />
+      ) : (
+        <Icon icon={BooksGlyph} size="inherit" aria-label="Folio" />
+      )}
     </span>
   );
 }
@@ -221,7 +241,7 @@ export function GlobalSearch({
 }: GlobalSearchProps): ReactElement {
   return (
     <label className="app-shell-search">
-      <Icon icon={MagnifyingGlassIcon} />
+      <Icon usage="slot" icon={SearchGlyph} />
       <input {...props} type="search" aria-label="Search workspace" placeholder={placeholder} />
       <Kbd>{shortcut}</Kbd>
     </label>
@@ -232,7 +252,7 @@ export function WorkspaceStatus(): ReactElement {
   return (
     <div className="app-shell-workspace-status">
       <span className="app-shell-branch">
-        <Icon icon={GitBranchIcon} /> main · eu-central-1
+        <Icon usage="slot" icon={BranchGlyph} /> main · eu-central-1
       </span>
       <span className="app-shell-status-divider" />
       <span>Platform Eng</span>
@@ -276,13 +296,17 @@ export function DocumentTabs({
             onValueChange?.(item.value);
           }}
         >
-          <Icon icon={item.dirty ? GitBranchIcon : FileTextIcon} />
+          <Icon usage="slot" icon={item.dirty ? BranchGlyph : FileTextGlyph} />
           <span>{item.label}</span>
-          {item.dirty ? <span className="app-shell-dirty-dot" /> : <Icon icon={XIcon} />}
+          {item.dirty ? (
+            <span className="app-shell-dirty-dot" />
+          ) : (
+            <Icon usage="slot" icon={CloseGlyph} />
+          )}
         </button>
       ))}
       <button type="button" className="app-shell-new-tab" aria-label="Open another document">
-        <Icon icon={PlusIcon} />
+        <Icon usage="slot" icon={PlusGlyph} />
       </button>
     </nav>
   );
@@ -294,19 +318,19 @@ export type RailDestination =
 interface RailItem {
   readonly value: RailDestination;
   readonly label: string;
-  readonly icon: GlyphComponent;
+  readonly icon: GlyphDefinition;
   readonly count?: number;
 }
 
 const primaryRailItems: readonly RailItem[] = [
-  { value: 'overview', label: 'Overview', icon: SquaresFourIcon },
-  { value: 'notifications', label: 'Notifications', icon: BellIcon, count: 3 },
-  { value: 'documents', label: 'Documents', icon: FileTextIcon },
-  { value: 'extensions', label: 'Extensions', icon: PuzzlePieceIcon },
+  { value: 'overview', label: 'Overview', icon: OverviewGlyph },
+  { value: 'notifications', label: 'Notifications', icon: NotificationGlyph, count: 3 },
+  { value: 'documents', label: 'Documents', icon: FileTextGlyph },
+  { value: 'extensions', label: 'Extensions', icon: ExtensionGlyph },
 ];
 const utilityRailItems: readonly RailItem[] = [
-  { value: 'admin', label: 'Workspace admin', icon: SlidersHorizontalIcon },
-  { value: 'preferences', label: 'Preferences', icon: GearIcon },
+  { value: 'admin', label: 'Workspace admin', icon: SlidersGlyph },
+  { value: 'preferences', label: 'Preferences', icon: SettingsGlyph },
 ];
 
 export interface LeftRailProps extends ComponentPropsWithRef<'nav'> {
@@ -338,10 +362,10 @@ export function LeftRail({
         onClick={() => onNavigate?.(entry.value)}
       >
         {entry.count === undefined ? (
-          <Icon icon={entry.icon} />
+          <Icon usage="slot" icon={entry.icon} />
         ) : (
           <Indicator count={entry.count} max={9} size="s" className="app-shell-rail-indicator">
-            <Icon icon={entry.icon} />
+            <Icon usage="slot" icon={entry.icon} />
           </Indicator>
         )}
       </button>
@@ -361,8 +385,7 @@ export function LeftRail({
           </div>
         )}
         {primaryRailItems.map(item)}
-        {showBrand &&
-          item({ value: 'search', label: 'Search workspace', icon: MagnifyingGlassIcon })}
+        {showBrand && item({ value: 'search', label: 'Search workspace', icon: SearchGlyph })}
       </div>
       <div className="app-shell-rail-items">
         {utilityRailItems.map(item)}
@@ -451,7 +474,7 @@ export function Subbar({ actions, children, className = '', ...props }: SubbarPr
 interface NavigationItem {
   readonly value: string;
   readonly label: string;
-  readonly icon?: GlyphComponent;
+  readonly icon?: GlyphDefinition;
   readonly count?: number;
   readonly children?: readonly NavigationItem[];
 }
@@ -495,18 +518,18 @@ const adminSections: readonly NavigationSection[] = [
   {
     label: 'Workspace admin',
     items: [
-      { value: 'general', label: 'General', icon: GearIcon },
-      { value: 'members', label: 'Members & roles', count: 14, icon: UsersIcon },
-      { value: 'metadata', label: 'Metadata schema', count: 6, icon: FileTextIcon },
-      { value: 'projects', label: 'Projects', count: 5, icon: FolderIcon },
+      { value: 'general', label: 'General', icon: SettingsGlyph },
+      { value: 'members', label: 'Members & roles', count: 14, icon: MembersGlyph },
+      { value: 'metadata', label: 'Metadata schema', count: 6, icon: FileTextGlyph },
+      { value: 'projects', label: 'Projects', count: 5, icon: FolderGlyph },
     ],
   },
   {
     label: 'Portability & audit',
     items: [
-      { value: 'import', label: 'Batch import', icon: BooksIcon },
-      { value: 'export', label: 'Export archive', icon: BookOpenIcon },
-      { value: 'audit', label: 'Audit log', icon: ShieldCheckIcon },
+      { value: 'import', label: 'Batch import', icon: BooksGlyph },
+      { value: 'export', label: 'Export archive', icon: ArchiveGlyph },
+      { value: 'audit', label: 'Audit log', icon: AuditGlyph },
     ],
   },
 ];
@@ -514,17 +537,17 @@ const extensionSections: readonly NavigationSection[] = [
   {
     label: 'Categories',
     items: [
-      { value: 'all', label: 'All connectors', count: 8, icon: SquaresFourIcon },
-      { value: 'source-control', label: 'Source control', count: 3, icon: GitBranchIcon },
-      { value: 'incident-response', label: 'Incident response', count: 3, icon: BellIcon },
-      { value: 'webhooks', label: 'Webhooks & API', count: 2, icon: PuzzlePieceIcon },
+      { value: 'all', label: 'All connectors', count: 8, icon: OverviewGlyph },
+      { value: 'source-control', label: 'Source control', count: 3, icon: BranchGlyph },
+      { value: 'incident-response', label: 'Incident response', count: 3, icon: NotificationGlyph },
+      { value: 'webhooks', label: 'Webhooks & API', count: 2, icon: ExtensionGlyph },
     ],
   },
   {
     label: 'Runtime',
     items: [
-      { value: 'schedules', label: 'Sync schedules', icon: SlidersHorizontalIcon },
-      { value: 'keys', label: 'Signing keys', icon: KeyIcon },
+      { value: 'schedules', label: 'Sync schedules', icon: SlidersGlyph },
+      { value: 'keys', label: 'Signing keys', icon: AccessKeyGlyph },
     ],
   },
 ];
@@ -532,16 +555,16 @@ const settingsSections: readonly NavigationSection[] = [
   {
     label: 'Personal',
     items: [
-      { value: 'appearance', label: 'Appearance & editor', icon: SlidersHorizontalIcon },
-      { value: 'notifications', label: 'Notifications', icon: BellIcon },
-      { value: 'shortcuts', label: 'Keyboard shortcuts', icon: SquaresFourIcon },
+      { value: 'appearance', label: 'Appearance & editor', icon: SlidersGlyph },
+      { value: 'notifications', label: 'Notifications', icon: NotificationGlyph },
+      { value: 'shortcuts', label: 'Keyboard shortcuts', icon: OverviewGlyph },
     ],
   },
   {
     label: 'Security',
     items: [
-      { value: 'sessions', label: 'Sessions & passkeys', icon: ShieldCheckIcon },
-      { value: 'tokens', label: 'Personal API tokens', icon: KeyIcon },
+      { value: 'sessions', label: 'Sessions & passkeys', icon: AuditGlyph },
+      { value: 'tokens', label: 'Personal API tokens', icon: AccessKeyGlyph },
     ],
   },
 ];
@@ -583,9 +606,18 @@ function Navigation({
         }}
       >
         {tree && !nested && (
-          <Icon icon={CaretRightIcon} className="app-shell-group-caret" directional />
+          <Icon
+            usage="slot"
+            icon={CaretRightGlyph}
+            className="app-shell-nav-glyph app-shell-group-caret"
+            directional
+          />
         )}
-        <Icon icon={entry.icon ?? (nested ? FileTextIcon : FolderIcon)} />
+        <Icon
+          className="app-shell-nav-glyph"
+          usage="slot"
+          icon={entry.icon ?? (nested ? FileTextGlyph : FolderGlyph)}
+        />
         <span className="app-shell-nav-label">{entry.label}</span>
         {entry.count !== undefined && <span className="app-shell-nav-count">{entry.count}</span>}
       </button>
@@ -603,8 +635,8 @@ function Navigation({
             <span>{section.label}</span>
             {section.label === 'Documents' && (
               <div className="app-shell-nav-tools">
-                <Icon icon={SlidersHorizontalIcon} />
-                <Icon icon={PlusIcon} />
+                <Icon usage="slot" icon={SlidersGlyph} />
+                <Icon usage="slot" icon={PlusGlyph} />
               </div>
             )}
           </div>
@@ -616,8 +648,13 @@ function Navigation({
                 open={expanded.includes(entry.value)}
               >
                 <summary>
-                  <Icon icon={CaretRightIcon} className="app-shell-group-caret" directional />
-                  <Icon icon={FolderIcon} />
+                  <Icon
+                    usage="slot"
+                    icon={CaretRightGlyph}
+                    className="app-shell-nav-glyph app-shell-group-caret"
+                    directional
+                  />
+                  <Icon usage="slot" icon={FolderGlyph} className="app-shell-nav-glyph" />
                   <span className="app-shell-nav-label">{entry.label}</span>
                   <span className="app-shell-nav-count">{entry.count}</span>
                 </summary>
@@ -673,7 +710,7 @@ export type WorkspaceUtilityProps = ComponentPropsWithRef<'button'>;
 export function WorkspaceTrash({ className = '', ...props }: WorkspaceUtilityProps): ReactElement {
   return (
     <button type="button" {...props} className={`app-shell-nav-row ${className}`}>
-      <Icon icon={TrashIcon} />
+      <Icon usage="slot" icon={TrashGlyph} className="app-shell-nav-glyph" />
       <span className="app-shell-nav-label">Trash</span>
       <span className="app-shell-nav-count">3</span>
     </button>
@@ -691,7 +728,7 @@ export function WorkspaceSwitcher({
       {...props}
       className={`app-shell-workspace-switcher ${className}`}
     >
-      <Icon icon={CaretDownIcon} />
+      <Icon usage="slot" icon={CaretDownGlyph} />
     </button>
   );
 }
@@ -704,7 +741,7 @@ export function BackToWorkspace({ className = '', ...props }: WorkspaceUtilityPr
       {...props}
       className={`app-shell-back ${className}`}
     >
-      <Icon icon={ArrowLeftIcon} directional />
+      <Icon usage="slot" icon={BackGlyph} directional />
     </button>
   );
 }
@@ -758,7 +795,7 @@ export function StickyActionBar({
 export function AccountLabel(): ReactElement {
   return (
     <span className="app-shell-account-label">
-      <Icon icon={UserCircleIcon} /> Platform engineer
+      <Icon usage="slot" icon={AccountGlyph} /> Platform engineer
     </span>
   );
 }

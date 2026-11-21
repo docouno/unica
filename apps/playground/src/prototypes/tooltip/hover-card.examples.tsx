@@ -3,7 +3,7 @@ import type { ReactElement } from 'react';
 import { FileTextIcon, GitCommitIcon, LockSimpleIcon, TicketIcon } from '@phosphor-icons/react';
 import { Avatar } from '../avatar/avatar.proto.js';
 import { Badge } from '../badge/badge.proto.js';
-import { Icon } from '../icon/icon.proto.js';
+import { Icon } from '@docouno/unica';
 import { Link } from '../link/link.proto.js';
 import { SkeletonText } from '../skeleton/skeleton.proto.js';
 import { Text } from '../text/text.proto.js';
@@ -56,7 +56,7 @@ export function DocumentPreview({
   return (
     <>
       <div className="hover-demo-kicker">
-        <Icon icon={FileTextIcon} size="s" />
+        <Icon usage="slot" className="hover-demo-glyph" icon={FileTextIcon} size="s" />
         <span>Runbook · Core Infrastructure</span>
       </div>
       <Title dir="auto" as="h3" size="body-m">
@@ -95,7 +95,7 @@ function IssuePreview(): ReactElement {
   return (
     <>
       <div className="hover-demo-kicker">
-        <Icon icon={TicketIcon} size="s" />
+        <Icon usage="slot" icon={TicketIcon} size="s" />
         <bdi dir="ltr">UI-128</bdi>
         <span>Interface</span>
       </div>
@@ -121,7 +121,7 @@ function CommitPreview(): ReactElement {
   return (
     <>
       <div className="hover-demo-kicker">
-        <Icon icon={GitCommitIcon} size="s" />
+        <Icon usage="slot" icon={GitCommitIcon} size="s" />
         <bdi dir="ltr">a91c7e2</bdi>
       </div>
       <Title dir="auto" as="h3" size="body-m">
@@ -214,7 +214,7 @@ export function HoverContentStates(): ReactElement {
         ) : state === 'loading' ? (
           <>
             <div className="hover-demo-kicker">
-              <Icon icon={FileTextIcon} size="s" />
+              <Icon usage="slot" className="hover-demo-glyph" icon={FileTextIcon} size="s" />
               <span>Document preview</span>
             </div>
             <Title dir="auto" as="h3" size="body-m">
@@ -229,7 +229,15 @@ export function HoverContentStates(): ReactElement {
           </>
         ) : (
           <div className="hover-demo-unavailable">
-            {state === 'restricted' && <Icon icon={LockSimpleIcon} size="m" />}
+            {state === 'restricted' && (
+              <Icon
+                usage="slot"
+                className="hover-demo-glyph"
+                icon={LockSimpleIcon}
+                size="m"
+                color="secondary"
+              />
+            )}
             <Title dir="auto" as="h3" size="body-m">
               {state === 'restricted'
                 ? 'Private document'
@@ -262,7 +270,7 @@ export function HoverOverflowExamples(): ReactElement {
       <Study label="Unbroken identifier · Isolated LTR text">
         <HoverCard>
           <div className="hover-demo-kicker">
-            <Icon icon={GitCommitIcon} size="s" />
+            <Icon usage="slot" icon={GitCommitIcon} size="s" />
             <span>Commit</span>
           </div>
           <Title dir="auto" as="h3" size="body-m">

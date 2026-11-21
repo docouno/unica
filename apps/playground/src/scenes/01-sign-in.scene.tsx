@@ -24,7 +24,7 @@ function SignInScene(): ReactElement {
     <FolioScene className="folio-auth">
       <header className="folio-auth-topbar">
         <div className="folio-row">
-          <BrandMark />
+          <BrandMark decorative />
           <Text as="span" weight="semibold">
             Folio
           </Text>

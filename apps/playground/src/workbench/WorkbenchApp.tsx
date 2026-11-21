@@ -14,6 +14,7 @@ import {
 import type { CSSProperties, MouseEvent, ReactElement, ReactNode, RefObject } from 'react';
 import { Inspector } from './Inspector.js';
 import { SettingsProvider } from './ViewSettings.js';
+import { useSubjectBounds } from './subjectBounds.js';
 import {
   patchRoute,
   readRoute,
@@ -557,6 +558,47 @@ export interface WorkbenchAppProps {
   readonly config: WorkbenchConfig;
 }
 
+function Artboard({
+  theme,
+  route,
+  scene,
+  renderArtboard,
+  children,
+}: {
+  readonly theme: WorkbenchTheme;
+  readonly route: WorkbenchRoute;
+  readonly scene: boolean;
+  readonly renderArtboard: WorkbenchConfig['renderArtboard'];
+  readonly children: ReactNode;
+}): ReactElement {
+  const artboardRef = useRef<HTMLDivElement>(null);
+  const [host, setHost] = useState<HTMLDivElement | null>(null);
+  const attachArtboard = useCallback(
+    (node: HTMLDivElement | null): void => {
+      artboardRef.current = node;
+      if (renderArtboard) {
+        setHost(node);
+      }
+    },
+    [renderArtboard],
+  );
+  useSubjectBounds(artboardRef, !scene && route.bounds, 'portaled');
+  return (
+    <div
+      ref={attachArtboard}
+      className="wb-artboard"
+      data-theme={theme.id}
+      data-color-scheme={theme.colorScheme}
+      data-text-scale={route.scale}
+      data-wb-scene={scene ? '' : undefined}
+      dir={route.dir}
+      style={{ colorScheme: theme.colorScheme }}
+    >
+      {renderArtboard ? renderArtboard({ theme, host, children }) : children}
+    </div>
+  );
+}
+
 const WorkbenchView = memo(function WorkbenchView({
   config,
   route,
@@ -626,17 +668,14 @@ const WorkbenchView = memo(function WorkbenchView({
                   </button>
                 )}
                 <ViewportFrame vp={route.vp} scaleToFit={selectedThemes.length > 1}>
-                  <div
-                    className="wb-artboard"
-                    data-theme={theme.id}
-                    data-color-scheme={theme.colorScheme}
-                    data-text-scale={route.scale}
-                    data-wb-scene={component ? undefined : ''}
-                    dir={route.dir}
-                    style={{ colorScheme: theme.colorScheme }}
+                  <Artboard
+                    theme={theme}
+                    route={route}
+                    scene={!component}
+                    renderArtboard={config.renderArtboard}
                   >
                     {render(theme)}
-                  </div>
+                  </Artboard>
                 </ViewportFrame>
               </section>
             ))}

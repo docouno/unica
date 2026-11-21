@@ -4,7 +4,7 @@ import { ArrowClockwiseIcon, FileTextIcon, WarningCircleIcon } from '@phosphor-i
 import { Avatar } from '../avatar/avatar.proto.js';
 import { Button } from '../button/button.proto.js';
 import { Card, CardMedia } from '../card/card.proto.js';
-import { Icon } from '../icon/icon.proto.js';
+import { Icon } from '@docouno/unica';
 import { Text } from '../text/text.proto.js';
 import type { TextSize } from '../text/text.proto.js';
 import { Title } from '../title/title.proto.js';
@@ -378,7 +378,11 @@ export function LifecycleExample(): ReactElement {
         >
           {state === 'empty' || state === 'error' ? (
             <div className="skeleton-demo-terminal">
-              <Icon icon={state === 'error' ? WarningCircleIcon : FileTextIcon} size="l" />
+              <Icon
+                usage="slot"
+                icon={state === 'error' ? WarningCircleIcon : FileTextIcon}
+                size="l"
+              />
               <Text size="body-s" weight="medium">
                 {state === 'error' ? 'Couldn’t load documents' : 'No documents yet'}
               </Text>
@@ -444,7 +448,7 @@ export function MotionExample(): ReactElement {
       </div>
       <div>
         <Button size="s" variant="secondary" tone="neutral" onClick={() => setRun(run + 1)}>
-          <Icon icon={ArrowClockwiseIcon} size="s" /> Replay motion
+          <Icon usage="slot" icon={ArrowClockwiseIcon} size="s" /> Replay motion
         </Button>
       </div>
       <Text size="caption-l" color="muted">

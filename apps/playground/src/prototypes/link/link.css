@@ -99,9 +99,6 @@
 .link-proto-external {
   white-space: nowrap;
 }
-.link-proto-external .icon-proto {
-  vertical-align: -0.125em;
-}
 
 @media (forced-colors: active) {
   .link-proto,

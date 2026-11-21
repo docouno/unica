@@ -1,8 +1,8 @@
+import { CheckGlyph } from '../control-glyphs.js';
 import { useEffect, useId, useRef, useState } from 'react';
 import type { ComponentPropsWithRef, ReactElement, ReactNode } from 'react';
-import { CheckIcon } from '@phosphor-icons/react';
-import { Icon } from '../icon/icon.proto.js';
-import type { GlyphComponent } from '../icon/icon.proto.js';
+import { Icon } from '@docouno/unica';
+import type { GlyphSource } from '@docouno/unica';
 import { Tooltip } from '../tooltip/tooltip.proto.js';
 import './chip.css';
 
@@ -15,7 +15,7 @@ export interface ChipProps extends Omit<
 > {
   readonly 'data-wb-subject'?: string | undefined;
   readonly size?: ChipSize;
-  readonly iconLeft?: GlyphComponent | undefined;
+  readonly iconLeft?: GlyphSource | undefined;
   readonly children: ReactNode;
   /** Local design-preview mode; the library will coordinate this through its group. */
   readonly type?: 'checkbox' | 'radio';
@@ -105,8 +105,10 @@ export function Chip({
       />
       <span className="chip-face-proto">
         <span className="chip-leading-proto" aria-hidden="true">
-          {iconLeft && <Icon icon={iconLeft} size={size} className="chip-option-icon-proto" />}
-          <Icon icon={CheckIcon} size={size} className="chip-check-proto" />
+          {iconLeft && (
+            <Icon usage="slot" icon={iconLeft} size={size} className="chip-option-icon-proto" />
+          )}
+          <Icon usage="slot" icon={CheckGlyph} size={size} className="chip-check-proto" />
         </span>
         <span className="chip-label-proto" ref={label}>
           {children}
@@ -134,7 +136,7 @@ export function Chip({
 export interface ChipOption {
   readonly value: string;
   readonly label: string;
-  readonly iconLeft?: GlyphComponent | undefined;
+  readonly iconLeft?: GlyphSource | undefined;
   readonly disabled?: boolean;
 }
 

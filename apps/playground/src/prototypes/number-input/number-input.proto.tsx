@@ -1,16 +1,7 @@
+import { BusyGlyph, MinusGlyph, PlusGlyph, fieldStatusGlyphs } from '../control-glyphs.js';
 import { useEffect, useId, useRef, useState } from 'react';
 import type { ComponentPropsWithRef, ReactElement, ReactNode } from 'react';
-import {
-  CheckCircleIcon,
-  CircleNotchIcon,
-  InfoIcon,
-  MinusIcon,
-  PlusIcon,
-  WarningCircleIcon,
-  WarningIcon,
-} from '@phosphor-icons/react';
-import { Icon } from '../icon/icon.proto.js';
-import type { GlyphComponent } from '../icon/icon.proto.js';
+import { Icon } from '@docouno/unica';
 import { FormField } from '../input/input.proto.js';
 import type { ControlSize, FieldStatus, FieldVariant } from '../input/input.proto.js';
 import { useInputFocus } from '../input/input-focus.proto.js';
@@ -44,13 +35,6 @@ export interface NumberInputProps extends Omit<
   readonly previewAction?:
     'decrement-hover' | 'decrement-active' | 'increment-hover' | 'increment-active' | undefined;
 }
-
-const statusIcons: Record<Exclude<FieldStatus, 'neutral'>, GlyphComponent> = {
-  info: InfoIcon,
-  success: CheckCircleIcon,
-  warning: WarningIcon,
-  danger: WarningCircleIcon,
-};
 
 // A small illustrative decimal stepper, not the library's arithmetic engine.
 function nextStep(
@@ -137,7 +121,7 @@ export function NumberInput({
   const pointerKind = useRef('');
   const stepNow = useRef<(direction: number) => void>(() => {});
   const effectiveStatus = disabled ? 'neutral' : status;
-  const StatusGlyph = effectiveStatus === 'neutral' ? null : statusIcons[effectiveStatus];
+  const StatusGlyph = effectiveStatus === 'neutral' ? null : fieldStatusGlyphs[effectiveStatus];
   const busy = loading && !disabled;
   const current = draft === '' ? NaN : Number(draft);
   const lower = nextStep(current, -1, min, max, step);
@@ -245,7 +229,7 @@ export function NumberInput({
           pointerKind.current = '';
         }}
       >
-        <Icon icon={isDecrease ? MinusIcon : PlusIcon} size={size} />
+        <Icon usage="slot" icon={isDecrease ? MinusGlyph : PlusGlyph} size={size} />
       </button>
     );
   };
@@ -344,10 +328,12 @@ export function NumberInput({
           <span className="number-feedback-proto">
             {StatusGlyph && (
               <span className="input-status-proto">
-                <Icon icon={StatusGlyph} size={size} />
+                <Icon usage="slot" icon={StatusGlyph} size={size} />
               </span>
             )}
-            {busy && <Icon icon={CircleNotchIcon} size={size} className="control-spinner-proto" />}
+            {busy && (
+              <Icon usage="slot" icon={BusyGlyph} size={size} className="control-spinner-proto" />
+            )}
           </span>
         )}
       </span>

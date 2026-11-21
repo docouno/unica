@@ -15,7 +15,7 @@ import {
 import { defineComponent } from '../../workbench/types.js';
 import { Badge } from '../../prototypes/badge/badge.proto.js';
 import type { BadgeStatus } from '../../prototypes/badge/badge.proto.js';
-import type { GlyphComponent } from '../../prototypes/icon/icon.proto.js';
+import type { GlyphSource } from '@docouno/unica';
 import { Text } from '../../prototypes/text/text.proto.js';
 import { Title } from '../../prototypes/title/title.proto.js';
 import '../../prototypes/badge/badge.examples.css';
@@ -23,7 +23,7 @@ import '../../prototypes/badge/badge.examples.css';
 const statuses: readonly {
   status: BadgeStatus;
   label: string;
-  icon: GlyphComponent;
+  icon: GlyphSource;
 }[] = [
   { status: 'neutral', label: 'Draft', icon: FileTextIcon },
   { status: 'accent', label: 'Beta', icon: SparkleIcon },
@@ -255,7 +255,7 @@ function Interaction(): ReactElement {
   );
 }
 
-const lifecycle: readonly { label: string; status: BadgeStatus; icon: GlyphComponent }[] = [
+const lifecycle: readonly { label: string; status: BadgeStatus; icon: GlyphSource }[] = [
   { label: 'Not checked', status: 'neutral', icon: FileTextIcon },
   { label: 'Checking', status: 'info', icon: ClockIcon },
   { label: 'Verified', status: 'success', icon: SealCheckIcon },

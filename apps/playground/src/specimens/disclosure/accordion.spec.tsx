@@ -6,7 +6,7 @@ import { Checkbox } from '../../prototypes/binary-controls/binary-controls.proto
 import { Button, IconButton } from '../../prototypes/button/button.proto.js';
 import { Card } from '../../prototypes/card/card.proto.js';
 import { Code, CodeBlock } from '../../prototypes/code/code.proto.js';
-import type { GlyphProps } from '../../prototypes/icon/icon.proto.js';
+import type { IconProps as PhosphorIconProps } from '@phosphor-icons/react';
 import {
   PopoverBody,
   PopoverContent,
@@ -266,7 +266,7 @@ const queries = [
   { name: 'Slow requests', description: 'Requests taking longer than 500 ms in the last hour.' },
 ] as const;
 
-function FilledStarIcon(props: GlyphProps): ReactElement {
+function FilledStarIcon(props: PhosphorIconProps): ReactElement {
   return <StarIcon {...props} weight="fill" />;
 }
 
