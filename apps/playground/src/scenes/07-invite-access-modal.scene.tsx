@@ -1,4 +1,5 @@
 import { useId, useState } from 'react';
+import { folioSceneHref } from './folio/folio.routes.js';
 import type { ReactElement } from 'react';
 import { PlusIcon } from '@phosphor-icons/react';
 import { AsidePanel, WorkspaceNavigation } from '../prototypes/app-shell/app-shell.proto.js';
@@ -108,7 +109,9 @@ function InviteScene(): ReactElement {
             classic
             breadcrumb={
               <Breadcrumb size="s">
-                <BreadcrumbLink href="?item=02-workspace-overview">Platform Eng</BreadcrumbLink>
+                <BreadcrumbLink href={folioSceneHref('02-workspace-overview')}>
+                  Platform Eng
+                </BreadcrumbLink>
                 <span>Administration</span>
                 <BreadcrumbPage>Members & roles</BreadcrumbPage>
               </Breadcrumb>

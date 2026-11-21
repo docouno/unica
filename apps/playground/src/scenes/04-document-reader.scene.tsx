@@ -1,5 +1,6 @@
 import { Link } from '@docouno/unica';
 import { useState } from 'react';
+import { folioSceneHref } from './folio/folio.routes.js';
 import type { ReactElement } from 'react';
 import {
   CopyIcon,
@@ -100,8 +101,12 @@ function ReaderScene(): ReactElement {
       <FolioWorkspace
         breadcrumb={
           <Breadcrumb size="s">
-            <BreadcrumbLink href="?item=02-workspace-overview">Platform Eng</BreadcrumbLink>
-            <BreadcrumbLink href="?item=03-document-collection">Runbooks</BreadcrumbLink>
+            <BreadcrumbLink href={folioSceneHref('02-workspace-overview')}>
+              Platform Eng
+            </BreadcrumbLink>
+            <BreadcrumbLink href={folioSceneHref('03-document-collection')}>
+              Runbooks
+            </BreadcrumbLink>
             <BreadcrumbPage>Zero-Downtime PG Failover</BreadcrumbPage>
           </Breadcrumb>
         }
@@ -131,15 +136,21 @@ function ReaderScene(): ReactElement {
           />
         }
         rightAside={
-          <AsidePanel aria-label="Document inspector" side="right" width={296}>
-            <Tabs size="s" value={tab} onValueChange={setTab}>
-              <TabsList aria-label="Document inspector panels">
-                <TabsTab value="details">Details</TabsTab>
-                <TabsTab value="history" count={3} countLabel="3 revisions">
-                  History
-                </TabsTab>
-                <TabsTab value="links">Links</TabsTab>
-              </TabsList>
+          <Tabs className="folio-reader-inspector-tabs" size="s" value={tab} onValueChange={setTab}>
+            <AsidePanel
+              aria-label="Document inspector"
+              side="right"
+              width={320}
+              headerContent={
+                <TabsList aria-label="Document inspector panels">
+                  <TabsTab value="details">Details</TabsTab>
+                  <TabsTab value="history" count={3} countLabel="3 revisions">
+                    History
+                  </TabsTab>
+                  <TabsTab value="links">Links</TabsTab>
+                </TabsList>
+              }
+            >
               <TabsContent value="details">
                 <InspectorSection title="Properties">
                   <dl className="folio-inspector-properties">
@@ -169,7 +180,7 @@ function ReaderScene(): ReactElement {
                       <dd>
                         <div className="folio-owner-preview">
                           <Link
-                            href="?item=03-document-collection"
+                            href={folioSceneHref('03-document-collection')}
                             tone="neutral"
                             underline="hover"
                             onPointerEnter={() => setOwner(true)}
@@ -217,8 +228,8 @@ function ReaderScene(): ReactElement {
                   <Text size="body-s">Database Reliability Playbook</Text>
                 </InspectorSection>
               </TabsContent>
-            </Tabs>
-          </AsidePanel>
+            </AsidePanel>
+          </Tabs>
         }
       >
         <div className="folio-prose-stage">

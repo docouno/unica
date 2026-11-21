@@ -1,52 +1,265 @@
-.app-shell-example-grid {
-  display: grid;
-  gap: var(--space-24);
-  min-inline-size: 0;
-}
-
-.app-shell-example-grid > section {
+.shell-study-stack,
+.shell-study-example {
   display: grid;
   gap: var(--space-12);
   min-inline-size: 0;
 }
 
-.app-shell-example-document {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-16);
-  inline-size: min(100%, 760px);
+.shell-study-stack {
+  gap: var(--space-24);
+}
+
+.shell-study-example > h3 {
+  margin: 0;
+  color: var(--fg-primary);
+  font-family: var(--font-family-base);
+  font-size: var(--text-size-body-s);
+  line-height: var(--text-size-body-s-lh);
+  font-weight: 600;
+}
+
+.shell-study-example .app-shell-proto {
+  border: 1px solid var(--border-default);
+  border-radius: var(--surface-s-radius);
+}
+
+.shell-study-canvas {
+  display: grid;
+  gap: var(--space-12);
+  inline-size: min(100%, 680px);
   margin-inline: auto;
-  padding: var(--space-32) var(--space-24) var(--space-48);
+  padding: var(--space-24) clamp(12px, 4cqi, 32px);
   overflow-wrap: anywhere;
 }
 
-.app-shell-example-document hr {
-  inline-size: 100%;
-  block-size: 1px;
-  margin-block: var(--space-8);
-  border: 0;
-  background: var(--border-subtle);
+.shell-study-canvas label {
+  display: grid;
+  gap: var(--space-8);
+  max-inline-size: 300px;
 }
 
-.app-shell-example-document blockquote {
-  margin: 0;
-  padding-inline-start: var(--space-16);
-  border-inline-start: 2px solid var(--border-strong);
-  color: var(--fg-secondary);
-  font-size: var(--text-size-body-s);
-  line-height: var(--text-size-body-s-lh);
+.shell-study-canvas .shell-study-check {
+  display: flex;
+  align-items: start;
+  gap: var(--space-8);
+  width: fit-content;
 }
 
-.app-shell-example-navigation {
+.shell-study-card {
+  display: grid;
+  align-content: start;
+  gap: var(--space-8);
+  padding: var(--space-12);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--surface-s-radius);
+  background: var(--bg-surface);
+}
+
+.shell-study-panels {
   display: flex;
   flex-wrap: wrap;
+  align-items: stretch;
   gap: var(--space-16);
   min-inline-size: 0;
 }
 
-.app-shell-example-navigation .app-shell-aside {
+.shell-study-panels > .shell-study-example {
+  align-content: start;
+  min-inline-size: 0;
   max-inline-size: 100%;
-  min-block-size: 500px;
+}
+
+.shell-study-panels .app-shell-aside {
+  max-inline-size: 100%;
   border: 1px solid var(--border-subtle);
   border-radius: var(--surface-s-radius);
+}
+
+.shell-study-rail {
+  display: flex;
+  inline-size: 58px;
+  min-block-size: 374px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--surface-s-radius);
+}
+
+.shell-study-rail .app-shell-left-rail {
+  border-radius: inherit;
+}
+
+.shell-study-inspector {
+  display: grid;
+  gap: var(--space-12);
+}
+
+.app-shell-example-properties {
+  gap: var(--space-16);
+  inline-size: min(420px, 100%);
+}
+
+.app-shell-example-properties > :not(:first-child),
+.shell-study-inspector > :not(:first-child) {
+  padding-block-start: var(--space-12);
+  border-block-start: 1px solid var(--border-subtle);
+}
+
+.shell-study-example:has(.shell-study-mobile-pin) {
+  flex: 0 1 360px;
+}
+
+.shell-study-mobile-pin {
+  position: relative;
+  isolation: isolate;
+  inline-size: min(360px, 100%);
+  min-block-size: 380px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--surface-s-radius);
+  overflow: clip;
+}
+
+.shell-study-mobile-scrim,
+.shell-study-mobile-sheet {
+  position: absolute;
+  inset: 0;
+}
+
+.shell-study-mobile-scrim {
+  background: var(--scrim-bg);
+}
+
+.shell-study-mobile-sheet {
+  display: flex;
+  flex-direction: column;
+  inline-size: min(340px, calc(100% - 24px));
+  inset-inline-end: auto;
+  border-inline-end: 1px solid var(--overlay-border);
+  background: var(--app-shell-sheet-fill);
+  backdrop-filter: var(--overlay-backdrop);
+  box-shadow: var(--overlay-shadow-drawer);
+  color: var(--fg-primary);
+  font-family: var(--font-family-base);
+  font-size: var(--text-size-body-xs);
+}
+
+.shell-study-mobile-sheet[data-side='end'] {
+  inset-inline: auto 0;
+  border-inline-end: 0;
+  border-inline-start: 1px solid var(--overlay-border);
+}
+
+.shell-study-mobile-sheet[data-side='start']:dir(ltr),
+.shell-study-mobile-sheet[data-side='end']:dir(rtl) {
+  box-shadow: var(--overlay-shadow-drawer-right, var(--overlay-shadow-drawer));
+}
+
+.shell-study-mobile-sheet .app-shell-sheet-preview {
+  display: flex;
+}
+
+.shell-study-mobile-sheet .app-shell-aside {
+  flex: 1;
+  border: 0;
+  border-radius: 0;
+  inline-size: 100%;
+  background: transparent;
+}
+
+.shell-study-mobile-sheet .app-shell-aside-body {
+  overflow: auto;
+}
+
+.shell-study-confirm {
+  --dialog-enter-x: 0px;
+  --dialog-enter-y: 0px;
+  --dialog-duration: 160ms;
+  position: fixed;
+  inset: 0;
+  inline-size: min(440px, calc(100% - 32px));
+  block-size: fit-content;
+  max-block-size: calc(100% - 32px);
+  margin: auto;
+  padding: var(--space-24);
+  overflow: auto;
+}
+
+.shell-study-confirm:not([open]) {
+  display: none;
+}
+
+.shell-study-confirm[open] {
+  display: grid;
+  gap: var(--space-16);
+}
+
+.shell-study-confirm::backdrop {
+  background: var(--scrim-bg);
+}
+
+.shell-study-save-previews {
+  display: grid;
+  gap: var(--space-8);
+  padding: var(--space-12);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--surface-s-radius);
+  background: var(--bg-canvas);
+}
+
+.shell-study-save-previews .app-shell-sticky-bar {
+  position: static;
+  margin: 0;
+}
+
+.app-shell-sticky-message {
+  display: flex;
+  align-items: start;
+  gap: var(--space-8);
+}
+
+.app-shell-sticky-message > svg {
+  flex: none;
+  font-size: 16px;
+}
+
+.shell-study-layout {
+  container: layout-study / inline-size;
+  color: var(--fg-primary);
+  font-family: var(--font-family-base);
+  font-size: var(--text-size-body-s);
+}
+
+.shell-study-layout-guide {
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--size-s-radius);
+  background: var(--bg-canvas);
+}
+
+.shell-study-layout-measure {
+  padding-inline: clamp(12px, 3cqi, 32px);
+}
+
+@media (width < 768px) {
+  .shell-study-layout-box {
+    padding: var(--space-12);
+  }
+}
+
+.shell-study-layout-cell {
+  padding: var(--space-8) var(--space-12);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--size-s-radius);
+  background: var(--bg-surface);
+  overflow-wrap: anywhere;
+}
+
+@media (forced-colors: active) {
+  .shell-study-mobile-scrim {
+    background: Canvas;
+    opacity: 0.6;
+  }
+
+  .shell-study-mobile-sheet,
+  .shell-study-confirm,
+  .shell-study-layout-guide {
+    border-color: CanvasText;
+  }
 }

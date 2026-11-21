@@ -1,10 +1,10 @@
 import { Badge, Blockquote, Code, Icon, Text, Title } from '@docouno/unica';
-import { useState } from 'react';
 import type { ReactElement, ReactNode } from 'react';
-import { CopyIcon, FileTextIcon, PlusIcon, SidebarSimpleIcon } from '@phosphor-icons/react';
+import { CopyIcon, FileTextIcon, PlusIcon } from '@phosphor-icons/react';
 import {
   AppShell,
   AsidePanel,
+  BrandMark,
   DocumentTabs,
   GlobalSearch,
   Header,
@@ -16,6 +16,7 @@ import {
   WorkspaceTrash,
   WorkspaceStatus,
 } from '../../prototypes/app-shell/app-shell.proto.js';
+import type { DocumentTab } from '../../prototypes/app-shell/document-tabs.proto.js';
 import type { RailDestination } from '../../prototypes/app-shell/app-shell.proto.js';
 import { Avatar, AvatarGroup } from '../../prototypes/avatar/avatar.proto.js';
 import { Button, IconButton } from '../../prototypes/button/button.proto.js';
@@ -32,6 +33,7 @@ import {
   TableRowHeader,
   TableScroll,
 } from '../../prototypes/table/table.proto.js';
+import { folioSceneHref } from './folio.routes.js';
 import './folio.css';
 
 export interface FolioSceneProps {
@@ -59,6 +61,44 @@ export interface WorkspaceProps {
   readonly minHeight?: number;
 }
 
+function openDocuments(): readonly DocumentTab[] {
+  return [
+    {
+      value: 'runbook',
+      label: 'Zero-Downtime PG Failover',
+      href: folioSceneHref('04-document-reader'),
+    },
+    {
+      value: 'adr',
+      label: 'ADR-014 Traffic Draining',
+      href: folioSceneHref('05-rich-editor'),
+      dirty: true,
+    },
+  ];
+}
+
+export function FolioRail({
+  active,
+  showBrand = false,
+}: {
+  readonly active: RailDestination;
+  readonly showBrand?: boolean;
+}): ReactElement {
+  return (
+    <LeftRail
+      active={active}
+      showBrand={showBrand}
+      links={{
+        overview: folioSceneHref('02-workspace-overview'),
+        documents: folioSceneHref('03-document-collection'),
+        extensions: folioSceneHref('08-extensions-empty'),
+        admin: folioSceneHref('10-workspace-admin'),
+        preferences: folioSceneHref('09-user-preferences'),
+      }}
+    />
+  );
+}
+
 export function FolioWorkspace({
   children,
   breadcrumb,
@@ -75,19 +115,22 @@ export function FolioWorkspace({
   expandedNavigation,
   minHeight = 960,
 }: WorkspaceProps): ReactElement {
-  const [navigationVisible, setNavigationVisible] = useState(true);
   return (
     <AppShell
+      canvasAs="section"
       minHeight={minHeight}
-      navigationCollapsed={!navigationVisible}
       topRail={
         classic ? undefined : (
-          <TopRail actions={<WorkspaceStatus />}>
-            {documentTabs ? <DocumentTabs defaultValue={activeDocument} /> : <GlobalSearch />}
+          <TopRail brand={<BrandMark label="Folio" />} actions={<WorkspaceStatus />}>
+            {documentTabs ? (
+              <DocumentTabs items={openDocuments()} value={activeDocument} />
+            ) : (
+              <GlobalSearch />
+            )}
           </TopRail>
         )
       }
-      leftRail={<LeftRail active={activeRail} showBrand={classic} />}
+      leftRail={<FolioRail active={activeRail} showBrand={classic} />}
       leftAside={
         railOnly
           ? undefined
@@ -123,21 +166,6 @@ export function FolioWorkspace({
             )
           }
         >
-          {!railOnly && (
-            <>
-              <IconButton
-                className="app-shell-desktop-navigation-toggle"
-                size="s"
-                variant="ghost"
-                tone="neutral"
-                icon={SidebarSimpleIcon}
-                aria-label="Toggle left navigation"
-                aria-expanded={navigationVisible}
-                onClick={() => setNavigationVisible(!navigationVisible)}
-              />
-              <span className="app-shell-navigation-seam" />
-            </>
-          )}
           {breadcrumb}
         </Header>
       }

@@ -232,7 +232,7 @@ export default function IconFixture() {
           <Combobox options={[]} label="Lookup" searchState="error" previewOpen />
         </IconProvider>
         <IconProvider adapter={() => null}>
-          <DocumentTabs />
+          <DocumentTabs items={[]} onAdd={() => undefined} />
           <LeftRail showBrand />
           <WorkspaceNavigation kind="admin" />
           <Avatar alt="Unassigned user" />
