@@ -272,12 +272,54 @@ export default {
     await command(page, 'dispose-clobbered');
 
     // Document-level DOM clobbering (<form name="defaultView">, <img name="body">, etc.).
-    await command(page, 'clobber-document', 'open-dialog', 'disable-guard');
+    await command(page, 'clobber-document');
+    await page.evaluate(() => {
+      HTMLElement.prototype.focus.call(document.querySelector('#outside'));
+    });
+    await command(page, 'open-dialog', 'disable-guard');
     await visibleLayer(page, 'dialog', ':modal');
     await statistic(page, 'toastHost', 'dialog');
+    await statistic(page, 'bodyToastHost', 'dialog');
+    assert.equal(
+      await page.evaluate(() => {
+        const html = Object.getOwnPropertyDescriptor(
+          Document.prototype,
+          'documentElement',
+        ).get.call(document);
+        return Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'style')
+          .get.call(html)
+          .getPropertyValue('overflow');
+      }),
+      'hidden',
+    );
+    // Blurring moves focus to the real <body> while layer.focused remains true, proving ownedFocus + returnFocus.
+    await page.evaluate(() => {
+      HTMLElement.prototype.blur.call(document.querySelector('#draft'));
+    });
     await page.keyboard.press('Escape');
     await closedLayer(page, 'dialog', ':modal');
     await statistic(page, 'toastHost', 'modal-host');
+    await statistic(page, 'bodyToastHost', 'body');
+    assert.equal(
+      await page.evaluate(() => {
+        const html = Object.getOwnPropertyDescriptor(
+          Document.prototype,
+          'documentElement',
+        ).get.call(document);
+        const s = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'style').get.call(html);
+        return `${s.overflowX}:${s.overflowY}`;
+      }),
+      'clip:auto',
+    );
+    assert.equal(
+      await page.evaluate(
+        () =>
+          Object.getOwnPropertyDescriptor(Document.prototype, 'activeElement').get.call(
+            document,
+          ) === document.querySelector('#outside'),
+      ),
+      true,
+    );
   },
 
   'Escape respects inner preventDefault and routes manual, passive, and foreign layers': async ({
@@ -337,6 +379,22 @@ export default {
     await page.keyboard.press('Escape');
     await closedLayer(page, 'foreign-combo-panel');
     await visibleLayer(page, 'foreign-auto');
+
+    // Portaled manual and auto overlays triggered inside an active Unica modal dismiss before the modal.
+    await mount('overlay');
+    await command(page, 'disable-guard', 'open-dialog', 'open-dialog-portaled-manual');
+    await visibleLayer(page, 'dialog', ':modal');
+    await visibleLayer(page, 'dialog-portaled-manual');
+    await page.keyboard.press('Escape');
+    await closedLayer(page, 'dialog-portaled-manual');
+    await visibleLayer(page, 'dialog', ':modal');
+    await command(page, 'open-dialog-portaled-auto');
+    await visibleLayer(page, 'dialog-portaled-auto');
+    await page.keyboard.press('Escape');
+    await closedLayer(page, 'dialog-portaled-auto');
+    await visibleLayer(page, 'dialog', ':modal');
+    await page.keyboard.press('Escape');
+    await closedLayer(page, 'dialog', ':modal');
 
     // Open <dialog popover="auto"> is not treated as a hidden ancestor, and native popover dismiss reconciles nested manual layers.
     await mount('overlay');

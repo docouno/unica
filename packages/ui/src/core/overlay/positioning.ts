@@ -2,10 +2,10 @@ import { autoUpdate, computePosition, flip, offset, platform, shift, size } from
 import type { Placement } from '@floating-ui/dom';
 import {
   composedAncestors,
-  defaultViewOf,
   elementStyle,
   getAttr,
   isConnectedNode,
+  liveViewOf,
   matchesSelector,
   ownerDocumentOf,
   removeAttr,
@@ -58,15 +58,8 @@ export function positionOverlay({
   if (!document || ownerDocumentOf(floating) !== document) {
     return () => {};
   }
-  const view = defaultViewOf(document);
+  const view = liveViewOf(document);
   if (!view) {
-    return () => {};
-  }
-  try {
-    if (view.document !== document) {
-      return () => {};
-    }
-  } catch {
     return () => {};
   }
 
@@ -109,24 +102,14 @@ export function positionOverlay({
   let lastResolvedAlign: Align | undefined;
 
   const isRTL = (): boolean => view.getComputedStyle(anchor).direction === 'rtl';
-  const isLive = (): boolean => {
-    if (
-      !active ||
-      defaultViewOf(document) !== view ||
-      !isConnectedNode(anchor) ||
-      !isConnectedNode(floating) ||
-      ownerDocumentOf(anchor) !== document ||
-      ownerDocumentOf(floating) !== document ||
-      !matchesSelector(floating, ':popover-open')
-    ) {
-      return false;
-    }
-    try {
-      return view.document === document;
-    } catch {
-      return false;
-    }
-  };
+  const isLive = (): boolean =>
+    active &&
+    liveViewOf(document) === view &&
+    isConnectedNode(anchor) &&
+    isConnectedNode(floating) &&
+    ownerDocumentOf(anchor) === document &&
+    ownerDocumentOf(floating) === document &&
+    matchesSelector(floating, ':popover-open');
 
   const offsetMiddleware = offset(gap);
   const flipMiddleware = flip({ padding });

@@ -103,9 +103,8 @@ export default {
 
       await mount('overlay-realms');
       await dispatch(page, 'check-move-before-modal');
-      await page.waitForFunction(() => {
-        const status = document.querySelector('#overlay-realms').dataset.moveBeforeReleased;
-        return status === 'true' || status === 'unsupported';
-      });
+      await page.waitForFunction(
+        () => document.querySelector('#overlay-realms').dataset.moveBeforeReleased === 'true',
+      );
     },
 };

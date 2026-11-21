@@ -145,17 +145,36 @@ export default function OverlayRealmsFixture(): JSX.Element {
 
     const checkCrossDocTrigger = () => {
       const host = root.appendChild(document.createElement('div'));
-      const foreignButton = childDocument.body.appendChild(childDocument.createElement('button'));
-      foreignButton.type = 'button';
+      const cleanForeignButton = childDocument.body.appendChild(
+        childDocument.createElement('button'),
+      );
+      cleanForeignButton.type = 'button';
+      const ownPopover = childDocument.body.appendChild(childDocument.createElement('div'));
+      ownPopover.id = 'child-own-popover';
+      ownPopover.popover = 'auto';
+      const boundForeignButton = childDocument.body.appendChild(
+        childDocument.createElement('button'),
+      );
+      boundForeignButton.type = 'button';
+      boundForeignButton.popoverTargetElement = ownPopover;
+
       const handle = registerOverlay({
         kind: 'auto',
         element: host,
-        trigger: foreignButton,
+        trigger: cleanForeignButton,
         onOpenChange() {},
       });
       registered.add(handle);
-      root.dataset.foreignTriggerMutated = String(foreignButton.popoverTargetElement !== null);
+      handle.setOpen(true);
+      handle.beginExit();
+      const cleanMutated = cleanForeignButton.hasAttribute('popovertarget');
+
+      handle.setTrigger(boundForeignButton);
+      handle.setOpen(true);
+      handle.beginExit();
       handle.dispose();
+      const boundPreserved = boundForeignButton.popoverTargetElement === ownPopover;
+      root.dataset.foreignTriggerMutated = String(cleanMutated || !boundPreserved);
     };
 
     const checkProtocolJoinWarning = async () => {
@@ -191,12 +210,14 @@ export default function OverlayRealmsFixture(): JSX.Element {
       };
       if (typeof movable.moveBefore === 'function') {
         movable.moveBefore(wrapper, null);
-        // After a microtask let onMutations re-watch containerB, then remove containerB.
+        // After a microtask let onMutations re-watch containerB, verify lock held, then remove containerB.
         queueMicrotask(() => {
+          const stillLocked =
+            dialog.matches(':modal') && document.documentElement.style.overflow === 'hidden';
           containerB.remove();
           queueMicrotask(() => {
             root.dataset.moveBeforeReleased = String(
-              document.documentElement.style.overflow === '',
+              stillLocked && document.documentElement.style.overflow === '',
             );
           });
         });

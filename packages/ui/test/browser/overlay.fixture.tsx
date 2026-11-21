@@ -53,6 +53,9 @@ export default function OverlayFixture(): JSX.Element {
     const dialogPopoverTrigger = get('dialog-popover-trigger');
     const dialogPopoverChild = get('dialog-popover-child');
     const manualInP1 = get('manual-in-p1');
+    const dialogPortaledTrigger = get('dialog-portaled-trigger');
+    const dialogPortaledManual = get('dialog-portaled-manual');
+    const dialogPortaledAuto = get('dialog-portaled-auto');
     const stats = get('stats');
     const report = (rawKey: string): void => {
       const key = rawKey.replace(/-([a-z])/g, (_, ch: string) => ch.toUpperCase());
@@ -116,12 +119,21 @@ export default function OverlayFixture(): JSX.Element {
     const foreignComboHandle = popover(foreignComboPanel, foreignComboTrigger, 'manual');
     const dialogPopoverChildHandle = popover(dialogPopoverChild, dialogPopoverTrigger, 'auto');
     const manualInP1Handle = popover(manualInP1, null, 'manual');
+    const dialogPortaledManualHandle = popover(
+      dialogPortaledManual,
+      dialogPortaledTrigger,
+      'manual',
+    );
+    const dialogPortaledAutoHandle = popover(dialogPortaledAuto, dialogPortaledTrigger, 'auto');
     let stopClobberedPositioning: (() => void) | undefined;
     const clobberedDocNodes: HTMLElement[] = [];
 
     const toastHost = get('modal-host');
+    const realBody = document.body;
     const unsubscribe = subscribeToModalChanges(document, () => {
       stats.dataset.toastHost = resolveToastPortalHost(toastHost)?.id ?? 'none';
+      const bodyHost = resolveToastPortalHost(realBody);
+      stats.dataset.bodyToastHost = bodyHost === realBody ? 'body' : (bodyHost?.id ?? 'none');
       report('projection');
     });
     const d1 = registerOverlay({
@@ -224,6 +236,14 @@ export default function OverlayFixture(): JSX.Element {
         foreignDialogPopover.showPopover();
         dialogPopoverTrigger.focus();
         dialogPopoverChildHandle.setOpen(true);
+      },
+      'open-dialog-portaled-manual': () => {
+        dialogPortaledTrigger.focus();
+        dialogPortaledManualHandle.setOpen(true);
+      },
+      'open-dialog-portaled-auto': () => {
+        dialogPortaledTrigger.focus();
+        dialogPortaledAutoHandle.setOpen(true);
       },
       'hide-p1-natively': () => p1.hidePopover(),
       'ignore-dismiss': () => {
@@ -389,6 +409,8 @@ export default function OverlayFixture(): JSX.Element {
         node.remove();
       }
       [
+        dialogPortaledAutoHandle,
+        dialogPortaledManualHandle,
         manualInP1Handle,
         dialogPopoverChildHandle,
         foreignComboHandle,
@@ -486,6 +508,12 @@ export default function OverlayFixture(): JSX.Element {
       <div id="foreign-combo-panel" style={overlap}>
         Portaled combobox panel
       </div>
+      <div id="dialog-portaled-manual" style={overlap}>
+        Portaled manual inside modal
+      </div>
+      <div id="dialog-portaled-auto" style={overlap}>
+        Portaled auto inside modal
+      </div>
       <dialog id="foreign-dialog-popover" popover="auto">
         <button id="dialog-popover-trigger" type="button">
           Inside dialog popover
@@ -558,6 +586,9 @@ export default function OverlayFixture(): JSX.Element {
           </div>
           <button id="close-modal" type="button">
             Close editor
+          </button>
+          <button id="dialog-portaled-trigger" type="button">
+            Portaled popover trigger
           </button>
           <div id="nested-clip" style={{ overflow: 'hidden', contain: 'paint', height: 32 }}>
             <button id="nested-anchor" type="button">

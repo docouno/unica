@@ -232,8 +232,16 @@ export function dispatchTargetEvent(target: EventTarget, event: Event): boolean 
   return dom().dispatchEvent(target, event);
 }
 
-export function defaultViewOf(document: Document): Realm | null {
-  return dom().docDefaultView(document);
+export function liveViewOf(document: Document): Realm | null {
+  const view = dom().docDefaultView(document);
+  if (!view) {
+    return null;
+  }
+  try {
+    return view.document === document ? view : null;
+  } catch {
+    return null;
+  }
 }
 
 export function documentBodyOf(document: Document): HTMLElement | null {
@@ -548,14 +556,14 @@ export function lockDocumentScroll(document: Document): () => void {
   const api = dom();
   const root = api.docElement(document);
   const style = root ? elementStyle(root) : null;
-  if (!root || !style) {
+  const view = liveViewOf(document);
+  if (!root || !style || !view) {
     return () => {};
   }
-  const view = api.docDefaultView(document);
-  const scrollX = view?.scrollX ?? 0;
-  const scrollY = view?.scrollY ?? 0;
-  const scrollbarWidth = view ? Math.max(0, view.innerWidth - api.clientWidth(root)) : 0;
-  const computed = view && scrollbarWidth > 0 ? view.getComputedStyle(root) : null;
+  const scrollX = view.scrollX;
+  const scrollY = view.scrollY;
+  const scrollbarWidth = Math.max(0, view.innerWidth - api.clientWidth(root));
+  const computed = scrollbarWidth > 0 ? view.getComputedStyle(root) : null;
   const compensate = scrollbarWidth > 0 && !(computed?.scrollbarGutter ?? '').includes('stable');
 
   const properties = [
@@ -574,23 +582,17 @@ export function lockDocumentScroll(document: Document): () => void {
   }
   style.setProperty('overflow', 'hidden', 'important');
 
-  const lockedX = view?.scrollX ?? scrollX;
-  const lockedY = view?.scrollY ?? scrollY;
+  const lockedX = view.scrollX;
+  const lockedY = view.scrollY;
   const shiftedOnLock = lockedX !== scrollX || lockedY !== scrollY;
 
   return () => {
-    const currentView = api.docDefaultView(document);
-    let unchangedDuringLock: boolean;
-    try {
-      unchangedDuringLock =
-        currentView !== null &&
-        currentView === view &&
-        currentView.document === document &&
-        currentView.scrollX === lockedX &&
-        currentView.scrollY === lockedY;
-    } catch {
-      unchangedDuringLock = false;
-    }
+    const currentView = liveViewOf(document);
+    const unchangedDuringLock =
+      currentView !== null &&
+      currentView === view &&
+      currentView.scrollX === lockedX &&
+      currentView.scrollY === lockedY;
 
     style.removeProperty('overflow');
     if (compensate) {
@@ -602,7 +604,6 @@ export function lockDocumentScroll(document: Document): () => void {
 
     if (
       unchangedDuringLock &&
-      currentView &&
       (shiftedOnLock || currentView.scrollX !== scrollX || currentView.scrollY !== scrollY)
     ) {
       currentView.scrollTo({ left: scrollX, top: scrollY, behavior: 'instant' });

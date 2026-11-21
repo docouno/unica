@@ -7,7 +7,6 @@ import {
   composedAncestors,
   composedContains,
   deepFocus,
-  defaultViewOf,
   dispatchTargetEvent,
   documentBodyOf,
   elementFromTarget,
@@ -20,6 +19,7 @@ import {
   isConnectedNode,
   isDialogOpen,
   isElement,
+  liveViewOf,
   lockDocumentScroll,
   matchesSelector,
   ownerDocumentOf,
@@ -117,9 +117,7 @@ function activeRuntime(document: Document): OverlayRuntime | undefined {
 }
 
 function inDocument(node: Element, document: Document): boolean {
-  return (
-    defaultViewOf(document) !== null && isConnectedNode(node) && ownerDocumentOf(node) === document
-  );
+  return isConnectedNode(node) && ownerDocumentOf(node) === document;
 }
 
 function isNativeOpen({ options }: Layer): boolean {
@@ -186,6 +184,7 @@ class Layer {
   phase: Phase = 'closed';
   runtime: OverlayRuntime | undefined;
   trigger: HTMLElement | null = null;
+  observedTrigger: HTMLElement | null = null;
   passive: boolean;
   onOpenChange: (open: boolean, reason: DismissReason) => void;
   dismissed = false;
@@ -248,7 +247,6 @@ class Layer {
     if (this.disposed || this.trigger === trigger) {
       return;
     }
-    const previous = this.trigger;
     this.unbindTrigger?.();
     this.unbindTrigger = undefined;
     this.clearSuppressTriggerClick();
@@ -268,13 +266,22 @@ class Layer {
       };
     }
     if (this.options.kind !== 'modal' && (this.active || this.phase === 'exiting')) {
-      this.runtime?.watchTrigger(previous, sameDocument ? trigger : null);
+      const nextObserved = sameDocument ? trigger : null;
+      if (this.observedTrigger !== nextObserved) {
+        this.runtime?.watchTrigger(this.observedTrigger, nextObserved);
+        this.observedTrigger = nextObserved;
+      }
     }
   };
 
   updateTrigger(): void {
     const { trigger } = this;
-    if (trigger && ownerDocumentOf(trigger) === this.document && this.options.kind === 'auto') {
+    if (
+      trigger &&
+      this.unbindTrigger &&
+      ownerDocumentOf(trigger) === this.document &&
+      this.options.kind === 'auto'
+    ) {
       setPopoverInvokerTarget(
         trigger,
         this.phase === 'exiting' || !this.ownsCarrier ? null : this.options.element,
@@ -441,6 +448,7 @@ class Layer {
       this.disposed ||
       !trigger ||
       !this.ownsCarrier ||
+      !isConnectedNode(trigger) ||
       ownerDocumentOf(trigger) !== this.document
     ) {
       return -1;
@@ -457,7 +465,11 @@ class Layer {
     }
     if (this.active) {
       this.onOpenChange(false, 'trigger');
-    } else {
+    } else if (
+      this.trigger &&
+      isConnectedNode(this.trigger) &&
+      ownerDocumentOf(this.trigger) === this.document
+    ) {
       this.requestOpen();
     }
   }
@@ -677,15 +689,8 @@ class OverlayRuntime {
   }
 
   private liveView(): Realm | null {
-    const view = defaultViewOf(this.document);
-    if (!view || view !== this.viewRef) {
-      return null;
-    }
-    try {
-      return view.document === this.document ? view : null;
-    } catch {
-      return null;
-    }
+    const view = liveViewOf(this.document);
+    return view === this.viewRef ? view : null;
   }
 
   private hasModalAncestryChanged(ancestry: readonly Element[]): boolean {
@@ -718,6 +723,9 @@ class OverlayRuntime {
   }
 
   private alive(layer: Layer): boolean {
+    if (!this.liveView()) {
+      return false;
+    }
     const { element, kind } = layer.options;
     if (!inDocument(element, this.document) || hasHiddenAncestor(element, false)) {
       return false;
@@ -741,7 +749,8 @@ class OverlayRuntime {
       this.stack.push(layer);
       layer.updateTrigger();
       this.observe(layer.options.element);
-      if (layer.options.kind !== 'modal') {
+      if (layer.options.kind !== 'modal' && layer.trigger) {
+        layer.observedTrigger = layer.trigger;
         this.observe(layer.trigger);
       }
       if (layer.options.kind === 'modal') {
@@ -756,10 +765,11 @@ class OverlayRuntime {
     if (index >= 0) {
       this.stack.splice(index, 1);
       this.unobserve(layer.options.element);
-      if (layer.options.kind !== 'modal') {
-        this.unobserve(layer.trigger);
+      if (layer.observedTrigger) {
+        this.unobserve(layer.observedTrigger);
       }
     }
+    layer.observedTrigger = null;
     this.pending.delete(layer);
     this.deferredOpens.delete(layer);
     layer.runtime = undefined;
@@ -1069,15 +1079,20 @@ class OverlayRuntime {
     readonly barrier: Layer | undefined;
     readonly layer: Layer | undefined;
   } {
-    const barrier = this.stack.findLast(({ options }) => options.kind === 'modal');
-    const layer = this.stack.findLast((entry) => {
+    const barrierIndex = this.stack.findLastIndex(({ options }) => options.kind === 'modal');
+    const barrier = barrierIndex >= 0 ? this.stack[barrierIndex] : undefined;
+    const layer = this.stack.findLast((entry, index) => {
       const { options } = entry;
       return (
         entry.active &&
         (options.kind !== 'manual' || !entry.passive) &&
         (!barrier ||
           entry === barrier ||
-          composedContains(barrier.options.element, options.element))
+          (index > barrierIndex &&
+            (composedContains(barrier.options.element, options.element) ||
+              (options.kind !== 'modal' &&
+                entry.trigger !== null &&
+                composedContains(barrier.options.element, entry.trigger)))))
       );
     });
     return { barrier, layer };
@@ -1213,15 +1228,8 @@ function recordVersion(document: Document, runtime: OverlayRuntime): void {
 }
 
 function runtimeFor(document: Document): OverlayRuntime | undefined {
-  const view = defaultViewOf(document);
+  const view = liveViewOf(document);
   if (!view) {
-    return undefined;
-  }
-  try {
-    if (view.document !== document) {
-      return undefined;
-    }
-  } catch {
     return undefined;
   }
   const current = activeRuntime(document);
