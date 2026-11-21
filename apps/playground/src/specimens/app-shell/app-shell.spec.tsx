@@ -3,7 +3,7 @@ import type { ReactElement } from 'react';
 import { ArrowRightIcon } from '@phosphor-icons/react';
 import { defineComponent } from '../../workbench/types.js';
 import { Button } from '../../prototypes/button/button.proto.js';
-import { Kbd } from '../../prototypes/kbd/kbd.proto.js';
+import { Kbd } from '@docouno/unica';
 import { Text } from '../../prototypes/text/text.proto.js';
 import { Title } from '../../prototypes/title/title.proto.js';
 import {

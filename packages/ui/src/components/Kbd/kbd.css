@@ -1,0 +1,85 @@
+@layer unica.components {
+  .unica-kbd,
+  .unica-kbd-group {
+    direction: ltr;
+    unicode-bidi: isolate;
+    flex: none;
+    font: inherit;
+    letter-spacing: normal;
+    text-transform: none;
+    white-space: nowrap;
+    vertical-align: bottom;
+  }
+  :is(.unica-kbd, .unica-kbd-group)[data-size='s'] {
+    font-size: calc(14px * var(--font-scale));
+    line-height: calc(20px * var(--font-scale));
+  }
+  :is(.unica-kbd, .unica-kbd-group)[data-size='m'] {
+    font-size: calc(16px * var(--font-scale));
+    line-height: calc(24px * var(--font-scale));
+  }
+  :is(.unica-kbd, .unica-kbd-group)[data-size='l'] {
+    font-size: calc(18px * var(--font-scale));
+    line-height: calc(28px * var(--font-scale));
+  }
+  .unica-kbd {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    block-size: 1lh;
+    min-inline-size: 1lh;
+    /* Reserve the two borders so a single glyph fits the inherited square. */
+    padding: 0 calc((1lh - min(1em, 1lh - 4px) * 0.9 - 2px) / 2);
+    border: 1px solid var(--kbd-border, var(--kbd-cap-border));
+    border-radius: var(--radius-xs);
+    background: var(--kbd-bg, var(--kbd-cap-bg));
+    box-shadow: var(--kbd-shadow, var(--kbd-cap-shadow));
+    color: var(--kbd-fg, var(--fg-secondary));
+  }
+  .unica-kbd-face {
+    display: block;
+    font-family: var(--font-family-mono);
+    font-size: calc(0.9 * min(1em, 1lh - 4px));
+    font-weight: 500;
+    font-style: normal;
+    line-height: 1;
+  }
+  .unica-kbd-face > * + * {
+    margin-inline-start: 0.125em;
+  }
+  .unica-kbd-symbol {
+    display: inline-block;
+    inline-size: 1em;
+    block-size: 1em;
+    /* Share the text's capital-height axis instead of centering two different boxes. */
+    vertical-align: -0.14em;
+    vertical-align: calc((1cap - 1em) / 2);
+  }
+  .unica-kbd-group {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25em;
+    color: var(--kbd-fg, var(--fg-muted));
+  }
+  .unica-kbd-separator {
+    font-size: 0.8em;
+    font-weight: 400;
+  }
+  :is(.unica-kbd, .unica-kbd-group)[hidden] {
+    display: none;
+  }
+  @media (forced-colors: active) {
+    .unica-kbd {
+      border-color: currentColor;
+      background: Canvas;
+      box-shadow: none;
+    }
+
+    .unica-kbd,
+    .unica-kbd-group {
+      color: var(--kbd-forced-fg, CanvasText);
+    }
+  }
+}

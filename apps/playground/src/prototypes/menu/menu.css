@@ -221,6 +221,13 @@
   opacity: 0.65;
 }
 
+button.menu-item-proto[data-unavailable] .menu-shortcut-proto {
+  --kbd-fg: var(--fg-disabled);
+  --kbd-bg: transparent;
+  --kbd-border: var(--border-subtle);
+  --kbd-shadow: none;
+}
+
 .menu-item-proto:is([data-open], [data-preview='hover']):not([data-unavailable]) {
   background: var(--menu-highlight);
 }
@@ -343,9 +350,12 @@ button.menu-back-proto:hover {
     color: HighlightText;
   }
 
-  .menu-proto .menu-item-proto[data-unavailable],
-  .menu-proto .menu-item-proto[data-unavailable] .menu-shortcut-proto .kbd-proto {
+  .menu-proto .menu-item-proto[data-unavailable] {
     color: GrayText;
+  }
+
+  .menu-item-proto[data-unavailable] .menu-shortcut-proto {
+    --kbd-forced-fg: GrayText;
     opacity: 1;
   }
 

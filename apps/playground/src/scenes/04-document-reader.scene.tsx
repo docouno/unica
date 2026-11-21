@@ -251,6 +251,7 @@ export default defineScene({
     'collapsible',
     'hover-card',
     'icon',
+    'kbd',
     'link',
     'list',
     'menu',

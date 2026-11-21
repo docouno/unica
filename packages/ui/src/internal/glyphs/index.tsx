@@ -16,7 +16,7 @@ const caretRotation: Record<CaretGlyphProps['direction'], number> = {
   right: -90,
 };
 
-function Glyph({
+export function Glyph({
   className,
   path,
   transform,

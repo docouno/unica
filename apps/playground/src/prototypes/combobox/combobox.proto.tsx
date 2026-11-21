@@ -7,11 +7,10 @@ import {
 } from '../control-glyphs.js';
 import { useId, useLayoutEffect, useRef, useState } from 'react';
 import type { KeyboardEvent, MouseEvent, ReactElement, ReactNode, RefObject } from 'react';
-import { Icon } from '@docouno/unica';
+import { Icon, Kbd } from '@docouno/unica';
 import type { GlyphSource } from '@docouno/unica';
 import { Input } from '../input/input.proto.js';
 import type { InputProps } from '../input/input.proto.js';
-import { Kbd } from '../kbd/kbd.proto.js';
 import { ListboxGroup, ListboxOption } from '../select/listbox.proto.js';
 import type { SelectOption } from '../select/listbox.proto.js';
 import { SelectPanel } from '../select/select-control.proto.js';

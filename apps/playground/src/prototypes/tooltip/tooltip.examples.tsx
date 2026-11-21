@@ -8,7 +8,7 @@ import {
   StarIcon,
 } from '@phosphor-icons/react';
 import { IconButton } from '../button/button.proto.js';
-import { Kbd, KbdGroup } from '../kbd/kbd.proto.js';
+import { Kbd, KbdGroup } from '@docouno/unica';
 import { Link } from '../link/link.proto.js';
 import { Text } from '../text/text.proto.js';
 import { Tooltip } from './tooltip.proto.js';
