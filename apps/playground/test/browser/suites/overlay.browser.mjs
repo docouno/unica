@@ -87,29 +87,67 @@ export default {
       await visibleLayer(page, 'p1');
     },
 
-  'non-button and Shadow DOM auto triggers toggle cleanly without reopening': async ({
-    page,
-    mount,
-  }) => {
-    await mount('overlay');
-    const divTrigger = page.locator('#div-trigger');
-    await divTrigger.click();
-    await visibleLayer(page, 'div-popover');
-    await divTrigger.click();
-    await closedLayer(page, 'div-popover');
-    await statistic(page, 'divPopoverChanges', 2);
+  'non-button, Shadow DOM, and nested auto triggers toggle cleanly without hijacking or reopening':
+    async ({ page, mount }) => {
+      await mount('overlay');
+      const divTrigger = page.locator('#div-trigger');
+      await divTrigger.click();
+      await visibleLayer(page, 'div-popover');
+      await divTrigger.click();
+      await closedLayer(page, 'div-popover');
+      await statistic(page, 'divPopoverChanges', 2);
 
-    const shadowButton = page.locator('#shadow-trigger-host').locator('#shadow-button');
-    await shadowButton.click();
-    await visibleLayer(page, 'shadow-popover');
-    assert.equal(
-      await shadowButton.evaluate((el) => el.popoverTargetElement?.id ?? null),
-      'shadow-popover',
-    );
-    await shadowButton.click();
-    await closedLayer(page, 'shadow-popover');
-    await statistic(page, 'shadowPopoverChanges', 2);
-  },
+      // Delayed synthetic click (mobile touch delay) after native light-dismiss must not reopen.
+      await divTrigger.click();
+      await visibleLayer(page, 'div-popover');
+      await page.evaluate(async () => {
+        const trigger = document.querySelector('#div-trigger');
+        const popover = document.querySelector('#div-popover');
+        trigger.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }));
+        popover.hidePopover();
+        trigger.dispatchEvent(new PointerEvent('pointerup', { bubbles: true }));
+        await new Promise((resolve) => setTimeout(resolve, 60));
+        trigger.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+      });
+      await closedLayer(page, 'div-popover');
+      await statistic(page, 'divPopoverChanges', 4);
+
+      // Aborted drag-off click followed by a fresh click immediately reopens via pointerdown reset.
+      await divTrigger.click();
+      await visibleLayer(page, 'div-popover');
+      await page.evaluate(() => {
+        const trigger = document.querySelector('#div-trigger');
+        const popover = document.querySelector('#div-popover');
+        trigger.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }));
+        popover.hidePopover();
+        trigger.dispatchEvent(new PointerEvent('pointerup', { bubbles: true }));
+      });
+      await closedLayer(page, 'div-popover');
+      await divTrigger.click();
+      await visibleLayer(page, 'div-popover');
+      await divTrigger.click();
+      await closedLayer(page, 'div-popover');
+
+      // Nested inner trigger registered after outer trigger must win via composedPath order.
+      await page.locator('#inner-nested-trigger').click();
+      await visibleLayer(page, 'inner-nested-popover');
+      await closedLayer(page, 'outer-nested-popover');
+      await statistic(page, 'innerNestedPopoverChanges', 1);
+      await statistic(page, 'outerNestedPopoverChanges', 0);
+      await page.locator('#inner-nested-trigger').click();
+      await closedLayer(page, 'inner-nested-popover');
+
+      const shadowButton = page.locator('#shadow-trigger-host').locator('#shadow-button');
+      await shadowButton.click();
+      await visibleLayer(page, 'shadow-popover');
+      assert.equal(
+        await shadowButton.evaluate((el) => el.popoverTargetElement?.id ?? null),
+        'shadow-popover',
+      );
+      await shadowButton.click();
+      await closedLayer(page, 'shadow-popover');
+      await statistic(page, 'shadowPopoverChanges', 2);
+    },
 
   'native dismissal latches stale controlled state and respects outside focus': async ({
     page,
@@ -192,7 +230,7 @@ export default {
     await closedLayer(page, 'dialog', ':modal');
   },
 
-  'DOM clobbering inside forms never loops or throws in overlay coordination': async ({
+  'DOM clobbering on forms and Document never loops or throws in overlay coordination': async ({
     page,
     mount,
   }) => {
@@ -205,6 +243,15 @@ export default {
     await page.waitForFunction(() =>
       Element.prototype.matches.call(document.querySelector('#clobbered-form'), ':popover-open'),
     );
+    // Positioning and disposing a <form popover> with name="style"/"removeEventListener" must work.
+    await command(page, 'position-clobbered');
+    await page.waitForFunction(
+      () =>
+        Element.prototype.getAttribute.call(
+          document.querySelector('#clobbered-form'),
+          'data-surface',
+        ) === 'overlay',
+    );
     await page.evaluate(() => {
       HTMLElement.prototype.focus.call(document.querySelector('#clobbered-action'));
     });
@@ -215,10 +262,22 @@ export default {
     );
     assert.equal(
       await page.evaluate(
-        () => document.activeElement === document.querySelector('#clobbered-trigger'),
+        () =>
+          Object.getOwnPropertyDescriptor(Document.prototype, 'activeElement').get.call(
+            document,
+          ) === document.querySelector('#clobbered-trigger'),
       ),
       true,
     );
+    await command(page, 'dispose-clobbered');
+
+    // Document-level DOM clobbering (<form name="defaultView">, <img name="body">, etc.).
+    await command(page, 'clobber-document', 'open-dialog', 'disable-guard');
+    await visibleLayer(page, 'dialog', ':modal');
+    await statistic(page, 'toastHost', 'dialog');
+    await page.keyboard.press('Escape');
+    await closedLayer(page, 'dialog', ':modal');
+    await statistic(page, 'toastHost', 'modal-host');
   },
 
   'Escape respects inner preventDefault and routes manual, passive, and foreign layers': async ({
@@ -261,6 +320,45 @@ export default {
     await closedLayer(page, 'foreign', ':modal');
     await visibleLayer(page, 'manual');
     await statistic(page, 'manualChanges', 1);
+
+    // Updating passive to undefined restores Escape dismissal (after manual above it closes).
+    await command(page, 'make-passive-active');
+    await page.keyboard.press('Escape');
+    await closedLayer(page, 'manual');
+    await visibleLayer(page, 'passive');
+    await page.keyboard.press('Escape');
+    await closedLayer(page, 'passive');
+
+    // Portaled manual overlay triggered inside a foreign auto popover dismisses before the foreign popover.
+    await mount('overlay');
+    await command(page, 'open-foreign-auto-combo');
+    await visibleLayer(page, 'foreign-auto');
+    await visibleLayer(page, 'foreign-combo-panel');
+    await page.keyboard.press('Escape');
+    await closedLayer(page, 'foreign-combo-panel');
+    await visibleLayer(page, 'foreign-auto');
+
+    // Open <dialog popover="auto"> is not treated as a hidden ancestor, and native popover dismiss reconciles nested manual layers.
+    await mount('overlay');
+    await command(page, 'open-dialog-popover-child');
+    await visibleLayer(page, 'foreign-dialog-popover');
+    await visibleLayer(page, 'dialog-popover-child');
+    await page.locator('#dialog-popover-child-action').focus();
+    await page.keyboard.press('Escape');
+    await closedLayer(page, 'dialog-popover-child');
+    await assertFocused(page.locator('#dialog-popover-trigger'));
+
+    await command(page, 'open-a', 'open-manual-in-p1');
+    await visibleLayer(page, 'manual-in-p1');
+    const dismissedAtMicrotask = await page.evaluate(async () => {
+      document
+        .querySelector('#overlay-fixture')
+        .dispatchEvent(new CustomEvent('fixture-command', { detail: 'hide-p1-natively' }));
+      await Promise.resolve();
+      await Promise.resolve();
+      return !document.querySelector('#manual-in-p1').matches(':popover-open');
+    });
+    assert.equal(dismissedAtMicrotask, true);
   },
 
   'nested auto popovers inside guarded and unguarded modals dismiss one layer per Escape': async ({
@@ -375,7 +473,7 @@ export default {
         el.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, button: 2 }));
         el.dispatchEvent(new MouseEvent('contextmenu', { bubbles: true, button: 2 }));
       });
-      await page.keyboard.press('Escape');
+      await command(page, 'finish-b');
       await closedLayer(page, 'p2');
       await assertFocused(page.locator('#trigger2'));
 

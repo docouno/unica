@@ -1,11 +1,15 @@
 import { devWarningsEnabled } from '../devWarningsEnabled.js';
 import { PACKAGE_VERSION } from '../version.js';
 import {
+  addListener,
   bindPopoverInvoker,
   closeDialog,
   composedAncestors,
   composedContains,
   deepFocus,
+  defaultViewOf,
+  dispatchTargetEvent,
+  documentBodyOf,
   elementFromTarget,
   focusElement,
   getElementInert,
@@ -20,6 +24,7 @@ import {
   matchesSelector,
   ownerDocumentOf,
   parentNodeOf,
+  removeListener,
   setElementInert,
   setElementPopover,
   setPopoverInvokerTarget,
@@ -63,6 +68,7 @@ export interface OverlayHandle {
 
 const RUNTIME_PROTOCOL = 1;
 const MAX_SYNC_PASSES = 64;
+const SUPPRESS_CLICK_TIMEOUT_MS = 500;
 const runtimeKey = Symbol.for(`@docouno/unica/OverlayRuntime@${RUNTIME_PROTOCOL}`);
 const versionsKey = Symbol.for('@docouno/unica/OverlayRuntimeVersions');
 const modalChange = `@docouno/unica/modalchange@${RUNTIME_PROTOCOL}`;
@@ -70,6 +76,7 @@ const modalChange = `@docouno/unica/modalchange@${RUNTIME_PROTOCOL}`;
 type Realm = Window & typeof globalThis;
 
 const fallbackRuntimes = new WeakMap<Document, OverlayRuntime>();
+const joinedRuntimes = new WeakSet<OverlayRuntime>();
 const triggerRegistries = new WeakMap<Document, Set<Layer>>();
 const foreignEscapes = new WeakMap<KeyboardEvent, 'manual' | 'other'>();
 
@@ -111,7 +118,7 @@ function activeRuntime(document: Document): OverlayRuntime | undefined {
 
 function inDocument(node: Element, document: Document): boolean {
   return (
-    document.defaultView !== null && isConnectedNode(node) && ownerDocumentOf(node) === document
+    defaultViewOf(document) !== null && isConnectedNode(node) && ownerDocumentOf(node) === document
   );
 }
 
@@ -140,11 +147,16 @@ function onDocumentClick(event: MouseEvent): void {
     return;
   }
   const path = event.composedPath();
-  for (const layer of [...layers]) {
-    if (layer.handleTriggerClick(event, path)) {
-      return;
+  let nearest: Layer | undefined;
+  let nearestIndex = Number.POSITIVE_INFINITY;
+  for (const layer of layers) {
+    const index = layer.triggerPathIndex(path);
+    if (index >= 0 && index < nearestIndex) {
+      nearest = layer;
+      nearestIndex = index;
     }
   }
+  nearest?.handleTriggerClick(event);
 }
 
 function registerTriggerClick(document: Document, layer: Layer): void {
@@ -152,7 +164,7 @@ function registerTriggerClick(document: Document, layer: Layer): void {
   if (!layers) {
     layers = new Set();
     triggerRegistries.set(document, layers);
-    document.addEventListener('click', onDocumentClick);
+    addListener(document, 'click', onDocumentClick);
   }
   layers.add(layer);
 }
@@ -164,7 +176,7 @@ function unregisterTriggerClick(document: Document, layer: Layer): void {
   }
   layers.delete(layer);
   if (!layers.size) {
-    document.removeEventListener('click', onDocumentClick);
+    removeListener(document, 'click', onDocumentClick);
     triggerRegistries.delete(document);
   }
 }
@@ -181,8 +193,9 @@ class Layer {
   internal = false;
   disposed = false;
   focused = false;
-  previousFocus: Element | null = null;
-  suppressNextTriggerClick = false;
+  previousFocus: WeakRef<Element> | null = null;
+  private suppressNextTriggerClick = false;
+  private cancelSuppressClick: (() => void) | undefined;
   private previousInert: boolean | undefined;
   private openRevision = 0;
   private pendingOpenRequest = false;
@@ -200,10 +213,10 @@ class Layer {
     if (kind !== 'modal') {
       setElementPopover(element, kind);
     }
-    element.addEventListener('beforetoggle', this.beforeToggle);
+    addListener(element, 'beforetoggle', this.beforeToggle);
     if (kind === 'modal') {
-      element.addEventListener('close', this.onClose);
-      element.addEventListener('cancel', this.onCancel);
+      addListener(element, 'close', this.onClose);
+      addListener(element, 'cancel', this.onCancel);
     }
     this.setTrigger(trigger ?? null);
   }
@@ -223,8 +236,8 @@ class Layer {
     if (patch.onOpenChange !== undefined) {
       this.onOpenChange = patch.onOpenChange;
     }
-    if (patch.passive !== undefined && this.options.kind === 'manual') {
-      this.passive = patch.passive;
+    if ('passive' in patch && this.options.kind === 'manual') {
+      this.passive = Boolean(patch.passive);
     }
     if ('trigger' in patch) {
       this.setTrigger(patch.trigger ?? null);
@@ -238,9 +251,10 @@ class Layer {
     const previous = this.trigger;
     this.unbindTrigger?.();
     this.unbindTrigger = undefined;
-    this.suppressNextTriggerClick = false;
+    this.clearSuppressTriggerClick();
     this.trigger = trigger;
-    if (trigger && this.options.kind === 'auto') {
+    const sameDocument = trigger !== null && ownerDocumentOf(trigger) === this.document;
+    if (sameDocument && this.options.kind === 'auto') {
       const restoreInvoker = bindPopoverInvoker(
         trigger,
         this.phase === 'exiting' || !this.ownsCarrier ? null : this.options.element,
@@ -254,7 +268,7 @@ class Layer {
       };
     }
     if (this.options.kind !== 'modal' && (this.active || this.phase === 'exiting')) {
-      this.runtime?.watchTrigger(previous, trigger);
+      this.runtime?.watchTrigger(previous, sameDocument ? trigger : null);
     }
   };
 
@@ -355,13 +369,40 @@ class Layer {
     const { element } = this.options;
     this.unbindTrigger?.();
     this.unbindTrigger = undefined;
-    element.removeEventListener('beforetoggle', this.beforeToggle);
-    element.removeEventListener('close', this.onClose);
-    element.removeEventListener('cancel', this.onCancel);
+    this.clearSuppressTriggerClick();
+    removeListener(element, 'beforetoggle', this.beforeToggle);
+    removeListener(element, 'close', this.onClose);
+    removeListener(element, 'cancel', this.onCancel);
     this.runtime?.close(this);
     this.trigger = null;
     this.previousFocus = null;
   };
+
+  armSuppressTriggerClick(view: Realm | null): void {
+    this.clearSuppressTriggerClick();
+    this.suppressNextTriggerClick = true;
+    const clear = (): void => this.clearSuppressTriggerClick();
+    addListener(this.document, 'pointerdown', clear, true);
+    addListener(this.document, 'keydown', clear, true);
+    const timer = view?.setTimeout(clear, SUPPRESS_CLICK_TIMEOUT_MS);
+    this.cancelSuppressClick = () => {
+      removeListener(this.document, 'pointerdown', clear, true);
+      removeListener(this.document, 'keydown', clear, true);
+      if (view && timer !== undefined) {
+        try {
+          view.clearTimeout(timer);
+        } catch {
+          // Ignore detached frame teardown.
+        }
+      }
+    };
+  }
+
+  clearSuppressTriggerClick(): void {
+    this.suppressNextTriggerClick = false;
+    this.cancelSuppressClick?.();
+    this.cancelSuppressClick = undefined;
+  }
 
   show(): void {
     const { options, trigger } = this;
@@ -394,29 +435,31 @@ class Layer {
     });
   }
 
-  handleTriggerClick(event: MouseEvent, path: readonly EventTarget[]): boolean {
+  triggerPathIndex(path: readonly EventTarget[]): number {
     const { trigger } = this;
     if (
       this.disposed ||
       !trigger ||
       !this.ownsCarrier ||
-      ownerDocumentOf(trigger) !== this.document ||
-      !path.includes(trigger)
+      ownerDocumentOf(trigger) !== this.document
     ) {
-      return false;
+      return -1;
     }
+    return path.indexOf(trigger);
+  }
+
+  handleTriggerClick(event: MouseEvent): void {
     event.preventDefault();
     this.runtime?.reconcile();
     if (this.suppressNextTriggerClick) {
-      this.suppressNextTriggerClick = false;
-      return true;
+      this.clearSuppressTriggerClick();
+      return;
     }
     if (this.active) {
       this.onOpenChange(false, 'trigger');
     } else {
       this.requestOpen();
     }
-    return true;
   }
 
   private operate(operation: () => void): void {
@@ -464,6 +507,7 @@ class OverlayRuntime {
   private readonly resizeTargets = new Map<Element, number>();
   private readonly mutations: MutationObserver;
   private readonly modalAncestors = new Set<Element>();
+  private readonly registeredVersions = new Set<string>();
   private readonly viewRef: Realm;
   private transactions = 0;
   private showing = 0;
@@ -481,15 +525,19 @@ class OverlayRuntime {
     this.viewRef = view;
     this.resize = new view.ResizeObserver(this.onResize);
     this.mutations = new view.MutationObserver(this.onMutations);
-    document.addEventListener('keydown', this.onEscapeCapture, true);
-    document.addEventListener('keydown', this.onEscape);
-    document.addEventListener('focusin', this.onFocus, true);
-    document.addEventListener('pointerdown', this.onPointer, true);
-    document.addEventListener('pointerup', this.endPointer, true);
-    document.addEventListener('pointercancel', this.endPointer, true);
-    document.addEventListener('contextmenu', this.clearPointer, true);
-    document.addEventListener('fullscreenchange', this.reconcile);
-    view.addEventListener('blur', this.clearPointer);
+    addListener(document, 'keydown', this.onEscapeCapture, true);
+    addListener(document, 'keydown', this.onEscape);
+    addListener(document, 'focusin', this.onFocus, true);
+    addListener(document, 'pointerdown', this.onPointer, true);
+    addListener(document, 'pointerup', this.endPointer, true);
+    addListener(document, 'pointercancel', this.endPointer, true);
+    addListener(document, 'contextmenu', this.clearPointer, true);
+    addListener(document, 'fullscreenchange', this.reconcile);
+    addListener(view, 'blur', this.clearPointer);
+  }
+
+  trackVersion(version: string): void {
+    this.registeredVersions.add(version);
   }
 
   open(layer: Layer): void {
@@ -505,7 +553,8 @@ class OverlayRuntime {
         this.deferredOpens.add(layer);
         return;
       }
-      layer.previousFocus = deepFocus(this.document);
+      const activeFocus = deepFocus(this.document);
+      layer.previousFocus = activeFocus ? new WeakRef(activeFocus) : null;
       layer.phase = 'opening';
       layer.runtime = this;
       this.pending.add(layer);
@@ -565,7 +614,7 @@ class OverlayRuntime {
     try {
       const shouldReturnFocus = options?.returnFocus !== false;
       const hadFocus = shouldReturnFocus && this.ownedFocus(layer);
-      const previousFocus = layer.previousFocus;
+      const previousFocus = layer.previousFocus?.deref() ?? null;
       layer.beginExit();
       // A projection subscriber may synchronously dispose this layer.
       if (layer.runtime === this) {
@@ -589,15 +638,13 @@ class OverlayRuntime {
         this.pointerTarget &&
         composedContains(layer.trigger, this.pointerTarget)
       ) {
-        layer.suppressNextTriggerClick = true;
-        const view = this.liveView();
-        if (view) {
-          view.setTimeout(() => {
-            layer.suppressNextTriggerClick = false;
-          }, 0);
-        }
+        layer.armSuppressTriggerClick(this.liveView());
       }
       this.finalDismiss(layer, 'native', true);
+      if (this.stack.length) {
+        // beforetoggle fires before the browser clears :popover-open on the closing layer.
+        queueMicrotask(() => this.reconcile());
+      }
     }
   }
 
@@ -620,7 +667,7 @@ class OverlayRuntime {
     const ancestry = Array.from(composedAncestors(this.resolveModal()));
     if (this.hasModalAncestryChanged(ancestry)) {
       this.modalAncestry = ancestry;
-      this.document.dispatchEvent(new view.Event(modalChange));
+      dispatchTargetEvent(this.document, new view.Event(modalChange));
     }
   }
 
@@ -630,8 +677,15 @@ class OverlayRuntime {
   }
 
   private liveView(): Realm | null {
-    const view = this.document.defaultView;
-    return view && view === this.viewRef ? view : null;
+    const view = defaultViewOf(this.document);
+    if (!view || view !== this.viewRef) {
+      return null;
+    }
+    try {
+      return view.document === this.document ? view : null;
+    } catch {
+      return null;
+    }
   }
 
   private hasModalAncestryChanged(ancestry: readonly Element[]): boolean {
@@ -682,6 +736,7 @@ class OverlayRuntime {
         continue;
       }
       this.pending.delete(layer);
+      layer.clearSuppressTriggerClick();
       layer.phase = 'open';
       this.stack.push(layer);
       layer.updateTrigger();
@@ -788,6 +843,9 @@ class OverlayRuntime {
     if (relevant) {
       this.reconcile();
       this.publishModal();
+      if (this.stack.some(({ options }) => options.kind === 'modal')) {
+        this.watchModals();
+      }
     }
   };
 
@@ -795,7 +853,7 @@ class OverlayRuntime {
     const focus = deepFocus(this.document);
     return (
       composedContains(layer.options.element, focus) ||
-      ((focus === this.document.body || !focus) && layer.focused)
+      ((focus === documentBodyOf(this.document) || !focus) && layer.focused)
     );
   }
 
@@ -803,7 +861,7 @@ class OverlayRuntime {
     const current = deepFocus(this.document);
     if (
       (current &&
-        current !== this.document.body &&
+        current !== documentBodyOf(this.document) &&
         current !== previousFocus &&
         !composedContains(layer.options.element, current)) ||
       (this.pointerTarget && !composedContains(layer.options.element, this.pointerTarget))
@@ -847,7 +905,7 @@ class OverlayRuntime {
   private finalDismiss(layer: Layer, reason: DismissReason, browserClosing = false): void {
     const wasActive = layer.active;
     const hadFocus = (wasActive || layer.phase === 'exiting') && this.ownedFocus(layer);
-    const previousFocus = layer.previousFocus;
+    const previousFocus = layer.previousFocus?.deref() ?? null;
     this.transactions++;
     try {
       if (wasActive) {
@@ -991,7 +1049,12 @@ class OverlayRuntime {
         if (
           matchesSelector(node, ':popover-open, :modal') &&
           !own.has(node) &&
-          !composedContains(node, candidate.options.element)
+          !composedContains(node, candidate.options.element) &&
+          !(
+            candidate.options.kind !== 'modal' &&
+            candidate.trigger &&
+            composedContains(node, candidate.trigger)
+          )
         ) {
           return matchesSelector(node, ':popover-open') && getElementPopover(node) === 'manual'
             ? 'manual'
@@ -1095,21 +1158,21 @@ class OverlayRuntime {
       }
     }
     this.pointerTarget = null;
-    this.document.removeEventListener('keydown', this.onEscapeCapture, true);
-    this.document.removeEventListener('keydown', this.onEscape);
-    this.document.removeEventListener('focusin', this.onFocus, true);
-    this.document.removeEventListener('pointerdown', this.onPointer, true);
-    this.document.removeEventListener('pointerup', this.endPointer, true);
-    this.document.removeEventListener('pointercancel', this.endPointer, true);
-    this.document.removeEventListener('contextmenu', this.clearPointer, true);
-    this.document.removeEventListener('fullscreenchange', this.reconcile);
+    removeListener(this.document, 'keydown', this.onEscapeCapture, true);
+    removeListener(this.document, 'keydown', this.onEscape);
+    removeListener(this.document, 'focusin', this.onFocus, true);
+    removeListener(this.document, 'pointerdown', this.onPointer, true);
+    removeListener(this.document, 'pointerup', this.endPointer, true);
+    removeListener(this.document, 'pointercancel', this.endPointer, true);
+    removeListener(this.document, 'contextmenu', this.clearPointer, true);
+    removeListener(this.document, 'fullscreenchange', this.reconcile);
     const view = this.liveView();
     if (view) {
       if (this.pointerTimeout !== undefined) {
         view.clearTimeout(this.pointerTimeout);
         this.pointerTimeout = undefined;
       }
-      view.removeEventListener('blur', this.clearPointer);
+      removeListener(view, 'blur', this.clearPointer);
     }
     if (activeRuntime(this.document) !== this) {
       return;
@@ -1119,7 +1182,9 @@ class OverlayRuntime {
       Reflect.deleteProperty(this.document, runtimeKey);
       const versions: unknown = Reflect.get(this.document, versionsKey);
       if (isVersionSet(versions)) {
-        versions.delete(PACKAGE_VERSION);
+        for (const version of this.registeredVersions) {
+          versions.delete(version);
+        }
         if (!versions.size) {
           Reflect.deleteProperty(this.document, versionsKey);
         }
@@ -1130,32 +1195,48 @@ class OverlayRuntime {
   }
 }
 
+function recordVersion(document: Document, runtime: OverlayRuntime): void {
+  try {
+    const existing: unknown = Reflect.get(document, versionsKey);
+    const storedVersions = isVersionSet(existing) ? existing : new Set<string>();
+    if (storedVersions.size && !storedVersions.has(PACKAGE_VERSION) && devWarningsEnabled()) {
+      console.warn('Unica overlay runtimes from different package versions share a document.');
+    }
+    storedVersions.add(PACKAGE_VERSION);
+    Reflect.set(document, versionsKey, storedVersions);
+    if (typeof runtime.trackVersion === 'function') {
+      runtime.trackVersion(PACKAGE_VERSION);
+    }
+  } catch {
+    // Ignore restricted document proxies.
+  }
+}
+
 function runtimeFor(document: Document): OverlayRuntime | undefined {
-  const view = document.defaultView;
+  const view = defaultViewOf(document);
   if (!view) {
+    return undefined;
+  }
+  try {
+    if (view.document !== document) {
+      return undefined;
+    }
+  } catch {
     return undefined;
   }
   const current = activeRuntime(document);
   if (current) {
+    if (!joinedRuntimes.has(current)) {
+      joinedRuntimes.add(current);
+      recordVersion(document, current);
+    }
     return current;
   }
-  let storedVersions: Set<string> | undefined;
-  try {
-    const existing: unknown = Reflect.get(document, versionsKey);
-    storedVersions = isVersionSet(existing) ? existing : new Set<string>();
-    if (storedVersions.size && !storedVersions.has(PACKAGE_VERSION) && devWarningsEnabled()) {
-      console.warn('Unica overlay runtimes from different package versions share a document.');
-    }
-  } catch {
-    storedVersions = undefined;
-  }
   const runtime = new OverlayRuntime(document, view);
+  joinedRuntimes.add(runtime);
+  recordVersion(document, runtime);
   let stored: boolean;
   try {
-    if (storedVersions) {
-      storedVersions.add(PACKAGE_VERSION);
-      Reflect.set(document, versionsKey, storedVersions);
-    }
     stored = Reflect.set(document, runtimeKey, runtime);
   } catch {
     stored = false;
@@ -1183,10 +1264,12 @@ export function resolveToastPortalHost(container: HTMLElement | null): HTMLEleme
   if (!modal) {
     return container;
   }
-  return container === document.body || composedContains(container, modal) ? modal : null;
+  return container === documentBodyOf(document) || composedContains(container, modal)
+    ? modal
+    : null;
 }
 
 export function subscribeToModalChanges(document: Document, notify: () => void): () => void {
-  document.addEventListener(modalChange, notify);
-  return () => document.removeEventListener(modalChange, notify);
+  addListener(document, modalChange, notify);
+  return () => removeListener(document, modalChange, notify);
 }

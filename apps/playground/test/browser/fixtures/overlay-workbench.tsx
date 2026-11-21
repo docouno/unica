@@ -18,14 +18,14 @@ const config = {
       category: 'Overlays',
       status: 'UI',
       props: {},
-      render: PortalProbe,
+      render: ({ ctx }) => <PortalProbe subject={ctx.subject} />,
       cases: [
         {
           id: 'both-surfaces',
           title: 'Both surfaces',
           kind: 'surface',
           compareSurfaces: true,
-          render: PortalProbe,
+          render: () => <PortalProbe />,
         },
       ],
     }),

@@ -151,6 +151,25 @@ it('honors a waiting provider, explicit overrides, body fallback, and a foreign 
   expect(document.body.querySelector('body > span')?.textContent).toBe('Body');
 });
 
+it('falls back to the real document.body even when DOM clobbering shadows document.body', () => {
+  const realBody = document.body;
+  const clobber = realBody.appendChild(document.createElement('img'));
+  clobber.setAttribute('name', 'body');
+  try {
+    expect(document.body).toBe(clobber);
+    render(
+      <Portal>
+        <span data-clobbered-body-portal="">Safe</span>
+      </Portal>,
+    );
+    expect(realBody.querySelector(':scope > [data-clobbered-body-portal]')?.textContent).toBe(
+      'Safe',
+    );
+  } finally {
+    clobber.remove();
+  }
+});
+
 it.each(['body', 'explicit', 'waiting'] as const)(
   'hydrates a direct consumer and a portal with a %s host',
   async (destination) => {

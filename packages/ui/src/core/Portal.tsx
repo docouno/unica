@@ -11,10 +11,23 @@ export interface PortalProps extends PortalProviderProps {
   readonly disabled?: boolean | undefined;
 }
 
+type BodyGetter = (this: Document) => HTMLElement | null;
+
 const PortalContext = /* @__PURE__ */ createContext<HTMLElement | null | undefined>(undefined);
 const subscribe = (): (() => void) => () => {};
 const getClientSnapshot = (): boolean => typeof document !== 'undefined';
 const getServerSnapshot = (): boolean => false;
+let bodyGetter: BodyGetter | null | undefined;
+
+function documentBody(): HTMLElement | null {
+  if (bodyGetter === undefined) {
+    const descriptor = Object.getOwnPropertyDescriptor(Document.prototype, 'body');
+    bodyGetter = descriptor
+      ? ((Reflect.get(descriptor, 'get') as BodyGetter | undefined) ?? null)
+      : null;
+  }
+  return bodyGetter ? bodyGetter.call(document) : document.body;
+}
 
 function useContainer(container: PortalProps['container']): HTMLElement | null {
   const inherited = useContext(PortalContext);
@@ -24,7 +37,7 @@ function useContainer(container: PortalProps['container']): HTMLElement | null {
   }
   return container === undefined
     ? inherited === undefined
-      ? document.body
+      ? documentBody()
       : inherited
     : container;
 }

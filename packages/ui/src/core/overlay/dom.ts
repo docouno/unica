@@ -1,4 +1,19 @@
+type Realm = Window & typeof globalThis;
+
 interface NativeDom {
+  readonly addEventListener: (
+    target: EventTarget,
+    type: string,
+    listener: EventListenerOrEventListenerObject,
+    options?: boolean | AddEventListenerOptions,
+  ) => void;
+  readonly removeEventListener: (
+    target: EventTarget,
+    type: string,
+    listener: EventListenerOrEventListenerObject,
+    options?: boolean | EventListenerOptions,
+  ) => void;
+  readonly dispatchEvent: (target: EventTarget, event: Event) => boolean;
   readonly nodeType: (node: Node) => number;
   readonly isConnected: (node: Node) => boolean;
   readonly ownerDocument: (node: Node) => Document | null;
@@ -7,6 +22,7 @@ interface NativeDom {
   readonly contains: (parent: Node, child: Node | null) => boolean;
   readonly matches: (element: Element, selector: string) => boolean;
   readonly localName: (element: Element) => string;
+  readonly clientWidth: (element: Element) => number;
   readonly getAttribute: (element: Element, name: string) => string | null;
   readonly setAttribute: (element: Element, name: string, value: string) => void;
   readonly removeAttribute: (element: Element, name: string) => void;
@@ -16,6 +32,11 @@ interface NativeDom {
   readonly shadowHost: ((root: Node) => Element) | undefined;
   readonly shadowActiveElement: ((root: ShadowRoot) => Element | null) | undefined;
   readonly docActiveElement: (document: Document) => Element | null;
+  readonly docDefaultView: (document: Document) => Realm | null;
+  readonly docElement: (document: Document) => Element | null;
+  readonly docBody: (document: Document) => HTMLElement | null;
+  readonly htmlStyle: (element: HTMLElement) => CSSStyleDeclaration;
+  readonly svgStyle: ((element: SVGElement) => CSSStyleDeclaration) | undefined;
   readonly getInert: ((element: HTMLElement) => boolean) | undefined;
   readonly setInert: ((element: HTMLElement, value: boolean) => void) | undefined;
   readonly getPopover: ((element: HTMLElement) => string | null) | undefined;
@@ -27,12 +48,16 @@ interface NativeDom {
     ((element: HTMLElement, options?: { readonly source?: HTMLElement }) => void) | undefined;
   readonly hidePopover: ((element: HTMLElement) => void) | undefined;
   readonly htmlFocus: (element: HTMLElement, options?: FocusOptions) => void;
+  readonly svgFocus: ((element: SVGElement, options?: FocusOptions) => void) | undefined;
   readonly getButtonTarget: ((button: HTMLButtonElement) => Element | null) | undefined;
   readonly setButtonTarget:
     ((button: HTMLButtonElement, value: Element | null) => void) | undefined;
   readonly getInputTarget: ((input: HTMLInputElement) => Element | null) | undefined;
   readonly setInputTarget: ((input: HTMLInputElement, value: Element | null) => void) | undefined;
 }
+
+const HIDDEN_TOP_LAYER =
+  'dialog:not([open]):not(:popover-open), [popover]:not(:popover-open):not(dialog[open])';
 
 type Getter = (this: unknown) => unknown;
 type Setter = (this: unknown, value: unknown) => void;
@@ -62,9 +87,12 @@ function dom(): NativeDom {
   if (cached) {
     return cached;
   }
+  const eventTargetProto = EventTarget.prototype;
   const nodeProto = Node.prototype;
   const elementProto = Element.prototype;
   const htmlProto = HTMLElement.prototype;
+  const svgProto = typeof SVGElement === 'undefined' ? undefined : SVGElement.prototype;
+  const docProto = Document.prototype;
   const shadowProto = typeof ShadowRoot === 'undefined' ? undefined : ShadowRoot.prototype;
   const dialogProto =
     typeof HTMLDialogElement === 'undefined' ? undefined : HTMLDialogElement.prototype;
@@ -74,6 +102,13 @@ function dom(): NativeDom {
     typeof HTMLInputElement === 'undefined' ? undefined : HTMLInputElement.prototype;
 
   cached = {
+    addEventListener: (target, type, listener, options) => {
+      eventTargetProto.addEventListener.call(target, type, listener, options);
+    },
+    removeEventListener: (target, type, listener, options) => {
+      eventTargetProto.removeEventListener.call(target, type, listener, options);
+    },
+    dispatchEvent: (target, event) => eventTargetProto.dispatchEvent.call(target, event),
     nodeType: getter<Node, number>(nodeProto, 'nodeType')!,
     isConnected: getter<Node, boolean>(nodeProto, 'isConnected')!,
     ownerDocument: getter<Node, Document | null>(nodeProto, 'ownerDocument')!,
@@ -82,6 +117,7 @@ function dom(): NativeDom {
     contains: (parent, child) => nodeProto.contains.call(parent, child),
     matches: (element, selector) => elementProto.matches.call(element, selector),
     localName: getter<Element, string>(elementProto, 'localName')!,
+    clientWidth: getter<Element, number>(elementProto, 'clientWidth')!,
     getAttribute: (element, name) => elementProto.getAttribute.call(element, name),
     setAttribute: (element, name, value) => elementProto.setAttribute.call(element, name, value),
     removeAttribute: (element, name) => elementProto.removeAttribute.call(element, name),
@@ -93,7 +129,12 @@ function dom(): NativeDom {
     shadowRoot: getter<Element, ShadowRoot | null>(elementProto, 'shadowRoot')!,
     shadowHost: getter<Node, Element>(shadowProto, 'host'),
     shadowActiveElement: getter<ShadowRoot, Element | null>(shadowProto, 'activeElement'),
-    docActiveElement: getter<Document, Element | null>(Document.prototype, 'activeElement')!,
+    docActiveElement: getter<Document, Element | null>(docProto, 'activeElement')!,
+    docDefaultView: getter<Document, Realm | null>(docProto, 'defaultView')!,
+    docElement: getter<Document, Element | null>(docProto, 'documentElement')!,
+    docBody: getter<Document, HTMLElement | null>(docProto, 'body')!,
+    htmlStyle: getter<HTMLElement, CSSStyleDeclaration>(htmlProto, 'style')!,
+    svgStyle: getter<SVGElement, CSSStyleDeclaration>(svgProto, 'style'),
     getInert: getter<HTMLElement, boolean>(htmlProto, 'inert'),
     setInert: setter<HTMLElement, boolean>(htmlProto, 'inert'),
     getPopover: getter<HTMLElement, string | null>(htmlProto, 'popover'),
@@ -108,12 +149,108 @@ function dom(): NativeDom {
       ? (element) => htmlProto.hidePopover.call(element)
       : undefined,
     htmlFocus: (element, options) => htmlProto.focus.call(element, options),
+    svgFocus: svgProto?.focus
+      ? (element, options) => {
+          svgProto.focus.call(element, options);
+        }
+      : undefined,
     getButtonTarget: getter<HTMLButtonElement, Element | null>(buttonProto, 'popoverTargetElement'),
     setButtonTarget: setter<HTMLButtonElement, Element | null>(buttonProto, 'popoverTargetElement'),
     getInputTarget: getter<HTMLInputElement, Element | null>(inputProto, 'popoverTargetElement'),
     setInputTarget: setter<HTMLInputElement, Element | null>(inputProto, 'popoverTargetElement'),
   };
   return cached;
+}
+
+export function addListener<K extends keyof DocumentEventMap>(
+  target: Document,
+  type: K,
+  listener: (event: DocumentEventMap[K]) => void,
+  options?: boolean | AddEventListenerOptions,
+): void;
+export function addListener<K extends keyof HTMLElementEventMap>(
+  target: HTMLElement,
+  type: K,
+  listener: (event: HTMLElementEventMap[K]) => void,
+  options?: boolean | AddEventListenerOptions,
+): void;
+export function addListener<K extends keyof WindowEventMap>(
+  target: Window,
+  type: K,
+  listener: (event: WindowEventMap[K]) => void,
+  options?: boolean | AddEventListenerOptions,
+): void;
+export function addListener(
+  target: EventTarget,
+  type: string,
+  listener: EventListenerOrEventListenerObject,
+  options?: boolean | AddEventListenerOptions,
+): void;
+export function addListener(
+  target: EventTarget,
+  type: string,
+  listener: EventListenerOrEventListenerObject,
+  options?: boolean | AddEventListenerOptions,
+): void {
+  dom().addEventListener(target, type, listener, options);
+}
+
+export function removeListener<K extends keyof DocumentEventMap>(
+  target: Document,
+  type: K,
+  listener: (event: DocumentEventMap[K]) => void,
+  options?: boolean | EventListenerOptions,
+): void;
+export function removeListener<K extends keyof HTMLElementEventMap>(
+  target: HTMLElement,
+  type: K,
+  listener: (event: HTMLElementEventMap[K]) => void,
+  options?: boolean | EventListenerOptions,
+): void;
+export function removeListener<K extends keyof WindowEventMap>(
+  target: Window,
+  type: K,
+  listener: (event: WindowEventMap[K]) => void,
+  options?: boolean | EventListenerOptions,
+): void;
+export function removeListener(
+  target: EventTarget,
+  type: string,
+  listener: EventListenerOrEventListenerObject,
+  options?: boolean | EventListenerOptions,
+): void;
+export function removeListener(
+  target: EventTarget,
+  type: string,
+  listener: EventListenerOrEventListenerObject,
+  options?: boolean | EventListenerOptions,
+): void {
+  dom().removeEventListener(target, type, listener, options);
+}
+
+export function dispatchTargetEvent(target: EventTarget, event: Event): boolean {
+  return dom().dispatchEvent(target, event);
+}
+
+export function defaultViewOf(document: Document): Realm | null {
+  return dom().docDefaultView(document);
+}
+
+export function documentBodyOf(document: Document): HTMLElement | null {
+  return dom().docBody(document);
+}
+
+export function elementStyle(element: Element): CSSStyleDeclaration | null {
+  const api = dom();
+  try {
+    return api.htmlStyle(element as HTMLElement);
+  } catch {
+    try {
+      return api.svgStyle ? api.svgStyle(element as SVGElement) : null;
+    } catch {
+      return null;
+    }
+  }
 }
 
 export function isElement(node: unknown): node is Element {
@@ -362,7 +499,7 @@ export function hasHiddenAncestor(element: Element, includeSelf: boolean): boole
     return true;
   }
   for (let ancestor = composedParent(element); ancestor; ancestor = composedParent(ancestor)) {
-    if (api.matches(ancestor, 'dialog:not([open]), [popover]:not(:popover-open), [hidden]')) {
+    if (api.matches(ancestor, `${HIDDEN_TOP_LAYER}, [hidden]`)) {
       return true;
     }
   }
@@ -385,10 +522,7 @@ export function focusElement(element: Element | null, document: Document): boole
     if (api.matches(current, '[inert], [hidden]')) {
       return false;
     }
-    if (
-      current !== element &&
-      api.matches(current, 'dialog:not([open]), [popover]:not(:popover-open)')
-    ) {
+    if (current !== element && api.matches(current, HIDDEN_TOP_LAYER)) {
       return false;
     }
   }
@@ -396,9 +530,13 @@ export function focusElement(element: Element | null, document: Document): boole
   try {
     api.htmlFocus(element as HTMLElement, { preventScroll: true });
   } catch {
-    if (typeof (element as HTMLElement).focus === 'function') {
-      (element as HTMLElement).focus({ preventScroll: true });
-    } else {
+    try {
+      if (api.svgFocus) {
+        api.svgFocus(element as SVGElement, { preventScroll: true });
+      } else {
+        return false;
+      }
+    } catch {
       return false;
     }
   }
@@ -407,15 +545,16 @@ export function focusElement(element: Element | null, document: Document): boole
 }
 
 export function lockDocumentScroll(document: Document): () => void {
-  const root = document.documentElement;
-  if (!root || !('style' in root)) {
+  const api = dom();
+  const root = api.docElement(document);
+  const style = root ? elementStyle(root) : null;
+  if (!root || !style) {
     return () => {};
   }
-  const { style } = root;
-  const view = document.defaultView;
+  const view = api.docDefaultView(document);
   const scrollX = view?.scrollX ?? 0;
   const scrollY = view?.scrollY ?? 0;
-  const scrollbarWidth = view ? Math.max(0, view.innerWidth - root.clientWidth) : 0;
+  const scrollbarWidth = view ? Math.max(0, view.innerWidth - api.clientWidth(root)) : 0;
   const computed = view && scrollbarWidth > 0 ? view.getComputedStyle(root) : null;
   const compensate = scrollbarWidth > 0 && !(computed?.scrollbarGutter ?? '').includes('stable');
 
@@ -440,12 +579,18 @@ export function lockDocumentScroll(document: Document): () => void {
   const shiftedOnLock = lockedX !== scrollX || lockedY !== scrollY;
 
   return () => {
-    const currentView = document.defaultView;
-    const unchangedDuringLock =
-      currentView !== null &&
-      currentView === view &&
-      currentView.scrollX === lockedX &&
-      currentView.scrollY === lockedY;
+    const currentView = api.docDefaultView(document);
+    let unchangedDuringLock: boolean;
+    try {
+      unchangedDuringLock =
+        currentView !== null &&
+        currentView === view &&
+        currentView.document === document &&
+        currentView.scrollX === lockedX &&
+        currentView.scrollY === lockedY;
+    } catch {
+      unchangedDuringLock = false;
+    }
 
     style.removeProperty('overflow');
     if (compensate) {
@@ -457,6 +602,7 @@ export function lockDocumentScroll(document: Document): () => void {
 
     if (
       unchangedDuringLock &&
+      currentView &&
       (shiftedOnLock || currentView.scrollX !== scrollX || currentView.scrollY !== scrollY)
     ) {
       currentView.scrollTo({ left: scrollX, top: scrollY, behavior: 'instant' });

@@ -143,8 +143,74 @@ export default function OverlayRealmsFixture(): JSX.Element {
       iframe.src = 'about:blank';
     };
 
+    const checkCrossDocTrigger = () => {
+      const host = root.appendChild(document.createElement('div'));
+      const foreignButton = childDocument.body.appendChild(childDocument.createElement('button'));
+      foreignButton.type = 'button';
+      const handle = registerOverlay({
+        kind: 'auto',
+        element: host,
+        trigger: foreignButton,
+        onOpenChange() {},
+      });
+      registered.add(handle);
+      root.dataset.foreignTriggerMutated = String(foreignButton.popoverTargetElement !== null);
+      handle.dispose();
+    };
+
+    const checkProtocolJoinWarning = async () => {
+      const url = new URL('../../src/core/overlay/runtime.ts', import.meta.url);
+      url.searchParams.set('copy', 'third');
+      const third = (await import(/* @vite-ignore */ url.href)) as typeof Runtime;
+      const warn = console.warn;
+      const warnings: string[] = [];
+      console.warn = (message: string) => warnings.push(message);
+      try {
+        attach(registerOverlay, document, 'join-first');
+        // Simulate an already-active runtime created by a different package version on protocol 1.
+        Reflect.set(document, registryKey, new Set(['0.0.9']));
+        attach(third.registerOverlay, document, 'join-second');
+      } finally {
+        console.warn = warn;
+      }
+      root.dataset.joinVersionWarnings = String(
+        warnings.filter((message) => message.includes('different package versions')).length,
+      );
+    };
+
+    const checkMoveBeforeModal = () => {
+      const containerA = root.appendChild(document.createElement('div'));
+      const containerB = root.appendChild(document.createElement('div'));
+      const wrapper = containerA.appendChild(document.createElement('div'));
+      const dialog = wrapper.appendChild(document.createElement('dialog'));
+      const handle = registerOverlay({ kind: 'modal', element: dialog, onOpenChange() {} });
+      registered.add(handle);
+      handle.setOpen(true);
+      const movable = containerB as HTMLElement & {
+        moveBefore?: (node: Node, child: Node | null) => void;
+      };
+      if (typeof movable.moveBefore === 'function') {
+        movable.moveBefore(wrapper, null);
+        // After a microtask let onMutations re-watch containerB, then remove containerB.
+        queueMicrotask(() => {
+          containerB.remove();
+          queueMicrotask(() => {
+            root.dataset.moveBeforeReleased = String(
+              document.documentElement.style.overflow === '',
+            );
+          });
+        });
+      } else {
+        handle.dispose();
+        root.dataset.moveBeforeReleased = 'unsupported';
+      }
+    };
+
     const start = () => {
       openCopies().catch((error: unknown) => window.reportError(error));
+    };
+    const startJoin = () => {
+      checkProtocolJoinWarning().catch((error: unknown) => window.reportError(error));
     };
     root.addEventListener('open-copies', start);
     root.addEventListener('check-cleanup', checkCleanup);
@@ -154,6 +220,9 @@ export default function OverlayRealmsFixture(): JSX.Element {
     root.addEventListener('adopt-popover', adoptPopover);
     root.addEventListener('open-iframe-modal', openIframeModal);
     root.addEventListener('navigate-dispose-iframe', navigateAndDisposeIframe);
+    root.addEventListener('check-cross-doc-trigger', checkCrossDocTrigger);
+    root.addEventListener('check-protocol-join-warning', startJoin);
+    root.addEventListener('check-move-before-modal', checkMoveBeforeModal);
 
     return () => {
       unsubscribe();

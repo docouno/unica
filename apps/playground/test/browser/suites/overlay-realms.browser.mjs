@@ -86,4 +86,26 @@ export default {
         () => document.querySelector('#overlay-realms').dataset.iframeDisposedCleanly === 'true',
       );
     },
+
+  'cross-document triggers are never mutated, active protocol joins warn, and moveBefore stays watched':
+    async ({ page, mount }) => {
+      await mount('overlay-realms');
+      await dispatch(page, 'check-cross-doc-trigger');
+      assert.equal(
+        await page.locator('#overlay-realms').getAttribute('data-foreign-trigger-mutated'),
+        'false',
+      );
+
+      await dispatch(page, 'check-protocol-join-warning');
+      await page.waitForFunction(
+        () => document.querySelector('#overlay-realms').dataset.joinVersionWarnings === '1',
+      );
+
+      await mount('overlay-realms');
+      await dispatch(page, 'check-move-before-modal');
+      await page.waitForFunction(() => {
+        const status = document.querySelector('#overlay-realms').dataset.moveBeforeReleased;
+        return status === 'true' || status === 'unsupported';
+      });
+    },
 };

@@ -9,10 +9,14 @@ import {
 
 const probeStyle = { fontSize: 'var(--text-size-body-m)', color: 'var(--fg-primary)' };
 
-export function PortalProbe(): JSX.Element {
+export function PortalProbe({
+  subject,
+}: {
+  readonly subject?: { readonly 'data-wb-subject': '' };
+} = {}): JSX.Element {
   return (
     <>
-      <span data-inline-probe="" style={probeStyle}>
+      <span data-inline-probe="" {...subject} style={probeStyle}>
         Inline probe
       </span>
       <Portal>

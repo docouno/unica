@@ -42,6 +42,17 @@ export default function OverlayFixture(): JSX.Element {
     const divPopover = get('div-popover');
     const clobberedForm = get<HTMLFormElement>('clobbered-form');
     const clobberedTrigger = get('clobbered-trigger');
+    const outerNestedTrigger = get('outer-nested-trigger');
+    const innerNestedTrigger = get('inner-nested-trigger');
+    const outerNestedPopover = get('outer-nested-popover');
+    const innerNestedPopover = get('inner-nested-popover');
+    const foreignAuto = get('foreign-auto');
+    const foreignComboTrigger = get('foreign-combo-trigger');
+    const foreignComboPanel = get('foreign-combo-panel');
+    const foreignDialogPopover = get<HTMLDialogElement>('foreign-dialog-popover');
+    const dialogPopoverTrigger = get('dialog-popover-trigger');
+    const dialogPopoverChild = get('dialog-popover-child');
+    const manualInP1 = get('manual-in-p1');
     const stats = get('stats');
     const report = (rawKey: string): void => {
       const key = rawKey.replace(/-([a-z])/g, (_, ch: string) => ch.toUpperCase());
@@ -100,6 +111,13 @@ export default function OverlayFixture(): JSX.Element {
     const divHandle = popover(divPopover, divTrigger, 'auto');
     const shadowHandle = popover(shadowPopover, shadowButton, 'auto');
     const clobberedHandle = popover(clobberedForm, clobberedTrigger, 'auto');
+    const outerNestedHandle = popover(outerNestedPopover, outerNestedTrigger, 'auto');
+    const innerNestedHandle = popover(innerNestedPopover, innerNestedTrigger, 'auto');
+    const foreignComboHandle = popover(foreignComboPanel, foreignComboTrigger, 'manual');
+    const dialogPopoverChildHandle = popover(dialogPopoverChild, dialogPopoverTrigger, 'auto');
+    const manualInP1Handle = popover(manualInP1, null, 'manual');
+    let stopClobberedPositioning: (() => void) | undefined;
+    const clobberedDocNodes: HTMLElement[] = [];
 
     const toastHost = get('modal-host');
     const unsubscribe = subscribeToModalChanges(document, () => {
@@ -161,6 +179,53 @@ export default function OverlayFixture(): JSX.Element {
       'open-b': () => b.setOpen(true),
       'open-manual': () => m.setOpen(true),
       'open-passive': () => passive.setOpen(true),
+      'make-passive-active': () => passive.update({ passive: undefined }),
+      'open-manual-in-p1': () => manualInP1Handle.setOpen(true),
+      'position-clobbered': () => {
+        stopClobberedPositioning = positionOverlay({
+          anchor: get('outside'),
+          floating: clobberedForm,
+          side: 'bottom',
+          align: 'start',
+          gap: 6,
+        });
+      },
+      'dispose-clobbered': () => {
+        stopClobberedPositioning?.();
+        stopClobberedPositioning = undefined;
+        clobberedHandle.dispose();
+      },
+      'clobber-document': () => {
+        const specs = [
+          { tag: 'form', name: 'defaultView' },
+          { tag: 'form', name: 'documentElement', childInput: 'style' },
+          { tag: 'img', name: 'body' },
+          { tag: 'form', name: 'removeEventListener' },
+          { tag: 'form', name: 'dispatchEvent' },
+        ];
+        for (const spec of specs) {
+          const el = document.createElement(spec.tag);
+          el.setAttribute('name', spec.name);
+          if (spec.childInput) {
+            const input = document.createElement('input');
+            input.setAttribute('name', spec.childInput);
+            el.appendChild(input);
+          }
+          fixture.appendChild(el);
+          clobberedDocNodes.push(el);
+        }
+      },
+      'open-foreign-auto-combo': () => {
+        foreignAuto.showPopover();
+        foreignComboTrigger.focus();
+        foreignComboHandle.setOpen(true);
+      },
+      'open-dialog-popover-child': () => {
+        foreignDialogPopover.showPopover();
+        dialogPopoverTrigger.focus();
+        dialogPopoverChildHandle.setOpen(true);
+      },
+      'hide-p1-natively': () => p1.hidePopover(),
       'ignore-dismiss': () => {
         ignoreDismiss = true;
       },
@@ -319,7 +384,16 @@ export default function OverlayFixture(): JSX.Element {
       get('close-modal')?.removeEventListener('click', closeModal);
       unsubscribe();
       stopPositioning?.();
+      stopClobberedPositioning?.();
+      for (const node of clobberedDocNodes) {
+        node.remove();
+      }
       [
+        manualInP1Handle,
+        dialogPopoverChildHandle,
+        foreignComboHandle,
+        innerNestedHandle,
+        outerNestedHandle,
         clobberedHandle,
         shadowHandle,
         divHandle,
@@ -387,14 +461,48 @@ export default function OverlayFixture(): JSX.Element {
         <input type="hidden" name="inert" value="trap" />
         <input type="hidden" name="parentElement" value="trap" />
         <input type="hidden" name="matches" value="trap" />
+        <input type="hidden" name="style" value="trap" />
+        <input type="hidden" name="addEventListener" value="trap" />
+        <input type="hidden" name="removeEventListener" value="trap" />
         <button id="clobbered-action" type="button">
           Clobbered action
         </button>
       </form>
+      <div id="outer-nested-trigger" role="button" tabIndex={0}>
+        Outer trigger
+        <button id="inner-nested-trigger" type="button">
+          Inner trigger
+        </button>
+      </div>
+      <div id="outer-nested-popover" style={overlap}>
+        Outer nested popover
+      </div>
+      <div id="inner-nested-popover" style={overlap}>
+        Inner nested popover
+      </div>
+      <div id="foreign-auto" popover="auto">
+        <input id="foreign-combo-trigger" defaultValue="query" />
+      </div>
+      <div id="foreign-combo-panel" style={overlap}>
+        Portaled combobox panel
+      </div>
+      <dialog id="foreign-dialog-popover" popover="auto">
+        <button id="dialog-popover-trigger" type="button">
+          Inside dialog popover
+        </button>
+        <div id="dialog-popover-child" style={overlap}>
+          <button id="dialog-popover-child-action" type="button">
+            Child action
+          </button>
+        </div>
+      </dialog>
       <div id="p1" style={overlap}>
         <button id="inside-a" type="button" autoFocus>
           Outer action
         </button>
+        <div id="manual-in-p1" style={{ ...overlap, left: 260 }}>
+          Manual inside p1
+        </div>
         <button
           id="trigger2"
           type="button"

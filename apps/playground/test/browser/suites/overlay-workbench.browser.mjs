@@ -167,10 +167,20 @@ export default {
     );
   },
 
-  'Bounds and owned FormData inspection work for subjects and forms rendered through Portal':
+  'Bounds and owned FormData inspection work for inline and Portal-rendered subjects and forms':
     async ({ page, mount }) => {
       await page.setViewportSize({ width: 1280, height: 720 });
       await mount('overlay-workbench');
+      // Ordinary inline subject is measured once (not duplicated by the artboard portaled observer).
+      await navigate(page, {
+        item: 'portal-probe',
+        family: 'soft',
+        scheme: 'dark',
+        bounds: '1',
+      });
+      await page.locator('.wb-inspector-preview > .wb-bounds-layer').waitFor();
+      assert.equal(await page.locator('.wb-bounds-layer').count(), 1);
+
       await navigate(page, {
         item: 'portal-dialog-probe',
         family: 'soft',
@@ -180,14 +190,20 @@ export default {
       await page.locator('[data-open-portaled-dialog]').click();
       await page.locator('dialog:modal').waitFor();
       await page.locator('.wb-artboard > .wb-bounds-layer[data-wb-native-layer]').waitFor();
+      assert.equal(await page.locator('.wb-bounds-layer').count(), 1);
       const label = await page
         .locator('.wb-artboard > .wb-bounds-layer [data-wb-bounds-label]')
         .textContent();
       assert.match(label ?? '', /240 × 120 px/);
+      await page.locator('dialog input[name="owner"]').fill('edited');
       await page.getByRole('button', { name: 'Save' }).click();
       await page.keyboard.press('Escape');
       await page.locator('dialog:modal').waitFor({ state: 'detached' });
       await page.getByRole('tab', { name: 'FormData' }).click();
+      assert.match((await page.getByRole('tabpanel').textContent()) ?? '', /owner.*edited/s);
+      // Workbench's own Reset + Submit buttons target the portaled owned form inside the artboard.
+      await page.getByRole('button', { name: 'Reset', exact: true }).click();
+      await page.getByRole('button', { name: 'Submit', exact: true }).click();
       assert.match((await page.getByRole('tabpanel').textContent()) ?? '', /owner.*unica/s);
     },
 };
