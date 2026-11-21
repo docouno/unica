@@ -7,6 +7,8 @@ import { test } from 'node:test';
 import { devkitWorkspaceSource } from '@docouno/env/vite';
 import react from '@vitejs/plugin-react';
 import { chromium } from 'playwright-core';
+import { createElement } from 'react';
+import { renderToString } from 'react-dom/server';
 import { createServer } from 'vite';
 
 const scenarioFiles = globSync('suites/**/*.browser.mjs', { cwd: import.meta.dirname }).sort();
@@ -17,7 +19,7 @@ for (const file of scenarioFiles) {
 }
 assert.ok(scenarios.length, 'No browser tests found in suites/**/*.browser.mjs');
 
-async function runScenario(t, browser, origin, scenario) {
+async function runScenario(t, browser, origin, renderFixture, scenario) {
   const context = await browser.newContext({ viewport: { width: 800, height: 600 } });
   t.after(() => context.close());
   const page = await context.newPage();
@@ -62,7 +64,7 @@ async function runScenario(t, browser, origin, scenario) {
   }
 
   try {
-    await scenario({ page, mount });
+    await scenario({ page, mount, renderFixture });
   } catch (error) {
     if (!errors.length) {
       throw error;
@@ -104,8 +106,36 @@ try {
   assert.ok(address && typeof address === 'object', 'Vite needs a loopback TCP address');
   const origin = `http://127.0.0.1:${address.port}`;
 
+  const serverFixtures = new Set(
+    globSync('fixtures/*.tsx', { cwd: import.meta.dirname }).map((file) =>
+      file.slice('fixtures/'.length, -'.tsx'.length),
+    ),
+  );
+
+  async function renderFixture(fixture) {
+    assert.ok(serverFixtures.has(fixture), `Unknown server fixture: ${fixture}`);
+    const ssrErrors = [];
+    const originalError = console.error;
+    console.error = (...args) => {
+      ssrErrors.push(args.map(String).join(' '));
+    };
+    try {
+      const { default: Fixture } = await server.ssrLoadModule(
+        `/test/browser/fixtures/${fixture}.tsx`,
+      );
+      assert.equal(typeof Fixture, 'function', `Unknown server fixture: ${fixture}`);
+      const html = renderToString(createElement(Fixture));
+      assert.deepEqual(ssrErrors, [], `Node SSR console.error in ${fixture}`);
+      return html;
+    } finally {
+      console.error = originalError;
+    }
+  }
+
   for (const [name, scenario] of scenarios) {
-    await test(name, { timeout: 30000 }, (t) => runScenario(t, browser, origin, scenario));
+    await test(name, { timeout: 30000 }, (t) =>
+      runScenario(t, browser, origin, renderFixture, scenario),
+    );
   }
 } finally {
   try {

@@ -6,6 +6,7 @@ export interface ControllableStateOptions<T> {
   readonly value?: T | undefined;
   readonly defaultValue: T;
   readonly onChange?: ((value: T) => void) | undefined;
+  readonly isEqual?: ((a: T, b: T) => boolean) | undefined;
 }
 
 interface LocalOrigin<T> {
@@ -20,7 +21,10 @@ interface LocalState<T> {
 interface CommittedState<T> {
   readonly controlled: boolean;
   readonly origin: LocalOrigin<T>;
+  readonly local: LocalState<T> | null;
   readonly onChange: ((value: T) => void) | undefined;
+  readonly isEqual: (a: T, b: T) => boolean;
+  readonly committedValue: T;
   latestValue: T;
 }
 
@@ -44,7 +48,26 @@ export function useControllableState<T>({
   value,
   defaultValue,
   onChange,
+  isEqual,
 }: ControllableStateOptions<T>): [T, (next: T) => void] {
+  const [current, { propose }] = useStateAuthority({ value, defaultValue, onChange, isEqual });
+  // Wrap propose so passing the setter to multi-argument callbacks never supplies the internal write arg.
+  const setValue = useCallback((next: T): void => propose(next), [propose]);
+  return [current, setValue];
+}
+
+export interface StateAuthority<T> {
+  read: () => T;
+  propose: (next: T, write?: (value: T) => void) => void;
+  restore: (initial: T, write?: (value: T) => void) => void;
+}
+
+export function useStateAuthority<T>({
+  value,
+  defaultValue,
+  onChange,
+  isEqual = Object.is,
+}: ControllableStateOptions<T>): [T, StateAuthority<T>] {
   const controlled = value !== undefined;
   const [history] = useState(() => createControlledHistory(defaultValue));
   const [local, setLocal] = useState<LocalState<T> | null>(null);
@@ -57,7 +80,10 @@ export function useControllableState<T>({
   const committed = useRef<CommittedState<T>>({
     controlled,
     origin,
+    local,
     onChange,
+    isEqual,
+    committedValue: current,
     latestValue: current,
   });
   const deliveries = useRef<T[]>([]);
@@ -69,14 +95,21 @@ export function useControllableState<T>({
     if (controlled) {
       history.accept(current);
     }
+    // Preserve pending local latestValue across unrelated parent rerenders (for example
+    // while a Continuous/Default/Transition update is queued), and sync it to current
+    // once local actually commits or authority changes.
+    const nextLatest =
+      controlled || previous.controlled || previous.origin !== origin || previous.local !== local
+        ? current
+        : previous.latestValue;
     committed.current = {
       controlled,
       origin,
+      local,
       onChange,
-      latestValue:
-        controlled || previous.controlled || previous.origin !== origin
-          ? current
-          : previous.latestValue,
+      isEqual,
+      committedValue: current,
+      latestValue: nextLatest,
     };
     if (controlled !== previous.controlled && !warned.current && devWarningsEnabled()) {
       warned.current = true;
@@ -84,25 +117,52 @@ export function useControllableState<T>({
         `useControllableState switched to ${controlled ? 'controlled' : 'uncontrolled'} mode.`,
       );
     }
-  }, [controlled, history, origin, onChange, current]);
+  }, [controlled, history, origin, local, onChange, isEqual, current]);
 
-  const setValue = useCallback((next: T): void => {
+  const read = useCallback((): T => committed.current.latestValue, []);
+
+  const restore = useCallback((initial: T, write?: (value: T) => void): void => {
+    const snapshot = committed.current;
+    if (!snapshot.controlled && !snapshot.isEqual(snapshot.latestValue, initial)) {
+      write?.(initial);
+      snapshot.latestValue = initial;
+      setLocal({ origin: snapshot.origin, value: initial });
+      return;
+    }
+    if (!snapshot.controlled && !snapshot.isEqual(snapshot.committedValue, initial)) {
+      write?.(initial);
+      setLocal({ origin: snapshot.origin, value: initial });
+      return;
+    }
+    write?.(snapshot.latestValue);
+  }, []);
+
+  const propose = useCallback((next: T, write?: (value: T) => void): void => {
     const active = deliveries.current;
-    if (active.some((candidate) => Object.is(candidate, next))) {
+    const snapshot = committed.current;
+    if (active.some((candidate) => snapshot.isEqual(candidate, next))) {
+      write?.(snapshot.latestValue);
       return;
     }
 
-    const snapshot = committed.current;
-    if (!snapshot.controlled) {
-      if (Object.is(snapshot.latestValue, next)) {
-        return;
-      }
+    const unchanged = !snapshot.controlled && snapshot.isEqual(snapshot.latestValue, next);
+    if (!snapshot.controlled && !unchanged) {
+      // Write before mutating local state so a throwing DOM writer keeps React and DOM in sync.
+      write?.(next);
       snapshot.latestValue = next;
       // A queued update can apply only under the authority that accepted it.
       setLocal({ origin: snapshot.origin, value: next });
+    } else if (!snapshot.controlled && !snapshot.isEqual(snapshot.committedValue, next)) {
+      // A prior setLocal(next) stayed pending (e.g. suspended transition); re-queue on the
+      // current priority lane without emitting a duplicate onChange.
+      write?.(snapshot.latestValue);
+      setLocal({ origin: snapshot.origin, value: next });
+    } else {
+      // Repair native edits before external code can read the form.
+      write?.(snapshot.latestValue);
     }
 
-    if (snapshot.onChange) {
+    if (!unchanged && snapshot.onChange) {
       active.push(next);
       try {
         snapshot.onChange(next);
@@ -112,5 +172,5 @@ export function useControllableState<T>({
     }
   }, []);
 
-  return [current, setValue];
+  return [current, { read, propose, restore }];
 }

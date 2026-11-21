@@ -1,3 +1,18 @@
+import {
+  addListenerSafe,
+  getComposedParentElement,
+  getDeepActiveElement,
+  getDefaultView,
+  getLocalName,
+  getNamespaceURI,
+  getOwnerDocument,
+  getRootNodeSafe,
+  getShadowHostSafe,
+  isContentEditableSafe,
+  isElementNode,
+  removeListenerSafe,
+} from './dom.js';
+
 export type FocusOrigin = 'unknown' | 'pointer' | 'keyboard';
 
 type FocusOriginListener = (origin: FocusOrigin | null) => void;
@@ -13,9 +28,17 @@ interface FocusTracker {
   markKeyboard: () => void;
 }
 
-const trackers = new WeakMap<Document, FocusTracker>();
-const textInputTypes = new Set(['text', 'search', 'url', 'tel', 'email', 'password', 'number']);
-const navigationKeys = new Set([
+const trackers = /* @__PURE__ */ new WeakMap<Document, FocusTracker>();
+const textInputTypes = /* @__PURE__ */ new Set([
+  'text',
+  'search',
+  'url',
+  'tel',
+  'email',
+  'password',
+  'number',
+]);
+const navigationKeys = /* @__PURE__ */ new Set([
   'Tab',
   'Escape',
   'Enter',
@@ -31,29 +54,45 @@ const navigationKeys = new Set([
 
 function elementOf(target: EventTarget | null | undefined): Element | null {
   // An adopted element keeps its original realm even after changing documents.
-  return target && 'nodeType' in target && target.nodeType === 1 ? (target as Element) : null;
+  return isElementNode(target) ? target : null;
+}
+
+function isSingleCodePoint(key: string): boolean {
+  return key.length === 1 || (key.length === 2 && (key.codePointAt(0) ?? 0) > 0xffff);
+}
+
+function composedContains(owner: Element, active: Element | null): boolean {
+  for (let node: Element | null = active; node; node = getComposedParentElement(node)) {
+    if (node === owner) {
+      return true;
+    }
+  }
+  return false;
 }
 
 function editsText(target: Element | null, key: string): boolean {
   if (
-    target?.namespaceURI !== 'http://www.w3.org/1999/xhtml' ||
+    !target ||
+    getNamespaceURI(target) !== 'http://www.w3.org/1999/xhtml' ||
     key === 'Tab' ||
     key === 'Escape'
   ) {
     return false;
   }
-  if (target.localName === 'input') {
+  const name = getLocalName(target);
+  if (name === 'input') {
     const { type } = target as HTMLInputElement;
     if (type === 'number' && (key === 'ArrowUp' || key === 'ArrowDown')) {
       return false;
     }
     return key !== 'Enter' && textInputTypes.has(type);
   }
-  return target.localName === 'textarea' || (target as HTMLElement).isContentEditable;
+  return name === 'textarea' || isContentEditableSafe(target);
 }
 
 function createTracker(doc: Document, view: Window): FocusTracker {
   const bindings = new Map<Element, Set<FocusBinding>>();
+  const shadowRoots = new Map<Node, number>();
   let focused = new Set<FocusBinding>();
   let origin: FocusOrigin = 'unknown';
   let pendingFocusCheck: number | undefined;
@@ -61,17 +100,34 @@ function createTracker(doc: Document, view: Window): FocusTracker {
   function sync(target: Element | null): void {
     const affected = focused;
     focused = new Set<FocusBinding>();
-    for (let owner = target; owner; owner = owner.parentElement) {
-      for (const binding of bindings.get(owner) ?? []) {
-        focused.add(binding);
-        affected.add(binding);
+    for (let owner: Element | null = target; owner; owner = getComposedParentElement(owner)) {
+      const ownerBindings = bindings.get(owner);
+      if (ownerBindings) {
+        for (const binding of ownerBindings) {
+          focused.add(binding);
+          affected.add(binding);
+        }
       }
     }
+    let failure: { error: unknown } | undefined;
     for (const binding of affected) {
       const next = focused.has(binding) ? origin : null;
       if (binding.attached && binding.reported !== next) {
         binding.reported = next;
-        binding.notify(next);
+        try {
+          binding.notify(next);
+        } catch (error) {
+          failure ??= { error };
+        }
+      }
+    }
+    if (failure) {
+      if (typeof view.reportError === 'function') {
+        view.reportError(failure.error);
+      } else if (typeof reportError === 'function') {
+        reportError(failure.error);
+      } else {
+        throw failure.error;
       }
     }
   }
@@ -79,7 +135,7 @@ function createTracker(doc: Document, view: Window): FocusTracker {
   function setOrigin(next: FocusOrigin): void {
     if (origin !== next) {
       origin = next;
-      sync(doc.activeElement);
+      sync(getDeepActiveElement(doc));
     }
   }
 
@@ -87,15 +143,21 @@ function createTracker(doc: Document, view: Window): FocusTracker {
     setOrigin('pointer');
   }
 
-  function keyboard(event: KeyboardEvent): void {
-    const { key } = event;
+  function keyboard(event: Event): void {
+    if (origin === 'keyboard') {
+      return;
+    }
+    const keyEvent = event as KeyboardEvent;
+    const { key } = keyEvent;
     if (
-      event.isComposing ||
-      event.altKey ||
-      event.ctrlKey ||
-      event.metaKey ||
-      (!navigationKeys.has(key) && [...key].length !== 1) ||
-      editsText(elementOf(event.composedPath()[0]), key)
+      typeof key !== 'string' ||
+      keyEvent.isComposing ||
+      keyEvent.keyCode === 229 ||
+      keyEvent.altKey ||
+      keyEvent.ctrlKey ||
+      keyEvent.metaKey ||
+      (!navigationKeys.has(key) && !isSingleCodePoint(key)) ||
+      editsText(elementOf(keyEvent.composedPath()[0]), key)
     ) {
       return;
     }
@@ -111,13 +173,14 @@ function createTracker(doc: Document, view: Window): FocusTracker {
 
   function syncActiveElement(): void {
     cancelFocusCheck();
-    sync(doc.activeElement);
+    sync(getDeepActiveElement(doc));
   }
 
-  function focusOut(event: FocusEvent): void {
+  function focusOut(event: Event): void {
+    const focusEvent = event as FocusEvent;
     // A successful transfer reports focusin. If a handler removes the destination,
     // reconcile after native dispatch; a microtask can run between blur and focus.
-    if (event.relatedTarget === null) {
+    if (focusEvent.relatedTarget === null) {
       syncActiveElement();
     } else if (focused.size && pendingFocusCheck === undefined) {
       pendingFocusCheck = view.setTimeout(syncActiveElement, 0);
@@ -130,11 +193,11 @@ function createTracker(doc: Document, view: Window): FocusTracker {
     setOrigin('unknown');
   }
 
-  doc.addEventListener('pointerdown', pointer, true);
-  doc.addEventListener('keydown', keyboard, true);
-  doc.addEventListener('focusin', syncActiveElement, true);
-  doc.addEventListener('focusout', focusOut, true);
-  view.addEventListener('blur', blur);
+  addListenerSafe(doc, 'pointerdown', pointer, true);
+  addListenerSafe(doc, 'keydown', keyboard, true);
+  addListenerSafe(doc, 'focusin', syncActiveElement, true);
+  addListenerSafe(doc, 'focusout', focusOut, true);
+  addListenerSafe(view, 'blur', blur);
 
   return {
     markKeyboard: () => setOrigin('keyboard'),
@@ -147,6 +210,19 @@ function createTracker(doc: Document, view: Window): FocusTracker {
       const binding: FocusBinding = { notify, reported: null, attached: true };
       owners.add(binding);
 
+      const root = getRootNodeSafe(element);
+      // Focus transfers within the same ShadowRoot stop propagating focusin/focusout at
+      // the shadow boundary (retargeted target === relatedTarget), so listen on the root too.
+      const shadowRoot = root !== doc && getShadowHostSafe(root) ? root : null;
+      if (shadowRoot) {
+        const count = shadowRoots.get(shadowRoot) ?? 0;
+        if (count === 0) {
+          addListenerSafe(shadowRoot, 'focusin', syncActiveElement, true);
+          addListenerSafe(shadowRoot, 'focusout', focusOut, true);
+        }
+        shadowRoots.set(shadowRoot, count + 1);
+      }
+
       const detach = (): void => {
         if (!binding.attached) {
           return;
@@ -157,19 +233,29 @@ function createTracker(doc: Document, view: Window): FocusTracker {
         if (!owners.size) {
           bindings.delete(element);
         }
+        if (shadowRoot) {
+          const remaining = (shadowRoots.get(shadowRoot) ?? 1) - 1;
+          if (remaining <= 0) {
+            shadowRoots.delete(shadowRoot);
+            removeListenerSafe(shadowRoot, 'focusin', syncActiveElement, true);
+            removeListenerSafe(shadowRoot, 'focusout', focusOut, true);
+          } else {
+            shadowRoots.set(shadowRoot, remaining);
+          }
+        }
         if (!bindings.size) {
           cancelFocusCheck();
-          doc.removeEventListener('pointerdown', pointer, true);
-          doc.removeEventListener('keydown', keyboard, true);
-          doc.removeEventListener('focusin', syncActiveElement, true);
-          doc.removeEventListener('focusout', focusOut, true);
-          view.removeEventListener('blur', blur);
+          removeListenerSafe(doc, 'pointerdown', pointer, true);
+          removeListenerSafe(doc, 'keydown', keyboard, true);
+          removeListenerSafe(doc, 'focusin', syncActiveElement, true);
+          removeListenerSafe(doc, 'focusout', focusOut, true);
+          removeListenerSafe(view, 'blur', blur);
           trackers.delete(doc);
         }
       };
 
       // Mounting a sibling during blur must not interrupt an existing focus transfer.
-      if (element.contains(doc.activeElement)) {
+      if (composedContains(element, getDeepActiveElement(doc))) {
         focused.add(binding);
         binding.reported = origin;
         try {
@@ -186,9 +272,9 @@ function createTracker(doc: Document, view: Window): FocusTracker {
 
 /** Subscribe to focus within an owner. Detach and subscribe again if the owner changes document. */
 export function subscribeFocusOrigin(element: Element, notify: FocusOriginListener): () => void {
-  const doc = element.ownerDocument;
-  const view = doc.defaultView;
-  if (!view) {
+  const doc = getOwnerDocument(element);
+  const view = getDefaultView(doc);
+  if (!doc || !view) {
     return () => {};
   }
   let tracker = trackers.get(doc);
@@ -201,5 +287,8 @@ export function subscribeFocusOrigin(element: Element, notify: FocusOriginListen
 
 /** A composite can claim keyboard navigation while leaving DOM focus in its editor. */
 export function markKeyboardNavigation(element: Element): void {
-  trackers.get(element.ownerDocument)?.markKeyboard();
+  const doc = getOwnerDocument(element);
+  if (doc) {
+    trackers.get(doc)?.markKeyboard();
+  }
 }

@@ -280,3 +280,14 @@ it('uses the layout phase in a browser and cleans up on unmount', () => {
   unmount();
   expect(called.mock.calls).toEqual([['attach'], ['detach']]);
 });
+
+it('ignores extra arguments when passed to a multi-parameter callback', () => {
+  const changed = vi.fn<(value: string) => void>();
+  const { result } = renderHook(() =>
+    useControllableState({ defaultValue: 'A', onChange: changed }),
+  );
+  const multiArgCallback: (next: string, reason: string) => void = result.current[1];
+  expect(() => act(() => multiArgCallback('B', 'pointer'))).not.toThrow();
+  expect(result.current[0]).toBe('B');
+  expect(changed).toHaveBeenCalledExactlyOnceWith('B');
+});

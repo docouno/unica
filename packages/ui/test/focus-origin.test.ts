@@ -1,8 +1,69 @@
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { markKeyboardNavigation, subscribeFocusOrigin } from '../src/core/focus-origin.js';
 import type { FocusOrigin } from '../src/core/focus-origin.js';
 
+interface RecordedListenerCall {
+  readonly target: EventTarget;
+  readonly type: string;
+}
+
+type ListenerFn = (
+  this: EventTarget,
+  type: string,
+  listener: EventListenerOrEventListenerObject | null,
+  options?: boolean | AddEventListenerOptions,
+) => void;
+
 const cleanups: (() => void)[] = [];
+const added: RecordedListenerCall[] = [];
+const removed: RecordedListenerCall[] = [];
+let originalAdd: ListenerFn;
+let originalRemove: ListenerFn;
+
+// Wrap EventTarget.prototype once before the first call warms core/dom.ts's descriptor cache.
+beforeAll(() => {
+  const rawAdd: unknown = Reflect.get(EventTarget.prototype, 'addEventListener');
+  const rawRemove: unknown = Reflect.get(EventTarget.prototype, 'removeEventListener');
+  originalAdd = rawAdd as ListenerFn;
+  originalRemove = rawRemove as ListenerFn;
+  EventTarget.prototype.addEventListener = function addEventListener(type, listener, options) {
+    added.push({ target: this, type });
+    Reflect.apply(originalAdd, this, [type, listener, options]);
+  };
+  EventTarget.prototype.removeEventListener = function removeEventListener(
+    type,
+    listener,
+    options,
+  ) {
+    removed.push({ target: this, type });
+    Reflect.apply(originalRemove, this, [type, listener, options]);
+  };
+});
+
+afterAll(() => {
+  Reflect.set(EventTarget.prototype, 'addEventListener', originalAdd);
+  Reflect.set(EventTarget.prototype, 'removeEventListener', originalRemove);
+});
+
+beforeEach(() => {
+  added.length = 0;
+  removed.length = 0;
+});
+
+function isWindowTarget(target: EventTarget): boolean {
+  return (
+    target === window ||
+    target === document.defaultView ||
+    ('document' in target && (target as Window).document === document)
+  );
+}
+
+function listenerTypes(calls: readonly RecordedListenerCall[], target: EventTarget): string[] {
+  const match = isWindowTarget(target)
+    ? (entry: RecordedListenerCall) => isWindowTarget(entry.target)
+    : (entry: RecordedListenerCall) => entry.target === target;
+  return calls.filter(match).map((entry) => entry.type);
+}
 
 function bind(owner: HTMLElement): { detach: () => void; report: ReturnType<typeof vi.fn> } {
   const report = vi.fn((origin: FocusOrigin | null) => {
@@ -18,11 +79,13 @@ function bind(owner: HTMLElement): { detach: () => void; report: ReturnType<type
 }
 
 function key(target: Element, value: string, modifiers: KeyboardEventInit = {}): void {
-  target.dispatchEvent(new KeyboardEvent('keydown', { key: value, bubbles: true, ...modifiers }));
+  target.dispatchEvent(
+    new KeyboardEvent('keydown', { key: value, bubbles: true, composed: true, ...modifiers }),
+  );
 }
 
 function pointer(target: Element): void {
-  target.dispatchEvent(new Event('pointerdown', { bubbles: true }));
+  target.dispatchEvent(new Event('pointerdown', { bubbles: true, composed: true }));
 }
 
 function frameDocument(): Document {
@@ -210,24 +273,22 @@ describe('FocusOrigin', () => {
     const owner = document.createElement('input');
     document.body.append(owner);
     owner.focus();
-    const remove = vi.spyOn(document, 'removeEventListener');
     const failed = vi.fn(() => {
       throw new Error('attachment failed');
     });
     expect(() => subscribeFocusOrigin(owner, failed)).toThrow('attachment failed');
-    expect(remove.mock.calls.filter(([type]) => type === 'focusin')).toHaveLength(1);
+    expect(listenerTypes(removed, document).filter((type) => type === 'focusin')).toHaveLength(1);
 
+    // A pointerdown while unsubscribed must not be recorded by a leaked tracker.
+    pointer(owner);
     const { report } = bind(owner);
+    expect(report.mock.calls).toEqual([['unknown']]);
     pointer(owner);
     expect(report.mock.calls).toEqual([['unknown'], ['pointer']]);
     expect(failed).toHaveBeenCalledTimes(1);
   });
 
   it('shares capture listeners and resets the last modality only after the final detach', () => {
-    const add = vi.spyOn(document, 'addEventListener');
-    const remove = vi.spyOn(document, 'removeEventListener');
-    const addWindow = vi.spyOn(window, 'addEventListener');
-    const removeWindow = vi.spyOn(window, 'removeEventListener');
     const field = document.createElement('input');
     document.body.append(field);
     field.focus();
@@ -236,21 +297,26 @@ describe('FocusOrigin', () => {
     expect(one.report.mock.calls).toEqual([['unknown']]);
     expect(two.report.mock.calls).toEqual([['unknown']]);
 
+    const view = document.defaultView!;
     const originEvents = ['pointerdown', 'keydown', 'focusin', 'focusout'];
-    expect(
-      add.mock.calls.filter(([type]) => originEvents.includes(type)).map(([type]) => type),
-    ).toEqual(originEvents);
-    expect(addWindow.mock.calls.filter(([type]) => type === 'blur')).toHaveLength(1);
+    expect(listenerTypes(added, document).filter((type) => originEvents.includes(type))).toEqual(
+      originEvents,
+    );
+    expect(listenerTypes(added, view).filter((type) => type === 'blur')).toHaveLength(1);
     one.detach();
     one.detach();
     pointer(field);
     expect(one.report.mock.calls).toEqual([['unknown']]);
     expect(two.report.mock.calls).toEqual([['unknown'], ['pointer']]);
-    expect(remove.mock.calls.filter(([type]) => originEvents.includes(type))).toHaveLength(0);
+    expect(
+      listenerTypes(removed, document).filter((type) => originEvents.includes(type)),
+    ).toHaveLength(0);
 
     two.detach();
-    expect(remove.mock.calls.filter(([type]) => originEvents.includes(type))).toHaveLength(4);
-    expect(removeWindow.mock.calls.filter(([type]) => type === 'blur')).toHaveLength(1);
+    expect(
+      listenerTypes(removed, document).filter((type) => originEvents.includes(type)),
+    ).toHaveLength(4);
+    expect(listenerTypes(removed, view).filter((type) => type === 'blur')).toHaveLength(1);
     expect(bind(field).report.mock.calls).toEqual([['unknown']]);
   });
 
@@ -286,11 +352,126 @@ describe('FocusOrigin', () => {
   it('does no document work when its owner has no browsing context', () => {
     const detached = document.implementation.createHTMLDocument();
     const field = detached.createElement('input');
-    const add = vi.spyOn(detached, 'addEventListener');
     const { detach, report } = bind(field);
     markKeyboardNavigation(field);
     detach();
-    expect(add).not.toHaveBeenCalled();
+    expect(listenerTypes(added, detached)).toHaveLength(0);
     expect(report).not.toHaveBeenCalled();
+  });
+
+  it('is immune to HTMLFormElement DOM clobbering on parentElement, ownerDocument, nodeType, localName, isContentEditable, and contains', () => {
+    const form = document.createElement('form');
+    form.tabIndex = -1;
+    for (const name of [
+      'parentElement',
+      'ownerDocument',
+      'nodeType',
+      'contains',
+      'localName',
+      'isContentEditable',
+    ]) {
+      const clobber = document.createElement('input');
+      clobber.name = name;
+      Element.prototype.append.call(form, clobber);
+    }
+    const target = document.createElement('button');
+    target.type = 'button';
+    Element.prototype.append.call(form, target);
+    document.body.append(form);
+
+    const { report } = bind(form);
+    pointer(target);
+    target.focus();
+    expect(form.dataset.focusOrigin).toBe('pointer');
+
+    markKeyboardNavigation(target);
+    expect(form.dataset.focusOrigin).toBe('keyboard');
+    expect(report.mock.calls).toEqual([['pointer'], ['keyboard']]);
+
+    // Non-editable clobbered <form> with <input name="isContentEditable"> must still flip to keyboard on ArrowDown.
+    pointer(form);
+    form.focus();
+    expect(form.dataset.focusOrigin).toBe('pointer');
+    key(form, 'ArrowDown');
+    expect(form.dataset.focusOrigin).toBe('keyboard');
+
+    // Editable clobbered <form> exercises prototype-safe nodeType/localName/isContentEditable during keydown.
+    Object.defineProperty(form, 'isContentEditable', { value: true, configurable: true });
+    pointer(form);
+    form.focus();
+    key(form, 'a');
+    expect(form.dataset.focusOrigin).toBe('pointer');
+  });
+
+  it('tracks focus origin and markKeyboardNavigation inside open Shadow DOM', () => {
+    const host = document.createElement('div');
+    const shadow = host.attachShadow({ mode: 'open' });
+    const shadowInput = document.createElement('input');
+    const shadowButton = document.createElement('button');
+    shadowButton.type = 'button';
+    shadow.append(shadowInput, shadowButton);
+    document.body.append(host);
+
+    const hostBinding = bind(host);
+    shadowInput.focus();
+    // Subscribing after shadowInput is already focused must report initial focus via composed ancestor walk.
+    const inputBinding = bind(shadowInput);
+    expect(hostBinding.report.mock.calls).toEqual([['unknown']]);
+    expect(inputBinding.report.mock.calls).toEqual([['unknown']]);
+
+    pointer(shadowInput);
+    expect(shadowInput.dataset.focusOrigin).toBe('pointer');
+    expect(host.dataset.focusOrigin).toBe('pointer');
+
+    markKeyboardNavigation(shadowInput);
+    expect(shadowInput.dataset.focusOrigin).toBe('keyboard');
+    expect(host.dataset.focusOrigin).toBe('keyboard');
+
+    pointer(shadowButton);
+    shadowButton.focus();
+    expect(shadowInput.dataset.focusOrigin).toBeUndefined();
+    expect(host.dataset.focusOrigin).toBe('pointer');
+
+    inputBinding.detach();
+    expect(listenerTypes(removed, shadow)).toEqual(['focusin', 'focusout']);
+  });
+
+  it('ignores non-KeyboardEvent keydown, Safari IME keyCode 229, and isolates throwing subscribers', () => {
+    const first = document.createElement('input');
+    const second = document.createElement('button');
+    second.type = 'button';
+    document.body.append(first, second);
+    bind(first);
+
+    pointer(first);
+    first.focus();
+    // Plain Event('keydown') (e.g. Chrome autofill with key === undefined) must not throw or change origin.
+    expect(() => first.dispatchEvent(new Event('keydown', { bubbles: true }))).not.toThrow();
+    expect(first.dataset.focusOrigin).toBe('pointer');
+
+    // Safari IME Enter fires isComposing: false with keyCode === 229; must keep pointer origin.
+    const safariIme = new KeyboardEvent('keydown', { key: 'Enter', bubbles: true });
+    Object.defineProperty(safariIme, 'keyCode', { value: 229 });
+    first.dispatchEvent(safariIme);
+    expect(first.dataset.focusOrigin).toBe('pointer');
+
+    // A throwing subscriber during sync() must not block healthy sibling subscribers.
+    const healthy = bind(second);
+    const throwingDetach = subscribeFocusOrigin(first, (origin) => {
+      if (origin === null) {
+        throw new Error('broken focus listener');
+      }
+    });
+    cleanups.push(throwingDetach);
+
+    const reportSpy = vi.fn();
+    vi.stubGlobal('reportError', reportSpy);
+    try {
+      second.focus();
+    } finally {
+      vi.unstubAllGlobals();
+    }
+    expect(healthy.report).toHaveBeenCalledWith('pointer');
+    expect(reportSpy).toHaveBeenCalledTimes(1);
   });
 });
