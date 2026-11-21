@@ -1,3 +1,4 @@
+import { Blockquote, Code, Icon } from '@docouno/unica';
 import { useState } from 'react';
 import type { ReactElement, ReactNode } from 'react';
 import { CopyIcon, FileTextIcon, PlusIcon, SidebarSimpleIcon } from '@phosphor-icons/react';
@@ -19,10 +20,8 @@ import type { RailDestination } from '../../prototypes/app-shell/app-shell.proto
 import { Avatar, AvatarGroup } from '../../prototypes/avatar/avatar.proto.js';
 import { Badge } from '../../prototypes/badge/badge.proto.js';
 import { Button, IconButton } from '../../prototypes/button/button.proto.js';
-import { Code, CodeBlock } from '../../prototypes/code/code.proto.js';
-import { Blockquote } from '../../prototypes/blockquote/blockquote.proto.js';
+import { CodeBlock } from '../../prototypes/code-block/code-block.proto.js';
 import { Alert, AlertTitle, AlertDescription } from '../../prototypes/alert/alert.proto.js';
-import { Icon } from '@docouno/unica';
 import { List, ListItem } from '../../prototypes/list/list.proto.js';
 import {
   Table,

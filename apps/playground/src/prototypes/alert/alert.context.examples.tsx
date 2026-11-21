@@ -1,3 +1,4 @@
+import { Code } from '@docouno/unica';
 import { useId, useLayoutEffect, useRef, useState } from 'react';
 import type { ReactElement } from 'react';
 import { ArrowClockwiseIcon } from '@phosphor-icons/react';
@@ -5,7 +6,6 @@ import { Alert, AlertActions, AlertDescription, AlertTitle } from './alert.proto
 import type { AlertSize, AlertStatus } from './alert.proto.js';
 import { Button, IconButton } from '../button/button.proto.js';
 import { Card } from '../card/card.proto.js';
-import { Code } from '../code/code.proto.js';
 import { Link } from '../link/link.proto.js';
 import { Text } from '../text/text.proto.js';
 import './alert.examples.css';

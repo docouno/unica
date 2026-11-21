@@ -1,0 +1,46 @@
+.code-block-proto {
+  direction: ltr;
+  unicode-bidi: isolate;
+  text-align: start;
+}
+
+.code-block-frame-proto {
+  position: relative;
+  min-inline-size: 0;
+  border: 1px solid var(--border-default);
+  border-radius: var(--surface-s-radius);
+  background: var(--bg-aside);
+  overflow: hidden;
+}
+.code-language-proto {
+  display: block;
+  padding: var(--space-8) var(--space-16);
+  border-block-end: 1px solid var(--border-subtle);
+  color: var(--fg-muted);
+  font-family: var(--font-family-mono);
+  font-size: var(--text-size-caption-l);
+  line-height: var(--text-size-caption-l-lh);
+}
+.code-block-proto {
+  margin: 0;
+  padding: var(--space-16);
+  overflow: auto;
+  color: var(--fg-secondary);
+  font-family: var(--font-family-mono);
+  font-size: var(--text-size-body-xs);
+  line-height: 1.65;
+  tab-size: 2;
+}
+.code-block-proto > code {
+  font: inherit;
+}
+:is(.code-block-frame-proto, .code-block-proto)[hidden] {
+  display: none;
+}
+@media (forced-colors: active) {
+  .code-block-frame-proto {
+    border-color: CanvasText;
+    background: Canvas;
+    color: CanvasText;
+  }
+}

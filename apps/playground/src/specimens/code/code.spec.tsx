@@ -1,6 +1,6 @@
+import { Code } from '@docouno/unica';
 import { previewProps, previewText } from '../preview-code.js';
 import { defineComponent } from '../../workbench/types.js';
-import { Code } from '../../prototypes/code/code.proto.js';
 import { Button } from '../../prototypes/button/button.proto.js';
 import { Card } from '../../prototypes/card/card.proto.js';
 import { Alert, AlertTitle, AlertDescription } from '../../prototypes/alert/alert.proto.js';
@@ -12,13 +12,15 @@ import {
 } from '../../prototypes/popover/popover.proto.js';
 import { Text } from '../../prototypes/text/text.proto.js';
 import { Title } from '../../prototypes/title/title.proto.js';
-import '../../prototypes/code/code.examples.css';
+import './code.examples.css';
+
+const defaultLiteral = 'git status --short';
 
 export default defineComponent({
   id: 'code',
   title: 'Code',
   category: 'Typography',
-  status: 'Proto',
+  status: 'UI',
   summary: 'Technical words that belong to the sentence. Selectable, quiet, and always complete.',
   componentName: 'Code',
   props: {
@@ -49,20 +51,39 @@ export default defineComponent({
       default: true,
       description: 'Show the local code background.',
     },
+    dir: {
+      kind: 'enum',
+      group: 'Content',
+      default: 'ltr',
+      description: 'Set the base direction of the isolated literal.',
+      choices: [{ value: 'ltr', label: 'LTR' }, { value: 'rtl', label: 'RTL' }, { value: 'auto' }],
+    },
     children: {
       kind: 'string',
       group: 'Content',
-      default: 'git status --short',
+      default: defaultLiteral,
       description: 'Inline code content.',
+      examples: [defaultLiteral, '', '0', 'src/connections/reconnect-with-exponential-backoff.ts'],
     },
   },
+  // Keep the literal in a line box inside the centered preview.
   render: ({ ctx, values: { children, ...props } }) => (
-    <Code {...ctx.subject} {...props}>
-      {children}
-    </Code>
+    <span>
+      <Code {...ctx.subject} {...props}>
+        {children}
+      </Code>
+    </span>
   ),
   code: ({ children, ...props }) =>
-    `<Code${previewProps(props, { size: 'inherit', tone: 'inherit', plate: true })}>${previewText(children)}</Code>`,
+    `<Code${previewProps(props, { size: 'inherit', tone: 'inherit', plate: true, dir: 'ltr' })}>${previewText(children)}</Code>`,
+  constraints: [
+    {
+      kind: 'ignored',
+      when: { children: '' },
+      affects: ['plate'],
+      reason: 'An empty literal has no visible plate.',
+    },
+  ],
   matrixViews: [
     {
       id: 'sizes',
@@ -236,6 +257,21 @@ export default defineComponent({
             </Text>
           </PopoverBody>
         </PopoverContent>
+      ),
+    },
+    {
+      id: 'plain',
+      title: 'Use the action foreground',
+      kind: 'behavior',
+      render: () => (
+        <div className="code-example-actions">
+          <Button size="s">
+            Run <Code plate={false}>npm test</Code>
+          </Button>
+          <Link href="https://developer.mozilla.org/en-US/docs/Web/API/AbortSignal">
+            Read <Code plate={false}>AbortSignal</Code>
+          </Link>
+        </div>
       ),
     },
   ],
