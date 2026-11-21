@@ -1,14 +1,14 @@
+import {
+  BusyGlyph,
+  CaretDownGlyph,
+  LockGlyph,
+  SearchGlyph,
+  fieldStatusGlyphs,
+} from '../control-glyphs.js';
 import { useId, useLayoutEffect, useRef, useState } from 'react';
 import type { KeyboardEvent, MouseEvent, ReactElement, ReactNode, RefObject } from 'react';
-import {
-  CaretDownIcon,
-  CircleNotchIcon,
-  LockSimpleIcon,
-  MagnifyingGlassIcon,
-  WarningCircleIcon,
-} from '@phosphor-icons/react';
-import { Icon } from '../icon/icon.proto.js';
-import type { GlyphComponent } from '../icon/icon.proto.js';
+import { Icon } from '@docouno/unica';
+import type { GlyphSource } from '@docouno/unica';
 import { Input } from '../input/input.proto.js';
 import type { InputProps } from '../input/input.proto.js';
 import { Kbd } from '../kbd/kbd.proto.js';
@@ -42,7 +42,7 @@ interface FieldProps extends Pick<
   | 'data-wb-subject'
 > {
   readonly options: readonly Suggestion[];
-  readonly iconLeft?: GlyphComponent | null | undefined;
+  readonly iconLeft?: GlyphSource | null | undefined;
   readonly minimumQueryLength?: number;
   readonly searchState?: 'loading' | 'error';
   readonly listMessage?: ReactNode;
@@ -264,7 +264,11 @@ function SuggestionRows({
         data-active={current || undefined}
         key={option.value}
       >
-        {option.icon && <Icon icon={option.icon} size="s" className="choice-option-icon-proto" />}
+        {option.icon && (
+          <span className="choice-option-icon-proto" aria-hidden="true">
+            <Icon usage="slot" icon={option.icon} />
+          </span>
+        )}
         <span className="choice-option-copy-proto">
           <span dir="auto">{option.label}</span>
           {option.description && (
@@ -310,17 +314,17 @@ function SuggestionRows({
 function SuggestionMessage({
   title,
   detail,
-  icon: Glyph,
+  icon,
   warning,
 }: {
   readonly title: ReactNode;
   readonly detail?: ReactNode;
-  readonly icon: GlyphComponent;
+  readonly icon: GlyphSource;
   readonly warning?: boolean;
 }): ReactElement {
   return (
     <div className="suggestion-notice-proto" role="status" data-warning={warning || undefined}>
-      <Glyph size="1em" aria-hidden="true" />
+      <Icon usage="slot" icon={icon} />
       <div className="suggestion-notice-copy-proto">
         <strong>{title}</strong>
         {detail && <span>{detail}</span>}
@@ -488,7 +492,7 @@ function SuggestionField({
   if (pending) {
     notice = (
       <SuggestionMessage
-        icon={CircleNotchIcon}
+        icon={BusyGlyph}
         title="Searching…"
         detail="Keep typing to refine your search."
       />
@@ -496,7 +500,7 @@ function SuggestionField({
   } else if (searchState === 'error') {
     notice = (
       <SuggestionMessage
-        icon={WarningCircleIcon}
+        icon={fieldStatusGlyphs.danger}
         warning
         title="Couldn’t load results"
         detail={
@@ -510,7 +514,7 @@ function SuggestionField({
   } else if (belowMinimum) {
     notice = (
       <SuggestionMessage
-        icon={MagnifyingGlassIcon}
+        icon={SearchGlyph}
         title="Type to search"
         detail={listMessage ?? `Enter at least ${minimumQueryLength} characters.`}
       />
@@ -518,7 +522,7 @@ function SuggestionField({
   } else if (results.length === 0) {
     notice = query.trim() ? (
       <SuggestionMessage
-        icon={MagnifyingGlassIcon}
+        icon={SearchGlyph}
         title={catalog ? 'No matches' : 'No matching suggestions'}
         detail={
           listMessage ??
@@ -529,7 +533,7 @@ function SuggestionField({
       />
     ) : (
       <SuggestionMessage
-        icon={MagnifyingGlassIcon}
+        icon={SearchGlyph}
         title={catalog ? 'No options available' : 'No suggestions available'}
         detail={listMessage}
       />
@@ -537,7 +541,7 @@ function SuggestionField({
   } else if (!enabled.length) {
     notice = (
       <SuggestionMessage
-        icon={LockSimpleIcon}
+        icon={LockGlyph}
         title="These results are unavailable"
         detail={listMessage}
       />
@@ -622,14 +626,17 @@ function SuggestionField({
             <>
               {pending && (
                 <Icon
-                  icon={CircleNotchIcon}
+                  usage="slot"
+                  icon={BusyGlyph}
                   size={size}
+                  color="muted"
                   className="suggestion-spinner-proto control-spinner-proto"
                 />
               )}
               {readOnly && !disabled ? (
                 <Icon
-                  icon={LockSimpleIcon}
+                  usage="slot"
+                  icon={LockGlyph}
                   size={size}
                   color="muted"
                   className="suggestion-lock-proto"
@@ -662,7 +669,7 @@ function SuggestionField({
                       }
                     }}
                   >
-                    <CaretDownIcon size="1em" aria-hidden="true" />
+                    <Icon usage="slot" icon={CaretDownGlyph} />
                   </button>
                 )
               )}
@@ -718,7 +725,7 @@ export function Combobox({
       initialSelection={defaultSelection}
       initialText={previewDraft}
       onTextChange={onQueryChange}
-      iconLeft={props.iconLeft === null ? undefined : (props.iconLeft ?? MagnifyingGlassIcon)}
+      iconLeft={props.iconLeft === null ? undefined : (props.iconLeft ?? SearchGlyph)}
     />
   );
 }

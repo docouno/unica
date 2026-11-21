@@ -27,8 +27,7 @@
   gap: var(--space-8);
 }
 
-.folio-connector-link > .icon-proto {
-  color: var(--fg-muted);
+.folio-connector-link > .folio-connector-arrow {
   font-size: var(--text-size-body-xs);
 }
 

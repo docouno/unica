@@ -1,3 +1,4 @@
+import { CloseGlyph, FileGlyph, fieldStatusGlyphs } from '../control-glyphs.js';
 import { useId, useRef, useState } from 'react';
 import type {
   ComponentPropsWithRef,
@@ -6,14 +7,7 @@ import type {
   ReactElement,
   ReactNode,
 } from 'react';
-import {
-  CheckCircleIcon,
-  FileIcon,
-  InfoIcon,
-  WarningCircleIcon,
-  XIcon,
-} from '@phosphor-icons/react';
-import { Icon } from '../icon/icon.proto.js';
+import { Icon } from '@docouno/unica';
 import { Button, IconButton } from '../button/button.proto.js';
 import { Progress, Spinner } from '../progress/progress.proto.js';
 import { FormField } from '../input/input.proto.js';
@@ -211,7 +205,7 @@ export function FileInput({
             {!multiple && clearable && !readOnly && !disabled && (
               <IconButton
                 className="file-input-clear-proto"
-                icon={XIcon}
+                icon={CloseGlyph}
                 size="s"
                 variant="ghost"
                 aria-label={`Remove ${currentName}`}
@@ -408,7 +402,13 @@ export function Dropzone({
       </div>
       {message && (
         <div id={`${inputId}-message`} className="dropzone-message-proto">
-          <Icon icon={status === 'danger' && !disabled ? WarningCircleIcon : InfoIcon} />
+          <Icon
+            className="dropzone-message-glyph"
+            usage="slot"
+            icon={
+              status === 'danger' && !disabled ? fieldStatusGlyphs.danger : fieldStatusGlyphs.info
+            }
+          />
           <span>{message}</span>
         </div>
       )}
@@ -487,7 +487,11 @@ export function FileItem({
       data-thumbnail={Boolean(thumbnail) || undefined}
     >
       <span className="file-item-icon-proto" aria-hidden="true">
-        {thumbnail ? <img src={thumbnail} alt="" /> : <Icon icon={FileIcon} size={size} />}
+        {thumbnail ? (
+          <img src={thumbnail} alt="" />
+        ) : (
+          <Icon usage="slot" icon={FileGlyph} size={size} />
+        )}
       </span>
       <div className="file-item-body-proto">
         {href && !disabled ? (
@@ -512,7 +516,7 @@ export function FileItem({
                   (waiting && !showTrack ? (
                     <Spinner />
                   ) : effectiveStatus === 'success' ? (
-                    <Icon icon={CheckCircleIcon} color="success" />
+                    <Icon usage="slot" icon={fieldStatusGlyphs.success} color="success" />
                   ) : null)}
                 <span dir="auto">{caption}</span>
               </span>
@@ -565,7 +569,7 @@ export function FileItem({
           )}
           {onRemove && (
             <IconButton
-              icon={XIcon}
+              icon={CloseGlyph}
               size={size}
               variant="ghost"
               aria-label={`Remove ${name}`}

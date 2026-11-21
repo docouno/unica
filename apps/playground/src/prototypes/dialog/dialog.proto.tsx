@@ -1,3 +1,4 @@
+import { CloseGlyph } from '../control-glyphs.js';
 import {
   createContext,
   useCallback,
@@ -15,7 +16,6 @@ import type {
   ReactNode,
   RefObject,
 } from 'react';
-import { XIcon } from '@phosphor-icons/react';
 import { Button, IconButton } from '../button/button.proto.js';
 import type { ButtonProps } from '../button/button.proto.js';
 import './dialog.css';
@@ -328,7 +328,7 @@ function DialogHeader({
       {closeLabel && onOpenChange && (
         <IconButton
           className="dialog-dismiss"
-          icon={XIcon}
+          icon={CloseGlyph}
           variant="ghost"
           size="s"
           aria-label={closeLabel}

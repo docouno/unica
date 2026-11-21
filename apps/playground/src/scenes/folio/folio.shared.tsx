@@ -22,7 +22,7 @@ import { Button, IconButton } from '../../prototypes/button/button.proto.js';
 import { Code, CodeBlock } from '../../prototypes/code/code.proto.js';
 import { Blockquote } from '../../prototypes/blockquote/blockquote.proto.js';
 import { Alert, AlertTitle, AlertDescription } from '../../prototypes/alert/alert.proto.js';
-import { Icon } from '../../prototypes/icon/icon.proto.js';
+import { Icon } from '@docouno/unica';
 import { List, ListItem } from '../../prototypes/list/list.proto.js';
 import {
   Table,
@@ -404,7 +404,7 @@ export function DocumentActions({
 export function DocumentName({ children }: { readonly children: ReactNode }): ReactElement {
   return (
     <span className="folio-document-name">
-      <Icon icon={FileTextIcon} size="s" />
+      <Icon usage="slot" icon={FileTextIcon} size="s" />
       <span>{children}</span>
     </span>
   );

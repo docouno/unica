@@ -14,7 +14,7 @@ Unica enforces two explicit browser tiers across CSS compilation and runtime beh
 - **Platform floor rationale:** Safari / iOS `17.0+` establishes baseline Popover API support; Safari / iOS `18.4+` resolves WebKit focus and light-dismiss edge cases for interactive form controls inside popovers. Browsers below Baseline are unsupported.
 - **Guarded progressive enhancements:** Features above Baseline — `@starting-style` and `transition-behavior: allow-discrete` on overlays, `field-sizing: content` on autosizing `Textarea`, CSS `subgrid` on `Calendar`, and typed `@property` custom-property interpolation — are wrapped in `@supports` or paired with deterministic fallbacks so interaction never breaks.
 - **Native browser UI:** Scrollbar geometry remains platform-dependent where the browser does not expose its parts. The [scrollbar design reference](scrollbars.md) specifies desktop Chromium/WebKit geometry and the standard native fallback for Firefox and touch-primary devices; square Pixel thumb ends are not a Firefox guarantee.
-- **Logical directionality (`LTR` / `RTL`):** Layout, spacing, borders, Drawer edges, and directional icons use CSS logical properties (`inline-start`, `inline-end`) and `:dir()` selectors rather than `[lang]` heuristics.
+- **Logical directionality (`LTR` / `RTL`):** Layout, spacing, borders, and Drawer edges use CSS logical properties (`inline-start`, `inline-end`), and directional icons mirror against explicit `[dir='rtl' i]` / `[dir='ltr' i]` regions rather than `[lang]` heuristics so mirroring works consistently across supported browsers and CSS bundlers.
 
 ```css
 .textareaAutosize {

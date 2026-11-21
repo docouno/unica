@@ -1,3 +1,4 @@
+import { CaretLeftGlyph, CaretRightGlyph } from '../control-glyphs.js';
 import {
   createContext,
   useCallback,
@@ -16,11 +17,10 @@ import type {
   ReactElement,
   ReactNode,
 } from 'react';
-import { CaretLeftIcon, CaretRightIcon } from '@phosphor-icons/react';
 import { Badge } from '../badge/badge.proto.js';
 import { IconButton } from '../button/button.proto.js';
-import { Icon } from '../icon/icon.proto.js';
-import type { GlyphComponent } from '../icon/icon.proto.js';
+import { Icon } from '@docouno/unica';
+import type { GlyphSource } from '@docouno/unica';
 import { HintPreview } from '../tooltip/tooltip.preview.js';
 import type { HintTriggerBindings } from '../tooltip/tooltip.preview.js';
 import './tabs.css';
@@ -389,7 +389,7 @@ export function TabsList({
             data-edge={toward}
             size={size}
             variant="ghost"
-            icon={toward === 'start' ? CaretLeftIcon : CaretRightIcon}
+            icon={toward === 'start' ? CaretLeftGlyph : CaretRightGlyph}
             aria-label={toward === 'start' ? 'Scroll tabs back' : 'Scroll tabs forward'}
             tabIndex={-1}
             hidden={toward === 'start' ? !start : !end}
@@ -403,7 +403,7 @@ export function TabsList({
 
 export interface TabsTabProps extends Omit<ComponentPropsWithoutRef<'button'>, 'value'> {
   readonly value: string;
-  readonly iconLeft?: GlyphComponent;
+  readonly iconLeft?: GlyphSource;
   readonly count?: number | string;
   readonly countLabel?: string;
   /** Pins pointer feedback for side-by-side comparison. */
@@ -465,7 +465,9 @@ export function TabsTab({
         }}
       >
         <span className="tab-body-proto">
-          {iconLeft && <Icon icon={iconLeft} size={tabs.size} />}
+          {iconLeft && (
+            <Icon className="tab-glyph-proto" usage="slot" icon={iconLeft} size={tabs.size} />
+          )}
           {hasLabel && <bdi className="tab-label-proto">{children}</bdi>}
           {count !== undefined && (
             <Badge className="tab-count-proto" size="s" aria-hidden="true">

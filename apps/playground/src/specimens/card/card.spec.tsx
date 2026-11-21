@@ -16,7 +16,7 @@ import { Text } from '../../prototypes/text/text.proto.js';
 import { Badge } from '../../prototypes/badge/badge.proto.js';
 import { Button, IconButton } from '../../prototypes/button/button.proto.js';
 import { Checkbox } from '../../prototypes/binary-controls/binary-controls.proto.js';
-import { Icon } from '../../prototypes/icon/icon.proto.js';
+import { Icon } from '@docouno/unica';
 import { Skeleton, SkeletonText } from '../../prototypes/skeleton/skeleton.proto.js';
 import { PopoverContent } from '../../prototypes/popover/popover.proto.js';
 import {
@@ -43,7 +43,7 @@ function Label({ children }: { readonly children: ReactNode }): ReactElement {
 function Metadata(): ReactElement {
   return (
     <div className="card-example-meta">
-      <Icon icon={FileTextIcon} size="s" />
+      <Icon usage="slot" icon={FileTextIcon} size="s" />
       <span>8 min read</span>
       <span aria-hidden="true">·</span>
       <span>Updated today</span>
@@ -124,7 +124,7 @@ function Hierarchy(): ReactElement {
                 <Text size="caption-l" color="muted">
                   24 documents
                 </Text>
-                <Icon icon={StackIcon} size="m" color="muted" />
+                <Icon usage="slot" icon={StackIcon} size="m" color="muted" />
               </CardFooter>
             </Card>
           </div>
@@ -433,7 +433,7 @@ function Navigation(): ReactElement {
             <Text size="caption-l" color="muted">
               Read the guide
             </Text>
-            <Icon icon={ArrowRightIcon} size="m" directional />
+            <Icon usage="slot" icon={ArrowRightIcon} size="m" directional />
           </CardFooter>
         </Card>
         <Card>
@@ -470,7 +470,7 @@ function Navigation(): ReactElement {
               onClick={() => setOpened('Handoff source notes')}
             >
               Source notes
-              <Icon icon={ArrowSquareOutIcon} size="s" />
+              <Icon usage="slot" icon={ArrowSquareOutIcon} size="s" />
             </a>
           </CardFooter>
         </Card>
@@ -542,7 +542,7 @@ function States(): ReactElement {
                 <Text size="caption-l" color="muted">
                   Read the guide
                 </Text>
-                <Icon icon={ArrowRightIcon} size="m" directional />
+                <Icon usage="slot" icon={ArrowRightIcon} size="m" directional />
               </CardFooter>
             </Card>
           </div>
@@ -610,7 +610,7 @@ function Availability(): ReactElement {
               <CardTitle>Saved references</CardTitle>
             </CardHeader>
             <CardBody className="card-example-empty">
-              <Icon icon={BookmarkSimpleIcon} size="l" color="muted" />
+              <Icon usage="slot" icon={BookmarkSimpleIcon} size="l" color="muted" />
               <CardTitle as="h4">Nothing saved yet</CardTitle>
               <CardDescription>Save a useful guide to keep it close.</CardDescription>
             </CardBody>
@@ -628,7 +628,7 @@ function Availability(): ReactElement {
               <CardTitle>Archived research</CardTitle>
               <CardDescription>This collection is restricted to its owners.</CardDescription>
               <CardAction>
-                <Icon icon={LockSimpleIcon} size="m" color="muted" />
+                <Icon usage="slot" icon={LockSimpleIcon} size="m" color="muted" />
               </CardAction>
             </CardHeader>
             <CardBody>
@@ -652,7 +652,7 @@ function Availability(): ReactElement {
               ) : (
                 <CardMedia aspectRatio="16 / 9">
                   <div className="card-example-media-fallback">
-                    <Icon icon={ImageBrokenIcon} size="l" color="muted" />
+                    <Icon usage="slot" icon={ImageBrokenIcon} size="l" color="muted" />
                     <span>Preview unavailable</span>
                   </div>
                 </CardMedia>

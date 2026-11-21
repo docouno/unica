@@ -230,7 +230,7 @@
 }
 
 .textarea-shell-proto:has(textarea:disabled) .textarea-status-proto,
-.textarea-field-proto:has(textarea:disabled) .textarea-message-proto > .icon-proto {
+.textarea-field-proto:has(textarea:disabled) .textarea-message-proto > .textarea-message-glyph {
   display: none;
 }
 
@@ -263,7 +263,7 @@
   gap: calc(var(--space-4) + var(--space-2));
 }
 
-.textarea-message-proto > .icon-proto {
+.textarea-message-proto > .textarea-message-glyph {
   flex: none;
   margin-block-start: calc((1lh - 1em) / 2);
 }

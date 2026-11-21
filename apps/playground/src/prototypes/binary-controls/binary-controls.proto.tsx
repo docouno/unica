@@ -9,7 +9,7 @@ import {
 } from 'react';
 import type { ComponentPropsWithRef, HTMLAttributes, ReactElement, ReactNode } from 'react';
 import { CheckIcon, CircleNotchIcon, MinusIcon } from '@phosphor-icons/react';
-import type { GlyphComponent } from '../icon/icon.proto.js';
+import type { IconProps as PhosphorIconProps } from '@phosphor-icons/react';
 import type { ControlSize } from '../input/input.proto.js';
 import './binary-controls.css';
 
@@ -457,7 +457,7 @@ export function RadioGroup({
 
 export interface SwitchIndicatorProps extends Omit<BinaryIndicatorProps, 'indeterminate'> {
   readonly loading?: boolean | undefined;
-  readonly thumbIcon?: GlyphComponent | undefined;
+  readonly thumbIcon?: ((props: PhosphorIconProps) => ReactNode) | undefined;
 }
 
 export function SwitchIndicator({
@@ -487,7 +487,7 @@ export function SwitchIndicator({
 const SwitchContext = createContext<BinaryGroupContextValue>({});
 export interface SwitchProps extends Omit<CheckboxProps, 'indeterminate' | 'status'> {
   readonly loading?: boolean | undefined;
-  readonly thumbIcon?: GlyphComponent | undefined;
+  readonly thumbIcon?: ((props: PhosphorIconProps) => ReactNode) | undefined;
 }
 
 export function Switch({

@@ -1,31 +1,16 @@
+import { CaretDownGlyph, LockGlyph, SearchGlyph, fieldStatusGlyphs } from '../control-glyphs.js';
 import { useId, useLayoutEffect, useRef, useState } from 'react';
 import type { ComponentPropsWithRef, ReactElement, ReactNode } from 'react';
-import {
-  CaretDownIcon,
-  CheckCircleIcon,
-  InfoIcon,
-  WarningIcon,
-  WarningCircleIcon,
-  LockSimpleIcon,
-  MagnifyingGlassIcon,
-} from '@phosphor-icons/react';
 import { FormField, Input } from '../input/input.proto.js';
 import type { ControlSize, FieldStatus, FieldVariant } from '../input/input.proto.js';
-import { Icon } from '../icon/icon.proto.js';
-import type { GlyphComponent } from '../icon/icon.proto.js';
+import { Icon } from '@docouno/unica';
+import type { GlyphSource } from '@docouno/unica';
 import { PopoverContent } from '../popover/popover.proto.js';
 import { Spinner } from '../progress/progress.proto.js';
 import { Button } from '../button/button.proto.js';
 import type { PopoverContentProps } from '../popover/popover.proto.js';
 import { Listbox } from './listbox.proto.js';
 import type { SelectOption } from './listbox.proto.js';
-
-const statusIcons: Record<Exclude<FieldStatus, 'neutral'>, GlyphComponent> = {
-  info: InfoIcon,
-  success: CheckCircleIcon,
-  warning: WarningIcon,
-  danger: WarningCircleIcon,
-};
 
 export function SelectPanel({ className = '', ...props }: PopoverContentProps): ReactElement {
   return (
@@ -126,7 +111,7 @@ export interface SelectProps extends Omit<
   readonly description?: ReactNode;
   readonly message?: ReactNode;
   readonly required?: boolean | undefined;
-  readonly iconLeft?: GlyphComponent | undefined;
+  readonly iconLeft?: GlyphSource | undefined;
   readonly orphanLabels?: Readonly<Record<string, string>> | undefined;
   readonly emptyState?: ReactNode;
   readonly errorState?: ReactNode;
@@ -204,7 +189,7 @@ export function Select({
       'Unavailable option',
   );
   const effectiveStatus = disabled ? 'neutral' : status;
-  const StatusGlyph = effectiveStatus === 'neutral' ? null : statusIcons[effectiveStatus];
+  const statusGlyph = effectiveStatus === 'neutral' ? null : fieldStatusGlyphs[effectiveStatus];
   const filtered = options.filter((option) =>
     `${option.label} ${option.description ?? ''} ${option.group ?? ''}`
       .toLocaleLowerCase()
@@ -418,21 +403,19 @@ export function Select({
             }
           }}
         >
-          {iconLeft && <Icon icon={iconLeft} size={size} />}
+          {iconLeft && <Icon usage="slot" icon={iconLeft} size={size} color="secondary" />}
           <SelectionSummary
             labels={labels}
             placeholder={busy && !labels.length ? 'Loading options…' : placeholder}
           />
-          {StatusGlyph && (
-            <StatusGlyph className="select-status-proto" size="1em" aria-hidden="true" />
-          )}
+          {statusGlyph && <Icon usage="slot" icon={statusGlyph} className="select-status-proto" />}
           {readOnly && (
-            <LockSimpleIcon className="select-readonly-icon-proto" size="1em" aria-hidden="true" />
+            <Icon usage="slot" icon={LockGlyph} className="select-readonly-icon-proto" />
           )}
           {busy ? (
             <Spinner className="select-spinner-proto" size={size} tone="muted" />
           ) : (
-            <CaretDownIcon className="select-disclosure-proto" size="1em" aria-hidden="true" />
+            <Icon usage="slot" icon={CaretDownGlyph} className="select-disclosure-proto" />
           )}
         </button>
       </div>
@@ -541,7 +524,7 @@ export function Select({
                   onBlur={() => setSearchFocused(false)}
                   aria-label="Search options"
                   placeholder="Search options…"
-                  iconLeft={MagnifyingGlassIcon}
+                  iconLeft={SearchGlyph}
                   value={query}
                   clearable
                   onClear={() => setQuery('')}

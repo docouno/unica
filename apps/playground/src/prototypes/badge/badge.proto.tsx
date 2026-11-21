@@ -1,7 +1,7 @@
 import { createElement } from 'react';
 import type { HTMLAttributes, ReactElement, Ref } from 'react';
-import { Icon } from '../icon/icon.proto.js';
-import type { GlyphComponent } from '../icon/icon.proto.js';
+import { Icon } from '@docouno/unica';
+import type { GlyphSource } from '@docouno/unica';
 import type { DisplayStatus } from './badge.styles.js';
 import { statusStyle } from './badge.styles.js';
 import './badge.css';
@@ -11,7 +11,7 @@ export interface BadgeProps extends HTMLAttributes<HTMLElement> {
   readonly status?: BadgeStatus;
   readonly size?: 's' | 'm' | 'l';
   readonly dot?: boolean;
-  readonly iconLeft?: GlyphComponent;
+  readonly iconLeft?: GlyphSource;
   /** Native stand-in for the future library's element composition. */
   readonly as?: 'span' | 'a' | 'button';
   readonly href?: string;
@@ -62,7 +62,7 @@ export function Badge({
     <>
       {iconLeft ? (
         <span className="badge-icon-proto" aria-hidden="true">
-          <Icon icon={iconLeft} size={size} />
+          <Icon usage="slot" icon={iconLeft} size={size} />
         </span>
       ) : dot ? (
         <span className="badge-dot-proto" aria-hidden="true" />

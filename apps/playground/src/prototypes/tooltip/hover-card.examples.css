@@ -24,7 +24,7 @@
 .hover-demo-kicker > bdi {
   min-inline-size: 0;
 }
-.hover-demo-kicker > .icon-proto {
+.hover-demo-kicker > .hover-demo-glyph {
   flex: none;
 }
 .hover-demo-facts {
@@ -59,9 +59,6 @@
   gap: var(--space-8);
   min-block-size: 88px;
   align-content: center;
-}
-.hover-demo-unavailable > .icon-proto {
-  color: var(--fg-secondary);
 }
 .hover-demo-constrained {
   max-block-size: 200px;

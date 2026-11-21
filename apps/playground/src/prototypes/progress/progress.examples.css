@@ -123,10 +123,6 @@
   line-height: var(--text-size-caption-l-lh);
 }
 
-.activity-outcome > .icon-proto {
-  flex: none;
-}
-
 .activity-preview-controls {
   display: grid;
   gap: var(--space-8);
