@@ -1,0 +1,103 @@
+@layer unica.components {
+  .unica-tooltip,
+  .unica-hover-card {
+    --_overlay-bridge-content: initial;
+    --_overlay-bridge-inset: initial;
+    --_overlay-bridge-clip: initial;
+    --_overlay-safe-top: env(safe-area-inset-top, 0px);
+    --_overlay-safe-right: env(safe-area-inset-right, 0px);
+    --_overlay-safe-bottom: env(safe-area-inset-bottom, 0px);
+    --_overlay-safe-left: env(safe-area-inset-left, 0px);
+
+    display: none;
+    box-sizing: border-box;
+    flex-direction: column;
+    min-inline-size: 0;
+    max-block-size: var(--overlay-available-height, 100dvh);
+    margin: 0;
+    border: 1px solid var(--_overlay-border);
+    border-radius: var(--surface-s-radius);
+    background: var(--bg-overlay);
+    color: var(--fg-primary);
+    backdrop-filter: var(--_overlay-backdrop);
+    font-family: var(--font-family-base);
+    font-size: var(--text-size-body-s);
+    font-weight: 400;
+    line-height: var(--text-size-body-s-lh);
+    text-align: start;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    overflow: visible;
+    user-select: text;
+  }
+
+  .unica-tooltip:popover-open:not([data-side]),
+  .unica-hover-card:popover-open:not([data-side]) {
+    visibility: hidden;
+  }
+
+  .unica-tooltip {
+    box-shadow: var(--_overlay-shadow-tooltip);
+  }
+
+  .unica-hover-card {
+    box-shadow: var(--_overlay-shadow-hover);
+  }
+
+  /* Bridge only the measured gap, independently from the native scroll owner. */
+  .unica-tooltip::before,
+  .unica-hover-card::before {
+    position: absolute;
+    inset: var(--_overlay-bridge-inset, 0);
+    clip-path: var(--_overlay-bridge-clip, none);
+    content: var(--_overlay-bridge-content, none);
+  }
+
+  .unica-tooltip::after,
+  .unica-hover-card::after {
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    box-shadow: var(--_overlay-rim);
+    mask-image: var(--_overlay-rim-mask);
+    pointer-events: none;
+    content: '';
+  }
+
+  .unica-hover-card::after {
+    background: var(--_motif-corner-ticks);
+  }
+
+  .unica-tooltip-body,
+  .unica-hover-card-reading-area {
+    flex: 1 1 auto;
+    min-block-size: 0;
+    min-inline-size: 0;
+    max-inline-size: 100%;
+    overflow: auto;
+    overscroll-behavior: contain;
+  }
+
+  @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    .unica-tooltip,
+    .unica-hover-card {
+      background: var(--bg-surface);
+    }
+  }
+
+  @media (forced-colors: active) {
+    .unica-tooltip,
+    .unica-hover-card {
+      background: Canvas;
+      color: CanvasText;
+      border-color: CanvasText;
+      box-shadow: none;
+      backdrop-filter: none;
+    }
+
+    .unica-tooltip::after,
+    .unica-hover-card::after {
+      display: none;
+    }
+  }
+}

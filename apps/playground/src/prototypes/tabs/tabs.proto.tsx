@@ -18,10 +18,9 @@ import type {
   ReactNode,
 } from 'react';
 import { IconButton } from '../button/button.proto.js';
-import { Badge, Icon } from '@docouno/unica';
+import { Badge, Icon, Tooltip } from '@docouno/unica';
 import type { GlyphSource } from '@docouno/unica';
-import { HintPreview } from '../tooltip/tooltip.preview.js';
-import type { HintTriggerBindings } from '../tooltip/tooltip.preview.js';
+import { useClippedLabel } from '../use-clipped-label.js';
 import './tabs.css';
 
 type TabsSize = 's' | 'm' | 'l';
@@ -180,20 +179,6 @@ function revealTab(list: HTMLElement, tab: HTMLElement): void {
   const shift = target.left < left ? target.left - left : Math.max(0, target.right - right);
   // Commit even if the target fits, interrupting an in-flight chevron step.
   list.scrollTo({ left: list.scrollLeft + shift, behavior: 'auto' });
-}
-
-function canShowTabHint(tab: HTMLElement): boolean {
-  const label = tab.querySelector('.tab-label-proto');
-  const list = tab.closest<HTMLElement>('[role="tablist"]');
-  if (
-    !list ||
-    (!tab.hasAttribute('data-icon-only') && !(label && label.scrollWidth > label.clientWidth))
-  ) {
-    return false;
-  }
-  const viewport = tabViewport(list);
-  const target = tab.getBoundingClientRect();
-  return target.right > viewport.left && target.left < viewport.right;
 }
 
 function scrollTabs(list: HTMLElement, toward: 'start' | 'end'): void {
@@ -427,13 +412,13 @@ export function TabsTab({
   const selected = value === tabs.selected;
   const hasLabel = children !== undefined && children !== null;
   const iconOnly = !hasLabel && iconLeft !== undefined;
-  const hint = iconOnly ? name : typeof children === 'string' ? children : undefined;
+  const text = typeof children === 'string' ? children : undefined;
+  const [label, clipped] = useClippedLabel<HTMLElement>(text);
 
-  function render(bindings?: HintTriggerBindings): ReactElement {
-    return (
+  return (
+    <Tooltip label={(iconOnly ? name : text) ?? ''} disabled={disabled || !(iconOnly || clipped)}>
       <button
         {...props}
-        {...bindings}
         id={`${tabs.id}-tab-${value}`}
         type="button"
         role="tab"
@@ -448,11 +433,9 @@ export function TabsTab({
         disabled={disabled}
         onFocus={(event) => {
           tabs.setFocused(value);
-          bindings?.onFocus?.(event);
           onFocus?.(event);
         }}
         onClick={(event) => {
-          bindings?.onClick?.(event);
           onClick?.(event);
           if (!event.defaultPrevented) {
             const viewport = event.currentTarget.closest<HTMLElement>('[role="tablist"]');
@@ -467,7 +450,11 @@ export function TabsTab({
           {iconLeft && (
             <Icon className="tab-glyph-proto" usage="slot" icon={iconLeft} size={tabs.size} />
           )}
-          {hasLabel && <bdi className="tab-label-proto">{children}</bdi>}
+          {hasLabel && (
+            <bdi className="tab-label-proto" ref={label}>
+              {children}
+            </bdi>
+          )}
           {count !== undefined && (
             <Badge className="tab-count-proto" size="s" aria-hidden="true">
               {count}
@@ -478,15 +465,7 @@ export function TabsTab({
           )}
         </span>
       </button>
-    );
-  }
-
-  return hint && !disabled ? (
-    <HintPreview canShow={canShowTabHint} trigger={render}>
-      {hint}
-    </HintPreview>
-  ) : (
-    render()
+    </Tooltip>
   );
 }
 

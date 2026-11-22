@@ -24,6 +24,36 @@ async function stageCorner(page, stage, direction) {
 }
 
 export default {
+  'Preferences keeps its desktop shortcut cue and its labelled mobile destination': async ({
+    page,
+    mount,
+  }) => {
+    await page.setViewportSize({ width: 1280, height: 720 });
+    await mount('app-shell');
+    const desktop = page.getByRole('link', { name: 'Preferences', exact: true });
+    await desktop.hover();
+    const hint = page.locator('[role="tooltip"]:popover-open');
+    await hint.waitFor();
+    assert.equal(
+      await hint.locator('.unica-tooltip-label').textContent(),
+      'Preferences & shortcuts',
+    );
+    assert.equal(await hint.locator('kbd svg').count(), 1);
+    assert.equal(await hint.locator('kbd .unica-kbd-face').textContent(), ',');
+    assert.equal(await desktop.getAttribute('href'), '#preferences');
+    assert.equal(await page.getByRole('button', { name: 'Notifications, 3 unread' }).count(), 1);
+
+    await page.setViewportSize({ width: 520, height: 720 });
+    await hint.waitFor({ state: 'detached' });
+    await page.getByRole('button', { name: 'Navigation', exact: true }).click();
+    const sheet = page.getByRole('dialog', { name: 'Navigation' });
+    await sheet.getByText('Workspace sections', { exact: true }).click();
+    const mobile = sheet.getByRole('link', { name: 'Preferences', exact: true });
+    await mobile.hover();
+    assert.equal(await mobile.getAttribute('href'), '#preferences');
+    assert.equal(await sheet.locator('.app-shell-sheet-rail [role="tooltip"]').count(), 0);
+  },
+
   'Inspector toggle and glyph keep their coordinates next to a taller canvas header': async ({
     page,
     mount,
@@ -49,6 +79,53 @@ export default {
       await assertBox(hide, buttonBox);
       await assertBox(hide.locator('svg'), glyphBox);
     }
+  },
+
+  'The inspector keeps its owner preview and draft across dock and modal layouts': async ({
+    page,
+    mount,
+  }) => {
+    await page.setViewportSize({ width: 1280, height: 720 });
+    await mount('app-shell', { theme: 'frost-dark' });
+    const owner = page.getByRole('link', { name: 'Owner team' });
+    const preview = page.locator('.unica-hover-card:popover-open[data-side]');
+    const openDock = page.locator('.app-shell-panel-end[open][role="presentation"]:not(:modal)');
+    const trigger = page.getByRole('button', { name: 'Inspector', exact: true });
+    const sheet = page.getByRole('dialog', { name: 'Inspector' });
+
+    await preview.waitFor();
+    await openDock.waitFor();
+    assert.equal(await preview.textContent(), 'Maintains the reference documentation.');
+    await page.keyboard.press('Escape');
+    await preview.waitFor({ state: 'detached' });
+    assert.equal(await openDock.isVisible(), true);
+    await owner.hover();
+    await preview.waitFor();
+
+    await page.setViewportSize({ width: 520, height: 720 });
+    await preview.waitFor({ state: 'detached' });
+    assert.equal(await openDock.isVisible(), false);
+    assert.equal(await owner.count(), 0);
+    await trigger.click();
+    await assertFocused(sheet.getByRole('heading', { name: 'Inspector', exact: true }));
+    await owner.hover();
+    await preview.waitFor();
+    await page.keyboard.press('Escape');
+    await preview.waitFor({ state: 'detached' });
+    assert.equal(await sheet.isVisible(), true);
+    await page.keyboard.press('Escape');
+    await openDock.waitFor({ state: 'attached' });
+    assert.equal(await openDock.isVisible(), false);
+    await assertFocused(trigger);
+
+    await trigger.click();
+    await sheet.getByRole('textbox', { name: 'Reference' }).fill('RS-105');
+    await page.setViewportSize({ width: 1280, height: 720 });
+    await openDock.waitFor();
+    await assertFocused(page.getByRole('region', { name: 'Workspace canvas' }));
+    assert.equal(await page.getByRole('textbox', { name: 'Reference' }).inputValue(), 'RS-105');
+    await owner.hover();
+    await preview.waitFor();
   },
 
   'The L-shaped corner keeps its material geometry when navigation collapses': async ({

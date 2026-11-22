@@ -1,8 +1,7 @@
 import { useId, useState } from 'react';
 import type { ComponentPropsWithRef, CSSProperties, ReactElement, ReactNode } from 'react';
 import { UserGlyph } from '../control-glyphs.js';
-import { Icon } from '@docouno/unica';
-import { AvatarNameHint } from './avatar-tooltip.proto.js';
+import { Icon, Tooltip, TooltipProvider } from '@docouno/unica';
 import './avatar.css';
 
 export type AvatarSize = '2xs' | 'xs' | 's' | 'm' | 'l';
@@ -142,7 +141,7 @@ export function AvatarGroup({
   const remaining = members.length - visible.length;
   const { dimension, overlap } = groupGeometry[size];
   const gap = 2;
-  return (
+  const group = (
     <ul
       {...props}
       className={`avatar-group-proto ${className}`}
@@ -157,6 +156,7 @@ export function AvatarGroup({
       }
     >
       {visible.map((member, index) => {
+        const name = member.name.trim();
         const identity = (
           <Avatar
             name={member.name}
@@ -192,7 +192,15 @@ export function AvatarGroup({
                 </defs>
               </svg>
             )}
-            {showNames ? <AvatarNameHint name={member.name}>{identity}</AvatarNameHint> : identity}
+            {showNames && name ? (
+              <Tooltip label={name} collisionPadding={8}>
+                <span className="avatar-name-hint" role="img" aria-label={name} tabIndex={0}>
+                  {identity}
+                </span>
+              </Tooltip>
+            ) : (
+              identity
+            )}
           </li>
         );
       })}
@@ -205,4 +213,5 @@ export function AvatarGroup({
       )}
     </ul>
   );
+  return <TooltipProvider delay={300}>{group}</TooltipProvider>;
 }

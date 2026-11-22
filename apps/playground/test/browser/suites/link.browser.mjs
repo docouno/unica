@@ -774,7 +774,7 @@ export default {
         return Boolean(lastLine && box.height && box.top + box.height / 2 <= lastLine.bottom + 1);
       });
 
-      // 3. Late ID in ShadowRoot clears tooltip fallback in NewTabDescription.
+      // 3. Late ID in ShadowRoot clears the new-tab description fallback.
       const shadowBefore = await page.evaluate(() => {
         const shadow = document.querySelector('#s2-shadow-desc-host').shadowRoot;
         const a = shadow.querySelector('[data-testid="shadow-desc-link"]');

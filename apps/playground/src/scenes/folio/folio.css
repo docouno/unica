@@ -436,23 +436,6 @@
 .folio-toast-dock > * {
   inline-size: 100%;
 }
-.folio-preferences-hint {
-  position: absolute;
-  z-index: 4;
-  inset-inline-start: 62px;
-  inset-block-end: 68px;
-}
-.folio-owner-preview {
-  position: relative;
-}
-.folio-owner-preview > .hover-card-proto {
-  position: absolute;
-  inline-size: min(22rem, calc(100cqw - 32px));
-  max-inline-size: none;
-  inset-block-start: calc(100% + 8px);
-  inset-inline-end: 0;
-  z-index: 4;
-}
 .folio-notice {
   padding: var(--space-12) var(--space-16);
   background: var(--accent-soft-bg);
@@ -616,9 +599,6 @@
     inset: auto;
     inline-size: auto;
     margin: var(--space-16);
-  }
-  .folio-preferences-hint {
-    display: none;
   }
   .folio-content,
   .folio-content-collection,

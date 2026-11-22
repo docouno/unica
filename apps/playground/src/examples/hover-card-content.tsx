@@ -1,10 +1,9 @@
 import type { ReactElement } from 'react';
 import { UsersIcon } from '@phosphor-icons/react';
-import { Avatar } from '../avatar/avatar.proto.js';
+import { Avatar } from '../prototypes/avatar/avatar.proto.js';
 import { Badge, Text, Title } from '@docouno/unica';
-import './hover-card.examples.css';
+import './hover-card-content.css';
 
-// Shared entity content keeps scenes independent of the specimen's study controls.
 export function TeamPreview(): ReactElement {
   return (
     <>

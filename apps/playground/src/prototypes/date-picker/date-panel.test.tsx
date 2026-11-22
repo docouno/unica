@@ -1,6 +1,6 @@
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, expect, it, vi } from 'vitest';
-import { DatePicker } from './date-picker.components.proto.js';
+import { DatePicker, DateRangePicker } from './date-picker.components.proto.js';
 
 afterEach(cleanup);
 
@@ -91,19 +91,51 @@ it('describes an unavailable date beside the grid without filling the panel foot
   const footer = panel.querySelector('.date-picker-panel-feedback-proto');
   fireEvent.focus(blocked);
 
-  expect(panel.querySelector('[role="tooltip"]')?.textContent).toBe('19 Sept 2026 is unavailable');
+  const tooltip = panel.querySelector('.calendar-date-feedback[popover="manual"]');
+  expect(tooltip?.textContent).toBe('19 Sept 2026 is unavailable');
+  expect(blocked.getAttribute('aria-describedby')).toBeNull();
   expect(footer?.hasAttribute('data-empty')).toBe(true);
 
-  fireEvent.keyDown(blocked, { key: 'Escape' });
-
-  expect(panel.querySelector('[role="tooltip"]')).toBeNull();
-  expect(screen.getByRole('dialog', { name: 'Select date' })).toBe(panel);
-
   fireEvent.click(blocked);
-  fireEvent.click(within(panel).getByRole('tooltip', { hidden: true }));
-
-  expect(panel.querySelector('[role="tooltip"]')).toBeNull();
   expect(screen.getByRole<HTMLInputElement>('textbox', { name: 'Review date' }).value).toBe(
     '14/09/2026',
   );
+});
+
+it('describes a rejected range separately from its visual tooltip', () => {
+  const onValueChange = vi.fn();
+  render(
+    <DateRangePicker
+      label="Review interval"
+      minRangeDays={3}
+      defaultOpen
+      previewInline
+      onValueChange={onValueChange}
+    />,
+  );
+
+  const panel = screen.getByRole('dialog', { name: 'Choose date range' });
+  fireEvent.click(within(panel).getByRole('button', { name: /16 Sept 2026/ }));
+  const tooEarly = within(panel).getByRole('button', { name: /17 Sept 2026/ });
+  fireEvent.click(tooEarly);
+  expect(onValueChange).not.toHaveBeenCalled();
+
+  const descriptionId = tooEarly.getAttribute('aria-describedby');
+  const description = descriptionId && document.getElementById(descriptionId);
+  expect(description && description.textContent).toBe('Choose at least 3 days.');
+  expect(
+    within(panel).getByRole('button', {
+      name: /17 Sept 2026/,
+      description: 'Choose at least 3 days.',
+    }),
+  ).toBe(tooEarly);
+  const tooltip = panel.querySelector('.calendar-date-feedback[popover="manual"]');
+  expect(tooltip?.getAttribute('aria-hidden')).toBe('true');
+  expect(tooltip?.id).not.toBe(descriptionId);
+
+  fireEvent.click(tooltip!);
+
+  expect(tooEarly.getAttribute('aria-describedby')).toBeNull();
+  expect(panel.contains(tooltip)).toBe(true);
+  expect(onValueChange).not.toHaveBeenCalled();
 });

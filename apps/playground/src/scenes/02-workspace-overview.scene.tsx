@@ -7,7 +7,6 @@ import { Card } from '../prototypes/card/card.proto.js';
 import { Alert, AlertTitle, AlertDescription } from '../prototypes/alert/alert.proto.js';
 import { ToastCard } from '../prototypes/toast/toast.proto.js';
 import { Badge, Icon, Link, Text, Title } from '@docouno/unica';
-import { Tooltip } from '../prototypes/tooltip/tooltip.proto.js';
 import { List, ListItem } from '../prototypes/list/list.proto.js';
 import { SegmentedControl } from '../prototypes/segmented-control/segmented-control.proto.js';
 import { Breadcrumb, BreadcrumbPage } from '../prototypes/breadcrumb/breadcrumb.proto.js';
@@ -109,6 +108,7 @@ function OverviewScene(): ReactElement {
     <FolioScene>
       <FolioWorkspace
         activeRail="overview"
+        preferencesShortcutHint={{ label: 'Preferences & shortcuts', shortcut: '⌘,' }}
         breadcrumb={
           <Breadcrumb size="s">
             <span>Platform Eng</span>
@@ -269,9 +269,6 @@ function OverviewScene(): ReactElement {
           </div>
         </div>
       </FolioWorkspace>
-      <Tooltip className="folio-preferences-hint" shortcut="⌘,">
-        Preferences & shortcuts
-      </Tooltip>
       {toast && (
         <div className="folio-toast-dock">
           <ToastCard

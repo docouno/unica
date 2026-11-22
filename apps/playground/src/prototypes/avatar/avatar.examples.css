@@ -187,12 +187,6 @@
   max-inline-size: 100%;
 }
 
-.avatar-example-name-reference {
-  max-inline-size: 220px;
-  white-space: normal;
-  overflow-wrap: anywhere;
-}
-
 @font-face {
   font-family: 'Avatar Arabic fixture';
   font-style: normal;

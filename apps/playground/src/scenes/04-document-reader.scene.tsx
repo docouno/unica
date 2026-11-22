@@ -1,4 +1,12 @@
-import { Link } from '@docouno/unica';
+import {
+  Badge,
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+  Link,
+  Progress,
+  Text,
+} from '@docouno/unica';
 import { useState } from 'react';
 import { folioSceneHref } from './folio/folio.routes.js';
 import type { ReactElement } from 'react';
@@ -10,22 +18,18 @@ import {
   TrashIcon,
 } from '@phosphor-icons/react';
 import { AsidePanel } from '../prototypes/app-shell/app-shell.proto.js';
-import { Badge } from '@docouno/unica';
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from '../prototypes/disclosure/disclosure.proto.js';
 import { List, ListItem } from '../prototypes/list/list.proto.js';
-import { Progress } from '@docouno/unica';
 import { Menu } from '../prototypes/menu/menu.live.js';
 import type { MenuEntry } from '../prototypes/menu/menu.entries.js';
 import { IconButton } from '../prototypes/button/button.proto.js';
-import { HoverCard } from '../prototypes/tooltip/tooltip.proto.js';
-import { TeamPreview } from '../prototypes/tooltip/hover-card.content.js';
+import { TeamPreview } from '../examples/hover-card-content.js';
 import { Switch } from '../prototypes/binary-controls/binary-controls.proto.js';
 import { Tabs, TabsContent, TabsList, TabsTab } from '../prototypes/tabs/tabs.proto.js';
-import { Text } from '@docouno/unica';
 import {
   Breadcrumb,
   BreadcrumbLink,
@@ -42,7 +46,6 @@ import {
 } from './folio/folio.shared.js';
 
 function ReaderScene(): ReactElement {
-  const [owner, setOwner] = useState(true);
   const [tab, setTab] = useState('details');
   const [notice, setNotice] = useState('');
   const items: readonly MenuEntry[] = [
@@ -178,30 +181,20 @@ function ReaderScene(): ReactElement {
                     <div>
                       <dt>Owner</dt>
                       <dd>
-                        <div className="folio-owner-preview">
-                          <Link
-                            href={folioSceneHref('03-document-collection')}
-                            tone="neutral"
-                            underline="hover"
-                            onPointerEnter={() => setOwner(true)}
-                            onFocus={() => setOwner(true)}
-                            onKeyDown={(event) => {
-                              if (event.key === 'Escape' && owner) {
-                                event.preventDefault();
-                                event.stopPropagation();
-                                setOwner(false);
-                              }
-                            }}
-                            onClick={() => setOwner(false)}
-                          >
-                            <Person name="Database reliability" />
-                          </Link>
-                          {owner && (
-                            <HoverCard aria-hidden="true">
-                              <TeamPreview />
-                            </HoverCard>
-                          )}
-                        </div>
+                        <HoverCard defaultOpen>
+                          <HoverCardTrigger asChild>
+                            <Link
+                              href={folioSceneHref('03-document-collection')}
+                              tone="neutral"
+                              underline="hover"
+                            >
+                              <Person name="Database reliability" />
+                            </Link>
+                          </HoverCardTrigger>
+                          <HoverCardContent align="end">
+                            <TeamPreview />
+                          </HoverCardContent>
+                        </HoverCard>
                       </dd>
                     </div>
                   </dl>

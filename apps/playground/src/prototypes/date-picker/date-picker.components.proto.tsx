@@ -84,11 +84,13 @@ function useDatePanel(
   trigger: RefObject<HTMLButtonElement | null>;
   field: RefObject<HTMLDivElement | null>;
   picker: RefObject<HTMLDivElement | null>;
+  issueTooltip: RefObject<HTMLSpanElement | null>;
 } {
   const panel = useRef<HTMLDivElement>(null);
   const trigger = useRef<HTMLButtonElement>(null);
   const field = useRef<HTMLDivElement>(null);
   const picker = useRef<HTMLDivElement>(null);
+  const issueTooltip = useRef<HTMLSpanElement>(null);
   useLayoutEffect(() => {
     const element = panel.current;
     const button = trigger.current;
@@ -139,7 +141,12 @@ function useDatePanel(
       }
     };
     const escape = (event: globalThis.KeyboardEvent): void => {
-      if (event.key === 'Escape' && !event.defaultPrevented) {
+      if (
+        event.key === 'Escape' &&
+        !event.defaultPrevented &&
+        !event.isComposing &&
+        !issueTooltip.current?.matches(':popover-open')
+      ) {
         event.preventDefault();
         onClose();
         button.focus();
@@ -160,7 +167,7 @@ function useDatePanel(
       }
     };
   }, [open, onClose]);
-  return { panel, trigger, field, picker };
+  return { panel, trigger, field, picker, issueTooltip };
 }
 
 function useDraftText(
@@ -249,7 +256,7 @@ export function DatePicker({
   const close = useCallback((): void => {
     setOpen(false);
   }, []);
-  const { panel, trigger, field, picker } = useDatePanel(
+  const { panel, trigger, field, picker, issueTooltip } = useDatePanel(
     open && !disabled && !previewInline,
     close,
   );
@@ -464,6 +471,7 @@ export function DatePicker({
             month={viewDate}
             value={current}
             onViewAvailability={setNoAvailableDays}
+            issueTooltipRef={issueTooltip}
             onToday={canChooseToday ? () => pick(today) : undefined}
             today={today}
             locale={locale}
@@ -546,7 +554,7 @@ export function DateRangePicker({
     setOpen(false);
     setCalendarFeedback({ message: '' });
   }, [setOpen, setCalendarFeedback]);
-  const { panel, trigger, field, picker } = useDatePanel(
+  const { panel, trigger, field, picker, issueTooltip } = useDatePanel(
     open && !disabled && !previewInline,
     close,
   );
@@ -769,6 +777,7 @@ export function DateRangePicker({
             mode="range"
             range={current[0] && current[1] ? current : undefined}
             onFeedback={setCalendarFeedback}
+            issueTooltipRef={issueTooltip}
             today={today}
             locale={locale}
             min={min}

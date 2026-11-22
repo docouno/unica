@@ -1,6 +1,6 @@
 import { useEffect, useId, useRef, useState } from 'react';
 import type { ReactElement } from 'react';
-import { Icon, defineGlyph } from '@docouno/unica';
+import { Icon, Tooltip, defineGlyph } from '@docouno/unica';
 import { PushPinIcon } from '@phosphor-icons/react/ssr';
 import {
   CaretDownGlyph,
@@ -12,7 +12,7 @@ import {
 import { IconButton } from '../button/button.proto.js';
 import { PopoverContent } from '../popover/popover.proto.js';
 import { useShellPopoverPosition } from './app-shell-position.js';
-import { HintPreview } from '../tooltip/tooltip.preview.js';
+import { useClippedLabel } from '../use-clipped-label.js';
 
 const PinGlyph = defineGlyph(PushPinIcon, 'phosphor');
 
@@ -31,6 +31,61 @@ export interface DocumentTabsProps {
   readonly onValueChange?: (value: string) => void;
   readonly onClose?: ((value: string) => void) | undefined;
   readonly onAdd?: (() => void) | undefined;
+}
+
+function DocumentTabTrigger({
+  item,
+  current,
+  onSelect,
+  onClose,
+}: {
+  readonly item: DocumentTab;
+  readonly current: 'page' | undefined;
+  readonly onSelect: ((value: string) => void) | undefined;
+  readonly onClose: (() => void) | undefined;
+}): ReactElement {
+  const [label, clipped] = useClippedLabel<HTMLSpanElement>(item.label);
+  const name = [item.label, item.pinned && 'Pinned', item.dirty && 'Unsaved changes']
+    .filter(Boolean)
+    .join(', ');
+  const attributes = {
+    className: 'app-shell-document-tab',
+    'aria-label': name,
+    'aria-current': current,
+  };
+  const contents = (
+    <>
+      <Icon usage="slot" icon={item.pinned ? PinGlyph : FileTextGlyph} />
+      <span className="app-shell-document-label" dir="auto" ref={label}>
+        {item.label}
+      </span>
+      {item.dirty && <span className="app-shell-dirty-dot" />}
+    </>
+  );
+
+  return (
+    <Tooltip label={item.label} side="bottom" disabled={!(item.pinned || clipped)}>
+      {item.href ? (
+        <a {...attributes} href={item.href}>
+          {contents}
+        </a>
+      ) : (
+        <button
+          {...attributes}
+          type="button"
+          onClick={() => onSelect?.(item.value)}
+          onKeyDown={(event) => {
+            if (event.key === 'Delete' && onClose) {
+              event.preventDefault();
+              onClose();
+            }
+          }}
+        >
+          {contents}
+        </button>
+      )}
+    </Tooltip>
+  );
 }
 
 export function DocumentTabs({
@@ -126,9 +181,7 @@ export function DocumentTabs({
         <ul className="app-shell-document-list" role="list" ref={list}>
           {ordered.map((item, index) => {
             const current = value === item.value ? 'page' : undefined;
-            const name = [item.label, item.pinned && 'Pinned', item.dirty && 'Unsaved changes']
-              .filter(Boolean)
-              .join(', ');
+            const canClose = onClose !== undefined && !item.pinned;
             return (
               <li
                 key={item.value}
@@ -137,55 +190,13 @@ export function DocumentTabs({
                 data-current={current}
                 data-pinned={item.pinned || undefined}
               >
-                <HintPreview
-                  side="bottom"
-                  canShow={(anchor) => {
-                    const label = anchor.querySelector<HTMLElement>('.app-shell-document-label');
-                    return Boolean(item.pinned || (label && label.scrollWidth > label.clientWidth));
-                  }}
-                  trigger={(bindings) => {
-                    const contents = (
-                      <>
-                        <Icon usage="slot" icon={item.pinned ? PinGlyph : FileTextGlyph} />
-                        <span className="app-shell-document-label" dir="auto">
-                          {item.label}
-                        </span>
-                        {item.dirty && <span className="app-shell-dirty-dot" />}
-                      </>
-                    );
-                    return item.href ? (
-                      <a
-                        {...bindings}
-                        href={item.href}
-                        aria-label={name}
-                        aria-current={current}
-                        className="app-shell-document-tab"
-                      >
-                        {contents}
-                      </a>
-                    ) : (
-                      <button
-                        {...bindings}
-                        type="button"
-                        aria-label={name}
-                        aria-current={current}
-                        className="app-shell-document-tab"
-                        onClick={() => onValueChange?.(item.value)}
-                        onKeyDown={(event) => {
-                          if (event.key === 'Delete' && onClose && !item.pinned) {
-                            event.preventDefault();
-                            close(item, index);
-                          }
-                        }}
-                      >
-                        {contents}
-                      </button>
-                    );
-                  }}
-                >
-                  {item.label}
-                </HintPreview>
-                {onClose && !item.pinned && (
+                <DocumentTabTrigger
+                  item={item}
+                  current={current}
+                  onSelect={onValueChange}
+                  onClose={canClose ? () => close(item, index) : undefined}
+                />
+                {canClose && (
                   <IconButton
                     size="s"
                     variant="ghost"

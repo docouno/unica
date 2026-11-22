@@ -35,7 +35,7 @@ const categories = [
   'Data',
 ];
 
-function UnicaUnderlay(): ReactElement {
+export function UnicaUnderlay(): ReactElement {
   return (
     <div
       data-unica-underlay=""

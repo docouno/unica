@@ -1,13 +1,16 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
+import { transform } from 'lightningcss';
 import postcss from 'postcss';
+import { verifyHoverPreviewCss } from '../../../scripts/verify-hover-preview-css.mjs';
 
 const distCssPath = resolve(import.meta.dirname, '../dist/style.css');
-const css = await readFile(distCssPath, 'utf8');
-assert.ok(css.length > 0, 'dist/style.css must not be empty');
+const code = await readFile(distCssPath);
+assert.ok(code.length > 0, 'dist/style.css must not be empty');
 
-const root = postcss.parse(css, { from: distCssPath });
+const root = postcss.parse(code.toString('utf8'), { from: distCssPath });
+verifyHoverPreviewCss(transform, [{ filename: distCssPath, code }], 'dist/style.css');
 
 let hasWebkitUserSelect = false;
 let hasFlattenedDividerLine = false;

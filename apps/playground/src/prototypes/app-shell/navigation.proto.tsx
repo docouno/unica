@@ -1,10 +1,10 @@
-import { useRef, useState } from 'react';
-import type { KeyboardEvent, ReactElement, ReactNode } from 'react';
-import { Icon, defineGlyph } from '@docouno/unica';
+import { useId, useRef, useState } from 'react';
+import type { ComponentPropsWithRef, KeyboardEvent, ReactElement, ReactNode, Ref } from 'react';
+import { Icon, Tooltip, defineGlyph } from '@docouno/unica';
 import type { GlyphSource } from '@docouno/unica';
 import { FolderOpenIcon } from '@phosphor-icons/react/ssr';
 import { CaretRightGlyph, FileTextGlyph, FolderGlyph } from '../control-glyphs.js';
-import { HintPreview } from '../tooltip/tooltip.preview.js';
+import { useClippedLabel } from '../use-clipped-label.js';
 
 const FolderOpenGlyph = defineGlyph(FolderOpenIcon, 'phosphor');
 
@@ -32,14 +32,16 @@ interface CommonProps {
 function RowContent({
   item,
   icon = item.icon,
+  labelRef,
 }: {
   readonly item: NavigationItem;
   readonly icon?: GlyphSource | undefined;
+  readonly labelRef?: Ref<HTMLSpanElement>;
 }): ReactElement {
   return (
     <>
       {icon && <Icon usage="slot" icon={icon} className="app-shell-nav-icon" />}
-      <span className="app-shell-nav-label" dir="auto">
+      <span className="app-shell-nav-label" dir="auto" ref={labelRef}>
         {item.label}
       </span>
       {item.count !== undefined && (
@@ -132,6 +134,73 @@ function visibleItems(
     item.children && expanded.has(item.value)
       ? [item, ...visibleItems(item.children, expanded)]
       : [item],
+  );
+}
+
+interface TreeRowProps extends Pick<
+  ComponentPropsWithRef<'div'>,
+  'aria-selected' | 'onClick' | 'onFocus' | 'onKeyDown' | 'ref' | 'tabIndex'
+> {
+  readonly item: NavigationItem;
+  readonly open: boolean;
+  readonly branch: ReactNode;
+  readonly onToggle: () => void;
+}
+
+function TreeRow({ item, open, branch, onToggle, ...row }: TreeRowProps): ReactElement {
+  const groupId = useId();
+  const [labelRef, clipped] = useClippedLabel<HTMLSpanElement>(item.label, 'block');
+
+  return (
+    <div className="app-shell-tree-node" role="none">
+      <Tooltip label={item.label} side="end" align="start" disabled={!clipped}>
+        <div
+          {...row}
+          className="app-shell-nav-row app-shell-tree-item"
+          role="treeitem"
+          aria-label={item.count === undefined ? item.label : `${item.label}, ${item.count} items`}
+          aria-expanded={item.children ? open : undefined}
+          aria-owns={open && item.children?.length ? groupId : undefined}
+          aria-disabled={item.disabled || undefined}
+        >
+          {item.children ? (
+            <span
+              className="app-shell-tree-disclosure"
+              aria-hidden="true"
+              onClick={(event) => {
+                event.stopPropagation();
+                onToggle();
+              }}
+            >
+              <Icon
+                usage="slot"
+                icon={CaretRightGlyph}
+                className="app-shell-nav-caret"
+                directional
+              />
+            </span>
+          ) : (
+            <span className="app-shell-tree-disclosure" data-empty aria-hidden="true" />
+          )}
+          <RowContent
+            item={item}
+            labelRef={labelRef}
+            icon={
+              item.icon ?? (item.children ? (open ? FolderOpenGlyph : FolderGlyph) : FileTextGlyph)
+            }
+          />
+        </div>
+      </Tooltip>
+      {open &&
+        item.children &&
+        (item.children.length ? (
+          <div id={groupId} className="app-shell-tree-branch" role="group">
+            {branch}
+          </div>
+        ) : (
+          <p className="app-shell-tree-branch app-shell-nav-empty">Empty folder</p>
+        ))}
+    </div>
   );
 }
 
@@ -246,108 +315,33 @@ export function TreeView({
     return nodes.map((item) => {
       const open = expanded.has(item.value);
       return (
-        <HintPreview
+        <TreeRow
           key={item.value}
-          side="end"
-          align="start"
-          canShow={(anchor) => {
-            const label = anchor.querySelector<HTMLElement>(
-              ':scope > .app-shell-nav-row > .app-shell-nav-label',
-            );
-            return Boolean(label && label.scrollHeight > label.clientHeight + 1);
+          item={item}
+          open={open}
+          branch={open && item.children ? rows(item.children, item) : null}
+          ref={(element) => {
+            if (element) {
+              elements.current.set(item.value, element);
+            } else {
+              elements.current.delete(item.value);
+            }
           }}
-          trigger={(bindings) => (
-            <div
-              {...bindings}
-              ref={(element) => {
-                bindings.ref(element);
-                if (element) {
-                  elements.current.set(item.value, element);
-                } else {
-                  elements.current.delete(item.value);
-                }
-              }}
-              className="app-shell-tree-item"
-              role="treeitem"
-              tabIndex={item.value === stop ? 0 : -1}
-              aria-label={
-                item.count === undefined ? item.label : `${item.label}, ${item.count} items`
-              }
-              aria-selected={item.value === selected}
-              aria-expanded={item.children ? open : undefined}
-              aria-disabled={item.disabled || undefined}
-              onKeyDown={(event) => keyDown(event, item, parent)}
-              onFocus={(event) => {
-                if (event.target === event.currentTarget) {
-                  setFocused(item.value);
-                  bindings.onFocus?.(event);
-                }
-              }}
-              onBlur={(event) => {
-                if (event.target === event.currentTarget) {
-                  bindings.onBlur?.(event);
-                }
-              }}
-              onPointerEnter={(event) => {
-                if (
-                  event.target instanceof Element &&
-                  event.target.closest('[role="treeitem"]') === event.currentTarget
-                ) {
-                  bindings.onPointerEnter?.(event);
-                }
-              }}
-            >
-              <div
-                className="app-shell-nav-row"
-                onClick={() => {
-                  focus(item);
-                  select(item);
-                }}
-              >
-                {item.children ? (
-                  <span
-                    className="app-shell-tree-disclosure"
-                    aria-hidden="true"
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      focus(item);
-                      if (!item.disabled) {
-                        toggle(item.value);
-                      }
-                    }}
-                  >
-                    <Icon
-                      usage="slot"
-                      icon={CaretRightGlyph}
-                      className="app-shell-nav-caret"
-                      directional
-                    />
-                  </span>
-                ) : (
-                  <span className="app-shell-tree-disclosure" data-empty aria-hidden="true" />
-                )}
-                <RowContent
-                  item={item}
-                  icon={
-                    item.icon ??
-                    (item.children ? (open ? FolderOpenGlyph : FolderGlyph) : FileTextGlyph)
-                  }
-                />
-              </div>
-              {open &&
-                item.children &&
-                (item.children.length ? (
-                  <div className="app-shell-tree-branch" role="group">
-                    {rows(item.children, item)}
-                  </div>
-                ) : (
-                  <p className="app-shell-tree-branch app-shell-nav-empty">Empty folder</p>
-                ))}
-            </div>
-          )}
-        >
-          {item.label}
-        </HintPreview>
+          tabIndex={item.value === stop ? 0 : -1}
+          aria-selected={item.value === selected}
+          onKeyDown={(event) => keyDown(event, item, parent)}
+          onFocus={() => setFocused(item.value)}
+          onClick={() => {
+            focus(item);
+            select(item);
+          }}
+          onToggle={() => {
+            focus(item);
+            if (!item.disabled) {
+              toggle(item.value);
+            }
+          }}
+        />
       );
     });
   }

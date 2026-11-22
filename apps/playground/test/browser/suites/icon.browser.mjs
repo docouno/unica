@@ -49,7 +49,7 @@ export default {
       const branch = page
         .getByTestId('chrome')
         .getByRole('treeitem', { name: 'Architecture, 34 items' });
-      const disclosure = branch.locator(':scope > .app-shell-nav-row > .app-shell-tree-disclosure');
+      const disclosure = branch.locator(':scope > .app-shell-tree-disclosure');
       const caret = disclosure.locator('.app-shell-nav-caret');
       assert.ok((await caret.evaluate((svg) => svg.getScreenCTM().b)) > 0);
       await disclosure.click();
@@ -269,9 +269,8 @@ export default {
     await mount('icon', { direction: 'rtl' });
     const chrome = page.getByTestId('chrome');
     const branch = chrome.getByRole('treeitem', { name: 'Architecture, 34 items' });
-    const row = branch.locator(':scope > .app-shell-nav-row');
-    await size(row.locator('.app-shell-nav-caret'), 12);
-    await size(row.locator('.app-shell-nav-icon'), 16);
+    await size(branch.locator('.app-shell-nav-caret'), 12);
+    await size(branch.locator('.app-shell-nav-icon'), 16);
     await size(chrome.getByRole('button', { name: /Trash/ }).locator('svg'), 16);
     const direction = (label) =>
       chrome

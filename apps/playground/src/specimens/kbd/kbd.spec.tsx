@@ -6,10 +6,9 @@ import { previewProps, previewText } from '../preview-code.js';
 import { defineComponent } from '../../workbench/types.js';
 import { Button } from '../../prototypes/button/button.proto.js';
 import type { ButtonTone, ButtonVariant } from '../../prototypes/button/button.proto.js';
-import { Text, Title } from '@docouno/unica';
+import { Text, Title, Tooltip } from '@docouno/unica';
 import { GlobalSearch } from '../../prototypes/app-shell/app-shell.proto.js';
 import { MenuPreview } from '../../prototypes/menu/menu.proto.js';
-import { Tooltip } from '../../prototypes/tooltip/tooltip.proto.js';
 import './kbd.examples.css';
 
 function ExampleRow({
@@ -294,7 +293,11 @@ function Surfaces(): ReactElement {
 function OverlayContext(): ReactElement {
   return (
     <div className="kbd-example-overlay">
-      <Tooltip shortcut="⌘B">Bold</Tooltip>
+      <Tooltip label="Bold" shortcut="⌘B">
+        <Button variant="ghost" tone="neutral" size="s">
+          Bold
+        </Button>
+      </Tooltip>
       <MenuPreview
         label="Shortcut appearance samples"
         className="kbd-example-menu"
@@ -306,8 +309,8 @@ function OverlayContext(): ReactElement {
         ]}
       />
       <Text size="caption-l" color="muted">
-        Static tooltip and menu surfaces; the highlighted row is pinned for comparison. The disabled
-        command keeps a quiet, readable hint.
+        Hover or Tab to Bold to show its shortcut. The highlighted menu row is pinned for
+        comparison, and the disabled command keeps its shortcut visible.
       </Text>
     </div>
   );
@@ -458,7 +461,6 @@ export default defineComponent({
     },
     {
       id: 'overlay',
-      mode: 'pinned',
       title: 'Menu & tooltip',
       surface: 'overlay',
       overlayStage: true,

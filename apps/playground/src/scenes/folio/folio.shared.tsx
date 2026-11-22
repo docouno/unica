@@ -17,7 +17,7 @@ import {
   WorkspaceStatus,
 } from '../../prototypes/app-shell/app-shell.proto.js';
 import type { DocumentTab } from '../../prototypes/app-shell/document-tabs.proto.js';
-import type { RailDestination } from '../../prototypes/app-shell/app-shell.proto.js';
+import type { LeftRailProps, RailDestination } from '../../prototypes/app-shell/app-shell.proto.js';
 import { Avatar, AvatarGroup } from '../../prototypes/avatar/avatar.proto.js';
 import { Button, IconButton } from '../../prototypes/button/button.proto.js';
 import { CodeBlock } from '../../prototypes/code-block/code-block.proto.js';
@@ -54,6 +54,7 @@ export interface WorkspaceProps {
   readonly documentTabs?: boolean;
   readonly activeDocument?: string;
   readonly activeRail?: RailDestination;
+  readonly preferencesShortcutHint?: LeftRailProps['preferencesShortcutHint'];
   readonly activeNavigation?: string;
   readonly classic?: boolean;
   readonly railOnly?: boolean;
@@ -80,14 +81,17 @@ function openDocuments(): readonly DocumentTab[] {
 export function FolioRail({
   active,
   showBrand = false,
+  preferencesShortcutHint,
 }: {
   readonly active: RailDestination;
   readonly showBrand?: boolean;
+  readonly preferencesShortcutHint?: LeftRailProps['preferencesShortcutHint'];
 }): ReactElement {
   return (
     <LeftRail
       active={active}
       showBrand={showBrand}
+      {...(preferencesShortcutHint ? { preferencesShortcutHint } : {})}
       links={{
         overview: folioSceneHref('02-workspace-overview'),
         documents: folioSceneHref('03-document-collection'),
@@ -109,6 +113,7 @@ export function FolioWorkspace({
   documentTabs = false,
   activeDocument = 'adr',
   activeRail = 'documents',
+  preferencesShortcutHint,
   activeNavigation,
   classic = false,
   railOnly = false,
@@ -130,7 +135,13 @@ export function FolioWorkspace({
           </TopRail>
         )
       }
-      leftRail={<FolioRail active={activeRail} showBrand={classic} />}
+      leftRail={
+        <FolioRail
+          active={activeRail}
+          showBrand={classic}
+          preferencesShortcutHint={preferencesShortcutHint}
+        />
+      }
       leftAside={
         railOnly
           ? undefined

@@ -1,11 +1,11 @@
-import { useId } from 'react';
+import { useContext, useId } from 'react';
 import type { ComponentPropsWithRef, MouseEvent, ReactElement, ReactNode } from 'react';
 import { Slot, requireSlotChild, resolveSlotProps } from '../../core/Slot.js';
 import { useComponentDefaults } from '../../core/UnicaProvider.js';
 import { cx } from '../../core/cx.js';
+import { DescriptionFallback, DescriptionScope, descriptionIds } from '../../core/description.js';
 import { ExternalLinkGlyph } from '../../internal/glyphs/index.js';
 import { Icon } from '../Icon/Icon.js';
-import { NewTabDescription } from './NewTabDescription.js';
 import { TrailingGlyph } from './TrailingGlyph.js';
 import { markTerminalText } from './terminalText.js';
 import type { LinkProps } from './types.js';
@@ -109,6 +109,7 @@ export function Link({
   ...props
 }: LinkProps): ReactElement {
   const hintId = useId();
+  const descriptionScope = useContext(DescriptionScope);
   const resolvedSize = useComponentDefaults('Link', 'size', { instance: size, builtIn: 'inherit' });
   const child = asChild ? requireAnchorChild(children, disabled) : undefined;
   if (dangerouslySetInnerHTML !== undefined) {
@@ -133,8 +134,30 @@ export function Link({
   const newTab = blank && !download;
   const showHint = newTab && !disabled;
   const showExternal = external || newTab;
-  const authorIds = showHint ? [...new Set(tokens(effective['aria-describedby']))] : [];
-  const nameIds = tokens(effective['aria-labelledby']);
+  const incomingIds =
+    showHint || descriptionScope ? descriptionIds(effective['aria-describedby']) : [];
+  const contribution =
+    descriptionScope && incomingIds.includes(descriptionScope.id) ? descriptionScope : null;
+  const hasOwnedDescription = showHint || contribution !== null;
+  const authorIds = contribution
+    ? incomingIds.filter((id) => id !== contribution.id && id !== contribution.fallbackId)
+    : incomingIds;
+  const authorDescription = effective['aria-description']?.trim() || undefined;
+  const title = effective.title?.trim() || undefined;
+  const fallbackId =
+    contribution && (authorDescription || title) ? `${hintId}-fallback` : undefined;
+  const fallback = hasOwnedDescription && (authorDescription || title) && (
+    <DescriptionFallback
+      id={fallbackId}
+      authorIds={authorIds}
+      authorDescription={authorDescription}
+      title={title}
+      hasExplicitName={Boolean(effective['aria-label']?.trim())}
+      label={label}
+      nameIds={descriptionIds(effective['aria-labelledby'])}
+    />
+  );
+  const hint = newTabHint?.trim() || 'Opens in a new tab';
   const terminal = showExternal || iconRight ? markTerminalText(label) : null;
   const content = (
     <>
@@ -153,17 +176,12 @@ export function Link({
           )}
         </TrailingGlyph>
       )}
+      {contribution && fallback}
       {showHint && (
-        <NewTabDescription
-          id={hintId}
-          hint={newTabHint?.trim() || 'Opens in a new tab'}
-          authorIds={authorIds}
-          authorDescription={effective['aria-description']?.trim() || undefined}
-          title={effective.title?.trim() || undefined}
-          hasExplicitName={Boolean(effective['aria-label']?.trim())}
-          label={label}
-          nameIds={nameIds}
-        />
+        <span id={hintId} hidden>
+          {!contribution && <>{fallback} </>}
+          {hint}
+        </span>
       )}
     </>
   );
@@ -173,8 +191,10 @@ export function Link({
     'data-unica-link-underline': underline,
     'data-unica-link-size': resolvedSize,
     'aria-disabled': disabled || undefined,
-    'aria-describedby': showHint
-      ? [...new Set([...authorIds, hintId])].join(' ')
+    'aria-describedby': hasOwnedDescription
+      ? [...new Set([...authorIds, fallbackId, contribution?.id, showHint ? hintId : undefined])]
+          .filter(Boolean)
+          .join(' ')
       : effective['aria-describedby'],
     rel: blank ? secureRel(effective.rel) : effective.rel,
   } as const;

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import type { ReactElement } from 'react';
+import { HoverCard, HoverCardContent, HoverCardTrigger } from '@docouno/unica';
 import {
   AppShell,
   AsidePanel,
@@ -40,7 +41,12 @@ export default function AppShellFixture(): ReactElement {
           />
         </TopRail>
       }
-      leftRail={<LeftRail />}
+      leftRail={
+        <LeftRail
+          links={{ preferences: '#preferences' }}
+          preferencesShortcutHint={{ label: 'Preferences & shortcuts', shortcut: '⌘,' }}
+        />
+      }
       leftAside={<AsidePanel title="Workspace">Document tree</AsidePanel>}
       header={
         <Header actions={<Button size="s">New note</Button>}>
@@ -52,6 +58,10 @@ export default function AppShellFixture(): ReactElement {
       }
       rightAside={
         <AsidePanel side="right" title="Document properties">
+          <HoverCard defaultOpen>
+            <HoverCardTrigger href="#team">Owner team</HoverCardTrigger>
+            <HoverCardContent>Maintains the reference documentation.</HoverCardContent>
+          </HoverCard>
           <label>
             Reference <input defaultValue="RS-104" />
           </label>

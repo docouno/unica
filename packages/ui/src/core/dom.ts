@@ -562,8 +562,12 @@ function isNodeLocallyInert(element: Element, checkCss: boolean): boolean {
  * explicit `[inert]`, CSS `interactivity: inert` (including `interactivity: auto` descendants
  * under an inert ancestor), tracked Unica modal stacks (including reverse DOM order & Shadow DOM),
  * and background nodes under a light-DOM native `dialog:modal`.
+ * Use local scope when the caller already observes modal ownership.
  */
-export function isInertElement(element: Element): boolean {
+export function isInertElement(
+  element: Element,
+  scope: 'local' | 'document' = 'document',
+): boolean {
   // Step 1: Disconnected nodes check only their local composed ancestors.
   if (!isConnectedNode(element)) {
     for (
@@ -578,7 +582,7 @@ export function isInertElement(element: Element): boolean {
     return false;
   }
 
-  const doc = getOwnerDocument(element);
+  const doc = scope === 'document' ? getOwnerDocument(element) : null;
   const runtime = doc ? resolveOverlayRuntime(doc) : undefined;
   let activeModal: HTMLDialogElement | null = null;
   if (runtime) {

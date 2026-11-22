@@ -1,0 +1,20 @@
+@layer unica.components {
+  .unica-hover-card:popover-open:not([hidden]) {
+    display: flex;
+  }
+
+  .unica-hover-card {
+    inline-size: 22rem;
+    max-inline-size: var(--overlay-available-width, 100dvw);
+    padding: var(--space-4);
+  }
+
+  .unica-hover-card-reading-area {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    align-content: start;
+    gap: var(--space-12);
+    padding: var(--space-12);
+    border-radius: max(0px, calc(var(--surface-s-radius) - 1px - var(--space-4)));
+  }
+}

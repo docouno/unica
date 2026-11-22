@@ -118,6 +118,20 @@
   flex: none;
   display: flex;
 }
+.avatar-name-hint {
+  display: inline-flex;
+  flex: none;
+  border-radius: var(--radius-full);
+  cursor: default;
+}
+.avatar-group-proto:has(.avatar-name-hint:focus-visible) {
+  border-radius: var(--radius-full);
+  outline: 2px solid var(--focus-ring-color);
+  outline-offset: 2px;
+}
+.avatar-name-hint:focus-visible {
+  outline: none;
+}
 .avatar-group-proto > li + li {
   margin-inline-start: calc(var(--avatar-step) - var(--avatar-size));
 }
@@ -168,6 +182,9 @@
   display: none;
 }
 @media (forced-colors: active) {
+  .avatar-group-proto:has(.avatar-name-hint:focus-visible) {
+    outline-color: Highlight;
+  }
   .avatar-proto,
   .avatar-group-proto-overflow {
     background: Canvas;

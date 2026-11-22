@@ -1,9 +1,9 @@
 import { CloseGlyph } from '../control-glyphs.js';
-import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { useId, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import type { ComponentPropsWithRef, ReactElement, Ref, RefObject } from 'react';
-import { Icon, Spinner } from '@docouno/unica';
+import { Icon, Spinner, Tooltip } from '@docouno/unica';
 import type { BadgeStatus, GlyphSource } from '@docouno/unica';
-import { Tooltip } from '../tooltip/tooltip.proto.js';
+import { useClippedLabel } from '../use-clipped-label.js';
 import './tag.css';
 
 export type TagSize = 's' | 'm' | 'l';
@@ -40,125 +40,69 @@ export function Tag({
   children,
   ...props
 }: TagProps): ReactElement {
-  const labelRef = useRef<HTMLSpanElement>(null);
-  const tooltipRef = useRef<HTMLDivElement>(null);
+  const text = typeof children === 'string' ? children : undefined;
+  const [labelRef, clipped] = useClippedLabel<HTMLSpanElement>(text);
   const touchStartedOnLabel = useRef(false);
-  const hideTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
-  useEffect(() => () => clearTimeout(hideTimer.current), []);
-  const revealLabel = (): void => {
-    clearTimeout(hideTimer.current);
-    const label = labelRef.current;
-    const tooltip = tooltipRef.current;
-    if (!label || !tooltip || label.scrollWidth <= label.clientWidth + 1) {
-      return;
-    }
-    tooltip.showPopover();
-    const anchor = label.getBoundingClientRect();
-    const bounds = tooltip.getBoundingClientRect();
-    tooltip.style.left = `${Math.max(12, Math.min(anchor.left, window.innerWidth - bounds.width - 12))}px`;
-    tooltip.style.top = `${anchor.top >= bounds.height + 12 ? anchor.top - bounds.height - 8 : anchor.bottom + 8}px`;
-  };
-  const hideLabel = (): void => {
-    clearTimeout(hideTimer.current);
-    tooltipRef.current?.hidePopover();
-  };
+
   return (
-    <span
-      {...props}
-      className={`tag-proto ${className}`}
-      data-size={size}
-      data-status={status}
-      data-unica-mark-status={status}
-      data-disabled={disabled || undefined}
-      data-pending={pending || undefined}
-      data-preview={previewState}
-      onPointerEnter={(event) => {
-        if (event.pointerType !== 'touch') {
-          revealLabel();
-        }
-        props.onPointerEnter?.(event);
-      }}
-      onPointerLeave={(event) => {
-        if (!event.currentTarget.querySelector(':focus-visible')) {
-          hideTimer.current = setTimeout(hideLabel, 160);
-        }
-        props.onPointerLeave?.(event);
-      }}
-      onFocus={(event) => {
-        if (event.target.matches(':focus-visible')) {
-          revealLabel();
-        }
-        props.onFocus?.(event);
-      }}
-      onBlur={(event) => {
-        hideLabel();
-        props.onBlur?.(event);
-      }}
-      onKeyDown={(event) => {
-        if (event.key === 'Escape' && tooltipRef.current?.matches(':popover-open')) {
-          hideLabel();
-          event.preventDefault();
-          event.stopPropagation();
-        }
-        props.onKeyDown?.(event);
-      }}
-    >
-      {iconLeft && (
-        <span className="tag-icon-proto" aria-hidden="true">
-          <Icon usage="slot" icon={iconLeft} size={size} />
-        </span>
-      )}
-      <span ref={labelRef} className="tag-label-proto">
-        {children}
-      </span>
-      <button
-        ref={removeRef}
-        className="tag-remove-proto"
-        type="button"
-        disabled={disabled}
-        aria-label={removeLabel}
-        aria-disabled={pending || undefined}
-        aria-busy={pending || undefined}
-        tabIndex={removeTabIndex}
-        onPointerDown={(event) => {
-          // Touch browsers may retarget a label-edge tap to the nearest button.
-          const label = labelRef.current?.getBoundingClientRect();
-          touchStartedOnLabel.current = Boolean(
-            event.pointerType === 'touch' &&
-            label &&
-            event.clientX >= label.left &&
-            event.clientX <= label.right &&
-            event.clientY >= label.top &&
-            event.clientY <= label.bottom,
-          );
-        }}
-        onClick={(event) => {
-          const labelTap = touchStartedOnLabel.current && event.detail > 0;
-          touchStartedOnLabel.current = false;
-          if (!pending && !labelTap) {
-            onRemove();
-          }
-        }}
+    <Tooltip label={text ?? ''} disabled={!clipped} align="start">
+      <span
+        {...props}
+        className={`tag-proto ${className}`}
+        data-size={size}
+        data-status={status}
+        data-unica-mark-status={status}
+        data-disabled={disabled || undefined}
+        data-pending={pending || undefined}
+        data-preview={previewState}
       >
-        <span className="tag-remove-visual-proto" aria-hidden="true">
-          {pending ? (
-            <Spinner size="inherit" tone="inherit" />
-          ) : (
-            <Icon usage="slot" icon={CloseGlyph} />
-          )}
-        </span>
-      </button>
-      {typeof children === 'string' && (
-        <Tooltip
-          ref={tooltipRef}
-          popover="manual"
-          className="tag-full-label-proto"
-          aria-hidden="true"
-        >
+        {iconLeft && (
+          <span className="tag-icon-proto" aria-hidden="true">
+            <Icon usage="slot" icon={iconLeft} size={size} />
+          </span>
+        )}
+        <span ref={labelRef} className="tag-label-proto">
           {children}
-        </Tooltip>
-      )}
-    </span>
+        </span>
+        <button
+          ref={removeRef}
+          className="tag-remove-proto"
+          type="button"
+          disabled={disabled}
+          aria-label={removeLabel}
+          aria-disabled={pending || undefined}
+          aria-busy={pending || undefined}
+          tabIndex={removeTabIndex}
+          onPointerDown={(event) => {
+            // Touch browsers may retarget a label-edge tap to the nearest button.
+            const label = labelRef.current?.getBoundingClientRect();
+            touchStartedOnLabel.current = Boolean(
+              event.pointerType === 'touch' &&
+              label &&
+              event.clientX >= label.left &&
+              event.clientX <= label.right &&
+              event.clientY >= label.top &&
+              event.clientY <= label.bottom,
+            );
+          }}
+          onClick={(event) => {
+            const labelTap = touchStartedOnLabel.current && event.detail > 0;
+            touchStartedOnLabel.current = false;
+            if (!pending && !labelTap) {
+              onRemove();
+            }
+          }}
+        >
+          <span className="tag-remove-visual-proto" aria-hidden="true">
+            {pending ? (
+              <Spinner size="inherit" tone="inherit" />
+            ) : (
+              <Icon usage="slot" icon={CloseGlyph} />
+            )}
+          </span>
+        </button>
+      </span>
+    </Tooltip>
   );
 }
 

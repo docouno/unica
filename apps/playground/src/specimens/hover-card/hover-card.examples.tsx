@@ -1,16 +1,27 @@
-import { useId, useState } from 'react';
-import type { ReactElement } from 'react';
+import {
+  Badge,
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+  Icon,
+  Link,
+  SkeletonText,
+  Text,
+  Title,
+} from '@docouno/unica';
 import { FileTextIcon, GitCommitIcon, LockSimpleIcon, TicketIcon } from '@phosphor-icons/react';
-import { Avatar } from '../avatar/avatar.proto.js';
-import { Badge, Icon, Link, SkeletonText, Text, Title } from '@docouno/unica';
-import { Study } from './tooltip.study.js';
-import { HoverCard } from './tooltip.proto.js';
-import { TeamPreview } from './hover-card.content.js';
-import type { HintAlign, HintSide } from './tooltip.proto.js';
-import { HintPreview } from './tooltip.preview.js';
-import './hover-card.examples.css';
+import { useState } from 'react';
+import type { ReactElement, ReactNode } from 'react';
+import { TeamPreview } from '../../examples/hover-card-content.js';
+import { OverlayExampleFrame } from '../../examples/OverlayExampleFrame.js';
+import { OverlayPlacementStudy } from '../../examples/overlay-studies.js';
+import { Avatar } from '../../prototypes/avatar/avatar.proto.js';
+import type { PreviewContext } from '../../workbench/types.js';
 
-// Content compositions are examples of anatomy, not proposed entity-specific APIs.
+type ExampleProps = { readonly ctx: PreviewContext };
+
+const collection = '?item=03-document-collection';
+const reader = '?item=04-document-reader';
 
 function MemberPreview(): ReactElement {
   return (
@@ -41,7 +52,7 @@ function MemberPreview(): ReactElement {
   );
 }
 
-export function DocumentPreview({
+function DocumentPreview({
   long = false,
   empty = false,
 }: {
@@ -137,54 +148,15 @@ function CommitPreview(): ReactElement {
   );
 }
 
-export function HoverIdentityExamples(): ReactElement {
-  return (
-    <div className="hint-demo-stack">
-      <Study label="Member · Image, identity and availability">
-        <HoverCard>
-          <MemberPreview />
-        </HoverCard>
-      </Study>
-      <Study label="Team · Fallback avatar and ownership">
-        <HoverCard>
-          <TeamPreview />
-        </HoverCard>
-      </Study>
-    </div>
-  );
-}
-
-export function HoverEntityExamples(): ReactElement {
-  return (
-    <div className="hint-demo-stack">
-      <Study label="Document · Summary and classification">
-        <HoverCard>
-          <DocumentPreview />
-        </HoverCard>
-      </Study>
-      <Study label="Issue · Identifier and status">
-        <HoverCard>
-          <IssuePreview />
-        </HoverCard>
-      </Study>
-      <Study label="Commit · Message and change summary">
-        <HoverCard>
-          <CommitPreview />
-        </HoverCard>
-      </Study>
-    </div>
-  );
-}
-
 type ContentState =
   'ready' | 'loading' | 'refreshing' | 'empty' | 'restricted' | 'missing' | 'error';
 
-export function HoverContentStates(): ReactElement {
+export function HoverContentStates({ ctx }: ExampleProps): ReactElement {
   const [state, setState] = useState<ContentState>('loading');
   const ready = state === 'ready' || state === 'refreshing' || state === 'empty';
   return (
-    <div className="hint-demo-stack">
-      <div className="hint-demo-options">
+    <div className="hint-study-stack">
+      <div className="hint-study-controls">
         <label>
           Preview content
           <select value={state} onChange={(event) => setState(event.target.value as ContentState)}>
@@ -196,7 +168,7 @@ export function HoverContentStates(): ReactElement {
           </select>
         </label>
       </div>
-      <HoverCard>
+      <PinnedCard ctx={ctx} title="Preview content" source="Document details" href={reader}>
         {ready ? (
           <>
             <DocumentPreview empty={state === 'empty'} />
@@ -249,124 +221,187 @@ export function HoverContentStates(): ReactElement {
             </Text>
           </div>
         )}
-      </HoverCard>
+      </PinnedCard>
     </div>
   );
 }
 
-export function HoverOverflowExamples(): ReactElement {
+function PinnedCard({
+  ctx,
+  title,
+  source,
+  href = collection,
+  limitHeight = false,
+  children,
+}: {
+  readonly ctx: PreviewContext;
+  readonly title: string;
+  readonly source: string;
+  readonly href?: string;
+  readonly limitHeight?: boolean;
+  readonly children: ReactNode;
+}): ReactElement {
   return (
-    <div className="hint-demo-stack">
-      <Study label="Long title, summary and metadata · No clipped names">
-        <HoverCard>
-          <DocumentPreview long />
+    <OverlayExampleFrame ctx={ctx} title={title} height={limitHeight ? 278 : 342}>
+      <div className="hint-study-anchor" data-position="top-start">
+        <HoverCard defaultOpen>
+          <HoverCardTrigger asChild>
+            <Link href={href} target="_top">
+              {source}
+            </Link>
+          </HoverCardTrigger>
+          <HoverCardContent {...ctx.subject} style={limitHeight ? { maxBlockSize: 200 } : {}}>
+            {children}
+          </HoverCardContent>
         </HoverCard>
-      </Study>
-      <Study label="Unbroken identifier · Isolated LTR text">
-        <HoverCard>
-          <div className="hover-demo-kicker">
-            <Icon usage="slot" icon={GitCommitIcon} size="s" />
-            <span>Commit</span>
-          </div>
-          <Title dir="auto" as="h3" size="body-m">
-            Rebuild the regional search index
-          </Title>
-          <Text dir="auto" size="body-s" color="secondary">
-            <bdi dir="ltr">release/production-eu-central-search-rebuild-2026</bdi>
-          </Text>
-          <Text dir="auto" size="caption-l" color="secondary">
-            Missing author metadata is omitted.
-          </Text>
-        </HoverCard>
-      </Study>
-      <Study label="Limited height · Scroll escape for pointer reading">
-        <HoverCard className="hover-demo-constrained">
-          <DocumentPreview long />
-        </HoverCard>
-      </Study>
-    </div>
+      </div>
+    </OverlayExampleFrame>
   );
 }
 
-export function HoverLiveExamples(): ReactElement {
-  const destination = `preview-destination-${useId()}`;
-  const [side, setSide] = useState<HintSide>('bottom');
-  const [align, setAlign] = useState<HintAlign>('start');
-  const [anchor, setAnchor] = useState('center');
+export function HoverIdentityExamples({ ctx }: ExampleProps): ReactElement {
+  const [example, setExample] = useState('member');
   return (
-    <div className="hint-demo-stack">
-      <div className="hint-demo-options">
+    <div className="hint-study-stack">
+      <div className="hint-study-controls">
         <label>
-          Side
-          <select value={side} onChange={(event) => setSide(event.target.value as HintSide)}>
-            {['top', 'bottom', 'start', 'end'].map((value) => (
-              <option key={value}>{value}</option>
-            ))}
-          </select>
-        </label>
-        <label>
-          Align
-          <select value={align} onChange={(event) => setAlign(event.target.value as HintAlign)}>
-            {['start', 'center', 'end'].map((value) => (
-              <option key={value}>{value}</option>
-            ))}
-          </select>
-        </label>
-        <label>
-          Source
-          <select value={anchor} onChange={(event) => setAnchor(event.target.value)}>
-            {['center', 'top-start', 'bottom-end'].map((value) => (
-              <option key={value}>{value}</option>
-            ))}
+          Identity
+          <select value={example} onChange={(event) => setExample(event.currentTarget.value)}>
+            <option value="member">Member</option>
+            <option value="team">Team</option>
           </select>
         </label>
       </div>
-      <div className="hint-demo-stage hover-demo-stage" data-anchor={anchor} data-hint-bounds>
-        <span className="hint-demo-stage-label hint-demo-label">
-          Hover or Tab · Select text · Escape to dismiss
-        </span>
-        <div className="hint-demo-anchor">
-          <HintPreview
-            family="hover-card"
-            side={side}
-            align={align}
-            trigger={(bindings) => (
-              <Link {...bindings} href={`#${destination}`}>
+      <PinnedCard
+        ctx={ctx}
+        title="Member and team hover cards"
+        source={example === 'member' ? 'Design lead' : 'Database reliability'}
+      >
+        {example === 'member' ? <MemberPreview /> : <TeamPreview />}
+      </PinnedCard>
+    </div>
+  );
+}
+
+export function HoverEntityExamples({ ctx }: ExampleProps): ReactElement {
+  const [example, setExample] = useState('document');
+  const source =
+    example === 'document'
+      ? 'PG Failover'
+      : example === 'issue'
+        ? 'Issue UI-128'
+        : 'Commit a91c7e2';
+  return (
+    <div className="hint-study-stack">
+      <div className="hint-study-controls">
+        <label>
+          Entity
+          <select value={example} onChange={(event) => setExample(event.currentTarget.value)}>
+            <option value="document">Document</option>
+            <option value="issue">Issue</option>
+            <option value="commit">Commit</option>
+          </select>
+        </label>
+      </div>
+      <PinnedCard ctx={ctx} title="Entity hover cards" source={source} href={reader}>
+        {example === 'document' ? (
+          <DocumentPreview />
+        ) : example === 'issue' ? (
+          <IssuePreview />
+        ) : (
+          <CommitPreview />
+        )}
+      </PinnedCard>
+    </div>
+  );
+}
+
+export function HoverOverflowExamples({ ctx }: ExampleProps): ReactElement {
+  const [example, setExample] = useState('limited');
+  return (
+    <div className="hint-study-stack">
+      <div className="hint-study-controls">
+        <label>
+          Reading space
+          <select value={example} onChange={(event) => setExample(event.currentTarget.value)}>
+            <option value="limited">Limited height (200 px)</option>
+            <option value="long">Long title and summary</option>
+            <option value="identifier">Unbroken identifier</option>
+          </select>
+        </label>
+      </div>
+      <PinnedCard
+        ctx={ctx}
+        title="Hover card overflow example"
+        source={example === 'identifier' ? 'Search index rebuild' : 'Regional recovery runbook'}
+        limitHeight={example === 'limited'}
+        href={reader}
+      >
+        {example === 'identifier' ? (
+          <>
+            <div className="hover-demo-kicker">
+              <Icon usage="slot" icon={GitCommitIcon} size="s" />
+              <span>Commit</span>
+            </div>
+            <Title dir="auto" as="h3" size="body-m">
+              Rebuild the regional search index
+            </Title>
+            <Text dir="auto" size="body-s" color="secondary">
+              <bdi dir="ltr">release/production-eu-central-search-rebuild-2026</bdi>
+            </Text>
+          </>
+        ) : (
+          <DocumentPreview long />
+        )}
+      </PinnedCard>
+    </div>
+  );
+}
+
+export function HoverLiveExamples({ ctx }: ExampleProps): ReactElement {
+  return (
+    <OverlayPlacementStudy
+      ctx={ctx}
+      title="Live team preview"
+      height={560}
+      initialSide="bottom"
+      initialAlign="start"
+    >
+      {(side, align) => (
+        <HoverCard>
+          <HoverCardTrigger asChild>
+            <Link {...ctx.subject} href={collection} target="_top">
+              Database reliability
+            </Link>
+          </HoverCardTrigger>
+          <HoverCardContent {...ctx.subject} side={side} align={align}>
+            <TeamPreview />
+          </HoverCardContent>
+        </HoverCard>
+      )}
+    </OverlayPlacementStudy>
+  );
+}
+
+export function HoverContextExamples({ ctx }: ExampleProps): ReactElement {
+  return (
+    <OverlayExampleFrame ctx={ctx} title="Hover card on an inline link" height={308}>
+      <div className="hint-study-anchor" data-position="top-start">
+        <div className="hint-study-copy">
+          Maintained by{' '}
+          <HoverCard defaultOpen>
+            <HoverCardTrigger asChild>
+              <Link href={collection} target="_top">
                 Database reliability
               </Link>
-            )}
-          >
-            <TeamPreview />
-          </HintPreview>
+            </HoverCardTrigger>
+            <HoverCardContent {...ctx.subject}>
+              <TeamPreview />
+            </HoverCardContent>
+          </HoverCard>
+          .
         </div>
-        <Link className="hint-demo-after" href={`#${destination}`}>
-          Continue to destination
-        </Link>
       </div>
-      <div id={destination} className="hover-demo-destination">
-        <Text dir="auto" size="body-s" weight="medium">
-          Database reliability
-        </Text>
-        <Text dir="auto" size="body-s" color="secondary">
-          Destination sample. The original link remains the way to open full details.
-        </Text>
-      </div>
-    </div>
-  );
-}
-
-export function HoverContextExamples(): ReactElement {
-  return (
-    <div className="hint-demo-stack">
-      <p className="hint-demo-copy">
-        Maintained by <Link href="#maintainer">Database reliability</Link>.
-      </p>
-      <HoverCard>
-        <TeamPreview />
-      </HoverCard>
-      <Text dir="auto" size="caption-l" color="secondary">
-        The card is pinned open. Hover or Tab to the source to inspect the live link.
-      </Text>
-    </div>
+    </OverlayExampleFrame>
   );
 }
