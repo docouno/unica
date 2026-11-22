@@ -28,13 +28,13 @@ A group uses one size and 8 px gaps in both directions. It paints no card, rail,
 
 ## Material and hierarchy
 
-Unselected rest is always neutral. Selected rest uses the theme's quiet `--chip-selected-*` tint and a mandatory leading check in the same foreground as the label. Never replace this with the primary button's solid accent fill: many selected facets must remain subordinate to the main command.
+Unselected rest is always neutral. Selected rest uses the theme's quiet `--_chip-selected-*` tint and a mandatory leading check in the same foreground as the label. Never replace this with the primary button's solid accent fill: many selected facets must remain subordinate to the main command.
 
 - **Soft:** borderless matte capsule, warm neutral plate and terracotta selection. No elevation, glow, scale, or press travel.
 - **Frost:** a fine semantic rim with a quiet neutral plane and indigo selection tint. The chip has no backdrop filter; an enclosing floating surface owns the glass. Its translucent selected fill composites on the actual owning surface.
 - **Pixel:** a crisp 1 px rim, zero radius, mono text, cyan/drafting-ink selection, immediate feedback. Use the same regular system check silhouette, not a second theme-specific icon set.
 
-The existing `--chip-*` palette and `--_btn-state-duration` supply the material. Soft/Frost have a 120 ms color transition; Pixel is immediate. No new theme recipe is introduced. The same chip sits on Base and Overlay without stacking its own glass or shadow. Color and check contrast must be assessed on their actual background, alongside the visual hierarchy of the whole row.
+The existing `--_chip-*` palette and `--_btn-state-duration` supply the material. Soft/Frost have a 120 ms color transition; Pixel is immediate. No new theme recipe is introduced. The same chip sits on Base and Overlay without stacking its own glass or shadow. Color and check contrast must be assessed on their actual background, alongside the visual hierarchy of the whole row.
 
 ## States and priorities
 
