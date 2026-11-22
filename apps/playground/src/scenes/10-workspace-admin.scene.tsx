@@ -1,9 +1,10 @@
 import { useId, useLayoutEffect, useRef, useState } from 'react';
+import { folioSceneHref } from './folio/folio.routes.js';
 import type { ReactElement } from 'react';
 import { ArrowLeftIcon } from '@phosphor-icons/react';
 import { defineScene } from '../workbench/types.js';
-import { AppShell, Header, LeftRail } from '../prototypes/app-shell/app-shell.proto.js';
-import { Badge } from '@docouno/unica';
+import { AppShell, Header } from '../prototypes/app-shell/app-shell.proto.js';
+import { Badge, Text, Title } from '@docouno/unica';
 import {
   Breadcrumb,
   BreadcrumbLink,
@@ -23,8 +24,7 @@ import {
 import type { FileItemStatus } from '../prototypes/file-input/file-input.proto.js';
 import { RadioCard } from '../prototypes/choice-card/choice-card.proto.js';
 import { Stepper, StepperStep } from '../prototypes/stepper/stepper.proto.js';
-import { Text, Title } from '@docouno/unica';
-import { FolioScene, PageIntro } from './folio/folio.shared.js';
+import { FolioRail, FolioScene, PageIntro } from './folio/folio.shared.js';
 import './folio/folio.settings.css';
 
 interface StagedArchive {
@@ -170,8 +170,9 @@ function WorkspaceAdminScene(): ReactElement {
   return (
     <FolioScene>
       <AppShell
+        canvasAs="section"
         minHeight={1380}
-        leftRail={<LeftRail active="admin" showBrand />}
+        leftRail={<FolioRail active="admin" showBrand />}
         header={
           <Header
             actions={
@@ -191,7 +192,9 @@ function WorkspaceAdminScene(): ReactElement {
             }
           >
             <Breadcrumb size="s">
-              <BreadcrumbLink href="?item=02-workspace-overview">Platform Eng</BreadcrumbLink>
+              <BreadcrumbLink href={folioSceneHref('02-workspace-overview')}>
+                Platform Eng
+              </BreadcrumbLink>
               <span>Administration</span>
               <BreadcrumbPage>Batch archive import</BreadcrumbPage>
             </Breadcrumb>

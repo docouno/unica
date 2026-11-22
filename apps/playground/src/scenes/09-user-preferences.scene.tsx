@@ -1,5 +1,5 @@
-import { Kbd, KbdGroup } from '@docouno/unica';
-import { useId, useState } from 'react';
+import { Kbd, KbdGroup, Text } from '@docouno/unica';
+import { useId, useRef, useState } from 'react';
 import type { ReactElement } from 'react';
 import { defineScene } from '../workbench/types.js';
 import {
@@ -40,7 +40,7 @@ import {
   TableRowHeader,
   TableScroll,
 } from '../prototypes/table/table.proto.js';
-import { Text } from '@docouno/unica';
+import { folioSceneHref } from './folio/folio.routes.js';
 import { FolioScene, SectionHeading } from './folio/folio.shared.js';
 import './folio/folio.settings.css';
 
@@ -76,19 +76,46 @@ function PreferencesScene(): ReactElement {
   const [saved, setSaved] = useState<Preferences>(defaults);
   const [notice, setNotice] = useState('');
   const measureName = useId();
+  const stage = useRef<HTMLDivElement>(null);
+  const lastEdited = useRef<HTMLElement>(null);
+  const typeface = useRef<HTMLButtonElement>(null);
   const dirty = (Object.keys(preferences) as (keyof Preferences)[]).filter(
     (key) => JSON.stringify(preferences[key]) !== JSON.stringify(saved[key]),
   ).length;
-  function update<K extends keyof Preferences>(key: K, value: Preferences[K]): void {
+  function update<K extends keyof Preferences>(
+    key: K,
+    value: Preferences[K],
+    source?: HTMLElement | null,
+  ): void {
+    const active = source ?? document.activeElement;
+    if (active instanceof HTMLElement && stage.current?.contains(active)) {
+      lastEdited.current = active;
+    }
     setPreferences((current) => ({ ...current, [key]: value }));
+  }
+
+  function restoreEditorFocus(): void {
+    window.requestAnimationFrame(() => {
+      const target = lastEdited.current;
+      if (target?.getClientRects().length && !target.matches(':disabled, [aria-disabled="true"]')) {
+        target.focus();
+      } else {
+        stage.current?.closest<HTMLElement>('.app-shell-main')?.focus({ preventScroll: true });
+      }
+    });
   }
 
   return (
     <FolioScene>
       <AppShell
-        minHeight={1260}
+        canvasAs="section"
+        viewportHeight="clamp(380px, calc(100svh - 11rem), 860px)"
         leftAside={
-          <AsidePanel width={256} title="Preferences" leading={<BackToWorkspace />}>
+          <AsidePanel
+            width={256}
+            title="Preferences"
+            leading={<BackToWorkspace href={folioSceneHref('02-workspace-overview')} />}
+          >
             <SettingsNavigation />
           </AsidePanel>
         }
@@ -118,7 +145,7 @@ function PreferencesScene(): ReactElement {
           </Header>
         }
       >
-        <div className="folio-settings-stage">
+        <div ref={stage} className="folio-settings-stage folio-preferences-stage">
           <div className="folio-settings-column folio-preferences-column">
             <Card className="folio-preferences-card">
               <section className="folio-preference-row folio-preference-inline">
@@ -152,12 +179,13 @@ function PreferencesScene(): ReactElement {
                   </Text>
                 </div>
                 <Select
+                  ref={typeface}
                   size="s"
                   aria-label="Code and terminal typeface"
                   value={preferences.typeface}
                   onValueChange={(value) => {
                     if (value) {
-                      update('typeface', value);
+                      update('typeface', value, typeface.current);
                     }
                   }}
                   options={[
@@ -375,7 +403,10 @@ function PreferencesScene(): ReactElement {
                     variant="secondary"
                     tone="neutral"
                     disabled={!dirty}
-                    onClick={() => setPreferences(saved)}
+                    onClick={() => {
+                      setPreferences(saved);
+                      restoreEditorFocus();
+                    }}
                   >
                     Discard
                   </Button>
@@ -385,6 +416,7 @@ function PreferencesScene(): ReactElement {
                     onClick={() => {
                       setSaved(preferences);
                       setNotice('Your preferences have been saved.');
+                      restoreEditorFocus();
                     }}
                   >
                     Save preferences

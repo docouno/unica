@@ -1,4 +1,5 @@
 import { useLayoutEffect, useRef, useState } from 'react';
+import { folioSceneHref } from './folio/folio.routes.js';
 import type { ReactElement } from 'react';
 import {
   ArrowsLeftRightIcon,
@@ -73,7 +74,9 @@ function ExtensionsScene(): ReactElement {
         minHeight={1160}
         breadcrumb={
           <Breadcrumb size="s">
-            <BreadcrumbLink href="?item=02-workspace-overview">Platform Eng</BreadcrumbLink>
+            <BreadcrumbLink href={folioSceneHref('02-workspace-overview')}>
+              Platform Eng
+            </BreadcrumbLink>
             <span>Extensions</span>
             <BreadcrumbPage>Connector catalog</BreadcrumbPage>
           </Breadcrumb>

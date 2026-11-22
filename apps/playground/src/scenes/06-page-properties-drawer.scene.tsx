@@ -1,4 +1,5 @@
 import { useId, useState } from 'react';
+import { folioSceneHref } from './folio/folio.routes.js';
 import type { ReactElement } from 'react';
 import { SlidersHorizontalIcon } from '@phosphor-icons/react';
 import { Button } from '../prototypes/button/button.proto.js';
@@ -76,8 +77,12 @@ function PropertiesScene(): ReactElement {
           <FolioWorkspace
             breadcrumb={
               <Breadcrumb size="s">
-                <BreadcrumbLink href="?item=02-workspace-overview">Platform Eng</BreadcrumbLink>
-                <BreadcrumbLink href="?item=03-document-collection">Runbooks</BreadcrumbLink>
+                <BreadcrumbLink href={folioSceneHref('02-workspace-overview')}>
+                  Platform Eng
+                </BreadcrumbLink>
+                <BreadcrumbLink href={folioSceneHref('03-document-collection')}>
+                  Runbooks
+                </BreadcrumbLink>
                 <BreadcrumbPage>Zero-Downtime PG Failover</BreadcrumbPage>
               </Breadcrumb>
             }

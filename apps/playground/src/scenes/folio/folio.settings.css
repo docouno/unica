@@ -114,6 +114,10 @@
   }
 }
 
+.folio-settings-stage.folio-preferences-stage {
+  padding-block-end: var(--space-16);
+}
+
 .folio-preferences-column {
   gap: 22px;
 }
@@ -287,7 +291,7 @@
     padding: var(--space-24) var(--space-16);
   }
 
-  .folio-preferences-actions .app-shell-header-actions {
+  .folio-preferences-actions .app-shell-sticky-actions {
     inline-size: 100%;
   }
 

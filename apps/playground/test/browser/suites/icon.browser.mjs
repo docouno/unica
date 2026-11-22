@@ -46,14 +46,14 @@ export default {
   }) => {
     for (const direction of ['ltr', 'rtl']) {
       await mount('icon', { direction });
-      const summary = page
+      const branch = page
         .getByTestId('chrome')
-        .locator('summary')
-        .filter({ hasText: 'Architecture' })
-        .first();
-      const caret = summary.locator('.app-shell-group-caret');
+        .getByRole('treeitem', { name: 'Architecture, 34 items' });
+      const disclosure = branch.locator(':scope > .app-shell-nav-row > .app-shell-tree-disclosure');
+      const caret = disclosure.locator('.app-shell-nav-caret');
       assert.ok((await caret.evaluate((svg) => svg.getScreenCTM().b)) > 0);
-      await summary.click();
+      await disclosure.click();
+      assert.equal(await branch.getAttribute('aria-expanded'), 'false');
       const horizontal = await caret.evaluate((svg) => svg.getScreenCTM().a);
       assert.ok(direction === 'rtl' ? horizontal < 0 : horizontal > 0);
     }
@@ -268,10 +268,11 @@ export default {
   }) => {
     await mount('icon', { direction: 'rtl' });
     const chrome = page.getByTestId('chrome');
-    const group = chrome.locator('.app-shell-nav-group > summary').first();
-    await size(group.locator('.app-shell-group-caret'), 11);
-    await size(group.locator('svg').last(), 15);
-    await size(chrome.getByRole('button', { name: /Trash/ }).locator('svg'), 15);
+    const branch = chrome.getByRole('treeitem', { name: 'Architecture, 34 items' });
+    const row = branch.locator(':scope > .app-shell-nav-row');
+    await size(row.locator('.app-shell-nav-caret'), 12);
+    await size(row.locator('.app-shell-nav-icon'), 16);
+    await size(chrome.getByRole('button', { name: /Trash/ }).locator('svg'), 16);
     const direction = (label) =>
       chrome
         .getByRole('menuitem', { name: label })
