@@ -1,4 +1,4 @@
-import { Link, Divider, Badge, Input, Text, Title } from '@docouno/unica';
+import { Badge, Checkbox, Divider, Input, Link, Text, Title } from '@docouno/unica';
 import { useId, useState } from 'react';
 import type { ReactElement } from 'react';
 import { GithubLogoIcon, KeyIcon } from '@phosphor-icons/react';
@@ -7,7 +7,6 @@ import { Button } from '../prototypes/button/button.proto.js';
 import { Card } from '../prototypes/card/card.proto.js';
 import { FormField } from '../prototypes/form-field/form-field.proto.js';
 import { SegmentedControl } from '../prototypes/segmented-control/segmented-control.proto.js';
-import { Checkbox } from '../prototypes/binary-controls/binary-controls.proto.js';
 import { defineScene } from '../workbench/types.js';
 import { FolioScene } from './folio/folio.shared.js';
 

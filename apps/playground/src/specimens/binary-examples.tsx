@@ -1,5 +1,5 @@
 import type { ReactElement, ReactNode } from 'react';
-import './binary-controls.examples.css';
+import './binary-examples.css';
 
 export function Sample({
   title,

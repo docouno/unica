@@ -250,16 +250,19 @@ export default {
       }
       return chrome;
     };
+    const assertSwitchIconSizes = async () => {
+      for (const [controlSize, dimension] of Object.entries({ s: 14, m: 16, l: 20 })) {
+        await size(page.getByTestId(`switch-icon-${controlSize}`), dimension);
+      }
+    };
     const before = await snapshot();
+    await assertSwitchIconSizes();
     const original = await application.locator('svg').evaluate((node) => node.outerHTML);
     await page.getByRole('button', { name: 'Toggle adapter' }).click();
     assert.equal(await application.locator('svg').getAttribute('data-replacement'), 'slot');
     assert.notEqual(await application.locator('svg').evaluate((node) => node.outerHTML), original);
     assert.deepEqual(await snapshot(), before);
-    for (const [index, dimension] of [14, 16, 20].entries()) {
-      const glyph = page.locator('.switch-thumb > svg').nth(index);
-      await size(glyph, dimension);
-    }
+    await assertSwitchIconSizes();
   },
 
   'Migrated control chrome keeps its size, ink and RTL submenu placement': async ({

@@ -1,12 +1,12 @@
 import { previewProps } from '../preview-code.js';
-import { size, disabled, readOnly, choice, toggle, eventProp } from '../control-props.js';
+import { size, disabled, readOnly, required, choice, toggle, eventProp } from '../control-props.js';
 import { useId, useState } from 'react';
 import type { ReactElement } from 'react';
 import { WarningCircleIcon } from '@phosphor-icons/react';
 import { defineComponent } from '../../workbench/types.js';
 import { Button } from '../../prototypes/button/button.proto.js';
-import { Checkbox, CheckboxGroup } from '../../prototypes/binary-controls/binary-controls.proto.js';
-import { Sample, SurfacePair } from '../../prototypes/binary-controls/binary-controls.examples.js';
+import { Checkbox, CheckboxGroup } from '@docouno/unica';
+import { Sample, SurfacePair } from '../binary-examples.js';
 
 function Sizes(): ReactElement {
   return (
@@ -33,24 +33,16 @@ function Sizes(): ReactElement {
 }
 
 function Interaction(): ReactElement {
+  const [mixed, setMixed] = useState(true);
   return (
-    <div>
-      {(['rest', 'hover', 'active', 'focus'] as const).map((state) => (
-        <div className="binary-demo-state" key={state}>
-          <span className="binary-demo-caption">
-            {state === 'focus'
-              ? 'Keyboard focus'
-              : state === 'active'
-                ? 'Pressed'
-                : state === 'hover'
-                  ? 'Hover'
-                  : 'Rest'}
-          </span>
-          <Checkbox aria-label={`${state} unselected`} previewState={state} />
-          <Checkbox aria-label={`${state} selected`} defaultChecked previewState={state} />
-          <Checkbox aria-label={`${state} mixed`} indeterminate previewState={state} />
-        </div>
-      ))}
+    <div className="binary-demo-row">
+      <Checkbox label="Include notes" />
+      <Checkbox label="Include attachments" defaultChecked />
+      <Checkbox
+        label="Include collections"
+        indeterminate={mixed}
+        onCheckedChange={() => setMixed(false)}
+      />
     </div>
   );
 }
@@ -87,9 +79,14 @@ function Validation(): ReactElement {
   const [values, setValues] = useState<string[]>([]);
   const [attempted, setAttempted] = useState(false);
   const invalid = attempted && values.length === 0;
+  const requiredMessage = 'Select a format to continue.';
   return (
     <div className="binary-demo-grid">
-      <div className="binary-demo-field">
+      <form
+        className="binary-demo-field"
+        onInvalid={() => setAttempted(true)}
+        onSubmit={(event) => event.preventDefault()}
+      >
         <span className="binary-demo-legend" id={`${id}-label`}>
           Include in the export
         </span>
@@ -99,46 +96,36 @@ function Validation(): ReactElement {
         <CheckboxGroup
           aria-labelledby={`${id}-label`}
           aria-describedby={`${id}-help${invalid ? ` ${id}-error` : ''}`}
+          name="format"
+          required
+          requiredMessage={requiredMessage}
           value={values}
           onValueChange={setValues}
           status={invalid ? 'danger' : 'neutral'}
         >
-          <Checkbox
-            value="markdown"
-            label="Markdown"
-            aria-describedby={invalid ? `${id}-error` : undefined}
-          />
-          <Checkbox
-            value="pdf"
-            label="PDF"
-            aria-describedby={invalid ? `${id}-error` : undefined}
-          />
+          <Checkbox value="markdown" label="Markdown" />
+          <Checkbox value="pdf" label="PDF" />
         </CheckboxGroup>
         {invalid && (
           <span className="binary-demo-message" id={`${id}-error`} role="alert">
-            <WarningCircleIcon size={16} />
-            Select a format to continue.
+            <WarningCircleIcon size={16} aria-hidden="true" />
+            {requiredMessage}
           </span>
         )}
         <div className="binary-demo-action-row">
-          <Button size="s" variant="secondary" onClick={() => setAttempted(true)}>
+          <Button size="s" variant="secondary" type="submit">
             Check selection
           </Button>
         </div>
-      </div>
-      <Sample title="Pinned validation intersections">
+      </form>
+      <Sample title="Validation and availability">
         <Checkbox
           label="Selected value needs attention"
           description="This permission conflicts with the current policy."
           defaultChecked
           status="danger"
         />
-        <Checkbox
-          label="Some values need attention"
-          indeterminate
-          status="danger"
-          previewState="focus"
-        />
+        <Checkbox label="Some values need attention" indeterminate status="danger" />
         <Checkbox
           label="Unavailable value"
           description="Disabled takes priority over invalid styling."
@@ -216,7 +203,11 @@ function Overflow(): ReactElement {
       />
       <Checkbox label="Include attachments_from_external_sources_without_short_names" />
       <div className="binary-demo-external-row">
-        <Checkbox id={`${id}-input`} aria-labelledby={id} />
+        <Checkbox
+          className="binary-demo-external-control"
+          id={`${id}-input`}
+          aria-labelledby={id}
+        />
         <label className="binary-demo-external-label" id={id} htmlFor={`${id}-input`}>
           Select this row · external accessible name
         </label>
@@ -229,16 +220,27 @@ export default defineComponent({
   id: 'checkbox',
   title: 'Checkbox',
   category: 'Forms',
-  status: 'Proto',
-  summary: 'Independent choices, clear partial selection, and calm availability feedback.',
+  status: 'UI',
+  summary: 'Independent choices, partial selection, and group validation.',
   componentName: 'Checkbox',
   form: 'owned',
   props: {
     size,
     disabled,
     readOnly,
-    status: choice('Field', 'Feedback tone of the selection.', ['neutral', 'danger'], 'neutral'),
+    required,
+    status: choice('Field', 'Validation state of the selection.', ['neutral', 'danger'], 'neutral'),
+    defaultChecked: {
+      ...toggle('Selection', 'Starts with Product updates selected.', true),
+      demo: true,
+    },
     indeterminate: toggle('Selection', 'Show a mixed state on the first control.'),
+    description: {
+      kind: 'string',
+      group: 'Content',
+      default: '',
+      description: 'Supporting text for Product updates.',
+    },
     onCheckedChange: eventProp(
       'Reports the changed subscription and checked state.',
       'handleCheckedChange',
@@ -248,61 +250,59 @@ export default defineComponent({
     {
       kind: 'ignored',
       when: { disabled: true },
-      affects: ['status'],
-      reason: 'The disabled state suppresses feedback color.',
+      affects: [{ key: 'status', value: 'danger' }],
+      reason: 'Disabled controls suppress invalid styling and semantics.',
+    },
+    {
+      kind: 'precedence',
+      when: { disabled: true },
+      affects: [
+        { key: 'readOnly', value: true },
+        { key: 'required', value: true },
+      ],
+      reason: 'Disabled controls are excluded from focus, validation, and submission.',
     },
   ],
   render: function CheckboxPreview({ values, ctx }) {
-    const [updates, setUpdates] = useState(true);
-    const [digest, setDigest] = useState(false);
+    const { size, disabled, readOnly, status, defaultChecked, description, ...props } = values;
+    const shared = { size, disabled, readOnly, status };
+    const log = ctx.action('onCheckedChange');
     return (
-      <form
-        {...ctx.form}
-        onReset={() => {
-          setUpdates(true);
-          setDigest(false);
-        }}
-      >
-        <Checkbox
-          {...values}
-          {...ctx.subject}
-          id={`${ctx.id}-updates`}
-          label="Product updates"
-          name="subscriptions"
-          value="updates"
-          checked={updates}
-          onCheckedChange={(checked) => {
-            setUpdates(checked);
-            ctx.action('onCheckedChange')({ subscription: 'updates', checked });
-          }}
-        />
-        <Checkbox
-          size={values.size}
-          disabled={values.disabled}
-          readOnly={values.readOnly}
-          status={values.status}
-          {...ctx.subject}
-          id={`${ctx.id}-digest`}
-          label="Weekly digest"
-          name="subscriptions"
-          value="digest"
-          checked={digest}
-          onCheckedChange={(checked) => {
-            setDigest(checked);
-            ctx.action('onCheckedChange')({ subscription: 'digest', checked });
-          }}
-        />
+      <form {...ctx.form}>
+        <div {...ctx.subject} className="binary-demo-subject">
+          <Checkbox
+            key={String(defaultChecked)}
+            {...shared}
+            {...props}
+            defaultChecked={defaultChecked}
+            description={description || undefined}
+            label="Product updates"
+            name="subscriptions"
+            value="updates"
+            onCheckedChange={(checked: boolean) => log({ subscription: 'updates', checked })}
+          />
+        </div>
+        <div {...ctx.subject} className="binary-demo-subject">
+          <Checkbox
+            {...shared}
+            label="Weekly digest"
+            name="subscriptions"
+            value="digest"
+            onCheckedChange={(checked: boolean) => log({ subscription: 'digest', checked })}
+          />
+        </div>
       </form>
     );
   },
-  code: ({ size, disabled, readOnly, status }, attributes) => {
+  code: ({ size, disabled, readOnly, status, defaultChecked }, attributes) => {
     const digestAttributes = previewProps(
       { size, disabled, readOnly, status },
       { size: 'm', disabled: false, readOnly: false, status: 'neutral' },
     );
+    const initialSelection = defaultChecked ? ' defaultChecked' : '';
     return `<>
-  <Checkbox label="Product updates" name="subscriptions" value="updates" checked={updates}${attributes} />
-  <Checkbox label="Weekly digest" name="subscriptions" value="digest" checked={digest}${digestAttributes} onCheckedChange={handleDigestChange} />
+  <Checkbox label="Product updates" name="subscriptions" value="updates"${initialSelection}${attributes} />
+  <Checkbox label="Weekly digest" name="subscriptions" value="digest"${digestAttributes} onCheckedChange={handleDigestChange} />
 </>`;
   },
   matrixViews: [
@@ -313,14 +313,16 @@ export default defineComponent({
       title: 'Size & selection',
       reference: () => <Sizes />,
     },
+    { id: 'selection', rows: 'defaultChecked', cols: 'indeterminate', title: 'Selection & mixed' },
   ],
   cases: [
     {
       id: 'interaction',
       title: 'Interaction states',
       caption:
-        'Appearance pins: rest, hover, press, keyboard focus. The controls still respond to clicks and Space; pins do not move focus.',
+        'Tab to a checkbox or point at its label and hold the pointer button. Space or a click toggles the value.',
       kind: 'behavior',
+      mode: 'live',
       render: () => <Interaction />,
     },
     {
@@ -333,8 +335,9 @@ export default defineComponent({
       id: 'validation',
       title: 'Validation',
       caption:
-        'Local validation preview. The check button reveals the error; selecting a format clears it.',
+        'Submit without a format to see the required-group error. A selection clears it. Tab to a danger example to inspect its focus ring.',
       kind: 'behavior',
+      mode: 'live',
       render: () => <Validation />,
     },
     {
@@ -363,6 +366,7 @@ export default defineComponent({
       title: 'Groups & select all',
       caption:
         'Live selection. A partial selection moves to all; another activation clears the available items.',
+      mode: 'live',
       code: `<>
   <Checkbox
     label="Select all available items"

@@ -4,6 +4,7 @@ import {
   AlertDescription,
   AlertTitle,
   Badge,
+  Checkbox,
   Input,
   Link,
   SkeletonText,
@@ -19,7 +20,6 @@ import {
   PushPinIcon,
   ArrowCounterClockwiseIcon,
 } from '@phosphor-icons/react';
-import { Checkbox } from '../binary-controls/binary-controls.proto.js';
 import { Button, IconButton } from '../button/button.proto.js';
 import { Card } from '../card/card.proto.js';
 import {

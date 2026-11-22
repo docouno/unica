@@ -2,10 +2,9 @@ import { FormField } from '../../prototypes/form-field/form-field.proto.js';
 import { useId } from 'react';
 import type { ReactElement } from 'react';
 import { defineComponent } from '../../workbench/types.js';
-import { Checkbox } from '../../prototypes/binary-controls/binary-controls.proto.js';
 import { Button } from '../../prototypes/button/button.proto.js';
 import { Card } from '../../prototypes/card/card.proto.js';
-import { Input, Text } from '@docouno/unica';
+import { Checkbox, Input, Text } from '@docouno/unica';
 import {
   PopoverBody,
   PopoverContent,

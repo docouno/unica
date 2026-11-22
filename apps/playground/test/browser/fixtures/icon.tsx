@@ -1,4 +1,4 @@
-import { Icon, UnicaProvider, defineGlyph, Link, Input } from '@docouno/unica';
+import { Icon, Input, Link, Switch, UnicaProvider, defineGlyph } from '@docouno/unica';
 import type { IconAdapter } from '@docouno/unica';
 import { ArrowRightIcon, BellIcon, CheckIcon, IconContext } from '@phosphor-icons/react';
 import { useId, useState } from 'react';
@@ -15,7 +15,6 @@ import { Combobox } from '../../../src/prototypes/combobox/combobox.proto.js';
 import { MenuRows, MenuSurface } from '../../../src/prototypes/menu/menu.proto.js';
 import { Listbox } from '../../../src/prototypes/select/listbox.proto.js';
 import { Select } from '../../../src/prototypes/select/select.proto.js';
-import { Switch } from '../../../src/prototypes/binary-controls/binary-controls.proto.js';
 import { Button } from '../../../src/prototypes/button/button.proto.js';
 import {
   Drawer,
@@ -209,7 +208,12 @@ export default function IconFixture() {
             </DrawerContent>
           </Drawer>
           {(['s', 'm', 'l'] as const).map((size) => (
-            <Switch key={size} size={size} label={`Switch ${size}`} thumbIcon={BellIcon} />
+            <Switch
+              key={size}
+              size={size}
+              label={`Switch ${size}`}
+              thumbIcon={<BellIcon data-testid={`switch-icon-${size}`} />}
+            />
           ))}
         </UnicaProvider>
       </section>

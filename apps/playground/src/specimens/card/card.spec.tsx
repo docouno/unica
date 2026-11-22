@@ -12,9 +12,8 @@ import {
   StackIcon,
 } from '@phosphor-icons/react';
 import { defineComponent } from '../../workbench/types.js';
-import { Badge, Icon, Skeleton, SkeletonText, Text } from '@docouno/unica';
+import { Badge, Checkbox, Icon, Skeleton, SkeletonText, Text } from '@docouno/unica';
 import { Button, IconButton } from '../../prototypes/button/button.proto.js';
-import { Checkbox } from '../../prototypes/binary-controls/binary-controls.proto.js';
 import { PopoverContent } from '../../prototypes/popover/popover.proto.js';
 import {
   Card,

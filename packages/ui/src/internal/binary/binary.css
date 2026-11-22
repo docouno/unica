@@ -1,0 +1,224 @@
+@layer unica.components {
+  .unica-binary-control {
+    --_binary-row: var(--size-m-height);
+    --_binary-target-minimum: 0px;
+    --_binary-line: var(--text-size-body-s-lh);
+    display: inline-flex;
+    align-items: flex-start;
+    gap: var(--size-m-gap);
+    min-inline-size: var(--_binary-target-minimum);
+    min-block-size: max(var(--_binary-row), var(--_binary-target-minimum));
+    padding-block: max(
+      var(--space-4),
+      calc((max(var(--_binary-row), var(--_binary-target-minimum)) - var(--_binary-line)) / 2)
+    );
+    color: var(--fg-primary);
+    font-family: var(--font-family-base);
+    font-size: var(--text-size-body-s);
+    line-height: var(--_binary-line);
+    cursor: pointer;
+  }
+
+  .unica-binary-control[data-unica-binary-size='s'] {
+    --_binary-row: var(--size-s-height);
+    gap: var(--size-s-gap);
+    font-size: var(--size-s-control-font);
+  }
+
+  .unica-binary-control[data-unica-binary-size='l'] {
+    --_binary-row: var(--size-l-height);
+    --_binary-line: var(--text-size-body-m-lh);
+    gap: var(--size-l-gap);
+    font-size: var(--text-size-body-m);
+  }
+
+  .unica-binary-control[data-unica-binary-standalone] {
+    min-inline-size: max(var(--_binary-row), var(--_binary-target-minimum));
+    justify-content: center;
+  }
+
+  .unica-binary-control[data-unica-binary-readonly] {
+    cursor: default;
+  }
+
+  .unica-binary-control:has(
+    > .unica-binary-target > .unica-switch-indicator[data-unica-switch-loading]
+  ) {
+    cursor: progress;
+  }
+
+  .unica-binary-control:has(> .unica-binary-target > .unica-binary-native:disabled) {
+    color: var(--fg-disabled);
+    cursor: not-allowed;
+  }
+
+  .unica-binary-target {
+    position: relative;
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    block-size: var(--_binary-line);
+  }
+
+  .unica-binary-native {
+    position: absolute;
+    inset: 0;
+    inline-size: 100%;
+    block-size: 100%;
+    margin: 0;
+    opacity: 0;
+    cursor: inherit;
+  }
+
+  .unica-binary-copy {
+    display: grid;
+    gap: var(--space-4);
+    min-inline-size: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .unica-binary-description {
+    color: var(--fg-muted);
+    font-size: var(--text-size-caption-l);
+    line-height: 1.5;
+  }
+
+  .unica-binary-group {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    min-inline-size: 0;
+  }
+
+  .unica-binary-group[data-unica-binary-orientation='horizontal'] {
+    flex-flow: row wrap;
+    gap: var(--space-4) var(--space-24);
+  }
+
+  .unica-binary-control[hidden],
+  .unica-binary-group[hidden] {
+    display: none;
+  }
+
+  .unica-binary-indicator {
+    --_binary-box: 20px;
+    --_binary-well: var(--control-bg);
+    --_binary-edge: var(--_binary-border);
+    --_binary-fill: var(--accent-solid);
+    --_binary-danger-edge: var(--status-danger-soft-fg);
+    position: relative;
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    inline-size: var(--_binary-box);
+    block-size: var(--_binary-box);
+    border: 1px solid var(--_binary-edge);
+    background: var(--_binary-well);
+    color: var(--fg-on-accent);
+    pointer-events: none;
+  }
+
+  .unica-binary-indicator:where([data-unica-checkbox-size='s'], [data-unica-radio-size='s']) {
+    --_binary-box: 16px;
+  }
+
+  .unica-binary-indicator:where([data-unica-checkbox-size='l'], [data-unica-radio-size='l']) {
+    --_binary-box: 24px;
+  }
+
+  /* Attached indicators follow checkedness on the input, including writes before React commits. */
+  .unica-binary-indicator:where(
+    .unica-binary-native:checked + *,
+    .unica-binary-native[type='checkbox']:indeterminate + *,
+    [data-unica-checkbox-indeterminate],
+    :not(.unica-binary-native + *):is([data-unica-checkbox-checked], [data-unica-radio-checked])
+  ) {
+    background: var(--_binary-fill);
+    border-color: var(--_binary-fill);
+  }
+
+  :where(
+      .unica-binary-control:not([data-unica-binary-readonly]):is(
+          :hover,
+          [data-unica-binary-external-hover]
+        )
+    )
+    > :where(.unica-binary-target)
+    > .unica-binary-indicator {
+    --_binary-edge: var(--_binary-border-hover);
+    --_binary-fill: var(--accent-solid-hover);
+  }
+
+  :where(
+      .unica-binary-control:not([data-unica-binary-readonly]):is(
+          :active,
+          [data-unica-binary-external-active]
+        )
+    )
+    > :where(.unica-binary-target)
+    > .unica-binary-indicator {
+    --_binary-well: var(--bg-surface-raised);
+    --_binary-edge: var(--fg-secondary);
+    --_binary-fill: var(--accent-solid-active);
+  }
+
+  :where(.unica-binary-control[data-unica-binary-status='danger'])
+    > :where(.unica-binary-target)
+    > .unica-binary-indicator {
+    border-color: var(--_binary-danger-edge);
+    outline: 1px solid var(--_binary-danger-edge);
+  }
+
+  .unica-binary-indicator:where(
+    .unica-binary-native:disabled + *,
+    [data-unica-checkbox-disabled],
+    [data-unica-radio-disabled]
+  ) {
+    background: var(--bg-surface-subtle);
+    border-color: var(--border-default);
+    color: var(--fg-disabled);
+    outline: none;
+  }
+
+  .unica-binary-native:focus-visible + :is(.unica-binary-indicator, .unica-switch-indicator) {
+    outline: 2px solid var(--focus-ring-color);
+    outline-offset: 2px;
+  }
+
+  .unica-binary-indicator[hidden] {
+    display: none;
+  }
+
+  @media (pointer: coarse) {
+    .unica-binary-control {
+      --_binary-target-minimum: 44px;
+    }
+  }
+
+  @media (forced-colors: active) {
+    .unica-binary-indicator {
+      --_binary-well: Canvas;
+      --_binary-edge: ButtonText;
+      --_binary-fill: Highlight;
+      --_binary-danger-edge: CanvasText;
+      forced-color-adjust: none;
+      color: HighlightText;
+    }
+
+    .unica-binary-indicator:where(
+      .unica-binary-native:disabled + *,
+      [data-unica-checkbox-disabled],
+      [data-unica-radio-disabled]
+    ) {
+      background: Canvas;
+      border-color: GrayText;
+      color: GrayText;
+    }
+
+    .unica-binary-native:focus-visible + :is(.unica-binary-indicator, .unica-switch-indicator) {
+      outline-color: Highlight;
+    }
+  }
+}

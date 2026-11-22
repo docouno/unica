@@ -1,0 +1,173 @@
+@layer unica.components {
+  .unica-switch-indicator {
+    --_switch-width: 44px;
+    --_switch-height: 24px;
+    --_switch-thumb-size: 20px;
+    --_switch-glyph-size: 16px;
+    --_switch-rest-fill: var(--_switch-track-off);
+    --_switch-rest-edge: var(--_binary-border);
+    --_switch-selected-fill: var(--_switch-track-on);
+    --_switch-selected-edge: var(--accent-signal);
+    position: relative;
+    display: inline-flex;
+    flex: none;
+    inline-size: var(--_switch-width);
+    block-size: var(--_switch-height);
+    border: 1px solid var(--_switch-rest-edge);
+    border-radius: var(--radius-full);
+    background: var(--_switch-rest-fill);
+    pointer-events: none;
+  }
+
+  .unica-switch-indicator[data-unica-switch-size='s'] {
+    --_switch-width: 40px;
+    --_switch-height: 22px;
+    --_switch-thumb-size: 18px;
+    --_switch-glyph-size: 14px;
+  }
+
+  .unica-switch-indicator[data-unica-switch-size='l'] {
+    --_switch-width: 52px;
+    --_switch-height: 28px;
+    --_switch-thumb-size: 24px;
+    --_switch-glyph-size: 20px;
+  }
+
+  .unica-switch-thumb {
+    position: absolute;
+    inset-inline-start: 1px;
+    inset-block-start: 1px;
+    display: grid;
+    place-items: center;
+    inline-size: var(--_switch-thumb-size);
+    block-size: var(--_switch-thumb-size);
+    border-radius: var(--radius-full);
+    background: var(--_switch-thumb-bg);
+    color: var(--_switch-track-on);
+    transition: inset-inline-start var(--_switch-travel-duration) ease-out;
+  }
+
+  .unica-switch-thumb-icon {
+    display: grid;
+    place-items: center;
+    font-size: var(--_switch-glyph-size);
+    line-height: 1;
+  }
+
+  .unica-switch-thumb-icon > :where(svg, img) {
+    inline-size: var(--_switch-glyph-size);
+    block-size: var(--_switch-glyph-size);
+  }
+
+  .unica-switch-indicator:where(
+    .unica-binary-native:checked + *,
+    [data-unica-switch-checked]:not(.unica-binary-native + *)
+  ) {
+    background: var(--_switch-selected-fill);
+    border-color: var(--_switch-selected-edge);
+  }
+
+  .unica-switch-indicator:where(
+      .unica-binary-native:checked + *,
+      [data-unica-switch-checked]:not(.unica-binary-native + *)
+    )
+    > .unica-switch-thumb {
+    inset-inline-start: calc(100% - var(--_switch-thumb-size) - 1px);
+  }
+
+  :where(
+      .unica-binary-control:not([data-unica-binary-readonly]):is(
+          :hover,
+          [data-unica-binary-external-hover]
+        )
+    )
+    > :where(.unica-binary-target)
+    > .unica-switch-indicator:where(:not([data-unica-switch-loading])) {
+    --_switch-rest-fill: var(--_switch-track-off-hover);
+    --_switch-rest-edge: var(--_binary-border-hover);
+    --_switch-selected-fill: var(--_switch-track-on-hover);
+  }
+
+  :where(
+      .unica-binary-control:not([data-unica-binary-readonly]):is(
+          :active,
+          [data-unica-binary-external-active]
+        )
+    )
+    > :where(.unica-binary-target)
+    > .unica-switch-indicator:where(:not([data-unica-switch-loading])) {
+    --_switch-rest-fill: var(--_switch-track-off-hover);
+    --_switch-rest-edge: var(--fg-secondary);
+    --_switch-selected-fill: var(--_switch-track-on-active);
+  }
+
+  .unica-switch-indicator[data-unica-switch-loading] .unica-switch-thumb-icon > svg {
+    animation: unica-switch-spin 800ms linear infinite;
+  }
+
+  .unica-switch-indicator:where(.unica-binary-native:disabled + *, [data-unica-switch-disabled]) {
+    background: var(--bg-surface-subtle);
+    border-color: var(--border-default);
+  }
+
+  .unica-switch-indicator:where(.unica-binary-native:disabled + *, [data-unica-switch-disabled])
+    > .unica-switch-thumb {
+    background: var(--fg-disabled);
+  }
+
+  .unica-switch-indicator:where(.unica-binary-native:disabled + *, [data-unica-switch-disabled])
+    .unica-switch-thumb-icon,
+  .unica-switch-indicator[hidden] {
+    display: none;
+  }
+
+  @keyframes unica-switch-spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .unica-switch-thumb {
+      transition: none;
+    }
+
+    .unica-switch-indicator[data-unica-switch-loading] .unica-switch-thumb-icon > svg {
+      animation: none;
+    }
+  }
+
+  @media (forced-colors: active) {
+    .unica-switch-indicator {
+      --_switch-rest-fill: Canvas;
+      --_switch-rest-edge: ButtonText;
+      --_switch-selected-fill: Highlight;
+      --_switch-selected-edge: Highlight;
+      forced-color-adjust: none;
+    }
+
+    .unica-switch-thumb {
+      background: ButtonText;
+      color: Canvas;
+    }
+
+    .unica-switch-indicator:where(
+        .unica-binary-native:checked + *,
+        [data-unica-switch-checked]:not(.unica-binary-native + *)
+      )
+      > .unica-switch-thumb {
+      background: HighlightText;
+      color: Highlight;
+    }
+
+    .unica-switch-indicator:where(.unica-binary-native:disabled + *, [data-unica-switch-disabled]) {
+      background: Canvas;
+      border-color: GrayText;
+    }
+
+    .unica-switch-indicator:where(.unica-binary-native:disabled + *, [data-unica-switch-disabled])
+      > .unica-switch-thumb {
+      background: GrayText;
+    }
+  }
+}

@@ -2,6 +2,7 @@ import { FormField } from '../prototypes/form-field/form-field.proto.js';
 import {
   Badge,
   Blockquote,
+  Checkbox,
   Code,
   Divider,
   Icon,
@@ -39,7 +40,6 @@ import {
   PopoverTitle,
 } from '../prototypes/popover/popover.proto.js';
 import { Listbox, SelectPanel } from '../prototypes/select/select.proto.js';
-import { Checkbox } from '../prototypes/binary-controls/binary-controls.proto.js';
 import { Tabs, TabsContent, TabsList, TabsTab } from '../prototypes/tabs/tabs.proto.js';
 import {
   Breadcrumb,
@@ -457,7 +457,7 @@ function EditorScene(): ReactElement {
                 <Checkbox
                   size="s"
                   checked={draftPinned}
-                  onChange={(event) => setDraftPinned(event.currentTarget.checked)}
+                  onCheckedChange={setDraftPinned}
                   label="Pin to verified revision (v14)"
                 />
               </form>

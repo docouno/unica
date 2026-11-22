@@ -1,0 +1,36 @@
+@layer unica.components {
+  .unica-checkbox-indicator {
+    border-radius: min(var(--radius-xs), 25%);
+  }
+
+  .unica-checkbox-indicator > svg {
+    position: absolute;
+    inline-size: 80%;
+    block-size: 80%;
+    visibility: hidden;
+  }
+
+  .unica-checkbox-indicator:where(
+      .unica-binary-native:checked + *,
+      [data-unica-checkbox-checked]:not(.unica-binary-native + *)
+    )
+    > .unica-checkbox-check {
+    visibility: visible;
+  }
+
+  .unica-checkbox-indicator:where(
+      .unica-binary-native:indeterminate + *,
+      [data-unica-checkbox-indeterminate]
+    )
+    > .unica-checkbox-check {
+    visibility: hidden;
+  }
+
+  .unica-checkbox-indicator:where(
+      .unica-binary-native:indeterminate + *,
+      [data-unica-checkbox-indeterminate]
+    )
+    > .unica-checkbox-minus {
+    visibility: visible;
+  }
+}

@@ -12,10 +12,9 @@ import {
   TrashIcon,
 } from '@phosphor-icons/react';
 import { defineComponent } from '../../workbench/types.js';
-import { Checkbox } from '../../prototypes/binary-controls/binary-controls.proto.js';
 import { IconButton } from '../../prototypes/button/button.proto.js';
 import { Card } from '../../prototypes/card/card.proto.js';
-import { Icon, Link, Text, Input } from '@docouno/unica';
+import { Checkbox, Icon, Input, Link, Text } from '@docouno/unica';
 import { ContextMenu } from '../../prototypes/menu/context-menu.proto.js';
 import type { MenuEntry } from '../../prototypes/menu/menu.entries.js';
 import { MenuPreview } from '../../prototypes/menu/menu.proto.js';
@@ -167,7 +166,7 @@ function NativeBehavior(): ReactElement {
         size="s"
         label="Use document actions for selected text"
         checked={allowSelection}
-        onChange={(event) => setAllowSelection(event.currentTarget.checked)}
+        onCheckedChange={setAllowSelection}
       />
       <ContextMenu
         label="Release notes actions"
