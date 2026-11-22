@@ -1,10 +1,10 @@
 import type { AriaAttributes, ComponentPropsWithRef } from 'react';
-import type { TEXT_ALIGN } from '../../consts.js';
+import type { ORIENTATION, TEXT_ALIGN } from '../../consts.js';
 import type { DataAttributeValue } from '../../core/passiveRoot.js';
 import type { ExactAxisSubset } from '../../types.js';
-import type { DIVIDER_LABEL_POSITION, DIVIDER_ORIENTATION } from './consts.js';
+import type { DIVIDER_LABEL_POSITION } from './consts.js';
 
-export type DividerOrientation = (typeof DIVIDER_ORIENTATION)[keyof typeof DIVIDER_ORIENTATION];
+export type DividerOrientation = (typeof ORIENTATION)[keyof typeof ORIENTATION];
 
 export type DividerLabelPosition = ExactAxisSubset<
   typeof TEXT_ALIGN,

@@ -1,5 +1,4 @@
-import { Divider } from '@docouno/unica';
-import { Card } from '../../../src/prototypes/card/card.proto.js';
+import { Card, Divider } from '@docouno/unica';
 
 const phrase = 'or continue with your organization’s email address';
 

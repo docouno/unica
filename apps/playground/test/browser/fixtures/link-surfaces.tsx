@@ -1,7 +1,6 @@
-import { Alert, Link, Text } from '@docouno/unica';
+import { Alert, Card, Link, Text } from '@docouno/unica';
 import type { ComponentProps, ReactElement } from 'react';
 import { AppShell } from '../../../src/prototypes/app-shell/app-shell.proto.js';
-import { Card } from '../../../src/prototypes/card/card.proto.js';
 import { unicaWorkbenchBase } from '../../../src/unica.workbench.shared.js';
 
 const statuses = ['neutral', 'info', 'success', 'warning', 'danger'] as const;

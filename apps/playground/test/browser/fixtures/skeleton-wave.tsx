@@ -1,7 +1,6 @@
-import { Skeleton, SkeletonText } from '@docouno/unica';
+import { Card, Skeleton, SkeletonText } from '@docouno/unica';
 import { useRef } from 'react';
 import type { ReactElement } from 'react';
-import { Card } from '../../../src/prototypes/card/card.proto.js';
 import { PopoverContent } from '../../../src/prototypes/popover/popover.proto.js';
 
 export default function SkeletonWaveFixture(): ReactElement {

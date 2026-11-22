@@ -3,8 +3,7 @@ import { useId } from 'react';
 import type { ReactElement } from 'react';
 import { defineComponent } from '../../workbench/types.js';
 import { Button } from '../../prototypes/button/button.proto.js';
-import { Card } from '../../prototypes/card/card.proto.js';
-import { Checkbox, Input, Text } from '@docouno/unica';
+import { Card, Checkbox, Input, Text } from '@docouno/unica';
 import {
   PopoverBody,
   PopoverContent,

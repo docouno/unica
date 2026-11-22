@@ -10,8 +10,7 @@ import {
   UsersIcon,
 } from '@phosphor-icons/react';
 import { defineComponent } from '../../workbench/types.js';
-import { Card } from '../../prototypes/card/card.proto.js';
-import { Input, Text } from '@docouno/unica';
+import { Card, Input, Text } from '@docouno/unica';
 import { PopoverContent } from '../../prototypes/popover/popover.proto.js';
 import { Tabs, TabsContent, TabsList, TabsTab } from '../../prototypes/tabs/tabs.proto.js';
 import type { TabsListProps, TabsProps, TabsTabProps } from '../../prototypes/tabs/tabs.proto.js';

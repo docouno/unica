@@ -1,4 +1,4 @@
-import { Link } from '@docouno/unica';
+import { Card, CardMedia, Link } from '@docouno/unica';
 import { useRef, useState } from 'react';
 import { folioSceneHref } from './folio/folio.routes.js';
 import type { ComponentProps, ReactElement } from 'react';
@@ -15,7 +15,6 @@ import { Button, IconButton } from '../prototypes/button/button.proto.js';
 import { DatePicker, DateRangePicker } from '../prototypes/date-picker/date-picker.proto.js';
 import { dateLabel, dateObject } from '../prototypes/date-picker/date-utils.proto.js';
 import type { DateRange } from '../prototypes/date-picker/date-utils.proto.js';
-import { Card, CardMedia } from '../prototypes/card/card.proto.js';
 import { ChipGroup } from '../prototypes/chip/chip.proto.js';
 import { Checkbox, Progress, Switch } from '@docouno/unica';
 import { ContextMenu } from '../prototypes/menu/context-menu.proto.js';

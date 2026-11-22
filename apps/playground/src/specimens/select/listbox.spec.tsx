@@ -2,7 +2,7 @@ import { size, disabled, readOnly, toggle, eventProp } from '../control-props.js
 import { useState } from 'react';
 import type { ReactElement } from 'react';
 import { defineComponent } from '../../workbench/types.js';
-import { Card } from '../../prototypes/card/card.proto.js';
+import { Card } from '@docouno/unica';
 import { Listbox, SelectPanel } from '../../prototypes/select/select.proto.js';
 import { regionOptions, roleOptions, simpleOptions } from '../../prototypes/select/select.data.js';
 import { Study, StudyNote } from '../../prototypes/select/select.examples.js';

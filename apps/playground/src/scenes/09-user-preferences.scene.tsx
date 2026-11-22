@@ -1,4 +1,4 @@
-import { Checkbox, Kbd, KbdGroup, Radio, RadioGroup, Text } from '@docouno/unica';
+import { Card, Checkbox, Kbd, KbdGroup, Radio, RadioGroup, Text } from '@docouno/unica';
 import { useId, useRef, useState } from 'react';
 import type { ReactElement } from 'react';
 import { defineScene } from '../workbench/types.js';
@@ -13,7 +13,6 @@ import {
 import { Badge } from '@docouno/unica';
 import { Breadcrumb, BreadcrumbPage } from '../prototypes/breadcrumb/breadcrumb.proto.js';
 import { Button } from '../prototypes/button/button.proto.js';
-import { Card } from '../prototypes/card/card.proto.js';
 import {
   Accordion,
   AccordionContent,

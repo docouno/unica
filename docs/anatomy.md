@@ -22,12 +22,12 @@ Never assign `<Name>.displayName = '<Name>'` on an exported component function. 
 
 ## Master Axis Vocabularies (`src/consts.ts`)
 
-`packages/ui/src/consts.ts` defines the **9 shared axes** used across multiple shipped families or package-wide layout contracts:
+`packages/ui/src/consts.ts` defines the **10 shared axes** used across multiple shipped families or package-wide layout contracts:
 
-- **Shared component axes (7):** `SIZE`, `STATUS`, `MARK_STATUS`, `TEXT_COLOR`, `TYPOGRAPHY_STEP`, `TYPOGRAPHY_WEIGHT`, `TEXT_ALIGN`.
+- **Shared component axes (8):** `SIZE`, `STATUS`, `MARK_STATUS`, `TEXT_COLOR`, `TYPOGRAPHY_STEP`, `TYPOGRAPHY_WEIGHT`, `TEXT_ALIGN`, `ORIENTATION` (Card and Divider).
 - **Package layout scales (2):** numeric `SPACING` (`[0, 2, 4, 8, 12, 16, 24, 32, 48, 64] as const` → `Spacing`) and `BREAKPOINT` (`mobile | tablet | desktop | wide`).
 
-Single-family axes (`ORIENTATION` in `Divider`, `WIDTH` in `Indicator`, overlay placement axes in `core/overlay/positioning.ts`) stay local until a second shipped family consumes them.
+Single-family axes (`WIDTH` in `Indicator`, overlay placement axes in `core/overlay/positioning.ts`) stay local until a second shipped family consumes them.
 
 String subsets are constrained against the master dictionaries using `ExactAxisSubset` from `packages/ui/src/types.ts`:
 

@@ -21,7 +21,7 @@
   min-inline-size: 0;
 }
 
-.disclosure-study-card.card-proto {
+.disclosure-study-card {
   inline-size: min(100%, 34rem);
 }
 
