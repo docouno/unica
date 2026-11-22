@@ -54,15 +54,15 @@
 
 .app-shell-proto[data-top-rail][data-left-rail] .app-shell-stage {
   border-block-start: 1px solid var(--border-default);
-  border-start-start-radius: var(--shell-stage-outer-radius);
+  border-start-start-radius: var(--_shell-stage-outer-radius);
 }
 
 .app-shell-proto[data-top-rail][data-left-rail] .app-shell-stage > :first-child {
-  border-start-start-radius: var(--shell-stage-inner-radius);
+  border-start-start-radius: var(--_shell-stage-inner-radius);
 }
 
 .app-shell-proto[data-top-rail][data-left-rail] .app-shell-left-region .app-shell-aside {
-  border-start-start-radius: var(--shell-stage-inner-radius);
+  border-start-start-radius: var(--_shell-stage-inner-radius);
 }
 
 .app-shell-left-region,
@@ -667,7 +667,7 @@
     inset-block: 0;
     inset-inline-end: 0;
     max-inline-size: calc(100% - var(--space-16));
-    box-shadow: var(--overlay-shadow-drawer);
+    box-shadow: var(--_overlay-shadow-drawer);
   }
 
   .app-shell-right-region[data-open] {
@@ -706,7 +706,7 @@
     inset-block: 0;
     inset-inline-start: 0;
     max-inline-size: calc(100% - var(--space-16));
-    box-shadow: var(--overlay-shadow-drawer);
+    box-shadow: var(--_overlay-shadow-drawer);
   }
 
   .app-shell-left-region[data-open],

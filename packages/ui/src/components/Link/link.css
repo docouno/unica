@@ -4,7 +4,7 @@
     --_link-line-height: initial;
     --_link-context-active-ink: color-mix(
       in srgb,
-      var(--action-context-ink) var(--btn-context-ink-strength),
+      var(--action-context-ink) var(--_btn-context-ink-strength),
       var(--fg-primary)
     );
     color: var(--accent-soft-fg);

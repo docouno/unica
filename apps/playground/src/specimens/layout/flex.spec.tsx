@@ -82,7 +82,7 @@ export default defineComponent({
       title: 'Main-axis and cross-axis alignment',
       rows: 'justify',
       cols: 'align',
-      fixed: { gap: 's' },
+      fixed: { gap: '8' },
     },
   ],
   cases: [
@@ -93,7 +93,7 @@ export default defineComponent({
       width: 168,
       render: ({ ctx }) => (
         <LayoutExample>
-          <Flex {...ctx.subject} gap="m" wrap="wrap" className="layout-flow">
+          <Flex {...ctx.subject} gap={16} wrap="wrap" className="layout-flow">
             <FlowItems />
           </Flex>
         </LayoutExample>
@@ -107,7 +107,7 @@ export default defineComponent({
       caption: 'Tab reaches Draft, In review, and Ready in that order.',
       render: ({ ctx }) => (
         <LayoutExample>
-          <Flex {...ctx.subject} direction="row-reverse" gap="s" wrap="wrap">
+          <Flex {...ctx.subject} direction="row-reverse" gap={8} wrap="wrap">
             <button type="button">Draft</button>
             <button type="button">In review</button>
             <button type="button">Ready</button>
@@ -121,7 +121,7 @@ export default defineComponent({
       id: 'record-controls',
       title: 'Wrapping record actions',
       render: ({ ctx }) => (
-        <Flex {...ctx.subject} align="center" gap="s" wrap="wrap">
+        <Flex {...ctx.subject} align="center" gap={8} wrap="wrap">
           <button type="button">Open record</button>
           <button type="button">Download</button>
         </Flex>
@@ -129,7 +129,7 @@ export default defineComponent({
       code: `import '@docouno/unica/styles.css';
 import { Flex } from '@docouno/unica';
 
-<Flex align="center" gap="s" wrap="wrap">
+<Flex align="center" gap={8} wrap="wrap">
   <button type="button">Open record</button>
   <button type="button">Download</button>
 </Flex>`,

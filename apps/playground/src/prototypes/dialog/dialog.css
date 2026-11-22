@@ -36,7 +36,7 @@
   --dialog-gap: var(--space-16);
   --dialog-width: 36rem;
   --dialog-radius: var(--surface-l-radius);
-  --dialog-shadow: var(--overlay-shadow-modal);
+  --dialog-shadow: var(--_overlay-shadow-modal);
   --dialog-rule: color-mix(in srgb, var(--fg-primary) 15%, transparent);
   position: relative;
   display: flex;
@@ -45,11 +45,11 @@
   min-block-size: 0;
   inline-size: min(var(--dialog-width), 100%);
   max-block-size: 100%;
-  border: 1px solid var(--overlay-border);
+  border: 1px solid var(--_overlay-border);
   border-radius: var(--dialog-radius);
   background: var(--bg-overlay);
   color: var(--fg-primary);
-  backdrop-filter: var(--overlay-backdrop);
+  backdrop-filter: var(--_overlay-backdrop);
   box-shadow: var(--dialog-shadow);
   font: var(--text-size-body-s) / var(--text-size-body-s-lh) var(--font-family-base);
   animation: dialog-surface-enter var(--dialog-duration) cubic-bezier(0.2, 0.7, 0.25, 1);
@@ -66,12 +66,12 @@
 }
 .dialog-surface::before {
   inset: 0;
-  box-shadow: var(--overlay-rim);
-  mask-image: var(--overlay-rim-mask);
+  box-shadow: var(--_overlay-rim);
+  mask-image: var(--_overlay-rim-mask);
 }
 .dialog-surface::after {
   inset: 0;
-  background: var(--motif-corner-ticks);
+  background: var(--_motif-corner-ticks);
 }
 
 .dialog-surface[data-dialog-size='s'] {
@@ -220,7 +220,7 @@
   --dialog-duration: 200ms;
 }
 .dialog-layer:not([data-dialog-side='center']) > .dialog-placement > .dialog-surface {
-  --dialog-shadow: var(--overlay-shadow-drawer);
+  --dialog-shadow: var(--_overlay-shadow-drawer);
   --dialog-safe-start: env(safe-area-inset-left);
   --dialog-safe-end: env(safe-area-inset-right);
 }
@@ -230,13 +230,13 @@
 }
 .dialog-layer[data-dialog-side='start']:dir(ltr) > .dialog-placement > .dialog-surface,
 .dialog-layer[data-dialog-side='end']:dir(rtl) > .dialog-placement > .dialog-surface {
-  --dialog-shadow: var(--overlay-shadow-drawer-right, var(--overlay-shadow-drawer));
+  --dialog-shadow: var(--_overlay-shadow-drawer-right, var(--_overlay-shadow-drawer));
 }
 .dialog-layer[data-dialog-side='top'] > .dialog-placement > .dialog-surface {
-  --dialog-shadow: var(--overlay-shadow-drawer-down, var(--overlay-shadow-drawer));
+  --dialog-shadow: var(--_overlay-shadow-drawer-down, var(--_overlay-shadow-drawer));
 }
 .dialog-layer[data-dialog-side='bottom'] > .dialog-placement > .dialog-surface {
-  --dialog-shadow: var(--overlay-shadow-drawer-up, var(--overlay-shadow-drawer));
+  --dialog-shadow: var(--_overlay-shadow-drawer-up, var(--_overlay-shadow-drawer));
 }
 .dialog-layer[data-dialog-side='start'] > .dialog-placement > .dialog-surface,
 .dialog-layer[data-dialog-side='end'] > .dialog-placement > .dialog-surface {
@@ -255,7 +255,7 @@
 .dialog-layer:is([data-dialog-side='start'], [data-dialog-side='end'])
   > .dialog-placement
   > .dialog-surface::before {
-  box-shadow: var(--overlay-rim-drawer-inline, var(--overlay-rim));
+  box-shadow: var(--_overlay-rim-drawer-inline, var(--_overlay-rim));
   mask-image: none;
 }
 .dialog-layer:is([data-dialog-side='start']:dir(ltr), [data-dialog-side='end']:dir(rtl))

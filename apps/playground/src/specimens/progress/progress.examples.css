@@ -75,11 +75,11 @@
   inline-size: 100%;
   max-inline-size: 480px;
   padding: var(--surface-m-padding);
-  border: 1px solid var(--overlay-border);
+  border: 1px solid var(--_overlay-border);
   border-radius: var(--surface-m-radius);
   background: var(--bg-overlay);
-  backdrop-filter: var(--overlay-backdrop);
-  box-shadow: var(--overlay-rim), var(--overlay-shadow-popover);
+  backdrop-filter: var(--_overlay-backdrop);
+  box-shadow: var(--_overlay-rim), var(--_overlay-shadow-popover);
 }
 
 .activity-control-slot {

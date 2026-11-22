@@ -58,7 +58,7 @@
   justify-content: center;
   inline-size: var(--binary-box);
   block-size: var(--binary-box);
-  border: 1px solid var(--binary-error-edge, var(--binary-border));
+  border: 1px solid var(--binary-error-edge, var(--_binary-border));
   border-radius: min(var(--radius-xs), 25%);
   background: var(--control-bg);
   color: var(--fg-on-accent);
@@ -106,7 +106,7 @@
     [data-preview='hover']
   )
   .binary-indicator {
-  border-color: var(--binary-error-edge, var(--binary-border-hover));
+  border-color: var(--binary-error-edge, var(--_binary-border-hover));
 }
 
 .binary-control:not([data-readonly]):not(:has(:disabled)):is(
@@ -287,9 +287,9 @@
   flex: 0 0 auto;
   inline-size: var(--switch-width);
   block-size: var(--switch-height);
-  border: 1px solid var(--binary-border);
+  border: 1px solid var(--_binary-border);
   border-radius: var(--radius-full);
-  background: var(--switch-track-off);
+  background: var(--_switch-track-off);
   pointer-events: none;
 }
 .switch-indicator[data-size='s'] {
@@ -313,9 +313,9 @@
   inline-size: var(--switch-thumb-size);
   block-size: var(--switch-thumb-size);
   border-radius: var(--radius-full);
-  background: var(--switch-thumb-bg);
-  color: var(--switch-track-on);
-  transition: inset-inline-start var(--switch-travel-duration, 0ms) ease-out;
+  background: var(--_switch-thumb-bg);
+  color: var(--_switch-track-on);
+  transition: inset-inline-start var(--_switch-travel-duration, 0ms) ease-out;
 }
 .switch-thumb > svg {
   inline-size: var(--switch-glyph-size);
@@ -323,7 +323,7 @@
 }
 .binary-native:checked + .switch-indicator,
 .switch-indicator[data-checked] {
-  background: var(--switch-track-on);
+  background: var(--_switch-track-on);
   border-color: var(--accent-signal);
 }
 .binary-native:checked + .switch-indicator > .switch-thumb,
@@ -336,8 +336,8 @@
     [data-preview='hover']
   )
   .switch-indicator {
-  background: var(--switch-track-off-hover);
-  border-color: var(--binary-border-hover);
+  background: var(--_switch-track-off-hover);
+  border-color: var(--_binary-border-hover);
 }
 .binary-control:not([data-readonly]):not([data-busy]):not(:has(:disabled)):is(
     :hover,
@@ -346,7 +346,7 @@
   )
   .binary-native:checked
   + .switch-indicator {
-  background: var(--switch-track-on-hover);
+  background: var(--_switch-track-on-hover);
   border-color: var(--accent-signal);
 }
 .binary-control:not([data-readonly]):not([data-busy]):not(:has(:disabled)):is(
@@ -355,7 +355,7 @@
     [data-preview='active']
   )
   .switch-indicator {
-  background: var(--switch-track-off-hover);
+  background: var(--_switch-track-off-hover);
   border-color: var(--fg-secondary);
 }
 .binary-control:not([data-readonly]):not([data-busy]):not(:has(:disabled)):is(
@@ -365,7 +365,7 @@
   )
   .binary-native:checked
   + .switch-indicator {
-  background: var(--switch-track-on-active);
+  background: var(--_switch-track-on-active);
   border-color: var(--accent-signal);
 }
 .binary-native:focus-visible + .switch-indicator,

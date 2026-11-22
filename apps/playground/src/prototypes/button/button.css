@@ -14,19 +14,19 @@
   --button-text: var(--accent-soft-fg);
   --button-edge: var(--accent-border);
   --button-bg: var(--button-solid);
-  --button-fill: var(--btn-primary-fill);
-  --button-shadow: var(--btn-primary-shadow);
+  --button-fill: var(--_btn-primary-fill);
+  --button-shadow: var(--_btn-primary-shadow);
   --button-rim: var(--button-edge);
-  --button-border-width: var(--btn-primary-border-width);
+  --button-border-width: var(--_btn-primary-border-width);
   --button-hover-bg: var(--button-solid-hover);
-  --button-hover-fill: var(--btn-primary-fill-hover);
-  --button-hover-shadow: var(--btn-primary-shadow-hover);
+  --button-hover-fill: var(--_btn-primary-fill-hover);
+  --button-hover-shadow: var(--_btn-primary-shadow-hover);
   --button-hover-rim: var(--button-rim);
   --button-active-bg: var(--button-solid-active);
-  --button-active-fill: var(--btn-primary-fill-active);
-  --button-active-shadow: var(--btn-primary-shadow-active);
+  --button-active-fill: var(--_btn-primary-fill-active);
+  --button-active-shadow: var(--_btn-primary-shadow-active);
   --button-active-rim: var(--button-rim);
-  --button-press: var(--btn-primary-press-transform);
+  --button-press: var(--_btn-primary-press-transform);
   --kbd-fg: currentColor;
   --kbd-bg: transparent;
   --kbd-border: color-mix(in oklab, currentColor 28%, transparent);
@@ -56,16 +56,16 @@
   vertical-align: middle;
   cursor: pointer;
   transition:
-    background-color var(--btn-state-duration),
-    box-shadow var(--btn-state-duration),
-    transform var(--btn-state-duration);
+    background-color var(--_btn-state-duration),
+    box-shadow var(--_btn-state-duration),
+    transform var(--_btn-state-duration);
   -webkit-tap-highlight-color: transparent;
 }
 
 .button-proto[data-size='s'] {
   --button-height: var(--size-s-height);
   --button-radius: var(--size-s-radius);
-  --button-pad: var(--button-s-padding-x);
+  --button-pad: var(--_button-s-padding-x);
   --button-pad-y: var(--size-s-padding-y);
   --button-gap: var(--size-s-gap);
   --button-icon: var(--size-s-icon);
@@ -97,27 +97,27 @@
 .button-proto[data-tone='neutral']:not([data-variant='primary']) {
   --_button-context-ink: color-mix(
     in srgb,
-    var(--action-context-ink) var(--btn-context-ink-strength),
+    var(--action-context-ink) var(--_btn-context-ink-strength),
     var(--fg-primary)
   );
   --_button-context-bg: color-mix(
     in srgb,
-    var(--action-context-ink) var(--btn-context-plate-tint),
+    var(--action-context-ink) var(--_btn-context-plate-tint),
     transparent
   );
   --_button-context-bg-hover: color-mix(
     in srgb,
-    var(--action-context-ink) var(--btn-context-hover-tint),
+    var(--action-context-ink) var(--_btn-context-hover-tint),
     transparent
   );
   --_button-context-bg-active: color-mix(
     in srgb,
-    var(--action-context-ink) var(--btn-context-active-tint),
+    var(--action-context-ink) var(--_btn-context-active-tint),
     transparent
   );
   --_button-context-edge: color-mix(
     in srgb,
-    var(--action-context-ink) var(--btn-context-border-tint),
+    var(--action-context-ink) var(--_btn-context-border-tint),
     transparent
   );
   --_button-context-disabled-bg: color-mix(in srgb, var(--action-context-ink) 4%, transparent);
@@ -126,13 +126,13 @@
   --button-text: var(--_button-context-ink, var(--fg-primary));
   --button-tint: var(--_button-context-bg, var(--bg-surface-raised));
   --button-edge: var(--_button-context-edge, var(--border-strong));
-  --button-secondary-bg: var(--_button-context-bg, var(--btn-secondary-bg));
-  --button-secondary-bg-hover: var(--_button-context-bg-hover, var(--btn-secondary-bg-hover));
+  --button-secondary-bg: var(--_button-context-bg, var(--_btn-secondary-bg));
+  --button-secondary-bg-hover: var(--_button-context-bg-hover, var(--_btn-secondary-bg-hover));
   --button-secondary-bg-active: var(
     --_button-context-bg-active,
-    color-mix(in oklab, var(--btn-secondary-bg-hover) 96%, var(--button-text))
+    color-mix(in oklab, var(--_btn-secondary-bg-hover) 96%, var(--button-text))
   );
-  --button-secondary-border: var(--_button-context-edge, var(--btn-secondary-border));
+  --button-secondary-border: var(--_button-context-edge, var(--_btn-secondary-border));
 }
 
 .button-proto[data-tone='danger'] {
@@ -157,30 +157,30 @@
   --button-fill: none;
   --button-hover-fill: none;
   --button-active-fill: none;
-  --button-shadow: var(--btn-primary-contact-shadow);
-  --button-hover-shadow: var(--btn-primary-contact-shadow);
-  --button-active-shadow: var(--btn-primary-shadow-active);
-  --button-press: var(--btn-primary-press-transform);
+  --button-shadow: var(--_btn-primary-contact-shadow);
+  --button-hover-shadow: var(--_btn-primary-contact-shadow);
+  --button-active-shadow: var(--_btn-primary-shadow-active);
+  --button-press: var(--_btn-primary-press-transform);
 }
 
 .button-proto[data-variant='secondary'] {
-  --button-bg: var(--button-secondary-bg, var(--btn-secondary-bg));
+  --button-bg: var(--button-secondary-bg, var(--_btn-secondary-bg));
   --button-fill: none;
-  --button-rim: var(--button-secondary-border, var(--btn-secondary-border));
-  --button-border-width: var(--btn-secondary-border-width);
-  --button-shadow: var(--btn-secondary-shadow);
-  --button-hover-bg: var(--button-secondary-bg-hover, var(--btn-secondary-bg-hover));
+  --button-rim: var(--button-secondary-border, var(--_btn-secondary-border));
+  --button-border-width: var(--_btn-secondary-border-width);
+  --button-shadow: var(--_btn-secondary-shadow);
+  --button-hover-bg: var(--button-secondary-bg-hover, var(--_btn-secondary-bg-hover));
   --button-hover-fill: none;
   --button-hover-rim: var(--button-edge);
-  --button-hover-shadow: var(--btn-secondary-shadow-hover);
+  --button-hover-shadow: var(--_btn-secondary-shadow-hover);
   --button-active-bg: var(
     --button-secondary-bg-active,
-    color-mix(in oklab, var(--btn-secondary-bg-hover) 96%, var(--button-text))
+    color-mix(in oklab, var(--_btn-secondary-bg-hover) 96%, var(--button-text))
   );
   --button-active-fill: none;
   --button-active-rim: var(--button-edge);
-  --button-active-shadow: var(--btn-secondary-shadow-active);
-  --button-press: var(--btn-secondary-press-transform);
+  --button-active-shadow: var(--_btn-secondary-shadow-active);
+  --button-press: var(--_btn-secondary-press-transform);
 
   color: var(--button-text);
 }
@@ -208,11 +208,11 @@
 
 /* Open triggers use a quiet plate, while selected commands have an inset keyline. */
 .button-proto[aria-expanded='true'][data-variant='secondary'] {
-  --button-bg: var(--button-secondary-bg-hover, var(--btn-secondary-bg-hover));
+  --button-bg: var(--button-secondary-bg-hover, var(--_btn-secondary-bg-hover));
   --button-rim: var(--button-edge);
   --button-hover-bg: color-mix(
     in oklab,
-    var(--button-secondary-bg-hover, var(--btn-secondary-bg-hover)) 95%,
+    var(--button-secondary-bg-hover, var(--_btn-secondary-bg-hover)) 95%,
     var(--button-text)
   );
 }
@@ -225,14 +225,14 @@
 .button-proto[aria-pressed='true'][data-variant='primary'] {
   --button-bg: var(--button-solid-active);
   --button-fill: var(--button-active-fill);
-  --button-shadow: inset 0 calc(1px * var(--btn-material-depth))
-    calc(2px * var(--btn-material-depth)) var(--border-strong);
+  --button-shadow: inset 0 calc(1px * var(--_btn-material-depth))
+    calc(2px * var(--_btn-material-depth)) var(--border-strong);
   --button-hover-bg: color-mix(in oklab, var(--button-solid-active) 95%, var(--button-solid));
   --button-hover-fill: var(--button-active-fill);
-  --button-hover-shadow: inset 0 calc(2px * var(--btn-material-depth))
-    calc(3px * var(--btn-material-depth)) var(--border-strong);
-  --button-active-shadow: inset 0 calc(3px * var(--btn-material-depth))
-    calc(4px * var(--btn-material-depth)) var(--border-strong);
+  --button-hover-shadow: inset 0 calc(2px * var(--_btn-material-depth))
+    calc(3px * var(--_btn-material-depth)) var(--border-strong);
+  --button-active-shadow: inset 0 calc(3px * var(--_btn-material-depth))
+    calc(4px * var(--_btn-material-depth)) var(--border-strong);
   --button-press: none;
 }
 
@@ -241,7 +241,7 @@
   --button-rim: var(--button-edge);
   --button-shadow:
     inset 0 0 0 1px var(--button-edge),
-    inset 0 calc(2px * var(--btn-material-depth)) calc(2px * var(--btn-material-depth))
+    inset 0 calc(2px * var(--_btn-material-depth)) calc(2px * var(--_btn-material-depth))
       var(--border-subtle);
   --button-hover-bg: color-mix(in oklab, var(--button-tint) 95%, var(--button-text));
   --button-hover-rim: var(--button-edge);
@@ -256,7 +256,7 @@
 }
 
 .button-proto[data-variant='ghost'][data-tone='neutral']:where(:not([aria-pressed='true'])) {
-  --button-tint: var(--_button-context-bg, var(--btn-ghost-neutral-bg-hover));
+  --button-tint: var(--_button-context-bg, var(--_btn-ghost-neutral-bg-hover));
 }
 
 /* Pinned previews and real hover use the same recipe; touch never keeps a hover plate. */
@@ -305,7 +305,7 @@
     border-radius: inherit;
     background: radial-gradient(
       circle 72px at var(--button-light-x, 50%) var(--button-light-y, 50%),
-      var(--btn-primary-backlight-color),
+      var(--_btn-primary-backlight-color),
       transparent 70%
     );
     filter: blur(10px);

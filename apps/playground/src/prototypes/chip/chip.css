@@ -15,7 +15,7 @@
   min-inline-size: var(--chip-target);
   min-block-size: max(var(--chip-paint), var(--chip-target));
   max-inline-size: min(100%, var(--chip-max-width, 100%));
-  color: var(--chip-fg);
+  color: var(--_chip-fg);
   font: 500 var(--chip-font) / var(--chip-line-height) var(--font-family-base);
   vertical-align: middle;
   cursor: pointer;
@@ -56,13 +56,13 @@
   min-inline-size: 0;
   min-block-size: var(--chip-paint);
   padding-inline: var(--chip-padding);
-  border: var(--pill-border-width) solid var(--chip-border);
+  border: var(--_pill-border-width) solid var(--_chip-border);
   border-radius: var(--radius-full);
-  background: var(--chip-bg);
+  background: var(--_chip-bg);
   color: inherit;
   transition:
-    background-color var(--btn-state-duration) ease,
-    border-color var(--btn-state-duration) ease;
+    background-color var(--_btn-state-duration) ease,
+    border-color var(--_btn-state-duration) ease;
 }
 /* Reserve the selected width, while centering text-only resting labels. */
 .chip-proto[data-iconless]:not(:has(.chip-native-proto:checked)) .chip-face-proto {
@@ -82,9 +82,9 @@
   display: none;
 }
 .chip-native-proto:checked + .chip-face-proto {
-  border-color: var(--chip-selected-border);
-  background: var(--chip-selected-bg);
-  color: var(--chip-selected-fg);
+  border-color: var(--_chip-selected-border);
+  background: var(--_chip-selected-bg);
+  color: var(--_chip-selected-fg);
 }
 .chip-native-proto:checked + .chip-face-proto .chip-option-icon-proto {
   display: none;
@@ -100,25 +100,25 @@
 }
 @media (hover: hover) {
   .chip-proto:hover:has(.chip-native-proto:not(:disabled)) .chip-face-proto {
-    background: color-mix(in oklab, var(--chip-bg), var(--chip-fg) 8%);
+    background: color-mix(in oklab, var(--_chip-bg), var(--_chip-fg) 8%);
   }
   .chip-proto:hover:has(.chip-native-proto:checked:not(:disabled)) .chip-face-proto {
-    background: color-mix(in oklab, var(--chip-selected-bg), var(--chip-selected-fg) 8%);
+    background: color-mix(in oklab, var(--_chip-selected-bg), var(--_chip-selected-fg) 8%);
   }
 }
 .chip-proto[data-preview='hover']:has(.chip-native-proto:not(:disabled)) .chip-face-proto {
-  background: color-mix(in oklab, var(--chip-bg), var(--chip-fg) 8%);
+  background: color-mix(in oklab, var(--_chip-bg), var(--_chip-fg) 8%);
 }
 .chip-proto[data-preview='hover']:has(.chip-native-proto:checked:not(:disabled)) .chip-face-proto {
-  background: color-mix(in oklab, var(--chip-selected-bg), var(--chip-selected-fg) 8%);
+  background: color-mix(in oklab, var(--_chip-selected-bg), var(--_chip-selected-fg) 8%);
 }
 .chip-proto:has(.chip-native-proto:active:not(:disabled)) .chip-face-proto,
 .chip-proto[data-preview='active']:has(.chip-native-proto:not(:disabled)) .chip-face-proto {
-  background: color-mix(in oklab, var(--chip-bg), var(--chip-fg) 14%);
+  background: color-mix(in oklab, var(--_chip-bg), var(--_chip-fg) 14%);
 }
 .chip-proto:has(.chip-native-proto:active:checked:not(:disabled)) .chip-face-proto,
 .chip-proto[data-preview='active']:has(.chip-native-proto:checked:not(:disabled)) .chip-face-proto {
-  background: color-mix(in oklab, var(--chip-selected-bg), var(--chip-selected-fg) 14%);
+  background: color-mix(in oklab, var(--_chip-selected-bg), var(--_chip-selected-fg) 14%);
 }
 .chip-native-proto:focus-visible + .chip-face-proto,
 .chip-proto[data-preview='focus']:has(.chip-native-proto:not(:disabled)) .chip-face-proto {
@@ -129,10 +129,10 @@
   cursor: default;
 }
 .chip-native-proto:disabled + .chip-face-proto {
-  color: color-mix(in oklab, var(--chip-fg) 58%, var(--chip-bg));
+  color: color-mix(in oklab, var(--_chip-fg) 58%, var(--_chip-bg));
 }
 .chip-native-proto:disabled:checked + .chip-face-proto {
-  color: color-mix(in oklab, var(--chip-selected-fg) 62%, var(--chip-bg));
+  color: color-mix(in oklab, var(--_chip-selected-fg) 62%, var(--_chip-bg));
 }
 .chip-full-label-proto {
   position: fixed;

@@ -13,6 +13,23 @@
   --wb-stage-caption-lh: var(--text-size-caption-l-lh);
   --wb-stage-tag-size: var(--text-size-caption-m);
   --wb-stage-radius: var(--surface-m-radius);
+  --folio-auth-stage-aura: none;
+}
+
+.wb-artboard[data-theme='frost-dark'] {
+  --folio-auth-stage-aura: radial-gradient(
+    60% 50% at 50% 0%,
+    rgb(84 69 229 / 0.22) 0%,
+    transparent 100%
+  );
+}
+
+.wb-artboard[data-theme='frost-light'] {
+  --folio-auth-stage-aura: radial-gradient(
+    60% 50% at 50% 0%,
+    rgb(72 56 212 / 0.122) 0%,
+    transparent 100%
+  );
 }
 
 /* Full product scenes own the canvas edge and their internal gutters. */

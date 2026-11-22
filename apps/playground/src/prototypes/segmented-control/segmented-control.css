@@ -16,7 +16,7 @@
   max-inline-size: 100%;
   padding: var(--thumb-inset);
   border-radius: var(--segment-radius);
-  background: var(--segmented-rail-bg);
+  background: var(--_segmented-rail-bg);
   overflow: auto;
   overscroll-behavior-inline: contain;
   scroll-padding-inline: var(--thumb-inset);
@@ -95,13 +95,13 @@
   text-align: center;
   white-space: nowrap;
   transition:
-    background-color var(--segmented-state-duration),
-    color var(--segmented-state-duration);
+    background-color var(--_segmented-state-duration),
+    color var(--_segmented-state-duration);
 }
 
 .segment-proto > input:checked + .segment-proto-plate {
-  background: var(--segmented-thumb-bg);
-  box-shadow: var(--segmented-thumb-shadow);
+  background: var(--_segmented-thumb-bg);
+  box-shadow: var(--_segmented-thumb-shadow);
   color: var(--fg-primary);
 }
 
@@ -118,14 +118,14 @@
     .segment-proto:is(:hover, [data-preview='hover'])
     > input:checked:not(:disabled)
     + .segment-proto-plate {
-    background: color-mix(in srgb, var(--fg-primary) 3%, var(--segmented-thumb-bg));
+    background: color-mix(in srgb, var(--fg-primary) 3%, var(--_segmented-thumb-bg));
   }
 
   .segmented-control-proto:not([data-readonly])
     .segment-proto:is(:active, [data-preview='active'])
     > input:not(:disabled)
     + .segment-proto-plate {
-    background: color-mix(in srgb, var(--fg-primary) 10%, var(--segmented-rail-bg));
+    background: color-mix(in srgb, var(--fg-primary) 10%, var(--_segmented-rail-bg));
     color: var(--fg-primary);
   }
 
@@ -133,7 +133,7 @@
     .segment-proto:is(:active, [data-preview='active'])
     > input:checked:not(:disabled)
     + .segment-proto-plate {
-    background: color-mix(in srgb, var(--fg-primary) 6%, var(--segmented-thumb-bg));
+    background: color-mix(in srgb, var(--fg-primary) 6%, var(--_segmented-thumb-bg));
   }
 }
 
@@ -158,7 +158,7 @@
 }
 
 .segment-proto > input:checked:disabled + .segment-proto-plate {
-  background: color-mix(in srgb, var(--segmented-thumb-bg) 70%, var(--segmented-rail-bg));
+  background: color-mix(in srgb, var(--_segmented-thumb-bg) 70%, var(--_segmented-rail-bg));
 }
 
 .segmented-control-proto[data-readonly] .segment-proto {

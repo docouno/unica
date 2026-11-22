@@ -346,7 +346,7 @@ export function ContextBoundaryExamples(): ReactElement {
         <AlertDescription>
           The supporting action adapts to this surface. Explicit accent and danger actions keep
           their own palette. An explicit neutral Code keeps its own plate:{' '}
-          <Code tone="neutral">draft_id</Code>. These are independent appearance samples.
+          <Code status="neutral">draft_id</Code>. These are independent appearance samples.
         </AlertDescription>
         <div className="alert-context-state-list">
           <div className="alert-demo-actions">

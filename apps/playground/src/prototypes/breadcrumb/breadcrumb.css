@@ -100,8 +100,8 @@
   text-underline-offset: 0.2em;
   text-decoration-skip-ink: auto;
   transition:
-    color var(--btn-state-duration),
-    text-decoration-color var(--btn-state-duration);
+    color var(--_btn-state-duration),
+    text-decoration-color var(--_btn-state-duration);
 }
 
 .breadcrumb-proto-link[data-icon-only] {

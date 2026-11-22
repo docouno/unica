@@ -284,6 +284,10 @@
     }
   }
 
+  :where(.unica-box, .unica-flex, .unica-stack, .unica-grid, .unica-grid-item) {
+    min-inline-size: 0;
+  }
+
   :where(.unica-box:not([hidden])) {
     display: var(--_box-display, revert-layer);
   }
@@ -363,12 +367,12 @@
   :where(.unica-container) {
     box-sizing: border-box;
     inline-size: 100%;
-    max-inline-size: var(--_container-width, 960px);
-    padding-inline: min(var(--_container-gutter, var(--space-m)), 50%);
+    max-inline-size: var(--_container-width, var(--container-m));
+    padding-inline: min(var(--_container-gutter, var(--space-16)), 50%);
     margin-inline: auto;
   }
 
-  :where(.unica-container--start) {
+  :where(.unica-container[data-unica-container-align='start']) {
     margin-inline-start: 0;
   }
 }

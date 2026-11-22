@@ -1,24 +1,13 @@
 import { useId } from 'react';
 import type { CSSProperties, JSX } from 'react';
+import { cx, dataFlag } from '../../core/cx.js';
+import { warnOnce } from '../../core/devWarning.js';
+import { nonBlank, passiveIndicatorAttributes } from '../../core/passiveRoot.js';
 import { measure, percentLabel } from './measurement.js';
-import { nonBlank, passiveAttributes } from './passive.js';
-import type { PassiveProps } from './passive.js';
+import type { ProgressProps, ProgressStatus } from './types.js';
 import './progress.css';
 
-export type ProgressSize = 's' | 'm' | 'l';
-export type ProgressStatus = 'accent' | 'neutral' | 'info' | 'success' | 'warning' | 'danger';
-
-export interface ProgressProps extends PassiveProps<'div'> {
-  readonly value: number | null;
-  readonly max?: number | undefined;
-  readonly label?: string | undefined;
-  readonly valueLabel?: string | undefined;
-  readonly showValue?: boolean | undefined;
-  readonly size?: ProgressSize | undefined;
-  readonly status?: ProgressStatus | undefined;
-  readonly active?: boolean | undefined;
-  readonly paused?: boolean | undefined;
-}
+export type { ProgressProps, ProgressSize, ProgressStatus } from './types.js';
 
 const statusColor: Readonly<Record<ProgressStatus, string>> = {
   accent: 'var(--accent-signal)',
@@ -29,6 +18,11 @@ const statusColor: Readonly<Record<ProgressStatus, string>> = {
   danger: 'var(--status-danger-signal)',
 };
 
+/**
+ * Linear progress bar (`role="progressbar"`) supporting determinate (`0..max`) and indeterminate
+ * (`null`) work. Requires a non-blank `label`, `aria-label`, or `aria-labelledby` unless
+ * `aria-hidden` is true.
+ */
 export function Progress({
   value,
   max = 100,
@@ -41,6 +35,7 @@ export function Progress({
   paused = false,
   'aria-label': ariaLabel,
   'aria-labelledby': ariaLabelledBy,
+  'aria-hidden': ariaHidden,
   'aria-describedby': describedBy,
   'aria-description': description,
   'aria-valuetext': ariaValueText,
@@ -55,6 +50,13 @@ export function Progress({
   const accessibleLabel = nonBlank(ariaLabel);
   const labelledBy =
     nonBlank(ariaLabelledBy) ?? (accessibleLabel ? undefined : heading ? labelId : undefined);
+  const hidden = ariaHidden === true || ariaHidden === 'true';
+  if (!hidden && !accessibleLabel && !labelledBy) {
+    warnOnce(
+      'progress-missing-name',
+      'Progress requires a non-blank label, aria-label, or aria-labelledby unless aria-hidden is true.',
+    );
+  }
   const units = nonBlank(valueLabel);
   const visibleValue = showValue
     ? (units ?? (measurement ? percentLabel(measurement) : '100%'))
@@ -64,16 +66,17 @@ export function Progress({
 
   return (
     <div
-      {...passiveAttributes(props)}
-      className={className ? `unica-progress ${className}` : 'unica-progress'}
-      data-size={size}
-      data-status={status}
-      data-indeterminate={!measurement || undefined}
-      data-empty={(measurement !== undefined && fraction === 0) || undefined}
-      data-full={full || undefined}
-      data-paused={paused || undefined}
-      data-active={(active && !resting && fraction > 0 && !full) || undefined}
-      data-resting={resting || undefined}
+      {...passiveIndicatorAttributes(props)}
+      aria-hidden={ariaHidden}
+      className={cx('unica-progress', className)}
+      data-unica-progress-size={size}
+      data-unica-progress-status={status}
+      data-unica-progress-indeterminate={dataFlag(!measurement)}
+      data-unica-progress-empty={dataFlag(measurement !== undefined && fraction === 0)}
+      data-unica-progress-full={dataFlag(full)}
+      data-unica-progress-paused={dataFlag(paused)}
+      data-unica-progress-active={dataFlag(active && !resting && fraction > 0 && !full)}
+      data-unica-progress-resting={dataFlag(resting)}
       style={
         {
           ...style,
@@ -93,7 +96,7 @@ export function Progress({
           {visibleValue && (
             <span
               className="unica-progress-value"
-              data-custom={Boolean(units) || undefined}
+              data-unica-progress-custom={dataFlag(Boolean(units))}
               aria-hidden={!measurement || undefined}
             >
               <bdi>{visibleValue}</bdi>

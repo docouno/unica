@@ -17,43 +17,43 @@
     display: none;
   }
 
-  .unica-activity-icon[data-spinner] > .unica-activity-icon-drawing {
+  .unica-activity-icon[data-unica-activity-spinner] > .unica-activity-icon-drawing {
     /* Backwards fill hides only the paint before the delay. Updating the delay
        keeps the same CSS animation timeline while the SVG remains in layout. */
     animation: unica-spinner-reveal 0s var(--_activity-delay) both;
   }
 
-  .unica-activity-icon[data-size='s'] {
+  .unica-activity-icon[data-unica-activity-size='s'] {
     --_activity-dimension: var(--size-s-icon);
   }
 
-  .unica-activity-icon[data-size='m'] {
+  .unica-activity-icon[data-unica-activity-size='m'] {
     --_activity-dimension: var(--size-m-icon);
   }
 
-  .unica-activity-icon[data-size='l'] {
+  .unica-activity-icon[data-unica-activity-size='l'] {
     --_activity-dimension: var(--size-l-icon);
     stroke-width: 2.4;
   }
 
-  .unica-activity-icon[data-tone='neutral'] {
+  .unica-activity-icon[data-unica-activity-tone='neutral'] {
     color: var(--fg-primary);
   }
 
-  .unica-activity-icon[data-tone='muted'] {
+  .unica-activity-icon[data-unica-activity-tone='muted'] {
     color: var(--fg-muted);
   }
 
-  .unica-activity-icon[data-tone='accent'] {
+  .unica-activity-icon[data-unica-activity-tone='accent'] {
     color: var(--accent-signal);
   }
 
   .unica-activity-icon-round {
-    display: var(--spinner-round-display);
+    display: var(--_spinner-round-display);
   }
 
   .unica-activity-icon-pixels {
-    display: var(--spinner-pixel-display);
+    display: var(--_spinner-pixel-display);
   }
 
   .unica-activity-icon-track,
@@ -84,10 +84,10 @@
   }
 
   .unica-activity-icon-fill {
-    transition: stroke-dasharray var(--progress-value-duration) ease-out;
+    transition: stroke-dasharray var(--_progress-value-duration) ease-out;
   }
 
-  .unica-activity-icon[data-empty] .unica-activity-icon-fill {
+  .unica-activity-icon[data-unica-activity-empty] .unica-activity-icon-fill {
     visibility: hidden;
     transition: none;
   }

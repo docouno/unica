@@ -37,7 +37,7 @@
 
 .type-auth {
   max-inline-size: 520px;
-  background-image: var(--auth-stage-aura);
+  background-image: var(--folio-auth-stage-aura);
 }
 
 .type-prose {
@@ -56,8 +56,8 @@
   border: 1px solid var(--border-default);
   border-radius: var(--surface-l-radius);
   background: var(--bg-overlay);
-  backdrop-filter: var(--overlay-backdrop);
-  box-shadow: var(--overlay-rim), var(--overlay-shadow-popover);
+  backdrop-filter: var(--_overlay-backdrop);
+  box-shadow: var(--_overlay-rim), var(--_overlay-shadow-popover);
 }
 
 .type-drawer {
@@ -82,7 +82,7 @@
 }
 .type-surface[data-sample-surface='overlay'] {
   background: var(--bg-overlay);
-  backdrop-filter: var(--overlay-backdrop);
+  backdrop-filter: var(--_overlay-backdrop);
 }
 
 .type-measure {

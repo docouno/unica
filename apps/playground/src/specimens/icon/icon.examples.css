@@ -81,14 +81,14 @@
   inline-size: 100%;
   max-inline-size: 480px;
   background: var(--bg-overlay);
-  backdrop-filter: var(--overlay-backdrop);
-  box-shadow: var(--overlay-rim), var(--overlay-shadow-popover);
+  backdrop-filter: var(--_overlay-backdrop);
+  box-shadow: var(--_overlay-rim), var(--_overlay-shadow-popover);
 }
 
 [data-surface='overlay'] .icon-product {
   background: var(--bg-overlay);
-  backdrop-filter: var(--overlay-backdrop);
-  box-shadow: var(--overlay-rim), var(--overlay-shadow-popover);
+  backdrop-filter: var(--_overlay-backdrop);
+  box-shadow: var(--_overlay-rim), var(--_overlay-shadow-popover);
 }
 
 .icon-toolbar {

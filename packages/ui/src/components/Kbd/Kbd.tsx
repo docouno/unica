@@ -1,29 +1,12 @@
 import { Children, Fragment, isValidElement } from 'react';
-import type { ComponentPropsWithRef, ReactElement, ReactNode } from 'react';
+import type { ReactElement, ReactNode } from 'react';
+import { cx } from '../../core/cx.js';
 import { Glyph } from '../../internal/glyphs/index.js';
 import { keySymbolPattern, keySymbols } from './key-symbols.js';
+import type { KbdGroupProps, KbdProps } from './types.js';
 import './kbd.css';
 
-export type KbdSize = 'inherit' | 's' | 'm' | 'l';
-
-export interface KbdProps extends Omit<
-  ComponentPropsWithRef<'kbd'>,
-  'aria-label' | 'dangerouslySetInnerHTML'
-> {
-  readonly size?: KbdSize | undefined;
-  /** Replaces the key's spoken text, for example to localize a built-in symbol. */
-  readonly label?: string | undefined;
-  readonly 'aria-label'?: never;
-}
-
-export interface KbdGroupProps extends Omit<
-  ComponentPropsWithRef<'span'>,
-  'dangerouslySetInnerHTML'
-> {
-  readonly size?: KbdSize | undefined;
-  /** Empty strings leave a compact gap and preserve a spoken “plus”. */
-  readonly separator?: string | undefined;
-}
+export type { KbdGroupProps, KbdProps, KbdSize } from './types.js';
 
 function isFragment(
   node: ReactNode,
@@ -65,6 +48,10 @@ function collectKeys(
   });
 }
 
+/**
+ * Keyboard shortcut keycap rendered on a native `<kbd>` element with automatic SVG glyph
+ * substitution and screen-reader spoken text for modifier symbols.
+ */
 export function Kbd({
   children,
   className,
@@ -87,9 +74,9 @@ export function Kbd({
     <kbd
       {...props}
       aria-label={undefined}
-      className={className ? `unica-kbd ${className}` : 'unica-kbd'}
+      className={cx('unica-kbd', className)}
       dangerouslySetInnerHTML={undefined}
-      data-size={size}
+      data-unica-kbd-size={size}
       dir="ltr"
     >
       {spoken && <span className="unica-visually-hidden">{spoken}</span>}
@@ -109,6 +96,10 @@ export function Kbd({
   );
 }
 
+/**
+ * Joins multiple `Kbd` steps with a visible or visually hidden spoken separator,
+ * skipping hidden keys while preserving child identity.
+ */
 export function KbdGroup({
   children,
   className,
@@ -127,9 +118,9 @@ export function KbdGroup({
   return (
     <span
       {...props}
-      className={className ? `unica-kbd-group ${className}` : 'unica-kbd-group'}
+      className={cx('unica-kbd-group', className)}
       dangerouslySetInnerHTML={undefined}
-      data-size={size}
+      data-unica-kbd-size={size}
       dir="ltr"
     >
       {keys.map(({ key, child, hidden }, index) => (

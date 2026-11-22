@@ -128,7 +128,7 @@
 .popover-demo-close-states {
   padding: var(--space-16);
   background: var(--bg-overlay);
-  backdrop-filter: var(--overlay-backdrop);
+  backdrop-filter: var(--_overlay-backdrop);
   border-radius: var(--surface-s-radius);
   display: flex;
   flex-wrap: wrap;

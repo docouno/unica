@@ -7,7 +7,7 @@
   > .collapsible-proto:not([hidden])
   ~ .collapsible-proto:not([hidden]) {
   padding-block-start: var(--space-4);
-  border-block-start: 1px solid var(--disclosure-divider-color);
+  border-block-start: 1px solid var(--_disclosure-divider-color);
 }
 
 .accordion-proto[data-dividers='true']
@@ -147,7 +147,7 @@
   margin-block-start: calc((var(--disclosure-label-line) - var(--disclosure-icon)) / 2);
   color: var(--fg-muted);
   transform: rotate(var(--disclosure-caret-angle));
-  transition: transform var(--disclosure-duration) cubic-bezier(0.2, 0, 0, 1);
+  transition: transform var(--_disclosure-duration) cubic-bezier(0.2, 0, 0, 1);
 }
 
 /* Use explicit direction boundaries so the CSS build preserves local overrides. */

@@ -18,7 +18,7 @@ Unica enforces two explicit browser tiers across CSS compilation and runtime beh
 
 ```css
 .textareaAutosize {
-  min-block-size: calc(var(--text-size-body-m-lh) * 3 + var(--space-m));
+  min-block-size: calc(var(--text-size-body-m-lh) * 3 + var(--space-16));
 }
 
 @supports (field-sizing: content) {
@@ -30,7 +30,7 @@ Unica enforces two explicit browser tiers across CSS compilation and runtime beh
 
 ## React 19 & Pure-ESM Package Contract
 
-- **React 19 peer dependencies** support ordinary `ref` props, StrictMode, concurrent rendering, React DOM server rendering, and hydration. Use `React.useId()` for stable IDs and defer DOM access until an element or its document is available. In applications using React Server Components, import runtime UI components and hooks from a module marked `'use client'`. The `react-server` entry exports `THEME_PRESETS`, `defineGlyph`, `getUnicaRootProps`, and TypeScript types.
+- **React 19 peer dependencies** support ordinary `ref` props, StrictMode, concurrent rendering, React DOM server rendering, and hydration. Use `React.useId()` for stable IDs and defer DOM access until an element or its document is available. In applications using React Server Components, import runtime UI components (including `VisuallyHidden`) and hooks from a module marked `'use client'`. The `react-server` entry exports strictly `THEME_PRESETS`, `defineGlyph`, `getUnicaRootProps`, and a 1:1 mirror of all public TypeScript types (including `VisuallyHiddenProps`, `Spacing`, `BlockquoteStatus`, `CodeStatus`, and `UnicaRootAttributes`).
 - **Pure ESM & `isolatedDeclarations`:** `@docouno/unica` ships pure ES modules (`"type": "module"`) with explicit TypeScript boundary annotations (`isolatedDeclarations: true`), accurate `sideEffects` metadata for CSS assets, and automated release verification via `publint` and `@arethetypeswrong/core`.
 
 ## WCAG Contrast & Non-Color Differentiation

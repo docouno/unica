@@ -23,6 +23,12 @@ A single bubble-phase `keydown` listener on the document respects `event.default
 
 The document scroll lock is shared across physical Unica modals, compensates classic scrollbar gutter width to avoid horizontal layout shift when `scrollbar-gutter: stable` is absent, and leaves scrolling inside a dialog intact.
 
+### Inertness & Foreign Modal Dialog Boundary
+
+Unica's internal inertness checks cover every library-observable inert state: explicit `[inert]`, CSS `interactivity: inert` (including descendants with `interactivity: auto` under an inert ancestor), any stack of Unica modal dialogs (including reverse DOM order and Shadow DOM), and background elements behind light-DOM foreign `<dialog>` elements opened via `showModal()`.
+
+Native user interaction and focus movement defer to the browser — internal focus helpers verify the actual outcome of native `focus()`, so active controls inside a topmost foreign `<dialog>` remain operable while lower blocked dialogs reject focus. Programmatic value proposals dispatched without a native user event against opaque mixed modal stacks (`Unica → foreign` or `foreign → Unica`) or against a foreign modal `<dialog>` nested inside an open `ShadowRoot` are an explicit platform boundary: the library does not expose a public registry for foreign `<dialog>` instances.
+
 ### Keeping Toasts Interactive Above Active Modals
 
 The native modal makes content outside its DOM subtree inert. A notification viewport can receive pointer and keyboard input by moving inside the active Unica dialog. Keep the queue, timer, and announcement state above the [Portal](../components/portal.md) so they survive the move.

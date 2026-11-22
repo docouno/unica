@@ -20,12 +20,13 @@ export function choiceProp<const Options extends Readonly<Record<string, unknown
 export const spacingOptions = {
   Default: undefined,
   '0': 0,
-  xs: 'xs',
-  s: 's',
-  m: 'm',
-  l: 'l',
-  xl: 'xl',
-  'Tablet m · Wide l': { tablet: 'm', wide: 'l' },
+  '4': 4,
+  '8': 8,
+  '12': 12,
+  '16': 16,
+  '24': 24,
+  '32': 32,
+  'Tablet 16 · Wide 24': { tablet: 16, wide: 24 },
 } as const;
 
 export const directionOptions = {

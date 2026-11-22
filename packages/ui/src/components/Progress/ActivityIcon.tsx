@@ -1,19 +1,10 @@
 import type { CSSProperties, JSX } from 'react';
+import { cx, dataFlag } from '../../core/cx.js';
 import type { Measurement } from './measurement.js';
-import type { PassiveProps } from './passive.js';
+import type { ActivityIconProps } from './types.js';
 import './activity-icon.css';
 
-export type SpinnerSize = 'inherit' | 's' | 'm' | 'l';
-export type SpinnerTone = 'inherit' | 'neutral' | 'muted' | 'accent';
-
-export type ActivityIconProps = Omit<PassiveProps<'svg'>, 'viewBox' | 'max'> & {
-  readonly dir?: 'ltr' | 'rtl' | 'auto' | undefined;
-  readonly hidden?: boolean | undefined;
-  readonly lang?: string | undefined;
-  readonly size?: SpinnerSize | undefined;
-  readonly tone?: SpinnerTone | undefined;
-  readonly viewBox?: never;
-};
+export type { ActivityIconProps, SpinnerSize, SpinnerTone } from './types.js';
 
 interface ActivityDrawingProps {
   readonly fraction?: number | undefined;
@@ -80,7 +71,7 @@ function ActivityCells({ fraction }: ActivityDrawingProps): JSX.Element {
 interface ActivityFrameProps {
   readonly attributes: ActivityIconProps;
   readonly role: 'img' | 'progressbar' | undefined;
-  readonly delay?: number;
+  readonly delay?: number | undefined;
   readonly measurement?: Measurement | undefined;
 }
 
@@ -96,15 +87,15 @@ export function ActivityIcon({
   return (
     <svg
       {...props}
-      className={className ? `unica-activity-icon ${className}` : 'unica-activity-icon'}
+      className={cx('unica-activity-icon', className)}
       viewBox="0 0 24 24"
       fill="none"
       focusable="false"
       role={role}
-      data-size={size}
-      data-tone={tone}
-      data-spinner={delay !== undefined || undefined}
-      data-empty={fraction === 0 || undefined}
+      data-unica-activity-size={size}
+      data-unica-activity-tone={tone}
+      data-unica-activity-spinner={dataFlag(delay !== undefined)}
+      data-unica-activity-empty={dataFlag(fraction === 0)}
       aria-valuemin={measurement ? 0 : undefined}
       aria-valuemax={measurement?.max}
       aria-valuenow={measurement?.value}

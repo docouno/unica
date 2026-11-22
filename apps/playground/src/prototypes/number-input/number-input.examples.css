@@ -51,10 +51,10 @@
   background: var(--bg-surface);
 }
 .number-material-proto[data-surface='overlay'] {
-  border-color: var(--overlay-border);
+  border-color: var(--_overlay-border);
   background: var(--bg-overlay);
-  box-shadow: var(--overlay-shadow-popover);
-  backdrop-filter: var(--overlay-backdrop);
+  box-shadow: var(--_overlay-shadow-popover);
+  backdrop-filter: var(--_overlay-backdrop);
 }
 .number-overlay-stage-proto {
   position: relative;

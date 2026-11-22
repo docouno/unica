@@ -232,7 +232,7 @@
   appearance: none;
   cursor: pointer;
   touch-action: manipulation;
-  transition: background-color var(--btn-state-duration) ease;
+  transition: background-color var(--_btn-state-duration) ease;
 }
 .tags-add-proto:disabled {
   color: var(--fg-disabled);

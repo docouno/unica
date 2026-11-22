@@ -1,44 +1,28 @@
-import type { ComponentPropsWithRef, ReactElement } from 'react';
+import type { ReactElement } from 'react';
+import { cx, dataFlag } from '../../core/cx.js';
+import { warnOnce } from '../../core/devWarning.js';
+import type { IndicatorProps } from './types.js';
 import './indicator.css';
 
-export type IndicatorPosition = 'top-start' | 'top-end' | 'bottom-start' | 'bottom-end';
-export type IndicatorStatus = 'neutral' | 'accent' | 'info' | 'success' | 'warning' | 'danger';
-
-interface IndicatorHostProps extends Omit<
-  ComponentPropsWithRef<'span'>,
-  'children' | 'dangerouslySetInnerHTML'
-> {
-  readonly children: ReactElement;
-  readonly position?: IndicatorPosition;
-  readonly status?: IndicatorStatus;
-  readonly size?: 's' | 'm' | 'l';
-  readonly overlap?: 'rectangular' | 'circular';
-  readonly width?: 'auto' | 'full';
-  readonly withBorder?: boolean;
-  readonly visible?: boolean;
-}
-
-export type IndicatorProps = IndicatorHostProps &
-  (
-    | {
-        readonly dot?: false;
-        readonly count?: number | null | undefined;
-        readonly max?: number;
-        readonly showZero?: boolean;
-      }
-    | {
-        readonly dot: true;
-        readonly count?: never;
-        readonly max?: never;
-        readonly showZero?: never;
-      }
-  );
+export type { IndicatorPosition, IndicatorProps, IndicatorStatus } from './types.js';
 
 function formatCount(
   count: number | null | undefined,
   max: number,
   showZero: boolean,
 ): string | null {
+  if (typeof count === 'number' && (!Number.isSafeInteger(count) || count < 0)) {
+    warnOnce(
+      'indicator-invalid-count',
+      `Indicator count must be a non-negative safe integer; received ${String(count)}.`,
+    );
+  }
+  if (!Number.isSafeInteger(max) || max <= 0) {
+    warnOnce(
+      'indicator-invalid-max',
+      `Indicator max must be a positive safe integer; received ${String(max)}.`,
+    );
+  }
   if (
     typeof count !== 'number' ||
     !Number.isSafeInteger(count) ||
@@ -52,6 +36,10 @@ function formatCount(
   return count > max ? `${max}+` : String(count);
 }
 
+/**
+ * Anchors a decorative count or status dot to a single host element. The host element
+ * retains ownership of accessible naming for the count or status.
+ */
 export function Indicator({
   children,
   dot = false,
@@ -73,20 +61,20 @@ export function Indicator({
   return (
     <span
       {...props}
-      className={className ? `unica-indicator ${className}` : 'unica-indicator'}
-      data-position={position}
-      data-status={status}
-      data-size={size}
-      data-overlap={overlap}
-      data-width={width}
+      className={cx('unica-indicator', className)}
+      data-unica-indicator-position={position}
+      data-unica-indicator-status={status}
+      data-unica-indicator-size={size}
+      data-unica-indicator-overlap={overlap}
+      data-unica-indicator-width={width}
     >
       {children}
       {visible && (dot || label !== null) && (
         <span className="unica-indicator-anchor">
           <span
             className="unica-indicator-marker"
-            data-mode={dot ? 'dot' : 'count'}
-            data-border={withBorder ? '' : undefined}
+            data-unica-indicator-mode={dot ? 'dot' : 'count'}
+            data-unica-indicator-border={dataFlag(withBorder)}
             aria-hidden="true"
           >
             {label !== null && <bdi dir="ltr">{label}</bdi>}

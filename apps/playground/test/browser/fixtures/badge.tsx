@@ -26,7 +26,7 @@ function Palette({ surface }: { surface: 'base' | 'overlay' }) {
         gap: 6,
         padding: 12,
         background: surface === 'overlay' ? 'var(--bg-overlay)' : 'var(--bg-canvas)',
-        backdropFilter: surface === 'overlay' ? 'var(--overlay-backdrop)' : undefined,
+        backdropFilter: surface === 'overlay' ? 'var(--_overlay-backdrop)' : undefined,
       }}
     >
       {statuses.map((status) => (

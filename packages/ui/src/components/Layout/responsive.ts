@@ -1,18 +1,12 @@
 import type { CSSProperties } from 'react';
+import type { BREAKPOINT } from '../../consts.js';
+import type { Spacing } from '../../types.js';
+import type { Responsive } from './types.js';
 
-export type Responsive<T> =
-  | T
-  | {
-      readonly mobile?: T | undefined;
-      readonly tablet?: T | undefined;
-      readonly desktop?: T | undefined;
-      readonly wide?: T | undefined;
-    };
+export type { Responsive, Spacing };
 
-export type Spacing = 0 | 'xs' | 's' | 'm' | 'l' | 'xl';
-
-export const breakpoints = ['mobile', 'tablet', 'desktop', 'wide'] as const;
-type Breakpoint = (typeof breakpoints)[number];
+export type Breakpoint = (typeof BREAKPOINT)[keyof typeof BREAKPOINT];
+export const breakpoints: readonly Breakpoint[] = ['mobile', 'tablet', 'desktop', 'wide'];
 type ResponsiveValue = string | number;
 
 export type LayoutStyle = CSSProperties & Record<`--_${string}`, ResponsiveValue>;
@@ -50,8 +44,4 @@ export function space(value: Spacing): string {
 
 export function flexAlignment(value: string): string {
   return value === 'start' || value === 'end' ? `flex-${value}` : value;
-}
-
-export function layoutClass(base: string, className?: string): string {
-  return className ? `${base} ${className}` : base;
 }

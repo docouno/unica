@@ -1,84 +1,22 @@
 import { Children, Fragment, isValidElement, use } from 'react';
-import type {
-  AriaAttributes,
-  CSSProperties,
-  ComponentPropsWithRef,
-  DOMAttributes,
-  ReactElement,
-  ReactNode,
-} from 'react';
+import type { ReactElement, ReactNode } from 'react';
 import { useComponentDefaults } from '../../core/UnicaProvider.js';
-import type { IconSize } from '../../core/defaults.js';
+import { cx } from '../../core/cx.js';
 import { isGlyphDefinition, renderGlyph } from '../../core/glyph.js';
-import type {
-  GlyphComponent,
-  GlyphDefinition,
-  GlyphSource,
-  GlyphSvgProps,
-} from '../../core/glyph.js';
+import type { GlyphSource, GlyphSvgProps } from '../../core/glyph.js';
 import { IconAdapterContext } from '../../core/icon-adapter.js';
+import type {
+  ClosedProps,
+  ClosedSvgKey,
+  IconFrame,
+  IconName,
+  IconProps,
+  IconSize,
+  IconTitle,
+} from './types.js';
 import './icon.css';
 
-export type { IconSize } from '../../core/defaults.js';
-
-export type IconColor =
-  | 'inherit'
-  | 'primary'
-  | 'secondary'
-  | 'muted'
-  | 'subtle'
-  | 'disabled'
-  | 'accent'
-  | 'info'
-  | 'success'
-  | 'warning'
-  | 'danger';
-
-export type IconUsage = 'standalone' | 'slot';
-
-type IconTitle = ReactElement<
-  {
-    children?: ReactNode;
-    id?: string | undefined;
-    lang?: string | undefined;
-    dir?: 'ltr' | 'rtl' | 'auto' | undefined;
-  },
-  'title'
->;
-
-type IconStyle =
-  | CSSProperties
-  | (CSSProperties & {
-      readonly [property: `--${string}`]: string | number | undefined;
-    });
-
-type UpperLetter =
-  | 'A'
-  | 'B'
-  | 'C'
-  | 'D'
-  | 'E'
-  | 'F'
-  | 'G'
-  | 'H'
-  | 'I'
-  | 'J'
-  | 'K'
-  | 'L'
-  | 'M'
-  | 'N'
-  | 'O'
-  | 'P'
-  | 'Q'
-  | 'R'
-  | 'S'
-  | 'T'
-  | 'U'
-  | 'V'
-  | 'W'
-  | 'X'
-  | 'Y'
-  | 'Z';
+export type { IconColor, IconProps, IconSize, IconUsage } from './types.js';
 
 const reservedInputProps = /* @__PURE__ */ new Set([
   '__proto__',
@@ -119,130 +57,6 @@ const fallbackDimensions: Readonly<Record<IconSize, string>> = {
 };
 
 const EMPTY_INPUT_PROPS: Readonly<Record<string, unknown>> = /* @__PURE__ */ Object.freeze({});
-
-interface IconFrame<G extends GlyphSource> {
-  readonly icon: G;
-  readonly size?: IconSize | undefined;
-  readonly color?: IconColor | undefined;
-  readonly directional?: boolean | undefined;
-  readonly ref?: GlyphSvgProps['ref'] | undefined;
-  readonly id?: string | undefined;
-  readonly className?: string | undefined;
-  readonly style?: IconStyle | undefined;
-  readonly [data: `data-${string}`]: string | number | boolean | undefined;
-}
-
-type IconName =
-  | {
-      readonly usage?: 'standalone' | undefined;
-      readonly 'aria-labelledby'?: string | undefined;
-      readonly 'aria-label'?: string | undefined;
-      readonly children?: IconTitle | false | null | undefined;
-    }
-  | {
-      readonly usage: 'slot';
-      readonly 'aria-labelledby'?: never;
-      readonly 'aria-label'?: never;
-      readonly children?: never;
-    };
-
-type ClosedSvgKey =
-  | Exclude<keyof AriaAttributes, 'aria-label' | 'aria-labelledby'>
-  | Exclude<keyof DOMAttributes<SVGSVGElement>, 'children'>
-  | 'role'
-  | 'alt'
-  | 'title'
-  | 'dir'
-  | 'focusable'
-  | 'tabIndex'
-  | 'width'
-  | 'height'
-  | 'viewBox'
-  | 'preserveAspectRatio'
-  | 'transform';
-
-type ClosedProps = {
-  readonly [K in ClosedSvgKey]?: never;
-};
-
-type GlyphCallable<G> =
-  G extends GlyphDefinition<infer Source> ? Source : Extract<G, GlyphComponent>;
-
-type OwnedKey =
-  | keyof IconFrame<GlyphSource>
-  | keyof IconName
-  | ClosedSvgKey
-  | 'key'
-  | `on${UpperLetter}${string}`;
-
-type SvgInherited = Omit<ComponentPropsWithRef<'svg'>, 'strokeWidth'>;
-
-type IsInheritedSvgKey<Props, K extends keyof Props> = K extends keyof SvgInherited
-  ? [NonNullable<SvgInherited[K]>] extends [NonNullable<Props[K]>]
-    ? [NonNullable<Props[K]>] extends [NonNullable<SvgInherited[K]>]
-      ? true
-      : false
-    : false
-  : false;
-
-type LiteralKey<K> = K extends string
-  ? string extends K
-    ? never
-    : K
-  : K extends number
-    ? number extends K
-      ? never
-      : K
-    : K extends symbol
-      ? symbol extends K
-        ? never
-        : K
-      : never;
-
-type OwnVendorKey<Props> = {
-  [K in Exclude<keyof Props, OwnedKey>]-?: 'xmlns' extends keyof Props
-    ? IsInheritedSvgKey<Props, K> extends true
-      ? never
-      : LiteralKey<K>
-    : LiteralKey<K>;
-}[Exclude<keyof Props, OwnedKey>];
-
-type VendorKeys<Props> = 0 extends 1 & Props
-  ? never
-  : Props extends unknown
-    ? OwnVendorKey<Props>
-    : never;
-
-// Omitted vendor options and explicit undefined behave alike. Required options need a value.
-type VendorProps<Props, Keys extends PropertyKey> = Props extends unknown
-  ? {
-      readonly [K in keyof Props as K extends Keys ? K : never]: Partial<
-        Pick<Props, K>
-      > extends Pick<Props, K>
-        ? Props[K] | undefined
-        : Exclude<Props[K], undefined>;
-    } & { readonly [K in Exclude<Keys, keyof Props>]?: never }
-  : never;
-
-// A dynamic source accepts only shared options. Every glyph also accepts a bare SVG,
-// even when its final overload requires options.
-type SourceOptions<
-  G extends GlyphComponent,
-  Keys extends PropertyKey = VendorKeys<Parameters<G>[0]>,
-> = [Keys] extends [never]
-  ? unknown
-  : (G extends unknown ? (options: VendorProps<Parameters<G>[0], Keys>) => void : never) extends (
-        options: infer Options,
-      ) => void
-    ? { readonly [K in Keys]?: undefined } extends Options
-      ? Options
-      : Options | { readonly [K in Keys]?: undefined }
-    : never;
-
-export type IconProps<G extends GlyphSource = GlyphSource> = IconFrame<G> &
-  IconName &
-  ClosedProps &
-  SourceOptions<GlyphCallable<G>>;
 
 function textName(value: string | undefined): string | undefined {
   return typeof value === 'string' ? value.trim() || undefined : undefined;
@@ -291,6 +105,10 @@ function svgTitle(child: IconTitle | false | null | undefined): IconTitle | unde
 type FrameKey = keyof IconFrame<GlyphSource> | keyof IconName | ClosedSvgKey | 'key';
 type AllKeys<T> = T extends unknown ? keyof T : never;
 
+/**
+ * Renders a single non-interactive vector glyph through the configured `UnicaProvider` adapter
+ * or a pinned `defineGlyph` descriptor.
+ */
 export function Icon<G extends GlyphSource>(props: IconProps<G>): ReactElement | null;
 export function Icon<P extends IconFrame<GlyphSource> & IconName & ClosedProps>(
   props: P & ([Exclude<AllKeys<P>, FrameKey>] extends [never] ? unknown : never),
@@ -350,7 +168,7 @@ export function Icon<G extends GlyphSource>({
 
   const svgProps: Record<string, unknown> = {
     ...dataProps,
-    className: className ? `unica-icon ${className}` : 'unica-icon',
+    className: cx('unica-icon', className),
     focusable: 'false',
     width: dimension,
     height: dimension,

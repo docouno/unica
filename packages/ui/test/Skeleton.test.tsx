@@ -1,8 +1,15 @@
-import { fireEvent, render } from '@testing-library/react';
+import { cleanup, fireEvent, render } from '@testing-library/react';
 import { createRef } from 'react';
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { resetDevWarnings } from '../src/core/devWarning.js';
 import { Skeleton, SkeletonText } from '../src/index.js';
 import type { SkeletonProps, SkeletonTextProps } from '../src/index.js';
+
+afterEach(() => {
+  cleanup();
+  resetDevWarnings();
+  vi.restoreAllMocks();
+});
 
 describe('Skeleton geometry props', () => {
   it.each([0, 24, '60%', '3ch', 'calc(100% - 8px)', 'var(--slot-width)'])(
@@ -38,6 +45,7 @@ describe('Skeleton geometry props', () => {
     const { rerender } = render(<Skeleton ref={ref} {...props} />);
     const root = ref.current;
     expect(root?.tagName).toBe('SPAN');
+    expect(root?.getAttribute('data-unica-skeleton-shape')).toBe('circle');
     expect(root?.style.blockSize).toBe('20px');
 
     rerender(<Skeleton ref={ref} {...props} hidden />);
@@ -64,11 +72,16 @@ describe('SkeletonText geometry props', () => {
     [-Infinity, 3],
     ['4', 3],
   ])('renders %s as %s lines', (input, count) => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
     const ref = createRef<HTMLDivElement>();
     render(<SkeletonText ref={ref} width={0} lines={input as SkeletonTextProps['lines']} />);
     expect(ref.current?.tagName).toBe('DIV');
     expect(ref.current?.childElementCount).toBe(count);
     expect(ref.current?.style.inlineSize).toBe('0px');
+    const valid =
+      input === undefined ||
+      (typeof input === 'number' && Number.isInteger(input) && input >= 1 && input <= 20);
+    expect(warn).toHaveBeenCalledTimes(valid ? 0 : 1);
   });
 });
 
@@ -124,7 +137,7 @@ it('protects decorative DOM and leaves form submission and reset to the host', (
   expect(text.classList.contains('preview')).toBe(true);
   expect(text.dataset.count).toBe('3');
   expect(text.style.getPropertyValue('--_skeleton-line-height')).toBe('var(--text-size-body-m-lh)');
-  expect(getByTestId('shape').classList.contains('unica-skeleton--circle')).toBe(false);
+  expect(getByTestId('shape').hasAttribute('data-unica-skeleton-shape')).toBe(false);
   expect(clicked).not.toHaveBeenCalled();
 
   const form = container.querySelector('form')!;

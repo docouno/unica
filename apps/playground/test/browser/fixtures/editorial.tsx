@@ -40,7 +40,7 @@ function Quote({
   return (
     <Blockquote
       data-testid={id}
-      tone="info"
+      status="info"
       iconLeft={start}
       iconRight={end}
       citeUrl="#source"
@@ -56,13 +56,13 @@ function ContextSample(): JSX.Element {
   return (
     <div data-surface="base">
       <Code data-testid="canvas">canvas</Code>
-      <Code tone="neutral" data-testid="neutral">
+      <Code status="neutral" data-testid="neutral">
         neutral
       </Code>
       <Alert status="info">
-        <Blockquote tone="danger">
+        <Blockquote status="danger">
           <Code data-testid="alert-quote">through a quote</Code>{' '}
-          <Code data-testid="explicit" tone="info">
+          <Code data-testid="explicit" status="info">
             explicit info
           </Code>
         </Blockquote>

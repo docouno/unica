@@ -39,7 +39,7 @@ The shown amount is controlled by the application. Finite values are clamped to 
 | --- | --- | --- | --- |
 | `value` | `number \| null` | Required | The measured amount or an indeterminate phase. |
 | `max` | `number` | `100` | Positive finite total in the same units as `value`. |
-| `aria-labelledby`, `aria-label` | `string` | — | Name the operation. A referenced label takes precedence. Supply a name for an exposed `ProgressCircle` or a `Progress` without a visible label. |
+| `aria-labelledby`, `aria-label` | `string` | — | Name the operation. A referenced label takes precedence. TypeScript requires at least one of `label`, `aria-label`, `aria-labelledby`, or `aria-hidden` on `Progress`, and at least one of `aria-label`, `aria-labelledby`, or `aria-hidden` on `ProgressCircle`. Blank runtime names emit a development warning unless `aria-hidden` is true. |
 | `aria-describedby`, `aria-description` | `string` | — | Describe the operation on the progressbar. |
 | `aria-valuetext` | `string` | — | Describe a known measurement in custom units. It takes precedence over `valueLabel` for assistive technology. |
 | `aria-hidden` | React ARIA boolean | — | Hide a redundant indicator from assistive technology when the surrounding UI conveys equivalent information. On `Progress` this applies to the whole group. |

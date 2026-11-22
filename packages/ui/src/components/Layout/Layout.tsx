@@ -1,31 +1,19 @@
 import { Children, Fragment, createElement, isValidElement } from 'react';
-import type { ComponentPropsWithRef, JSX, ReactNode } from 'react';
-
-import {
-  type LayoutStyle,
-  type Responsive,
-  type Spacing,
-  flexAlignment,
-  layoutClass,
-  setResponsive,
-  space,
-} from './responsive.js';
-
+import type { JSX, ReactNode } from 'react';
+import { cx } from '../../core/cx.js';
+import { type LayoutStyle, flexAlignment, setResponsive, space } from './responsive.js';
+import type {
+  BoxProps,
+  BoxTag,
+  ContainerProps,
+  ContainerSize,
+  FlexProps,
+  SpacingSlot,
+  StackProps,
+} from './types.js';
 import './layout.css';
 
-type BoxTag =
-  'div' | 'span' | 'section' | 'article' | 'aside' | 'main' | 'header' | 'footer' | 'nav';
-type BoxDisplay = 'block' | 'inline' | 'inline-block' | 'flow-root' | 'none';
-type SpacingSlot =
-  '' | 'Inline' | 'Block' | 'InlineStart' | 'InlineEnd' | 'BlockStart' | 'BlockEnd';
-type SpacingProp = `${'padding' | 'margin'}${SpacingSlot}`;
-type BoxSpacing = { [Prop in SpacingProp]?: Responsive<Spacing> | undefined };
-type BoxRoot<Tag extends BoxTag> = { as: Tag } | ('div' extends Tag ? { as?: undefined } : never);
-
-export type BoxProps<Tag extends BoxTag = 'div'> = BoxSpacing &
-  BoxRoot<Tag> & {
-    display?: Responsive<BoxDisplay> | undefined;
-  } & Omit<ComponentPropsWithRef<NoInfer<Tag>>, 'as' | 'display' | SpacingProp>;
+export type { BoxProps, ContainerProps, FlexProps, StackProps } from './types.js';
 
 const spacingSlots = {
   '': '',
@@ -37,6 +25,10 @@ const spacingSlots = {
   BlockEnd: '-block-end',
 } as const satisfies Record<SpacingSlot, string>;
 
+/**
+ * Low-level structural container applying responsive logical spacing and display slots
+ * on a semantic HTML landmark or block/inline element.
+ */
 export function Box<Tag extends BoxTag = 'div'>({
   as,
   className,
@@ -56,27 +48,14 @@ export function Box<Tag extends BoxTag = 'div'>({
 
   return createElement<Record<string, unknown>>(as ?? 'div', {
     ...props,
-    className: layoutClass('unica-box', className),
+    className: cx('unica-box', className),
     style: { ...layout, ...style },
   });
 }
 
-type Direction = 'row' | 'row-reverse' | 'column' | 'column-reverse';
-type Align = 'start' | 'center' | 'end' | 'stretch' | 'baseline';
-type Wrap = 'nowrap' | 'wrap' | 'wrap-reverse';
-type Justify = 'start' | 'center' | 'end' | 'space-between' | 'space-around' | 'space-evenly';
-
-interface FlowProps extends ComponentPropsWithRef<'div'> {
-  direction?: Responsive<Direction> | undefined;
-  align?: Responsive<Align> | undefined;
-  gap?: Responsive<Spacing> | undefined;
-}
-
-export interface FlexProps extends FlowProps {
-  wrap?: Responsive<Wrap> | undefined;
-  justify?: Responsive<Justify> | undefined;
-}
-
+/**
+ * Responsive one-dimensional flexbox layout container with direction, wrap, alignment, and token gap.
+ */
 export function Flex({
   className,
   style,
@@ -93,17 +72,7 @@ export function Flex({
   setResponsive(layout, 'flow-gap', gap, space);
   setResponsive(layout, 'flex-wrap', wrap);
   setResponsive(layout, 'flex-justify', justify, flexAlignment);
-  return (
-    <div
-      {...props}
-      className={layoutClass('unica-flex', className)}
-      style={{ ...layout, ...style }}
-    />
-  );
-}
-
-export interface StackProps extends FlowProps {
-  divider?: ReactNode;
+  return <div {...props} className={cx('unica-flex', className)} style={{ ...layout, ...style }} />;
 }
 
 function stackChildren(children: ReactNode): JSX.Element[] {
@@ -120,6 +89,10 @@ function stackChildren(children: ReactNode): JSX.Element[] {
   return (items ?? []) as JSX.Element[];
 }
 
+/**
+ * Responsive flex stack (column by default) that spaces meaningful children and inserts
+ * optional `divider` nodes between adjacent non-empty items.
+ */
 export function Stack({
   className,
   style,
@@ -139,11 +112,7 @@ export function Stack({
   const hasDivider = items.length > 1 && stackChildren(divider).length > 0;
 
   return (
-    <div
-      {...props}
-      className={layoutClass('unica-stack', className)}
-      style={{ ...layout, ...style }}
-    >
+    <div {...props} className={cx('unica-stack', className)} style={{ ...layout, ...style }}>
       {children === null || children === undefined
         ? children
         : items.flatMap((item, index) =>
@@ -155,15 +124,16 @@ export function Stack({
   );
 }
 
-type ContainerSize = 's' | 'm' | 'l';
-const containerWidths = { s: '720px', m: '960px', l: '1280px' } as const;
+const containerWidths: Readonly<Record<ContainerSize, string>> = {
+  s: 'var(--container-s)',
+  m: 'var(--container-m)',
+  l: 'var(--container-l)',
+};
 
-export interface ContainerProps extends ComponentPropsWithRef<'div'> {
-  size?: Responsive<ContainerSize> | undefined;
-  gutter?: Responsive<Spacing> | undefined;
-  centered?: boolean | undefined;
-}
-
+/**
+ * Fluid content column constrained by `--container-{s,m,l}` with responsive inline gutters
+ * and optional centering (`centered={false}` aligns to inline start).
+ */
 export function Container({
   className,
   style,
@@ -178,10 +148,8 @@ export function Container({
   return (
     <div
       {...props}
-      className={layoutClass(
-        centered ? 'unica-container' : 'unica-container unica-container--start',
-        className,
-      )}
+      className={cx('unica-container', className)}
+      data-unica-container-align={centered ? undefined : 'start'}
       style={{ ...layout, ...style }}
     />
   );

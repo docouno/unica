@@ -3,10 +3,15 @@ import { createRef } from 'react';
 import { hydrateRoot } from 'react-dom/client';
 import { renderToString } from 'react-dom/server';
 import { afterEach, expect, it, vi } from 'vitest';
+import { resetDevWarnings } from '../src/core/devWarning.js';
 import { Indicator } from '../src/index.js';
 import type { IndicatorProps } from '../src/index.js';
 
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  resetDevWarnings();
+  vi.restoreAllMocks();
+});
 
 type NumericOptions = Pick<IndicatorProps, 'count' | 'max' | 'showZero' | 'visible'>;
 
@@ -37,18 +42,25 @@ const numericCases: readonly [string, NumericOptions, string | null][] = [
 ];
 
 it.each(numericCases)('formats a %s count', (_case, props, expected) => {
+  const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
   const { container } = render(
     <Indicator {...props}>
       <button type="button">Notifications</button>
     </Indicator>,
   );
 
-  const marker = container.querySelector('[data-mode="count"]');
+  const marker = container.querySelector('[data-unica-indicator-mode="count"]');
   expect(marker?.textContent ?? null).toBe(expected);
-  expect(container.querySelector('[data-mode="dot"]')).toBeNull();
+  expect(container.querySelector('[data-unica-indicator-mode="dot"]')).toBeNull();
   expect(screen.getByRole('button', { name: 'Notifications' })).toBeTruthy();
+  const invalidCount =
+    typeof props.count === 'number' && (!Number.isSafeInteger(props.count) || props.count < 0);
+  const invalidMax =
+    props.max !== undefined && (!Number.isSafeInteger(props.max) || props.max <= 0);
+  expect(warn).toHaveBeenCalledTimes(Number(invalidCount) + Number(invalidMax));
   if (marker) {
     expect(marker.getAttribute('aria-hidden')).toBe('true');
+    expect(marker.getAttribute('data-unica-indicator-border')).toBe('');
     expect(marker.querySelector('bdi')?.dir).toBe('ltr');
   }
 });
@@ -56,20 +68,21 @@ it.each(numericCases)('formats a %s count', (_case, props, expected) => {
 it('lets a dot take precedence over untyped numeric data and honors visible in dot mode', () => {
   const props = { dot: true, count: NaN, max: 0 } as unknown as IndicatorProps;
   const { container, rerender } = render(
-    <Indicator {...props}>
+    <Indicator {...props} withBorder={false}>
       <button type="button">Activity</button>
     </Indicator>,
   );
-  const marker = container.querySelector('[data-mode="dot"]');
+  const marker = container.querySelector('[data-unica-indicator-mode="dot"]');
   expect(marker?.textContent).toBe('');
   expect(marker?.getAttribute('aria-hidden')).toBe('true');
+  expect(marker?.hasAttribute('data-unica-indicator-border')).toBe(false);
 
   rerender(
     <Indicator dot visible={false}>
       <button type="button">Activity</button>
     </Indicator>,
   );
-  expect(container.querySelector('[data-mode]')).toBeNull();
+  expect(container.querySelector('[data-unica-indicator-mode]')).toBeNull();
   expect(screen.getByRole('button', { name: 'Activity' })).toBeTruthy();
 });
 
@@ -113,16 +126,22 @@ it('keeps refs, root attributes, native events, and the same host through count 
   expect(root?.firstElementChild).toBe(host);
   expect(hostRef.current).toBe(host);
 
+  expect(root?.getAttribute('data-unica-indicator-position')).toBe('top-end');
+  expect(root?.getAttribute('data-unica-indicator-status')).toBe('accent');
+  expect(root?.getAttribute('data-unica-indicator-size')).toBe('m');
+  expect(root?.getAttribute('data-unica-indicator-overlap')).toBe('rectangular');
+  expect(root?.getAttribute('data-unica-indicator-width')).toBe('auto');
+
   host.focus();
   fireEvent.click(host);
   expect(calls).toEqual(['host', 'root']);
   rerender(view(0));
-  expect(root?.querySelector('[data-mode]')).toBeNull();
+  expect(root?.querySelector('[data-unica-indicator-mode]')).toBeNull();
   rerender(view(3));
   expect(rootRef.current).toBe(root);
   expect(hostRef.current).toBe(host);
   expect(document.activeElement).toBe(host);
-  expect(root?.querySelector('[data-mode]')?.textContent).toBe('3');
+  expect(root?.querySelector('[data-unica-indicator-mode]')?.textContent).toBe('3');
   expect(host.getAttribute('aria-label')).toBe('Notifications, 3 unread');
 });
 

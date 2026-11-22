@@ -161,3 +161,29 @@ it.each([Code, Blockquote])(
     ]);
   },
 );
+
+it('applies status semantics and single-hyphen structural attributes on Blockquote and Code', () => {
+  const { container } = render(
+    <UnicaProvider iconAdapter="native">
+      <Blockquote status="warning" iconLeft={Mark} iconRight={Mark}>
+        Watch the limit
+      </Blockquote>
+      <Code status="danger">ENOENT</Code>
+      <Code status="info" plate={false}>
+        inline
+      </Code>
+    </UnicaProvider>,
+  );
+
+  const figure = container.querySelector('figure')!;
+  expect(figure.getAttribute('data-unica-blockquote-status')).toBe('warning');
+  expect(figure.querySelector('.unica-blockquote-body')).not.toBeNull();
+  expect(figure.querySelector('.unica-blockquote-glyph-start')).not.toBeNull();
+  expect(figure.querySelector('.unica-blockquote-glyph-end')).not.toBeNull();
+
+  const codes = container.querySelectorAll('code');
+  expect(codes[0]?.getAttribute('data-unica-code-status')).toBe('danger');
+  expect(codes[0]?.getAttribute('data-unica-code-plate')).toBe('');
+  expect(codes[1]?.getAttribute('data-unica-code-status')).toBe('info');
+  expect(codes[1]?.hasAttribute('data-unica-code-plate')).toBe(false);
+});

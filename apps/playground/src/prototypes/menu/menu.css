@@ -19,13 +19,13 @@
   max-inline-size: 100%;
   margin: 0;
   padding: 0;
-  border: 1px solid var(--overlay-border);
+  border: 1px solid var(--_overlay-border);
   border-radius: var(--surface-s-radius);
   background: var(--bg-overlay);
   color: var(--fg-primary);
   font-family: var(--font-family-base);
-  backdrop-filter: var(--overlay-backdrop);
-  box-shadow: var(--overlay-shadow-popover);
+  backdrop-filter: var(--_overlay-backdrop);
+  box-shadow: var(--_overlay-shadow-popover);
   box-sizing: border-box;
 }
 
@@ -59,13 +59,13 @@
 }
 
 .menu-proto::before {
-  box-shadow: var(--overlay-rim);
-  mask-image: var(--overlay-rim-mask);
+  box-shadow: var(--_overlay-rim);
+  mask-image: var(--_overlay-rim-mask);
 }
 
 .menu-proto::after {
   inset: -1px;
-  background: var(--motif-corner-ticks);
+  background: var(--_motif-corner-ticks);
 }
 
 .menu-rows-proto {

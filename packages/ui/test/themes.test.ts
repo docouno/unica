@@ -77,13 +77,27 @@ it('exports all 6 canonical theme presets with symmetric, self-contained CSS tok
     '--z-sticky',
     '--space-0',
     '--space-64',
+    '--container-s',
+    '--container-m',
+    '--container-l',
+  ]) {
+    expect(declaredVars.has(requiredToken), `Missing ${requiredToken} in styles.css`).toBe(true);
+  }
+
+  for (const removedToken of [
     '--space-xs',
     '--space-s',
     '--space-m',
     '--space-l',
     '--space-xl',
+    '--size-s-padding-square',
+    '--size-m-padding-square',
+    '--size-l-padding-square',
+    '--auth-stage-aura',
   ]) {
-    expect(declaredVars.has(requiredToken), `Missing ${requiredToken} in styles.css`).toBe(true);
+    expect(declaredVars.has(removedToken), `Removed token ${removedToken} still declared`).toBe(
+      false,
+    );
   }
 
   let baselineKeys: string[] | null = null;

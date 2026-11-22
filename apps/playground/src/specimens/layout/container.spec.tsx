@@ -27,7 +27,7 @@ export default defineComponent({
   summary: 'A fluid content column with a maximum width and logical gutters. ' + viewportNote,
   props: {
     size: choiceProp(sizeOptions, 'm', 'Widths for s, m, and l are 720, 960, and 1280 px.'),
-    gutter: choiceProp(spacingOptions, 'Default', 'Inline padding. Defaults to m.'),
+    gutter: choiceProp(spacingOptions, 'Default', 'Inline padding. Defaults to 16.'),
     centered: {
       kind: 'boolean',
       group: 'Layout',
@@ -95,7 +95,7 @@ export default defineComponent({
       width: 360,
       render: ({ ctx }) => (
         <div className="layout-example layout-container-frame">
-          <Container {...ctx.subject} size="l" gutter="m">
+          <Container {...ctx.subject} size="l" gutter={16}>
             <span className="layout-demo-tile">The gutter sits inside the column.</span>
           </Container>
         </div>
@@ -108,7 +108,7 @@ export default defineComponent({
       title: 'A bounded document column',
       render: ({ ctx }) => (
         <div className="layout-example layout-container-frame">
-          <Container {...ctx.subject} size="s" gutter={{ mobile: 's', tablet: 'l' }}>
+          <Container {...ctx.subject} size="s" gutter={{ mobile: 8, tablet: 24 }}>
             <DocumentSummary />
           </Container>
         </div>
@@ -116,7 +116,7 @@ export default defineComponent({
       code: `import '@docouno/unica/styles.css';
 import { Container } from '@docouno/unica';
 
-<Container size="s" gutter={{ mobile: 's', tablet: 'l' }}>
+<Container size="s" gutter={{ mobile: 8, tablet: 24 }}>
   <section>
     <h2>Release notes</h2>
     <p>Review changes to the publishing workflow.</p>

@@ -96,7 +96,7 @@
     var(--slider-short) / 2 + (100% - var(--slider-short)) * var(--slider-start)
   );
   inline-size: calc((100% - var(--slider-short)) * (var(--slider-end) - var(--slider-start)));
-  background: var(--slider-fill);
+  background: var(--_slider-fill);
 }
 .slider-thumb-wrap-proto {
   position: absolute;
@@ -126,10 +126,10 @@
   inset: 0;
   border: 1px solid transparent;
   border-radius: min(2px, var(--radius-xs));
-  background: var(--slider-fill);
+  background: var(--_slider-fill);
   transition:
-    background-color var(--slider-state-duration),
-    border-color var(--slider-state-duration);
+    background-color var(--_slider-state-duration),
+    border-color var(--_slider-state-duration);
 }
 .slider-thumb-wrap-proto:is([data-hover], [data-active]) {
   z-index: 1;
@@ -137,12 +137,12 @@
 .slider-proto:not([data-disabled], [data-readonly])
   .slider-thumb-wrap-proto[data-hover]
   .slider-thumb-proto {
-  border-color: color-mix(in srgb, var(--slider-fill) 80%, var(--fg-primary));
+  border-color: color-mix(in srgb, var(--_slider-fill) 80%, var(--fg-primary));
 }
 .slider-proto:not([data-disabled], [data-readonly])
   .slider-thumb-wrap-proto[data-active]
   .slider-thumb-proto {
-  border-color: color-mix(in srgb, var(--slider-fill) 65%, var(--fg-primary));
+  border-color: color-mix(in srgb, var(--_slider-fill) 65%, var(--fg-primary));
 }
 .slider-thumb-wrap-proto:has(:focus-visible),
 .slider-thumb-wrap-proto[data-focus] {
@@ -168,7 +168,7 @@
   inset-inline-start: calc(50% - 0.5px);
   inline-size: 1px;
   block-size: 3px;
-  background: var(--slider-fill);
+  background: var(--_slider-fill);
 }
 .slider-hit-proto[data-close] .slider-thumb-wrap-proto[data-thumb-index='0']::before {
   inset-block-start: 100%;
@@ -488,11 +488,11 @@
 .slider-overlay-proto {
   inline-size: min(100%, 420px);
   padding: var(--space-24);
-  border: 1px solid var(--overlay-border);
+  border: 1px solid var(--_overlay-border);
   border-radius: var(--surface-m-radius);
   background: var(--bg-overlay);
-  backdrop-filter: var(--overlay-backdrop);
-  box-shadow: var(--overlay-shadow-popover);
+  backdrop-filter: var(--_overlay-backdrop);
+  box-shadow: var(--_overlay-shadow-popover);
 }
 .slider-pair-proto {
   display: grid;

@@ -59,8 +59,8 @@ async function readPaint(parent) {
           const shadow = styles.boxShadow;
           const color = shadow.match(/^(.*\)) 0px 0px 0px 2px$/)?.[1];
           return {
-            mode: node.dataset.mode,
-            status: node.closest('.unica-indicator').dataset.status,
+            mode: node.dataset.unicaIndicatorMode,
+            status: node.closest('.unica-indicator').dataset.unicaIndicatorStatus,
             fill: rgba(styles.backgroundColor),
             ink: rgba(styles.color),
             separator: color ? rgba(color) : null,
@@ -297,9 +297,9 @@ export default {
         await mount('indicator-material', { theme, textScale: 120 });
         for (const root of await page.getByTestId('corner').all()) {
           const [position, direction, overlap] = await root.evaluate((node) => [
-            node.dataset.position,
+            node.dataset.unicaIndicatorPosition,
             node.dataset.direction,
-            node.dataset.overlap,
+            node.dataset.unicaIndicatorOverlap,
           ]);
           const marker = root.locator(markerSelector);
           const inset = overlap === 'circular' && !theme.startsWith('pixel') ? 0.1464466 : 0;
@@ -383,8 +383,12 @@ export default {
             [20, 8],
             [24, 12],
           ].entries()) {
-            const count = sizes.locator(`${markerSelector}[data-mode="count"]`).nth(index);
-            const dot = sizes.locator(`${markerSelector}[data-mode="dot"]`).nth(index);
+            const count = sizes
+              .locator(`${markerSelector}[data-unica-indicator-mode="count"]`)
+              .nth(index);
+            const dot = sizes
+              .locator(`${markerSelector}[data-unica-indicator-mode="dot"]`)
+              .nth(index);
             await assertBox(count, { height: (countHeight * textScale) / 100 }, { tolerance: 0.1 });
             await assertBox(dot, { width: dotSize, height: dotSize });
             for (const marker of [count, dot]) {

@@ -67,7 +67,7 @@ function createField(doc: Document, view: Window): PointerField {
     if (dirty) {
       for (const [element, binding] of targets) {
         const style = view.getComputedStyle(element);
-        const reach = style.getPropertyValue('--btn-primary-backlight-reach').trim();
+        const reach = style.getPropertyValue('--_btn-primary-backlight-reach').trim();
         binding.reach = /^\d+(?:\.\d+)?px$/.test(reach) ? Number.parseFloat(reach) : 0;
         binding.visible = style.visibility === 'visible';
       }

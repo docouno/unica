@@ -2,55 +2,18 @@ import { useId } from 'react';
 import type { ComponentPropsWithRef, MouseEvent, ReactElement, ReactNode } from 'react';
 import { Slot, requireSlotChild, resolveSlotProps } from '../../core/Slot.js';
 import { useComponentDefaults } from '../../core/UnicaProvider.js';
-import type { LinkSize } from '../../core/defaults.js';
-import type { GlyphSource } from '../../core/glyph.js';
+import { cx } from '../../core/cx.js';
 import { ExternalLinkGlyph } from '../../internal/glyphs/index.js';
 import { Icon } from '../Icon/Icon.js';
 import { NewTabDescription } from './NewTabDescription.js';
 import { TrailingGlyph } from './TrailingGlyph.js';
 import { markTerminalText } from './terminalText.js';
+import type { LinkProps } from './types.js';
 import './link.css';
 
-export type { LinkSize } from '../../core/defaults.js';
+export type { LinkProps, LinkSize } from './types.js';
 
 type AnchorProps = ComponentPropsWithRef<'a'>;
-type OwnedAttribute = 'aria-disabled' | 'dangerouslySetInnerHTML';
-
-interface LinkOptions {
-  readonly tone?: 'accent' | 'neutral' | 'inherit' | undefined;
-  readonly underline?: 'always' | 'hover' | 'none' | undefined;
-  readonly size?: LinkSize | undefined;
-  readonly iconLeft?: GlyphSource | undefined;
-  readonly iconRight?: GlyphSource | undefined;
-  readonly external?: boolean | undefined;
-  readonly newTabHint?: string | undefined;
-}
-
-type LinkDestination =
-  | {
-      readonly asChild: true;
-      readonly href?: never;
-      readonly disabled?: boolean | undefined;
-      readonly children: ReactElement;
-    }
-  | {
-      readonly asChild?: false | undefined;
-      readonly href: string;
-      readonly disabled?: boolean | undefined;
-      readonly children?: ReactNode;
-    }
-  | {
-      readonly asChild?: false | undefined;
-      readonly href?: string | undefined;
-      readonly disabled: true;
-      readonly children?: ReactNode;
-    };
-
-export type LinkProps = LinkOptions &
-  LinkDestination &
-  Omit<AnchorProps, 'href' | 'children' | OwnedAttribute> & {
-    readonly [Key in OwnedAttribute]?: never;
-  };
 
 function requireAnchorChild(children: ReactNode, disabled: boolean): ReactElement<AnchorProps> {
   const child: ReactElement<AnchorProps> = requireSlotChild<HTMLAnchorElement>(
@@ -124,6 +87,10 @@ function blockActivation(event: MouseEvent<HTMLAnchorElement>): void {
   event.stopPropagation();
 }
 
+/**
+ * Inline navigational hyperlink supporting native `<a>` and router `asChild` composition,
+ * safe `target="_blank"` handling, accessible new-tab hints, and disabled fallback semantics.
+ */
 export function Link({
   asChild,
   tone = 'accent',
@@ -210,7 +177,7 @@ export function Link({
       : effective['aria-describedby'],
     rel: blank ? secureRel(effective.rel) : effective.rel,
   } as const;
-  const anchorClass = className ? `unica-link ${className}` : 'unica-link';
+  const anchorClass = cx('unica-link', className);
 
   if (disabled) {
     const unavailable = {

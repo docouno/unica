@@ -343,7 +343,7 @@ export default {
     assert.equal(fade.before, fade.start);
     assert.ok(fade.start > fade.midpoint && fade.midpoint > fade.end);
     assert.equal(fade.end, 0);
-    assert.equal(await root.getAttribute('data-status'), 'accent');
+    assert.equal(await root.getAttribute('data-unica-progress-status'), 'accent');
     const initiallyFull = page.getByTestId('initial-full').locator(tip);
     assert.equal(await initiallyFull.evaluate((node) => getComputedStyle(node).opacity), '0');
     assert.equal(await initiallyFull.evaluate((node) => node.getAnimations().length), 0);

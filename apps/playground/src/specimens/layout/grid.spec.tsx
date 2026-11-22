@@ -94,7 +94,7 @@ export default defineComponent({
       title: 'Named areas and placement',
       rows: 'areas',
       cols: 'flow',
-      fixed: { columns: 'Default', gap: 's' },
+      fixed: { columns: 'Default', gap: '8' },
     },
   ],
   cases: [
@@ -107,12 +107,12 @@ export default defineComponent({
         'The outer grid moves from one to two to four columns at 768 and 1440 px. The inner grid keeps one column.',
       render: ({ ctx }) => (
         <LayoutExample>
-          <Grid {...ctx.subject} columns={{ tablet: 2, wide: 4 }} gap="s">
+          <Grid {...ctx.subject} columns={{ tablet: 2, wide: 4 }} gap={8}>
             <GridItem className="layout-cell">
               <span>Topics</span>
             </GridItem>
             <div>
-              <Grid gap="xs" className="layout-outline">
+              <Grid gap={4} className="layout-outline">
                 <GridItem className="layout-cell">
                   <span>Notes</span>
                 </GridItem>
@@ -137,7 +137,7 @@ export default defineComponent({
       kind: 'behavior',
       render: ({ ctx }) => (
         <LayoutExample>
-          <Grid {...ctx.subject} gap="s" areas={areaOptions['Workspace map']}>
+          <Grid {...ctx.subject} gap={8} areas={areaOptions['Workspace map']}>
             {labels.map(({ area, text }) => (
               <GridItem key={area} area={area} className="layout-cell">
                 <span>{text}</span>
@@ -155,7 +155,7 @@ export default defineComponent({
       render: ({ ctx }) => (
         <LayoutExample>
           <Container size="l">
-            <Grid {...ctx.subject} columns={{ mobile: 1, tablet: 2, desktop: 3 }} gap="s">
+            <Grid {...ctx.subject} columns={{ mobile: 1, tablet: 2, desktop: 3 }} gap={8}>
               <GridItem className="layout-cell">
                 <span>Overview</span>
               </GridItem>
@@ -173,7 +173,7 @@ export default defineComponent({
 import { Container, Grid, GridItem } from '@docouno/unica';
 
 <Container size="l">
-  <Grid columns={{ mobile: 1, tablet: 2, desktop: 3 }} gap="s">
+  <Grid columns={{ mobile: 1, tablet: 2, desktop: 3 }} gap={8}>
     <GridItem><span>Overview</span></GridItem>
     <GridItem><span>Queue</span></GridItem>
     <GridItem><span>Exceptions</span></GridItem>

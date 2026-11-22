@@ -1,24 +1,19 @@
-import type { ReactElement, ReactNode } from 'react';
+import type { ReactElement } from 'react';
+import { cx } from '../../core/cx.js';
 import { passiveRootAttributes } from '../../core/passiveRoot.js';
-import type { PassiveRootProps } from '../../core/passiveRoot.js';
-import type { GlyphSource } from '../../core/glyph.js';
 import { Icon } from '../Icon/Icon.js';
+import type { BlockquoteProps } from './types.js';
 import './blockquote.css';
 
-export type BlockquoteTone = 'neutral' | 'info' | 'success' | 'warning' | 'danger';
+export type { BlockquoteProps, BlockquoteStatus } from './types.js';
 
-export interface BlockquoteProps extends PassiveRootProps {
-  readonly size?: 's' | 'm' | 'l' | undefined;
-  readonly tone?: BlockquoteTone | undefined;
-  readonly attribution?: ReactNode;
-  readonly citeUrl?: string | undefined;
-  readonly iconLeft?: GlyphSource | undefined;
-  readonly iconRight?: GlyphSource | undefined;
-}
-
+/**
+ * Editorial quotation rendered on a native `<figure>` + `<blockquote>` with optional attribution
+ * and semantic status rail. Passive without live-region announcements.
+ */
 export function Blockquote({
   size = 'm',
-  tone = 'neutral',
+  status = 'neutral',
   attribution,
   citeUrl,
   iconLeft,
@@ -35,23 +30,20 @@ export function Blockquote({
 
   return (
     <figure
-      {...passiveRootAttributes(props)}
-      className={className ? `unica-blockquote ${className}` : 'unica-blockquote'}
+      {...passiveRootAttributes<'figure'>(props)}
+      className={cx('unica-blockquote', className)}
       data-unica-blockquote-size={size}
-      data-unica-blockquote-tone={tone}
+      data-unica-blockquote-status={status}
     >
-      <div className="unica-blockquote__body">
+      <div className="unica-blockquote-body">
         {iconLeft && (
-          <span
-            className="unica-blockquote__glyph unica-blockquote__glyph--start"
-            aria-hidden="true"
-          >
+          <span className="unica-blockquote-glyph unica-blockquote-glyph-start" aria-hidden="true">
             <Icon usage="slot" icon={iconLeft} size={size} />
           </span>
         )}
         <blockquote cite={citeUrl}>{children}</blockquote>
         {iconRight && (
-          <span className="unica-blockquote__glyph unica-blockquote__glyph--end" aria-hidden="true">
+          <span className="unica-blockquote-glyph unica-blockquote-glyph-end" aria-hidden="true">
             <Icon usage="slot" icon={iconRight} size={size} />
           </span>
         )}

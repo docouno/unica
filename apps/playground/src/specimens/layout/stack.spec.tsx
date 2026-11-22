@@ -40,7 +40,7 @@ function DividerToggle({ ctx }: { ctx: PreviewContext }) {
         <input type="checkbox" checked={show} onChange={(event) => setShow(event.target.checked)} />{' '}
         Show dividers
       </label>
-      <Stack {...ctx.subject} gap="s" divider={show ? <hr /> : undefined}>
+      <Stack {...ctx.subject} gap={8} divider={show ? <hr /> : undefined}>
         <span>Checklist</span>
         {null}
         <Fragment key="details">
@@ -114,7 +114,7 @@ export default defineComponent({
       caption: 'Zero remains a child. Dividers also appear between children of the fragment.',
       render: ({ ctx }) => (
         <LayoutExample>
-          <StackExample {...ctx.subject} gap="s" divider={<hr />} />
+          <StackExample {...ctx.subject} gap={8} divider={<hr />} />
         </LayoutExample>
       ),
     },
@@ -133,7 +133,7 @@ export default defineComponent({
       title: 'Separated help topics',
       render: ({ ctx }) => (
         <LayoutExample>
-          <Stack {...ctx.subject} gap="s" divider={<hr />}>
+          <Stack {...ctx.subject} gap={8} divider={<hr />}>
             <a href="#account">Manage your account</a>
             <a href="#billing">Find an invoice</a>
             <a href="#support">Contact support</a>
@@ -143,7 +143,7 @@ export default defineComponent({
       code: `import '@docouno/unica/styles.css';
 import { Stack } from '@docouno/unica';
 
-<Stack gap="s" divider={<hr />}>
+<Stack gap={8} divider={<hr />}>
   <a href="#account">Manage your account</a>
   <a href="#billing">Find an invoice</a>
   <a href="#support">Contact support</a>

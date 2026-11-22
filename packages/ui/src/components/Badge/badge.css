@@ -1,28 +1,28 @@
 @layer unica.components {
   .unica-badge {
-    --badge-height: 24px;
-    --badge-padding: 9px;
-    --badge-line-height: var(--text-size-body-s-lh);
-    --badge-font-size: var(--text-size-body-s);
-    --badge-dot-size: 6px;
+    --_badge-height: 24px;
+    --_badge-padding: 9px;
+    --_badge-line-height: var(--text-size-body-s-lh);
+    --_badge-font-size: var(--text-size-body-s);
+    --_badge-dot-size: 6px;
     display: inline-flex;
     flex: none;
     align-items: baseline;
     justify-content: center;
     gap: 5px;
     box-sizing: border-box;
-    min-inline-size: max(var(--badge-height), calc(var(--badge-line-height) + 4px));
-    min-block-size: var(--badge-height);
+    min-inline-size: max(var(--_badge-height), calc(var(--_badge-line-height) + 4px));
+    min-block-size: var(--_badge-height);
     max-inline-size: min(100%, var(--badge-max-width, 100%));
-    padding-block: calc(2px - var(--pill-border-width));
-    padding-inline: var(--badge-padding);
-    border: var(--pill-border-width) solid var(--mark-border);
+    padding-block: calc(2px - var(--_pill-border-width));
+    padding-inline: var(--_badge-padding);
+    border: var(--_pill-border-width) solid var(--_mark-border);
     border-radius: var(--radius-full);
-    background: var(--mark-bg);
-    color: var(--mark-fg);
+    background: var(--_mark-bg);
+    color: var(--_mark-fg);
     font-family: var(--font-family-base);
-    font-size: var(--badge-font-size);
-    line-height: var(--badge-line-height);
+    font-size: var(--_badge-font-size);
+    line-height: var(--_badge-line-height);
     font-weight: 500;
     font-variant-numeric: tabular-nums;
     font-kerning: none;
@@ -32,19 +32,19 @@
     vertical-align: baseline;
   }
   .unica-badge[data-unica-badge-size='s'] {
-    --badge-height: 20px;
-    --badge-padding: 7px;
-    --badge-line-height: var(--text-size-caption-l-lh);
-    --badge-font-size: var(--text-size-caption-l);
-    --badge-dot-size: 5px;
+    --_badge-height: 20px;
+    --_badge-padding: 7px;
+    --_badge-line-height: var(--text-size-caption-l-lh);
+    --_badge-font-size: var(--text-size-caption-l);
+    --_badge-dot-size: 5px;
     gap: 4px;
   }
   .unica-badge[data-unica-badge-size='l'] {
-    --badge-height: 28px;
-    --badge-padding: 11px;
-    --badge-line-height: var(--text-size-body-m-lh);
-    --badge-font-size: var(--text-size-body-m);
-    --badge-dot-size: 7px;
+    --_badge-height: 28px;
+    --_badge-padding: 11px;
+    --_badge-line-height: var(--text-size-body-m-lh);
+    --_badge-font-size: var(--text-size-body-m);
+    --_badge-dot-size: 7px;
     gap: 6px;
   }
   .unica-badge[data-unica-badge-numeric] {
@@ -53,12 +53,12 @@
   .unica-badge-dot {
     flex: none;
     align-self: center;
-    inline-size: var(--badge-dot-size);
-    block-size: var(--badge-dot-size);
+    inline-size: var(--_badge-dot-size);
+    block-size: var(--_badge-dot-size);
     border-radius: var(--radius-full);
-    color: var(--mark-signal);
+    color: var(--_mark-signal);
     background: currentColor;
-    box-shadow: var(--badge-dot-shadow);
+    box-shadow: var(--_badge-dot-shadow);
   }
   .unica-badge-icon {
     align-self: center;
@@ -84,11 +84,11 @@
   }
   @media (hover: hover) {
     .unica-badge:where(a[href], button:not(:disabled)):hover {
-      background: color-mix(in oklab, var(--mark-bg), var(--mark-fg) 8%);
+      background: color-mix(in oklab, var(--_mark-bg), var(--_mark-fg) 8%);
     }
   }
   .unica-badge:where(a[href], button:not(:disabled)):active {
-    background: color-mix(in oklab, var(--mark-bg), var(--mark-fg) 11%);
+    background: color-mix(in oklab, var(--_mark-bg), var(--_mark-fg) 11%);
   }
   .unica-badge:is(a[href], button:not(:disabled)):focus-visible {
     outline: 2px solid var(--focus-ring-color);

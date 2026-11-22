@@ -1,6 +1,10 @@
 .card-proto {
   --action-context-ink: initial;
-  --code-context-bg: color-mix(in srgb, var(--neutral-soft-fg) var(--code-plate-tint), transparent);
+  --code-context-bg: color-mix(
+    in srgb,
+    var(--neutral-soft-fg) var(--_code-plate-tint),
+    transparent
+  );
   --code-context-fg: var(--neutral-soft-fg);
   --code-context-border: var(--neutral-border);
   --card-padding: var(--surface-m-padding);
@@ -30,7 +34,7 @@
   position: absolute;
   inset: -1px;
   border-radius: inherit;
-  background: var(--motif-corner-ticks);
+  background: var(--_motif-corner-ticks);
   pointer-events: none;
 }
 .card-proto[data-variant='subtle'] {

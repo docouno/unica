@@ -29,12 +29,12 @@
   inline-size: min(100%, var(--popover-width));
   min-inline-size: 0;
   padding: var(--popover-padding);
-  border: 1px solid var(--overlay-border);
+  border: 1px solid var(--_overlay-border);
   border-radius: var(--element-radius);
   color: var(--fg-primary);
   background-color: var(--bg-overlay);
-  box-shadow: var(--overlay-shadow-popover);
-  backdrop-filter: var(--overlay-backdrop);
+  box-shadow: var(--_overlay-shadow-popover);
+  backdrop-filter: var(--_overlay-backdrop);
   font-family: var(--font-family-base);
   overflow-wrap: anywhere;
   /* The native [popover] UA rule scrolls the whole surface by default. */
@@ -46,8 +46,8 @@
   position: absolute;
   inset: 0;
   border-radius: inherit;
-  box-shadow: var(--overlay-rim);
-  mask-image: var(--overlay-rim-mask);
+  box-shadow: var(--_overlay-rim);
+  mask-image: var(--_overlay-rim-mask);
   pointer-events: none;
 }
 
@@ -57,7 +57,7 @@
   inset: 0;
   border-radius: inherit;
   /* The motif token contains full background layers, including size and repeat. */
-  background: var(--motif-corner-ticks);
+  background: var(--_motif-corner-ticks);
   pointer-events: none;
 }
 

@@ -5,21 +5,21 @@
   --alert-line: var(--text-size-body-m-lh);
   --alert-glyph: var(--size-m-icon);
   --alert-close-size: 24px;
-  --code-context-bg: color-mix(in srgb, var(--mark-fg) var(--code-plate-tint), transparent);
-  --code-context-fg: var(--mark-fg);
-  --code-context-border: var(--mark-border);
-  --action-context-ink: var(--mark-fg);
+  --code-context-bg: color-mix(in srgb, var(--_mark-fg) var(--_code-plate-tint), transparent);
+  --code-context-fg: var(--_mark-fg);
+  --code-context-border: var(--_mark-border);
+  --action-context-ink: var(--_mark-fg);
   display: flex;
   align-items: start;
   gap: var(--alert-gap);
   min-inline-size: 0;
   padding: var(--alert-padding);
-  border: var(--alert-border-width) solid var(--mark-border);
-  border-inline-start-width: max(var(--alert-border-width), var(--alert-edge-width));
-  border-inline-start-color: var(--mark-border);
+  border: var(--_alert-border-width) solid var(--_mark-border);
+  border-inline-start-width: max(var(--_alert-border-width), var(--_alert-edge-width));
+  border-inline-start-color: var(--_mark-border);
   border-radius: var(--surface-m-radius);
-  background: var(--mark-bg);
-  color: var(--mark-fg);
+  background: var(--_mark-bg);
+  color: var(--_mark-fg);
   font-family: var(--font-family-base);
   font-size: var(--alert-font);
   line-height: var(--alert-line);
@@ -105,7 +105,7 @@
   background: transparent;
   color: inherit;
   cursor: pointer;
-  transition: background-color var(--btn-state-duration) ease;
+  transition: background-color var(--_btn-state-duration) ease;
 }
 .alert-close-proto > svg {
   inline-size: var(--alert-glyph);
@@ -146,7 +146,7 @@
 @media (forced-colors: active) {
   .alert-proto {
     border: 1px solid CanvasText;
-    border-inline-start-width: max(1px, var(--alert-edge-width));
+    border-inline-start-width: max(1px, var(--_alert-edge-width));
     background: Canvas;
     color: CanvasText;
   }

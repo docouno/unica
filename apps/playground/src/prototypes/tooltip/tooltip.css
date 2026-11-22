@@ -3,11 +3,11 @@
   position: relative;
   box-sizing: border-box;
   min-inline-size: 0;
-  border: 1px solid var(--overlay-border);
+  border: 1px solid var(--_overlay-border);
   border-radius: var(--surface-s-radius);
   background: var(--bg-overlay);
   color: var(--fg-primary);
-  backdrop-filter: var(--overlay-backdrop);
+  backdrop-filter: var(--_overlay-backdrop);
   font-family: var(--font-family-base);
   font-weight: 400;
   text-align: start;
@@ -23,8 +23,8 @@
   position: absolute;
   inset: 0;
   border-radius: inherit;
-  box-shadow: var(--overlay-rim);
-  mask-image: var(--overlay-rim-mask);
+  box-shadow: var(--_overlay-rim);
+  mask-image: var(--_overlay-rim-mask);
   pointer-events: none;
 }
 
@@ -33,7 +33,7 @@
   position: absolute;
   inset: 0;
   border-radius: inherit;
-  background: var(--motif-corner-ticks);
+  background: var(--_motif-corner-ticks);
   pointer-events: none;
 }
 
@@ -44,7 +44,7 @@
   max-inline-size: min(20rem, 100%);
   min-block-size: 30px;
   padding: 0;
-  box-shadow: var(--overlay-shadow-tooltip);
+  box-shadow: var(--_overlay-shadow-tooltip);
   font-size: var(--text-size-body-s);
   line-height: var(--text-size-body-s-lh);
 }
@@ -89,7 +89,7 @@
   inline-size: 22rem;
   max-inline-size: 100%;
   padding: var(--space-4);
-  box-shadow: var(--overlay-shadow-hover);
+  box-shadow: var(--_overlay-shadow-hover);
   font-size: var(--text-size-body-s);
   line-height: var(--text-size-body-s-lh);
 }

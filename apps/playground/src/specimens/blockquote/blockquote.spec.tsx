@@ -41,11 +41,11 @@ export default defineComponent({
       description: 'The size of the quote and its frame.',
       choices: [{ value: 's' }, { value: 'm' }, { value: 'l' }],
     },
-    tone: {
+    status: {
       kind: 'enum',
       group: 'Appearance',
       default: 'neutral',
-      description: 'The semantic tone of the quotation.',
+      description: 'The semantic status of the quotation.',
       choices: [
         { value: 'neutral' },
         { value: 'info' },
@@ -104,7 +104,7 @@ export default defineComponent({
   code: ({ children, iconLeft, iconRight, ...props }) => {
     const attributes = previewProps(props, {
       size: 'm',
-      tone: 'neutral',
+      status: 'neutral',
       attribution: '',
       citeUrl: '',
     });
@@ -147,13 +147,13 @@ export default defineComponent({
       ),
     },
     {
-      id: 'tones',
-      rows: 'tone',
+      id: 'statuses',
+      rows: 'status',
       title: 'Meaning at the margin',
       reference: () => (
         <div className="quote-example-stack">
           <Text size="body-s" color="muted">
-            Tone describes the quoted material. It does not turn the excerpt into a live
+            Status describes the quoted material. It does not turn the excerpt into a live
             notification.
           </Text>
           <Blockquote size="s" attribution={<cite>Editorial principles</cite>}>
@@ -161,19 +161,31 @@ export default defineComponent({
           </Blockquote>
           <Blockquote
             size="s"
-            tone="info"
+            status="info"
             iconLeft={OpeningQuotes}
             attribution={<cite>Release notes · Information</cite>}
           >
             The preview format is available for evaluation.
           </Blockquote>
-          <Blockquote size="s" tone="success" attribution={<cite>Review summary · Accepted</cite>}>
+          <Blockquote
+            size="s"
+            status="success"
+            attribution={<cite>Review summary · Accepted</cite>}
+          >
             The updated procedure meets the acceptance criteria.
           </Blockquote>
-          <Blockquote size="s" tone="warning" attribution={<cite>Migration guide · Caution</cite>}>
+          <Blockquote
+            size="s"
+            status="warning"
+            attribution={<cite>Migration guide · Caution</cite>}
+          >
             Existing clients may continue using the previous format during the transition.
           </Blockquote>
-          <Blockquote size="s" tone="danger" attribution={<cite>Safety policy · Prohibition</cite>}>
+          <Blockquote
+            size="s"
+            status="danger"
+            attribution={<cite>Safety policy · Prohibition</cite>}
+          >
             Unverified backups must never be treated as a recovery guarantee.
           </Blockquote>
         </div>

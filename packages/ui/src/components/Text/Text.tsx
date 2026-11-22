@@ -1,32 +1,17 @@
 import { createElement } from 'react';
-import type { ComponentPropsWithRef, ReactElement } from 'react';
+import type { ReactElement } from 'react';
+import { cx } from '../../core/cx.js';
 import { typographyPresentation } from '../../internal/typography.js';
-import type { TypographyProps, TypographyWeight } from '../../internal/typography.js';
 import '../../internal/typography.css';
+import type { TextProps } from './types.js';
 import './text.css';
 
-export type { TextAlign, TextColor } from '../../internal/typography.js';
+export type { TextAlign, TextColor, TextProps, TextSize, TextTag, TextWeight } from './types.js';
 
-export type TextTag = 'p' | 'span' | 'div' | 'label' | 'strong' | 'em';
-export type TextSize =
-  'body-l' | 'body-m' | 'body-s' | 'body-xs' | 'caption-l' | 'caption-m' | 'caption-s';
-export type TextWeight = TypographyWeight;
-
-type NativeTextProps = {
-  [Tag in TextTag]: Omit<ComponentPropsWithRef<Tag>, keyof TypographyProps> &
-    (Tag extends 'label'
-      ? { readonly as: Tag }
-      : { readonly htmlFor?: never } & (Tag extends 'p'
-          ? { readonly as?: Tag | undefined }
-          : { readonly as: Tag }));
-}[TextTag];
-
-export type TextProps = NativeTextProps &
-  TypographyProps & {
-    readonly size?: TextSize | undefined;
-    readonly weight?: TextWeight | undefined;
-  };
-
+/**
+ * Semantic body and caption typography primitive on native HTML elements (`p`, `span`, `div`,
+ * `label`, `strong`, `em`) with token scaling, truncation, and line clamping.
+ */
 export function Text({
   as = 'p',
   size = 'body-m',
@@ -53,6 +38,6 @@ export function Text({
     ...nativeProps,
     ...presentation,
     htmlFor: as === 'label' ? htmlFor : undefined,
-    className: className ? `unica-text ${className}` : 'unica-text',
+    className: cx('unica-text', className),
   });
 }

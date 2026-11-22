@@ -121,7 +121,7 @@ button.stepper-entry-proto {
 }
 
 .stepper-step-proto[data-current]:not([data-status='invalid']) .stepper-marker-proto {
-  box-shadow: var(--stepper-current-shadow, none);
+  box-shadow: var(--_stepper-current-shadow, none);
 }
 
 .stepper-step-proto[data-status='invalid'] .stepper-marker-proto {
@@ -433,7 +433,7 @@ button.stepper-entry-proto:is(:active, [data-preview='hover'], [data-preview='pr
 
 @media (forced-colors: active) {
   .stepper-proto {
-    --stepper-current-shadow: none;
+    --_stepper-current-shadow: none;
     --stepper-focus: Highlight;
     --stepper-rail: GrayText;
     --stepper-rail-traversed: CanvasText;

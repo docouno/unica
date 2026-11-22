@@ -105,7 +105,7 @@
   inline-size: var(--empty-medallion-size);
   max-inline-size: 100%;
   aspect-ratio: 1;
-  border: var(--pill-border-width) solid var(--card-border);
+  border: var(--_pill-border-width) solid var(--card-border);
   border-radius: var(--radius-full);
   background: color-mix(in srgb, var(--empty-media-signal) 6%, transparent);
   color: color-mix(in oklab, var(--empty-media-signal) 76%, var(--fg-subtle));

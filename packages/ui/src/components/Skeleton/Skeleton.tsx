@@ -1,45 +1,13 @@
-import type { CSSProperties, HTMLAttributes, ReactElement, Ref } from 'react';
+import type { CSSProperties, ReactElement } from 'react';
+import { cx } from '../../core/cx.js';
+import { warnOnce } from '../../core/devWarning.js';
+import { pickConsumerDataAttributes } from '../../core/passiveRoot.js';
+import { SKELETON_TEXT_SIZE } from './consts.js';
 import { useSkeletonSweep } from './sweep.js';
+import type { SkeletonProps, SkeletonTextProps, SkeletonTextSize } from './types.js';
 import './skeleton.css';
 
-interface PlaceholderProps {
-  readonly children?: never;
-  readonly className?: string | undefined;
-  readonly style?: CSSProperties | undefined;
-  readonly id?: string | undefined;
-  readonly dir?: HTMLAttributes<HTMLElement>['dir'];
-  readonly hidden?: boolean | undefined;
-  readonly width?: CSSProperties['inlineSize'];
-  readonly [data: `data-${string}`]: string | number | boolean | undefined;
-}
-
-export interface SkeletonProps extends PlaceholderProps {
-  readonly ref?: Ref<HTMLSpanElement> | undefined;
-  readonly shape?: 'rect' | 'circle' | undefined;
-  readonly height?: CSSProperties['blockSize'];
-}
-
-const textSizes = [
-  'caption-s',
-  'caption-m',
-  'caption-l',
-  'body-s',
-  'body-m',
-  'body-l',
-  'heading-s',
-  'heading-m',
-  'heading-l',
-  'heading-xl',
-  'display-s',
-  'display-m',
-  'display-l',
-] as const;
-
-export interface SkeletonTextProps extends PlaceholderProps {
-  readonly ref?: Ref<HTMLDivElement> | undefined;
-  readonly size?: (typeof textSizes)[number] | undefined;
-  readonly lines?: number | undefined;
-}
+export type { SkeletonProps, SkeletonTextProps } from './types.js';
 
 function dimension(value: CSSProperties['inlineSize']): CSSProperties['inlineSize'] {
   if (typeof value === 'string') {
@@ -48,20 +16,10 @@ function dimension(value: CSSProperties['inlineSize']): CSSProperties['inlineSiz
   return typeof value === 'number' && Number.isFinite(value) && value >= 0 ? value : undefined;
 }
 
-function dataAttributes(props: Record<string, unknown>): Record<string, string | number | boolean> {
-  // Forward instrumentation without letting a JavaScript spread change the decorative DOM.
-  const attributes: Record<string, string | number | boolean> = {};
-  for (const [key, value] of Object.entries(props)) {
-    if (
-      key.startsWith('data-') &&
-      (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean')
-    ) {
-      attributes[key] = value;
-    }
-  }
-  return attributes;
-}
-
+/**
+ * Decorative loading placeholder block (`rect` or `circle`) synchronized with the document
+ * diagonal shimmer sweep. Hidden from assistive technology and keyboard focus.
+ */
 export function Skeleton({
   ref,
   shape,
@@ -75,17 +33,15 @@ export function Skeleton({
   ...props
 }: SkeletonProps): ReactElement {
   const rootRef = useSkeletonSweep(ref);
-  const classes = ['unica-skeleton', shape === 'circle' && 'unica-skeleton--circle', className]
-    .filter(Boolean)
-    .join(' ');
   return (
     <span
-      {...dataAttributes(props)}
+      {...pickConsumerDataAttributes(props, 'data-unica-skeleton-')}
       ref={rootRef}
       id={id}
       dir={dir}
       hidden={hidden}
-      className={classes}
+      className={cx('unica-skeleton', className)}
+      data-unica-skeleton-shape={shape === 'circle' ? 'circle' : undefined}
       aria-hidden="true"
       contentEditable={false}
       style={{
@@ -97,6 +53,9 @@ export function Skeleton({
   );
 }
 
+/**
+ * Multi-line decorative text loading placeholder sized to Unica typography scale tokens.
+ */
 export function SkeletonText({
   ref,
   size = 'body-m',
@@ -110,8 +69,17 @@ export function SkeletonText({
   ...props
 }: SkeletonTextProps): ReactElement {
   const rootRef = useSkeletonSweep(ref);
-  const step = textSizes.includes(size) ? size : 'body-m';
-  const count = Number.isFinite(lines) ? Math.max(1, Math.min(20, Math.floor(lines))) : 3;
+  const step: SkeletonTextSize = Object.hasOwn(SKELETON_TEXT_SIZE, size) ? size : 'body-m';
+  if (typeof lines !== 'number' || !Number.isInteger(lines) || lines < 1 || lines > 20) {
+    warnOnce(
+      'skeleton-text-lines',
+      `SkeletonText lines must be an integer between 1 and 20; received ${String(lines)}.`,
+    );
+  }
+  const count =
+    typeof lines === 'number' && Number.isFinite(lines)
+      ? Math.max(1, Math.min(20, Math.floor(lines)))
+      : 3;
   const textStyle: CSSProperties & {
     '--_skeleton-font-size': string;
     '--_skeleton-line-height': string;
@@ -124,19 +92,19 @@ export function SkeletonText({
 
   return (
     <div
-      {...dataAttributes(props)}
+      {...pickConsumerDataAttributes(props, 'data-unica-skeleton-')}
       ref={rootRef}
       id={id}
       dir={dir}
       hidden={hidden}
-      className={className ? `unica-skeleton-text ${className}` : 'unica-skeleton-text'}
+      className={cx('unica-skeleton-text', className)}
       aria-hidden="true"
       contentEditable={false}
       style={textStyle}
     >
       {Array.from({ length: count }, (_, index) => (
-        <span className="unica-skeleton-text__line" key={index}>
-          <span className="unica-skeleton-text__bar" />
+        <span className="unica-skeleton-text-line" key={index}>
+          <span className="unica-skeleton-text-bar" />
         </span>
       ))}
     </div>

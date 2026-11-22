@@ -7,7 +7,7 @@
     cursor: progress;
   }
 
-  :is(.unica-skeleton, .unica-skeleton-text__bar) {
+  :is(.unica-skeleton, .unica-skeleton-text-bar) {
     position: relative;
     overflow: hidden;
     background: color-mix(in srgb, var(--fg-muted) 16%, transparent);
@@ -21,7 +21,7 @@
     border-radius: var(--element-radius, var(--size-m-radius));
   }
 
-  .unica-skeleton--circle {
+  .unica-skeleton[data-unica-skeleton-shape='circle'] {
     inline-size: 40px;
     /* Keep the ratio when a taller flex sibling stretches auto-sized items. */
     block-size: max-content;
@@ -33,19 +33,19 @@
     display: grid;
   }
 
-  .unica-skeleton-text__line {
+  .unica-skeleton-text-line {
     display: flex;
     align-items: center;
     block-size: var(--_skeleton-line-height);
   }
 
-  .unica-skeleton-text__bar {
+  .unica-skeleton-text-bar {
     inline-size: 100%;
     block-size: calc(var(--_skeleton-font-size) * 0.72);
     border-radius: var(--radius-xs);
   }
 
-  .unica-skeleton-text__line:last-child:not(:first-child) > .unica-skeleton-text__bar {
+  .unica-skeleton-text-line:last-child:not(:first-child) > .unica-skeleton-text-bar {
     inline-size: 60%;
   }
 
@@ -54,7 +54,7 @@
   }
 
   @media (prefers-reduced-motion: no-preference) {
-    :is(.unica-skeleton, .unica-skeleton-text__bar)::after {
+    :is(.unica-skeleton, .unica-skeleton-text-bar)::after {
       --_skeleton-band-rise: 30%;
       content: '';
       position: absolute;
@@ -77,7 +77,7 @@
     }
 
     @media (min-width: 768px) {
-      :is(.unica-skeleton, .unica-skeleton-text__bar)::after {
+      :is(.unica-skeleton, .unica-skeleton-text-bar)::after {
         --_skeleton-band-rise: 20%;
       }
     }
@@ -98,14 +98,14 @@
   }
 
   @media (forced-colors: active) {
-    :is(.unica-skeleton, .unica-skeleton-text__bar) {
+    :is(.unica-skeleton, .unica-skeleton-text-bar) {
       forced-color-adjust: none;
       background: Canvas;
       outline: 1px solid GrayText;
       outline-offset: -1px;
     }
 
-    :is(.unica-skeleton, .unica-skeleton-text__bar)::after {
+    :is(.unica-skeleton, .unica-skeleton-text-bar)::after {
       content: none;
       animation: none;
     }

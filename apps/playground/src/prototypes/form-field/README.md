@@ -1,6 +1,6 @@
 # FormField design reference
 
-FormField gives one control, a group of controls, or a composite editor a visible name and an orderly supporting area. It is optional: simple vertical fields may keep their own convenience label and message props. This reference defines appearance and intended interaction; prototype props and DOM do not prescribe the shipped API.
+FormField gives one control, a group of controls, or a composite editor a visible name and an orderly supporting area. Data-entry controls do not expose shorthand `label`, `description`, or `message` props; wrap labeled controls and groups in `FormField`, or use native `<label htmlFor>` / `aria-label` on standalone inline fields (see [Feedback and Errors](../../../../../docs/concepts/feedback-and-errors.md)). This reference defines appearance and intended interaction; prototype props and DOM do not prescribe the shipped API.
 
 ## Scope and anatomy
 

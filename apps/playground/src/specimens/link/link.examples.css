@@ -60,8 +60,8 @@
 }
 .link-study-surface[data-link-surface='overlay'] {
   background: var(--bg-overlay);
-  backdrop-filter: var(--overlay-backdrop);
-  box-shadow: var(--overlay-rim), var(--overlay-shadow-popover);
+  backdrop-filter: var(--_overlay-backdrop);
+  box-shadow: var(--_overlay-rim), var(--_overlay-shadow-popover);
 }
 .link-study-destination {
   display: grid;

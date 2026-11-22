@@ -25,7 +25,7 @@
   --table-head-line: var(--text-size-body-xs-lh);
   --table-sort-icon: var(--size-m-icon);
   --table-sort-radius: var(--size-m-radius);
-  --_table-head-ground: var(--table-sticky-header-bg, var(--bg-canvas));
+  --_table-head-ground: var(--_table-sticky-header-bg, var(--bg-canvas));
   inline-size: 100%;
   border-collapse: separate;
   border-spacing: 0;
@@ -59,10 +59,10 @@
   --table-sort-radius: var(--size-l-radius);
 }
 :where(.card-proto) .table-proto {
-  --_table-head-ground: var(--table-sticky-header-bg, var(--card-bg));
+  --_table-head-ground: var(--_table-sticky-header-bg, var(--card-bg));
 }
 :where(.card-proto[data-variant='subtle']) .table-proto {
-  --_table-head-ground: var(--table-sticky-header-bg, var(--card-bg-subtle));
+  --_table-head-ground: var(--_table-sticky-header-bg, var(--card-bg-subtle));
 }
 
 .table-proto > :is(thead, tbody, tfoot) > tr > :is(th, td) {
@@ -87,7 +87,7 @@
   line-height: var(--table-head-line);
 }
 .table-proto > tbody > tr:has(~ tr:not([hidden])) > :is(th, td) {
-  border-block-end-color: var(--table-row-rule, var(--border-subtle));
+  border-block-end-color: var(--_table-row-rule, var(--border-subtle));
 }
 .table-proto > tbody > tr > th {
   color: var(--fg-primary);

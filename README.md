@@ -38,7 +38,7 @@ export function ThemePreview() {
 }
 ```
 
-The library ships theme tokens, preset metadata, `getUnicaRootProps`, `UnicaProvider`, [Layout](docs/components/layout.md) primitives, [native scrollbar utilities](docs/components/scrollbar.md), the [Icon](docs/components/icon.md) glyph protocol, [Link](docs/components/link.md), [Portal](docs/components/portal.md), [Badge](docs/components/badge.md), [Divider](docs/components/divider.md), [Indicator](docs/components/indicator.md), the typography primitives [Text](docs/components/text.md), [Title](docs/components/title.md), [Code](docs/components/code.md) and [Blockquote](docs/components/blockquote.md), keyboard hints [Kbd and KbdGroup](docs/components/kbd.md), [Spinner](docs/components/spinner.md), [Progress and ProgressCircle](docs/components/progress.md), and [Skeleton and SkeletonText](docs/components/skeleton.md). The `data-theme` attribute (or `getUnicaRootProps`) applies the CSS preset. `UnicaProvider` supplies [structural component defaults](docs/concepts/themes-and-roles.md#structural-component-defaults), scoped `portalContainer`, and `iconAdapter` through React context.
+The library ships theme tokens, preset metadata, `getUnicaRootProps`, `UnicaProvider`, [Layout](docs/components/layout.md) primitives (including `VisuallyHidden`), [native scrollbar utilities](docs/components/scrollbar.md), the [Icon](docs/components/icon.md) glyph protocol, [Link](docs/components/link.md), [Portal](docs/components/portal.md), [Badge](docs/components/badge.md), [Divider](docs/components/divider.md), [Indicator](docs/components/indicator.md), the typography primitives [Text](docs/components/text.md), [Title](docs/components/title.md), [Code](docs/components/code.md) and [Blockquote](docs/components/blockquote.md), keyboard hints [Kbd and KbdGroup](docs/components/kbd.md), [Spinner](docs/components/spinner.md), [Progress and ProgressCircle](docs/components/progress.md), and [Skeleton and SkeletonText](docs/components/skeleton.md). The `data-theme` attribute (or `getUnicaRootProps`) applies the CSS preset. `UnicaProvider` supplies [structural component defaults](docs/concepts/themes-and-roles.md#structural-component-defaults), scoped `portalContainer`, and `iconAdapter` through React context.
 
 New component families are reviewed as live prototypes in the playground before their public package APIs ship. Playground scenes use the shipped package for Badge, Text, Title, Icon, Code, Blockquote, Divider, Kbd, KbdGroup, Link, Spinner, and Progress alongside families still in design.
 
@@ -89,7 +89,8 @@ make dev app=playground
 
 ## Documentation
 
-- [Documentation Index](docs/README.md) — themes, geometry, overlays, forms, and browser support
+- [Documentation Index](docs/README.md) — themes, geometry, feedback, overlays, forms, and browser support
+- [Component Anatomy](docs/anatomy.md) — family structure, master axis dictionaries, and conformance gates
 - [Workbench Workflow](docs/workbench.md) — author specimens, compare themes, and capture a specific view
 - [Browser Tests](docs/browser-tests.md) — prepare Chromium and add a browser contract scenario
 - [Folio Composition](docs/compositions/folio.md) — baseline product scenes across `Soft`, `Frost`, and `Pixel`

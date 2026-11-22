@@ -132,9 +132,9 @@
 }
 .avatar-example-surface[data-example-surface='overlay'] {
   background: var(--bg-overlay);
-  backdrop-filter: var(--overlay-backdrop);
-  border-color: var(--overlay-border);
-  box-shadow: var(--overlay-shadow);
+  backdrop-filter: var(--_overlay-backdrop);
+  border-color: var(--_overlay-border);
+  box-shadow: var(--_overlay-shadow);
 }
 .avatar-example-range {
   display: flex;

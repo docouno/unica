@@ -1,15 +1,14 @@
 import type { JSX } from 'react';
+import { nonBlank, passiveIndicatorAttributes } from '../../core/passiveRoot.js';
 import { ActivityIcon } from './ActivityIcon.js';
-import type { ActivityIconProps } from './ActivityIcon.js';
-import { nonBlank, passiveAttributes } from './passive.js';
+import type { SpinnerProps } from './types.js';
 
-export type { SpinnerSize, SpinnerTone } from './ActivityIcon.js';
+export type { SpinnerProps, SpinnerSize, SpinnerTone } from './types.js';
 
-export interface SpinnerProps extends ActivityIconProps {
-  readonly delay?: number | undefined;
-  readonly 'aria-valuetext'?: never;
-}
-
+/**
+ * Indeterminate activity spinner. Decorative (`aria-hidden="true"`) unless named via
+ * `aria-label` or `aria-labelledby`, with optional CSS reveal `delay`.
+ */
 export function Spinner({
   delay = 0,
   'aria-label': ariaLabel,
@@ -25,7 +24,7 @@ export function Spinner({
   return (
     <ActivityIcon
       attributes={{
-        ...passiveAttributes(props),
+        ...passiveIndicatorAttributes(props),
         'aria-hidden': hidden || undefined,
         'aria-label': label,
         'aria-labelledby': labelledBy,

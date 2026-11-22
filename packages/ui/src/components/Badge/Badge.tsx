@@ -1,42 +1,18 @@
 import { Children, Fragment, isValidElement } from 'react';
-import type { CSSProperties, HTMLAttributes, ReactElement, ReactNode, Ref } from 'react';
+import type { HTMLAttributes, ReactElement, ReactNode } from 'react';
 import { Slot } from '../../core/Slot.js';
-import type { GlyphSource } from '../../core/glyph.js';
+import { cx, dataFlag } from '../../core/cx.js';
+import { warnOnce } from '../../core/devWarning.js';
 import { Icon } from '../Icon/Icon.js';
+import type { BadgeProps } from './types.js';
 import './badge.css';
 
-export type BadgeStatus = 'neutral' | 'accent' | 'info' | 'success' | 'warning' | 'danger';
-
-interface BadgePresentation {
-  readonly status?: BadgeStatus | undefined;
-  readonly size?: 's' | 'm' | 'l' | undefined;
-  readonly dot?: boolean | undefined;
-  readonly iconLeft?: GlyphSource | undefined;
-}
-
-interface BadgeRootProps<T extends HTMLElement> extends Omit<
-  HTMLAttributes<T>,
-  'children' | 'dangerouslySetInnerHTML' | 'style'
-> {
-  readonly ref?: Ref<T> | undefined;
-  readonly style?: (CSSProperties & { readonly '--badge-max-width'?: string }) | undefined;
-  readonly dangerouslySetInnerHTML?: never;
-  readonly [name: `data-${string}`]: string | number | boolean | undefined;
-}
+export type { BadgeProps, BadgeStatus } from './types.js';
 
 type BadgeChild = ReactElement<
   Pick<HTMLAttributes<HTMLElement>, 'children' | 'dangerouslySetInnerHTML'> & { type?: string },
   'a' | 'button'
 >;
-
-export type BadgeProps = BadgePresentation &
-  (
-    | (BadgeRootProps<HTMLSpanElement> & {
-        readonly asChild?: false | undefined;
-        readonly children: ReactNode;
-      })
-    | (BadgeRootProps<HTMLElement> & { readonly asChild: true; readonly children: ReactElement })
-  );
 
 function requireBadgeChild(child: unknown): BadgeChild {
   if (
@@ -65,6 +41,10 @@ function hasLabel(label: ReactNode): boolean {
   });
 }
 
+/**
+ * Compact status or count badge. Renders nothing when its label has no visible content;
+ * `iconLeft` takes precedence over `dot`.
+ */
 export function Badge({
   asChild,
   children,
@@ -79,6 +59,12 @@ export function Badge({
   const child = asChild ? requireBadgeChild(children) : undefined;
   const label = child ? child.props.children : children;
   if (!hasLabel(label)) {
+    if (typeof label === 'string' && label.length > 0) {
+      warnOnce(
+        'badge-blank-children',
+        'Badge received whitespace-only children and rendered nothing.',
+      );
+    }
     return null;
   }
 
@@ -89,9 +75,9 @@ export function Badge({
   const marker = {
     'data-unica-mark-status': status,
     'data-unica-badge-size': size,
-    'data-unica-badge-numeric': numeric || undefined,
+    'data-unica-badge-numeric': dataFlag(numeric),
   };
-  const rootClass = className ? `unica-badge ${className}` : 'unica-badge';
+  const rootClass = cx('unica-badge', className);
   const content = (
     <>
       {iconLeft ? (

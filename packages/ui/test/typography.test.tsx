@@ -2,9 +2,14 @@ import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { createRef } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { afterEach, expect, it, vi } from 'vitest';
+import { resetDevWarnings } from '../src/core/devWarning.js';
 import { Text, Title } from '../src/index.js';
 
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  resetDevWarnings();
+  vi.restoreAllMocks();
+});
 
 it('renders a single native Text root with semantic defaults and explicit overrides', () => {
   const { container } = render(
@@ -37,13 +42,11 @@ it('renders a single native Text root with semantic defaults and explicit overri
     'em',
   ]);
   expect(screen.getByText('Label').getAttribute('for')).toBe('field');
-  expect(screen.getByText('Paragraph').style.getPropertyValue('--unica-type-size')).toBe(
+  expect(screen.getByText('Paragraph').style.getPropertyValue('--_type-size')).toBe(
     'var(--text-size-body-m)',
   );
-  expect(screen.getByText('Strong').style.getPropertyValue('--unica-type-weight')).toBe('700');
-  expect(screen.getByText('Light strong').style.getPropertyValue('--unica-type-weight')).toBe(
-    '300',
-  );
+  expect(screen.getByText('Strong').style.getPropertyValue('--_type-weight')).toBe('700');
+  expect(screen.getByText('Light strong').style.getPropertyValue('--_type-weight')).toBe('300');
   expect(screen.getByText('Emphasis').dataset.unicaTypeStyle).toBe('italic');
   expect(screen.getByText('Upright emphasis').dataset.unicaTypeStyle).toBe('normal');
 });
@@ -177,4 +180,16 @@ it('renders deterministic provider-free SSR without leaking styling props or cha
   ]) {
     expect(heading?.hasAttribute(attribute)).toBe(false);
   }
+});
+
+it('warns once in development and ignores non-positive lineClamp values', () => {
+  const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+  const { container } = render(
+    <>
+      <Text lineClamp={0}>Zero</Text>
+      <Text lineClamp={-2}>Negative</Text>
+    </>,
+  );
+  expect(warn).toHaveBeenCalledTimes(1);
+  expect(container.querySelector('[data-unica-type-clamp]')).toBeNull();
 });

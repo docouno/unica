@@ -445,7 +445,7 @@ export default {
             const contextInk = await colorIn(link, 'var(--action-context-ink)');
             const activeInk = await colorIn(
               link,
-              'color-mix(in srgb, var(--action-context-ink) var(--btn-context-ink-strength), var(--fg-primary))',
+              'color-mix(in srgb, var(--action-context-ink) var(--_btn-context-ink-strength), var(--fg-primary))',
             );
             const context = `${theme} / ${status} / ${mode}`;
             const before = await getBox(link);

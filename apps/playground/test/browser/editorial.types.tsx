@@ -1,14 +1,14 @@
 import { createRef } from 'react';
 import { Blockquote, Code, defineGlyph } from '@docouno/unica';
-import type { BlockquoteProps, BlockquoteTone, CodeProps, CodeTone } from '@docouno/unica';
+import type { BlockquoteProps, BlockquoteStatus, CodeProps, CodeStatus } from '@docouno/unica';
 
 const root = createRef<HTMLElement>();
 const svgRef = createRef<SVGSVGElement>();
-const codeTone: CodeTone = 'inherit';
-const code: CodeProps = { tone: codeTone, ref: root, lang: 'ar', dir: 'rtl' };
-const quoteTone: BlockquoteTone = 'info';
+const codeStatus: CodeStatus = 'inherit';
+const code: CodeProps = { status: codeStatus, ref: root, lang: 'ar', dir: 'rtl' };
+const quoteStatus: BlockquoteStatus = 'info';
 const quote: BlockquoteProps = {
-  tone: quoteTone,
+  status: quoteStatus,
   ref: root,
   attribution: <cite>Style guide</cite>,
   iconLeft: defineGlyph(() => <svg />),
@@ -45,8 +45,8 @@ const forbidden = {
 <Code contentEditable="plaintext-only" />;
 // @ts-expect-error Code uses an HTML ref.
 <Code ref={svgRef} />;
-// @ts-expect-error Code uses the defined tones.
-<Code tone="accent" />;
+// @ts-expect-error Code uses the defined statuses.
+<Code status="accent" />;
 // @ts-expect-error Code uses the defined sizes.
 <Code size="xl" />;
 
@@ -60,7 +60,7 @@ const forbidden = {
 <Blockquote contentEditable />;
 // @ts-expect-error Blockquote uses an HTML ref.
 <Blockquote ref={svgRef} />;
-// @ts-expect-error Blockquote uses the defined tones.
-<Blockquote tone="inherit" />;
+// @ts-expect-error Blockquote uses the defined statuses.
+<Blockquote status="inherit" />;
 // @ts-expect-error Blockquote uses the defined sizes.
 <Blockquote size="inherit" />;

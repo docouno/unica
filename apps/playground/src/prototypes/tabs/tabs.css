@@ -12,7 +12,7 @@
   --tabs-line-height: var(--text-size-body-s-lh);
   --tabs-equal-floor: 96px;
   --tabs-arrow-target: var(--tabs-height);
-  --tabs-edge-fade: var(--tabs-overflow-fade, var(--space-12));
+  --tabs-edge-fade: var(--_tabs-overflow-fade, var(--space-12));
   --tabs-mask-edge: calc(var(--tabs-arrow-target) + var(--tabs-edge-fade));
   --tabs-overflow-inset: calc(var(--tabs-mask-edge) + var(--tabs-clearance));
   --tabs-mask-start: 0px;
@@ -79,7 +79,7 @@
 .tabs-list-frame-proto:is([data-scroll-start], [data-scroll-end]) > .tabs-list-proto {
   clip-path: inset(0 var(--tabs-clip-right) 0 var(--tabs-clip-left));
   mask-image: var(
-    --tabs-overflow-mask,
+    --_tabs-overflow-mask,
     linear-gradient(
       var(--tabs-mask-direction),
       transparent var(--tabs-mask-start),
@@ -214,7 +214,7 @@
   font-size: var(--tabs-font);
   font-weight: 500;
   line-height: var(--tabs-line-height);
-  transition: background-color var(--tabs-feedback-duration) ease-out;
+  transition: background-color var(--_tabs-feedback-duration) ease-out;
   cursor: pointer;
 }
 
@@ -362,7 +362,7 @@
 @media (prefers-contrast: more), (forced-colors: active) {
   .tabs-list-frame-proto {
     --tabs-edge-fade: 0px;
-    --tabs-overflow-mask: none;
+    --_tabs-overflow-mask: none;
   }
 }
 
