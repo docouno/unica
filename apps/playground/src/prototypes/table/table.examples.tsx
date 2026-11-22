@@ -1,4 +1,14 @@
-import { Link, SkeletonText, Text, Badge, Input } from '@docouno/unica';
+import {
+  Alert,
+  AlertActions,
+  AlertDescription,
+  AlertTitle,
+  Badge,
+  Input,
+  Link,
+  SkeletonText,
+  Text,
+} from '@docouno/unica';
 import { useId, useRef, useState } from 'react';
 import type { ReactElement } from 'react';
 import {
@@ -9,7 +19,6 @@ import {
   PushPinIcon,
   ArrowCounterClockwiseIcon,
 } from '@phosphor-icons/react';
-import { Alert, AlertDescription, AlertTitle } from '../alert/alert.proto.js';
 import { Checkbox } from '../binary-controls/binary-controls.proto.js';
 import { Button, IconButton } from '../button/button.proto.js';
 import { Card } from '../card/card.proto.js';
@@ -658,17 +667,19 @@ export function ResultExamples(): ReactElement {
                     <Alert status="danger" size="s">
                       <AlertTitle>Branch checks could not load</AlertTitle>
                       <AlertDescription>Retry to refresh the current results.</AlertDescription>
-                      <Button
-                        size="s"
-                        variant="secondary"
-                        tone="neutral"
-                        onClick={() => {
-                          setState('loading');
-                          previewControl.current?.focus();
-                        }}
-                      >
-                        Retry
-                      </Button>
+                      <AlertActions>
+                        <Button
+                          size="s"
+                          variant="secondary"
+                          tone="neutral"
+                          onClick={() => {
+                            setState('loading');
+                            previewControl.current?.focus();
+                          }}
+                        >
+                          Retry
+                        </Button>
+                      </AlertActions>
                     </Alert>
                   )}
                 </TableCell>

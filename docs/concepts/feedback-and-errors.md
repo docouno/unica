@@ -26,7 +26,7 @@ Choose one channel based on scope and lifecycle:
 
 1. **Field or group validation** → `FormField` (`status` + `message`), paired with the affected control's own frame/indicator.
 2. **Operation result, background job, or generic async failure** → `Toast` (deduplicated by `id`, exposed via polite `status` or assertive `alert` regions without interrupting focus).
-3. **Persistent contextual warning for a section/page or form submit summary** → `Alert`.
+3. **Persistent contextual warning for a section/page or form submit summary** → [Alert](../components/alert.md).
 4. **Empty, filtered-out, or failed initial region load** → `Empty` with an explicit recovery action.
 
 **Exceptions:**

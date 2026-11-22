@@ -1,0 +1,170 @@
+@layer unica.components {
+  .unica-alert {
+    --_alert-padding: var(--surface-m-padding);
+    --_alert-gap: var(--surface-m-gap);
+    --_alert-font: var(--text-size-body-m);
+    --_alert-line: var(--text-size-body-m-lh);
+    --_alert-glyph: var(--size-m-icon);
+    --_alert-close-size: 24px;
+    --code-context-bg: color-mix(in srgb, var(--_mark-fg) var(--_code-plate-tint), transparent);
+    --code-context-fg: var(--_mark-fg);
+    --code-context-border: var(--_mark-border);
+    --action-context-ink: var(--_mark-fg);
+    min-inline-size: 0;
+    border: var(--_alert-border-width) solid var(--_mark-border);
+    border-inline-start-width: max(var(--_alert-border-width), var(--_alert-edge-width));
+    border-inline-start-color: var(--_mark-border);
+    border-radius: var(--surface-m-radius);
+    background: var(--_mark-bg);
+    color: var(--_mark-fg);
+    font-family: var(--font-family-base);
+    font-size: var(--_alert-font);
+    line-height: var(--_alert-line);
+    overflow-wrap: anywhere;
+  }
+  .unica-alert:not([hidden]) {
+    display: flex;
+    align-items: start;
+    gap: var(--_alert-gap);
+    padding: var(--_alert-padding);
+  }
+  .unica-alert[hidden='until-found' i] {
+    display: block;
+    content-visibility: hidden;
+  }
+  .unica-alert[hidden]:not([hidden='until-found' i]) {
+    display: none;
+  }
+  .unica-alert[data-unica-alert-size='s'] {
+    --_alert-padding: var(--surface-s-padding);
+    --_alert-gap: var(--surface-s-gap);
+    --_alert-font: var(--text-size-body-s);
+    --_alert-line: var(--text-size-body-s-lh);
+    --_alert-glyph: var(--size-s-icon);
+  }
+  .unica-alert[data-unica-alert-size='l'] {
+    --_alert-padding: var(--surface-l-padding);
+    --_alert-gap: var(--surface-l-gap);
+    --_alert-font: var(--text-size-body-l);
+    --_alert-line: var(--text-size-body-l-lh);
+    --_alert-glyph: var(--size-l-icon);
+    --_alert-close-size: 28px;
+  }
+  .unica-alert-glyph {
+    display: grid;
+    place-items: center;
+    flex: none;
+    inline-size: var(--_alert-glyph);
+    block-size: var(--_alert-line);
+  }
+  .unica-alert-glyph > svg {
+    inline-size: var(--_alert-glyph);
+    block-size: var(--_alert-glyph);
+  }
+  .unica-alert-glyph:not(:has(> svg)),
+  .unica-alert-glyph:has(> svg:not(.unica-alert-glyph-fallback)) > .unica-alert-glyph-fallback {
+    display: none;
+  }
+  .unica-alert-content {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: var(--space-4);
+    min-inline-size: 0;
+  }
+  .unica-alert-title {
+    margin: 0;
+    font: inherit;
+    font-weight: 600;
+  }
+  .unica-alert-description {
+    min-inline-size: 0;
+  }
+  .unica-alert-description > :first-child {
+    margin-block-start: 0;
+  }
+  .unica-alert-description > :last-child {
+    margin-block-end: 0;
+  }
+  .unica-alert-description :is(p, ul, ol) {
+    margin-block: var(--space-8);
+  }
+  .unica-alert-description :is(ul, ol) {
+    padding-inline-start: 1.25em;
+  }
+  .unica-alert-description li + li {
+    margin-block-start: var(--space-4);
+  }
+  .unica-alert-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-8);
+    padding-block-start: var(--space-8);
+    min-inline-size: 0;
+  }
+  .unica-alert-actions > * {
+    max-inline-size: 100%;
+  }
+  .unica-alert-close {
+    display: grid;
+    place-items: center;
+    flex: none;
+    inline-size: var(--_alert-close-size);
+    block-size: var(--_alert-close-size);
+    margin-block-start: calc((var(--_alert-line) - var(--_alert-close-size)) / 2);
+    padding: 0;
+    border: 0;
+    border-radius: var(--radius-xs);
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+    transition: background-color var(--_btn-state-duration) ease;
+  }
+  .unica-alert-close > svg {
+    inline-size: var(--_alert-glyph);
+    block-size: var(--_alert-glyph);
+  }
+  @media (hover: hover) {
+    .unica-alert-close:enabled:hover {
+      background: color-mix(in srgb, currentColor 12%, transparent);
+    }
+  }
+  .unica-alert-close:enabled:active {
+    background: color-mix(in srgb, currentColor 20%, transparent);
+  }
+  .unica-alert-close:focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: 2px;
+  }
+  .unica-alert-close:disabled {
+    cursor: default;
+  }
+  @media (pointer: coarse) {
+    .unica-alert-close {
+      inline-size: 44px;
+      block-size: 44px;
+      margin-block-start: 0;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .unica-alert-close {
+      transition: none;
+    }
+  }
+  @media (forced-colors: active) {
+    .unica-alert {
+      border: 1px solid CanvasText;
+      border-inline-start-width: max(1px, var(--_alert-edge-width));
+      background: Canvas;
+      color: CanvasText;
+    }
+    .unica-alert-close:enabled:is(:hover, :active) {
+      background: Highlight;
+      color: HighlightText;
+    }
+    .unica-alert-close:focus-visible {
+      outline-color: Highlight;
+    }
+  }
+}

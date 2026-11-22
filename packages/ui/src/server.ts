@@ -1,6 +1,13 @@
 export { THEME_PRESETS, getUnicaRootProps } from './core/themes.js';
 export { defineGlyph } from './core/glyph.js';
 export type {
+  AlertActionsProps,
+  AlertCloseProps,
+  AlertDescriptionProps,
+  AlertProps,
+  AlertSize,
+  AlertStatus,
+  AlertTitleProps,
   BadgeProps,
   BadgeStatus,
   BlockquoteProps,

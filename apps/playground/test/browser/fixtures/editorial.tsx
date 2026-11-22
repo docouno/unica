@@ -1,9 +1,17 @@
 import '@fontsource-variable/inter';
 import '@fontsource-variable/jetbrains-mono';
 import type { JSX, ReactNode } from 'react';
-import { Blockquote, Code, defineGlyph, Link, Text, Title, UnicaProvider } from '@docouno/unica';
+import {
+  Alert,
+  Blockquote,
+  Code,
+  defineGlyph,
+  Link,
+  Text,
+  Title,
+  UnicaProvider,
+} from '@docouno/unica';
 import type { GlyphSource, GlyphSvgProps } from '@docouno/unica';
-import { Alert } from '../../../src/prototypes/alert/alert.proto.js';
 import { Button } from '../../../src/prototypes/button/button.proto.js';
 import { Card } from '../../../src/prototypes/card/card.proto.js';
 import { PopoverContent } from '../../../src/prototypes/popover/popover.proto.js';
@@ -59,7 +67,7 @@ function ContextSample(): JSX.Element {
       <Code status="neutral" data-testid="neutral">
         neutral
       </Code>
-      <Alert status="info">
+      <Alert role="none" status="info">
         <Blockquote status="danger">
           <Code data-testid="alert-quote">through a quote</Code>{' '}
           <Code data-testid="explicit" status="info">

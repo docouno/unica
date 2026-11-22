@@ -1,6 +1,5 @@
-import { Link, Text } from '@docouno/unica';
+import { Alert, Link, Text } from '@docouno/unica';
 import type { ComponentProps, ReactElement } from 'react';
-import { Alert } from '../../../src/prototypes/alert/alert.proto.js';
 import { AppShell } from '../../../src/prototypes/app-shell/app-shell.proto.js';
 import { Card } from '../../../src/prototypes/card/card.proto.js';
 import { unicaWorkbenchBase } from '../../../src/unica.workbench.shared.js';
@@ -53,7 +52,7 @@ function StatusProbe({
   readonly underline: NonNullable<ComponentProps<typeof Link>['underline']>;
 }): ReactElement {
   return (
-    <Alert status={status}>
+    <Alert role="none" status={status}>
       <Text color="secondary">
         <Link
           tone="inherit"
@@ -81,7 +80,7 @@ export default function LinkSurfacesFixture(): ReactElement {
           <a href="#destination" data-testid="plain-shell">
             Native anchor
           </a>
-          <Alert status="danger">
+          <Alert role="none" status="danger">
             <Text color="secondary">
               <Link tone="inherit" href="#destination" data-testid="outer-context">
                 Outer guidance

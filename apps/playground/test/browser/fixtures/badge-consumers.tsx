@@ -1,5 +1,5 @@
+import { Alert } from '@docouno/unica';
 import { useState } from 'react';
-import { Alert } from '../../../src/prototypes/alert/alert.proto.js';
 import { Tag } from '../../../src/prototypes/tag/tag.proto.js';
 import { Tabs, TabsContent, TabsList, TabsTab } from '../../../src/prototypes/tabs/tabs.proto.js';
 
@@ -7,7 +7,7 @@ export default function BadgeConsumersFixture() {
   const [showTabs, setShowTabs] = useState(false);
   return (
     <>
-      <Alert status="warning" data-testid="alert">
+      <Alert role="none" status="warning" data-testid="alert">
         Review the publication date.
       </Alert>
       <Tag status="accent" onRemove={() => {}} removeLabel="Remove Draft" data-testid="tag">

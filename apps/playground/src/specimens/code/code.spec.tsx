@@ -1,9 +1,8 @@
-import { Code, Link, Text, Title } from '@docouno/unica';
+import { Alert, AlertDescription, AlertTitle, Code, Link, Text, Title } from '@docouno/unica';
 import { previewProps, previewText } from '../preview-code.js';
 import { defineComponent } from '../../workbench/types.js';
 import { Button } from '../../prototypes/button/button.proto.js';
 import { Card } from '../../prototypes/card/card.proto.js';
-import { Alert, AlertTitle, AlertDescription } from '../../prototypes/alert/alert.proto.js';
 import {
   PopoverContent,
   PopoverBody,
@@ -193,7 +192,7 @@ export default defineComponent({
       render: () => (
         <div className="code-example-stack code-example-compact">
           {(['neutral', 'info', 'success', 'warning', 'danger'] as const).map((status) => (
-            <Alert key={status} status={status} size="s">
+            <Alert role="none" key={status} status={status} size="s">
               <AlertTitle>{`${status} · quoted configuration`}</AlertTitle>
               <AlertDescription>
                 Read <Code>response.status</Code> before retrying. An explicit matching status{' '}
@@ -213,7 +212,7 @@ export default defineComponent({
       title: 'Text passes context through · a Card starts its own',
       kind: 'content',
       render: () => (
-        <Alert status="info" size="s">
+        <Alert role="none" status="info" size="s">
           <AlertTitle>Reference details</AlertTitle>
           <div className="code-example-stack code-example-compact">
             <Text size="body-s" color="secondary">

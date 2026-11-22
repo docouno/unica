@@ -4,7 +4,16 @@ import type { ReactElement } from 'react';
 import { ArrowLeftIcon } from '@phosphor-icons/react';
 import { defineScene } from '../workbench/types.js';
 import { AppShell, Header } from '../prototypes/app-shell/app-shell.proto.js';
-import { Badge, Text, Title } from '@docouno/unica';
+import {
+  Alert,
+  AlertClose,
+  AlertDescription,
+  AlertTitle,
+  Badge,
+  Progress,
+  Text,
+  Title,
+} from '@docouno/unica';
 import {
   Breadcrumb,
   BreadcrumbLink,
@@ -12,9 +21,7 @@ import {
 } from '../prototypes/breadcrumb/breadcrumb.proto.js';
 import { Button } from '../prototypes/button/button.proto.js';
 import { Card } from '../prototypes/card/card.proto.js';
-import { Alert, AlertTitle, AlertDescription } from '../prototypes/alert/alert.proto.js';
 import { ToastViewport } from '../prototypes/toast/toast.proto.js';
-import { Progress } from '@docouno/unica';
 import {
   Dropzone,
   FileInput,
@@ -34,6 +41,18 @@ interface StagedArchive {
   readonly detail: string;
   readonly status: FileItemStatus;
   readonly progress?: number;
+}
+
+type ImportSource = 'schema' | 'archives';
+
+interface ImportError {
+  readonly attempt: number;
+  readonly message: string;
+  readonly source: ImportSource;
+}
+
+function isSchema(file: File): boolean {
+  return /\.ya?ml$/i.test(file.name);
 }
 
 const initialArchives: readonly StagedArchive[] = [
@@ -61,11 +80,35 @@ function WorkspaceAdminScene(): ReactElement {
   const [archives, setArchives] = useState<readonly StagedArchive[]>(initialArchives);
   const [currentStep, setCurrentStep] = useState<'source' | 'verify' | 'commit'>('verify');
   const [validation, setValidation] = useState<'checking' | 'required' | 'verified'>('checking');
-  const [error, setError] = useState('');
+  const [error, setError] = useState<ImportError | null>(null);
   const [notice, setNotice] = useState('');
   const [showActivityToast, setShowActivityToast] = useState(true);
   const [showValidationToast, setShowValidationToast] = useState(true);
   const policyName = useId();
+  const attempt = useRef(0);
+  const summary = useRef<HTMLDivElement>(null);
+  const summaryClose = useRef<HTMLButtonElement>(null);
+  const schemaCard = useRef<HTMLDivElement>(null);
+  const archivesCard = useRef<HTMLDivElement>(null);
+  const restoreFocus = useRef<{
+    readonly source: ImportSource;
+    readonly document: Document;
+  } | null>(null);
+  useLayoutEffect(() => {
+    const restoration = restoreFocus.current;
+    restoreFocus.current = null;
+    if (!restoration || restoration.document.activeElement !== restoration.document.body) {
+      return;
+    }
+    if (error) {
+      summaryClose.current?.focus();
+    } else if (restoration.source === 'schema') {
+      schemaCard.current?.querySelector('button')?.focus();
+    } else {
+      archivesCard.current?.querySelector<HTMLInputElement>('input[type="file"]')?.focus();
+    }
+  }, [error]);
+
   const feedbackRegion = useRef<HTMLDivElement>(null);
   const sourceHeading = useRef<HTMLHeadingElement>(null);
   const verificationHeading = useRef<HTMLHeadingElement>(null);
@@ -128,29 +171,37 @@ function WorkspaceAdminScene(): ReactElement {
     setNotice(`Dry-run check complete: ${archives.length} staged archives passed validation.`);
   }
 
+  function reportResult(source: ImportSource, message?: string): void {
+    const document = summary.current?.ownerDocument;
+    restoreFocus.current =
+      document && summary.current?.contains(document.activeElement) ? { source, document } : null;
+    setError(message ? { attempt: ++attempt.current, message, source } : null);
+  }
+
   function chooseSchema(files: readonly File[]): void {
     const file = files[0];
     if (!file) {
       return;
     }
-    if (!/\.ya?ml$/i.test(file.name)) {
-      setError('Choose a YAML mapping schema.');
+    if (!isSchema(file)) {
+      reportResult('schema', 'Choose a YAML mapping schema.');
       return;
     }
     setSchema(file.name);
     invalidateVerification();
     setSchemaSize(`${(file.size / 1024).toFixed(1)} KB`);
-    setError('');
+    reportResult('schema');
   }
 
   function addArchives(files: readonly File[]): void {
     const accepted = files.filter(
       (file) => /\.(?:md|mdx|zip)$/i.test(file.name) && file.size <= 50 * 1024 * 1024,
     );
-    setError(
-      accepted.length === files.length
-        ? ''
-        : 'Choose UTF-8 Markdown or ZIP archives up to 50 MB each. Unsupported files were not added.',
+    reportResult(
+      'archives',
+      accepted.length !== files.length
+        ? 'Choose UTF-8 Markdown or ZIP archives up to 50 MB each. Unsupported files were not added.'
+        : undefined,
     );
     const additions = accepted
       .filter((file) => !archives.some((archive) => archive.name === file.name))
@@ -224,16 +275,22 @@ function WorkspaceAdminScene(): ReactElement {
             </Stepper>
             {error && (
               <Alert
+                key={error.attempt}
+                ref={summary}
                 status="danger"
-                role="alert"
-                onClose={() => setError('')}
-                closeLabel="Dismiss file validation summary"
+                close={
+                  <AlertClose
+                    ref={summaryClose}
+                    aria-label="Dismiss file validation summary"
+                    onClose={() => reportResult(error.source)}
+                  />
+                }
               >
                 <AlertTitle>Check the selected files</AlertTitle>
-                <AlertDescription>{error}</AlertDescription>
+                <AlertDescription>{error.message}</AlertDescription>
               </Alert>
             )}
-            <Card className="folio-import-card">
+            <Card ref={schemaCard} className="folio-import-card">
               <div className="folio-row folio-between folio-import-card-heading">
                 <div className="folio-stack">
                   <Title as="h2" size="body-m" ref={sourceHeading} tabIndex={-1}>
@@ -253,6 +310,12 @@ function WorkspaceAdminScene(): ReactElement {
                 fileName={schema}
                 fileDetail={schemaSize}
                 onFilesChange={chooseSchema}
+                onChange={({ currentTarget }) => {
+                  const file = currentTarget.files?.[0];
+                  if (file && !isSchema(file)) {
+                    currentTarget.value = '';
+                  }
+                }}
                 onClear={() => {
                   setSchema('');
                   setSchemaSize('');
@@ -292,7 +355,7 @@ function WorkspaceAdminScene(): ReactElement {
                 </div>
               </div>
             </Card>
-            <Card className="folio-import-card">
+            <Card ref={archivesCard} className="folio-import-card">
               <div className="folio-row folio-between folio-import-card-heading">
                 <div className="folio-stack">
                   <Title as="h2" size="body-m" ref={verificationHeading} tabIndex={-1}>
