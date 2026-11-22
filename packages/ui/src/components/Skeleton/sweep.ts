@@ -2,18 +2,9 @@ import { useCallback, useMemo } from 'react';
 import type { Ref, RefCallback } from 'react';
 import {
   addListenerSafe,
-  composedContains,
-  getAttributeSafe,
-  getComposedParentElement,
-  getComputedStyleSafe,
-  getDocumentStyleSheets,
   getLiveView,
-  getLocalName,
   getOwnerDocument,
-  isElementNode,
   isRTL,
-  matchesSafe,
-  parentNodeOf,
   removeListenerSafe,
 } from '../../core/dom.js';
 import { mergeRefs } from '../../core/mergeRefs.js';
@@ -28,72 +19,8 @@ const geometryProperties = [
 ] as const;
 const [bandWidth, sweepStart, sweepEnd, bandAngle] = geometryProperties;
 const bandSlope = Math.tan((12 * Math.PI) / 180);
-const positionMotion = new Set([
-  'transform',
-  'translate',
-  'scale',
-  'left',
-  'right',
-  'top',
-  'bottom',
-  'inset',
-  'insetInline',
-  'insetInlineStart',
-  'insetInlineEnd',
-  'insetBlock',
-  'insetBlockStart',
-  'insetBlockEnd',
-  'margin',
-  'marginLeft',
-  'marginRight',
-  'marginTop',
-  'marginBottom',
-  'marginInline',
-  'marginInlineStart',
-  'marginInlineEnd',
-  'marginBlock',
-  'marginBlockStart',
-  'marginBlockEnd',
-]);
 
 type BrowserWindow = NonNullable<Document['defaultView']>;
-
-function isPlaying(animation: Animation): boolean {
-  return animation.pending || animation.playState === 'running';
-}
-
-function findDefiningAutoDirAncestor(node: Element): Element | null {
-  for (let current: Element | null = node; current; current = getComposedParentElement(current)) {
-    const rawDir = getAttributeSafe(current, 'dir');
-    if (rawDir !== null) {
-      const normalized = rawDir.toLowerCase();
-      if (normalized === 'auto') {
-        return current;
-      }
-      if (normalized === 'ltr' || normalized === 'rtl') {
-        return null;
-      }
-    }
-    if (getLocalName(current) === 'bdi') {
-      return current;
-    }
-  }
-  return null;
-}
-
-function isStyleSource(node: EventTarget | null): boolean {
-  return (
-    isElementNode(node) &&
-    (getLocalName(node) === 'style' ||
-      (getLocalName(node) === 'link' && matchesSafe(node, 'link[rel~="stylesheet" i]')))
-  );
-}
-
-// Inline boxes do not deliver ResizeObserver notifications for text changes.
-function layoutMode(element: Element): 'inline' | 'contents' | 'box' {
-  const display = getComputedStyleSafe(element)?.display;
-  return display === 'inline' || display === 'contents' ? display : 'box';
-}
 
 interface Sweep {
   readonly end: number;
@@ -106,211 +33,27 @@ const sweeps = new WeakMap<Document, Sweep>();
 function createSweep(view: BrowserWindow, start: number, duration: number): Sweep {
   const { document } = view;
   const paints = new Map<HTMLElement, CSSAnimation>();
-  const visiblePaints = new Set<HTMLElement>();
-  const measuredOnce = new Set<HTMLElement>();
-  const pendingInvisible = new Set<HTMLElement>();
-  const writtenStyles = new WeakMap<HTMLElement, string | null>();
-  const pendingDisplayChecks = new Set<Element>();
-  const sheetPaths = new Set<Node>();
-  let sheetsDirty = true;
-  let visibleLayoutParents = new Set<Element>();
-  let layoutModes = new Map<Element, ReturnType<typeof layoutMode>>();
-  let observedResize = new Set<Element>();
-  const pendingInitialResize = new Set<Element>();
-  let moving: Animation[] = [];
-  let layoutDirty = true;
-  let motionDirty = true;
+  const visible = new Set<HTMLElement>();
+  const initial = new Set<HTMLElement>();
   let frame: number | undefined;
 
-  function observeStyleSheets(): void {
-    if (visiblePaints.size && !sheetsDirty) {
-      return;
+  function schedule(): void {
+    if (visible.size || initial.size) {
+      frame ??= view.requestAnimationFrame(update);
     }
-    sheetMutations.disconnect();
-    sheetPaths.clear();
-    sheetsDirty = visiblePaints.size === 0;
-    if (sheetsDirty) {
-      return;
-    }
-    // Track real stylesheet owners, wherever the application mounted them.
-    // Shallow child-list subscriptions catch removal of an owner or its route.
-    for (const sheet of getDocumentStyleSheets(document)) {
-      const owner = sheet.ownerNode;
-      if (!owner) {
-        continue;
-      }
-      sheetPaths.add(owner);
-      sheetMutations.observe(owner, {
-        attributes: true,
-        childList: true,
-        characterData: true,
-        subtree: true,
-      });
-      for (
-        let parent = parentNodeOf(owner);
-        parent && !sheetPaths.has(parent);
-        parent = parentNodeOf(parent)
-      ) {
-        sheetPaths.add(parent);
-        sheetMutations.observe(parent, { childList: true });
-      }
-    }
-  }
-
-  function observeLayout(): void {
-    const parents = new Set<Element>();
-    const modes = new Map<Element, ReturnType<typeof layoutMode>>();
-    const containers = new Set<Element>();
-    const autoDirs = new Set<Element>();
-    const resizeBoxes = new Set<Element>();
-
-    function collectChildren(container: Element): void {
-      if (containers.has(container)) {
-        return;
-      }
-      containers.add(container);
-      for (const child of container.children) {
-        const mode = layoutMode(child);
-        modes.set(child, mode);
-        if (mode === 'contents') {
-          collectChildren(child);
-        } else {
-          resizeBoxes.add(child);
-        }
-      }
-    }
-
-    if (visiblePaints.size > 0 && document.documentElement) {
-      resizeBoxes.add(document.documentElement);
-    }
-
-    for (const node of visiblePaints) {
-      resizeBoxes.add(node);
-      const autoDir = findDefiningAutoDirAncestor(node);
-      if (autoDir) {
-        autoDirs.add(autoDir);
-      }
-      // A sibling's intrinsic size (including children behind display: contents) can move a placeholder.
-      for (
-        let parent = getComposedParentElement(node);
-        parent && !parents.has(parent);
-        parent = getComposedParentElement(parent)
-      ) {
-        parents.add(parent);
-        resizeBoxes.add(parent);
-        collectChildren(parent);
-      }
-    }
-
-    for (const box of observedResize) {
-      if (!resizeBoxes.has(box)) {
-        resize.unobserve(box);
-        pendingInitialResize.delete(box);
-      }
-    }
-    for (const box of resizeBoxes) {
-      if (!observedResize.has(box)) {
-        pendingInitialResize.add(box);
-        resize.observe(box);
-      }
-    }
-    observedResize = resizeBoxes;
-    visibleLayoutParents = parents;
-    layoutModes = modes;
-
-    mutations.disconnect();
-    for (const element of new Set([
-      ...containers,
-      ...modes.keys(),
-      ...autoDirs,
-      ...visiblePaints,
-    ])) {
-      const subtree = autoDirs.has(element) || modes.get(element) === 'inline';
-      mutations.observe(element, {
-        attributes: true,
-        childList: subtree || containers.has(element),
-        characterData: subtree,
-        subtree,
-      });
-      if (containers.has(element) && !subtree) {
-        for (const child of element.childNodes) {
-          if (child.nodeType === 3) {
-            mutations.observe(child, { characterData: true });
-          }
-        }
-      }
-    }
-
-    observeStyleSheets();
-    layoutDirty = false;
-    motionDirty = true;
-  }
-
-  function readMovingSurfaces(): void {
-    if (visiblePaints.size === 0) {
-      moving = [];
-      motionDirty = false;
-      return;
-    }
-    const hosts = new Set([...visibleLayoutParents, ...visiblePaints]);
-    moving = [...hosts].flatMap((element) =>
-      element.getAnimations().filter((animation) => {
-        if (
-          !isPlaying(animation) ||
-          ('animationName' in animation && animation.animationName === sweepName)
-        ) {
-          return false;
-        }
-        const { effect } = animation;
-        return (
-          effect instanceof view.KeyframeEffect &&
-          effect
-            .getKeyframes()
-            .some((keyframe) => Object.keys(keyframe).some((key) => positionMotion.has(key)))
-        );
-      }),
-    );
-    motionDirty = false;
   }
 
   function update(): void {
     frame = undefined;
-    if (!layoutDirty && pendingDisplayChecks.size) {
-      // Rules on an ancestor can change which descendants produce layout boxes.
-      for (const target of pendingDisplayChecks) {
-        const mode = layoutModes.get(target);
-        if (
-          (mode && layoutMode(target) !== mode) ||
-          ((visibleLayoutParents.has(target) || mode === 'contents') &&
-            [...layoutModes].some(
-              ([child, previous]) =>
-                child !== target &&
-                composedContains(target, child) &&
-                layoutMode(child) !== previous,
-            ))
-        ) {
-          layoutDirty = true;
-          break;
-        }
-      }
-    }
-    pendingDisplayChecks.clear();
-    if (layoutDirty) {
-      observeLayout();
-    }
-    if (motionDirty) {
-      readMovingSurfaces();
-    }
-    if (visiblePaints.size === 0) {
-      return;
-    }
-
+    if (!visible.size && !initial.size) return;
     const { clientWidth, clientHeight } = document.documentElement;
     const band = Math.max(64, Math.min(320, 64 + (clientWidth - 480) * 0.27));
     const middleY = clientHeight / 2;
     const overhang = middleY * bandSlope;
-    // Read the whole batch before writing. Normal animation frames need no DOM reads.
-    const positions = Array.from(visiblePaints, (node) => {
+    // Sample the rendered boxes together. A remote CSS selector or a CSSOM edit can
+    // move a clipped paint without changing its size or its intersection ratio.
+    const changes: { node: HTMLElement; property: string; value: string }[] = [];
+    function measure(node: HTMLElement): void {
       const rect = node.getBoundingClientRect();
       const style = view.getComputedStyle(node);
       const borderLeft = parseFloat(style.borderLeftWidth) || 0;
@@ -323,241 +66,56 @@ function createSweep(view: BrowserWindow, start: number, duration: number): Swee
       const rtl = isRTL(node, style);
       const slope = rtl ? bandSlope : -bandSlope;
       const top = rect.top + borderTop * scaleY;
-      // Project the viewport band onto the top edge of this paint box.
       const offset = (slope * (top - middleY) - rect.left) / scaleX - borderLeft;
-      const before = `${offset - (band + overhang) / scaleX}px`;
-      const after = `${offset + (clientWidth + overhang) / scaleX}px`;
-      return {
-        node,
-        values: [
-          [bandWidth, `${band / scaleX}px`],
-          [sweepStart, rtl ? after : before],
-          [sweepEnd, rtl ? before : after],
-          [bandAngle, `${Math.atan((slope * scaleY) / scaleX)}rad`],
-        ] as const,
-      };
-    });
-    for (const { node, values } of positions) {
-      measuredOnce.add(node);
-      let changed = false;
-      for (const [property, value] of values) {
+      const before = offset - (band + overhang) / scaleX;
+      const after = offset + (clientWidth + overhang) / scaleX;
+      function queueIfChanged(property: string, value: string): void {
         if (node.style.getPropertyValue(property) !== value) {
-          node.style.setProperty(property, value);
-          changed = true;
+          changes.push({ node, property, value });
         }
       }
-      if (changed) {
-        writtenStyles.set(node, node.getAttribute('style'));
+      queueIfChanged(bandWidth, `${band / scaleX}px`);
+      queueIfChanged(sweepStart, `${rtl ? after : before}px`);
+      queueIfChanged(sweepEnd, `${rtl ? before : after}px`);
+      queueIfChanged(bandAngle, `${Math.atan((slope * scaleY) / scaleX)}rad`);
+    }
+    for (const node of initial) {
+      if (!visible.has(node)) {
+        measure(node);
       }
     }
-
-    if (pendingInvisible.size > 0) {
-      let detachedOffscreen = false;
-      for (const node of pendingInvisible) {
-        if (measuredOnce.has(node) && visiblePaints.delete(node)) {
-          detachedOffscreen = true;
-        }
-      }
-      pendingInvisible.clear();
-      if (detachedOffscreen) {
-        // Keep written --_skeleton-* geometry on offscreen nodes; only stop observing them.
-        observeLayout();
-        if (motionDirty) {
-          readMovingSurfaces();
-        }
-      }
+    initial.clear();
+    visible.forEach(measure);
+    for (const { node, property, value } of changes) {
+      node.style.setProperty(property, value);
     }
-
-    if (visiblePaints.size > 0 && moving.some(isPlaying)) {
-      schedule();
-    }
+    schedule();
   }
 
-  function schedule(): void {
-    if (visiblePaints.size > 0) {
-      frame ??= view.requestAnimationFrame(update);
-    }
-  }
-
-  const resize = new view.ResizeObserver((entries) => {
-    let resized = false;
-    for (let index = 0; index < entries.length; index++) {
-      const target = entries[index]!.target;
-      if (pendingInitialResize.delete(target)) {
-        continue;
-      }
-      pendingDisplayChecks.add(target);
-      resized = true;
-    }
-    if (resized) {
-      schedule();
-    }
-  });
   const intersection =
     typeof view.IntersectionObserver === 'function'
       ? new view.IntersectionObserver((entries) => {
-          let visibilityChanged = false;
-          for (let index = 0; index < entries.length; index++) {
-            const entry = entries[index]!;
+          for (const entry of entries) {
             const node = entry.target as HTMLElement;
-            if (!paints.has(node)) {
-              continue;
-            }
-            if (entry.isIntersecting) {
-              pendingInvisible.delete(node);
-              if (!visiblePaints.has(node)) {
-                visiblePaints.add(node);
-                visibilityChanged = true;
-              }
-            } else if (measuredOnce.has(node)) {
-              if (visiblePaints.delete(node)) {
-                visibilityChanged = true;
-              }
+            if (entry.isIntersecting && paints.has(node)) {
+              visible.add(node);
             } else {
-              // Defer detaching until after the initial geometry write completes.
-              pendingInvisible.add(node);
+              visible.delete(node);
             }
           }
-          if (visibilityChanged) {
-            layoutDirty = true;
-            if (visiblePaints.size > 0) {
-              schedule();
-            } else {
-              if (frame !== undefined) {
-                view.cancelAnimationFrame(frame);
-                frame = undefined;
-              }
-              observeLayout();
-              moving = [];
-            }
-          }
+          schedule();
         })
       : undefined;
-
-  const mutations = new view.MutationObserver((records) => {
-    let shouldSchedule = false;
-    for (let index = 0; index < records.length; index++) {
-      const record = records[index]!;
-      const { type, target, attributeName } = record;
-      // A detached subtree may still deliver records queued before its removal.
-      // Its removal is reported separately on the connected parent.
-      if (!target.isConnected) {
-        continue;
-      }
-      if (
-        type === 'attributes' &&
-        attributeName === 'style' &&
-        target instanceof view.HTMLElement &&
-        paints.has(target) &&
-        writtenStyles.get(target) === target.getAttribute('style')
-      ) {
-        continue;
-      }
-      shouldSchedule = true;
-      if (type === 'childList' || (type === 'attributes' && attributeName === 'dir')) {
-        layoutDirty = true;
-      } else if (type === 'attributes' && isElementNode(target)) {
-        pendingDisplayChecks.add(target);
-      }
-    }
-    if (shouldSchedule) {
-      schedule();
-    }
-  });
-
-  function onScroll(event: Event): void {
-    if (visiblePaints.size === 0) {
-      return;
-    }
-    const { target } = event;
-    if (target === document || target === view) {
-      schedule();
-      return;
-    }
-    if (isElementNode(target)) {
-      for (const paint of visiblePaints) {
-        if (composedContains(target, paint)) {
-          schedule();
-          return;
-        }
-      }
-    }
-  }
-
-  function onSurfaceMotion(event: Event): void {
-    const { target } = event;
-    if (
-      isElementNode(target) &&
-      (visibleLayoutParents.has(target) ||
-        (target instanceof view.HTMLElement && visiblePaints.has(target)))
-    ) {
-      motionDirty = true;
-      schedule();
-    }
-  }
-
-  const motionEvents = [
-    'transitionrun',
-    'transitionend',
-    'transitioncancel',
-    'animationstart',
-    'animationend',
-    'animationcancel',
-  ] as const;
-  function onViewportResize(): void {
-    pendingDisplayChecks.add(document.documentElement);
-    schedule();
-  }
-  function onStyleSheetChange(): void {
-    sheetsDirty = true;
-    layoutDirty = true;
-    schedule();
-  }
-  const sheetMutations = new view.MutationObserver((records) => {
-    const changed = records.some(
-      (record) =>
-        record.type !== 'childList' ||
-        isStyleSource(record.target) ||
-        [...record.addedNodes, ...record.removedNodes].some(
-          (node) => sheetPaths.has(node) || isStyleSource(node),
-        ),
-    );
-    if (changed) {
-      onStyleSheetChange();
-    }
-  });
-  function onStylesheetLoad(event: Event): void {
-    if (isStyleSource(event.target)) {
-      onStyleSheetChange();
-    }
-  }
-  addListenerSafe(document, 'load', onStylesheetLoad, true);
-  addListenerSafe(view, 'resize', onViewportResize);
-  addListenerSafe(view, 'scroll', onScroll, { capture: true, passive: true });
-  for (const event of motionEvents) {
-    addListenerSafe(view, event, onSurfaceMotion, true);
-  }
 
   function clear(node: HTMLElement): void {
     for (const property of geometryProperties) {
       node.style.removeProperty(property);
     }
-    writtenStyles.set(node, node.getAttribute('style'));
   }
 
   function stop(): void {
     sweeps.delete(document);
-    resize.disconnect();
     intersection?.disconnect();
-    mutations.disconnect();
-    sheetMutations.disconnect();
-    sheetPaths.clear();
-    removeListenerSafe(document, 'load', onStylesheetLoad, true);
-    removeListenerSafe(view, 'resize', onViewportResize);
-    removeListenerSafe(view, 'scroll', onScroll, true);
-    for (const event of motionEvents) {
-      removeListenerSafe(view, event, onSurfaceMotion, true);
-    }
     if (frame !== undefined) {
       view.cancelAnimationFrame(frame);
       frame = undefined;
@@ -566,15 +124,8 @@ function createSweep(view: BrowserWindow, start: number, duration: number): Swee
       clear(node);
     }
     paints.clear();
-    visiblePaints.clear();
-    measuredOnce.clear();
-    pendingInvisible.clear();
-    pendingDisplayChecks.clear();
-    visibleLayoutParents.clear();
-    layoutModes.clear();
-    observedResize.clear();
-    pendingInitialResize.clear();
-    moving = [];
+    visible.clear();
+    initial.clear();
   }
 
   function add(node: HTMLElement, animation: CSSAnimation): void {
@@ -582,10 +133,12 @@ function createSweep(view: BrowserWindow, start: number, duration: number): Swee
       return;
     }
     paints.set(node, animation);
-    visiblePaints.add(node);
-    pendingInvisible.delete(node);
-    intersection?.observe(node);
-    layoutDirty = true;
+    if (intersection) {
+      initial.add(node);
+      intersection.observe(node);
+    } else {
+      visible.add(node);
+    }
     animation.startTime = start;
     schedule();
 
@@ -595,19 +148,11 @@ function createSweep(view: BrowserWindow, start: number, duration: number): Swee
       }
       intersection?.unobserve(node);
       paints.delete(node);
-      visiblePaints.delete(node);
-      measuredOnce.delete(node);
-      pendingInvisible.delete(node);
+      visible.delete(node);
+      initial.delete(node);
       clear(node);
-      if (paints.size === 0) {
+      if (!paints.size) {
         stop();
-      } else {
-        layoutDirty = true;
-        if (visiblePaints.size > 0) {
-          schedule();
-        } else {
-          observeLayout();
-        }
       }
     };
     void animation.finished.then(remove, remove);

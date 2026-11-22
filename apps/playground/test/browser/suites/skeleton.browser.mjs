@@ -703,7 +703,7 @@ scenarios['Skeleton sweeps in English RTL and nested LTR without :dir(rtl) CSS']
 };
 
 scenarios[
-  'Skeleton targeted observers ignore unrelated mutations and track >64 siblings, display:contents, and dir=auto'
+  'Skeleton tracks sibling layout and direction with one geometry sample per visible frame'
 ] = async ({ page, mount }) => {
   await mount('skeleton', { direction: 'ltr' });
   await page.getByRole('button', { name: 'Mount observer probes' }).click();
@@ -736,52 +736,48 @@ scenarios[
     await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
   });
 
-  // 1. Unrelated mutation inside overridden <div dir="auto"><div unrelated/><main dir="ltr"><Skeleton/></main></div> -> 0 reads,
-  //    while a real mutation on its own parent <main> -> >0 reads (proves it IS actively observed).
-  const overriddenReads = await page.evaluate(async () => {
-    const skel = document.querySelector('[data-testid="probe-overridden-ltr"]');
-    const orig = skel.getBoundingClientRect.bind(skel);
+  const costs = await page.getByTestId('probe-overridden-ltr').evaluate(async (node) => {
+    const original = node.getBoundingClientRect.bind(node);
     let reads = 0;
-    skel.getBoundingClientRect = () => {
+    node.getBoundingClientRect = () => {
       reads++;
-      return orig();
+      return original();
     };
-    const nextFrames = () =>
-      new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
-
-    const meta = document.head.appendChild(document.createElement('meta'));
-    meta.setAttribute('name', 'application-name');
-    meta.remove();
-    const metadataLink = document.createElement('link');
-    metadataLink.rel = 'canonical';
-    document.head.append(metadataLink);
-    await nextFrames();
-    metadataLink.rel = 'alternate';
-    await nextFrames();
-    metadataLink.remove();
-    const unrelated = document.querySelector('[data-testid="unrelated-subtree"]');
-    unrelated.textContent = 'Mutated unrelated text 12345';
-    unrelated.setAttribute('data-noise', '1');
-    unrelated.appendChild(document.createElement('span')).textContent = 'extra';
-    await nextFrames();
-    const unrelatedCount = reads;
-
-    document.querySelector('[data-testid="overridden-ltr-main"]').setAttribute('data-touched', '1');
-    await nextFrames();
-    const relevantCount = reads - unrelatedCount;
-
-    skel.getBoundingClientRect = orig;
-    return { unrelatedCount, relevantCount };
+    const sample = async (change) => {
+      reads = 0;
+      change();
+      for (let i = 0; i < 4; i++) await new Promise(requestAnimationFrame);
+      return reads;
+    };
+    let styleChanges = 0;
+    const changes = new MutationObserver((records) => {
+      styleChanges += records.length;
+    });
+    changes.observe(node, { attributes: true, attributeFilter: ['style'] });
+    const stable = await sample(() => {});
+    const unrelated = await sample(() => {
+      const link = document.head.appendChild(document.createElement('link'));
+      link.rel = 'canonical';
+      link.rel = 'alternate';
+      link.remove();
+      document.querySelector('[data-testid="unrelated-subtree"]').textContent = 'Unrelated text';
+    });
+    const unchangedWrites = styleChanges;
+    const before = parseFloat(node.style.getPropertyValue('--_skeleton-sweep-start'));
+    await sample(() => {
+      node.parentElement.style.translate = '70px 0';
+    });
+    const shift = before - parseFloat(node.style.getPropertyValue('--_skeleton-sweep-start'));
+    const changedWrites = styleChanges - unchangedWrites;
+    changes.disconnect();
+    node.getBoundingClientRect = original;
+    return { stable, unrelated, unchangedWrites, changedWrites, shift };
   });
-  assert.equal(
-    overriddenReads.unrelatedCount,
-    0,
-    'Unrelated mutation outside ancestors triggers 0 layout reads',
-  );
-  assert.ok(
-    overriddenReads.relevantCount > 0,
-    'Positive control: mutation on active parent triggers layout read',
-  );
+  assert.equal(costs.stable, 4);
+  assert.equal(costs.unrelated, costs.stable);
+  assert.equal(costs.unchangedWrites, 0);
+  assert.ok(costs.changedWrites > 0);
+  assert.ok(Math.abs(costs.shift - 70) < 1);
 
   // 2. >64 siblings: expanding sibling #0 shifts probe-many-skel by 80px.
   const manyDelta = await page.evaluate(async () => {
@@ -1029,6 +1025,108 @@ scenarios['Skeleton follows translation from a dynamic document stylesheet'] = a
       `projected band after translation by ${delta}px`,
     );
   }
+};
+
+scenarios['Skeleton follows remote selectors and CSSOM moves through a fixed clip'] = async ({
+  page,
+  mount,
+}) => {
+  await mount('skeleton-responsive');
+  const samples = await page.getByTestId('viewport').evaluate(async (row) => {
+    const paint = row.querySelector('.unica-skeleton');
+    const clip = document.createElement('div');
+    row.before(clip);
+    clip.append(row);
+    clip.style.cssText = 'width: 120px; overflow: hidden;';
+    row.style.cssText = 'width: 400px; position: relative; left: -140px;';
+    paint.style.inlineSize = '100%';
+    const panel = document.body
+      .appendChild(document.createElement('aside'))
+      .appendChild(document.createElement('div'))
+      .appendChild(document.createElement('details'));
+    const css = document.head.appendChild(document.createElement('style')).sheet;
+    css.insertRule('body:has(details[open]) [data-testid="viewport"] { translate: 80px 0; }');
+    const settle = async () => {
+      for (let frame = 0; frame < 4; frame++) await new Promise(requestAnimationFrame);
+    };
+    const sample = () => {
+      const rect = paint.getBoundingClientRect();
+      const bounds = clip.getBoundingClientRect();
+      return {
+        x: rect.x,
+        covered: Math.min(rect.right, bounds.right) - Math.max(rect.left, bounds.left),
+        start: parseFloat(paint.style.getPropertyValue('--_skeleton-sweep-start')),
+      };
+    };
+    await settle();
+    document.getAnimations().forEach((animation) => animation.pause());
+    const results = [sample()];
+    panel.open = true;
+    await settle();
+    results.push(sample());
+    css.cssRules[0].style.translate = '100px 0';
+    await settle();
+    results.push(sample());
+    return results;
+  });
+  for (const [index, delta] of [0, 80, 100].entries()) {
+    assert.equal(samples[index].covered, 120);
+    assert.ok(Math.abs(samples[index].x - samples[0].x - delta) < 1);
+    assert.ok(
+      Math.abs(samples[0].start - samples[index].start - delta) < 1,
+      `Projected sweep missed a ${delta}px shift inside the clip`,
+    );
+  }
+};
+
+scenarios['Skeleton suspends offscreen measurements and releases finished paints'] = async ({
+  page,
+  mount,
+}) => {
+  await mount('skeleton-responsive');
+  const costs = await page
+    .getByTestId('viewport')
+    .locator('.unica-skeleton')
+    .evaluate(async (node) => {
+      const settle = async () => {
+        for (let frame = 0; frame < 5; frame++) await new Promise(requestAnimationFrame);
+      };
+      await settle();
+      const animation = node.getAnimations({ subtree: true })[0];
+      animation.pause();
+      const original = node.getBoundingClientRect.bind(node);
+      let reads = 0;
+      node.getBoundingClientRect = () => {
+        reads++;
+        return original();
+      };
+      const count = async () => {
+        reads = 0;
+        await settle();
+        return reads;
+      };
+      const visible = await count();
+      node.style.translate = '0 4000px';
+      await settle();
+      const outside = await count();
+      const retained = node.style.getPropertyValue('--_skeleton-sweep-start');
+      node.style.translate = '40px 0';
+      await settle();
+      const returned = await count();
+      animation.finish();
+      await animation.finished;
+      await settle();
+      const finished = await count();
+      const cleared = node.style.getPropertyValue('--_skeleton-sweep-start');
+      node.getBoundingClientRect = original;
+      return { visible, outside, retained, returned, finished, cleared };
+    });
+  assert.equal(costs.visible, 5);
+  assert.equal(costs.outside, 0);
+  assert.ok(costs.retained);
+  assert.equal(costs.returned, 5);
+  assert.equal(costs.finished, 0);
+  assert.equal(costs.cleared, '');
 };
 
 export default scenarios;
