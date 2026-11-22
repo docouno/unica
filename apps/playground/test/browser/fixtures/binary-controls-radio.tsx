@@ -227,7 +227,7 @@ function ReassociatedRadios(): JSX.Element {
         name="primary"
         value="first"
         defaultChecked
-        onCheckedChange={() => setFirstChanges((current) => current + 1)}
+        onChange={() => setFirstChanges((current) => current + 1)}
       />
       <Radio
         label="Reassociated second"
