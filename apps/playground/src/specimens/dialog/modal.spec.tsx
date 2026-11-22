@@ -1,4 +1,4 @@
-import { Alert, AlertDescription, AlertTitle, Input } from '@docouno/unica';
+import { Alert, AlertDescription, AlertTitle, Input, Textarea } from '@docouno/unica';
 import { FormField } from '../../prototypes/form-field/form-field.proto.js';
 import { useId, useRef, useState } from 'react';
 import type { ReactElement } from 'react';
@@ -6,7 +6,6 @@ import { defineComponent } from '../../workbench/types.js';
 import { Button } from '../../prototypes/button/button.proto.js';
 import { CheckboxCard } from '../../prototypes/choice-card/choice-card.proto.js';
 import { Select } from '../../prototypes/select/select.proto.js';
-import { Textarea } from '../../prototypes/textarea/textarea.proto.js';
 import { ToastCard } from '../../prototypes/toast/toast.proto.js';
 import {
   DialogSizeControls,
@@ -41,6 +40,8 @@ function EditProject({
   readonly guarded?: boolean;
 }): ReactElement {
   const formId = useId();
+  const descriptionId = useId();
+  const instructionsId = useId();
   const nameRef = useRef<HTMLInputElement>(null);
   const touchLaunch = useRef(false);
   const cancelRef = useRef<HTMLButtonElement>(null);
@@ -200,11 +201,13 @@ function EditProject({
                     }
                   />
                 </FormField>
-                <Textarea
-                  label="Description"
-                  defaultValue="Source files and review notes for the quarterly editorial release."
-                  rows={2}
-                />
+                <FormField label="Description" htmlFor={descriptionId}>
+                  <Textarea
+                    id={descriptionId}
+                    defaultValue="Source files and review notes for the quarterly editorial release."
+                    rows={2}
+                  />
+                </FormField>
               </div>
               {!guarded && (
                 <div className="dialog-study-fields">
@@ -233,11 +236,13 @@ function EditProject({
                     <FormField htmlFor={`${formId}-review-owner`} label="Review owner">
                       <Input id={`${formId}-review-owner`} defaultValue="Content operations" />
                     </FormField>
-                    <Textarea
-                      label="Review instructions"
-                      rows={3}
-                      defaultValue="Verify the source credits, then confirm that the release notes match the published changes."
-                    />
+                    <FormField label="Review instructions" htmlFor={instructionsId}>
+                      <Textarea
+                        id={instructionsId}
+                        rows={3}
+                        defaultValue="Verify the source credits, then confirm that the release notes match the published changes."
+                      />
+                    </FormField>
                   </div>
                 </>
               )}

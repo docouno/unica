@@ -112,6 +112,8 @@ export type {
   TextTag,
   TextWeight,
 } from './components/Text/index.js';
+export { Textarea } from './components/Textarea/index.js';
+export type { TextareaProps } from './components/Textarea/index.js';
 export { Tooltip, TooltipProvider } from './components/Tooltip/index.js';
 export type {
   HoverPreviewChangeDetails,

@@ -5,9 +5,8 @@ import { SlidersHorizontalIcon } from '@phosphor-icons/react';
 import { defineComponent } from '../../workbench/types.js';
 import { Button } from '../../prototypes/button/button.proto.js';
 import { CheckboxCard, SwitchCard } from '../../prototypes/choice-card/choice-card.proto.js';
-import { Input } from '@docouno/unica';
+import { Input, Textarea } from '@docouno/unica';
 import { Select } from '../../prototypes/select/select.proto.js';
-import { Textarea } from '../../prototypes/textarea/textarea.proto.js';
 import {
   DialogSizeControls,
   DialogStudy,
@@ -131,6 +130,7 @@ function FilterActivity(): ReactElement {
 
 function DeliverySettings({ long = false }: { readonly long?: boolean }): ReactElement {
   const formId = useId();
+  const noteId = useId();
   const keepRef = useRef<HTMLButtonElement>(null);
   const emailRef = useRef<HTMLInputElement>(null);
   const returnRef = useRef<HTMLElement>(null);
@@ -281,12 +281,9 @@ function DeliverySettings({ long = false }: { readonly long?: boolean }): ReactE
                   </div>
                   <div className="dialog-study-form-section">
                     <h3>Additional instructions</h3>
-                    <Textarea
-                      label="Digest note"
-                      name="note"
-                      rows={3}
-                      defaultValue={delivery.note}
-                    />
+                    <FormField label="Digest note" htmlFor={noteId}>
+                      <Textarea id={noteId} name="note" rows={3} defaultValue={delivery.note} />
+                    </FormField>
                   </div>
                 </>
               )}

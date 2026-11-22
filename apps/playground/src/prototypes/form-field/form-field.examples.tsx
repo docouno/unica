@@ -1,4 +1,4 @@
-import { Link, Input } from '@docouno/unica';
+import { Input, Link, Textarea } from '@docouno/unica';
 import { useId, useRef, useState } from 'react';
 import type { CSSProperties, ReactElement, ReactNode } from 'react';
 import { Button } from '../button/button.proto.js';
@@ -13,7 +13,6 @@ import {
 import type { ControlSize, FieldStatus, FieldVariant } from '@docouno/unica';
 import { PopoverContent } from '../popover/popover.proto.js';
 import { CheckboxCard } from '../choice-card/choice-card.proto.js';
-import { Textarea } from '../textarea/textarea.proto.js';
 import {
   FormField,
   FormFieldDescription,

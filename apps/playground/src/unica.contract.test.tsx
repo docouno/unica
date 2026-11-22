@@ -1,3 +1,6 @@
+import babel from 'prettier/plugins/babel';
+import estree from 'prettier/plugins/estree';
+import { format } from 'prettier/standalone';
 import { readdir, readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
@@ -58,6 +61,20 @@ it('discovers real Proto and scene entries and renders six themed Subjects', () 
 
   fireEvent.click(screen.getByRole('button', { name: 'RTL' }));
   expect(container.querySelectorAll('.wb-artboard[dir="rtl"]')).toHaveLength(6);
+});
+
+it('emits valid Textarea JSX for uncontrolled and controlled log examples', async () => {
+  const component = unicaWorkbench.components.find(({ id }) => id === 'textarea')!;
+  const defaults = defaultValues(component.props);
+  for (const values of [
+    defaults,
+    { ...defaults, useValue: true, useDefaultValue: false, wrap: 'off', status: 'danger' },
+  ]) {
+    const code = componentCode(component, values);
+    await expect(format(code, { parser: 'babel', plugins: [babel, estree] })).resolves.toContain(
+      '<>',
+    );
+  }
 });
 
 it('covers typography controls in Pairwise and renders only valid label bindings', () => {
