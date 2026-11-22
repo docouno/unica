@@ -814,7 +814,9 @@ export function WorkbenchApp({ config }: WorkbenchAppProps): ReactElement {
         Array.from(document.querySelectorAll('dialog[open]')).some((dialog) =>
           dialog.matches(':modal'),
         ) ||
-        target?.closest('dialog[open], [role="dialog"], [role="alertdialog"]') ||
+        target?.closest(
+          'dialog[open]:not([role="presentation"], [role="none"]), [role="dialog"], [role="alertdialog"]',
+        ) ||
         (slash && (target?.isContentEditable || target?.closest('input, textarea, select')))
       ) {
         return;
