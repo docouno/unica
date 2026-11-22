@@ -203,7 +203,7 @@ Components reference only semantic tokens — never raw palette steps or `#hex` 
 <Button variant="primary" tone="danger">Delete workspace</Button>
 
 <Badge status="success">Verified</Badge>
-<Alert status="warning" title="Rate limit approaching" />
+<Alert status="warning" role="none">Rate limit approaching</Alert>
 ```
 
 ## Binary-control material feedback

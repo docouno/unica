@@ -21,6 +21,8 @@ export default defineConfig({
     cssTarget: [...VITE_CSS_TARGET],
     rolldownOptions: {
       output: {
+        // Shared example modules must initialize before the catalog's split specimens.
+        strictExecutionOrder: true,
         codeSplitting: {
           groups: [
             { name: 'react', test: /\/node_modules\/(?:react|react-dom|scheduler)\// },
