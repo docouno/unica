@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { ArrowRightIcon, FileTextIcon, MagnifyingGlassIcon } from '@phosphor-icons/react';
-import { Icon, IconProvider } from '@docouno/unica';
+import { Icon, UnicaProvider } from '@docouno/unica';
 import type { IconAdapter, IconProps } from '@docouno/unica';
 import { previewProps } from '../preview-code.js';
 import { defineComponent } from '../../workbench/types.js';
@@ -132,7 +132,7 @@ export default defineComponent({
       group: 'Glyph',
       default: 'phosphor',
       demo: true,
-      description: 'Adapter used by the surrounding IconProvider.',
+      description: 'Adapter used by the surrounding UnicaProvider.',
       choices: [{ value: 'phosphor' }, { value: 'custom' }],
     },
     weight: {
@@ -226,14 +226,14 @@ export default defineComponent({
       />
     );
     return (
-      <IconProvider adapter={adapter === 'custom' ? outlineAdapter : 'phosphor'}>
+      <UnicaProvider iconAdapter={adapter === 'custom' ? outlineAdapter : 'phosphor'}>
         {example.nameMode === 'labelledby' ? (
           <>
             <span id={nameId}>Release ready</span>{' '}
           </>
         ) : null}
         {glyph}
-      </IconProvider>
+      </UnicaProvider>
     );
   },
   code: ({ icon, adapter, nameMode, ...props }) => {
@@ -262,9 +262,9 @@ export default defineComponent({
 </>`
         : iconCode;
     return adapter === 'custom'
-      ? `<IconProvider adapter={outlineAdapter}>
+      ? `<UnicaProvider iconAdapter={outlineAdapter}>
   ${subject}
-</IconProvider>`
+</UnicaProvider>`
       : subject;
   },
   matrixViews: [

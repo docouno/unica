@@ -32,7 +32,7 @@ Every size uses `--surface-m-radius`: 12px in Soft/Frost, 0px in Pixel. Title us
 - Frost: status ground and uniform 1px semantic contour. No independent blur, rim light, elevation, or shadow; an enclosing overlay owns its glass.
 - Pixel: opaque status ground, 1px semantic perimeter, 2px **total** logical inline-start edge. The edge mirrors in RTL. No surface press displacement or motion.
 
-The bounded theme recipe `--alert-edge-width` is 0px in Soft/Frost and 2px in Pixel. `--alert-border-width` controls the perimeter. Component CSS does not branch on theme names. Existing consumers use this Alert rather than a second callout implementation in the feedback sketch.
+The bounded theme recipe `--_alert-edge-width` is 0px in Soft/Frost and 2px in Pixel. `--_alert-border-width` controls the perimeter. Component CSS does not branch on theme names. Existing consumers use this Alert rather than a second callout implementation in the feedback sketch.
 
 Glyphs use readable status ink, matching the copy. Some general signal colors are too dark on Frost Dark status grounds. Hierarchy comes from weight, spacing, and wording. Do not dim descriptions or turn an error into a saturated red billboard. Inline links inherit ink with a persistent underline; Code inherits Alert's status plate recipe. Focus uses local ink for reliable contrast on each ground.
 
@@ -40,7 +40,7 @@ Glyphs use readable status ink, matching the copy. Some general signal colors ar
 
 A painted Alert supplies `--action-context-ink` alongside its existing Code context. Ordinary `secondary` and `ghost` neutral Buttons and IconButtons consume that ink automatically. Their tone still describes a supporting action; it does not acquire a warning, success, or error meaning from its surroundings. No new button tone, appearance, or parent-context prop is introduced.
 
-Secondary uses an 8% context-ink veil at rest, 12% on hover, and 16% on press. Ghost starts transparent and uses the same hover/press veils. Labels blend 80% context ink with 20% theme primary ink so small action text remains readable as the plate deepens. The contour uses 28% context ink in Soft/Frost and 44% in Pixel (Soft's secondary perimeter remains absent). The theme owns these `--btn-context-*` recipes; ordinary theme shadows, press travel, timing, and geometry still apply. The status surface itself stays stationary.
+Secondary uses an 8% context-ink veil at rest, 12% on hover, and 16% on press. Ghost starts transparent and uses the same hover/press veils. Labels blend 80% context ink with 20% theme primary ink so small action text remains readable as the plate deepens. The contour uses 28% context ink in Soft/Frost and 44% in Pixel (Soft's secondary perimeter remains absent). The theme owns these `--_btn-context-*` recipes; ordinary theme shadows, press travel, timing, and geometry still apply. The status surface itself stays stationary.
 
 Open and selected actions retain the existing Button state hierarchy with the contextual palette. Pending preserves the same plate, name, focus, and geometry. Disabled supporting actions use a 4% ink veil, 40% action ink, and a 12% contour; ghost remains transparent. The containing message stays fully readable. Focus is a separate 2px contour in the enclosing surface ink, including during hover or pending.
 
@@ -48,7 +48,7 @@ Inherited Code uses its own 8% status-ink veil and the status foreground, distin
 
 The nearest painted surface owns the context. Transparent Text or Blockquote passes it through even when it changes its own text color. Card clears the outer action context and supplies neutral Code context. A theme boundary or a Base/Overlay surface boundary clears the outer action context; a nested Alert then establishes its own. After a nested surface ends, the outer context resumes. Custom painted surfaces can publish the same ink or clear it with `initial`.
 
-Explicit accent/danger Buttons, primary neutral Buttons, and explicit Code tones retain their own palettes. This keeps action intent independent of the message's severity. All contextual behavior is automatic for ordinary supporting actions, while those explicit choices remain visible in the boundary study.
+Explicit accent/danger Buttons, primary neutral Buttons, and explicit Code statuses retain their own palettes. This keeps action intent independent of the message's severity. All contextual behavior is automatic for ordinary supporting actions, while those explicit choices remain visible in the boundary study.
 
 ## Actions and recovery
 

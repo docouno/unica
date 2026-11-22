@@ -2,14 +2,18 @@ import { useCallback, useInsertionEffect, useRef, useState } from 'react';
 import type { FocusEvent, KeyboardEvent, Ref, RefCallback } from 'react';
 import { composeEventHandlers } from '../composeEventHandlers.js';
 import {
+  composedContains,
   containsSafe,
   documentHasFocusSafe,
+  getDeepActiveElement,
   getDocumentActiveElement,
   getDocumentBody,
   getOwnerDocument,
   getRootActiveElement,
   getRootNodeSafe,
+  isConnectedNode,
   isElementNode,
+  matchesSafe,
 } from '../dom.js';
 import { mergeRefs } from '../mergeRefs.js';
 import { useIsoLayoutEffect } from '../useIsoLayoutEffect.js';
@@ -43,14 +47,22 @@ export interface RovingFocus<T extends HTMLElement> {
 
 type FocusHandler<T extends HTMLElement> = (event: FocusEvent<T>) => void;
 
+function acceptedFocus(target: HTMLElement, root: Node, doc: Document): boolean {
+  if (getRootActiveElement(root, doc) === target) {
+    return true;
+  }
+  const deep = getDeepActiveElement(doc);
+  return deep !== null && composedContains(target, deep);
+}
+
 function canRecoverFocus(root: Node, doc: Document, originNode: HTMLElement): boolean {
   if (!documentHasFocusSafe(doc)) {
     return false;
   }
-  const active = getRootActiveElement(root, doc);
-  if (active === originNode) {
+  if (acceptedFocus(originNode, root, doc)) {
     return true;
   }
+  const active = getRootActiveElement(root, doc);
   if (root === doc) {
     return active === getDocumentBody(doc) || active === null;
   }
@@ -103,10 +115,17 @@ export function useRovingFocus<T extends HTMLElement>(options: RovingFocusOption
       if (!target) {
         return;
       }
+      const doc = getOwnerDocument(target);
+      if (!doc) {
+        return;
+      }
+      const root = getRootNodeSafe(target);
       navigating.current = true;
       try {
         target.focus();
-        optionsRef.current.onNavigate?.(key);
+        if (acceptedFocus(target, root, doc)) {
+          optionsRef.current.onNavigate?.(key);
+        }
       } finally {
         navigating.current = false;
       }
@@ -166,13 +185,13 @@ export function useRovingFocus<T extends HTMLElement>(options: RovingFocusOption
     if (!doc) {
       return;
     }
-    const active = getRootActiveElement(origin.root, doc);
+    const stillFocused = acceptedFocus(origin.node, origin.root, doc);
     const lost = !findNavigable(items, origin.key);
     const replaced = maps.nodes.get(origin.key) !== origin.node;
     const orderChanged =
       !lost &&
       !replaced &&
-      active !== origin.node &&
+      !stillFocused &&
       before !== items &&
       (before.length !== items.length ||
         before.some(({ key }, index) => key !== items[index]?.key));
@@ -191,7 +210,7 @@ export function useRovingFocus<T extends HTMLElement>(options: RovingFocusOption
     }
     if (
       focused.current === origin &&
-      (lost || !documentHasFocusSafe(doc) || getRootActiveElement(origin.root, doc) !== origin.node)
+      (lost || !documentHasFocusSafe(doc) || !acceptedFocus(origin.node, origin.root, doc))
     ) {
       focused.current = null;
       setFocusedKey(null);
@@ -334,7 +353,11 @@ export function useRovingFocus<T extends HTMLElement>(options: RovingFocusOption
 
       const origin = focused.current;
       if (related === null && origin) {
-        if (!committing.current && origin.node.isConnected && !origin.node.matches(':disabled')) {
+        if (
+          !committing.current &&
+          isConnectedNode(origin.node) &&
+          !matchesSafe(origin.node, ':disabled')
+        ) {
           origin.blurredWhileLive = true;
         }
         // Removal or reorder can blur without a related target. Layout gets the first
@@ -343,9 +366,7 @@ export function useRovingFocus<T extends HTMLElement>(options: RovingFocusOption
           const doc = getOwnerDocument(origin.node);
           if (
             focused.current === origin &&
-            (!doc ||
-              !documentHasFocusSafe(doc) ||
-              getRootActiveElement(origin.root, doc) !== origin.node)
+            (!doc || !documentHasFocusSafe(doc) || !acceptedFocus(origin.node, origin.root, doc))
           ) {
             focused.current = null;
             setFocusedKey(null);

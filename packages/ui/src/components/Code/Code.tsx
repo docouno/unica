@@ -1,21 +1,18 @@
 import type { ReactElement } from 'react';
+import { cx, dataFlag } from '../../core/cx.js';
 import { passiveRootAttributes } from '../../core/passiveRoot.js';
-import type { PassiveRootProps } from '../../core/passiveRoot.js';
+import type { CodeProps } from './types.js';
 import './code.css';
 
-export type CodeTone = 'inherit' | 'neutral' | 'info' | 'success' | 'warning' | 'danger';
+export type { CodeProps, CodeStatus } from './types.js';
 
-export interface CodeProps extends Omit<PassiveRootProps, 'aria-label' | 'aria-labelledby'> {
-  readonly size?: 'inherit' | 's' | 'm' | 'l' | undefined;
-  readonly tone?: CodeTone | undefined;
-  readonly plate?: boolean | undefined;
-  readonly 'aria-label'?: never;
-  readonly 'aria-labelledby'?: never;
-}
-
+/**
+ * Inline technical literal on a native `<code>` element. Defaults to `status="inherit"` to follow
+ * painted surface context (`--code-context-*`) without live-region announcements.
+ */
 export function Code({
   size = 'inherit',
-  tone = 'inherit',
+  status = 'inherit',
   plate = true,
   dir = 'ltr',
   className,
@@ -23,12 +20,12 @@ export function Code({
 }: CodeProps): ReactElement {
   return (
     <code
-      {...passiveRootAttributes(props, true)}
-      className={className ? `unica-code ${className}` : 'unica-code'}
+      {...passiveRootAttributes<'code'>(props, true)}
+      className={cx('unica-code', className)}
       dir={dir}
       data-unica-code-size={size}
-      data-unica-code-tone={tone}
-      data-unica-code-plate={plate}
+      data-unica-code-status={status}
+      data-unica-code-plate={dataFlag(plate)}
     />
   );
 }

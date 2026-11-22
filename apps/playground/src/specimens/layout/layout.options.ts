@@ -1,3 +1,5 @@
+import type { Spacing } from '@docouno/unica';
+
 export const viewportNote =
   'Responsive values follow the browser viewport. Workbench Width changes only the artboard.';
 
@@ -20,13 +22,17 @@ export function choiceProp<const Options extends Readonly<Record<string, unknown
 export const spacingOptions = {
   Default: undefined,
   '0': 0,
-  xs: 'xs',
-  s: 's',
-  m: 'm',
-  l: 'l',
-  xl: 'xl',
-  'Tablet m · Wide l': { tablet: 'm', wide: 'l' },
-} as const;
+  '2': 2,
+  '4': 4,
+  '8': 8,
+  '12': 12,
+  '16': 16,
+  '24': 24,
+  '32': 32,
+  '48': 48,
+  '64': 64,
+  'Tablet 16 · Wide 24': { tablet: 16, wide: 24 },
+} as const satisfies { [Step in Spacing]: Step } & Record<string, unknown>;
 
 export const directionOptions = {
   row: 'row',

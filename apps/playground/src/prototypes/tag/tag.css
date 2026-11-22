@@ -10,7 +10,7 @@
   --tag-cross: 14px;
   --tag-icon-size: var(--size-m-icon);
   --tag-icon-optical-inset: 4px;
-  --tag-state-duration: var(--btn-state-duration);
+  --tag-state-duration: var(--_btn-state-duration);
   --tag-painted-height: max(var(--tag-height), calc(var(--tag-line-height) + 4px));
   --tag-target-size: max(var(--tag-target), var(--tag-painted-height));
   --tag-remove-inset: calc((var(--tag-painted-height) - var(--tag-visual)) / 2);
@@ -24,7 +24,7 @@
   max-inline-size: min(100%, var(--tag-max-width, 100%));
   border: 0;
   background: transparent;
-  color: var(--mark-fg);
+  color: var(--_mark-fg);
   font-family: var(--font-family-base);
   font-size: var(--tag-font);
   font-weight: 500;
@@ -68,9 +68,9 @@
   inset-inline: 0;
   inset-block-start: 50%;
   block-size: var(--tag-painted-height);
-  border: var(--pill-border-width) solid var(--mark-border);
+  border: var(--_pill-border-width) solid var(--_mark-border);
   border-radius: var(--radius-full);
-  background: var(--mark-bg);
+  background: var(--_mark-bg);
   content: '';
   pointer-events: none;
   transform: translateY(-50%);

@@ -1,57 +1,19 @@
 import { useId } from 'react';
 import type { ComponentPropsWithRef, MouseEvent, ReactElement, ReactNode } from 'react';
-import { Slot, requireSlotChild } from '../../core/Slot.js';
+import { Slot, requireSlotChild, resolveSlotProps } from '../../core/Slot.js';
 import { useComponentDefaults } from '../../core/UnicaProvider.js';
+import { cx } from '../../core/cx.js';
 import { ExternalLinkGlyph } from '../../internal/glyphs/index.js';
 import { Icon } from '../Icon/Icon.js';
-import type { GlyphSource } from '../Icon/glyph.js';
 import { NewTabDescription } from './NewTabDescription.js';
-import { RouterAnchor } from './RouterAnchor.js';
 import { TrailingGlyph } from './TrailingGlyph.js';
 import { markTerminalText } from './terminalText.js';
+import type { LinkProps } from './types.js';
 import './link.css';
 
-export type LinkSize =
-  'inherit' | 'body-l' | 'body-m' | 'body-s' | 'caption-l' | 'caption-m' | 'caption-s';
+export type { LinkProps, LinkSize } from './types.js';
 
 type AnchorProps = ComponentPropsWithRef<'a'>;
-type OwnedAttribute = 'aria-disabled' | 'dangerouslySetInnerHTML';
-
-interface LinkOptions {
-  readonly tone?: 'accent' | 'neutral' | 'inherit' | undefined;
-  readonly underline?: 'always' | 'hover' | 'none' | undefined;
-  readonly size?: LinkSize | undefined;
-  readonly iconLeft?: GlyphSource | undefined;
-  readonly iconRight?: GlyphSource | undefined;
-  readonly external?: boolean | undefined;
-  readonly newTabHint?: string | undefined;
-}
-
-type LinkDestination =
-  | {
-      readonly asChild: true;
-      readonly href?: never;
-      readonly disabled?: boolean | undefined;
-      readonly children: ReactElement;
-    }
-  | {
-      readonly asChild?: false | undefined;
-      readonly href: string;
-      readonly disabled?: boolean | undefined;
-      readonly children?: ReactNode;
-    }
-  | {
-      readonly asChild?: false | undefined;
-      readonly href?: string | undefined;
-      readonly disabled: true;
-      readonly children?: ReactNode;
-    };
-
-export type LinkProps = LinkOptions &
-  LinkDestination &
-  Omit<AnchorProps, 'href' | 'children' | OwnedAttribute> & {
-    readonly [Key in OwnedAttribute]?: never;
-  };
 
 function requireAnchorChild(children: ReactNode, disabled: boolean): ReactElement<AnchorProps> {
   const child: ReactElement<AnchorProps> = requireSlotChild<HTMLAnchorElement>(
@@ -125,6 +87,10 @@ function blockActivation(event: MouseEvent<HTMLAnchorElement>): void {
   event.stopPropagation();
 }
 
+/**
+ * Inline navigational hyperlink supporting native `<a>` and router `asChild` composition,
+ * safe `target="_blank"` handling, accessible new-tab hints, and disabled fallback semantics.
+ */
 export function Link({
   asChild,
   tone = 'accent',
@@ -152,7 +118,15 @@ export function Link({
     throw new Error('An enabled Link requires a string href.');
   }
 
-  const effective = child ? { ...props, ...child.props } : props;
+  // Resolve all 8 navigation/a11y fields once through resolveSlotProps so logic and Slot agree.
+  const effective = (
+    child
+      ? resolveSlotProps({
+          slotProps: props,
+          childProps: child.props as Record<string, unknown>,
+        })
+      : props
+  ) as AnchorProps;
   const label = child ? child.props.children : children;
   const blank = typeof effective.target === 'string' && effective.target.toLowerCase() === '_blank';
   const download = effective.download === true || typeof effective.download === 'string';
@@ -160,6 +134,8 @@ export function Link({
   const showHint = newTab && !disabled;
   const showExternal = external || newTab;
   const authorIds = showHint ? [...new Set(tokens(effective['aria-describedby']))] : [];
+  const nameIds = tokens(effective['aria-labelledby']);
+  const terminal = showExternal || iconRight ? markTerminalText(label) : null;
   const content = (
     <>
       {iconLeft && (
@@ -167,9 +143,9 @@ export function Link({
           <Icon icon={iconLeft} usage="slot" />
         </span>
       )}
-      {showExternal || iconRight ? markTerminalText(label) : label}
-      {(showExternal || iconRight) && (
-        <TrailingGlyph>
+      {terminal ? terminal.content : label}
+      {terminal && (
+        <TrailingGlyph measureLine={terminal.end === 'text'}>
           {showExternal ? (
             <ExternalLinkGlyph />
           ) : (
@@ -186,7 +162,7 @@ export function Link({
           title={effective.title?.trim() || undefined}
           hasExplicitName={Boolean(effective['aria-label']?.trim())}
           label={label}
-          nameIds={tokens(effective['aria-labelledby'])}
+          nameIds={nameIds}
         />
       )}
     </>
@@ -202,7 +178,7 @@ export function Link({
       : effective['aria-describedby'],
     rel: blank ? secureRel(effective.rel) : effective.rel,
   } as const;
-  const anchorClass = className ? `unica-link ${className}` : 'unica-link';
+  const anchorClass = cx('unica-link', className);
 
   if (disabled) {
     const unavailable = {
@@ -223,10 +199,14 @@ export function Link({
 
     if (child) {
       return (
-        <Slot<HTMLAnchorElement> {...props} {...unavailable} className={anchorClass} ref={ref}>
-          <a {...fallbackAttributes(child.props)} {...unavailable} ref={child.props.ref}>
-            {content}
-          </a>
+        <Slot<HTMLAnchorElement>
+          {...props}
+          className={anchorClass}
+          ref={ref}
+          slotOwned={unavailable}
+          slotContent={content}
+        >
+          <a {...fallbackAttributes(child.props)} ref={child.props.ref} />
         </Slot>
       );
     }
@@ -239,11 +219,14 @@ export function Link({
 
   if (child) {
     return (
-      <Slot<HTMLAnchorElement> {...props} {...owned} className={anchorClass} ref={ref}>
-        <RouterAnchor {...child.props} {...owned}>
-          {child}
-          {content}
-        </RouterAnchor>
+      <Slot<HTMLAnchorElement>
+        {...props}
+        className={anchorClass}
+        ref={ref}
+        slotOwned={owned}
+        slotContent={content}
+      >
+        {child}
       </Slot>
     );
   }

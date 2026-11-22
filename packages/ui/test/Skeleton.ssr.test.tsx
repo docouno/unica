@@ -16,5 +16,6 @@ it('renders deterministic decorative roots in Node without a DOM', () => {
   expect(html).toMatch(/<div hidden="" [^>]*aria-hidden="true" contentEditable="false"/u);
   expect(html).toContain('inline-size:32px');
   expect(html).toContain('var(--text-size-body-l-lh)');
-  expect(html.match(/unica-skeleton-text__line/gu)).toHaveLength(2);
+  expect(html).toContain('data-unica-skeleton-shape="circle"');
+  expect(html.match(/unica-skeleton-text-line/gu)).toHaveLength(2);
 });

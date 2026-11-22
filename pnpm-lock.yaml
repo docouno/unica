@@ -54,6 +54,9 @@ importers:
       jsdom:
         specifier: "30.1.3"
         version: "30.1.3"
+      lightningcss:
+        specifier: "1.33.0"
+        version: "1.33.0"
       playwright-core:
         specifier: ^1.65.0
         version: "1.65.0"
@@ -110,6 +113,12 @@ importers:
       jsdom:
         specifier: "30.1.3"
         version: "30.1.3"
+      lightningcss:
+        specifier: "1.33.0"
+        version: "1.33.0"
+      postcss:
+        specifier: "8.5.31"
+        version: "8.5.31"
       prettier:
         specifier: "3.9.10"
         version: "3.9.10"

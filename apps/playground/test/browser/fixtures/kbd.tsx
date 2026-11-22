@@ -22,7 +22,7 @@ function MaterialSample({ surface }: { readonly surface: 'base' | 'overlay' }) {
       data-testid={`material-${surface}`}
       style={{
         background: surface === 'base' ? 'var(--bg-canvas)' : 'var(--bg-overlay)',
-        backdropFilter: surface === 'overlay' ? 'var(--overlay-backdrop)' : undefined,
+        backdropFilter: surface === 'overlay' ? 'var(--_overlay-backdrop)' : undefined,
         display: 'flex',
         flexWrap: 'wrap',
         gap: 12,

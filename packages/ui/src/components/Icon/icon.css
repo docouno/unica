@@ -1,24 +1,24 @@
 @layer unica.components {
   .unica-icon {
-    --unica-icon-frame: 1em;
+    --_icon-frame: 1em;
     display: inline-block;
     flex: none;
-    width: var(--unica-icon-frame);
-    height: var(--unica-icon-frame);
+    width: var(--_icon-frame);
+    height: var(--_icon-frame);
     vertical-align: -0.125em;
     color: inherit;
   }
 
   .unica-icon[data-unica-icon-size='s'] {
-    --unica-icon-frame: var(--size-s-icon);
+    --_icon-frame: var(--size-s-icon);
   }
 
   .unica-icon[data-unica-icon-size='m'] {
-    --unica-icon-frame: var(--size-m-icon);
+    --_icon-frame: var(--size-m-icon);
   }
 
   .unica-icon[data-unica-icon-size='l'] {
-    --unica-icon-frame: var(--size-l-icon);
+    --_icon-frame: var(--size-l-icon);
   }
 
   .unica-icon[data-unica-icon-color='primary'] {
@@ -65,16 +65,18 @@
     scale: -1 1;
   }
 
-  [dir='rtl' i] {
-    --unica-icon-direction: -1 1;
-  }
-
-  [dir='ltr' i] {
-    --unica-icon-direction: none;
-  }
-
   .unica-icon[data-unica-icon-directional] {
-    scale: var(--unica-icon-direction, none);
+    scale: var(--_dir-scale, none);
+  }
+
+  @supports selector(:dir(rtl)) {
+    .unica-icon[data-unica-icon-directional]:dir(ltr) {
+      scale: none;
+    }
+
+    .unica-icon[data-unica-icon-directional]:dir(rtl) {
+      scale: -1 1;
+    }
   }
 
   @media (forced-colors: active) {

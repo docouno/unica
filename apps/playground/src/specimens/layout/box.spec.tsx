@@ -89,7 +89,7 @@ export default defineComponent({
     {
       kind: 'precedence',
       when: { paddingInlineStart: '0' },
-      affects: [{ key: 'paddingInline', value: 'm' }],
+      affects: [{ key: 'paddingInline', value: '16' }],
       reason: 'Inline-start padding takes priority over the inline axis at that edge.',
     },
   ],
@@ -141,10 +141,10 @@ export default defineComponent({
       id: 'logical-spacing',
       title: 'Side, axis, and general spacing',
       kind: 'behavior',
-      caption: 'Block padding stays at m. Inline padding uses s except for 0 at inline start.',
+      caption: 'Block padding stays at 16. Inline padding uses 8 except for 0 at inline start.',
       render: ({ ctx }) => (
         <LayoutExample>
-          <Box {...ctx.subject} padding="m" paddingInline="s" paddingInlineStart={0}>
+          <Box {...ctx.subject} padding={16} paddingInline={8} paddingInlineStart={0}>
             <Box className="layout-outline">Nested Box</Box>
           </Box>
         </LayoutExample>
@@ -156,14 +156,14 @@ export default defineComponent({
       id: 'checklist',
       title: 'Checklist section',
       render: ({ ctx }) => (
-        <Box {...ctx.subject} as="section" padding="l">
+        <Box {...ctx.subject} as="section" padding={24}>
           <ChecklistContents />
         </Box>
       ),
       code: `import '@docouno/unica/styles.css';
 import { Box } from '@docouno/unica';
 
-<Box as="section" padding="l">
+<Box as="section" padding={24}>
   <h1>Release checklist</h1>
   <p>Review the checklist before publishing.</p>
 </Box>`,
@@ -173,14 +173,14 @@ import { Box } from '@docouno/unica';
       title: 'Standalone page landmark',
       caption: 'This example uses a section in Workbench. Use main at the page root.',
       render: ({ ctx }) => (
-        <Box {...ctx.subject} as="section" padding="l">
+        <Box {...ctx.subject} as="section" padding={24}>
           <ChecklistContents />
         </Box>
       ),
       code: `import '@docouno/unica/styles.css';
 import { Box } from '@docouno/unica';
 
-<Box as="main" padding="l">
+<Box as="main" padding={24}>
   <h1>Release checklist</h1>
   <p>Review the checklist before publishing.</p>
 </Box>`,

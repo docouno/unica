@@ -252,4 +252,31 @@ export default {
     await page.keyboard.press('Tab');
     await assertFocused(page.getByRole('textbox', { name: 'Work email' }));
   },
+
+  'Divider preserves hidden="until-found" and reveals on fragment navigation': async ({
+    page,
+    mount,
+  }) => {
+    await mount('divider');
+    const hiddenState = await page.evaluate(() => {
+      const target = document.querySelector('[data-testid="center"]');
+      target.id = 'until-found-divider';
+      target.setAttribute('hidden', 'until-found');
+      const style = getComputedStyle(target);
+      return {
+        display: style.display,
+        contentVisibility: style.contentVisibility,
+      };
+    });
+    assert.deepEqual(hiddenState, { display: 'block', contentVisibility: 'hidden' });
+
+    await page.evaluate(() => {
+      window.location.hash = '#until-found-divider';
+    });
+    const revealed = page.locator('#until-found-divider');
+    await page.waitForFunction(
+      () => !document.getElementById('until-found-divider')?.hasAttribute('hidden'),
+    );
+    assert.ok((await getBox(revealed)).height > 0);
+  },
 };

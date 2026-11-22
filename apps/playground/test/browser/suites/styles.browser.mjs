@@ -1,4 +1,8 @@
 import assert from 'node:assert/strict';
+import { Buffer } from 'node:buffer';
+import { readFile } from 'node:fs/promises';
+import { Features, transform } from 'lightningcss';
+import { createLightningCssOptions } from '../../../../../css.config.mjs';
 
 const presets = [
   ['soft-dark', 'dark', 'rgb(247, 239, 224)', '1', '8px', '9999px'],
@@ -69,6 +73,64 @@ scenarios['Uses regular and compact native scrollbar geometry with forced-colors
     const expected = { gutter: native.gutter, width: 'auto', color: 'auto' };
     assert.deepEqual(await readScrollbar(regular), expected);
     assert.deepEqual(await readScrollbar(compact), expected);
+  };
+
+scenarios['Slider, Drawer and AppShell honor nested explicit direction without native :dir()'] =
+  async ({ page }) => {
+    const files = [
+      'packages/ui/src/styles.css',
+      'apps/playground/src/prototypes/slider/slider.css',
+      'apps/playground/src/prototypes/dialog/dialog.css',
+      'apps/playground/src/prototypes/app-shell/app-shell.css',
+    ];
+    const css = await Promise.all(
+      files.map(async (filename) => {
+        const code = await readFile(new URL('../../../../../' + filename, import.meta.url));
+        const built = transform({
+          filename,
+          code,
+          minify: true,
+          ...createLightningCssOptions(Features),
+        });
+        return Buffer.from(built.code)
+          .toString()
+          .replace(/:dir\((?:ltr|rtl)\)/gi, ':not(*)');
+      }),
+    );
+    await page.setContent(`<html lang="en" dir="rtl"><body><main data-theme="pixel-light">
+      <div style="position:relative; width:300px; height:30px; --slider-position:.5; --slider-short:16px; --slider-long:20px"><div class="slider-thumb-wrap-proto"></div></div>
+      <div class="dialog-layer" data-dialog-side="start"><div class="dialog-placement"><div class="dialog-surface"></div></div></div>
+      <dialog class="app-shell-panel app-shell-panel-start" style="--shell-sheet-left:11px;--shell-sheet-right:27px"></dialog>
+      </main></body></html>`);
+    await page.addStyleTag({ content: css.join('\n') });
+    await page.locator('dialog').evaluate((el) => el.showModal());
+    for (const [dir, sign, inset] of [
+      ['rtl', -1, 27],
+      ['ltr', 1, 11],
+    ]) {
+      const result = await page.evaluate((dir) => {
+        const main = document.querySelector('main');
+        if (dir === 'ltr') {
+          main.dir = dir;
+          main.lang = 'ar';
+        }
+        const thumb = main.querySelector('.slider-thumb-wrap-proto');
+        const box = thumb.getBoundingClientRect();
+        const track = thumb.parentElement.getBoundingClientRect();
+        const shell = getComputedStyle(main.querySelector('dialog'));
+        const surface = getComputedStyle(main.querySelector('.dialog-surface'));
+        return {
+          offset: box.x + box.width / 2 - track.x - track.width / 2,
+          inset: parseFloat(shell.insetInlineStart),
+          shellShadow: shell.boxShadow,
+          drawerShadow: surface.boxShadow,
+        };
+      }, dir);
+      assert.ok(Math.abs(result.offset) < 1);
+      assert.equal(result.inset, inset);
+      assert.equal(result.shellShadow, result.drawerShadow);
+      assert.ok(result.drawerShadow.includes(`${6 * sign}px 0px`), result.drawerShadow);
+    }
   };
 
 export default scenarios;

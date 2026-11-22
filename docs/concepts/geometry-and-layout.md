@@ -72,7 +72,7 @@ AppRail (--bg-shell) < Aside (--bg-aside) < Main Canvas (--bg-canvas) < Card (--
 
 ## Unified `4px` Spacing & `s / m / l` Sizing
 
-Spacing uses a ten-step `4px` scale (`--space-0`, `2`, `4`, `8`, `12`, `16`, `24`, `32`, `48`, `64`) with five semantic aliases (`xs: 4px`, `s: 8px`, `m: 16px`, `l: 24px`, `xl: 32px`). Interactive controls and surfaces share three aligned size tiers:
+Spacing uses a ten-step numeric `4px` scale (`Spacing = 0 | 2 | 4 | 8 | 12 | 16 | 24 | 32 | 48 | 64`, backed by `--space-0` through `--space-64`). Interactive controls and surfaces share three aligned size tiers:
 
 | Tier | Control Height | Horizontal Padding | Gap | Icon Size | Surface Padding / Gap |
 | --- | --- | --- | --- | --- | --- |
@@ -84,11 +84,11 @@ Buttons, inputs, selects, date pickers, and segmented controls of the same `size
 
 ## Responsive Layout Primitives
 
-The package provides `Box`, `Flex`, `Stack`, `Grid`, `GridItem`, and `Container` (`s: 720px`, `m: 960px`, `l: 1280px`) across mobile-first CSS breakpoints (`mobile: 0px`, `tablet: 768px`, `desktop: 1024px`, `wide: 1440px`):
+The package provides `Box`, `Flex`, `Stack`, `Grid`, `GridItem`, `Container` (`--container-s: 720px`, `--container-m: 960px`, `--container-l: 1280px`), and `VisuallyHidden` across mobile-first CSS breakpoints (`mobile: 0px`, `tablet: 768px`, `desktop: 1024px`, `wide: 1440px`):
 
 ```tsx
 <Container size="l">
-  <Grid columns={{ mobile: 1, tablet: 2, desktop: 3 }} gap={{ mobile: 's', desktop: 'm' }}>
+  <Grid columns={{ mobile: 1, tablet: 2, desktop: 3 }} gap={{ mobile: 8, desktop: 16 }}>
     <GridItem>Overview</GridItem>
     <GridItem>Throughput</GridItem>
     <GridItem>Incidents</GridItem>
@@ -96,4 +96,4 @@ The package provides `Box`, `Flex`, `Stack`, `Grid`, `GridItem`, and `Container`
 </Container>
 ```
 
-Responsive props compile to CSS custom properties and viewport media queries. Each root resets its responsive values, so nested layouts keep their own defaults. Library display rules use zero specificity and apply only to visible roots, leaving native `hidden` behavior to the browser. See [Layout](../components/layout.md) for the full component API.
+Responsive props compile to CSS custom properties and viewport media queries. Each root resets its responsive values, so nested layouts keep their own defaults. `Box`, `Flex`, `Stack`, `Grid`, and `GridItem` set `min-inline-size: 0` at zero specificity so truncated text and nested tracks shrink cleanly inside flex and grid parents without overflowing narrow viewports. Library display rules use zero specificity and apply only to visible roots, leaving native `hidden` behavior to the browser. See [Layout](../components/layout.md) for the full component API.

@@ -1,5 +1,8 @@
 import { useLayoutEffect, useRef } from 'react';
 import type { JSX } from 'react';
+import { getLiveView, isInertElement } from '../../src/core/dom.js';
+import { OVERLAY_RUNTIME_KEY } from '../../src/core/overlay-protocol.js';
+import { focusElement, lockDocumentScroll } from '../../src/core/overlay/dom.js';
 import {
   registerOverlay,
   resolveToastPortalHost,
@@ -128,6 +131,7 @@ export default function OverlayRealmsFixture(): JSX.Element {
       iframeModalHandle.setOpen(true);
     };
     const navigateAndDisposeIframe = () => {
+      const oldDoc = iframe.contentDocument!;
       iframe.addEventListener(
         'load',
         () => {
@@ -136,7 +140,11 @@ export default function OverlayRealmsFixture(): JSX.Element {
           tall.style.height = '2000px';
           iframe.contentWindow!.scrollTo(0, 450);
           iframeModalHandle?.dispose();
-          root.dataset.iframeDisposedCleanly = String(iframe.contentWindow!.scrollY === 450);
+          root.dataset.iframeDisposedCleanly = String(
+            iframe.contentWindow!.scrollY === 450 &&
+              getLiveView(oldDoc) === null &&
+              getLiveView(newDoc) === iframe.contentWindow,
+          );
         },
         { once: true },
       );
@@ -230,11 +238,330 @@ export default function OverlayRealmsFixture(): JSX.Element {
       }
     };
 
+    const checkCrossBundleTriggers = async () => {
+      const url = new URL('../../src/core/overlay/runtime.ts', import.meta.url);
+      url.searchParams.set('copy', 'trigger-copy-b');
+      const copyB = (await import(/* @vite-ignore */ url.href)) as typeof Runtime;
+
+      const results: Record<string, unknown> = {};
+      for (const order of ['A-then-B', 'B-then-A'] as const) {
+        const host = root.appendChild(document.createElement('div'));
+        const outerTrigger = host.appendChild(document.createElement('div'));
+        outerTrigger.id = `outer-trig-${order}`;
+        const innerTrigger = outerTrigger.appendChild(document.createElement('div'));
+        innerTrigger.id = `inner-trig-${order}`;
+        const outerPopover = host.appendChild(document.createElement('div'));
+        const innerPopover = host.appendChild(document.createElement('div'));
+
+        let outerCalls = 0;
+        let innerCalls = 0;
+        const handleA = registerOverlay({
+          kind: 'auto',
+          element: outerPopover,
+          trigger: outerTrigger,
+          onOpenChange(open) {
+            outerCalls++;
+            handleA.setOpen(open);
+          },
+        });
+        const handleB = copyB.registerOverlay({
+          kind: 'auto',
+          element: innerPopover,
+          trigger: innerTrigger,
+          onOpenChange(open) {
+            innerCalls++;
+            handleB.setOpen(open);
+          },
+        });
+
+        innerTrigger.click();
+        const afterInnerClick = {
+          outerCalls,
+          innerCalls,
+          outerOpen: outerPopover.matches(':popover-open'),
+          innerOpen: innerPopover.matches(':popover-open'),
+        };
+
+        // Close via second click on innerTrigger (1 click -> 1 toggle).
+        innerTrigger.click();
+        const afterSecondClick = {
+          outerCalls,
+          innerCalls,
+          innerOpen: innerPopover.matches(':popover-open'),
+        };
+
+        if (order === 'A-then-B') {
+          handleA.dispose();
+          handleB.dispose();
+        } else {
+          handleB.dispose();
+          handleA.dispose();
+        }
+        host.remove();
+        results[order] = {
+          afterInnerClick,
+          afterSecondClick,
+          keysAfterTeardown: realmKeys(document).length - registeredBefore,
+        };
+      }
+
+      // Remount after full teardown + independent iframe trigger must work cleanly and leave 0 keys.
+      const remountHost = root.appendChild(document.createElement('div'));
+      const remountTrigger = remountHost.appendChild(document.createElement('div'));
+      const remountPopover = remountHost.appendChild(document.createElement('div'));
+      let remountCalls = 0;
+      const remountHandle = copyB.registerOverlay({
+        kind: 'auto',
+        element: remountPopover,
+        trigger: remountTrigger,
+        onOpenChange(open) {
+          remountCalls++;
+          remountHandle.setOpen(open);
+        },
+      });
+      const iframeTrigger = childDocument.body.appendChild(childDocument.createElement('div'));
+      const iframePopover = childDocument.body.appendChild(childDocument.createElement('div'));
+      let iframeCalls = 0;
+      const iframeHandle = registerOverlay({
+        kind: 'auto',
+        element: iframePopover,
+        trigger: iframeTrigger,
+        onOpenChange(open) {
+          iframeCalls++;
+          iframeHandle.setOpen(open);
+        },
+      });
+      remountTrigger.click();
+      iframeTrigger.click();
+      results.remountAndIframe = {
+        remountCalls,
+        remountOpen: remountPopover.matches(':popover-open'),
+        iframeCalls,
+        iframeOpen: iframePopover.matches(':popover-open'),
+      };
+      remountHandle.dispose();
+      iframeHandle.dispose();
+      remountHost.remove();
+      iframeTrigger.remove();
+      iframePopover.remove();
+      results.finalMainKeys = realmKeys(document).length - registeredBefore;
+      results.finalIframeKeys = realmKeys(childDocument).length;
+      root.dataset.crossBundleTriggers = JSON.stringify(results);
+    };
+
+    const checkInertAndFocusMatrix = () => {
+      const box = root.appendChild(document.createElement('div'));
+      const bgInput = box.appendChild(document.createElement('input'));
+
+      // 1. Mixed modal order: Unica -> foreign on top
+      const unicaD1 = box.appendChild(document.createElement('dialog'));
+      const unicaIn1 = unicaD1.appendChild(document.createElement('input'));
+      const foreignD1 = box.appendChild(document.createElement('dialog'));
+      const foreignIn1 = foreignD1.appendChild(document.createElement('input'));
+      const h1 = registerOverlay({ kind: 'modal', element: unicaD1, onOpenChange() {} });
+      h1.setOpen(true);
+      foreignD1.showModal();
+      const unicaThenForeign = {
+        foreignInert: isInertElement(foreignIn1),
+        foreignFocus: focusElement(foreignIn1, document),
+        unicaFocus: focusElement(unicaIn1, document),
+        bgInert: isInertElement(bgInput),
+      };
+      foreignD1.close();
+      h1.dispose();
+
+      // 2. Mixed modal order: foreign -> Unica on top
+      const foreignD2 = box.appendChild(document.createElement('dialog'));
+      const foreignIn2 = foreignD2.appendChild(document.createElement('input'));
+      const unicaD2 = box.appendChild(document.createElement('dialog'));
+      const unicaIn2 = unicaD2.appendChild(document.createElement('input'));
+      foreignD2.showModal();
+      const h2 = registerOverlay({ kind: 'modal', element: unicaD2, onOpenChange() {} });
+      h2.setOpen(true);
+      const foreignThenUnica = {
+        unicaInert: isInertElement(unicaIn2),
+        unicaFocus: focusElement(unicaIn2, document),
+        foreignFocus: focusElement(foreignIn2, document),
+        bgInert: isInertElement(bgInput),
+      };
+      h2.dispose();
+      foreignD2.close();
+
+      // 3. Reverse DOM order two Unica modals (A before B in DOM; open B then A) on primary & fallback paths
+      const testReverseOrder = (withFakeKey: boolean) => {
+        const fakeDetached = document.createElement('dialog');
+        const fakeObj = { resolveModal: () => fakeDetached };
+        if (withFakeKey) {
+          Reflect.set(document, OVERLAY_RUNTIME_KEY, fakeObj);
+        }
+        const bgBeforeModals = isInertElement(bgInput);
+
+        const dlgA = box.appendChild(document.createElement('dialog'));
+        const inA = dlgA.appendChild(document.createElement('input'));
+        const dlgB = box.appendChild(document.createElement('dialog'));
+        const inB = dlgB.appendChild(document.createElement('input'));
+        const hA = registerOverlay({ kind: 'modal', element: dlgA, onOpenChange() {} });
+        const hB = registerOverlay({ kind: 'modal', element: dlgB, onOpenChange() {} });
+        hB.setOpen(true);
+        hA.setOpen(true);
+        const during = {
+          inAInert: isInertElement(inA),
+          inAFocus: focusElement(inA, document),
+          inBInert: isInertElement(inB),
+          inBFocus: focusElement(inB, document),
+          bgInert: isInertElement(bgInput),
+        };
+        hA.dispose();
+        hB.dispose();
+        dlgA.remove();
+        dlgB.remove();
+        const fakeKeyPreserved = withFakeKey
+          ? Reflect.get(document, OVERLAY_RUNTIME_KEY) === fakeObj
+          : true;
+        const versionsCleaned = !Reflect.has(
+          document,
+          Symbol.for('@docouno/unica/OverlayRuntimeVersions'),
+        );
+        if (withFakeKey) {
+          Reflect.deleteProperty(document, OVERLAY_RUNTIME_KEY);
+        }
+        const bgAfterIdle = isInertElement(bgInput);
+        return { bgBeforeModals, during, fakeKeyPreserved, versionsCleaned, bgAfterIdle };
+      };
+      const reversePrimary = testReverseOrder(false);
+      const reverseFallback = testReverseOrder(true);
+
+      // 4. <main inert><dialog showModal()><input> (light DOM + Shadow DOM)
+      const inertMain = box.appendChild(document.createElement('main'));
+      inertMain.inert = true;
+      const lightModal = inertMain.appendChild(document.createElement('dialog'));
+      const lightModalIn = lightModal.appendChild(document.createElement('input'));
+      lightModal.showModal();
+      const lightInertHost = {
+        inert: isInertElement(lightModalIn),
+        focus: focusElement(lightModalIn, document),
+        bgInert: isInertElement(bgInput),
+      };
+      lightModal.close();
+
+      const shadowInertHostEl = box.appendChild(document.createElement('div'));
+      shadowInertHostEl.inert = true;
+      const sRoot = shadowInertHostEl.attachShadow({ mode: 'open' });
+      const shadowModal = sRoot.appendChild(document.createElement('dialog'));
+      const shadowModalIn = shadowModal.appendChild(document.createElement('input'));
+      shadowModal.showModal();
+      const shadowInertHost = {
+        inert: isInertElement(shadowModalIn),
+        focus: focusElement(shadowModalIn, document),
+      };
+      shadowModal.close();
+
+      const lower = registerOverlay({ kind: 'modal', element: lightModal, onOpenChange() {} });
+      const upper = registerOverlay({ kind: 'modal', element: shadowModal, onOpenChange() {} });
+      lower.setOpen(true);
+      upper.setOpen(true);
+      upper.beginExit();
+      const exitingShadow = {
+        stillModal: shadowModal.matches(':modal'),
+        lowerInert: isInertElement(lightModalIn),
+        upperInert: isInertElement(shadowModalIn),
+        lowerFocus: focusElement(lightModalIn, document),
+        backgroundInert: isInertElement(bgInput),
+      };
+      upper.finishExit();
+      const lowerAfterExit = isInertElement(lightModalIn);
+      lower.dispose();
+      upper.setOpen(true);
+      upper.beginExit();
+      const backgroundDuringLastExit = isInertElement(bgInput);
+      upper.dispose();
+
+      // 5. CSS interactivity: inert cases + <dialog inert>
+      const cssMain = box.appendChild(document.createElement('main'));
+      cssMain.style.setProperty('interactivity', 'inert');
+      const cssDlg1 = cssMain.appendChild(document.createElement('dialog'));
+      const cssIn1 = cssDlg1.appendChild(document.createElement('input'));
+      cssDlg1.showModal();
+      const cssModalUnderInertMain = {
+        inert: isInertElement(cssIn1),
+        focus: focusElement(cssIn1, document),
+      };
+      cssDlg1.style.setProperty('interactivity', 'inert');
+      const cssInertDialogItself = {
+        inert: isInertElement(cssIn1),
+        focus: focusElement(cssIn1, document),
+      };
+      cssDlg1.close();
+
+      const cssDlg2 = box.appendChild(document.createElement('dialog'));
+      const cssWrapInert = cssDlg2.appendChild(document.createElement('div'));
+      cssWrapInert.style.setProperty('interactivity', 'inert');
+      const cssInnerDirect = cssWrapInert.appendChild(document.createElement('input'));
+      const cssWrapAuto = cssWrapInert.appendChild(document.createElement('div'));
+      cssWrapAuto.style.setProperty('interactivity', 'auto');
+      const cssInnerAuto = cssWrapAuto.appendChild(document.createElement('input'));
+      cssDlg2.showModal();
+      const cssNestedInert = {
+        directInert: isInertElement(cssInnerDirect),
+        directFocus: focusElement(cssInnerDirect, document),
+        autoChildInert: isInertElement(cssInnerAuto),
+        autoChildFocus: focusElement(cssInnerAuto, document),
+      };
+      cssDlg2.close();
+
+      const attrInertDlg = box.appendChild(document.createElement('dialog'));
+      attrInertDlg.inert = true;
+      const attrInertIn = attrInertDlg.appendChild(document.createElement('input'));
+      attrInertDlg.showModal();
+      const attrInertDialog = {
+        inert: isInertElement(attrInertIn),
+        focus: focusElement(attrInertIn, document),
+      };
+      attrInertDlg.close();
+
+      // 6. lockDocumentScroll: external mutation preserved on release + idempotent release
+      const docStyle = document.documentElement.style;
+      docStyle.setProperty('overflow-x', 'auto');
+      docStyle.setProperty('overflow-y', 'scroll', 'important');
+      const unlock = lockDocumentScroll(document);
+      docStyle.setProperty('overflow-x', 'clip'); // external mutation during lock
+      unlock();
+      unlock(); // idempotent second release must not clobber
+      const scrollLockResult = {
+        overflowX: docStyle.getPropertyValue('overflow-x'),
+        overflowY: docStyle.getPropertyValue('overflow-y'),
+        overflowYPriority: docStyle.getPropertyPriority('overflow-y'),
+      };
+      docStyle.removeProperty('overflow-x');
+      docStyle.removeProperty('overflow-y');
+
+      box.remove();
+      root.dataset.inertMatrix = JSON.stringify({
+        unicaThenForeign,
+        foreignThenUnica,
+        reversePrimary,
+        reverseFallback,
+        lightInertHost,
+        shadowInertHost,
+        exitingShadow,
+        lowerAfterExit,
+        backgroundDuringLastExit,
+        cssModalUnderInertMain,
+        cssInertDialogItself,
+        cssNestedInert,
+        attrInertDialog,
+        scrollLockResult,
+      });
+    };
+
     const start = () => {
       openCopies().catch((error: unknown) => window.reportError(error));
     };
     const startJoin = () => {
       checkProtocolJoinWarning().catch((error: unknown) => window.reportError(error));
+    };
+    const startCrossTriggers = () => {
+      checkCrossBundleTriggers().catch((error: unknown) => window.reportError(error));
     };
     root.addEventListener('open-copies', start);
     root.addEventListener('check-cleanup', checkCleanup);
@@ -247,6 +574,8 @@ export default function OverlayRealmsFixture(): JSX.Element {
     root.addEventListener('check-cross-doc-trigger', checkCrossDocTrigger);
     root.addEventListener('check-protocol-join-warning', startJoin);
     root.addEventListener('check-move-before-modal', checkMoveBeforeModal);
+    root.addEventListener('check-cross-bundle-triggers', startCrossTriggers);
+    root.addEventListener('check-inert-matrix', checkInertAndFocusMatrix);
 
     return () => {
       unsubscribe();

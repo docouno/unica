@@ -1,11 +1,16 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { createRef } from 'react';
 import type { ComponentPropsWithRef, ReactNode } from 'react';
-import { afterEach, expect, it } from 'vitest';
-import { Badge, IconProvider, defineGlyph } from '../src/index.js';
+import { afterEach, expect, it, vi } from 'vitest';
+import { resetDevWarnings } from '../src/core/devWarning.js';
+import { Badge, UnicaProvider, defineGlyph } from '../src/index.js';
 import type { BadgeProps } from '../src/index.js';
 
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  resetDevWarnings();
+  vi.restoreAllMocks();
+});
 
 function Check(props: ComponentPropsWithRef<'svg'>) {
   return <svg {...props} viewBox="0 0 24 24" />;
@@ -58,7 +63,7 @@ it.each([0, '0', '99+'])('keeps an inline count of %s visible and compact', (cou
   const { container, rerender } = render(<Badge>{count}</Badge>);
   const root = container.firstElementChild;
   expect(root?.textContent).toBe(String(count));
-  expect(root?.getAttribute('data-unica-badge-numeric')).toBe('true');
+  expect(root?.getAttribute('data-unica-badge-numeric')).toBe('');
   expect(root?.getAttribute('data-unica-mark-status')).toBe('neutral');
   rerender(<Badge dot>{count}</Badge>);
   expect(root?.hasAttribute('data-unica-badge-numeric')).toBe(false);
@@ -77,12 +82,18 @@ it.each<ReactNode>([
     {false}
   </>,
 ])('omits an empty label (%s) and any leading cues', (label) => {
+  const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
   const { container, rerender } = render(
     <Badge dot iconLeft={Check}>
       {label}
     </Badge>,
   );
   expect(container.firstChild).toBeNull();
+  if (typeof label === 'string' && label.length > 0) {
+    expect(warn).toHaveBeenCalledTimes(1);
+  } else {
+    expect(warn).not.toHaveBeenCalled();
+  }
   rerender(
     <Badge asChild dot>
       <button>{label}</button>
@@ -95,11 +106,11 @@ it.each([Check, defineGlyph(Check)])(
   'gives both glyph sources priority over the dot',
   (iconLeft) => {
     const { container } = render(
-      <IconProvider adapter="native">
+      <UnicaProvider iconAdapter="native">
         <Badge dot size="s" iconLeft={iconLeft}>
           99+
         </Badge>
-      </IconProvider>,
+      </UnicaProvider>,
     );
     const root = container.firstElementChild;
     expect(root?.hasAttribute('data-unica-badge-numeric')).toBe(false);

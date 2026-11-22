@@ -1,6 +1,6 @@
 import '@docouno/unica/styles.css';
 import type { ReactElement } from 'react';
-import { PortalProvider, THEME_PRESETS, UnicaProvider } from '@docouno/unica';
+import { THEME_PRESETS, UnicaProvider } from '@docouno/unica';
 import type { ThemeConfig } from '@docouno/unica';
 import { OverlayStage } from './workbench/WorkbenchApp.js';
 import './unica.workbench.css';
@@ -218,10 +218,10 @@ function renderUnicaEmptyState({ theme, surface }: WorkbenchEmptyContext): React
         borderRadius: 'var(--surface-m-radius)',
         border: '1px solid var(--border-default)',
         backgroundColor: isOverlay ? 'var(--bg-overlay)' : 'var(--bg-surface)',
-        backgroundImage: 'var(--motif-corner-ticks)',
-        backdropFilter: isOverlay ? 'var(--overlay-backdrop)' : 'none',
+        backgroundImage: 'var(--_motif-corner-ticks)',
+        backdropFilter: isOverlay ? 'var(--_overlay-backdrop)' : 'none',
         boxShadow: isOverlay
-          ? 'var(--overlay-rim), var(--overlay-shadow-popover)'
+          ? 'var(--_overlay-rim), var(--_overlay-shadow-popover)'
           : 'var(--surface-shadow)',
         display: 'flex',
         flexDirection: 'column',
@@ -256,7 +256,7 @@ function renderUnicaEmptyState({ theme, surface }: WorkbenchEmptyContext): React
           style={{
             padding: '3px 9px',
             borderRadius: 'var(--radius-full)',
-            border: 'var(--pill-border-width) solid var(--accent-border)',
+            border: 'var(--_pill-border-width) solid var(--accent-border)',
             background: 'var(--accent-soft-bg)',
             color: 'var(--accent-soft-fg)',
             fontSize: 'var(--text-size-caption-m)',
@@ -345,7 +345,7 @@ function renderUnicaStage({
           pointerEvents: 'none',
         }}
       />
-      <div className="unica-stage-content" data-surface="overlay">
+      <div data-stage-content="" data-surface="overlay">
         {children}
       </div>
     </OverlayStage>
@@ -358,8 +358,8 @@ function renderUnicaArtboard({ theme, host, children }: WorkbenchArtboardContext
     throw new Error(`Unknown Unica theme preset: ${theme.id}`);
   }
   return (
-    <UnicaProvider theme={themeConfig}>
-      <PortalProvider container={host}>{children}</PortalProvider>
+    <UnicaProvider theme={themeConfig} portalContainer={host}>
+      {children}
     </UnicaProvider>
   );
 }

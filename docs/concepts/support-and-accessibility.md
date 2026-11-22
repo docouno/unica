@@ -15,10 +15,11 @@ Unica enforces two explicit browser tiers across CSS compilation and runtime beh
 - **Guarded progressive enhancements:** Features above Baseline — `@starting-style` and `transition-behavior: allow-discrete` on overlays, `field-sizing: content` on autosizing `Textarea`, CSS `subgrid` on `Calendar`, and typed `@property` custom-property interpolation — are wrapped in `@supports` or paired with deterministic fallbacks so interaction never breaks.
 - **Native browser UI:** Scrollbar geometry remains platform-dependent where the browser does not expose its parts. The [scrollbar design reference](scrollbars.md) specifies desktop Chromium/WebKit geometry and the standard native fallback for Firefox and touch-primary devices; square Pixel thumb ends are not a Firefox guarantee.
 - **Logical directionality (`LTR` / `RTL`):** Layout, spacing, borders, and Drawer edges use CSS logical properties (`inline-start`, `inline-end`), and directional icons mirror against explicit `[dir='rtl' i]` / `[dir='ltr' i]` regions rather than `[lang]` heuristics so mirroring works consistently across supported browsers and CSS bundlers.
+- **Native fragment reveal:** On HTML component roots that support `hidden="until-found"`, set the attribute through the DOM. Supporting browsers reveal the content on a matching fragment or find-in-page result. Older engines keep it hidden until the attribute is removed. The SVG roots of Spinner and ProgressCircle stay hidden for any `hidden` value.
 
 ```css
 .textareaAutosize {
-  min-block-size: calc(var(--text-size-body-m-lh) * 3 + var(--space-m));
+  min-block-size: calc(var(--text-size-body-m-lh) * 3 + var(--space-16));
 }
 
 @supports (field-sizing: content) {
@@ -30,7 +31,7 @@ Unica enforces two explicit browser tiers across CSS compilation and runtime beh
 
 ## React 19 & Pure-ESM Package Contract
 
-- **React 19 peer dependencies** support ordinary `ref` props, StrictMode, concurrent rendering, React DOM server rendering, and hydration. Use `React.useId()` for stable IDs and defer DOM access until an element or its document is available. In applications using React Server Components, import runtime UI components and hooks from a module marked `'use client'`. The `react-server` entry exports `THEME_PRESETS`, `defineGlyph`, and TypeScript types.
+- **React 19 peer dependencies** support ordinary `ref` props, StrictMode, concurrent rendering, React DOM server rendering, and hydration. Use `React.useId()` for stable IDs and defer DOM access until an element or its document is available. In applications using React Server Components, import runtime UI components (including `VisuallyHidden`) and hooks from a module marked `'use client'`. The `react-server` entry exports strictly `THEME_PRESETS`, `defineGlyph`, `getUnicaRootProps`, and a 1:1 mirror of all public TypeScript types (including `VisuallyHiddenProps`, `Spacing`, `BlockquoteStatus`, `CodeStatus`, and `UnicaRootAttributes`).
 - **Pure ESM & `isolatedDeclarations`:** `@docouno/unica` ships pure ES modules (`"type": "module"`) with explicit TypeScript boundary annotations (`isolatedDeclarations: true`), accurate `sideEffects` metadata for CSS assets, and automated release verification via `publint` and `@arethetypeswrong/core`.
 
 ## WCAG Contrast & Non-Color Differentiation

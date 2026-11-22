@@ -865,21 +865,21 @@ function LayoutExamples(): ReactElement {
       <Example title="Box, Stack and Flex · spacing, baseline and wrapping">
         <Box
           className="shell-study-layout-guide shell-study-layout-box"
-          padding={{ tablet: 'l', desktop: 'xl' }}
+          padding={{ tablet: 24, desktop: 32 }}
         >
-          <Stack gap={{ mobile: 's', tablet: 'm' }}>
+          <Stack gap={{ mobile: 8, tablet: 16 }}>
             <div className="shell-study-layout-cell">Workspace access</div>
             <Flex
               wrap="wrap"
               align="center"
-              gap={{ mobile: 's', tablet: 'm' }}
+              gap={{ mobile: 8, tablet: 16 }}
               direction={{ mobile: 'column', tablet: 'row' }}
             >
               <div className="shell-study-layout-cell">Editors</div>
               <div className="shell-study-layout-cell">External collaborators</div>
               <div className="shell-study-layout-cell">Service accounts</div>
             </Flex>
-            <Flex wrap="wrap" align="baseline" gap="s">
+            <Flex wrap="wrap" align="baseline" gap={8}>
               <Title as="h4" size="heading-s">
                 Permissions
               </Title>
@@ -894,7 +894,7 @@ function LayoutExamples(): ReactElement {
         <Grid
           className="shell-study-layout-guide"
           columns={{ mobile: 1, tablet: 2, desktop: 3, wide: 4 }}
-          gap={{ mobile: 's', tablet: 'm', wide: 'l' }}
+          gap={{ mobile: 8, tablet: 16, wide: 24 }}
         >
           <GridItem span={{ mobile: 1, desktop: 2 }} className="shell-study-layout-cell">
             Access overview
@@ -908,7 +908,7 @@ function LayoutExamples(): ReactElement {
         </Grid>
       </Example>
       <Example title="Container · 720, 960 and 1280px">
-        <Stack gap="s">
+        <Stack gap={8}>
           {(['s', 'm', 'l'] as const).map((size, index) => (
             <Container
               size={size}

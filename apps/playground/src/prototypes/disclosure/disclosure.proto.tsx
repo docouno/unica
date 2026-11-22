@@ -218,7 +218,7 @@ export function CollapsibleContent({
     motion.current?.cancel();
     panel.hidden = false;
     const to = open ? body.getBoundingClientRect().height : 0;
-    const time = getComputedStyle(panel).getPropertyValue('--disclosure-duration').trim();
+    const time = getComputedStyle(panel).getPropertyValue('--_disclosure-duration').trim();
     const duration = Number.parseFloat(time) * (time.endsWith('ms') ? 1 : 1000);
     const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
 

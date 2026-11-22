@@ -28,7 +28,7 @@ export default defineComponent({
       description: 'Scale relative to prose or a control.',
       choices: [{ value: 'inherit' }, { value: 's' }, { value: 'm' }, { value: 'l' }],
     },
-    tone: {
+    status: {
       kind: 'enum',
       group: 'Appearance',
       default: 'inherit',
@@ -72,7 +72,7 @@ export default defineComponent({
     </span>
   ),
   code: ({ children, ...props }) =>
-    `<Code${previewProps(props, { size: 'inherit', tone: 'inherit', plate: true, dir: 'ltr' })}>${previewText(children)}</Code>`,
+    `<Code${previewProps(props, { size: 'inherit', status: 'inherit', plate: true, dir: 'ltr' })}>${previewText(children)}</Code>`,
   constraints: [
     {
       kind: 'ignored',
@@ -105,28 +105,28 @@ export default defineComponent({
       ),
     },
     {
-      id: 'tones',
-      rows: 'tone',
+      id: 'statuses',
+      rows: 'status',
       cols: 'plate',
       title: 'Status is meaning, not decoration',
       caption:
-        'Neutral for ordinary literals. A semantic tone accompanies an explicit status, never replaces its wording.',
+        'Neutral for ordinary literals. A semantic status accompanies an explicit status, never replaces its wording.',
       reference: () => (
         <div className="code-example-stack code-example-compact">
           <Text size="body-s">
             Format <Code>application/json</Code>
           </Text>
           <Text size="body-s">
-            Information <Code tone="info">100 CONTINUE</Code>
+            Information <Code status="info">100 CONTINUE</Code>
           </Text>
           <Text size="body-s">
-            Created <Code tone="success">201 CREATED</Code>
+            Created <Code status="success">201 CREATED</Code>
           </Text>
           <Text size="body-s">
-            Retry later <Code tone="warning">429 RATE_LIMITED</Code>
+            Retry later <Code status="warning">429 RATE_LIMITED</Code>
           </Text>
           <Text size="body-s">
-            Access denied <Code tone="danger">403 FORBIDDEN</Code>
+            Access denied <Code status="danger">403 FORBIDDEN</Code>
           </Text>
         </div>
       ),
@@ -196,13 +196,13 @@ export default defineComponent({
             <Alert key={status} status={status} size="s">
               <AlertTitle>{`${status} · quoted configuration`}</AlertTitle>
               <AlertDescription>
-                Read <Code>response.status</Code> before retrying. An explicit matching tone{' '}
-                <Code tone={status}>response.code</Code> also keeps its own tonal step.
+                Read <Code>response.status</Code> before retrying. An explicit matching status{' '}
+                <Code status={status}>response.code</Code> also keeps its own tonal step.
               </AlertDescription>
             </Alert>
           ))}
           <Text size="body-s" color="muted">
-            The nearest painted surface supplies the hue. An explicit tone overrides that context;
+            The nearest painted surface supplies the hue. An explicit status overrides that context;
             plain Code inherits the surrounding text.
           </Text>
         </div>
@@ -218,7 +218,7 @@ export default defineComponent({
           <div className="code-example-stack code-example-compact">
             <Text size="body-s" color="secondary">
               A local text color keeps <Code>request_id</Code> on the blue plate. An explicit{' '}
-              <Code tone="neutral">config.json</Code> uses neutral colors.
+              <Code status="neutral">config.json</Code> uses neutral colors.
             </Text>
             <Card size="s">
               <Text size="body-s">
@@ -250,7 +250,7 @@ export default defineComponent({
               <Code>authorization</Code> out of shared logs.
             </Text>
             <Text size="body-s">
-              Accepted <Code tone="success">202 ACCEPTED</Code>
+              Accepted <Code status="success">202 ACCEPTED</Code>
             </Text>
           </PopoverBody>
         </PopoverContent>
@@ -319,13 +319,13 @@ export default defineComponent({
           <div className="code-example-actions">
             <Button size="s">
               Run{' '}
-              <Code plate={false} tone="inherit">
+              <Code plate={false} status="inherit">
                 npm test
               </Code>
             </Button>
             <Button size="s" variant="secondary" tone="neutral">
               Open{' '}
-              <Code plate={false} tone="inherit">
+              <Code plate={false} status="inherit">
                 config.ts
               </Code>
             </Button>
@@ -333,7 +333,7 @@ export default defineComponent({
           <Text size="body-s">
             Read the{' '}
             <Link href="https://developer.mozilla.org/en-US/docs/Web/API/AbortSignal">
-              <Code plate={false} tone="inherit">
+              <Code plate={false} status="inherit">
                 AbortSignal
               </Code>{' '}
               reference

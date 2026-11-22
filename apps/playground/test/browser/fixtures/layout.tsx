@@ -1,5 +1,5 @@
-import { Fragment, useState, type ReactNode } from 'react';
-import { Box, Container, Flex, Grid, GridItem, Stack } from '@docouno/unica';
+import { Fragment, useState, type CSSProperties, type ReactNode } from 'react';
+import { Box, Container, Flex, Grid, GridItem, Stack, Text, VisuallyHidden } from '@docouno/unica';
 
 function identifyRef(node: HTMLElement | null) {
   if (node) {
@@ -50,12 +50,12 @@ function LayoutRoots() {
         aria-label="Release notes"
         className="fixture-layout-heading"
         lang="en"
-        marginInlineEnd="s"
-        marginInline="xs"
-        margin="m"
+        marginInlineEnd={8}
+        marginInline={4}
+        margin={16}
         paddingInlineStart={0}
-        paddingInline="s"
-        padding="m"
+        paddingInline={8}
+        padding={16}
         style={{ minBlockSize: 40 }}
         onClick={() => setClicks(clicks + 1)}
         data-clicks={clicks}
@@ -91,7 +91,7 @@ function LayoutFlow() {
     <>
       <Flex
         data-testid="wrapped-flex"
-        gap="s"
+        gap={8}
         justify="end"
         align="start"
         wrap="wrap"
@@ -101,12 +101,12 @@ function LayoutFlow() {
         <div style={{ inlineSize: 60, blockSize: 20 }}>Two</div>
         <div style={{ inlineSize: 60, blockSize: 20 }}>Three</div>
       </Flex>
-      <Flex direction={{ tablet: 'column-reverse' }} gap={{ desktop: 'l' }}>
+      <Flex direction={{ tablet: 'column-reverse' }} gap={{ desktop: 24 }}>
         <div>
           <Flex data-testid="inner-flex">Inner flex</Flex>
         </div>
       </Flex>
-      <Stack direction={{ tablet: 'row' }} gap={{ desktop: 'l' }}>
+      <Stack direction={{ tablet: 'row' }} gap={{ desktop: 24 }}>
         <div>
           <Stack data-testid="inner-stack">Inner stack</Stack>
         </div>
@@ -121,7 +121,7 @@ function LayoutFlow() {
         <Stack
           data-testid="field-stack"
           direction={reverse}
-          gap="s"
+          gap={8}
           divider={showDivider ? <hr /> : undefined}
         >
           {insertField && <span key="prefix">Name fields</span>}
@@ -185,13 +185,13 @@ function LayoutGrid() {
   const [flow, setFlow] = useState<'row' | 'column'>('row');
   return (
     <>
-      <Grid data-testid="span-grid" columns={3} gap="s" style={{ inlineSize: 300 }}>
+      <Grid data-testid="span-grid" columns={3} gap={8} style={{ inlineSize: 300 }}>
         <GridItem data-testid="responsive-span" span={{ mobile: 1, desktop: 2 }}>
           Summary
         </GridItem>
         <GridItem>Activity</GridItem>
       </Grid>
-      <Grid data-testid="twelve-grid" columns={{ mobile: 12, desktop: 1, wide: 12 }} gap="s">
+      <Grid data-testid="twelve-grid" columns={{ mobile: 12, desktop: 1, wide: 12 }} gap={8}>
         <div>
           <Grid data-testid="inner-grid">
             <GridItem>Nested grid</GridItem>
@@ -260,13 +260,18 @@ function LayoutContainer() {
         <Container
           data-testid="container-responsive"
           size={{ tablet: 's', desktop: 'l' }}
-          gutter={{ mobile: 'm', tablet: 0, wide: 'xl' }}
+          gutter={{ mobile: 16, tablet: 0, wide: 32 }}
         >
           <div data-testid="container-responsive-content">Responsive</div>
           <div>
             <Container data-testid="container-nested">Nested container</Container>
           </div>
         </Container>
+        <div style={{ '--container-m': '640px' } as CSSProperties}>
+          <Container data-testid="container-custom-default">
+            <div>Custom default container</div>
+          </Container>
+        </div>
       </div>
       <div data-testid="container-narrow-parent" style={{ inlineSize: 360 }}>
         <Container data-testid="container-narrow">
@@ -274,9 +279,43 @@ function LayoutContainer() {
         </Container>
       </div>
       <div style={{ inlineSize: 48 }}>
-        <Container data-testid="container-tight" gutter="xl">
+        <Container data-testid="container-tight" gutter={32}>
           <div data-testid="container-tight-content" />
         </Container>
+      </div>
+      <div
+        data-testid="layout-hardening-probes"
+        style={
+          {
+            inlineSize: 320,
+            '--space-16': '20px',
+          } as CSSProperties
+        }
+      >
+        <Stack data-testid="spacing-12-stack" gap={12}>
+          <Box data-testid="custom-space-16-box" padding={16}>
+            Custom 16
+          </Box>
+          <Flex data-testid="overflow-flex" gap={8} style={{ inlineSize: 220 }}>
+            <Box data-testid="overflow-box" style={{ flex: '1 1 auto' }}>
+              <Text data-testid="overflow-text" truncate>
+                UninterruptedLongIdentifierThatMustTruncateInsideFlexBoxWithoutPushingOuterWidth
+              </Text>
+            </Box>
+          </Flex>
+          <Grid data-testid="overflow-grid" columns={2} gap={8} style={{ inlineSize: 220 }}>
+            <Stack data-testid="overflow-grid-stack">
+              <Text data-testid="overflow-grid-text" truncate>
+                GridNestedStackTextThatMustNotBlowOutTrackWidthUnderMinInlineSizeZero
+              </Text>
+            </Stack>
+            <span>Peer</span>
+          </Grid>
+          <VisuallyHidden data-testid="vh-span">Hidden span announcement</VisuallyHidden>
+          <VisuallyHidden as="div" data-testid="vh-div">
+            Hidden div announcement
+          </VisuallyHidden>
+        </Stack>
       </div>
     </>
   );

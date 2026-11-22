@@ -1,9 +1,14 @@
 import { cleanup, render, screen } from '@testing-library/react';
 import { createRef } from 'react';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { resetDevWarnings } from '../src/core/devWarning.js';
 import { Progress, ProgressCircle, Spinner } from '../src/index.js';
 
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  resetDevWarnings();
+  vi.restoreAllMocks();
+});
 
 describe('progress indicators', () => {
   it.each([
@@ -194,5 +199,43 @@ describe('progress indicators', () => {
     expect(progressRef.current).toBeNull();
     expect(circleRef.current).toBeNull();
     expect(spinnerNodes).toEqual([spinner, null]);
+  });
+
+  it('warns once for blank names unless aria-hidden, and emits data-unica-* boolean flags', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    const { container } = render(
+      <>
+        <Progress value={50} label="   " active />
+        <Progress value={50} aria-label="  " aria-hidden />
+        <Progress value={null} label="Missing ref" aria-labelledby="nonexistent" />
+        <ProgressCircle value={0} aria-label="   " />
+        <ProgressCircle value={null} aria-hidden="true" />
+        <Spinner delay={150} />
+      </>,
+    );
+
+    expect(warn).toHaveBeenCalledTimes(2);
+    expect(warn.mock.calls.flat()).toEqual([
+      expect.stringContaining('Progress requires a non-blank'),
+      expect.stringContaining('ProgressCircle requires a non-blank'),
+    ]);
+
+    const first = container.querySelector('.unica-progress');
+    expect(first?.getAttribute('data-unica-progress-active')).toBe('');
+    expect(first?.hasAttribute('data-unica-progress-paused')).toBe(false);
+    expect(first?.hasAttribute('data-unica-progress-indeterminate')).toBe(false);
+
+    const bars = container.querySelectorAll('[role="progressbar"]');
+    const brokenRef = bars[2];
+    expect(brokenRef?.getAttribute('aria-labelledby')).toBe('nonexistent');
+    expect(
+      container.querySelector('.unica-progress[data-unica-progress-indeterminate=""]'),
+    ).not.toBeNull();
+    expect(
+      container.querySelector('.unica-activity-icon[data-unica-activity-empty=""]'),
+    ).not.toBeNull();
+    expect(
+      container.querySelector('.unica-activity-icon[data-unica-activity-spinner=""]'),
+    ).not.toBeNull();
   });
 });

@@ -15,12 +15,15 @@ function releaseRefs(cleanups: readonly (() => void)[]): void {
 }
 
 export function mergeRefs<T>(...refs: (Ref<T> | undefined)[]): RefCallback<T> {
+  let detach: (() => void) | undefined;
+
   return (node) => {
-    // React 19 calls the returned cleanup after success. A null call after failed
-    // attachment follows the rollback below and has nothing left to release.
     if (node === null) {
+      detach?.();
       return;
     }
+
+    detach?.();
 
     const cleanups: (() => void)[] = [];
     try {
@@ -51,6 +54,13 @@ export function mergeRefs<T>(...refs: (Ref<T> | undefined)[]): RefCallback<T> {
       throw error;
     }
 
-    return () => releaseRefs(cleanups);
+    const release = (): void => {
+      if (detach === release) {
+        detach = undefined;
+        releaseRefs(cleanups);
+      }
+    };
+    detach = release;
+    return release;
   };
 }

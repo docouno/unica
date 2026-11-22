@@ -1,4 +1,5 @@
 import { useCallback, useInsertionEffect, useRef, useState } from 'react';
+import { isInertElement, matchesSafe } from '../dom.js';
 import { useStateAuthority } from '../useControllableState.js';
 import type { ControllableStateOptions } from '../useControllableState.js';
 import { useIsoLayoutEffect } from '../useIsoLayoutEffect.js';
@@ -151,10 +152,10 @@ export function useFormValue<T>(options: FormValueOptions<T>): FormValueState<T>
     (next: T, source?: FormControl): void => {
       const currentOptions = config.current;
       const controls = readControls(currentOptions);
-      const disabled = source
-        ? source.matches(':disabled')
-        : controls.length > 0 && controls.every((control) => control.matches(':disabled'));
-      if (currentOptions.readOnly || disabled) {
+      const isBlocked = (control: FormControl): boolean =>
+        matchesSafe(control, ':disabled') || isInertElement(control);
+      const blocked = source ? isBlocked(source) : controls.length > 0 && controls.every(isBlocked);
+      if (currentOptions.readOnly || blocked) {
         writeWith(read(), true, controls);
         return;
       }

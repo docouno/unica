@@ -131,10 +131,10 @@
   background: var(--bg-surface);
 }
 .binary-demo-plate[data-plate='overlay'] {
-  border-color: var(--overlay-border);
+  border-color: var(--_overlay-border);
   background: var(--bg-overlay);
-  backdrop-filter: var(--overlay-backdrop);
-  box-shadow: var(--overlay-shadow-popover);
+  backdrop-filter: var(--_overlay-backdrop);
+  box-shadow: var(--_overlay-shadow-popover);
 }
 .binary-demo-narrow {
   inline-size: min(100%, 26rem);

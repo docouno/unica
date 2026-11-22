@@ -271,6 +271,28 @@ for (const direction of ['ltr', 'rtl']) {
     }
     await toggle.click();
     assert.deepEqual(await readHidden(), shown);
+
+    // hidden="until-found" must not be forced to display: none by the [hidden] rule.
+    const untilFound = await page.evaluate(() => {
+      const shape = document.querySelector('[data-testid="rect"]');
+      const text = document.querySelector('[data-testid="text-shape"]');
+      shape.setAttribute('hidden', 'until-found');
+      text.setAttribute('hidden', 'UNTIL-FOUND');
+      const result = [shape, text].map((node) => {
+        const style = getComputedStyle(node);
+        return {
+          display: style.display,
+          contentVisibility: style.contentVisibility,
+        };
+      });
+      shape.removeAttribute('hidden');
+      text.removeAttribute('hidden');
+      return result;
+    });
+    assert.deepEqual(untilFound, [
+      { display: 'block', contentVisibility: 'hidden' },
+      { display: 'block', contentVisibility: 'hidden' },
+    ]);
   };
 
   scenarios[
@@ -638,5 +660,479 @@ scenarios['Skeleton SSR markup hydrates both existing roots without changing the
     await assertBox(text, textBox);
     await before.dispose();
   };
+
+scenarios['Skeleton sweeps in English RTL and nested LTR without :dir(rtl) CSS'] = async ({
+  page,
+  mount,
+}) => {
+  await mount('skeleton', { direction: 'rtl' });
+  const shape = page.getByTestId('motion');
+  await shape.scrollIntoViewIfNeeded();
+  await page.waitForFunction(
+    () =>
+      parseFloat(
+        getComputedStyle(document.querySelector('[data-testid="motion"]'), '::after').width,
+      ) > 0,
+  );
+  const rtlSweep = await shape.evaluate((node) => {
+    document.documentElement.lang = 'en';
+    const start = parseFloat(node.style.getPropertyValue('--_skeleton-sweep-start'));
+    const end = parseFloat(node.style.getPropertyValue('--_skeleton-sweep-end'));
+    const slope = new DOMMatrix(getComputedStyle(node, '::after').transform).m21;
+    return { start, end, slope };
+  });
+  assert.ok(rtlSweep.start > rtlSweep.end, 'RTL sweep moves from right to left');
+  assert.ok(rtlSweep.slope > 0, 'RTL sweep tilts toward inline end');
+
+  await shape.evaluate((node) => {
+    node.setAttribute('dir', 'ltr');
+  });
+  await page.waitForFunction(() => {
+    const node = document.querySelector('[data-testid="motion"]');
+    const start = parseFloat(node.style.getPropertyValue('--_skeleton-sweep-start'));
+    const end = parseFloat(node.style.getPropertyValue('--_skeleton-sweep-end'));
+    return start < end;
+  });
+  const nestedLtr = await shape.evaluate((node) => ({
+    start: parseFloat(node.style.getPropertyValue('--_skeleton-sweep-start')),
+    end: parseFloat(node.style.getPropertyValue('--_skeleton-sweep-end')),
+    slope: new DOMMatrix(getComputedStyle(node, '::after').transform).m21,
+  }));
+  assert.ok(nestedLtr.start < nestedLtr.end, 'Nested LTR sweep moves from left to right');
+  assert.ok(nestedLtr.slope < 0, 'Nested LTR sweep tilts toward inline end');
+};
+
+scenarios[
+  'Skeleton tracks sibling layout and direction with one geometry sample per visible frame'
+] = async ({ page, mount }) => {
+  await mount('skeleton', { direction: 'ltr' });
+  await page.getByRole('button', { name: 'Mount observer probes' }).click();
+  const probes = page.getByTestId('observer-probes');
+  await probes.waitFor();
+  await probes.scrollIntoViewIfNeeded();
+  await page.evaluate(
+    () => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))),
+  );
+
+  // Wait for all probe skeletons to receive their initial sweep geometry.
+  await page.waitForFunction(() =>
+    [
+      'probe-overridden-ltr',
+      'probe-many-skel',
+      'probe-contents-skel',
+      'probe-dir-auto-skel',
+      'probe-text-skel',
+    ].every((id) => {
+      const el = document.querySelector(`[data-testid="${id}"]`);
+      return el && Boolean(el.style.getPropertyValue('--_skeleton-sweep-start'));
+    }),
+  );
+
+  // Pause all running sweep animations so earlier skeletons cannot expire and probes stay active.
+  await page.evaluate(async () => {
+    for (const anim of document.getAnimations()) {
+      anim.pause();
+    }
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+  });
+
+  const costs = await page.getByTestId('probe-overridden-ltr').evaluate(async (node) => {
+    const original = node.getBoundingClientRect.bind(node);
+    let reads = 0;
+    node.getBoundingClientRect = () => {
+      reads++;
+      return original();
+    };
+    const sample = async (change) => {
+      reads = 0;
+      change();
+      for (let i = 0; i < 4; i++) {
+        await new Promise(requestAnimationFrame);
+      }
+      return reads;
+    };
+    let styleChanges = 0;
+    const changes = new MutationObserver((records) => {
+      styleChanges += records.length;
+    });
+    changes.observe(node, { attributes: true, attributeFilter: ['style'] });
+    const stable = await sample(() => {});
+    const unrelated = await sample(() => {
+      const link = document.head.appendChild(document.createElement('link'));
+      link.rel = 'canonical';
+      link.rel = 'alternate';
+      link.remove();
+      document.querySelector('[data-testid="unrelated-subtree"]').textContent = 'Unrelated text';
+    });
+    const unchangedWrites = styleChanges;
+    const before = parseFloat(node.style.getPropertyValue('--_skeleton-sweep-start'));
+    await sample(() => {
+      node.parentElement.style.translate = '70px 0';
+    });
+    const shift = before - parseFloat(node.style.getPropertyValue('--_skeleton-sweep-start'));
+    const changedWrites = styleChanges - unchangedWrites;
+    changes.disconnect();
+    node.getBoundingClientRect = original;
+    return { stable, unrelated, unchangedWrites, changedWrites, shift };
+  });
+  assert.equal(costs.stable, 4);
+  assert.equal(costs.unrelated, costs.stable);
+  assert.equal(costs.unchangedWrites, 0);
+  assert.ok(costs.changedWrites > 0);
+  assert.ok(Math.abs(costs.shift - 70) < 1);
+
+  // 2. >64 siblings: expanding sibling #0 shifts probe-many-skel by 80px.
+  const manyDelta = await page.evaluate(async () => {
+    const skel = document.querySelector('[data-testid="probe-many-skel"]');
+    const before = parseFloat(skel.style.getPropertyValue('--_skeleton-sweep-start'));
+    document.querySelector('[data-probe-sibling="0"]').style.inlineSize = '84px';
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+    const after = parseFloat(skel.style.getPropertyValue('--_skeleton-sweep-start'));
+    return before - after;
+  });
+  assert.ok(
+    Math.abs(manyDelta - 80) <= 2,
+    `Expected ~80px shift past 64 siblings, got ${manyDelta}`,
+  );
+
+  // 3. display: contents: 100px shift from child behind display:contents, dynamic insertion into display:contents,
+  //    and toggling a sibling to display:contents mid-sweep.
+  const contentsShifts = await page.evaluate(async () => {
+    const skel = document.querySelector('[data-testid="probe-contents-skel"]');
+    const read = () => parseFloat(skel.style.getPropertyValue('--_skeleton-sweep-start'));
+    const nextFrames = () =>
+      new Promise((r) =>
+        requestAnimationFrame(() => requestAnimationFrame(() => requestAnimationFrame(r))),
+      );
+
+    const s0 = read();
+    document.querySelector('[data-testid="probe-contents-child"]').style.inlineSize = '120px';
+    await nextFrames();
+    const s1 = read();
+
+    const added = document.createElement('div');
+    added.style.cssText = 'inline-size: 40px; block-size: 16px; flex: none';
+    document.querySelector('[data-testid="probe-contents-wrap"]').appendChild(added);
+    await nextFrames();
+    const s2 = read();
+
+    document.querySelector('[data-testid="probe-contents-row"]').classList.add('probe-flat');
+    await nextFrames();
+    document.querySelector('[data-testid="probe-toggle-inner"]').style.inlineSize = '70px';
+    await nextFrames();
+    const s3 = read();
+
+    return {
+      growBehindContents: s0 - s1,
+      insertInsideContents: s1 - s2,
+      toggledToContents: s2 - s3,
+    };
+  });
+  assert.ok(
+    Math.abs(contentsShifts.growBehindContents - 100) <= 2,
+    `Expected ~100px shift behind display:contents, got ${contentsShifts.growBehindContents}`,
+  );
+  assert.ok(
+    Math.abs(contentsShifts.insertInsideContents - 40) <= 2,
+    `Expected ~40px shift after inserting into display:contents, got ${contentsShifts.insertInsideContents}`,
+  );
+  assert.ok(
+    Math.abs(contentsShifts.toggledToContents - 50) <= 2,
+    `Expected ~50px shift after toggling display->contents, got ${contentsShifts.toggledToContents}`,
+  );
+
+  // 4. dir="auto": changing nested text Abc -> שלום flips sweep direction and band angle sign.
+  const dirAutoFlip = await page.evaluate(async () => {
+    const skel = document.querySelector('[data-testid="probe-dir-auto-skel"]');
+    const snap = () => ({
+      start: parseFloat(skel.style.getPropertyValue('--_skeleton-sweep-start')),
+      end: parseFloat(skel.style.getPropertyValue('--_skeleton-sweep-end')),
+      angle: parseFloat(skel.style.getPropertyValue('--_skeleton-band-angle')),
+    });
+    const ltr = snap();
+    document.querySelector('[data-testid="probe-dir-auto-text"]').textContent = 'שלום';
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+    const rtl = snap();
+    return { ltr, rtl };
+  });
+  assert.ok(dirAutoFlip.ltr.start < dirAutoFlip.ltr.end && dirAutoFlip.ltr.angle < 0);
+  assert.ok(dirAutoFlip.rtl.start > dirAutoFlip.rtl.end && dirAutoFlip.rtl.angle > 0);
+
+  // 5. Direct Text node mutation + sibling margin change shift probe-text-skel.
+  const textAndMargin = await page.evaluate(async () => {
+    const row = document.querySelector('[data-testid="probe-text-row"]');
+    const skel = document.querySelector('[data-testid="probe-text-skel"]');
+    const read = () => parseFloat(skel.style.getPropertyValue('--_skeleton-sweep-start'));
+    const nextFrames = () =>
+      new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+    const s0 = read();
+    row.firstChild.data = 'Much longer direct text node content';
+    await nextFrames();
+    const s1 = read();
+    document.querySelector('[data-testid="probe-margin-sibling"]').style.marginInlineStart = '40px';
+    await nextFrames();
+    const s2 = read();
+    return { textShift: s0 - s1, marginShift: s1 - s2 };
+  });
+  assert.ok(
+    textAndMargin.textShift > 20,
+    `Expected text node shift > 20, got ${textAndMargin.textShift}`,
+  );
+  assert.ok(
+    Math.abs(textAndMargin.marginShift - 40) <= 2,
+    `Expected ~40px sibling margin shift, got ${textAndMargin.marginShift}`,
+  );
+
+  const inline = await page.evaluate(async () => {
+    const skel = document.querySelector('[data-testid="probe-inline-skel"]');
+    const read = () => [
+      skel.getBoundingClientRect().left,
+      parseFloat(skel.style.getPropertyValue('--_skeleton-sweep-start')),
+    ];
+    const [left, start] = read();
+    document.querySelector('[data-testid="probe-inline-label"] em').firstChild.data =
+      'Substantially longer inline text';
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+    const [newLeft, newStart] = read();
+    return { shift: newLeft - left, sweepShift: start - newStart };
+  });
+  assert.ok(inline.shift > 20);
+  assert.ok(Math.abs(inline.shift - inline.sweepShift) < 2);
+
+  // 6. Leaving viewport retains written --_skeleton-* geometry without clearing; finishing animation cleans up (idle = 0).
+  const offscreenAndIdle = await page.evaluate(async () => {
+    const skel = document.querySelector('[data-testid="probe-many-skel"]');
+    window.scrollTo(0, 0);
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+    const retainedStart = skel.style.getPropertyValue('--_skeleton-sweep-start');
+
+    for (const el of document.querySelectorAll(
+      '.unica-skeleton, .unica-skeleton-text > span > span',
+    )) {
+      for (const anim of el.getAnimations({ subtree: true })) {
+        anim.finish();
+      }
+    }
+    await new Promise((r) => setTimeout(r, 50));
+    const clearedStart = skel.style.getPropertyValue('--_skeleton-sweep-start');
+    return { retainedStart, clearedStart };
+  });
+  assert.ok(Boolean(offscreenAndIdle.retainedStart), 'Offscreen exit keeps --_skeleton-* geometry');
+  assert.equal(offscreenAndIdle.clearedStart, '', 'Animation finish clears --_skeleton-* at idle');
+};
+
+scenarios['Skeleton tracks formatting changes at viewport and container breakpoints'] = async ({
+  page,
+  mount,
+}) => {
+  await mount('skeleton-responsive');
+  await page.waitForFunction(() =>
+    [...document.querySelectorAll('.unica-skeleton')].every((el) =>
+      el.style.getPropertyValue('--_skeleton-sweep-start'),
+    ),
+  );
+  await page.evaluate(() => document.getAnimations().forEach((animation) => animation.pause()));
+  for (const id of ['viewport', 'container']) {
+    const row = page.getByTestId(id);
+    if (id === 'viewport') {
+      await page.setViewportSize({ width: 550, height: 600 });
+    } else {
+      await row.evaluate((node) => {
+        node.parentElement.style.width = '400px';
+      });
+    }
+    const shift = await row.evaluate(async (node) => {
+      const settle = () =>
+        new Promise((r) =>
+          requestAnimationFrame(() => requestAnimationFrame(() => requestAnimationFrame(r))),
+        );
+      await settle();
+      const skeleton = node.querySelector('.unica-skeleton');
+      const start = () => parseFloat(skeleton.style.getPropertyValue('--_skeleton-sweep-start'));
+      const previous = start();
+      const wrap = node.firstElementChild;
+      const display = getComputedStyle(wrap).display;
+      wrap.firstElementChild.style.width = '130px';
+      await settle();
+      return [display, previous - start()];
+    });
+    assert.equal(shift[0], 'contents');
+    assert.ok(Math.abs(shift[1] - 110) < 1, `${id} shifted the projected sweep by ${shift[1]}px`);
+  }
+};
+
+scenarios['Skeleton follows translation from a dynamic document stylesheet'] = async ({
+  page,
+  mount,
+}) => {
+  await mount('skeleton-responsive');
+  const paint = page.getByTestId('viewport').locator('.unica-skeleton');
+  await page.waitForFunction(() =>
+    document.querySelector('.unica-skeleton')?.style.getPropertyValue('--_skeleton-sweep-start'),
+  );
+  const samples = await paint.evaluate(async (node) => {
+    document.getAnimations().forEach((animation) => animation.pause());
+    const settle = () =>
+      new Promise((r) =>
+        requestAnimationFrame(() => requestAnimationFrame(() => requestAnimationFrame(r))),
+      );
+    const sample = () => [
+      node.getBoundingClientRect().left,
+      parseFloat(node.style.getPropertyValue('--_skeleton-sweep-start')),
+    ];
+    await settle();
+    const result = [sample()];
+    const style = document.createElement('style');
+    const rule = (x) => `[data-testid="viewport"] { transform: translateX(${x}px); }`;
+    const text = document.createTextNode(rule(100));
+    style.append(text);
+    document.head.append(style);
+    await settle();
+    result.push(sample());
+    text.data = rule(45);
+    await settle();
+    result.push(sample());
+    style.remove();
+    await settle();
+    result.push(sample());
+    // A route can own CSS in a separate body fragment with no layout dependency on the paint.
+    const route = document.body.appendChild(document.createElement('aside'));
+    const assets = route.appendChild(document.createElement('div'));
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = `data:text/css,${encodeURIComponent(rule(70))}`;
+    await new Promise((resolve, reject) => {
+      link.onload = resolve;
+      link.onerror = reject;
+      assets.append(link);
+    });
+    await settle();
+    result.push(sample());
+    link.media = 'print';
+    await settle();
+    result.push(sample());
+    link.media = 'all';
+    await settle();
+    result.push(sample());
+    route.remove();
+    link.rel = 'alternate';
+    await settle();
+    result.push(sample());
+    return result;
+  });
+  for (const [i, delta] of [0, 100, 45, 0, 70, 0, 70, 0].entries()) {
+    assert.ok(Math.abs(samples[i][0] - samples[0][0] - delta) < 1, 'paint translation');
+    assert.ok(
+      Math.abs(samples[0][1] - samples[i][1] - delta) < 1,
+      `projected band after translation by ${delta}px`,
+    );
+  }
+};
+
+scenarios['Skeleton follows remote selectors and CSSOM moves through a fixed clip'] = async ({
+  page,
+  mount,
+}) => {
+  await mount('skeleton-responsive');
+  const samples = await page.getByTestId('viewport').evaluate(async (row) => {
+    const paint = row.querySelector('.unica-skeleton');
+    const clip = document.createElement('div');
+    row.before(clip);
+    clip.append(row);
+    clip.style.cssText = 'width: 120px; overflow: hidden;';
+    row.style.cssText = 'width: 400px; position: relative; left: -140px;';
+    paint.style.inlineSize = '100%';
+    const panel = document.body
+      .appendChild(document.createElement('aside'))
+      .appendChild(document.createElement('div'))
+      .appendChild(document.createElement('details'));
+    const css = document.head.appendChild(document.createElement('style')).sheet;
+    css.insertRule('body:has(details[open]) [data-testid="viewport"] { translate: 80px 0; }');
+    const settle = async () => {
+      for (let frame = 0; frame < 4; frame++) {
+        await new Promise(requestAnimationFrame);
+      }
+    };
+    const sample = () => {
+      const rect = paint.getBoundingClientRect();
+      const bounds = clip.getBoundingClientRect();
+      return {
+        x: rect.x,
+        covered: Math.min(rect.right, bounds.right) - Math.max(rect.left, bounds.left),
+        start: parseFloat(paint.style.getPropertyValue('--_skeleton-sweep-start')),
+      };
+    };
+    await settle();
+    document.getAnimations().forEach((animation) => animation.pause());
+    const results = [sample()];
+    panel.open = true;
+    await settle();
+    results.push(sample());
+    css.cssRules[0].style.translate = '100px 0';
+    await settle();
+    results.push(sample());
+    return results;
+  });
+  for (const [index, delta] of [0, 80, 100].entries()) {
+    assert.equal(samples[index].covered, 120);
+    assert.ok(Math.abs(samples[index].x - samples[0].x - delta) < 1);
+    assert.ok(
+      Math.abs(samples[0].start - samples[index].start - delta) < 1,
+      `Projected sweep missed a ${delta}px shift inside the clip`,
+    );
+  }
+};
+
+scenarios['Skeleton suspends offscreen measurements and releases finished paints'] = async ({
+  page,
+  mount,
+}) => {
+  await mount('skeleton-responsive');
+  const costs = await page
+    .getByTestId('viewport')
+    .locator('.unica-skeleton')
+    .evaluate(async (node) => {
+      const settle = async () => {
+        for (let frame = 0; frame < 5; frame++) {
+          await new Promise(requestAnimationFrame);
+        }
+      };
+      await settle();
+      const animation = node.getAnimations({ subtree: true })[0];
+      animation.pause();
+      const original = node.getBoundingClientRect.bind(node);
+      let reads = 0;
+      node.getBoundingClientRect = () => {
+        reads++;
+        return original();
+      };
+      const count = async () => {
+        reads = 0;
+        await settle();
+        return reads;
+      };
+      const visible = await count();
+      node.style.translate = '0 4000px';
+      await settle();
+      const outside = await count();
+      const retained = node.style.getPropertyValue('--_skeleton-sweep-start');
+      node.style.translate = '40px 0';
+      await settle();
+      const returned = await count();
+      animation.finish();
+      await animation.finished;
+      await settle();
+      const finished = await count();
+      const cleared = node.style.getPropertyValue('--_skeleton-sweep-start');
+      node.getBoundingClientRect = original;
+      return { visible, outside, retained, returned, finished, cleared };
+    });
+  assert.equal(costs.visible, 5);
+  assert.equal(costs.outside, 0);
+  assert.ok(costs.retained);
+  assert.equal(costs.returned, 5);
+  assert.equal(costs.finished, 0);
+  assert.equal(costs.cleared, '');
+};
 
 export default scenarios;

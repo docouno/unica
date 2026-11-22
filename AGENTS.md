@@ -57,9 +57,9 @@ unica/
 └── docs/                        Core concepts, compositions (folio.md), and component contracts
 ```
 
-Read [`docs/README.md`](docs/README.md) before modifying public props, tokens, or specimens.
+Read [`docs/README.md`](docs/README.md), [`docs/anatomy.md`](docs/anatomy.md), and [`docs/concepts/feedback-and-errors.md`](docs/concepts/feedback-and-errors.md) before modifying public props, tokens, or specimens.
 
-Add public re-exports to `packages/ui/src/index.ts`. Import each family stylesheet from its component module and put its rules in `@layer unica.components`. The package entry loads `styles.css`, which declares the layer order, reset, tokens, and shared utilities. See [CSS Layers](docs/concepts/themes-and-roles.md#css-layers).
+Add public re-exports to `packages/ui/src/index.ts` (strictly via `./components/<Family>/index.js`) and mirror every exported type 1:1 in `packages/ui/src/server.ts`. Import each family stylesheet from its component module and put 100% of its rules in `@layer unica.components`. The package entry loads `styles.css`, which declares the layer order, reset, tokens, and shared utilities. See [CSS Layers](docs/concepts/themes-and-roles.md#css-layers) and [Component Anatomy](docs/anatomy.md).
 
 Keep temporary renders, logs, probes, and scratch scripts in a task-specific subdirectory of the Git-ignored `.artifacts/` directory inside the current checkout. `make visual` writes to `.artifacts/visual/`. Do not commit task artifacts or store them outside the checkout.
 

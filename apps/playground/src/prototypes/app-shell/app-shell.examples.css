@@ -132,24 +132,22 @@
   flex-direction: column;
   inline-size: min(340px, calc(100% - 24px));
   inset-inline-end: auto;
-  border-inline-end: 1px solid var(--overlay-border);
+  border-inline-end: 1px solid var(--_overlay-border);
   background: var(--app-shell-sheet-fill);
-  backdrop-filter: var(--overlay-backdrop);
-  box-shadow: var(--overlay-shadow-drawer);
+  backdrop-filter: var(--_overlay-backdrop);
+  box-shadow: var(--_if-ltr, var(--_overlay-shadow-drawer-right, var(--_overlay-shadow-drawer)))
+    var(--_if-rtl, var(--_overlay-shadow-drawer));
   color: var(--fg-primary);
   font-family: var(--font-family-base);
   font-size: var(--text-size-body-xs);
 }
 
 .shell-study-mobile-sheet[data-side='end'] {
+  box-shadow: var(--_if-ltr, var(--_overlay-shadow-drawer))
+    var(--_if-rtl, var(--_overlay-shadow-drawer-right, var(--_overlay-shadow-drawer)));
   inset-inline: auto 0;
   border-inline-end: 0;
-  border-inline-start: 1px solid var(--overlay-border);
-}
-
-.shell-study-mobile-sheet[data-side='start']:dir(ltr),
-.shell-study-mobile-sheet[data-side='end']:dir(rtl) {
-  box-shadow: var(--overlay-shadow-drawer-right, var(--overlay-shadow-drawer));
+  border-inline-start: 1px solid var(--_overlay-border);
 }
 
 .shell-study-mobile-sheet .app-shell-sheet-preview {

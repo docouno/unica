@@ -25,6 +25,7 @@ export default function SkeletonFixture(): ReactElement {
   const [avatar, setAvatar] = useState(false);
   const [hidden, setHidden] = useState(false);
   const [updates, setUpdates] = useState(0);
+  const [showProbes, setShowProbes] = useState(false);
   const displayStyles = [{ style: { display: 'grid' } }, { className: 'skeleton-test-grid' }];
 
   return (
@@ -123,6 +124,73 @@ export default function SkeletonFixture(): ReactElement {
         data-testid="forced-colors-reference"
         style={{ backgroundColor: 'Canvas', outlineColor: 'GrayText' }}
       />
+      <button type="button" onClick={() => setShowProbes(true)}>
+        Mount observer probes
+      </button>
+      {showProbes && (
+        <section
+          data-testid="observer-probes"
+          style={{ display: 'flex', flexDirection: 'column', gap: 8 }}
+        >
+          <div dir="auto" data-testid="overridden-auto-root">
+            <div style={{ inlineSize: 240, blockSize: 24, overflow: 'hidden' }}>
+              <span data-testid="unrelated-subtree">Initial unrelated text</span>
+            </div>
+            <main dir="ltr" data-testid="overridden-ltr-main">
+              <Skeleton data-testid="probe-overridden-ltr" width={80} />
+            </main>
+          </div>
+          <div data-testid="probe-many-row" style={{ display: 'flex', alignItems: 'center' }}>
+            {Array.from({ length: 68 }, (_, index) => (
+              <div
+                key={index}
+                data-probe-sibling={index}
+                style={{ inlineSize: 4, blockSize: 16, flex: 'none' }}
+              />
+            ))}
+            <Skeleton data-testid="probe-many-skel" width={60} />
+          </div>
+          <style>{'.probe-flat [data-testid="probe-toggle-wrap"] { display: contents; }'}</style>
+          <div style={{ width: 680, height: 40 }}>
+            <span data-testid="probe-inline-label">
+              <em>Short</em>
+            </span>
+            <span style={{ display: 'inline-block', width: 60 }}>
+              <Skeleton data-testid="probe-inline-skel" width={60} />
+            </span>
+          </div>
+          <div data-testid="probe-contents-row" style={{ display: 'flex', alignItems: 'center' }}>
+            <div data-testid="probe-contents-wrap" style={{ display: 'contents' }}>
+              <div
+                data-testid="probe-contents-child"
+                style={{ inlineSize: 20, blockSize: 16, flex: 'none' }}
+              />
+            </div>
+            <div
+              data-testid="probe-toggle-wrap"
+              style={{ inlineSize: 20, blockSize: 16, flex: 'none' }}
+            >
+              <div
+                data-testid="probe-toggle-inner"
+                style={{ inlineSize: 20, blockSize: 16, flex: 'none' }}
+              />
+            </div>
+            <Skeleton data-testid="probe-contents-skel" width={60} />
+          </div>
+          <div data-testid="probe-dir-auto" dir="auto" style={{ inlineSize: 240 }}>
+            <span data-testid="probe-dir-auto-text">Abc</span>
+            <Skeleton data-testid="probe-dir-auto-skel" width={80} />
+          </div>
+          <div data-testid="probe-text-row" style={{ display: 'flex', alignItems: 'center' }}>
+            Short
+            <div
+              data-testid="probe-margin-sibling"
+              style={{ inlineSize: 16, blockSize: 16, flex: 'none' }}
+            />
+            <Skeleton data-testid="probe-text-skel" width={60} />
+          </div>
+        </section>
+      )}
     </div>
   );
 }

@@ -13,6 +13,20 @@ const initial = [
 ];
 
 export default {
+  'Form proposals stay blocked through native modal autofocus and exit': async ({
+    page,
+    mount,
+  }) => {
+    await mount('form-authority');
+    const open = button(page, 'Open shadow modal');
+    await open.click();
+    assert.equal(await open.getAttribute('data-modal-blur'), 'true');
+    assert.deepEqual(await log(page), []);
+    assert.deepEqual(await entries(page.locator('#first')), initial);
+    await button(page, 'Change local to B').click();
+    assert.equal(await page.getByTestId('local-value').textContent(), 'c');
+  },
+
   'form reads inside reentrant and controlled callbacks use current authority': async ({
     page,
     mount,
@@ -133,6 +147,41 @@ export default {
     assert.deepEqual(await entries(form), [['other-radio', 'other']]);
     assert.equal(await radioB.isChecked(), false);
   },
+
+  'mixed disabled+inert radio group rejects propose until unblocked and fieldset disabled preserves first legend':
+    async ({ page, mount }) => {
+      await mount('form-authority');
+      const form = page.locator('#radios');
+      await button(page, 'Use local radio').click();
+
+      // Radio A disabled + Radio B inert -> whole group is blocked, propose('b') is ignored.
+      await button(page, 'Toggle disable radio A').click();
+      await button(page, 'Toggle inert radio B').click();
+      await button(page, 'Propose radio B').click();
+      assert.equal(
+        (await entries(form)).find(([k]) => k === 'radio')?.[1],
+        undefined,
+        'disabled Radio A does not submit and inert Radio B was not checked',
+      );
+      assert.equal(
+        await page.getByRole('radio', { name: 'Radio B', exact: true }).isChecked(),
+        false,
+      );
+
+      // Unblocking Radio B (removing inert) lets propose('b') succeed even while Radio A stays disabled.
+      await button(page, 'Toggle inert radio B').click();
+      await button(page, 'Propose radio B').click();
+      assert.equal(
+        await page.getByRole('radio', { name: 'Radio B', exact: true }).isChecked(),
+        true,
+      );
+
+      // Native <fieldset disabled> keeps its first <legend> control active and blocks body controls.
+      await button(page, 'Propose legend input').click();
+      await button(page, 'Propose fieldset body input').click();
+      assert.equal(await page.getByTestId('legend-val').textContent(), 'legend-next');
+      assert.equal(await page.getByTestId('fieldset-body-val').textContent(), 'body-init');
+    },
   'native resets preserve controlled values, restore mount defaults, and leave DOM clean': async ({
     page,
     mount,

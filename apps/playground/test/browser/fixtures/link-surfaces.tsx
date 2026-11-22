@@ -19,7 +19,7 @@ function DrawnSurface({ overlay }: { readonly overlay: boolean }): ReactElement 
       style={{
         padding: 32,
         background: overlay ? 'var(--bg-overlay)' : 'var(--bg-canvas)',
-        backdropFilter: overlay ? 'var(--overlay-backdrop)' : undefined,
+        backdropFilter: overlay ? 'var(--_overlay-backdrop)' : undefined,
       }}
     >
       <Link href="#destination" data-testid="surface-link">

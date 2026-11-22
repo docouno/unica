@@ -51,6 +51,18 @@ async function seekAnimations(locator, time, property) {
 }
 
 export default {
+  'Activity SVGs stay hidden until the author removes the attribute': async ({ page, mount }) => {
+    await mount('progress');
+    for (const id of ['spinner', 'circle']) {
+      const display = await page.getByTestId(id).evaluate((svg) => {
+        svg.setAttribute('hidden', 'until-found');
+        const hidden = getComputedStyle(svg).display;
+        svg.removeAttribute('hidden');
+        return [hidden, getComputedStyle(svg).display];
+      });
+      assert.deepEqual(display, ['none', 'inline-block']);
+    }
+  },
   'Progress: delay follows elapsed time on the same SVG and preserves its slot': async ({
     page,
     mount,
@@ -301,7 +313,7 @@ export default {
           .map((animation) => animation.effect.getTiming().duration),
       }));
     assert.ok((await inspect()).opacity > 0);
-    assert.equal((await inspect()).motion, 'activity-tip-breathe');
+    assert.equal((await inspect()).motion, 'unica-progress-tip-breathe');
     assert.ok((await inspect()).animations.includes(2400));
 
     await page.getByRole('button', { name: 'Toggle active' }).click();
@@ -343,7 +355,7 @@ export default {
     assert.equal(fade.before, fade.start);
     assert.ok(fade.start > fade.midpoint && fade.midpoint > fade.end);
     assert.equal(fade.end, 0);
-    assert.equal(await root.getAttribute('data-status'), 'accent');
+    assert.equal(await root.getAttribute('data-unica-progress-status'), 'accent');
     const initiallyFull = page.getByTestId('initial-full').locator(tip);
     assert.equal(await initiallyFull.evaluate((node) => getComputedStyle(node).opacity), '0');
     assert.equal(await initiallyFull.evaluate((node) => node.getAnimations().length), 0);
@@ -564,5 +576,43 @@ export default {
     assert.equal(await archive.getAttribute('aria-labelledby'), archiveId);
     assert.equal(await preview.getAttribute('aria-labelledby'), previewId);
     assert.equal(await original.evaluate((node) => node.isConnected), true);
+  },
+
+  'Progress mirrors the active tip for Baseline dir attributes and Guarantee dir="auto"': async ({
+    page,
+    mount,
+  }) => {
+    await mount('progress', { theme: 'frost-dark', direction: 'rtl' });
+    const result = await page.evaluate(() => {
+      document.documentElement.lang = 'en';
+      const linear = document.querySelector('[data-testid="linear"]');
+      const tipEl = linear.querySelector('.unica-progress-tip');
+      const read = (node) => ({
+        mirror: getComputedStyle(node).getPropertyValue('--_dir-mirror').trim(),
+        scaleX: new DOMMatrix(getComputedStyle(node).transform).a,
+      });
+
+      const englishRtl = read(tipEl);
+
+      linear.setAttribute('dir', 'ltr');
+      const nestedLtr = read(tipEl);
+
+      const labelEl = linear.querySelector('.unica-progress-label');
+      const originalText = labelEl.textContent;
+      linear.setAttribute('dir', 'auto');
+      labelEl.textContent = 'שלום עולם';
+      const autoRtl = read(tipEl);
+
+      labelEl.textContent = originalText;
+      const autoLtr = read(tipEl);
+
+      return { englishRtl, nestedLtr, autoRtl, autoLtr };
+    });
+    assert.equal(result.englishRtl.mirror, '-1');
+    assert.equal(result.englishRtl.scaleX, -1);
+    assert.equal(result.nestedLtr.mirror, '1');
+    assert.equal(result.nestedLtr.scaleX, 1);
+    assert.equal(result.autoRtl.scaleX, -1);
+    assert.equal(result.autoLtr.scaleX, 1);
   },
 };

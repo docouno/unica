@@ -10,7 +10,7 @@ import type {
 import { hydrateRoot } from 'react-dom/client';
 import { renderToString } from 'react-dom/server';
 import { afterEach, expect, it, vi } from 'vitest';
-import { IconProvider, Link, UnicaProvider, defineGlyph } from '../src/index.js';
+import { Link, UnicaProvider, defineGlyph } from '../src/index.js';
 import type { GlyphSvgProps, LinkProps } from '../src/index.js';
 
 type RouterProps = Omit<ComponentPropsWithRef<'a'>, 'href'> & { to: string; prefetch?: boolean };
@@ -121,9 +121,10 @@ it('combines child attributes, actions and refs while owning secure navigation a
   expect(anchor.style.color).toBe('blue');
   expect(anchor.style.margin).toBe('8px');
   const ids = anchor.getAttribute('aria-describedby')?.split(' ') ?? [];
-  expect(ids).toHaveLength(2);
+  expect(ids).toHaveLength(3);
   expect(ids[0]).toBe('source');
-  expect(document.getElementById(ids[1]!)?.textContent?.trim()).toBe('Opens in a new tab');
+  expect(ids[1]).toBe('outer-description');
+  expect(document.getElementById(ids[2]!)?.textContent?.trim()).toBe('Opens in a new tab');
   expect(anchor.querySelectorAll('svg[aria-hidden="true"]')).toHaveLength(2);
   expect(anchor.querySelectorAll('[data-source="mark"]')).toHaveLength(1);
 
@@ -272,11 +273,11 @@ it('keeps the download request and still protects the target without an automati
   expect(anchor.querySelector('svg')).toBeNull();
 
   rerender(
-    <IconProvider adapter={() => null}>
+    <UnicaProvider iconAdapter={() => null}>
       <Link href="/report.pdf" download target="_blank" external iconLeft={Mark} iconRight={Mark}>
         Report
       </Link>
-    </IconProvider>,
+    </UnicaProvider>,
   );
   const external = screen.getByRole('link');
   expect(external.querySelectorAll('svg')).toHaveLength(1);
@@ -448,5 +449,127 @@ it('hydrates stable, unique descriptions and a native fallback from server HTML'
   } finally {
     act(() => root.unmount());
     container.remove();
+  }
+});
+
+it('resolves all 8 Link fields consistently without concatenating aria-labelledby and preserves single childRef null-detach', () => {
+  const attached = new Set<HTMLAnchorElement>();
+  const singleChildRef = vi.fn<RefCallback<HTMLAnchorElement>>((node) => {
+    if (node) {
+      attached.add(node);
+      return () => {
+        attached.delete(node);
+      };
+    }
+    throw new Error('Cleanup must replace ref(null) even when Link has no outer ref');
+  });
+
+  const { unmount } = render(
+    <>
+      <span id="outer-lbl">Outer label</span>
+      <span id="inner-lbl">Inner label</span>
+      <span id="outer-desc">Outer desc</span>
+      <Link
+        asChild
+        target="_blank"
+        aria-labelledby="outer-lbl"
+        aria-describedby="outer-desc"
+        title="Outer tip"
+      >
+        <NullDetachRoute
+          to="#x"
+          ref={singleChildRef}
+          target={undefined}
+          aria-labelledby="inner-lbl"
+          aria-describedby="inner-desc outer-desc"
+        >
+          Go
+        </NullDetachRoute>
+      </Link>
+    </>,
+  );
+
+  const anchor = screen.getByRole<HTMLAnchorElement>('link');
+  expect(anchor.getAttribute('target')).toBe('_blank');
+  expect(anchor.getAttribute('rel')).toBe('noopener noreferrer');
+  expect(anchor.getAttribute('aria-labelledby')).toBe('inner-lbl');
+  const descIds = anchor.getAttribute('aria-describedby')?.split(' ') ?? [];
+  expect(descIds.slice(0, 2)).toEqual(['inner-desc', 'outer-desc']);
+  expect(descIds).toHaveLength(3);
+  expect(attached.has(anchor)).toBe(true);
+
+  unmount();
+  expect(attached.size).toBe(0);
+});
+
+it('does not recreate TrailingGlyph or NewTabDescription observers on equivalent rerenders and logs zero SSR errors', () => {
+  const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+  const observeCalls = vi.spyOn(MutationObserver.prototype, 'observe');
+  const disconnectCalls = vi.spyOn(MutationObserver.prototype, 'disconnect');
+
+  try {
+    const html = renderToString(
+      <Link href="/report" target="_blank" title="Details" aria-describedby="note" external>
+        Report
+      </Link>,
+    );
+    expect(html).toContain('Opens in a new tab');
+    expect(errorSpy).not.toHaveBeenCalled();
+
+    const { rerender, unmount } = render(
+      <Link href="/report" target="_blank" title="Details" aria-describedby="note" external>
+        Report
+      </Link>,
+    );
+    const initialObserves = observeCalls.mock.calls.length;
+    const initialDisconnects = disconnectCalls.mock.calls.length;
+    expect(initialObserves).toBeGreaterThan(0);
+
+    for (let tick = 0; tick < 3; tick++) {
+      rerender(
+        <Link href="/report" target="_blank" title="Details" aria-describedby="note" external>
+          Report
+        </Link>,
+      );
+    }
+
+    expect(observeCalls.mock.calls.length).toBe(initialObserves);
+    expect(disconnectCalls.mock.calls.length).toBe(initialDisconnects);
+    unmount();
+    expect(errorSpy).not.toHaveBeenCalled();
+  } finally {
+    observeCalls.mockRestore();
+    disconnectCalls.mockRestore();
+    errorSpy.mockRestore();
+  }
+});
+
+it('observes glyph layout only while the link has a measurable terminal word', () => {
+  const observe = vi.spyOn(MutationObserver.prototype, 'observe');
+  const disconnect = vi.spyOn(MutationObserver.prototype, 'disconnect');
+  const OpaqueLabel = () => <span>Localized name</span>;
+  const link = (children: ReactNode) => (
+    <Link href="/report" external>
+      {children}
+    </Link>
+  );
+  try {
+    const { rerender } = render(link(<OpaqueLabel />));
+    expect(observe).not.toHaveBeenCalled();
+    rerender(link(''));
+    expect(observe).not.toHaveBeenCalled();
+    rerender(link('Report'));
+    expect(observe).toHaveBeenCalled();
+    const registrations = observe.mock.calls.length;
+    rerender(link(<strong>Updated report</strong>));
+    expect(observe).toHaveBeenCalledTimes(registrations);
+    rerender(link(<OpaqueLabel />));
+    expect(disconnect).toHaveBeenCalled();
+    expect(observe).toHaveBeenCalledTimes(registrations);
+    rerender(link('Late report'));
+    expect(observe.mock.calls.length).toBeGreaterThan(registrations);
+  } finally {
+    observe.mockRestore();
+    disconnect.mockRestore();
   }
 });

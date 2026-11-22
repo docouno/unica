@@ -56,10 +56,10 @@
   padding-block: 4px;
 }
 .badge-example-state > [data-badge-example-state='hover'] {
-  background: color-mix(in oklab, var(--mark-bg), var(--mark-fg) 8%);
+  background: color-mix(in oklab, var(--_mark-bg), var(--_mark-fg) 8%);
 }
 .badge-example-state > [data-badge-example-state='active'] {
-  background: color-mix(in oklab, var(--mark-bg), var(--mark-fg) 11%);
+  background: color-mix(in oklab, var(--_mark-bg), var(--_mark-fg) 11%);
 }
 .badge-example-state > [data-badge-example-state='focus'] {
   outline: 2px solid var(--focus-ring-color);

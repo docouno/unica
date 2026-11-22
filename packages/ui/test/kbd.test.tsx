@@ -30,7 +30,7 @@ describe('Kbd', () => {
     expect(cap?.getAttribute('lang')).toBe('fr');
     expect(cap?.getAttribute('aria-hidden')).toBe('true');
     expect(cap?.hasAttribute('hidden')).toBe(true);
-    expect(cap?.getAttribute('data-size')).toBe('s');
+    expect(cap?.getAttribute('data-unica-kbd-size')).toBe('s');
     expect(cap?.getAttribute('dir')).toBe('ltr');
     expect(cap?.hasAttribute('tabindex')).toBe(false);
     expect(cap?.hasAttribute('aria-keyshortcuts')).toBe(false);
@@ -177,7 +177,7 @@ describe('KbdGroup', () => {
     expect(ref.current?.id).toBe('sequence');
     expect(ref.current?.classList.contains('steps')).toBe(true);
     expect(ref.current?.getAttribute('dir')).toBe('ltr');
-    expect(ref.current?.getAttribute('data-size')).toBe('m');
+    expect(ref.current?.getAttribute('data-unica-kbd-size')).toBe('m');
     expect(ref.current?.textContent).toBe('Ctrl + K then I');
     expect(
       Array.from(ref.current?.children ?? [], (node) => [node.tagName, node.textContent]),

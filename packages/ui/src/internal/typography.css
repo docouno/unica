@@ -3,9 +3,9 @@
     margin: 0;
     min-inline-size: 0;
     font-family: var(--font-family-base);
-    font-size: var(--unica-type-size);
-    line-height: var(--unica-type-line-height);
-    font-weight: var(--unica-type-weight);
+    font-size: var(--_type-size);
+    line-height: var(--_type-line-height);
+    font-weight: var(--_type-weight);
     letter-spacing: normal;
     color: inherit;
     overflow-wrap: anywhere;

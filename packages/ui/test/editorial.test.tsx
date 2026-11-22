@@ -3,7 +3,7 @@ import { createRef } from 'react';
 import type { MouseEvent } from 'react';
 import { renderToString } from 'react-dom/server';
 import { afterEach, expect, it, vi } from 'vitest';
-import { Blockquote, Code, defineGlyph, IconProvider } from '../src/index.js';
+import { Blockquote, Code, defineGlyph, UnicaProvider } from '../src/index.js';
 import type { GlyphSvgProps } from '../src/index.js';
 
 afterEach(cleanup);
@@ -47,7 +47,7 @@ it('renders a figure with mixed quoted content and a separate optional source', 
   const ref = createRef<HTMLElement>();
   const onClick = vi.fn((event: MouseEvent<HTMLElement>) => event.preventDefault());
   render(
-    <IconProvider adapter="native">
+    <UnicaProvider iconAdapter="native">
       <Blockquote
         ref={ref}
         citeUrl="/guide"
@@ -64,7 +64,7 @@ it('renders a figure with mixed quoted content and a separate optional source', 
           <li>Check the source.</li>
         </ul>
       </Blockquote>
-    </IconProvider>,
+    </UnicaProvider>,
   );
 
   const figure = screen.getByRole('figure', { name: 'Excerpt' });
@@ -161,3 +161,29 @@ it.each([Code, Blockquote])(
     ]);
   },
 );
+
+it('applies status semantics and single-hyphen structural attributes on Blockquote and Code', () => {
+  const { container } = render(
+    <UnicaProvider iconAdapter="native">
+      <Blockquote status="warning" iconLeft={Mark} iconRight={Mark}>
+        Watch the limit
+      </Blockquote>
+      <Code status="danger">ENOENT</Code>
+      <Code status="info" plate={false}>
+        inline
+      </Code>
+    </UnicaProvider>,
+  );
+
+  const figure = container.querySelector('figure')!;
+  expect(figure.getAttribute('data-unica-blockquote-status')).toBe('warning');
+  expect(figure.querySelector('.unica-blockquote-body')).not.toBeNull();
+  expect(figure.querySelector('.unica-blockquote-glyph-start')).not.toBeNull();
+  expect(figure.querySelector('.unica-blockquote-glyph-end')).not.toBeNull();
+
+  const codes = container.querySelectorAll('code');
+  expect(codes[0]?.getAttribute('data-unica-code-status')).toBe('danger');
+  expect(codes[0]?.getAttribute('data-unica-code-plate')).toBe('');
+  expect(codes[1]?.getAttribute('data-unica-code-status')).toBe('info');
+  expect(codes[1]?.hasAttribute('data-unica-code-plate')).toBe(false);
+});

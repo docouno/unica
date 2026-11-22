@@ -67,7 +67,7 @@
   z-index: -1;
   inset: -90px 0;
   pointer-events: none;
-  background-image: var(--auth-stage-aura);
+  background-image: var(--folio-auth-stage-aura);
 }
 .folio-auth-card.card-proto {
   inline-size: min(428px, 100%);

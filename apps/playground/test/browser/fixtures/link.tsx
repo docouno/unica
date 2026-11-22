@@ -1,6 +1,8 @@
-import { IconProvider, Link, defineGlyph } from '@docouno/unica';
+import { Link, UnicaProvider, defineGlyph } from '@docouno/unica';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { ComponentPropsWithRef, ReactElement, RefCallback } from 'react';
+import { createRoot } from 'react-dom/client';
+import type { Root } from 'react-dom/client';
 
 const FileGlyph = defineGlyph((props) => (
   <svg {...props} viewBox="0 0 24 24">
@@ -33,13 +35,13 @@ function FixedLineSample(): ReactElement {
         data-testid="fixed-line"
         style={{ font: '24px / 38.4px Arial', inlineSize: 120, blockSize: 160 }}
       >
-        <IconProvider
-          adapter={(_glyph, { svgProps }) =>
+        <UnicaProvider
+          iconAdapter={(_glyph, { svgProps }) =>
             showGlyph ? <svg {...svgProps} viewBox="0 0 24 24" /> : null
           }
         >
           {fixedLine}
-        </IconProvider>
+        </UnicaProvider>
       </p>
     </section>
   );
@@ -337,6 +339,198 @@ function DescriptionSample(): ReactElement {
   );
 }
 
+function WatchModeLinks(): ReactElement {
+  const [full, setFull] = useState(false);
+  return (
+    <>
+      <button type="button" onClick={() => setFull(true)}>
+        Add title watcher
+      </button>
+      {full && (
+        <>
+          <span id="mode-note">Author note</span>
+          <div data-testid="title-list">
+            {Array.from({ length: 80 }, (_, index) => (
+              <Link key={index} href={`#report-${index}`} target="_blank" title="Details">
+                Details
+              </Link>
+            ))}
+          </div>
+        </>
+      )}
+    </>
+  );
+}
+
+function WatchedNames(): ReactElement {
+  const [open, setOpen] = useState(true);
+  return (
+    <>
+      <style>{`
+        [data-state="closed"] .watched-name,
+        [data-names-closed] ~ .context-link .context-name { display: none; }
+      `}</style>
+      <button
+        type="button"
+        data-names-closed={open ? undefined : ''}
+        onClick={() => setOpen(!open)}
+      >
+        Toggle report names
+      </button>
+      <div data-testid="watched-names" data-state={open ? 'open' : 'closed'}>
+        <Link href="#target" target="_blank" title="Details" data-testid="watched-inline-name">
+          <span className="watched-name">Report</span>
+        </Link>
+        <Link
+          href="#target"
+          target="_blank"
+          title="Details"
+          aria-labelledby="watched-name"
+          data-testid="watched-idref-name"
+        />
+        <span id="watched-name">
+          <span className="watched-name">Report</span>
+        </span>
+      </div>
+      <Link
+        href="#target"
+        target="_blank"
+        title="Details"
+        className="context-link"
+        data-testid="context-name"
+      >
+        <span className="context-name">Report</span>
+      </Link>
+    </>
+  );
+}
+
+function TrackingLink(): ReactElement {
+  const [tight, setTight] = useState(true);
+  return (
+    <>
+      <style>{'[data-tracking="tight"] p { letter-spacing: -2px; }'}</style>
+      <button type="button" onClick={() => setTight(!tight)}>
+        Toggle link tracking
+      </button>
+      <section data-tracking={tight ? 'tight' : 'normal'}>
+        <p style={{ font: '24px / 38.4px Arial', inlineSize: 120, blockSize: 160 }}>
+          <Link href="#target" external data-testid="tracking-link">
+            handbook
+          </Link>
+        </p>
+      </section>
+    </>
+  );
+}
+
+function S2ObserverProbes(): ReactElement {
+  const [hideText, setHideText] = useState(false);
+  const [mountLateId, setMountLateId] = useState(false);
+  const [lateLabel, setLateLabel] = useState('');
+  const [rerenderTick, setRerenderTick] = useState(0);
+  const shadowHostRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const host = shadowHostRef.current;
+    if (!host) {
+      return;
+    }
+    const shadow = host.shadowRoot ?? host.attachShadow({ mode: 'open' });
+    const container = document.createElement('div');
+    shadow.replaceChildren(container);
+    const root: Root = createRoot(container);
+    root.render(
+      <Link
+        href="#target"
+        target="_blank"
+        aria-describedby="shadow-late-note"
+        title="Shadow tooltip"
+        data-testid="shadow-desc-link"
+      >
+        Shadow report
+      </Link>,
+    );
+    const modeHost = document.createElement('div');
+    shadow.append(modeHost);
+    const modeRoot = createRoot(modeHost.attachShadow({ mode: 'open' }));
+    modeRoot.render(
+      <>
+        <Link
+          href="#target"
+          target="_blank"
+          aria-describedby="mode-note"
+          aria-description="Fallback"
+          data-testid="mode-link"
+        >
+          Report
+        </Link>
+        <WatchModeLinks />
+      </>,
+    );
+    return () => {
+      modeRoot.unmount();
+      root.unmount();
+    };
+  }, []);
+
+  return (
+    <section data-testid="s2-link-probes" data-tick={rerenderTick}>
+      <style>{'.s2-ancestor-hidden .s2-link-text { display: none; }'}</style>
+      <button type="button" onClick={() => setHideText(!hideText)}>
+        Toggle ancestor hide text
+      </button>
+      <button type="button" onClick={() => setMountLateId(!mountLateId)}>
+        Toggle late description id
+      </button>
+      <button type="button" onClick={() => setLateLabel('Research the handbook')}>
+        Populate late link text
+      </button>
+      <button type="button" onClick={() => setRerenderTick((n) => n + 1)}>
+        Equivalent link rerender
+      </button>
+      {mountLateId && (
+        <span id="s2-late-desc" hidden>
+          Server note
+        </span>
+      )}
+      <div className={hideText ? 's2-ancestor-hidden' : undefined}>
+        <Link
+          href="#target"
+          target="_blank"
+          title="Additional info"
+          aria-describedby="s2-late-desc"
+          data-testid="s2-ancestor-class-link"
+        >
+          <span className="s2-link-text">Details</span>
+        </Link>
+      </div>
+      <p
+        data-testid="s2-late-glyph-line"
+        style={{ font: '24px / 38.4px Arial', inlineSize: 200, blockSize: 160 }}
+      >
+        <Link href="#target" external data-testid="s2-late-glyph-link">
+          {lateLabel}
+        </Link>
+      </p>
+      <div style={{ display: 'grid', width: 800, gridTemplateColumns: 'minmax(0, 1fr) auto' }}>
+        <p style={{ margin: 0, font: '24px / 38.4px Arial' }}>
+          <Link href="#target" external style={{ display: 'block' }} data-testid="dynamic-line">
+            <bdi>
+              https://example.com/research/understanding-accessibility-in-collaborative-workspaces
+            </bdi>
+            <span> </span>
+          </Link>
+        </p>
+        <div data-testid="dynamic-sidebar" />
+      </div>
+      <WatchedNames />
+      <TrackingLink />
+      <div id="s2-shadow-desc-host" ref={shadowHostRef} />
+    </section>
+  );
+}
+
 export default function LinkFixture(): ReactElement {
   const [submits, setSubmits] = useState(0);
   return (
@@ -391,6 +585,7 @@ export default function LinkFixture(): ReactElement {
       <RouterSample />
       <DescriptionSample />
       <FixedLineSample />
+      <S2ObserverProbes />
       <section
         style={{
           fontSize: 24,
@@ -494,7 +689,7 @@ export default function LinkFixture(): ReactElement {
             </Link>
           </p>
         </div>
-        <IconProvider adapter={() => null}>
+        <UnicaProvider iconAdapter={() => null}>
           <div>
             <Link href="#target" iconLeft={NullGlyph} iconRight={NullGlyph} data-testid="no-glyph">
               Plain text
@@ -510,7 +705,7 @@ export default function LinkFixture(): ReactElement {
               Plain text
             </Link>
           </div>
-        </IconProvider>
+        </UnicaProvider>
       </section>
       <p id="target" tabIndex={-1} style={{ marginBlock: '500px' }}>
         Fragment destination

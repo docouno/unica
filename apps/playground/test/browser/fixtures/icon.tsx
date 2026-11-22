@@ -1,4 +1,4 @@
-import { Icon, IconProvider, UnicaProvider, defineGlyph, Link } from '@docouno/unica';
+import { Icon, UnicaProvider, defineGlyph, Link } from '@docouno/unica';
 import type { IconAdapter } from '@docouno/unica';
 import { ArrowRightIcon, BellIcon, CheckIcon, IconContext } from '@phosphor-icons/react';
 import { useId, useState } from 'react';
@@ -187,7 +187,7 @@ export default function IconFixture() {
         <button type="button" onClick={() => setSwap(!swap)}>
           Toggle adapter
         </button>
-        <IconProvider adapter={swap ? replacement : 'phosphor'}>
+        <UnicaProvider iconAdapter={swap ? replacement : 'phosphor'}>
           <Button iconLeft={BellIcon} data-testid="application">
             Application button
           </Button>
@@ -210,7 +210,7 @@ export default function IconFixture() {
           {(['s', 'm', 'l'] as const).map((size) => (
             <Switch key={size} size={size} label={`Switch ${size}`} thumbIcon={BellIcon} />
           ))}
-        </IconProvider>
+        </UnicaProvider>
       </section>
 
       <section data-testid="chrome">
@@ -227,11 +227,11 @@ export default function IconFixture() {
             flipped
           />
         </MenuSurface>
-        <IconProvider adapter={replacement}>
+        <UnicaProvider iconAdapter={replacement}>
           <Select options={[]} label="Invalid selection" size="l" status="danger" />
           <Combobox options={[]} label="Lookup" searchState="error" previewOpen />
-        </IconProvider>
-        <IconProvider adapter={() => null}>
+        </UnicaProvider>
+        <UnicaProvider iconAdapter={() => null}>
           <DocumentTabs items={[]} onAdd={() => undefined} />
           <LeftRail showBrand />
           <WorkspaceNavigation kind="admin" />
@@ -239,7 +239,7 @@ export default function IconFixture() {
           <FileList>
             <FileItem name="Readme" />
           </FileList>
-        </IconProvider>
+        </UnicaProvider>
       </section>
 
       <Tabs defaultValue="one" orientation="vertical">

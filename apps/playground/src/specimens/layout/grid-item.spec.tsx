@@ -43,12 +43,12 @@ export default defineComponent({
         : { area: areaOptions[values.area] };
     return (
       <LayoutExample>
-        <Grid columns={12} gap="xs" className="layout-track-markers">
+        <Grid columns={12} gap={4} className="layout-track-markers">
           {tracks.map((track) => (
             <div key={track} aria-hidden="true" />
           ))}
         </Grid>
-        <Grid columns={12} gap="xs" areas={values.area === 'None' ? undefined : placement}>
+        <Grid columns={12} gap={4} areas={values.area === 'None' ? undefined : placement}>
           <GridItem {...ctx.subject} {...itemProps}>
             <div
               aria-hidden="true"
@@ -61,7 +61,7 @@ export default defineComponent({
   },
   code: ({ area }, attributes) => {
     const map = area === 'None' ? '' : ` areas={${JSON.stringify(placement)}}`;
-    return `<Grid columns={12} gap="xs"${map}>
+    return `<Grid columns={12} gap={4}${map}>
   <GridItem${attributes}>
     <div aria-hidden="true" style={{ minBlockSize: '2rem', background: 'var(--bg-surface-raised)' }} />
   </GridItem>
@@ -80,7 +80,7 @@ export default defineComponent({
       caption: 'At 1024 px browser width, the lead item grows from one track to two.',
       render: ({ ctx }) => (
         <LayoutExample>
-          <Grid columns={3} gap="s">
+          <Grid columns={3} gap={8}>
             <GridItem {...ctx.subject} span={{ desktop: 2 }} className="layout-cell">
               <span>Lead item</span>
             </GridItem>
@@ -98,7 +98,7 @@ export default defineComponent({
       title: 'Lead item across two columns',
       render: ({ ctx }) => (
         <LayoutExample>
-          <Grid columns={3} gap="s">
+          <Grid columns={3} gap={8}>
             <GridItem {...ctx.subject} span={2} className="layout-cell">
               <span>Featured release</span>
             </GridItem>
@@ -111,7 +111,7 @@ export default defineComponent({
       code: `import '@docouno/unica/styles.css';
 import { Grid, GridItem } from '@docouno/unica';
 
-<Grid columns={3} gap="s">
+<Grid columns={3} gap={8}>
   <GridItem span={2}><span>Featured release</span></GridItem>
   <GridItem><span>History</span></GridItem>
 </Grid>`,

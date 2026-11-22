@@ -38,6 +38,7 @@
 }
 
 .activity-label {
+  --activity-glyph-size: var(--size-m-icon);
   display: flex;
   align-items: baseline;
   gap: var(--space-8);
@@ -45,9 +46,13 @@
   overflow-wrap: anywhere;
 }
 
-.activity-label > .unica-activity-icon {
+.activity-label[data-glyph-size='s'] {
+  --activity-glyph-size: var(--size-s-icon);
+}
+
+.activity-label > svg {
   align-self: flex-start;
-  margin-block-start: calc((var(--text-size-body-s-lh) - var(--_activity-dimension)) / 2);
+  margin-block-start: calc((var(--text-size-body-s-lh) - var(--activity-glyph-size)) / 2);
 }
 
 .activity-divider {
@@ -70,11 +75,11 @@
   inline-size: 100%;
   max-inline-size: 480px;
   padding: var(--surface-m-padding);
-  border: 1px solid var(--overlay-border);
+  border: 1px solid var(--_overlay-border);
   border-radius: var(--surface-m-radius);
   background: var(--bg-overlay);
-  backdrop-filter: var(--overlay-backdrop);
-  box-shadow: var(--overlay-rim), var(--overlay-shadow-popover);
+  backdrop-filter: var(--_overlay-backdrop);
+  box-shadow: var(--_overlay-rim), var(--_overlay-shadow-popover);
 }
 
 .activity-control-slot {
@@ -150,12 +155,7 @@
   outline-offset: 2px;
 }
 
-.activity-static.unica-activity-icon *,
-.activity-static .unica-progress-wait {
+.activity-static,
+.activity-static * {
   animation: none;
-}
-
-/* Workbench snapshots show the revealed frame even when the preview has a delay. */
-html[data-wb-freeze='1'] .unica-activity-icon[data-spinner] > .unica-activity-icon-drawing {
-  animation-delay: 0ms !important;
 }

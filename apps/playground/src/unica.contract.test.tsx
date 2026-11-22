@@ -160,6 +160,41 @@ it('keeps src/workbench portable with zero app-specific imports or Unica token l
 
 it('enforces semantic CSS in prototypes, specimens and scenes, including their live entrypoints', async () => {
   const srcDir = import.meta.dirname;
+  const uiSrcDir = resolve(srcDir, '../../../packages/ui/src');
+  const allowedUtilityClasses = new Set([
+    'unica-scrollbar',
+    'unica-scrollbar--compact',
+    'unica-visually-hidden',
+  ]);
+
+  const themePrivateVars = new Set<string>();
+  const stylesCss = (await readFile(resolve(uiSrcDir, 'styles.css'), 'utf8')).replace(
+    /\/\*[\s\S]*?\*\//g,
+    '',
+  );
+  for (const match of stylesCss.matchAll(/(--_[a-z0-9-]+)\s*:/g)) {
+    themePrivateVars.add(match[1]!);
+  }
+
+  const componentPrivateVars = new Set<string>();
+  for (const folder of ['components', 'internal'] as const) {
+    const cssFiles = await collectFiles(resolve(uiSrcDir, folder), ['.css']);
+    for (const cssFile of cssFiles) {
+      const css = (await readFile(cssFile, 'utf8')).replace(/\/\*[\s\S]*?\*\//g, '');
+      for (const match of css.matchAll(/(--_[a-z0-9-]+)\s*:/g)) {
+        if (!themePrivateVars.has(match[1]!)) {
+          componentPrivateVars.add(match[1]!);
+        }
+      }
+      for (const match of css.matchAll(/var\(\s*(--_[a-z0-9-]+)/g)) {
+        if (!themePrivateVars.has(match[1]!)) {
+          componentPrivateVars.add(match[1]!);
+        }
+      }
+    }
+  }
+  expect(componentPrivateVars.size).toBeGreaterThan(0);
+
   for (const [folder, entry] of [
     ['prototypes', '.proto.tsx'],
     ['specimens', '.spec.tsx'],
@@ -179,6 +214,26 @@ it('enforces semantic CSS in prototypes, specimens and scenes, including their l
         strippedComments,
         `${file} must use semantic CSS tokens instead of raw #hex`,
       ).not.toMatch(/#[0-9a-fA-F]{3,8}\b/);
+
+      const leakedClasses = [...strippedComments.matchAll(/(?<![a-zA-Z0-9_-])unica-[a-z0-9-]+/g)]
+        .map((match) => match[0])
+        .filter((name) => !allowedUtilityClasses.has(name));
+      expect(leakedClasses, `${file} must not depend on internal .unica-* classes`).toEqual([]);
+
+      if (folder === 'scenes') {
+        expect(
+          strippedComments,
+          `${file} must not read private var(--_*) tokens in scenes`,
+        ).not.toMatch(/var\(\s*--_[a-z0-9-]+/);
+      } else {
+        const leakedPrivateVars = [...strippedComments.matchAll(/--_[a-z0-9-]+/g)]
+          .map((match) => match[0])
+          .filter((name) => componentPrivateVars.has(name));
+        expect(
+          leakedPrivateVars,
+          `${file} must not depend on shipped component private --_* variables`,
+        ).toEqual([]);
+      }
     }
   }
 });

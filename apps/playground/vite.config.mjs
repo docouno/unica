@@ -1,16 +1,24 @@
 import { env } from 'node:process';
 import { devkitWorkspaceSource } from '@docouno/env/vite';
 import react from '@vitejs/plugin-react';
+import { Features } from 'lightningcss';
 import { defineConfig } from 'vite';
+import { VITE_CSS_TARGET } from '../../css.config.mjs';
 
 export default defineConfig({
   plugins: [devkitWorkspaceSource(), react()],
   cacheDir: 'node_modules/.cache/devkit-vite',
   resolve: { dedupe: ['react', 'react-dom'] },
+  css: {
+    lightningcss: {
+      exclude: Features.DirSelector,
+    },
+  },
   optimizeDeps: {
     include: ['@phosphor-icons/react'],
   },
   build: {
+    cssTarget: [...VITE_CSS_TARGET],
     rolldownOptions: {
       output: {
         codeSplitting: {

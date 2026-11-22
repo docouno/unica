@@ -132,9 +132,9 @@
 }
 .avatar-example-surface[data-example-surface='overlay'] {
   background: var(--bg-overlay);
-  backdrop-filter: var(--overlay-backdrop);
-  border-color: var(--overlay-border);
-  box-shadow: var(--overlay-shadow);
+  backdrop-filter: var(--_overlay-backdrop);
+  border-color: var(--_overlay-border);
+  box-shadow: var(--_overlay-shadow);
 }
 .avatar-example-range {
   display: flex;
@@ -209,7 +209,7 @@
   src: url('/assets/avatar-arabic-600.ttf') format('truetype');
   unicode-range: U+062F, U+0631, U+0635, U+0645-0646, U+0648-0649;
 }
-.avatar-example-names .avatar-name-hint-panel bdi:dir(rtl),
+.avatar-example-names .avatar-name-hint-panel bdi,
 .avatar-example-names .avatar-group-proto-member:last-child .avatar-proto {
   font-family: 'Avatar Arabic fixture', var(--font-family-base);
 }

@@ -41,9 +41,9 @@
 }
 .tags-material-proto[data-surface='overlay'] {
   background: var(--bg-overlay);
-  border-color: var(--overlay-border);
-  box-shadow: var(--overlay-shadow-popover);
-  backdrop-filter: var(--overlay-backdrop);
+  border-color: var(--_overlay-border);
+  box-shadow: var(--_overlay-shadow-popover);
+  backdrop-filter: var(--_overlay-backdrop);
 }
 .tags-material-underlay-proto {
   position: absolute;

@@ -1,13 +1,13 @@
 .layout-example,
 .layout-cases {
   display: grid;
-  gap: var(--space-m);
+  gap: var(--space-16);
   min-inline-size: 0;
 }
 
 .layout-example {
   inline-size: 100%;
-  padding: var(--space-xs);
+  padding: var(--space-4);
   border: 1px dashed var(--border-default);
 }
 
@@ -24,7 +24,7 @@
 .layout-flow > span,
 .layout-cell > span,
 .layout-example span.layout-demo-tile {
-  padding: var(--space-xs);
+  padding: var(--space-4);
   border: 1px solid var(--border-default);
   background: var(--bg-surface-raised);
 }
@@ -75,7 +75,7 @@
 }
 
 .layout-container-frame section > * + * {
-  margin-block-start: var(--space-xs);
+  margin-block-start: var(--space-4);
 }
 
 .layout-container-frame .layout-demo-tile {

@@ -125,7 +125,7 @@ const examples: Record<string, () => ReactElement> = {
         />
         <span dir="auto">Transfer paused · waiting for connection</span>
       </div>
-      <div className="activity-label">
+      <div className="activity-label" data-glyph-size="s">
         <ProgressCircle
           size="s"
           value={1284}

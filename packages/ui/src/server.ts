@@ -1,14 +1,14 @@
-export { THEME_PRESETS } from './core/themes.js';
-export { defineGlyph } from './components/Icon/glyph.js';
+export { THEME_PRESETS, getUnicaRootProps } from './core/themes.js';
+export { defineGlyph } from './core/glyph.js';
 export type {
   BadgeProps,
   BadgeStatus,
   BlockquoteProps,
-  BlockquoteTone,
+  BlockquoteStatus,
   BoxProps,
   BuiltinIconAdapterName,
   CodeProps,
-  CodeTone,
+  CodeStatus,
   ContainerProps,
   DividerProps,
   FlexProps,
@@ -23,7 +23,6 @@ export type {
   IconAdapterRenderContext,
   IconColor,
   IconProps,
-  IconProviderProps,
   IconSize,
   IconUsage,
   IndicatorPosition,
@@ -33,8 +32,8 @@ export type {
   KbdProps,
   KbdSize,
   LinkProps,
+  LinkSize,
   PortalProps,
-  PortalProviderProps,
   ProgressCircleProps,
   ProgressProps,
   ProgressSize,
@@ -42,6 +41,7 @@ export type {
   Responsive,
   SkeletonProps,
   SkeletonTextProps,
+  Spacing,
   SpinnerProps,
   SpinnerSize,
   SpinnerTone,
@@ -61,4 +61,6 @@ export type {
   TitleWeight,
   UnicaComponentDefaults,
   UnicaProviderProps,
+  UnicaRootAttributes,
+  VisuallyHiddenProps,
 } from './index.js';

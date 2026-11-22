@@ -104,7 +104,7 @@
   margin: var(--space-24);
   padding: var(--space-24);
   background: var(--bg-overlay);
-  border: 1px solid var(--overlay-border);
+  border: 1px solid var(--_overlay-border);
   border-radius: var(--surface-m-radius);
   color: var(--fg-primary);
   font-size: var(--text-size-body-s);
@@ -119,12 +119,12 @@
   max-block-size: calc(100dvh - 32px);
   overflow: auto;
   padding: var(--space-24);
-  border: 1px solid var(--overlay-border);
+  border: 1px solid var(--_overlay-border);
   border-radius: var(--surface-m-radius);
   background: var(--bg-overlay);
   color: var(--fg-primary);
-  backdrop-filter: var(--overlay-backdrop);
-  box-shadow: var(--overlay-shadow-modal);
+  backdrop-filter: var(--_overlay-backdrop);
+  box-shadow: var(--_overlay-shadow-modal);
   font-family: var(--font-family-base);
 }
 .toast-example-dialog::backdrop {

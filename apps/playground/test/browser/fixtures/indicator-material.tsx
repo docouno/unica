@@ -111,7 +111,7 @@ export default function IndicatorMaterialFixture() {
           data-surface="overlay"
           style={{
             background: 'var(--bg-overlay)',
-            backdropFilter: 'var(--overlay-backdrop)',
+            backdropFilter: 'var(--_overlay-backdrop)',
             padding: 24,
           }}
         >

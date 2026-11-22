@@ -195,8 +195,8 @@ button.pagination-cell-proto[aria-current='page'] {
   block-size: var(--pagination-icon);
 }
 
-.pagination-arrow-proto:dir(rtl) {
-  transform: scaleX(-1);
+.pagination-arrow-proto {
+  scale: var(--_dir-scale, none);
 }
 
 @media (forced-colors: active) {

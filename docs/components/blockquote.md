@@ -22,11 +22,11 @@ import '@docouno/unica/styles.css';
 | `attribution` | React node | — | Source credit in a figcaption. Empty strings, null, undefined, and booleans omit it. Zero is visible. |
 | `citeUrl` | String | — | Source metadata on the native blockquote. Authors can add a visible link in the credit or body. |
 | `size` | `s`, `m`, `l` | `m` | Body typography, padding, and glyph frame. The caption uses body-s. |
-| `tone` | `neutral`, `info`, `success`, `warning`, `danger` | `neutral` | Semantic color of the rail and glyphs. Body and caption keep their reading colors. |
+| `status` | `neutral`, `info`, `success`, `warning`, `danger` | `neutral` | Semantic color of the rail and glyphs. Body and caption keep their reading colors. |
 | `iconLeft`, `iconRight` | [`GlyphSource`](icon.md) | — | Optional decorative marks at logical start and end. Pass a glyph component for the active adapter or use `defineGlyph` to attach an adapter to the source. |
 | `ref` | `Ref<HTMLElement>` | — | React 19 ref to the native figure. |
 
-The package exports `BlockquoteProps` and `BlockquoteTone`. Native attributes and event handlers, including `id`, `dir`, `hidden`, `className`, `style`, and ARIA attributes, apply to the figure. The component reserves `role`, `tabIndex`, and `dangerouslySetInnerHTML`. In a rich-text editor, `contentEditable={false}` marks the excerpt read-only. An omitted or inherited setting follows the editor.
+The package exports `BlockquoteProps` and `BlockquoteStatus`. Native attributes and event handlers, including `id`, `dir`, `hidden`, `className`, `style`, and ARIA attributes, apply to the figure. The component reserves `role`, `tabIndex`, and `dangerouslySetInnerHTML`. In a rich-text editor, `contentEditable={false}` marks the excerpt read-only. An omitted or inherited setting follows the editor.
 
 ## Layout and accessibility
 

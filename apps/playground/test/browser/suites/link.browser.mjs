@@ -52,6 +52,121 @@ async function navigateTabs(page, link) {
 }
 
 export default {
+  'Link preserves queued ID changes and skips unrelated title reads': async ({ page, mount }) => {
+    await mount('link');
+    const fallback = page.getByTestId('mode-link').locator('[hidden] > span');
+    assert.equal(await fallback.textContent(), 'Fallback');
+    await page.getByRole('button', { name: 'Add title watcher' }).click();
+    await fallback.filter({ hasText: 'Fallback' }).waitFor({ state: 'detached' });
+    assert.equal(await fallback.textContent(), '');
+    const reads = await page.getByTestId('title-list').evaluate(async (list) => {
+      const anchors = new Set(list.querySelectorAll('a[title]'));
+      const descriptor = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'innerText');
+      const clock = list.appendChild(document.createTextNode('one'));
+      await new Promise(requestAnimationFrame);
+      let count = 0;
+      Object.defineProperty(HTMLElement.prototype, 'innerText', {
+        ...descriptor,
+        get() {
+          if (anchors.has(this)) {
+            count++;
+          }
+          return descriptor.get.call(this);
+        },
+      });
+      try {
+        clock.data = 'two';
+        await new Promise(requestAnimationFrame);
+        const unrelated = count;
+        list.querySelector('a').setAttribute('class', 'updated');
+        await new Promise(requestAnimationFrame);
+        return { links: anchors.size, unrelated, local: count - unrelated };
+      } finally {
+        Object.defineProperty(HTMLElement.prototype, 'innerText', descriptor);
+        clock.remove();
+      }
+    });
+    assert.deepEqual(reads, { links: 80, unrelated: 0, local: 1 });
+  },
+  'Link updates titled descriptions when custom CSS attributes control label visibility': async ({
+    page,
+    mount,
+  }) => {
+    await mount('link');
+    const session = await page.context().newCDPSession(page);
+    const { root } = await session.send('DOM.getDocument');
+    const check = async (visible, ids = ['watched-inline-name', 'watched-idref-name']) => {
+      for (const id of ids) {
+        assert.deepEqual(
+          await accessibleLink(session, root.nodeId, id),
+          visible ? ['Report', 'Details Opens in a new tab'] : ['Details', 'Opens in a new tab'],
+          id,
+        );
+      }
+    };
+    await check(true);
+    await page.getByRole('button', { name: 'Toggle report names' }).click();
+    await check(false);
+    await check(false, ['context-name']);
+    const group = page.getByTestId('watched-names');
+    await group.evaluate((node) => node.setAttribute('data-state', 'open'));
+    await check(true);
+    await group.evaluate((node) => node.setAttribute('data-state', 'closed'));
+    await check(false);
+    await page.getByRole('button', { name: 'Toggle report names' }).click();
+    await check(true);
+    await check(true, ['context-name']);
+    await session.detach();
+  },
+  'Link follows its new line container when a sibling narrows the grid': async ({
+    page,
+    mount,
+  }) => {
+    await mount('link');
+    const anchor = page.getByTestId('dynamic-line');
+    await anchor.evaluate(async (el) => {
+      el.style.display = 'inline';
+      await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+    });
+    await page.getByTestId('dynamic-sidebar').evaluate((el) => {
+      el.style.width = '643px';
+    });
+    await page.waitForFunction(() => {
+      const el = document.querySelector('[data-testid="dynamic-line"]');
+      const last = Array.from(el.querySelector('.unica-link-terminal-text').getClientRects()).at(
+        -1,
+      );
+      const glyph = el.querySelector('svg').getBoundingClientRect();
+      return el.parentElement.clientWidth === 157 && glyph.top + glyph.height / 2 <= last.bottom;
+    });
+  },
+  'Link keeps the trailing glyph on the last line after a typography-only React commit': async ({
+    page,
+    mount,
+  }) => {
+    await mount('link');
+    const link = page.getByTestId('tracking-link');
+    const geometry = () =>
+      link.evaluate(async (anchor) => {
+        await new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done)));
+        const last = Array.from(
+          anchor.querySelector('.unica-link-terminal-text').getClientRects(),
+        ).at(-1);
+        const glyph = anchor.querySelector('svg').getBoundingClientRect();
+        return {
+          width: anchor.parentElement.clientWidth,
+          wrap: anchor.hasAttribute('data-unica-link-wrap-terminal'),
+          onLastLine: glyph.top + glyph.height / 2 <= last.bottom && glyph.bottom >= last.top,
+        };
+      });
+    const toggle = page.getByRole('button', { name: 'Toggle link tracking' });
+    assert.deepEqual(await geometry(), { width: 120, wrap: false, onLastLine: true });
+    await toggle.click();
+    assert.deepEqual(await geometry(), { width: 120, wrap: true, onLastLine: true });
+    await toggle.click();
+    assert.deepEqual(await geometry(), { width: 120, wrap: false, onLastLine: true });
+  },
+
   'Link keeps native keyboard, history, form, and modified pointer navigation': async ({
     page,
     mount,
@@ -206,6 +321,43 @@ export default {
         'Ready report',
         'PDF coming soon Opens in a new tab',
       ]);
+      // Move the same IDREF under a rule hiding its text. The title now supplies the name.
+      await page.evaluate(() => {
+        const name = document.getElementById('report-name');
+        name.hidden = false;
+        const piece = document.createElement('span');
+        piece.className = 'moved-name-piece';
+        piece.textContent = name.textContent;
+        name.replaceChildren(piece);
+        const target = document.body.appendChild(document.createElement('div'));
+        target.className = 'moved-name-target';
+        const style = document.head.appendChild(document.createElement('style'));
+        style.textContent = '.moved-name-target .moved-name-piece {display:none}';
+      });
+      assert.deepEqual(await a11y('idref-name'), [
+        'Annual report',
+        'Named via IDREF Opens in a new tab',
+      ]);
+      await page.evaluate(() =>
+        document.querySelector('.moved-name-target').append(document.getElementById('report-name')),
+      );
+      assert.deepEqual(await a11y('idref-name'), ['Named via IDREF', 'Opens in a new tab']);
+      // CSS can also change the referenced name without touching the link or its IDREF.
+      await page.evaluate(() => {
+        const style = document.head.appendChild(document.createElement('style'));
+        style.textContent =
+          '.moved-name-target .moved-name-piece {display:inline} .collapse-name + .moved-name-target .moved-name-piece {display:none}';
+      });
+      const visibleName = ['Annual report', 'Named via IDREF Opens in a new tab'];
+      assert.deepEqual(await a11y('idref-name'), visibleName);
+      await page.evaluate(() => {
+        const sibling = document.createElement('div');
+        sibling.className = 'collapse-name';
+        document.querySelector('.moved-name-target').before(sibling);
+      });
+      assert.deepEqual(await a11y('idref-name'), ['Named via IDREF', 'Opens in a new tab']);
+      await page.locator('.collapse-name').evaluate((el) => el.remove());
+      assert.deepEqual(await a11y('idref-name'), visibleName);
       await session.detach();
     },
 
@@ -445,7 +597,7 @@ export default {
             const contextInk = await colorIn(link, 'var(--action-context-ink)');
             const activeInk = await colorIn(
               link,
-              'color-mix(in srgb, var(--action-context-ink) var(--btn-context-ink-strength), var(--fg-primary))',
+              'color-mix(in srgb, var(--action-context-ink) var(--_btn-context-ink-strength), var(--fg-primary))',
             );
             const context = `${theme} / ${status} / ${mode}`;
             const before = await getBox(link);
@@ -554,4 +706,114 @@ export default {
       }
     }
   },
+
+  'Link updates AX name/description on ancestor class hide/show, tracks late TrailingGlyph text, late ShadowRoot ID, and skips redundant observer churn':
+    async ({ page, mount }) => {
+      await mount('link');
+      const session = await page.context().newCDPSession(page);
+      const readAx = async (testId) => {
+        const { root } = await session.send('DOM.getDocument', { depth: -1 });
+        const { nodeId } = await session.send('DOM.querySelector', {
+          nodeId: root.nodeId,
+          selector: `[data-testid="${testId}"]`,
+        });
+        const { nodes: axNodes } = await session.send('Accessibility.getPartialAXTree', {
+          nodeId,
+          fetchRelatives: false,
+        });
+        const linkNode = axNodes.find((node) => node.role?.value === 'link');
+        return [linkNode?.name?.value, linkNode?.description?.value];
+      };
+
+      // 1. Ancestor class hides/shows text inside <Link target="_blank" title="Additional info" aria-describedby="s2-late-desc">
+      assert.deepEqual(await readAx('s2-ancestor-class-link'), [
+        'Details',
+        'Additional info Opens in a new tab',
+      ]);
+      await page.getByRole('button', { name: 'Toggle ancestor hide text' }).click();
+      await page.waitForFunction(() => {
+        const a = document.querySelector('[data-testid="s2-ancestor-class-link"]');
+        const hintId = a.getAttribute('aria-describedby').split(' ').at(-1);
+        return document.getElementById(hintId)?.textContent?.trim() === 'Opens in a new tab';
+      });
+      assert.deepEqual(await readAx('s2-ancestor-class-link'), [
+        'Additional info',
+        'Opens in a new tab',
+      ]);
+      await page.getByRole('button', { name: 'Toggle ancestor hide text' }).click();
+      await page.waitForFunction(() => {
+        const a = document.querySelector('[data-testid="s2-ancestor-class-link"]');
+        const hintId = a.getAttribute('aria-describedby').split(' ').at(-1);
+        return (
+          document.getElementById(hintId)?.textContent?.trim() ===
+          'Additional info Opens in a new tab'
+        );
+      });
+      assert.deepEqual(await readAx('s2-ancestor-class-link'), [
+        'Details',
+        'Additional info Opens in a new tab',
+      ]);
+      await page.getByRole('button', { name: 'Toggle late description id' }).click();
+      assert.deepEqual(await readAx('s2-ancestor-class-link'), [
+        'Details',
+        'Server note Opens in a new tab',
+      ]);
+      await session.detach();
+
+      // 2. Late text in TrailingGlyph after initially empty label keeps glyph on last text line.
+      await page.getByRole('button', { name: 'Populate late link text' }).click();
+      await page.waitForFunction(() => {
+        const link = document.querySelector('[data-testid="s2-late-glyph-link"]');
+        const text = link?.querySelector('.unica-link-terminal-text');
+        const svg = link?.querySelector('svg');
+        if (!text || !svg) {
+          return false;
+        }
+        const lastLine = Array.from(text.getClientRects()).at(-1);
+        const box = svg.getBoundingClientRect();
+        return Boolean(lastLine && box.height && box.top + box.height / 2 <= lastLine.bottom + 1);
+      });
+
+      // 3. Late ID in ShadowRoot clears tooltip fallback in NewTabDescription.
+      const shadowBefore = await page.evaluate(() => {
+        const shadow = document.querySelector('#s2-shadow-desc-host').shadowRoot;
+        const a = shadow.querySelector('[data-testid="shadow-desc-link"]');
+        const hintId = a.getAttribute('aria-describedby').split(' ').at(-1);
+        return shadow.getElementById(hintId)?.textContent?.trim();
+      });
+      assert.equal(shadowBefore, 'Shadow tooltip Opens in a new tab');
+      const shadowAfter = await page.evaluate(async () => {
+        const shadow = document.querySelector('#s2-shadow-desc-host').shadowRoot;
+        const note = document.createElement('span');
+        note.id = 'shadow-late-note';
+        note.textContent = 'Shadow description';
+        shadow.appendChild(note);
+        await Promise.resolve();
+        const a = shadow.querySelector('[data-testid="shadow-desc-link"]');
+        const hintId = a.getAttribute('aria-describedby').split(' ').at(-1);
+        return shadow.getElementById(hintId)?.textContent?.trim();
+      });
+      assert.equal(shadowAfter, 'Opens in a new tab');
+
+      // 4. Equivalent rerender causes 0 MutationObserver/ResizeObserver registrations.
+      const observerChurn = await page.evaluate(async () => {
+        let observes = 0;
+        const origMo = MutationObserver.prototype.observe;
+        const origRo = ResizeObserver.prototype.observe;
+        MutationObserver.prototype.observe = function (...args) {
+          observes++;
+          return origMo.apply(this, args);
+        };
+        ResizeObserver.prototype.observe = function (...args) {
+          observes++;
+          return origRo.apply(this, args);
+        };
+        document.querySelector('[data-testid="s2-link-probes"] button:last-of-type').click();
+        await new Promise((r) => requestAnimationFrame(r));
+        MutationObserver.prototype.observe = origMo;
+        ResizeObserver.prototype.observe = origRo;
+        return observes;
+      });
+      assert.equal(observerChurn, 0);
+    },
 };

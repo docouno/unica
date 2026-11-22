@@ -107,4 +107,92 @@ export default {
         () => document.querySelector('#overlay-realms').dataset.moveBeforeReleased === 'true',
       );
     },
+
+  'cross-bundle OverlayTriggerRegistry@1 deduplicates nested auto triggers and cleans up in both teardown orders':
+    async ({ page, mount }) => {
+      await mount('overlay-realms');
+      await dispatch(page, 'check-cross-bundle-triggers');
+      await page.waitForFunction(() =>
+        Boolean(document.querySelector('#overlay-realms').dataset.crossBundleTriggers),
+      );
+      const data = JSON.parse(
+        await page.locator('#overlay-realms').getAttribute('data-cross-bundle-triggers'),
+      );
+      for (const order of ['A-then-B', 'B-then-A']) {
+        assert.deepEqual(data[order], {
+          afterInnerClick: { outerCalls: 0, innerCalls: 1, outerOpen: false, innerOpen: true },
+          afterSecondClick: { outerCalls: 0, innerCalls: 2, innerOpen: false },
+          keysAfterTeardown: 0,
+        });
+      }
+      assert.deepEqual(data.remountAndIframe, {
+        remountCalls: 1,
+        remountOpen: true,
+        iframeCalls: 1,
+        iframeOpen: true,
+      });
+      assert.equal(data.finalMainKeys, 0);
+      assert.equal(data.finalIframeKeys, 0);
+    },
+
+  'isInertElement, focusElement, and lockDocumentScroll honor modal stacks, inert hosts, CSS interactivity, and fallback keys':
+    async ({ page, mount }) => {
+      await mount('overlay-realms');
+      await dispatch(page, 'check-inert-matrix');
+      const raw = await page.locator('#overlay-realms').getAttribute('data-inert-matrix');
+      const m = JSON.parse(raw);
+
+      assert.deepEqual(m.unicaThenForeign, {
+        foreignInert: false,
+        foreignFocus: true,
+        unicaFocus: false,
+        bgInert: true,
+      });
+      assert.deepEqual(m.foreignThenUnica, {
+        unicaInert: false,
+        unicaFocus: true,
+        foreignFocus: false,
+        bgInert: true,
+      });
+      const expectedReverse = {
+        bgBeforeModals: false,
+        during: {
+          inAInert: false,
+          inAFocus: true,
+          inBInert: true,
+          inBFocus: false,
+          bgInert: true,
+        },
+        fakeKeyPreserved: true,
+        versionsCleaned: true,
+        bgAfterIdle: false,
+      };
+      assert.deepEqual(m.reversePrimary, expectedReverse);
+      assert.deepEqual(m.reverseFallback, expectedReverse);
+      assert.deepEqual(m.lightInertHost, { inert: false, focus: true, bgInert: true });
+      assert.deepEqual(m.shadowInertHost, { inert: false, focus: true });
+      assert.deepEqual(m.exitingShadow, {
+        stillModal: true,
+        lowerInert: true,
+        upperInert: true,
+        lowerFocus: false,
+        backgroundInert: true,
+      });
+      assert.equal(m.lowerAfterExit, false);
+      assert.equal(m.backgroundDuringLastExit, true);
+      assert.deepEqual(m.cssModalUnderInertMain, { inert: false, focus: true });
+      assert.deepEqual(m.cssInertDialogItself, { inert: true, focus: false });
+      assert.deepEqual(m.cssNestedInert, {
+        directInert: true,
+        directFocus: false,
+        autoChildInert: true,
+        autoChildFocus: false,
+      });
+      assert.deepEqual(m.attrInertDialog, { inert: true, focus: false });
+      assert.deepEqual(m.scrollLockResult, {
+        overflowX: 'clip',
+        overflowY: 'scroll',
+        overflowYPriority: 'important',
+      });
+    },
 };

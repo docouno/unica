@@ -725,6 +725,29 @@ export default {
       assert.deepEqual(await lock(page), ['scroll', 'scroll', 'important']);
     },
 
+  'Positioning follows the intrinsic anchor width after a font loads': async ({ page, mount }) => {
+    await mount('overlay');
+    const initialWidth = await page.locator('#anchor').evaluate((anchor) => {
+      anchor.textContent = 'دمی'.repeat(5);
+      anchor.style.width = 'max-content';
+      anchor.style.font = '30px ProbeFont, monospace';
+      return anchor.getBoundingClientRect().width;
+    });
+    await command(page, 'open-positioned');
+    await visibleLayer(page, 'positioned');
+    await page.evaluate(async () => {
+      const font = new FontFace('ProbeFont', 'url(/assets/alert-arabic-400.ttf)');
+      document.fonts.add(await font.load());
+    });
+    await page.waitForFunction((before) => {
+      const width = document.querySelector('#anchor').getBoundingClientRect().width;
+      const projected = parseFloat(
+        document.querySelector('#positioned').style.getPropertyValue('--anchor-width'),
+      );
+      return Math.abs(before - width) > 1 && Math.abs(projected - width) < 1;
+    }, initialWidth);
+  },
+
   'positioned top-layer panels escape clipping, size in one pass, and align in LTR and RTL':
     async ({ page, mount }) => {
       for (const direction of ['ltr', 'rtl']) {

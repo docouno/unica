@@ -1,7 +1,7 @@
 // @vitest-environment node
 import { renderToString } from 'react-dom/server';
 import { expect, it } from 'vitest';
-import { Portal, PortalProvider, usePortalContainer } from '../src/index.js';
+import { Portal, UnicaProvider, usePortalContainer } from '../src/index.js';
 import '../src/core/overlay/positioning.js';
 import '../src/core/overlay/runtime.js';
 
@@ -23,11 +23,11 @@ it('renders inline content and waiting consumers in Node SSR with and without a 
   expect(bareHtml).toBe('Default inline<output>waiting</output>');
 
   const waitingHtml = renderToString(
-    <PortalProvider container={null}>
+    <UnicaProvider portalContainer={null}>
       <Portal>Portaled</Portal>
       <Portal disabled>Inline</Portal>
       <ContainerStatus />
-    </PortalProvider>,
+    </UnicaProvider>,
   );
   expect(waitingHtml).toBe('Inline<output>waiting</output>');
   expect(Object.getOwnPropertySymbols(globalThis)).toEqual(symbols);

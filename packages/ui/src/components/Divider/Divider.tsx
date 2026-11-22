@@ -1,40 +1,15 @@
-import type { AriaAttributes, ComponentPropsWithRef, JSX } from 'react';
+import type { JSX } from 'react';
+import { cx } from '../../core/cx.js';
+import { pickConsumerDataAttributes } from '../../core/passiveRoot.js';
+import type { DividerProps } from './types.js';
 import './divider.css';
 
-type Orientation = 'horizontal' | 'vertical';
-type LabelPosition = 'start' | 'center' | 'end';
-type DataValue = string | number | boolean | undefined;
-type NameKey = 'aria-label' | 'aria-labelledby';
-type RootElementProps = ComponentPropsWithRef<'div'>;
-type PassiveKey = 'className' | 'dir' | 'hidden' | 'id' | 'lang' | 'ref' | 'style';
+export type { DividerProps } from './types.js';
 
-type DividerRootProps = Readonly<Pick<RootElementProps, PassiveKey>> & {
-  readonly [key: `data-${string}`]: DataValue;
-} & {
-  readonly [Key in Exclude<keyof RootElementProps, PassiveKey | NameKey | 'key'>]?: never;
-};
-
-type SeparatorName = Readonly<Pick<AriaAttributes, NameKey>>;
-type NoSeparatorName = { readonly [Key in NameKey]?: never };
-
-type PlainDivider = {
-  readonly orientation?: Orientation | undefined;
-  readonly label?: never;
-  readonly labelPosition?: never;
-} & (
-  | ({ readonly decorative: false } & SeparatorName)
-  | ({ readonly decorative?: boolean | undefined } & NoSeparatorName)
-);
-
-type LabeledDivider = {
-  readonly orientation?: 'horizontal' | undefined;
-  readonly label: string;
-  readonly labelPosition?: LabelPosition | undefined;
-  readonly decorative?: never;
-} & NoSeparatorName;
-
-export type DividerProps = DividerRootProps & (PlainDivider | LabeledDivider);
-
+/**
+ * Horizontal or vertical section separator with optional centered or aligned inline label.
+ * Decorative by default; set `decorative={false}` to expose a semantic separator.
+ */
 export function Divider({
   orientation,
   label,
@@ -56,16 +31,7 @@ export function Divider({
   const position = labelPosition === 'start' || labelPosition === 'end' ? labelPosition : 'center';
   const semantic = text === undefined && decorative === false;
   const naming = semantic ? { 'aria-label': name, 'aria-labelledby': labelledBy } : undefined;
-  const data: Record<string, DataValue> = {};
-  for (const [key, value] of Object.entries(rest)) {
-    if (
-      key.startsWith('data-') &&
-      !key.toLowerCase().startsWith('data-unica-divider-') &&
-      (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean')
-    ) {
-      data[key] = value;
-    }
-  }
+  const data = pickConsumerDataAttributes(rest, 'data-unica-divider-');
 
   return (
     <div
@@ -77,7 +43,7 @@ export function Divider({
       lang={lang}
       hidden={hidden}
       style={style}
-      className={className ? `unica-divider ${className}` : 'unica-divider'}
+      className={cx('unica-divider', className)}
       role={vertical && semantic ? 'separator' : undefined}
       aria-orientation={vertical && semantic ? 'vertical' : undefined}
       aria-hidden={text === undefined && !semantic ? true : undefined}

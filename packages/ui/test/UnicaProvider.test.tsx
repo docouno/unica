@@ -1,8 +1,27 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { memo, Profiler, useEffect } from 'react';
 import type { JSX } from 'react';
 import { renderToString } from 'react-dom/server';
 import { afterEach, expect, it, vi } from 'vitest';
-import { UnicaProvider, type ThemeConfig, type UnicaComponentDefaults } from '../src/index.js';
+import {
+  getUnicaRootProps,
+  Icon,
+  Link,
+  UnicaProvider,
+  usePortalContainer,
+  defineGlyph,
+  type IconSize,
+  type LinkSize,
+  type ThemeConfig,
+  type ThemePreset,
+  type UnicaComponentDefaults,
+  type UnicaRootAttributes,
+} from '../src/index.js';
+import { getUnicaRootProps as serverGetUnicaRootProps } from '../src/server.js';
+import type {
+  LinkSize as ServerLinkSize,
+  UnicaRootAttributes as ServerRootAttributes,
+} from '../src/server.js';
 import { IconSizeProbe } from './fixtures/icon-size-probe.js';
 
 afterEach(cleanup);
@@ -143,4 +162,188 @@ it('hydrates the existing host and resolved defaults with the same config', () =
   expect(container.firstElementChild?.getAttribute('data-theme')).toBe('pixel-light');
   expect(onRecoverableError).not.toHaveBeenCalled();
   expect(consoleError).not.toHaveBeenCalled();
+});
+
+it('normalizes preset shorthand theme="pixel-dark" as a full ThemeConfig replacement', () => {
+  render(
+    <UnicaProvider theme={{ preset: 'soft-light', defaults: { Icon: { size: 'm' } } }}>
+      <UnicaProvider theme="pixel-dark">
+        <IconSizeProbe label="Shorthand inner" />
+      </UnicaProvider>
+      <IconSizeProbe label="Outer" />
+    </UnicaProvider>,
+  );
+
+  expect(screen.getByRole('button', { name: 'Shorthand inner' }).getAttribute('data-size')).toBe(
+    'inherit',
+  );
+  expect(screen.getByRole('button', { name: 'Outer' }).getAttribute('data-size')).toBe('m');
+});
+
+it('isolates split contexts with zero fan-out rerenders under React Profiler', () => {
+  const Mark = defineGlyph((props) => <svg {...props} viewBox="0 0 16 16" />);
+  const commits = {
+    iconDefault: 0,
+    iconExplicit: 0,
+    linkDefault: 0,
+    portalRead: 0,
+  };
+  const onRender = (id: string) => {
+    if (id in commits) {
+      commits[id as keyof typeof commits] += 1;
+    }
+  };
+
+  const IconDefaultLeaf = memo(function IconDefaultLeaf() {
+    return (
+      <Profiler id="iconDefault" onRender={onRender}>
+        <Icon icon={Mark} data-testid="prof-icon-default" />
+      </Profiler>
+    );
+  });
+  const IconExplicitLeaf = memo(function IconExplicitLeaf() {
+    return (
+      <Profiler id="iconExplicit" onRender={onRender}>
+        <Icon icon={Mark} size="m" data-testid="prof-icon-explicit" />
+      </Profiler>
+    );
+  });
+  const LinkDefaultLeaf = memo(function LinkDefaultLeaf() {
+    return (
+      <Profiler id="linkDefault" onRender={onRender}>
+        <Link href="#target" data-testid="prof-link-default">
+          Docs
+        </Link>
+      </Profiler>
+    );
+  });
+  const PortalReadLeaf = memo(function PortalReadLeaf() {
+    const container = usePortalContainer();
+    return (
+      <Profiler id="portalRead" onRender={onRender}>
+        <span data-testid="prof-portal">{container ? container.tagName : 'none'}</span>
+      </Profiler>
+    );
+  });
+
+  function Harness({
+    tick,
+    iconOverride,
+    linkOverride,
+  }: {
+    readonly tick: number;
+    readonly iconOverride: IconSize;
+    readonly linkOverride?: LinkSize | undefined;
+  }) {
+    return (
+      <UnicaProvider
+        theme={{
+          preset: 'frost-dark',
+          defaults: { Icon: { size: 'm' }, Link: { size: 'body-s' } },
+        }}
+        overrides={{
+          Icon: { size: iconOverride },
+          ...(linkOverride ? { Link: { size: linkOverride } } : {}),
+        }}
+      >
+        <span data-tick={tick} />
+        <IconDefaultLeaf />
+        <IconExplicitLeaf />
+        <LinkDefaultLeaf />
+        <PortalReadLeaf />
+      </UnicaProvider>
+    );
+  }
+
+  const { rerender } = render(<Harness tick={1} iconOverride="s" />);
+  const baseline = { ...commits };
+  expect(baseline.iconDefault).toBe(1);
+  expect(baseline.iconExplicit).toBe(1);
+  expect(baseline.linkDefault).toBe(1);
+
+  // Equivalent inline theme + overrides literals must cause 0 extra rerenders anywhere.
+  rerender(<Harness tick={2} iconOverride="s" />);
+  expect(commits).toEqual(baseline);
+
+  // Changing Icon.size rerenders ONLY IconDefaultLeaf, never explicit Icon, Link, or Portal consumers.
+  rerender(<Harness tick={3} iconOverride="l" />);
+  expect(commits.iconDefault).toBe(baseline.iconDefault + 1);
+  expect(commits.iconExplicit).toBe(baseline.iconExplicit);
+  expect(commits.linkDefault).toBe(baseline.linkDefault);
+  expect(commits.portalRead).toBe(baseline.portalRead);
+  expect(screen.getByTestId('prof-icon-default').getAttribute('data-unica-icon-size')).toBe('l');
+
+  // Changing Link.size rerenders ONLY LinkDefaultLeaf.
+  rerender(<Harness tick={4} iconOverride="l" linkOverride="body-l" />);
+  expect(commits.iconDefault).toBe(baseline.iconDefault + 1);
+  expect(commits.iconExplicit).toBe(baseline.iconExplicit);
+  expect(commits.linkDefault).toBe(baseline.linkDefault + 1);
+  expect(commits.portalRead).toBe(baseline.portalRead);
+});
+
+it('preserves child Fiber identity when toggling portalContainer or iconAdapter', () => {
+  const host = document.body.appendChild(document.createElement('div'));
+  let mounts = 0;
+  let unmounts = 0;
+
+  function Child() {
+    useEffect(() => {
+      mounts++;
+      return () => {
+        unmounts++;
+      };
+    }, []);
+    return <span>stable</span>;
+  }
+
+  const { rerender, unmount } = render(
+    <UnicaProvider theme="soft-dark">
+      <Child />
+    </UnicaProvider>,
+  );
+  expect([mounts, unmounts]).toEqual([1, 0]);
+
+  rerender(
+    <UnicaProvider theme="frost-dark" portalContainer={host} iconAdapter="native">
+      <Child />
+    </UnicaProvider>,
+  );
+  rerender(
+    <UnicaProvider theme="pixel-light" portalContainer={null} iconAdapter="phosphor">
+      <Child />
+    </UnicaProvider>,
+  );
+  rerender(
+    <UnicaProvider theme="soft-dark">
+      <Child />
+    </UnicaProvider>,
+  );
+  expect([mounts, unmounts]).toEqual([1, 0]);
+  unmount();
+  expect([mounts, unmounts]).toEqual([1, 1]);
+  host.remove();
+});
+
+it('builds root data-theme attributes cleanly via client-free getUnicaRootProps', () => {
+  expect(serverGetUnicaRootProps).toBe(getUnicaRootProps);
+
+  const empty = getUnicaRootProps();
+  expect(empty).toEqual({});
+  expect(Object.keys(empty)).toEqual([]);
+  expect('data-theme' in empty).toBe(false);
+
+  const undef = getUnicaRootProps({ theme: undefined });
+  expect(Object.keys(undef)).toEqual([]);
+
+  // Spreading an omitted theme must never clobber an existing data-theme attribute.
+  const preserved: Record<string, unknown> = { 'data-theme': 'soft-light', ...undef };
+  expect(preserved['data-theme']).toBe('soft-light');
+
+  const preset: ThemePreset = 'frost-dark';
+  const fromString: UnicaRootAttributes = getUnicaRootProps({ theme: preset });
+  const fromConfig: ServerRootAttributes = getUnicaRootProps({
+    theme: { preset: 'pixel-light', defaults: { Link: { size: 'body-s' as ServerLinkSize } } },
+  });
+  expect(fromString).toEqual({ 'data-theme': 'frost-dark' });
+  expect(fromConfig).toEqual({ 'data-theme': 'pixel-light' });
 });

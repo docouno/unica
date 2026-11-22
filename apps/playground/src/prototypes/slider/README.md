@@ -39,7 +39,7 @@ At `[x, x]`, the readout remains `x — x`, and both inputs retain independent f
 
 ## Material and state feedback
 
-The contextual `--control-bg` and `--control-border` create a quiet recessed track. `--slider-fill` colors both the selected interval and its compact caps; `--slider-state-duration` controls edge feedback. These recipes have no other consumers. At rest, caps have no contrasting outline, highlight, gradient, or shadow. They project only 3px beyond either side of the rail, marking a graspable boundary without becoming a second visual accent. Their small painted area does not reduce the interactive row.
+The contextual `--control-bg` and `--control-border` create a quiet recessed track. `--_slider-fill` colors both the selected interval and its compact caps; `--_slider-state-duration` controls edge feedback. These recipes have no other consumers. At rest, caps have no contrasting outline, highlight, gradient, or shadow. They project only 3px beyond either side of the rail, marking a graspable boundary without becoming a second visual accent. Their small painted area does not reduce the interactive row.
 
 - Soft uses a matte accent cap and fill, a small radius, and a 120ms edge response.
 - Frost uses a flat cap continuous with the selected interval, with a 120ms edge response. Glass belongs to the containing overlay and contextual track. Dark uses the accent signal for both the thin selected segment and its caps, keeping them legible over the overlay trough; Light uses the solid accent. The cap has no separate luminous rim or raised face.

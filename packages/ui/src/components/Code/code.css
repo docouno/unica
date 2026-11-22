@@ -7,11 +7,11 @@
     --_code-edge: var(--neutral-border);
     --_code-plate: color-mix(
       in srgb,
-      var(--_code-ink) var(--code-plate-tint),
+      var(--_code-ink) var(--_code-plate-tint),
       var(--_code-soft-bg)
     );
     font-family: var(--font-family-mono);
-    font-size: calc(var(--_code-size) * var(--code-font-scale));
+    font-size: calc(var(--_code-size) * var(--_code-font-scale));
     font-weight: inherit;
     /* The surrounding text sets the line box, including in tight captions. */
     line-height: var(--_code-line-height);
@@ -39,53 +39,57 @@
     --_code-line-height: var(--text-size-body-l-lh);
   }
 
-  .unica-code[data-unica-code-tone='info'] {
+  .unica-code[data-unica-code-status='info'] {
     --_code-soft-bg: var(--status-info-soft-bg);
     --_code-ink: var(--status-info-soft-fg);
     --_code-edge: var(--status-info-border);
   }
 
-  .unica-code[data-unica-code-tone='success'] {
+  .unica-code[data-unica-code-status='success'] {
     --_code-soft-bg: var(--status-success-soft-bg);
     --_code-ink: var(--status-success-soft-fg);
     --_code-edge: var(--status-success-border);
   }
 
-  .unica-code[data-unica-code-tone='warning'] {
+  .unica-code[data-unica-code-status='warning'] {
     --_code-soft-bg: var(--status-warning-soft-bg);
     --_code-ink: var(--status-warning-soft-fg);
     --_code-edge: var(--status-warning-border);
   }
 
-  .unica-code[data-unica-code-tone='danger'] {
+  .unica-code[data-unica-code-status='danger'] {
     --_code-soft-bg: var(--status-danger-soft-bg);
     --_code-ink: var(--status-danger-soft-fg);
     --_code-edge: var(--status-danger-border);
   }
 
-  .unica-code[data-unica-code-plate='true']:not(:empty) {
+  .unica-code[data-unica-code-plate]:not(:empty) {
     padding: 0.08em var(--space-4);
-    border: var(--pill-border-width) solid var(--_code-edge);
+    border: var(--_pill-border-width) solid var(--_code-edge);
     border-radius: var(--radius-xs);
     background-color: var(--_code-plate);
   }
 
-  .unica-code[data-unica-code-tone='inherit'] {
+  .unica-code[data-unica-code-status='inherit'] {
     color: inherit;
   }
 
-  .unica-code:where([data-unica-code-tone='inherit'])[data-unica-code-plate='true']:not(:empty) {
+  .unica-code:where([data-unica-code-status='inherit'])[data-unica-code-plate]:not(:empty) {
     color: var(--code-context-fg, var(--_code-ink));
     background-color: var(--code-context-bg, var(--_code-plate));
     border-color: var(--code-context-border, var(--_code-edge));
   }
 
-  .unica-code[hidden] {
+  .unica-code[hidden='until-found' i] {
+    position: absolute;
+  }
+
+  .unica-code[hidden]:not([hidden='until-found' i]) {
     display: none;
   }
 
   @media (forced-colors: active) {
-    .unica-code[data-unica-code-plate='true']:not(:empty) {
+    .unica-code[data-unica-code-plate]:not(:empty) {
       color: CanvasText;
       background-color: Canvas;
       border-color: CanvasText;
@@ -93,7 +97,7 @@
       outline-offset: -1px;
     }
 
-    .unica-code[data-unica-code-plate='false'] {
+    .unica-code:not([data-unica-code-plate]) {
       color: inherit;
     }
   }

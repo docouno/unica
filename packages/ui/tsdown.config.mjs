@@ -1,4 +1,6 @@
+import { Features } from 'lightningcss';
 import { defineConfig } from 'tsdown';
+import { createLightningCssOptions } from '../../css.config.mjs';
 
 export default defineConfig({
   entry: ['src/index.ts', 'src/server.ts'],
@@ -8,6 +10,7 @@ export default defineConfig({
   css: {
     splitting: false,
     fileName: 'style.css',
+    lightningcss: createLightningCssOptions(Features),
   },
   copy: ['src/styles.d.ts'],
   deps: {

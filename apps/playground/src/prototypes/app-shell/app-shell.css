@@ -14,17 +14,19 @@
   line-height: var(--text-size-body-xs-lh);
 }
 
-:where(
-  .app-shell-proto a:not(.unica-link),
-  .app-shell-skip,
-  .app-shell-rail-item,
-  .app-shell-profile,
-  .app-shell-nav-row,
-  .app-shell-workspace-switcher,
-  .app-shell-back
-):focus-visible {
-  outline: 2px solid var(--focus-ring-color);
-  outline-offset: 2px;
+@layer unica.base {
+  :where(
+    .app-shell-proto a,
+    .app-shell-skip,
+    .app-shell-rail-item,
+    .app-shell-profile,
+    .app-shell-nav-row,
+    .app-shell-workspace-switcher,
+    .app-shell-back
+  ):focus-visible {
+    outline: 2px solid var(--focus-ring-color);
+    outline-offset: 2px;
+  }
 }
 
 .app-shell-top-region {
@@ -63,15 +65,15 @@
 
 .app-shell-proto[data-top-rail][data-left-rail] .app-shell-stage {
   border-block-start: 1px solid var(--border-default);
-  border-start-start-radius: var(--shell-stage-outer-radius);
+  border-start-start-radius: var(--_shell-stage-outer-radius);
 }
 
 .app-shell-proto[data-top-rail][data-left-rail] .app-shell-canvas {
-  border-start-start-radius: var(--shell-stage-inner-radius);
+  border-start-start-radius: var(--_shell-stage-inner-radius);
 }
 
 .app-shell-proto[data-top-rail][data-left-rail] .app-shell-panel-start > .app-shell-aside {
-  border-start-start-radius: var(--shell-stage-inner-radius);
+  border-start-start-radius: var(--_shell-stage-inner-radius);
 }
 
 .app-shell-canvas {
@@ -504,9 +506,12 @@
   justify-content: end;
 }
 
-:is(.app-shell-inspector-toggle, .app-shell-dock-end):dir(ltr) .button-leading-glyph,
-:is(.app-shell-navigation-toggle, .app-shell-dock-start):dir(rtl) .button-leading-glyph {
-  scale: -1 1;
+:is(.app-shell-inspector-toggle, .app-shell-dock-end) .button-leading-glyph {
+  scale: calc(-1 * var(--_dir-mirror, 1)) 1;
+}
+
+:is(.app-shell-navigation-toggle, .app-shell-dock-start) .button-leading-glyph {
+  scale: var(--_dir-scale, none);
 }
 
 .app-shell-dock-toggle.button-proto,
@@ -604,12 +609,16 @@
 }
 
 .app-shell-panel:modal {
-  --dialog-enter-x: 20px;
+  --dialog-enter-x: calc(-20px * var(--_dir-mirror, 1));
   --dialog-enter-y: 0px;
-  --sheet-edge: var(--shell-sheet-left, 0px);
-  --sheet-opposite: var(--shell-sheet-right, 0px);
-  --sheet-safe-start: env(safe-area-inset-left);
-  --sheet-safe-end: env(safe-area-inset-right);
+  --sheet-edge: var(--_if-ltr, var(--shell-sheet-left, 0px))
+    var(--_if-rtl, var(--shell-sheet-right, 0px));
+  --sheet-opposite: var(--_if-ltr, var(--shell-sheet-right, 0px))
+    var(--_if-rtl, var(--shell-sheet-left, 0px));
+  --sheet-safe-start: var(--_if-ltr, env(safe-area-inset-left))
+    var(--_if-rtl, env(safe-area-inset-right));
+  --sheet-safe-end: var(--_if-ltr, env(safe-area-inset-right))
+    var(--_if-rtl, env(safe-area-inset-left));
   position: fixed;
   inset-block: var(--shell-sheet-top, 0px) auto;
   inset-inline: var(--sheet-edge) auto;
@@ -621,10 +630,11 @@
   padding-inline-start: var(--sheet-safe-start);
   overflow: hidden;
   overscroll-behavior: contain;
-  border-inline-end: 1px solid var(--overlay-border);
+  border-inline-end: 1px solid var(--_overlay-border);
   background: var(--app-shell-sheet-fill);
-  backdrop-filter: var(--overlay-backdrop);
-  box-shadow: var(--overlay-shadow-drawer);
+  backdrop-filter: var(--_overlay-backdrop);
+  box-shadow: var(--_if-ltr, var(--_overlay-shadow-drawer-right, var(--_overlay-shadow-drawer)))
+    var(--_if-rtl, var(--_overlay-shadow-drawer));
   animation: dialog-surface-enter 200ms cubic-bezier(0.2, 0.7, 0.25, 1);
 }
 
@@ -642,12 +652,12 @@
 }
 
 .app-shell-sheet:is(:modal, [data-preview='pinned'])::before {
-  box-shadow: var(--overlay-rim);
-  mask-image: var(--overlay-rim-mask);
+  box-shadow: var(--_overlay-rim);
+  mask-image: var(--_overlay-rim-mask);
 }
 
 .app-shell-sheet:is(:modal, [data-preview='pinned'])::after {
-  background: var(--motif-corner-ticks);
+  background: var(--_motif-corner-ticks);
 }
 
 .app-shell-sheet:is(:modal, [data-preview='pinned']) .app-shell-aside-body {
@@ -655,24 +665,14 @@
   padding: var(--space-8);
 }
 
-.app-shell-panel:modal:dir(rtl) {
-  --sheet-edge: var(--shell-sheet-right, 0px);
-  --sheet-opposite: var(--shell-sheet-left, 0px);
-  --sheet-safe-start: env(safe-area-inset-right);
-  --sheet-safe-end: env(safe-area-inset-left);
-}
-
 .app-shell-panel-end:modal {
+  --dialog-enter-x: calc(20px * var(--_dir-mirror, 1));
+  box-shadow: var(--_if-ltr, var(--_overlay-shadow-drawer))
+    var(--_if-rtl, var(--_overlay-shadow-drawer-right, var(--_overlay-shadow-drawer)));
   inset-inline: auto var(--sheet-opposite);
   padding-inline: 0 var(--sheet-safe-end);
-  border-inline-start: 1px solid var(--overlay-border);
+  border-inline-start: 1px solid var(--_overlay-border);
   border-inline-end: 0;
-}
-
-.app-shell-panel-start:modal:dir(ltr),
-.app-shell-panel-end:modal:dir(rtl) {
-  --dialog-enter-x: -20px;
-  box-shadow: var(--overlay-shadow-drawer-right, var(--overlay-shadow-drawer));
 }
 
 .app-shell-panel:modal::backdrop {
@@ -1110,8 +1110,8 @@
   text-decoration: none;
   cursor: pointer;
   transition:
-    background-color var(--tabs-feedback-duration),
-    color var(--tabs-feedback-duration);
+    background-color var(--_tabs-feedback-duration),
+    color var(--_tabs-feedback-duration);
 }
 
 .app-shell-nav-row {
@@ -1136,12 +1136,11 @@
   overflow-wrap: anywhere;
 }
 
-.app-shell-nav-row:dir(ltr) > .app-shell-nav-label {
-  text-align: left;
+.app-shell-nav-row {
+  --row-label-align: var(--_if-ltr, left) var(--_if-rtl, right);
 }
-
-.app-shell-nav-row:dir(rtl) > .app-shell-nav-label {
-  text-align: right;
+.app-shell-nav-row > .app-shell-nav-label {
+  text-align: var(--row-label-align);
 }
 
 .app-shell-nav-count {

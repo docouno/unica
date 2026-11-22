@@ -1,31 +1,17 @@
 import './styles.css';
 
-export { THEME_PRESETS } from './core/themes.js';
-export type { ThemePreset, ThemePresetMeta } from './core/themes.js';
-export { UnicaProvider } from './core/UnicaProvider.js';
-export type { ThemeConfig } from './core/UnicaProvider.js';
-export type { UnicaComponentDefaults, UnicaProviderProps } from './core/UnicaProvider.js';
-export { Portal, PortalProvider, usePortalContainer } from './core/Portal.js';
-export type { PortalProps, PortalProviderProps } from './core/Portal.js';
-
-export { Badge } from './components/Badge/Badge.js';
-export type { BadgeProps, BadgeStatus } from './components/Badge/Badge.js';
-export { Blockquote } from './components/Blockquote/Blockquote.js';
-export type { BlockquoteProps, BlockquoteTone } from './components/Blockquote/Blockquote.js';
-export { Code } from './components/Code/Code.js';
-export type { CodeProps, CodeTone } from './components/Code/Code.js';
-export { Divider } from './components/Divider/Divider.js';
-export type { DividerProps } from './components/Divider/Divider.js';
-
-export { Icon, IconProvider } from './components/Icon/Icon.js';
+export { THEME_PRESETS, getUnicaRootProps } from './core/themes.js';
 export type {
-  IconColor,
-  IconProps,
-  IconProviderProps,
-  IconSize,
-  IconUsage,
-} from './components/Icon/Icon.js';
-export { defineGlyph } from './components/Icon/glyph.js';
+  ThemeConfig,
+  ThemePreset,
+  ThemePresetMeta,
+  UnicaRootAttributes,
+} from './core/themes.js';
+export { UnicaProvider } from './core/UnicaProvider.js';
+export type { UnicaComponentDefaults, UnicaProviderProps } from './core/UnicaProvider.js';
+export { Portal, usePortalContainer } from './core/Portal.js';
+export type { PortalProps } from './core/Portal.js';
+export { defineGlyph } from './core/glyph.js';
 export type {
   BuiltinIconAdapterName,
   GlyphComponent,
@@ -34,48 +20,61 @@ export type {
   GlyphSvgProps,
   IconAdapter,
   IconAdapterRenderContext,
-} from './components/Icon/glyph.js';
+} from './core/glyph.js';
 
-export { Indicator } from './components/Indicator/Indicator.js';
+export { Badge } from './components/Badge/index.js';
+export type { BadgeProps, BadgeStatus } from './components/Badge/index.js';
+export { Blockquote } from './components/Blockquote/index.js';
+export type { BlockquoteProps, BlockquoteStatus } from './components/Blockquote/index.js';
+export { Code } from './components/Code/index.js';
+export type { CodeProps, CodeStatus } from './components/Code/index.js';
+export { Divider } from './components/Divider/index.js';
+export type { DividerProps } from './components/Divider/index.js';
+export { Icon } from './components/Icon/index.js';
+export type { IconColor, IconProps, IconSize, IconUsage } from './components/Icon/index.js';
+export { Indicator } from './components/Indicator/index.js';
 export type {
   IndicatorPosition,
   IndicatorProps,
   IndicatorStatus,
-} from './components/Indicator/Indicator.js';
-
-export { Kbd, KbdGroup } from './components/Kbd/Kbd.js';
-export type { KbdGroupProps, KbdProps, KbdSize } from './components/Kbd/Kbd.js';
-
-export { Grid, GridItem } from './components/Layout/Grid.js';
-export type { GridItemProps, GridProps } from './components/Layout/Grid.js';
-export { Box, Container, Flex, Stack } from './components/Layout/Layout.js';
+} from './components/Indicator/index.js';
+export { Kbd, KbdGroup } from './components/Kbd/index.js';
+export type { KbdGroupProps, KbdProps, KbdSize } from './components/Kbd/index.js';
+export {
+  Box,
+  Container,
+  Flex,
+  Grid,
+  GridItem,
+  Stack,
+  VisuallyHidden,
+} from './components/Layout/index.js';
 export type {
   BoxProps,
   ContainerProps,
   FlexProps,
+  GridItemProps,
+  GridProps,
+  Responsive,
+  Spacing,
   StackProps,
-} from './components/Layout/Layout.js';
-export type { Responsive } from './components/Layout/responsive.js';
-
-export { Link } from './components/Link/Link.js';
-export type { LinkProps } from './components/Link/Link.js';
-
-export { Progress } from './components/Progress/Progress.js';
+  VisuallyHiddenProps,
+} from './components/Layout/index.js';
+export { Link } from './components/Link/index.js';
+export type { LinkProps, LinkSize } from './components/Link/index.js';
+export { Progress, ProgressCircle, Spinner } from './components/Progress/index.js';
 export type {
+  ProgressCircleProps,
   ProgressProps,
   ProgressSize,
   ProgressStatus,
-} from './components/Progress/Progress.js';
-export { ProgressCircle } from './components/Progress/ProgressCircle.js';
-export type { ProgressCircleProps } from './components/Progress/ProgressCircle.js';
-
-export { Skeleton, SkeletonText } from './components/Skeleton/Skeleton.js';
-export type { SkeletonProps, SkeletonTextProps } from './components/Skeleton/Skeleton.js';
-
-export { Spinner } from './components/Progress/Spinner.js';
-export type { SpinnerProps, SpinnerSize, SpinnerTone } from './components/Progress/Spinner.js';
-
-export { Text } from './components/Text/Text.js';
+  SpinnerProps,
+  SpinnerSize,
+  SpinnerTone,
+} from './components/Progress/index.js';
+export { Skeleton, SkeletonText } from './components/Skeleton/index.js';
+export type { SkeletonProps, SkeletonTextProps } from './components/Skeleton/index.js';
+export { Text } from './components/Text/index.js';
 export type {
   TextAlign,
   TextColor,
@@ -83,12 +82,12 @@ export type {
   TextSize,
   TextTag,
   TextWeight,
-} from './components/Text/Text.js';
-export { Title } from './components/Title/Title.js';
+} from './components/Text/index.js';
+export { Title } from './components/Title/index.js';
 export type {
   HeadingTag,
   TitleProps,
   TitleSize,
   TitleTextWrap,
   TitleWeight,
-} from './components/Title/Title.js';
+} from './components/Title/index.js';

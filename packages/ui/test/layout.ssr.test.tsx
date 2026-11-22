@@ -3,16 +3,18 @@ import { Children, Fragment } from 'react';
 import { renderToStaticMarkup, renderToString } from 'react-dom/server';
 import { afterEach, expect, it, vi } from 'vitest';
 
+import { resetDevWarnings } from '../src/core/devWarning.js';
 import { Box, Container, Flex, Grid, GridItem, Stack, type GridItemProps } from '../src/index.js';
 
 afterEach(() => {
+  resetDevWarnings();
   vi.restoreAllMocks();
   vi.unstubAllEnvs();
 });
 
 it('renders one native root and only the supplied responsive slots during SSR', () => {
   const page = renderToString(
-    <Box as="main" aria-label="Overview" padding={{ desktop: 'm' }} paddingInlineStart={0}>
+    <Box as="main" aria-label="Overview" padding={{ desktop: 16 }} paddingInlineStart={0}>
       <Container size={{}} style={{ color: 'currentColor' }}>
         <Grid columns={{ tablet: 2, wide: 3 }}>
           <GridItem>Activity</GridItem>
@@ -22,7 +24,7 @@ it('renders one native root and only the supplied responsive slots during SSR', 
   );
 
   expect(page).toBe(
-    '<main aria-label="Overview" class="unica-box" style="--_box-padding-desktop:var(--space-m);--_box-padding-inline-start-mobile:var(--space-0)">' +
+    '<main aria-label="Overview" class="unica-box" style="--_box-padding-desktop:var(--space-16);--_box-padding-inline-start-mobile:var(--space-0)">' +
       '<div class="unica-container" style="color:currentColor">' +
       '<div class="unica-grid" style="--_grid-columns-tablet:2;--_grid-columns-wide:3">' +
       '<div class="unica-grid-item">Activity</div></div></div></main>',
@@ -74,11 +76,29 @@ it('renders native inner HTML in a Stack without children', () => {
   ).toBe('<div class="unica-stack"><p>Content</p></div>');
 });
 
+it('warns once per Grid area problem across different user-supplied names', () => {
+  vi.stubEnv('NODE_ENV', 'development');
+  const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+  for (const name of ['first', 'second']) {
+    renderToStaticMarkup(
+      <Grid areas={[`${name} ${name}`, `${name} .`]}>
+        <GridItem area={`${name}?`} />
+      </Grid>,
+    );
+  }
+  expect(warn.mock.calls).toEqual([
+    ['Grid areas cell "first" must form a single rectangle.'],
+    ['GridItem area "first?" is absent from its parent Grid areas.'],
+    ['GridItem area "first?" is not a valid cell name.'],
+  ]);
+});
+
 it('reports malformed maps, incompatible tracks and invalid direct item placements in development', () => {
   vi.stubEnv('NODE_ENV', 'development');
   const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
   const conflict = { area: 'auto', span: 2 } as GridItemProps;
 
+  expect(renderToStaticMarkup(<Grid areas={[]} />)).not.toContain('--_grid-areas');
   expect(renderToStaticMarkup(<Grid areas={[]} />)).not.toContain('--_grid-areas');
   expect(renderToStaticMarkup(<Grid areas={['a b c d e f g h i j k l m']} />)).not.toContain(
     '--_grid-area-width',

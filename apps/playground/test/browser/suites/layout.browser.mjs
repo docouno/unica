@@ -501,5 +501,60 @@ export default {
       await assertBox(page.getByTestId('container-narrow-content'), { width: 328 });
       await assertBox(page.getByTestId('container-tight'), { width: 48 });
       await assertBox(page.getByTestId('container-tight-content'), { width: 0 });
+
+      // Custom --container-m overrides the default <Container /> width without a size prop.
+      await page.setViewportSize({ width: 1500, height: 600 });
+      await assertBox(page.getByTestId('container-custom-default'), { width: 640 });
+      assert.equal(
+        await page.getByTestId('container-start').getAttribute('data-unica-container-align'),
+        'start',
+      );
+
+      // Numeric spacing (12px), custom --space-16 token override, min-inline-size: 0 overflow
+      // containment at 360px / 120% text / RTL, and VisuallyHidden semantics.
+      await page.setViewportSize({ width: 360, height: 600 });
+      const hardening = await page.evaluate(() => {
+        const stack = document.querySelector('[data-testid="spacing-12-stack"]');
+        const box16 = document.querySelector('[data-testid="custom-space-16-box"]');
+        const flex = document.querySelector('[data-testid="overflow-flex"]');
+        const overflowBox = document.querySelector('[data-testid="overflow-box"]');
+        const overflowText = document.querySelector('[data-testid="overflow-text"]');
+        const overflowGrid = document.querySelector('[data-testid="overflow-grid"]');
+        const overflowGridStack = document.querySelector('[data-testid="overflow-grid-stack"]');
+        const vhSpan = document.querySelector('[data-testid="vh-span"]');
+        const vhDiv = document.querySelector('[data-testid="vh-div"]');
+        return {
+          gap12: getComputedStyle(stack).rowGap,
+          customPad16: getComputedStyle(box16).paddingInlineStart,
+          flexWidth: flex.getBoundingClientRect().width,
+          overflowBoxWidth: overflowBox.getBoundingClientRect().width,
+          overflowTextWidth: overflowText.getBoundingClientRect().width,
+          overflowTextScroll: overflowText.scrollWidth,
+          gridWidth: overflowGrid.getBoundingClientRect().width,
+          gridStackWidth: overflowGridStack.getBoundingClientRect().width,
+          vhSpanTag: vhSpan.localName,
+          vhSpanRect: vhSpan.getBoundingClientRect().width,
+          vhDivTag: vhDiv.localName,
+          vhDivRect: vhDiv.getBoundingClientRect().width,
+        };
+      });
+      assert.equal(hardening.gap12, '12px');
+      assert.equal(hardening.customPad16, '20px');
+      assert.ok(
+        hardening.overflowBoxWidth <= hardening.flexWidth + 0.5,
+        `Box inside Flex must not overflow: ${hardening.overflowBoxWidth} vs ${hardening.flexWidth}`,
+      );
+      assert.ok(
+        hardening.overflowTextWidth <= hardening.flexWidth + 0.5 &&
+          hardening.overflowTextScroll > hardening.overflowTextWidth,
+        'Truncated Text inside Flex > Box must ellipsize within flex bounds',
+      );
+      assert.ok(
+        hardening.gridStackWidth <= hardening.gridWidth / 2 + 1,
+        `Stack inside 2-col Grid must not blow out track width: ${hardening.gridStackWidth} vs ${hardening.gridWidth}`,
+      );
+      assert.equal(hardening.vhSpanTag, 'span');
+      assert.equal(hardening.vhDivTag, 'div');
+      assert.ok(hardening.vhSpanRect <= 1 && hardening.vhDivRect <= 1);
     },
 };

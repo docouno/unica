@@ -229,7 +229,7 @@
 .choice-card-proto:has(.choice-card-native:checked)
   .choice-card-custom-indicator
   .switch-indicator {
-  background: var(--switch-track-on);
+  background: var(--_switch-track-on);
   border-color: var(--accent-signal);
 }
 .choice-card-proto:has(.choice-card-native:checked) .choice-card-custom-indicator .switch-thumb {

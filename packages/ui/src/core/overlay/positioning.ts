@@ -1,5 +1,6 @@
 import { autoUpdate, computePosition, flip, offset, platform, shift, size } from '@floating-ui/dom';
 import type { Placement } from '@floating-ui/dom';
+import { isRTL as isElementRTL, reportErrorSafe } from '../dom.js';
 import {
   composedAncestors,
   elementStyle,
@@ -101,7 +102,7 @@ export function positionOverlay({
   let lastResolvedSide: Side | undefined;
   let lastResolvedAlign: Align | undefined;
 
-  const isRTL = (): boolean => view.getComputedStyle(anchor).direction === 'rtl';
+  const isRTL = (): boolean => isElementRTL(anchor);
   const isLive = (): boolean =>
     active &&
     liveViewOf(document) === view &&
@@ -195,7 +196,7 @@ export function positionOverlay({
       },
       (error: unknown) => {
         if (valid()) {
-          view.reportError(error);
+          reportErrorSafe(view, error);
         }
       },
     );
@@ -210,7 +211,6 @@ export function positionOverlay({
   for (const ancestor of composedAncestors(anchor)) {
     direction.observe(ancestor, { attributes: true, attributeFilter: ['dir'] });
   }
-
   const cleanup = (): void => {
     if (!active) {
       return;

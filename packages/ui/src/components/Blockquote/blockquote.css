@@ -28,9 +28,9 @@
     position: absolute;
     inset-block: var(--space-8);
     inset-inline-start: 0;
-    border-inline-start: var(--blockquote-rail-width) var(--blockquote-rail-style)
+    border-inline-start: var(--_blockquote-rail-width) var(--_blockquote-rail-style)
       var(--_quote-rail);
-    border-radius: var(--blockquote-rail-radius);
+    border-radius: var(--_blockquote-rail-radius);
     pointer-events: none;
   }
   .unica-blockquote[data-unica-blockquote-size='s'] {
@@ -47,65 +47,65 @@
     font-size: var(--text-size-body-l);
     line-height: var(--text-size-body-l-lh);
   }
-  .unica-blockquote[data-unica-blockquote-tone='info'] {
+  .unica-blockquote[data-unica-blockquote-status='info'] {
     --_quote-rail: var(--status-info-signal);
     --_quote-glyph: var(--status-info-soft-fg);
   }
-  .unica-blockquote[data-unica-blockquote-tone='success'] {
+  .unica-blockquote[data-unica-blockquote-status='success'] {
     --_quote-rail: var(--status-success-signal);
     --_quote-glyph: var(--status-success-soft-fg);
   }
-  .unica-blockquote[data-unica-blockquote-tone='warning'] {
+  .unica-blockquote[data-unica-blockquote-status='warning'] {
     --_quote-rail: var(--status-warning-signal);
     --_quote-glyph: var(--status-warning-soft-fg);
   }
-  .unica-blockquote[data-unica-blockquote-tone='danger'] {
+  .unica-blockquote[data-unica-blockquote-status='danger'] {
     --_quote-rail: var(--status-danger-signal);
     --_quote-glyph: var(--status-danger-soft-fg);
   }
-  .unica-blockquote__body {
+  .unica-blockquote-body {
     display: flex;
     align-items: flex-start;
     gap: var(--space-12);
     min-inline-size: 0;
   }
-  .unica-blockquote__body > blockquote {
+  .unica-blockquote-body > blockquote {
     flex: 1;
     min-inline-size: 0;
     margin: 0;
   }
-  .unica-blockquote__body > blockquote > * {
+  .unica-blockquote-body > blockquote > * {
     margin-block: 0;
   }
-  .unica-blockquote__body > blockquote > * + * {
+  .unica-blockquote-body > blockquote > * + * {
     margin-block-start: var(--space-12);
   }
-  .unica-blockquote__body > blockquote > :is(ul, ol) {
+  .unica-blockquote-body > blockquote > :is(ul, ol) {
     padding-inline-start: var(--space-24);
   }
-  .unica-blockquote__body li + li {
+  .unica-blockquote-body li + li {
     margin-block-start: var(--space-4);
   }
-  .unica-blockquote__glyph {
+  .unica-blockquote-glyph {
     display: inline-flex;
     flex: none;
     padding-block-start: calc((1lh - var(--_quote-icon)) / 2);
     color: var(--_quote-glyph);
   }
   /* Null glyphs render an empty slot. Keep it out of the layout and caption offsets. */
-  .unica-blockquote__glyph:empty,
+  .unica-blockquote-glyph:empty,
   .unica-blockquote > figcaption:empty {
     display: none;
   }
-  .unica-blockquote__glyph--end {
+  .unica-blockquote-glyph-end {
     align-self: flex-end;
     padding-block-start: 0;
     padding-block-end: calc((1lh - var(--_quote-icon)) / 2);
   }
-  .unica-blockquote:has(> .unica-blockquote__body > .unica-blockquote__glyph--start:not(:empty)) {
+  .unica-blockquote:has(> .unica-blockquote-body > .unica-blockquote-glyph-start:not(:empty)) {
     --_quote-leading: calc(var(--_quote-icon) + var(--space-12));
   }
-  .unica-blockquote:has(> .unica-blockquote__body > .unica-blockquote__glyph--end:not(:empty)) {
+  .unica-blockquote:has(> .unica-blockquote-body > .unica-blockquote-glyph-end:not(:empty)) {
     --_quote-trailing: calc(var(--_quote-icon) + var(--space-12));
   }
   .unica-blockquote > figcaption {
@@ -128,23 +128,23 @@
   }
   /* Move optional marks out of the text measure when the quote itself is narrow. */
   @container unica-quote (inline-size <= 20rem) {
-    .unica-blockquote__body {
+    .unica-blockquote-body {
       display: grid;
       grid-template-columns: minmax(0, 1fr);
       gap: var(--space-8);
     }
-    .unica-blockquote__glyph {
+    .unica-blockquote-glyph {
       padding-block: 0;
     }
-    .unica-blockquote__glyph--end {
+    .unica-blockquote-glyph-end {
       justify-self: end;
     }
     .unica-blockquote > figcaption {
       margin-inline: 0;
     }
   }
-  .unica-blockquote[hidden],
-  .unica-blockquote:has(> .unica-blockquote__body > blockquote:empty) {
+  .unica-blockquote[hidden]:not([hidden='until-found' i]),
+  .unica-blockquote:has(> .unica-blockquote-body > blockquote:empty) {
     display: none;
   }
   @media (forced-colors: active) {
@@ -155,7 +155,7 @@
       border-color: CanvasText;
     }
     .unica-blockquote > figcaption,
-    .unica-blockquote__glyph {
+    .unica-blockquote-glyph {
       color: CanvasText;
     }
   }

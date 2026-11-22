@@ -1,24 +1,14 @@
 import { createElement } from 'react';
-import type { ComponentPropsWithRef, ReactElement } from 'react';
+import type { ReactElement } from 'react';
+import { cx } from '../../core/cx.js';
 import { typographyPresentation } from '../../internal/typography.js';
-import type { TypographyProps } from '../../internal/typography.js';
 import '../../internal/typography.css';
+import type { HeadingTag, TitleProps, TitleSize } from './types.js';
 import './title.css';
 
-export type HeadingTag = 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6';
-export type TitleSize =
-  | 'display-l'
-  | 'display-m'
-  | 'display-s'
-  | 'heading-xl'
-  | 'heading-l'
-  | 'heading-m'
-  | 'heading-s'
-  | 'body-m';
-export type TitleWeight = 'medium' | 'semibold' | 'bold';
-export type TitleTextWrap = 'wrap' | 'nowrap' | 'pretty' | 'balance';
+export type { HeadingTag, TitleProps, TitleSize, TitleTextWrap, TitleWeight } from './types.js';
 
-const headingSizes: Record<HeadingTag, TitleSize> = {
+const headingSizes: Readonly<Record<HeadingTag, TitleSize>> = {
   h1: 'display-s',
   h2: 'heading-xl',
   h3: 'heading-l',
@@ -27,14 +17,10 @@ const headingSizes: Record<HeadingTag, TitleSize> = {
   h6: 'body-m',
 };
 
-export interface TitleProps
-  extends Omit<ComponentPropsWithRef<'h1'>, keyof TypographyProps>, TypographyProps {
-  readonly as?: HeadingTag | undefined;
-  readonly size?: TitleSize | undefined;
-  readonly weight?: TitleWeight | undefined;
-  readonly textWrap?: TitleTextWrap | undefined;
-}
-
+/**
+ * Semantic heading (`h1`–`h6`) with display/heading scale tokens, logical alignment,
+ * and `textWrap` control (`truncate`/`lineClamp` take precedence over `textWrap`).
+ */
 export function Title({
   as = 'h1',
   size = headingSizes[as],
@@ -60,7 +46,7 @@ export function Title({
   return createElement(as, {
     ...nativeProps,
     ...presentation,
-    className: className ? `unica-title ${className}` : 'unica-title',
+    className: cx('unica-title', className),
     'data-unica-title-size': size,
     'data-unica-title-wrap': presentation['data-unica-type-overflow'] ? undefined : textWrap,
   });

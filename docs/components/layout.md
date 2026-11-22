@@ -1,17 +1,17 @@
 # Layout
 
-Use `Box`, `Flex`, `Stack`, `Grid`, `GridItem`, and `Container` to compose structural layout with Unica's spacing scale. Import `@docouno/unica/styles.css` once in your browser entry.
+Use `Box`, `Flex`, `Stack`, `Grid`, `GridItem`, `Container`, and `VisuallyHidden` to compose structural layout with Unica's numeric spacing scale. Import `@docouno/unica/styles.css` once in your browser entry.
 
 ```tsx
 import { Box, Container, Grid, GridItem, Stack } from '@docouno/unica';
 
 export function OverviewPage() {
   return (
-    <Box as="main" aria-labelledby="overview-title" paddingBlock={{ mobile: 'm', desktop: 'xl' }}>
+    <Box as="main" aria-labelledby="overview-title" paddingBlock={{ mobile: 16, desktop: 32 }}>
       <Container size="l">
-        <Stack gap="m">
+        <Stack gap={16}>
           <h1 id="overview-title">Overview</h1>
-          <Grid columns={{ mobile: 1, tablet: 2, desktop: 3 }} gap="m">
+          <Grid columns={{ mobile: 1, tablet: 2, desktop: 3 }} gap={16}>
             <GridItem span={{ mobile: 1, desktop: 2 }}>Activity</GridItem>
             <GridItem>Upcoming events</GridItem>
           </Grid>
@@ -46,11 +46,13 @@ const markup = renderToString(<OverviewPage />);
 
 Place the markup in the app root on the server. Serve the built stylesheet for `@docouno/unica/styles.css` and link its asset URL in the HTML head so the first paint includes layout. Call `hydrateRoot(root, <OverviewPage />)` with the same props on the client.
 
-All spacing props use `0 | 'xs' | 's' | 'm' | 'l' | 'xl'` for 0, 4, 8, 16, 24, and 32px in the default themes.
+All spacing props accept the numeric `Spacing` union `0 | 2 | 4 | 8 | 12 | 16 | 24 | 32 | 48 | 64`, mapping directly to `--space-0` through `--space-64` (migrating earlier string aliases: `'xs' → 4`, `'s' → 8`, `'m' → 16`, `'l' → 24`, `'xl' → 32`).
 
 ## Native roots
 
-All six components render one native root and forward its normal HTML props, events, `className`, `style`, and React 19 `ref`. `Box` defaults to `div` and accepts the static tag choices `div`, `span`, `section`, `article`, `aside`, `main`, `header`, `footer`, and `nav`. The other five render a `div`.
+All layout components render one native root and forward its normal HTML props, events, `className`, `style`, and React 19 `ref`. `Box` defaults to `div` and accepts the static tag choices `div`, `span`, `section`, `article`, `aside`, `main`, `header`, `footer`, and `nav`. `VisuallyHidden` defaults to `span` and also accepts `div`. The remaining layout primitives render a `div`.
+
+`Box`, `Flex`, `Stack`, `Grid`, and `GridItem` apply `min-inline-size: 0` at zero specificity so truncated text and nested flex/grid tracks shrink cleanly inside narrow parents without overflowing.
 
 The components leave DOM reading order, keyboard focus order, and descendant form participation to HTML. Name a landmark where appropriate. Keep visual reordering from obscuring the order in which a keyboard or screen reader user encounters content. Use the native boolean `hidden` prop to collapse a root and its descendants.
 
@@ -72,7 +74,7 @@ Use ordinary CSS classes or inline styles to adapt the root. The library's displ
 | `paddingInline`, `paddingBlock`, `marginInline`, `marginBlock` | Responsive spacing for the named logical axis | Group value |
 | `paddingInlineStart`, `paddingInlineEnd`, `paddingBlockStart`, `paddingBlockEnd`, and the matching `margin*` props | Responsive spacing for the named logical side | Axis or group value |
 
-For each logical side, its own active value takes precedence over the axis and then the group. For example, `padding="m" paddingInline="s" paddingInlineStart={0}` gives 16px along the block axis, 8px at inline-end, and 0 at inline-start. Inline-start is on the right in RTL.
+For each logical side, its own active value takes precedence over the axis and then the group. For example, `padding={16} paddingInline={8} paddingInlineStart={0}` gives 16px along the block axis, 8px at inline-end, and 0 at inline-start. Inline-start is on the right in RTL.
 
 ## Flex and Stack
 
@@ -90,10 +92,10 @@ For each logical side, its own active value takes precedence over the axis and t
 
 `Grid` takes responsive `columns` from 1 through 12 and responsive `gap` (default 0). Each column is an equal-width track that can shrink to zero. `flow` sets native auto-placement to `row` (default) or `column`.
 
-Without an area map, `Grid` defaults to one column. An optional `areas` array describes a fixed map, one string per row. A dot marks an empty cell. Named cells must form rectangles. All rows must have the same width, and any supplied column counts must match that width across breakpoints. The map sets the default column count.
+Without an area map, `Grid` defaults to one column. An optional `areas` array describes a fixed map, one string per row. A dot marks an empty cell. Named cells must form rectangles. All rows must have the same width, and any supplied column counts must match that width across breakpoints. The map sets the default column count. For nonrectangular areas and missing or invalid `GridItem` area names, development builds report the first example of each problem.
 
 ```tsx
-<Grid areas={['nav body body', 'nav foot .']} gap="s">
+<Grid areas={['nav body body', 'nav foot .']} gap={8}>
   <GridItem area="nav">Navigation</GridItem>
   <GridItem area="body">Updates</GridItem>
   <GridItem area="foot">More information</GridItem>
@@ -106,8 +108,19 @@ Auto-placed `GridItem`s occupy one column by default. Use responsive `span` (1 t
 
 | Prop | Values | Default |
 | --- | --- | --- |
-| `size` | Responsive `s` (720px), `m` (960px), `l` (1280px) | `m` |
-| `gutter` | Responsive spacing applied to both inline sides | `m` |
+| `size` | Responsive `s` (`var(--container-s)`, `720px`), `m` (`var(--container-m)`, `960px`), `l` (`var(--container-l)`, `1280px`) | `m` |
+| `gutter` | Responsive `Spacing` applied to both inline sides | `16` (`var(--space-16)`) |
 | `centered` | Boolean | `true` |
 
-The container fills the available inline width up to its size limit, including both gutters. Gutters shrink equally if there is less room than their combined width. Set `centered={false}` to align it to the parent's inline-start edge.
+The container fills the available inline width up to its size token (`--container-s`, `--container-m`, or `--container-l`), including both gutters. Gutters shrink equally if there is less room than their combined width. Set `centered={false}` to set `data-unica-container-align="start"` and align it to the parent's inline-start edge.
+
+## VisuallyHidden
+
+`VisuallyHidden` hides content visually while keeping it accessible to screen readers via `.unica-visually-hidden`.
+
+| Prop | Values | Default |
+| --- | --- | --- |
+| `as` | `'span' \| 'div'` | `'span'` |
+| `ref` | `Ref<HTMLSpanElement>` (default) or `Ref<HTMLDivElement>` (`as="div"`) | — |
+
+In React Server Components applications, import the `VisuallyHidden` runtime component from a `'use client'` module; `VisuallyHiddenProps` is exported from both the main and `react-server` entry points.

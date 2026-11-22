@@ -13,6 +13,7 @@ import {
   writeTextareaValue,
 } from '../../src/core/forms/carriers.js';
 import { useFormValue } from '../../src/core/forms/useFormValue.js';
+import { registerOverlay } from '../../src/core/overlay/runtime.js';
 import { useFixtureSelect } from './form-fixture-helpers.js';
 
 function AuthorityFixture(): JSX.Element {
@@ -98,6 +99,7 @@ function AuthorityFixture(): JSX.Element {
         <button type="reset">Reset second</button>
       </form>
       <RadioFixture key={String(radioLocal)} local={radioLocal} record={record} />
+      <FieldsetLegendFixture />
       <LiveTextFixture />
       <ShadowResetHost />
       {visible && (
@@ -113,6 +115,37 @@ function AuthorityFixture(): JSX.Element {
       )}
       <button ref={trigger} type="button" onClick={() => local.propose('b')}>
         Change local to B
+      </button>
+      <button
+        type="button"
+        onClick={(event) => {
+          const button = event.currentTarget;
+          const host = document.body.appendChild(document.createElement('div'));
+          const dialog = host
+            .attachShadow({ mode: 'open' })
+            .appendChild(document.createElement('dialog'));
+          dialog.appendChild(document.createElement('input'));
+          const modal = registerOverlay({ kind: 'modal', element: dialog, onOpenChange() {} });
+          try {
+            button.focus();
+            button.addEventListener(
+              'blur',
+              () => {
+                button.dataset.modalBlur = String(dialog.matches(':modal'));
+                local.propose('b');
+              },
+              { once: true },
+            );
+            modal.setOpen(true);
+            modal.beginExit();
+            local.propose('b');
+          } finally {
+            modal.dispose();
+            host.remove();
+          }
+        }}
+      >
+        Open shadow modal
       </button>
       <output data-testid="local-value">{local.value}</output>
       <FormSelect
@@ -201,6 +234,7 @@ function RadioFixture({ local, record }: RadioFixtureProps): JSX.Element {
   const [value, setValue] = useState('a');
   const [accept, setAccept] = useState(false);
   const [disableA, setDisableA] = useState(false);
+  const [inertB, setInertB] = useState(false);
   const [showA, setShowA] = useState(true);
   const radioChecks = (): boolean[] => [
     radioA.current?.checked ?? false,
@@ -258,6 +292,7 @@ function RadioFixture({ local, record }: RadioFixtureProps): JSX.Element {
           type="radio"
           name="radio"
           value="b"
+          inert={inertB}
           defaultChecked={local ? false : value === 'b'}
           onChange={(event) => radio.propose('b', event.currentTarget)}
         />
@@ -276,10 +311,77 @@ function RadioFixture({ local, record }: RadioFixtureProps): JSX.Element {
       <button type="button" onClick={() => setDisableA(!disableA)}>
         Toggle disable radio A
       </button>
+      <button type="button" onClick={() => setInertB(!inertB)}>
+        Toggle inert radio B
+      </button>
+      <button type="button" onClick={() => radio.propose('b')}>
+        Propose radio B
+      </button>
       <button type="button" onClick={() => setShowA(!showA)}>
         Toggle mount radio A
       </button>
     </form>
+  );
+}
+
+function FieldsetLegendFixture(): JSX.Element {
+  const legendRef = useRef<HTMLInputElement>(null);
+  const bodyRef = useRef<HTMLInputElement>(null);
+  const legendField = useFormValue<string>({
+    defaultValue: 'legend-init',
+    getControl: () => legendRef.current,
+    write: (next, ctx) => {
+      if (legendRef.current) {
+        writeInputValue(legendRef.current, next, {
+          syncDefault: ctx.controlled,
+          force: ctx.force,
+        });
+      }
+    },
+  });
+  const bodyField = useFormValue<string>({
+    defaultValue: 'body-init',
+    getControl: () => bodyRef.current,
+    write: (next, ctx) => {
+      if (bodyRef.current) {
+        writeInputValue(bodyRef.current, next, {
+          syncDefault: ctx.controlled,
+          force: ctx.force,
+        });
+      }
+    },
+  });
+  return (
+    <>
+      <fieldset disabled>
+        <legend>
+          <FormInput
+            ref={legendRef}
+            controlled={false}
+            name="legendInput"
+            aria-label="First legend input"
+            defaultValue={legendField.value}
+            onChange={(event) => legendField.propose(event.currentTarget.value)}
+          />
+        </legend>
+        <FormInput
+          ref={bodyRef}
+          controlled={false}
+          name="fieldsetBodyInput"
+          aria-label="Disabled fieldset body input"
+          defaultValue={bodyField.value}
+          onChange={(event) => bodyField.propose(event.currentTarget.value)}
+        />
+      </fieldset>
+      <button type="button" onClick={() => legendField.propose('legend-next')}>
+        Propose legend input
+      </button>
+      <button type="button" onClick={() => bodyField.propose('body-next')}>
+        Propose fieldset body input
+      </button>
+      <output data-testid="legend-val">{legendField.value}</output>
+      <output data-testid="fieldset-body-val">{bodyField.value}</output>
+    </>
   );
 }
 
