@@ -111,6 +111,7 @@ interface DescriptorCache {
   readonly shadowActiveElement: Getter<Node, Element | null> | undefined;
   readonly docElement: Getter<Document, HTMLElement | null> | undefined;
   readonly docFonts: Getter<Document, FontFaceSet> | undefined;
+  readonly docStyleSheets: Getter<Document, StyleSheetList> | undefined;
   readonly docBody: Getter<Document, HTMLElement | null> | undefined;
   readonly docHasFocus: ZeroArgMethod<Document, boolean> | undefined;
   readonly docCreateElement: OneArgMethod<Document, string, HTMLElement> | undefined;
