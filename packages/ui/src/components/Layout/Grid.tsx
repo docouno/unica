@@ -189,10 +189,7 @@ export function GridItem({ className, style, area, span, ...props }: GridItemPro
       layout['--_grid-item-area-start'] = areaLine(area, 'start');
       layout['--_grid-item-area-end'] = areaLine(area, 'end');
     } else if (devWarningsEnabled()) {
-      warnOnce(
-        'grid-item-invalid-area',
-        `GridItem area "${area}" is not a valid cell name.`,
-      );
+      warnOnce('grid-item-invalid-area', `GridItem area "${area}" is not a valid cell name.`);
     }
   }
   return (
