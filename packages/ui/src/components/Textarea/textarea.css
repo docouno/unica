@@ -1,0 +1,311 @@
+@layer unica.components {
+  .unica-textarea {
+    --_textarea-padding: var(--size-m-padding-x);
+    --_textarea-padding-y: var(--space-12);
+    --_textarea-radius: var(--size-m-radius);
+    --_textarea-font: var(--text-size-body-s);
+    --_textarea-line: var(--text-size-body-s-lh);
+    --_textarea-icon: var(--size-m-icon);
+    --_textarea-gap: var(--size-m-gap);
+    --_textarea-edge: var(--control-border);
+    --_textarea-focus: var(--focus-ring-color);
+    --_textarea-status: var(--fg-secondary);
+    --_textarea-status-inset: var(--_textarea-padding);
+    position: relative;
+    display: block;
+    inline-size: 100%;
+    min-inline-size: 0;
+    border-radius: var(--_textarea-radius);
+    background: var(--control-bg);
+    font-family: var(--font-family-base);
+    font-size: var(--_textarea-font);
+    line-height: var(--_textarea-line);
+  }
+
+  .unica-textarea::before {
+    position: absolute;
+    inset: 0;
+    border: 1px solid var(--_textarea-edge);
+    border-radius: inherit;
+    content: '';
+    pointer-events: none;
+  }
+
+  .unica-textarea[data-unica-textarea-size='s'] {
+    --_textarea-padding: var(--size-s-padding-x);
+    --_textarea-padding-y: var(--space-8);
+    --_textarea-radius: var(--size-s-radius);
+    --_textarea-font: var(--size-s-control-font);
+    --_textarea-icon: var(--size-s-icon);
+    --_textarea-gap: var(--size-s-gap);
+  }
+
+  .unica-textarea[data-unica-textarea-size='l'] {
+    --_textarea-padding: var(--size-l-padding-x);
+    --_textarea-padding-y: var(--space-16);
+    --_textarea-radius: var(--size-l-radius);
+    --_textarea-font: var(--text-size-body-m);
+    --_textarea-line: var(--text-size-body-m-lh);
+    --_textarea-icon: var(--size-l-icon);
+    --_textarea-gap: var(--size-l-gap);
+  }
+
+  .unica-textarea[data-unica-textarea-width='auto'] {
+    inline-size: min(100%, 28rem);
+  }
+
+  .unica-textarea-editor {
+    --_textarea-max-rows: initial;
+    box-sizing: border-box;
+    inline-size: 100%;
+    min-inline-size: 0;
+    block-size: calc(var(--_textarea-rows) * 1lh + 2 * var(--_textarea-padding-y) + 2px);
+    min-block-size: calc(1lh + 2 * var(--_textarea-padding-y) + 2px);
+    padding-block: var(--_textarea-padding-y);
+    padding-inline: var(--_textarea-padding)
+      calc(var(--_textarea-status-inset) + var(--_textarea-icon) + var(--_textarea-gap));
+    margin: 0;
+    border: 1px solid transparent;
+    border-radius: var(--_textarea-radius);
+    outline: 0;
+    background: transparent;
+    color: var(--fg-primary);
+    font: inherit;
+    text-align: start;
+    overflow: auto;
+    overflow-wrap: anywhere;
+    scrollbar-gutter: auto;
+    resize: vertical;
+    cursor: text;
+  }
+
+  .unica-textarea-editor:where(:not([hidden])) {
+    display: block;
+  }
+
+  /* Unwrapped lines keep the entire viewport available for text. */
+  .unica-textarea-editor[wrap='off' i] {
+    padding-inline-end: var(--_textarea-padding);
+  }
+
+  @supports selector(::-webkit-resizer) {
+    @media (pointer: fine) and (forced-colors: none), (pointer: none) and (forced-colors: none) {
+      .unica-textarea-editor::-webkit-resizer {
+        --_textarea-resizer-angle: calc(180deg - 45deg * var(--_dir-mirror, 1));
+        --_textarea-resizer-edge: var(--_if-ltr, right) var(--_if-rtl, left);
+        background:
+          linear-gradient(
+              var(--_textarea-resizer-angle),
+              transparent 40%,
+              var(--_textarea-edge) 40% 56%,
+              transparent 56%
+            )
+            var(--_textarea-resizer-edge) 2px bottom 2px / 6px 6px no-repeat,
+          linear-gradient(
+              var(--_textarea-resizer-angle),
+              transparent 40%,
+              var(--_textarea-edge) 40% 72%,
+              transparent 72%
+            )
+            var(--_textarea-resizer-edge) 2px bottom 2px / 3px 3px no-repeat;
+      }
+    }
+  }
+
+  .unica-textarea-editor[data-unica-textarea-fixed] {
+    resize: none;
+  }
+
+  .unica-textarea-editor[data-unica-textarea-autosize] {
+    min-block-size: calc(var(--_textarea-rows) * 1lh + 2 * var(--_textarea-padding-y) + 2px);
+  }
+
+  @supports (field-sizing: content) {
+    .unica-textarea-editor[data-unica-textarea-autosize] {
+      field-sizing: content;
+      block-size: auto;
+      /* With no cap the unresolved row count invalidates this declaration. */
+      max-block-size: calc(var(--_textarea-max-rows) * 1lh + 2 * var(--_textarea-padding-y) + 2px);
+    }
+  }
+
+  .unica-textarea[data-unica-textarea-variant='ghost'] {
+    background: transparent;
+  }
+
+  .unica-textarea[data-unica-textarea-variant='ghost']::before {
+    border-color: transparent;
+  }
+
+  /* Ghost keeps a persistent baseline for inline editing. */
+  .unica-textarea[data-unica-textarea-variant='ghost']::after {
+    position: absolute;
+    inset-inline: 0;
+    inset-block-end: 0;
+    border-block-end: 1px solid var(--_textarea-edge);
+    content: '';
+    pointer-events: none;
+  }
+
+  .unica-textarea[data-unica-textarea-status='neutral']:hover:not(
+      :has(> .unica-textarea-editor:disabled, > .unica-textarea-editor[readonly])
+    ) {
+    --_textarea-edge: var(--control-border-hover);
+  }
+
+  .unica-textarea[data-unica-textarea-status='neutral']:has(
+      .unica-textarea-editor:focus:not(:disabled)
+    ) {
+    --_textarea-edge: var(--control-border-focus);
+  }
+
+  .unica-textarea[data-unica-textarea-status='info'] {
+    --_textarea-edge: var(--status-info-border);
+    --_textarea-focus: var(--status-info-signal);
+    --_textarea-status: var(--status-info-soft-fg);
+  }
+
+  .unica-textarea[data-unica-textarea-status='success'] {
+    --_textarea-edge: var(--status-success-border);
+    --_textarea-focus: var(--status-success-signal);
+    --_textarea-status: var(--status-success-soft-fg);
+  }
+
+  .unica-textarea[data-unica-textarea-status='warning'] {
+    --_textarea-edge: var(--status-warning-border);
+    --_textarea-focus: var(--status-warning-signal);
+    --_textarea-status: var(--status-warning-soft-fg);
+  }
+
+  .unica-textarea[data-unica-textarea-status='danger'] {
+    --_textarea-edge: var(--status-danger-border);
+    --_textarea-focus: var(--status-danger-signal);
+    --_textarea-status: var(--status-danger-soft-fg);
+  }
+
+  .unica-textarea:has(
+    .unica-textarea-editor:focus:where(:not([data-unica-textarea-focus-origin='pointer']))
+  ) {
+    outline: 2px solid var(--_textarea-focus);
+    outline-offset: 2px;
+  }
+
+  .unica-textarea-status {
+    position: absolute;
+    display: flex;
+    inset-inline-end: calc(1px + var(--_textarea-status-inset));
+    inset-block-start: calc(1px + var(--_textarea-padding-y) + (1lh - var(--_textarea-icon)) / 2);
+    inline-size: var(--_textarea-icon);
+    block-size: var(--_textarea-icon);
+    color: var(--_textarea-status);
+    pointer-events: none;
+  }
+
+  .unica-textarea:has(> .unica-textarea-editor:is([dir='rtl' i], :dir(rtl)))
+    .unica-textarea-status {
+    direction: rtl;
+  }
+
+  .unica-textarea:has(> .unica-textarea-editor:is([dir='ltr' i], :dir(ltr)))
+    .unica-textarea-status {
+    direction: ltr;
+  }
+
+  .unica-textarea-editor::placeholder {
+    color: var(--fg-muted);
+    opacity: 1;
+  }
+
+  .unica-textarea-editor::selection {
+    background: var(--accent-soft-bg);
+    color: var(--accent-soft-fg);
+  }
+
+  .unica-textarea:has(> .unica-textarea-editor:disabled) {
+    --_textarea-edge: var(--border-subtle);
+    background: var(--bg-surface-subtle);
+    outline: none;
+  }
+
+  .unica-textarea[data-unica-textarea-variant='ghost']:has(> .unica-textarea-editor:disabled) {
+    background: transparent;
+  }
+
+  .unica-textarea-editor:disabled {
+    color: var(--fg-disabled);
+    -webkit-text-fill-color: var(--fg-disabled);
+    opacity: 1;
+    cursor: not-allowed;
+    resize: none;
+  }
+
+  .unica-textarea-editor:disabled::placeholder {
+    color: var(--fg-disabled);
+  }
+
+  .unica-textarea:has(> .unica-textarea-editor:disabled) .unica-textarea-status {
+    display: none;
+  }
+
+  .unica-textarea:has(> .unica-textarea-editor[hidden]:not([hidden='until-found' i])) {
+    display: none;
+  }
+
+  @media (forced-colors: active) {
+    .unica-textarea {
+      --_textarea-status-inset: max(
+        var(--_textarea-padding),
+        calc(var(--space-16) + var(--space-4))
+      );
+      background: Canvas;
+    }
+
+    .unica-textarea::before {
+      border-color: ButtonText;
+    }
+
+    .unica-textarea-editor {
+      color: CanvasText;
+    }
+
+    .unica-textarea[data-unica-textarea-variant='ghost']::after {
+      border-color: ButtonText;
+    }
+
+    .unica-textarea:has(> .unica-textarea-editor:focus) {
+      outline: 2px solid Highlight;
+      outline-offset: 2px;
+    }
+
+    .unica-textarea-editor:disabled {
+      -webkit-text-fill-color: GrayText;
+    }
+
+    .unica-textarea:has(> .unica-textarea-editor:disabled)::before,
+    .unica-textarea:has(> .unica-textarea-editor:disabled)::after {
+      border-color: GrayText;
+    }
+
+    .unica-textarea[data-unica-textarea-variant='ghost']:has(
+        .unica-textarea-editor:disabled
+      )::before {
+      border-color: transparent;
+    }
+  }
+  /* Leave fragment reveal to the editor and hide the frame while its contents are hidden. */
+  .unica-textarea:has(> .unica-textarea-editor[hidden='until-found' i]) {
+    background: transparent;
+    outline: none;
+  }
+
+  .unica-textarea:has(> .unica-textarea-editor[hidden='until-found' i])::before,
+  .unica-textarea:has(> .unica-textarea-editor[hidden='until-found' i])::after,
+  .unica-textarea:has(> .unica-textarea-editor[hidden='until-found' i]) > .unica-textarea-status {
+    display: none;
+  }
+
+  .unica-textarea-editor[hidden='until-found' i] {
+    overflow: hidden;
+    resize: none;
+  }
+}

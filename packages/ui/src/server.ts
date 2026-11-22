@@ -55,6 +55,7 @@ export type {
   SpinnerTone,
   StackProps,
   TextAlign,
+  TextareaProps,
   TextColor,
   TextProps,
   TextSize,

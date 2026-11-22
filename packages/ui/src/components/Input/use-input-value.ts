@@ -1,8 +1,7 @@
-import { useRef } from 'react';
 import type { ChangeEvent, FocusEvent, CompositionEvent, RefObject } from 'react';
-import { getDefaultView, getOwnerDocument } from '../../core/dom.js';
 import { writeInputValue } from '../../core/forms/carriers.js';
 import { useFormValue } from '../../core/forms/useFormValue.js';
+import { useNativeComposition } from '../../core/forms/useNativeComposition.js';
 import { useIsoLayoutEffect } from '../../core/useIsoLayoutEffect.js';
 import type { InputProps } from './types.js';
 
@@ -40,16 +39,8 @@ export function useInputValue({
   onCompositionEnd,
   onBlur,
 }: InputValueOptions): InputValueEvents {
-  const composition = useRef<HTMLInputElement | null>(null);
-  const finishTimer = useRef<(() => void) | undefined>(undefined);
-
-  function cancelComposition(): void {
-    finishTimer.current?.();
-    finishTimer.current = undefined;
-    composition.current = null;
-  }
-
-  useIsoLayoutEffect(() => cancelComposition, []);
+  const composition = useNativeComposition(input);
+  const { isActive } = composition;
 
   const form = useFormValue({
     value,
@@ -58,13 +49,13 @@ export function useInputValue({
     commitMode: 'deferred',
     getControl: () => input.current,
     readInitialValue: (control) => (control as HTMLInputElement).value,
-    beforeReset: cancelComposition,
+    beforeReset: composition.cancel,
     onReset() {
       if (!form.controlled && input.current) {
         form.adopt(input.current.value);
       }
     },
-    shouldWrite: () => input.current !== composition.current,
+    shouldWrite: () => !isActive(),
     writeDeps: [type, multiple],
     write(next, { controlled, force }) {
       if (input.current) {
@@ -75,54 +66,30 @@ export function useInputValue({
   const { adopt, controlled } = form;
 
   useIsoLayoutEffect(() => {
-    if (!controlled && input.current && !composition.current) {
+    if (!controlled && input.current && !isActive()) {
       // Changing type or multiple can sanitize an existing local edit.
       adopt(input.current.value);
     }
-  }, [adopt, controlled, input, multiple, type]);
-
-  function finishComposition(node: HTMLInputElement): void {
-    if (composition.current !== node || finishTimer.current) {
-      return;
-    }
-    const view = getDefaultView(getOwnerDocument(node));
-    if (!view) {
-      cancelComposition();
-      return;
-    }
-    // Engines differ on whether the final input is before or after compositionend.
-    // Let both the native sequence and callbacks commit before restoring authority.
-    const timer = view.setTimeout(() => {
-      finishTimer.current = undefined;
-      if (composition.current === node) {
-        composition.current = null;
-        if (input.current === node) {
-          form.reconcile();
-        }
-      }
-    }, 0);
-    finishTimer.current = () => view.clearTimeout(timer);
-  }
+  }, [adopt, controlled, input, isActive, multiple, type]);
 
   return {
     controlled,
-    isComposing: () => composition.current !== null,
+    isComposing: isActive,
     handleChange(event) {
       const target = event.currentTarget;
       form.propose(target.value, target);
       onChange?.(event);
     },
     handleCompositionStart(event) {
-      cancelComposition();
-      composition.current = event.currentTarget;
+      composition.start(event.currentTarget);
       onCompositionStart?.(event);
     },
     handleCompositionEnd(event) {
-      finishComposition(event.currentTarget);
+      composition.finish(event.currentTarget, form.reconcile);
       onCompositionEnd?.(event);
     },
     handleBlur(event) {
-      finishComposition(event.currentTarget);
+      composition.finish(event.currentTarget, form.reconcile);
       onBlur?.(event);
     },
   };

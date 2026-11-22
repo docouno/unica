@@ -86,9 +86,6 @@
   padding-block-start: var(--space-16);
   border-block-start: 1px solid color-mix(in srgb, var(--fg-primary) 12%, transparent);
 }
-.dialog-study-form .textarea-shell-proto {
-  inline-size: 100%;
-}
 .dialog-study-stage .dialog-surface {
   container: dialog-surface / inline-size;
 }

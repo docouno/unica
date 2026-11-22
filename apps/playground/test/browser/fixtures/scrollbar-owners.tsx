@@ -1,3 +1,4 @@
+import { Textarea } from '@docouno/unica';
 import type { JSX } from 'react';
 import { CodeBlock } from '../../../src/prototypes/code-block/code-block.proto.js';
 import { MenuRows, MenuSurface } from '../../../src/prototypes/menu/menu.proto.js';
@@ -15,7 +16,6 @@ import {
   TableRow,
   TableScroll,
 } from '../../../src/prototypes/table/table.proto.js';
-import { Textarea } from '../../../src/prototypes/textarea/textarea.proto.js';
 
 const rows = Array.from({ length: 24 }, (_, index) => `Review document ${index + 1}`);
 

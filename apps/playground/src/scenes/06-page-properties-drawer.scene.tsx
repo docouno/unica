@@ -1,3 +1,4 @@
+import { Textarea } from '@docouno/unica';
 import { useId, useState } from 'react';
 import { folioSceneHref } from './folio/folio.routes.js';
 import type { ReactElement } from 'react';
@@ -20,7 +21,6 @@ import { FormField } from '../prototypes/form-field/form-field.proto.js';
 import { Combobox } from '../prototypes/combobox/combobox.proto.js';
 import type { Suggestion } from '../prototypes/combobox/combobox.proto.js';
 import { CheckboxCard, RadioCard } from '../prototypes/choice-card/choice-card.proto.js';
-import { Textarea } from '../prototypes/textarea/textarea.proto.js';
 import {
   Breadcrumb,
   BreadcrumbLink,
@@ -170,7 +170,6 @@ function PropertiesScene(): ReactElement {
                   rows={2}
                   value={draft.scope}
                   onChange={(event) => setDraft({ ...draft, scope: event.currentTarget.value })}
-                  aria-label="Verification scope"
                 />
               </FormField>
               <Combobox
