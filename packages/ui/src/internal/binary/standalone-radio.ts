@@ -145,10 +145,10 @@ export function registerStandaloneRadio(
       remove(entry);
       entry.root = root;
       add(entry);
-      entry.reset?.syncRoots();
     }
     entry.form = form;
     entry.name = name;
+    entry.reset?.syncTargets();
     if (reconcile) {
       // The browser reconciles two HTML radio sets when their name or form owner changes.
       const peers = peersOf(entry);

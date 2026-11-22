@@ -39,12 +39,6 @@
   font-variant-numeric: tabular-nums;
 }
 
-.segment-state-list {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 230px), 1fr));
-  gap: var(--space-24);
-}
-
 .segment-field-label {
   margin: 0;
   color: var(--fg-primary);

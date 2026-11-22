@@ -153,7 +153,7 @@
   gap: 20px;
 }
 
-.folio-preference-row > .segmented-control-proto {
+.folio-color-mode {
   inline-size: fit-content;
 }
 
@@ -279,7 +279,7 @@
     gap: var(--space-16);
   }
 
-  .folio-preference-row > .segmented-control-proto {
+  .folio-color-mode {
     inline-size: 100%;
   }
 

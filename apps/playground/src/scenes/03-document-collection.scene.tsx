@@ -20,7 +20,7 @@ import { Checkbox, Progress, Switch } from '@docouno/unica';
 import { ContextMenu } from '../prototypes/menu/context-menu.proto.js';
 import type { MenuEntry } from '../prototypes/menu/menu.entries.js';
 import { Pagination } from '../prototypes/pagination/pagination.proto.js';
-import { SegmentedControl } from '../prototypes/segmented-control/segmented-control.proto.js';
+import { SegmentedControl } from '@docouno/unica';
 import { Select } from '../prototypes/select/select.proto.js';
 import {
   Table,

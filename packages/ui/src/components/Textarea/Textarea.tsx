@@ -221,7 +221,7 @@ export function Textarea({
   useIsoLayoutEffect(() => {
     const editor = editorRef.current;
     if (editor) {
-      reset.current?.syncRoots();
+      reset.current?.syncTargets();
       syncInvalid(editor, danger);
       if (wasManual.current && !manual) {
         // Dragging writes an inline physical height. Restore the author's current height.

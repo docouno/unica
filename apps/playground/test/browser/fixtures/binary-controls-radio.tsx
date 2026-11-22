@@ -219,9 +219,16 @@ function GeneratedNames(): JSX.Element {
 function ReassociatedRadios(): JSX.Element {
   const [join, setJoin] = useState(false);
   const [version, setVersion] = useState(0);
+  const [firstChanges, setFirstChanges] = useState(0);
   return (
     <form aria-label="Reassociated standalone radios" onSubmit={preventSubmit}>
-      <Radio label="Reassociated first" name="primary" value="first" defaultChecked />
+      <Radio
+        label="Reassociated first"
+        name="primary"
+        value="first"
+        defaultChecked
+        onCheckedChange={() => setFirstChanges((current) => current + 1)}
+      />
       <Radio
         label="Reassociated second"
         name={join ? 'primary' : 'secondary'}
@@ -238,6 +245,7 @@ function ReassociatedRadios(): JSX.Element {
       <button type="button" onClick={() => setVersion((current) => current + 1)}>
         Rerender peer form {version}
       </button>
+      <output data-testid="reassociated-first-changes">{firstChanges}</output>
     </form>
   );
 }

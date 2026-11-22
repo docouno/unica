@@ -145,6 +145,15 @@ export type {
 } from './components/Progress/index.js';
 export { Radio, RadioGroup, RadioIndicator } from './components/Radio/index.js';
 export type { RadioGroupProps, RadioIndicatorProps, RadioProps } from './components/Radio/index.js';
+export { SegmentedControl } from './components/SegmentedControl/index.js';
+export type {
+  SegmentedControlOption,
+  SegmentedControlOrientation,
+  SegmentedControlProps,
+  SegmentedControlSize,
+  SegmentedControlStatus,
+  SegmentedControlWidth,
+} from './components/SegmentedControl/index.js';
 export { Skeleton, SkeletonText } from './components/Skeleton/index.js';
 export type { SkeletonProps, SkeletonTextProps } from './components/Skeleton/index.js';
 export { Switch, SwitchGroup, SwitchIndicator } from './components/Switch/index.js';

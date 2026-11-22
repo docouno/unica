@@ -74,9 +74,6 @@
   padding: 28px;
   gap: 18px;
 }
-.folio-auth-card > .segmented-control-proto {
-  inline-size: 100%;
-}
 .folio-auth-compliance {
   display: flex;
   align-items: center;

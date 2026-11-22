@@ -24,6 +24,7 @@ import type { CollectionNavigationOptions } from './useCollectionNavigation.js';
 export interface RovingFocusOptions extends Omit<CollectionNavigationOptions, 'activeKey'> {
   readonly recoveryKey?: string | null | undefined;
   readonly onNavigate?: ((key: string) => void) | undefined;
+  readonly focusOptions?: FocusOptions | undefined;
 }
 
 export interface RovingItemUserProps<T extends HTMLElement> {
@@ -39,6 +40,7 @@ export interface RovingItemProps<T extends HTMLElement> {
 
 export interface RovingFocus<T extends HTMLElement> {
   tabStop: string | null;
+  focusedKey: string | null;
   getItemProps: (key: string, userProps?: RovingItemUserProps<T>) => RovingItemProps<T>;
   onKeyDown: (event: KeyboardEvent<HTMLElement>) => void;
   onBlur: (event: FocusEvent<HTMLElement>) => void;
@@ -122,7 +124,7 @@ export function useRovingFocus<T extends HTMLElement>(options: RovingFocusOption
       const root = getRootNodeSafe(target);
       navigating.current = true;
       try {
-        target.focus();
+        target.focus(optionsRef.current.focusOptions);
         if (acceptedFocus(target, root, doc)) {
           optionsRef.current.onNavigate?.(key);
         }
@@ -206,7 +208,7 @@ export function useRovingFocus<T extends HTMLElement>(options: RovingFocusOption
       !origin.blurredWhileLive &&
       canRecoverFocus(origin.root, doc, origin.node)
     ) {
-      maps.nodes.get(target)?.focus();
+      maps.nodes.get(target)?.focus(options.focusOptions);
     }
     if (
       focused.current === origin &&
@@ -385,6 +387,7 @@ export function useRovingFocus<T extends HTMLElement>(options: RovingFocusOption
 
   return {
     tabStop,
+    focusedKey: current?.key ?? null,
     getItemProps,
     onKeyDown,
     onBlur,

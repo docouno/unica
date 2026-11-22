@@ -1,11 +1,20 @@
-import { Badge, Card, Checkbox, Divider, Input, Link, Text, Title } from '@docouno/unica';
+import {
+  Badge,
+  Card,
+  Checkbox,
+  Divider,
+  Input,
+  Link,
+  SegmentedControl,
+  Text,
+  Title,
+} from '@docouno/unica';
 import { useId, useState } from 'react';
 import type { ReactElement } from 'react';
 import { GithubLogoIcon, KeyIcon } from '@phosphor-icons/react';
 import { BrandMark } from '../prototypes/app-shell/app-shell.proto.js';
 import { Button } from '@docouno/unica';
 import { FormField } from '../prototypes/form-field/form-field.proto.js';
-import { SegmentedControl } from '../prototypes/segmented-control/segmented-control.proto.js';
 import { defineScene } from '../workbench/types.js';
 import { FolioScene } from './folio/folio.shared.js';
 
@@ -54,6 +63,7 @@ function SignInScene(): ReactElement {
           </div>
           <SegmentedControl
             aria-label="Account access mode"
+            width="full"
             size="s"
             value={mode}
             onValueChange={setMode}
