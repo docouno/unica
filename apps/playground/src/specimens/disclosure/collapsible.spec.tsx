@@ -1,10 +1,11 @@
+import { FormField } from '../../prototypes/form-field/form-field.proto.js';
 import { useId } from 'react';
 import type { ReactElement } from 'react';
 import { defineComponent } from '../../workbench/types.js';
 import { Checkbox } from '../../prototypes/binary-controls/binary-controls.proto.js';
 import { Button } from '../../prototypes/button/button.proto.js';
 import { Card } from '../../prototypes/card/card.proto.js';
-import { Input } from '../../prototypes/input/input.proto.js';
+import { Input, Text } from '@docouno/unica';
 import {
   PopoverBody,
   PopoverContent,
@@ -12,7 +13,6 @@ import {
   PopoverTitle,
 } from '../../prototypes/popover/popover.proto.js';
 import { Table, TableScroll } from '../../prototypes/table/table.proto.js';
-import { Text } from '@docouno/unica';
 import {
   Collapsible,
   CollapsibleContent,
@@ -132,6 +132,7 @@ function FlushContent(): ReactElement {
 }
 
 function DeliveryDetails(): ReactElement {
+  const id = useId();
   return (
     <Card className="disclosure-study-card">
       <Text size="body-s" color="secondary">
@@ -145,12 +146,9 @@ function DeliveryDetails(): ReactElement {
         </CollapsibleTrigger>
         <CollapsibleContent padded={false}>
           <div className="disclosure-study-body">
-            <Input
-              label="Reply-to address"
-              size="s"
-              type="email"
-              defaultValue="reviews@example.com"
-            />
+            <FormField htmlFor={id} label="Reply-to address" size="s">
+              <Input id={id} size="s" type="email" defaultValue="reviews@example.com" />
+            </FormField>
             <CollapsibleTrigger asChild>
               <Button className="disclosure-study-dismiss" variant="ghost" tone="neutral" size="s">
                 Close details
@@ -294,7 +292,8 @@ export default defineComponent({
       code: `<Collapsible defaultOpen>
   <CollapsibleTrigger asChild><Button size="s">Delivery details</Button></CollapsibleTrigger>
   <CollapsibleContent padded={false}>
-    <Input type="email" label="Reply-to address" defaultValue="reviews@example.com" />
+    <label htmlFor={replyId}>Reply-to address</label>
+    <Input id={replyId} type="email" defaultValue="reviews@example.com" />
     <CollapsibleTrigger asChild><Button variant="ghost">Close details</Button></CollapsibleTrigger>
   </CollapsibleContent>
 </Collapsible>`,

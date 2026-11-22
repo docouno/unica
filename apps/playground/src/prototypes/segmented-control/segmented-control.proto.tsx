@@ -11,8 +11,7 @@ import {
 } from 'react';
 import type { HTMLAttributes, ReactElement, ReactNode, Ref } from 'react';
 import { Icon } from '@docouno/unica';
-import type { GlyphSource } from '@docouno/unica';
-import type { ControlSize } from '../input/input.proto.js';
+import type { GlyphSource, ControlSize } from '@docouno/unica';
 import './segmented-control.css';
 
 export interface SegmentItem {

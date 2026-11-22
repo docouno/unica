@@ -1,10 +1,9 @@
 import { CaretDownGlyph, LockGlyph, SearchGlyph, fieldStatusGlyphs } from '../control-glyphs.js';
 import { useId, useLayoutEffect, useRef, useState } from 'react';
 import type { ComponentPropsWithRef, ReactElement, ReactNode } from 'react';
-import { FormField, Input } from '../input/input.proto.js';
-import type { ControlSize, FieldStatus, FieldVariant } from '../input/input.proto.js';
-import { Icon, Spinner } from '@docouno/unica';
-import type { GlyphSource } from '@docouno/unica';
+import { Input, Icon, Spinner } from '@docouno/unica';
+import { FormField } from '../form-field/form-field.proto.js';
+import type { ControlSize, FieldStatus, FieldVariant, GlyphSource } from '@docouno/unica';
 import { PopoverContent } from '../popover/popover.proto.js';
 import { Button } from '../button/button.proto.js';
 import type { PopoverContentProps } from '../popover/popover.proto.js';
@@ -357,7 +356,7 @@ export function Select({
               ref.current = node;
             }
           }}
-          className="input-shell-proto select-trigger-proto"
+          className="select-trigger-proto"
           data-size={size}
           data-variant={variant}
           data-status={effectiveStatus}
@@ -622,11 +621,13 @@ export function Select({
     <FormField
       label={label}
       description={description}
-      message={disabled && status !== 'neutral' ? undefined : message}
+      message={disabled && status !== 'neutral' ? '' : (message ?? '')}
       required={required}
       status={effectiveStatus}
       htmlFor={controlId}
-      messageIcon={false}
+      descriptionId={description ? `${controlId}-description` : undefined}
+      messageId={message ? `${controlId}-message` : undefined}
+      feedbackIcon={false}
       hidden={hidden}
     >
       {content}

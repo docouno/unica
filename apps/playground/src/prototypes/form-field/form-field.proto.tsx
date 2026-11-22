@@ -1,6 +1,6 @@
 import type { HTMLAttributes, ReactElement, ReactNode } from 'react';
 import { CheckCircleIcon, InfoIcon, WarningCircleIcon, WarningIcon } from '@phosphor-icons/react';
-import type { ControlSize, FieldStatus } from '../input/input.proto.js';
+import type { ControlSize, FieldStatus } from '@docouno/unica';
 import './form-field.css';
 
 const feedbackIcons = {
@@ -141,7 +141,9 @@ export function FormField({
 }: FormFieldProps): ReactElement {
   const effectiveStatus = disabled ? 'neutral' : status;
   const hasFeedback =
-    !disabled && ((message !== undefined && message !== null) || effectiveStatus !== 'neutral');
+    !disabled &&
+    message !== '' &&
+    ((message !== undefined && message !== null) || effectiveStatus !== 'neutral');
   return (
     <div
       {...props}

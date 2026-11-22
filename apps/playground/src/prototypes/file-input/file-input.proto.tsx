@@ -9,9 +9,9 @@ import type {
 } from 'react';
 import { Icon, Progress, Spinner } from '@docouno/unica';
 import { Button, IconButton } from '../button/button.proto.js';
-import { FormField } from '../input/input.proto.js';
-import { useInputFocus } from '../input/input-focus.proto.js';
-import type { ControlSize, FieldStatus, FieldVariant } from '../input/input.proto.js';
+import { FormField } from '../form-field/form-field.proto.js';
+import { useControlFocus } from '../control-focus.js';
+import type { ControlSize, FieldStatus, FieldVariant } from '@docouno/unica';
 import { formatFileSize } from './file-input.utils.js';
 import './file-input.css';
 
@@ -78,7 +78,7 @@ export function FileInput({
   const [localDetail, setLocalDetail] = useState('');
   const [dragging, setDragging] = useState(false);
   const generatedId = useId();
-  const focusScope = useInputFocus();
+  const focusScope = useControlFocus();
   const trigger = useRef<HTMLButtonElement>(null);
   const inputId = id ?? generatedId;
   const triggerId = readOnly ? inputId : `${inputId}-picker`;
@@ -119,15 +119,18 @@ export function FileInput({
     <FormField
       label={label && <span id={labelId}>{label}</span>}
       description={description}
-      message={message}
+      message={message ?? ''}
       status={effectiveStatus}
       required={isRequired}
       htmlFor={triggerId}
+      descriptionId={description ? `${triggerId}-description` : undefined}
+      messageId={message ? `${triggerId}-message` : undefined}
       hidden={hidden}
     >
       <span
         ref={focusScope}
-        data-input-focus-scope=""
+        data-preview-focus-scope=""
+        data-native-context-region=""
         data-wb-subject={subject}
         className={`file-input-proto ${className}`}
         style={style}

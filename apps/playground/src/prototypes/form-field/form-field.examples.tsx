@@ -1,4 +1,4 @@
-import { Link } from '@docouno/unica';
+import { Link, Input } from '@docouno/unica';
 import { useId, useRef, useState } from 'react';
 import type { CSSProperties, ReactElement, ReactNode } from 'react';
 import { Button } from '../button/button.proto.js';
@@ -10,8 +10,7 @@ import {
   Switch,
   SwitchGroup,
 } from '../binary-controls/binary-controls.proto.js';
-import { Input } from '../input/input.proto.js';
-import type { ControlSize, FieldStatus, FieldVariant } from '../input/input.proto.js';
+import type { ControlSize, FieldStatus, FieldVariant } from '@docouno/unica';
 import { PopoverContent } from '../popover/popover.proto.js';
 import { CheckboxCard } from '../choice-card/choice-card.proto.js';
 import { Textarea } from '../textarea/textarea.proto.js';
@@ -43,7 +42,6 @@ interface TextFieldProps {
   readonly loading?: boolean;
   readonly placeholder?: string;
   readonly dir?: 'ltr' | 'rtl';
-  readonly previewState?: 'hover' | 'pointer-focus' | 'keyboard-focus';
 }
 
 function TextField({
@@ -141,6 +139,7 @@ export function Layouts(): ReactElement {
         label="Inline reference"
         variant="ghost"
         defaultValue="DS-024"
+        placeholder="e.g. DS-024"
         description="Ghost belongs in an established editing context, such as a details inspector."
       />
     </div>
@@ -450,18 +449,15 @@ export function Availability(): ReactElement {
         message="Reserving address…"
       />
       <div className="ff-example-study">
-        <p className="ff-example-kicker">Pinned focus · same label & support</p>
-        <TextField
-          label="Pointer editing"
-          defaultValue="design-library"
-          previewState="pointer-focus"
-        />
+        <p className="ff-example-kicker">
+          Click to edit or use Tab to compare the keyboard outline
+        </p>
+        <TextField label="Pointer editing" defaultValue="design-library" />
         <TextField
           label="Keyboard editing"
           status="danger"
           message="Use an address without spaces."
           defaultValue="design library"
-          previewState="keyboard-focus"
         />
       </div>
     </div>
@@ -678,11 +674,26 @@ export function Overflow(): ReactElement {
           className="ff-example-pair"
           role="group"
           aria-labelledby={`${id}-label`}
-          aria-describedby={`${id}-description ${id}-message`}
-          aria-invalid="true"
+          aria-describedby={`${id}-description`}
         >
-          <Input type="time" label="Start" defaultValue="09:00" />
-          <Input type="time" label="End" defaultValue="08:30" status="danger" />
+          <FormField label="Start" htmlFor={`${id}-start`}>
+            <input
+              className="ff-example-time"
+              id={`${id}-start`}
+              type="time"
+              defaultValue="09:00"
+            />
+          </FormField>
+          <FormField label="End" htmlFor={`${id}-end`}>
+            <input
+              className="ff-example-time"
+              id={`${id}-end`}
+              type="time"
+              defaultValue="08:30"
+              aria-invalid="true"
+              aria-describedby={`${id}-message`}
+            />
+          </FormField>
         </div>
       </FormField>
       <div className="ff-example-narrow">

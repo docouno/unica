@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import type { HTMLAttributes, KeyboardEvent, ReactElement } from 'react';
 import { CaretLeftIcon, CaretRightIcon } from '@phosphor-icons/react';
-import type { ControlSize } from '../input/input.proto.js';
+import type { ControlSize } from '@docouno/unica';
 import { Tooltip } from '../tooltip/tooltip.proto.js';
 import {
   addDays,

@@ -87,11 +87,6 @@
   font-display: block;
 }
 .file-demo-arabic
-  :is(
-    .file-input-name-proto,
-    .form-field-label-proto,
-    .file-item-name-proto,
-    .file-item-detail-proto
-  ) {
+  :is(.file-input-name-proto, .ff-label, .file-item-name-proto, .file-item-detail-proto) {
   font-family: 'File Demo Arabic', var(--font-family-base);
 }

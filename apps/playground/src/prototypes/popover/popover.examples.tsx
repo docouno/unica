@@ -1,9 +1,9 @@
+import { FormField } from '../form-field/form-field.proto.js';
 import { useEffect, useId, useRef, useState } from 'react';
 import type { ReactElement, ReactNode } from 'react';
 import { CheckIcon, ClockIcon, LinkSimpleIcon, WarningCircleIcon } from '@phosphor-icons/react';
 import { Button } from '../button/button.proto.js';
-import { Input } from '../input/input.proto.js';
-import { Text } from '@docouno/unica';
+import { Input, Text } from '@docouno/unica';
 import {
   Popover,
   PopoverBody,
@@ -155,6 +155,7 @@ export function SizeExamples(): ReactElement {
 }
 
 export function StateExamples(): ReactElement {
+  const id = useId();
   return (
     <div className="popover-demo-stack">
       <Note>
@@ -177,20 +178,36 @@ export function StateExamples(): ReactElement {
         trigger="Settings"
       >
         <PopoverBody>
-          <Input label="Display name" defaultValue="Release notes" />
-          <Input
+          <FormField htmlFor={`${id}-display`} label="Display name">
+            <Input id={`${id}-display`} defaultValue="Release notes" />
+          </FormField>
+          <FormField
+            htmlFor={`${id}-path`}
             label="Page path"
-            dir="ltr"
-            readOnly
-            value="/handbook/release-notes"
+            descriptionId={`${id}-path-hint`}
             description="Read only · You can select and copy this path."
-          />
-          <Input
+          >
+            <Input
+              id={`${id}-path`}
+              dir="ltr"
+              readOnly
+              value="/handbook/release-notes"
+              aria-describedby={`${id}-path-hint`}
+            />
+          </FormField>
+          <FormField
+            htmlFor={`${id}-archive`}
             label="Archive location"
-            disabled
-            value="Workspace archive"
+            descriptionId={`${id}-archive-hint`}
             description="Only workspace owners can change this."
-          />
+          >
+            <Input
+              id={`${id}-archive`}
+              disabled
+              value="Workspace archive"
+              aria-describedby={`${id}-archive-hint`}
+            />
+          </FormField>
         </PopoverBody>
       </PanelExample>
       <div className="popover-demo-disabled">
@@ -320,29 +337,34 @@ export function FormExamples(): ReactElement {
             }}
           >
             <PopoverBody>
-              <Input
-                ref={textRef}
+              <FormField
+                htmlFor={`${id}-text`}
                 label="Text"
-                value={draft.text}
-                readOnly={state === 'saving'}
-                onChange={(event) => setDraft({ ...draft, text: event.target.value })}
+                messageId={`${id}-text-message`}
                 status={state === 'invalid' && !draft.text.trim() ? 'danger' : 'neutral'}
                 message={
                   state === 'invalid' && !draft.text.trim()
                     ? 'Add a label readers can recognize.'
                     : undefined
                 }
-              />
-              <Input
-                ref={inputRef}
+                feedbackIcon={false}
+              >
+                <Input
+                  id={`${id}-text`}
+                  aria-describedby={
+                    state === 'invalid' && !draft.text.trim() ? `${id}-text-message` : undefined
+                  }
+                  ref={textRef}
+                  value={draft.text}
+                  readOnly={state === 'saving'}
+                  onChange={(event) => setDraft({ ...draft, text: event.target.value })}
+                  status={state === 'invalid' && !draft.text.trim() ? 'danger' : 'neutral'}
+                />
+              </FormField>
+              <FormField
+                htmlFor={`${id}-url`}
                 label="Link"
-                type="url"
-                dir="ltr"
-                value={draft.url}
-                readOnly={state === 'saving'}
-                onChange={(event) => {
-                  setDraft({ ...draft, url: event.target.value });
-                }}
+                messageId={`${id}-url-message`}
                 status={
                   state === 'invalid' && !/^https?:\/\/\S+\.\S+$/i.test(draft.url)
                     ? 'danger'
@@ -353,7 +375,30 @@ export function FormExamples(): ReactElement {
                     ? 'Enter a complete web address.'
                     : undefined
                 }
-              />
+                feedbackIcon={false}
+              >
+                <Input
+                  id={`${id}-url`}
+                  aria-describedby={
+                    state === 'invalid' && !/^https?:\/\/\S+\.\S+$/i.test(draft.url)
+                      ? `${id}-url-message`
+                      : undefined
+                  }
+                  ref={inputRef}
+                  type="url"
+                  dir="ltr"
+                  value={draft.url}
+                  readOnly={state === 'saving'}
+                  onChange={(event) => {
+                    setDraft({ ...draft, url: event.target.value });
+                  }}
+                  status={
+                    state === 'invalid' && !/^https?:\/\/\S+\.\S+$/i.test(draft.url)
+                      ? 'danger'
+                      : 'neutral'
+                  }
+                />
+              </FormField>
               {state === 'error' && (
                 <div className="popover-demo-error" role="alert">
                   <WarningCircleIcon size="1em" aria-hidden="true" />

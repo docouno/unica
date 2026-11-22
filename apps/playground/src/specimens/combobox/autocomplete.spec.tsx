@@ -119,17 +119,16 @@ function Roles(): ReactElement {
 function Rows(): ReactElement {
   return (
     <div className="suggestion-study-grid-proto">
-      <Study title="Plain suggestions · keyboard focus">
+      <Study title="Plain suggestions · Tab to edit">
         <Autocomplete
           label="Document title"
           options={titles}
           defaultValue="Release"
           previewOpen
           previewActive="review"
-          previewState="keyboard-focus"
         />
       </Study>
-      <Study title="Grouped commands · pointer focus">
+      <Study title="Grouped commands · Click to edit">
         <Autocomplete
           label="Insert a block"
           options={[blocks[0], blocks[2], blocks[4]]}
@@ -140,7 +139,6 @@ function Rows(): ReactElement {
           defaultValue="/"
           previewOpen
           previewActive="callout"
-          previewState="pointer-focus"
         />
       </Study>
     </div>

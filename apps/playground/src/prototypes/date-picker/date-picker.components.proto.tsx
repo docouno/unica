@@ -1,8 +1,9 @@
 import { useCallback, useId, useLayoutEffect, useRef, useState } from 'react';
 import type { HTMLAttributes, ReactElement, ReactNode, RefObject } from 'react';
 import { CalendarBlankIcon, XIcon } from '@phosphor-icons/react';
-import { Input } from '../input/input.proto.js';
-import type { ControlSize, FieldStatus, FieldVariant, InputProps } from '../input/input.proto.js';
+import { Input } from '@docouno/unica';
+import type { ControlSize, FieldStatus, FieldVariant } from '@docouno/unica';
+import { FormField } from '../form-field/form-field.proto.js';
 import { PopoverContent } from '../popover/popover.proto.js';
 import { Calendar } from './calendar.proto.js';
 import type { CalendarFeedback } from './calendar.proto.js';
@@ -82,22 +83,30 @@ function useDatePanel(
   panel: RefObject<HTMLDivElement | null>;
   trigger: RefObject<HTMLButtonElement | null>;
   field: RefObject<HTMLDivElement | null>;
+  picker: RefObject<HTMLDivElement | null>;
 } {
   const panel = useRef<HTMLDivElement>(null);
   const trigger = useRef<HTMLButtonElement>(null);
   const field = useRef<HTMLDivElement>(null);
+  const picker = useRef<HTMLDivElement>(null);
   useLayoutEffect(() => {
     const element = panel.current;
     const button = trigger.current;
-    const boundary = field.current;
-    if (!open || !element || !button || !boundary || typeof element.showPopover !== 'function') {
+    const anchor = field.current;
+    const boundary = picker.current;
+    if (
+      !open ||
+      !element ||
+      !button ||
+      !anchor ||
+      !boundary ||
+      typeof element.showPopover !== 'function'
+    ) {
       return;
     }
     element.showPopover();
     const position = (): void => {
-      const bounds =
-        boundary.querySelector('.input-shell-proto')?.getBoundingClientRect() ??
-        button.getBoundingClientRect();
+      const bounds = anchor.getBoundingClientRect();
       const size = element.getBoundingClientRect();
       const viewport = window.visualViewport;
       const width = viewport?.width ?? window.innerWidth;
@@ -105,7 +114,7 @@ function useDatePanel(
       const topOffset = viewport?.offsetTop ?? 0;
       const leftOffset = viewport?.offsetLeft ?? 0;
       const start =
-        getComputedStyle(boundary).direction === 'rtl' ? bounds.right - size.width : bounds.left;
+        getComputedStyle(anchor).direction === 'rtl' ? bounds.right - size.width : bounds.left;
       element.style.left = `${Math.max(leftOffset + 8, Math.min(start, leftOffset + width - size.width - 8))}px`;
       const above = Math.max(0, bounds.top - topOffset - 16);
       const below = Math.max(0, height + topOffset - bounds.bottom - 16);
@@ -119,6 +128,7 @@ function useDatePanel(
     position();
     const observer = new ResizeObserver(position);
     observer.observe(element);
+    observer.observe(anchor);
     window.addEventListener('resize', position);
     window.visualViewport?.addEventListener('resize', position);
     window.visualViewport?.addEventListener('scroll', position);
@@ -150,7 +160,7 @@ function useDatePanel(
       }
     };
   }, [open, onClose]);
-  return { panel, trigger, field };
+  return { panel, trigger, field, picker };
 }
 
 function useDraftText(
@@ -188,7 +198,6 @@ export interface DatePickerProps extends Omit<
   readonly min?: string | undefined;
   readonly max?: string | undefined;
   readonly unavailable?: readonly string[] | undefined;
-  readonly previewState?: InputProps['previewState'];
   readonly previewText?: string | undefined;
   /** Keeps the open panel in document flow for side-by-side design inspection. */
   readonly previewInline?: boolean | undefined;
@@ -217,7 +226,6 @@ export function DatePicker({
   min,
   max,
   unavailable = [],
-  previewState,
   previewText,
   previewInline,
   subjectAttributes,
@@ -225,6 +233,8 @@ export function DatePicker({
   ...props
 }: DatePickerProps): ReactElement {
   const id = useId();
+  const editor = useRef<HTMLInputElement>(null);
+  const composing = useRef(false);
   const [localValue, setLocalValue] = useState(defaultValue);
   const current = value ?? localValue;
   const viewDate = defaultViewDate(current || today, min, max);
@@ -239,7 +249,10 @@ export function DatePicker({
   const close = useCallback((): void => {
     setOpen(false);
   }, []);
-  const { panel, trigger, field } = useDatePanel(open && !disabled && !previewInline, close);
+  const { panel, trigger, field, picker } = useDatePanel(
+    open && !disabled && !previewInline,
+    close,
+  );
   const update = (next: string): void => {
     setLocalValue(next);
     onValueChange?.(next);
@@ -267,8 +280,8 @@ export function DatePicker({
   };
   const validity = !readOnly && !disabled ? validate(text) : '';
   useLayoutEffect(() => {
-    field.current?.querySelector('input')?.setCustomValidity(validity);
-  }, [field, validity]);
+    editor.current?.setCustomValidity(validity);
+  }, [validity]);
   const pick = (next: string): void => {
     update(next);
     close();
@@ -280,72 +293,112 @@ export function DatePicker({
     : readOnly
       ? 'Read only'
       : '';
+  const fieldStatus = error ? 'danger' : status;
+  const feedback = error || message;
+  const describedBy =
+    [
+      ...new Set(
+        [
+          props['aria-describedby'],
+          description ? `${id}-description` : undefined,
+          feedback ? `${id}-message` : undefined,
+        ]
+          .flatMap((part) => part?.trim().split(/\s+/) ?? [])
+          .filter(Boolean),
+      ),
+    ].join(' ') || undefined;
+
   return (
     <div
       {...props}
-      ref={field}
+      ref={picker}
       className={`date-picker-proto ${className}`}
       data-open={(open && !disabled) || undefined}
       data-preview-inline={previewInline || undefined}
     >
-      <Input
-        {...subjectAttributes}
-        id={id}
-        label={label}
-        description={description}
-        message={error || message}
-        status={error ? 'danger' : status}
-        loading={loading}
-        disabled={disabled}
-        readOnly={readOnly}
-        required={required}
+      <FormField
         size={size}
-        variant={variant}
-        value={text}
-        placeholder={datePlaceholder(locale)}
-        previewState={previewState}
-        aria-label={label ? undefined : props['aria-label'] || 'Date'}
-        onInvalid={() => setError(validity)}
-        onChange={(event) => {
-          const draft = event.currentTarget.value;
-          setText(draft);
-          setError('');
-          const parsed = parseDate(draft, locale);
-          if (parsed && !validate(draft)) {
-            setLocalValue(parsed);
-            onValueChange?.(parsed);
-            setText(draft, textSource(parsed));
-          } else if (!draft) {
-            setLocalValue('');
-            onValueChange?.('');
-            setText('', textSource(''));
-          }
-        }}
-        onBlur={() => {
-          if (readOnly || disabled) {
-            return;
-          }
-          const issue = validate(text);
-          setError(issue);
-          if (!issue) {
-            const parsed = parseDate(text, locale);
-            if (parsed) {
-              setText(numericDate(parsed, locale));
-            }
-          }
-        }}
-        onKeyDown={(event) => {
-          if (event.altKey && event.key === 'ArrowDown') {
-            event.preventDefault();
-            setOpen(true);
-            requestAnimationFrame(() =>
-              panel.current
-                ?.querySelector<HTMLButtonElement>('.calendar-day-proto[tabindex="0"]')
-                ?.focus(),
-            );
-          }
-        }}
-        suffix={
+        htmlFor={id}
+        label={label}
+        required={required}
+        description={description}
+        descriptionId={`${id}-description`}
+        message={feedback || ''}
+        messageId={`${id}-message`}
+        status={disabled ? 'neutral' : fieldStatus}
+        feedbackIcon={false}
+      >
+        <div
+          {...subjectAttributes}
+          ref={field}
+          className="date-field-row-proto"
+          data-size={size}
+          data-variant={variant}
+          data-status={!disabled && fieldStatus !== 'neutral' ? fieldStatus : undefined}
+          data-loading={(loading && !disabled) || undefined}
+        >
+          <Input
+            ref={editor}
+            className="date-editor-proto"
+            id={id}
+            status={fieldStatus}
+            aria-describedby={describedBy}
+            onCompositionStart={() => {
+              composing.current = true;
+            }}
+            onCompositionEnd={() => {
+              composing.current = false;
+            }}
+            loading={loading}
+            disabled={disabled}
+            readOnly={readOnly}
+            required={required}
+            size={size}
+            variant={variant}
+            value={text}
+            placeholder={datePlaceholder(locale)}
+            aria-label={label ? undefined : props['aria-label'] || 'Date'}
+            onInvalid={() => setError(validity)}
+            onChange={(event) => {
+              const draft = event.currentTarget.value;
+              setText(draft);
+              setError('');
+              const parsed = parseDate(draft, locale);
+              if (parsed && !validate(draft)) {
+                setLocalValue(parsed);
+                onValueChange?.(parsed);
+                setText(draft, textSource(parsed));
+              } else if (!draft) {
+                setLocalValue('');
+                onValueChange?.('');
+                setText('', textSource(''));
+              }
+            }}
+            onBlur={() => {
+              if (readOnly || disabled) {
+                return;
+              }
+              const issue = validate(text);
+              setError(issue);
+              if (!issue) {
+                const parsed = parseDate(text, locale);
+                if (parsed) {
+                  setText(numericDate(parsed, locale));
+                }
+              }
+            }}
+            onKeyDown={(event) => {
+              if (event.altKey && event.key === 'ArrowDown') {
+                event.preventDefault();
+                setOpen(true);
+                requestAnimationFrame(() =>
+                  panel.current
+                    ?.querySelector<HTMLButtonElement>('.calendar-day-proto[tabindex="0"]')
+                    ?.focus(),
+                );
+              }
+            }}
+          />
           <span className="date-field-actions-proto">
             {clearable && text && !readOnly && (
               <button
@@ -355,8 +408,11 @@ export function DatePicker({
                 disabled={disabled}
                 onMouseDown={(event) => event.preventDefault()}
                 onClick={() => {
+                  if (composing.current || editor.current?.matches(':disabled')) {
+                    return;
+                  }
                   update('');
-                  field.current?.querySelector('input')?.focus();
+                  editor.current?.focus();
                 }}
               >
                 <XIcon size="1em" />
@@ -392,8 +448,8 @@ export function DatePicker({
               <CalendarBlankIcon size="1em" />
             </button>
           </span>
-        }
-      />
+        </div>
+      </FormField>
       {open && !disabled && (
         <DatePickerPanel
           {...subjectAttributes}
@@ -457,7 +513,6 @@ export function DateRangePicker({
   min,
   max,
   unavailable = [],
-  previewState,
   previewText,
   previewInline,
   subjectAttributes,
@@ -469,6 +524,8 @@ export function DateRangePicker({
   ...props
 }: DateRangePickerProps): ReactElement {
   const id = useId();
+  const editor = useRef<HTMLInputElement>(null);
+  const composing = useRef(false);
   const [localValue, setLocalValue] = useState<DateRange>(defaultValue);
   const current = value ?? localValue;
   const format = (range: DateRange): string =>
@@ -488,8 +545,11 @@ export function DateRangePicker({
   const close = useCallback((): void => {
     setOpen(false);
     setCalendarFeedback({ message: '' });
-  }, []);
-  const { panel, trigger, field } = useDatePanel(open && !disabled && !previewInline, close);
+  }, [setOpen, setCalendarFeedback]);
+  const { panel, trigger, field, picker } = useDatePanel(
+    open && !disabled && !previewInline,
+    close,
+  );
   const update = (next: DateRange): void => {
     setLocalValue(next);
     onValueChange?.(next);
@@ -527,81 +587,121 @@ export function DateRangePicker({
           ? validate(parsedText)
           : 'Enter both dates with a four-digit year, separated by a dash.';
   useLayoutEffect(() => {
-    field.current?.querySelector('input')?.setCustomValidity(validity);
-  }, [field, validity]);
+    editor.current?.setCustomValidity(validity);
+  }, [validity]);
   const pick = (next: DateRange): void => {
     update(next);
     close();
     trigger.current?.focus();
   };
+  const fieldStatus = error ? 'danger' : status;
+  const feedback = error || message;
+  const describedBy =
+    [
+      ...new Set(
+        [
+          props['aria-describedby'],
+          description ? `${id}-description` : undefined,
+          feedback ? `${id}-message` : undefined,
+        ]
+          .flatMap((part) => part?.trim().split(/\s+/) ?? [])
+          .filter(Boolean),
+      ),
+    ].join(' ') || undefined;
+
   return (
     <div
       {...props}
-      ref={field}
+      ref={picker}
       className={`date-picker-proto ${className}`}
       data-open={(open && !disabled) || undefined}
       data-preview-inline={previewInline || undefined}
     >
-      <Input
-        {...subjectAttributes}
-        id={id}
-        label={label}
-        description={description}
-        message={error || message}
-        status={error ? 'danger' : status}
-        loading={loading}
-        disabled={disabled}
-        readOnly={readOnly}
-        required={required}
+      <FormField
         size={size}
-        variant={variant}
-        value={text}
-        previewState={previewState}
-        placeholder={`${datePlaceholder(locale)} – ${datePlaceholder(locale)}`}
-        aria-label={label ? undefined : props['aria-label'] || 'Date range'}
-        onInvalid={() => setError(validity)}
-        onChange={(event) => {
-          const draftText = event.currentTarget.value;
-          setText(draftText);
-          setError('');
-          const parsed = parse(draftText);
-          if (parsed && !validate(parsed)) {
-            setLocalValue(parsed);
-            onValueChange?.(parsed);
-            setText(draftText, textSource(parsed));
-          } else if (!draftText) {
-            setLocalValue(['', '']);
-            onValueChange?.(['', '']);
-            setText('', textSource(['', '']));
-          }
-        }}
-        onBlur={() => {
-          if (readOnly || disabled) {
-            return;
-          }
-          if (!text.trim()) {
-            setError(required ? 'Enter a start and end date.' : '');
-            return;
-          }
-          const parsed = parse(text);
-          if (!parsed) {
-            setError('Enter both dates with a four-digit year, separated by a dash.');
-          } else {
-            const issue = validate(parsed);
-            setError(issue);
-            if (!issue) {
-              setText(format(parsed));
-            }
-          }
-        }}
-        onKeyDown={(event) => {
-          if (event.altKey && event.key === 'ArrowDown') {
-            event.preventDefault();
-            setOpen(true);
-            focusCalendar();
-          }
-        }}
-        suffix={
+        htmlFor={id}
+        label={label}
+        required={required}
+        description={description}
+        descriptionId={`${id}-description`}
+        message={feedback || ''}
+        messageId={`${id}-message`}
+        status={disabled ? 'neutral' : fieldStatus}
+        feedbackIcon={false}
+      >
+        <div
+          {...subjectAttributes}
+          ref={field}
+          className="date-field-row-proto"
+          data-size={size}
+          data-variant={variant}
+          data-status={!disabled && fieldStatus !== 'neutral' ? fieldStatus : undefined}
+          data-loading={(loading && !disabled) || undefined}
+        >
+          <Input
+            ref={editor}
+            className="date-editor-proto"
+            id={id}
+            status={fieldStatus}
+            aria-describedby={describedBy}
+            onCompositionStart={() => {
+              composing.current = true;
+            }}
+            onCompositionEnd={() => {
+              composing.current = false;
+            }}
+            loading={loading}
+            disabled={disabled}
+            readOnly={readOnly}
+            required={required}
+            size={size}
+            variant={variant}
+            value={text}
+            placeholder={`${datePlaceholder(locale)} – ${datePlaceholder(locale)}`}
+            aria-label={label ? undefined : props['aria-label'] || 'Date range'}
+            onInvalid={() => setError(validity)}
+            onChange={(event) => {
+              const draftText = event.currentTarget.value;
+              setText(draftText);
+              setError('');
+              const parsed = parse(draftText);
+              if (parsed && !validate(parsed)) {
+                setLocalValue(parsed);
+                onValueChange?.(parsed);
+                setText(draftText, textSource(parsed));
+              } else if (!draftText) {
+                setLocalValue(['', '']);
+                onValueChange?.(['', '']);
+                setText('', textSource(['', '']));
+              }
+            }}
+            onBlur={() => {
+              if (readOnly || disabled) {
+                return;
+              }
+              if (!text.trim()) {
+                setError(required ? 'Enter a start and end date.' : '');
+                return;
+              }
+              const parsed = parse(text);
+              if (!parsed) {
+                setError('Enter both dates with a four-digit year, separated by a dash.');
+              } else {
+                const issue = validate(parsed);
+                setError(issue);
+                if (!issue) {
+                  setText(format(parsed));
+                }
+              }
+            }}
+            onKeyDown={(event) => {
+              if (event.altKey && event.key === 'ArrowDown') {
+                event.preventDefault();
+                setOpen(true);
+                focusCalendar();
+              }
+            }}
+          />
           <span className="date-field-actions-proto">
             {clearable && text && !readOnly && (
               <button
@@ -611,8 +711,11 @@ export function DateRangePicker({
                 disabled={disabled}
                 onMouseDown={(event) => event.preventDefault()}
                 onClick={() => {
+                  if (composing.current || editor.current?.matches(':disabled')) {
+                    return;
+                  }
                   update(['', '']);
-                  field.current?.querySelector('input')?.focus();
+                  editor.current?.focus();
                 }}
               >
                 <XIcon size="1em" />
@@ -648,8 +751,8 @@ export function DateRangePicker({
               <CalendarBlankIcon size="1em" />
             </button>
           </span>
-        }
-      />
+        </div>
+      </FormField>
       {open && !disabled && (
         <DatePickerPanel
           {...subjectAttributes}

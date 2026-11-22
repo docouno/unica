@@ -186,7 +186,7 @@ export default {
         await inheritedPaint(page.getByTestId('disabled-button'));
         const input = page.getByRole('textbox', { name: 'Disabled input' });
         const inputColor = await input.evaluate((node) => getComputedStyle(node).color);
-        const leading = page.getByTestId('measurements').locator('.input-leading-glyph');
+        const leading = page.getByTestId('disabled-field').locator('svg');
         assert.equal(await leading.evaluate((node) => getComputedStyle(node).fill), inputColor);
 
         const semanticHost = page.getByTestId('semantic-host');

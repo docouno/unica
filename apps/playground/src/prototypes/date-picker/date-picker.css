@@ -341,27 +341,79 @@
   min-inline-size: 0;
   font-family: var(--font-family-base);
 }
-.date-picker-proto .input-native-proto {
+.date-field-row-proto {
+  --date-field-padding: var(--size-m-padding-x);
+  --date-field-gap: var(--size-m-gap);
+  --date-field-icon: var(--size-m-icon);
+  --date-action-size: 24px;
+  --date-actions-inline: var(--date-action-size);
+  --date-feedback-inline: 0px;
+  position: relative;
+}
+
+.date-field-row-proto[data-size='s'] {
+  --date-field-padding: var(--size-s-padding-x);
+  --date-field-gap: var(--size-s-gap);
+  --date-field-icon: var(--size-s-icon);
+}
+
+.date-field-row-proto[data-size='l'] {
+  --date-field-padding: var(--size-l-padding-x);
+  --date-field-gap: var(--size-l-gap);
+  --date-field-icon: var(--size-l-icon);
+}
+
+.date-field-row-proto:has(.date-action-proto + .date-action-proto) {
+  --date-actions-inline: calc(2 * var(--date-action-size) + var(--space-2));
+}
+
+.date-field-row-proto:is([data-status], [data-loading]):not(:has(input:disabled)) {
+  --date-feedback-inline: calc(var(--date-field-icon) + var(--date-field-gap));
+}
+
+.date-field-row-proto[data-status][data-loading]:not(:has(input:disabled)) {
+  --date-feedback-inline: calc(2 * (var(--date-field-icon) + var(--date-field-gap)));
+}
+
+.date-editor-proto > input {
+  direction: ltr;
+  text-align: start;
+  unicode-bidi: isolate;
   font-variant-numeric: tabular-nums;
+  margin-inline-end: calc(var(--date-actions-inline) + var(--date-field-gap));
 }
-.date-picker-proto[data-open] .input-shell-proto[data-status='neutral'] {
-  --field-edge: var(--control-border-focus);
+
+.date-field-row-proto:dir(rtl) .date-editor-proto > input {
+  margin-inline-end: 0;
+  margin-inline-start: calc(var(--date-actions-inline) + var(--date-field-gap));
 }
-.date-picker-proto[data-open] .input-shell-proto[data-variant='ghost'] {
+
+.date-picker-proto[data-open] .date-field-row-proto:not([data-status]) {
+  --control-border: var(--control-border-focus);
+  --control-border-hover: var(--control-border-focus);
+}
+
+.date-picker-proto[data-open] .date-field-row-proto[data-variant='ghost'] .date-editor-proto {
   background: var(--control-bg);
 }
+
 .date-field-actions-proto {
+  position: absolute;
+  inset-inline-end: calc(1px + var(--date-field-padding) + var(--date-feedback-inline));
+  inset-block-start: 50%;
+  translate: 0 -50%;
   display: inline-flex;
   align-items: center;
   gap: var(--space-2);
 }
+
 .date-action-proto {
   flex: none;
-  inline-size: 24px;
-  block-size: 24px;
+  inline-size: var(--date-action-size);
+  block-size: var(--date-action-size);
   padding: 0;
   color: var(--fg-muted);
-  font-size: var(--field-icon-size);
+  font-size: var(--date-field-icon);
 }
 .date-picker-panel-proto.popover-content-proto {
   --popover-width: 282px;
@@ -524,12 +576,11 @@
   .date-picker-panel-proto[popover] {
     inline-size: min(336px, calc(100vw - 16px));
   }
-  .date-action-proto {
-    min-inline-size: 44px;
-    min-block-size: 44px;
+  .date-field-row-proto {
+    --date-action-size: 44px;
   }
-  .date-picker-proto .input-shell-proto {
-    min-block-size: max(var(--field-height), 44px);
+  .date-editor-proto {
+    min-block-size: 44px;
   }
 }
 @media (forced-colors: active) {
@@ -565,17 +616,11 @@
 .calendar-day-proto[data-edge][aria-disabled='true'] {
   color: var(--fg-on-accent);
 }
-.date-picker-proto .input-native-proto {
-  direction: ltr;
-  text-align: start;
-  unicode-bidi: isolate;
-}
-
 /* Let the source field keep its full value when the calendar panel is narrower. */
 .date-picker-proto[data-preview-inline] {
   inline-size: min(100%, 21rem);
 }
-.date-picker-proto[data-preview-inline] > .form-field-proto {
+.date-picker-proto[data-preview-inline] > .ff-proto {
   padding: var(--space-12);
   border: 1px solid var(--border-subtle);
   border-radius: var(--size-m-radius);

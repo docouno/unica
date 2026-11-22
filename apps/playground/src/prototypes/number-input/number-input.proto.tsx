@@ -1,10 +1,10 @@
-import { BusyGlyph, MinusGlyph, PlusGlyph, fieldStatusGlyphs } from '../control-glyphs.js';
+import { MinusGlyph, PlusGlyph, fieldStatusGlyphs } from '../control-glyphs.js';
 import { useEffect, useId, useRef, useState } from 'react';
 import type { ComponentPropsWithRef, ReactElement, ReactNode } from 'react';
-import { Icon } from '@docouno/unica';
-import { FormField } from '../input/input.proto.js';
-import type { ControlSize, FieldStatus, FieldVariant } from '../input/input.proto.js';
-import { useInputFocus } from '../input/input-focus.proto.js';
+import { Icon, Spinner } from '@docouno/unica';
+import { FormField } from '../form-field/form-field.proto.js';
+import type { ControlSize, FieldStatus, FieldVariant } from '@docouno/unica';
+import { useControlFocus } from '../control-focus.js';
 import './number-input.css';
 
 export interface NumberInputProps extends Omit<
@@ -113,7 +113,7 @@ export function NumberInput({
 }: NumberInputProps): ReactElement {
   const generatedId = useId();
   const inputId = id ?? generatedId;
-  const scope = useInputFocus();
+  const scope = useControlFocus();
   const editor = useRef<HTMLInputElement | null>(null);
   const [draft, setDraft] = useState(String(value ?? defaultValue));
   const repeat = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -236,9 +236,10 @@ export function NumberInput({
   const control = (
     <span
       ref={scope}
-      data-input-focus-scope=""
+      data-preview-focus-scope=""
+      data-native-context-region=""
       data-wb-subject={subject}
-      className={`input-shell-proto number-input-proto ${className}`}
+      className={`number-input-proto ${className}`}
       data-size={size}
       data-width={width}
       data-variant={variant}
@@ -257,7 +258,7 @@ export function NumberInput({
       <span className="number-input-body-proto">
         <span className="number-input-value-proto">
           {prefix && (
-            <span className="input-affix-proto number-affix-proto" dir="auto" title={prefix}>
+            <span className="number-affix-proto" dir="auto" title={prefix}>
               {prefix}
             </span>
           )}
@@ -273,7 +274,7 @@ export function NumberInput({
               }
             }}
             id={inputId}
-            className="input-native-proto"
+            className="number-native-proto"
             style={{ inlineSize: `${Math.max(3, (draft || props.placeholder || '').length)}ch` }}
             type="number"
             inputMode="decimal"
@@ -319,7 +320,7 @@ export function NumberInput({
             }}
           />
           {suffix && (
-            <span className="input-affix-proto number-affix-proto" dir="auto" title={suffix}>
+            <span className="number-affix-proto" dir="auto" title={suffix}>
               {suffix}
             </span>
           )}
@@ -327,13 +328,11 @@ export function NumberInput({
         {(StatusGlyph || busy) && (
           <span className="number-feedback-proto">
             {StatusGlyph && (
-              <span className="input-status-proto">
+              <span className="number-status-proto">
                 <Icon usage="slot" icon={StatusGlyph} size={size} />
               </span>
             )}
-            {busy && (
-              <Icon usage="slot" icon={BusyGlyph} size={size} className="control-spinner-proto" />
-            )}
+            {busy && <Spinner size={size} tone="muted" className="number-spinner-proto" />}
           </span>
         )}
       </span>
@@ -344,12 +343,14 @@ export function NumberInput({
     <FormField
       label={label}
       description={description}
-      message={message}
+      message={message ?? ''}
       status={effectiveStatus}
       required={required}
       htmlFor={inputId}
-      messageIcon={false}
-      data-size={size}
+      descriptionId={description ? `${inputId}-description` : undefined}
+      messageId={message ? `${inputId}-message` : undefined}
+      feedbackIcon={false}
+      size={size}
       data-width={width}
       className="number-field-proto"
     >

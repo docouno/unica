@@ -1,8 +1,8 @@
+import { FormField } from '../form-field/form-field.proto.js';
 import { useId, useLayoutEffect, useRef, useState } from 'react';
 import type { ReactElement } from 'react';
 import { Button } from '../button/button.proto.js';
-import { Input } from '../input/input.proto.js';
-import { Text } from '@docouno/unica';
+import { Input, Text } from '@docouno/unica';
 import {
   PopoverBody,
   PopoverClose,
@@ -268,11 +268,13 @@ export function PlacementExamples({
           </PopoverHeader>
           <PopoverClose onClick={close} />
           <PopoverBody>
-            <Input
-              label="Display name"
-              value={value}
-              onChange={(event) => setValue(event.target.value)}
-            />
+            <FormField htmlFor={`${id}-display`} label="Display name">
+              <Input
+                id={`${id}-display`}
+                value={value}
+                onChange={(event) => setValue(event.target.value)}
+              />
+            </FormField>
             <Text size="caption-l" color="secondary">
               This name appears in search and page links.
             </Text>

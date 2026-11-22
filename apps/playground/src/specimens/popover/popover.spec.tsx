@@ -1,4 +1,5 @@
-import { Input } from '../../prototypes/input/input.proto.js';
+import { FormField } from '../../prototypes/form-field/form-field.proto.js';
+import { Input } from '@docouno/unica';
 import {
   PopoverBody,
   PopoverContent,
@@ -55,13 +56,13 @@ export default defineComponent({
     return values.presentation === 'pinned'
       ? `<PopoverContent${size} aria-labelledby={titleId}>
   ${header}
-  <PopoverBody><Input label="Display name" defaultValue="Release notes" /></PopoverBody>
+  <PopoverBody><label htmlFor={nameId}>Display name</label><Input id={nameId} defaultValue="Release notes" /></PopoverBody>
 </PopoverContent>`
       : `<>
   <Button popoverTarget={panelId}>Settings</Button>
   <PopoverContent id={panelId} popover="auto"${size} onToggle={handleToggle} aria-labelledby={titleId}>
     ${header}
-    <PopoverBody><Input label="Display name" defaultValue="Release notes" /></PopoverBody>
+    <PopoverBody><label htmlFor={nameId}>Display name</label><Input id={nameId} defaultValue="Release notes" /></PopoverBody>
   </PopoverContent>
 </>`;
   },
@@ -73,7 +74,9 @@ export default defineComponent({
           <PopoverDescription>Changes apply as you type.</PopoverDescription>
         </PopoverHeader>
         <PopoverBody>
-          <Input label="Display name" defaultValue="Release notes" />
+          <FormField label="Display name" htmlFor={`${ctx.id}-name`}>
+            <Input id={`${ctx.id}-name`} defaultValue="Release notes" />
+          </FormField>
         </PopoverBody>
       </PopoverContent>
     ) : (
@@ -146,8 +149,10 @@ export default defineComponent({
   <PopoverHeader><PopoverTitle id={titleId}>Edit link</PopoverTitle></PopoverHeader>
   <form onSubmit={saveDraft}>
     <PopoverBody>
-      <Input label="Text" value={draft.text} onChange={updateText} />
-      <Input label="URL" value={draft.url} onChange={updateUrl} />
+      <label htmlFor={textId}>Text</label>
+      <Input id={textId} value={draft.text} onChange={updateText} />
+      <label htmlFor={urlId}>URL</label>
+      <Input id={urlId} type="url" value={draft.url} onChange={updateUrl} />
     </PopoverBody>
     <PopoverFooter><Button type="submit" loading={saving}>Save changes</Button></PopoverFooter>
   </form>

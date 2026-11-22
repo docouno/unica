@@ -1,10 +1,11 @@
+import { FormField } from '../../prototypes/form-field/form-field.proto.js';
 import { useId, useRef, useState } from 'react';
 import type { ReactElement } from 'react';
 import { SlidersHorizontalIcon } from '@phosphor-icons/react';
 import { defineComponent } from '../../workbench/types.js';
 import { Button } from '../../prototypes/button/button.proto.js';
 import { CheckboxCard, SwitchCard } from '../../prototypes/choice-card/choice-card.proto.js';
-import { Input } from '../../prototypes/input/input.proto.js';
+import { Input } from '@docouno/unica';
 import { Select } from '../../prototypes/select/select.proto.js';
 import { Textarea } from '../../prototypes/textarea/textarea.proto.js';
 import {
@@ -106,7 +107,9 @@ function FilterActivity(): ReactElement {
               }}
             >
               <Select label="Action type" options={activity} defaultValue="all" />
-              <Input label="Actor" placeholder="All people and services" />
+              <FormField htmlFor={`${formId}-actor`} label="Actor">
+                <Input id={`${formId}-actor`} placeholder="All people and services" />
+              </FormField>
               <CheckboxCard
                 label="Include scheduled events"
                 description={<bdi>Show changes made by automation.</bdi>}
@@ -243,14 +246,16 @@ function DeliverySettings({ long = false }: { readonly long?: boolean }): ReactE
                 defaultValue={delivery.schedule}
                 onValueChange={() => setDirty(true)}
               />
-              <Input
-                ref={emailRef}
-                label="Send to"
-                type="email"
-                name="email"
-                defaultValue={delivery.email}
-                required
-              />
+              <FormField htmlFor={`${formId}-email`} label="Send to" required>
+                <Input
+                  id={`${formId}-email`}
+                  ref={emailRef}
+                  type="email"
+                  name="email"
+                  defaultValue={delivery.email}
+                  required
+                />
+              </FormField>
               <SwitchCard
                 label="Include a preview"
                 description={<bdi>Add a short summary of each pending review.</bdi>}

@@ -48,17 +48,16 @@
 }
 
 /* The action shares the shell's row even when the field label wraps. */
-.suggestion-save-pair-proto :is(.suggestion-field-proto, .form-field-proto) {
+.suggestion-save-pair-proto :is(.suggestion-field-proto, .ff-proto) {
   display: contents;
 }
 
-.suggestion-save-pair-proto
-  :is(.form-field-label-proto, .form-field-support-proto, .suggestion-recovery-proto),
+.suggestion-save-pair-proto :is(.ff-label, .ff-support, .suggestion-recovery-proto),
 .suggestion-saved-proto {
   grid-column: 1 / -1;
 }
 
-.suggestion-save-pair-proto .form-field-label-proto {
+.suggestion-save-pair-proto .ff-label {
   grid-row: 1;
 }
 
@@ -72,7 +71,7 @@
   grid-column: 2;
 }
 
-.suggestion-save-pair-proto .form-field-support-proto {
+.suggestion-save-pair-proto .ff-support {
   grid-row: 3;
 }
 

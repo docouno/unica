@@ -14,8 +14,7 @@ import {
 } from '@phosphor-icons/react';
 import { Button } from '../button/button.proto.js';
 import { Card, CardTitle } from '../card/card.proto.js';
-import { Input } from '../input/input.proto.js';
-import { Text, Title } from '@docouno/unica';
+import { Input, Text, Title } from '@docouno/unica';
 import { Empty, EmptyActions, EmptyDescription, EmptyMedia, EmptyTitle } from './empty.proto.js';
 import './empty.examples.css';
 
@@ -253,6 +252,7 @@ function EmptySearch(): ReactElement {
           ref={input}
           size="s"
           iconLeft={MagnifyingGlassIcon}
+          className="empty-example-search-input"
           aria-label="Find runbooks"
           value={query}
           onChange={(event) => setQuery(event.currentTarget.value)}

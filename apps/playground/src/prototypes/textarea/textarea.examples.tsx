@@ -1,8 +1,8 @@
 import { useId, useState } from 'react';
 import type { ReactElement } from 'react';
 import { Button } from '../button/button.proto.js';
-import { FormField } from '../input/input.proto.js';
-import type { ControlSize, FieldStatus, FieldVariant } from '../input/input.proto.js';
+import { FormField } from '../form-field/form-field.proto.js';
+import type { ControlSize, FieldStatus, FieldVariant } from '@docouno/unica';
 import { Textarea } from './textarea.proto.js';
 import './textarea.examples.css';
 

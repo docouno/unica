@@ -1,0 +1,302 @@
+@layer unica.components {
+  .unica-input {
+    --_height: var(--size-m-height);
+    --_radius: var(--size-m-radius);
+    --_padding: var(--size-m-padding-x);
+    --_gap: var(--size-m-gap);
+    --_font: var(--text-size-body-s);
+    --_edge: var(--control-border);
+    --_focus: var(--focus-ring-color);
+    --_status: var(--fg-secondary);
+    --_affix: var(--fg-secondary);
+    --_clear-size: 24px;
+    --_icon-size: var(--size-m-icon);
+    --_clear-inset: calc((var(--_clear-size) - var(--_icon-size)) / 2);
+    --_clear-bleed: min(var(--_clear-inset), calc(var(--_gap) - 2px));
+    position: relative;
+    box-sizing: border-box;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--_gap);
+    inline-size: 100%;
+    min-inline-size: 0;
+    min-block-size: var(--_height);
+    padding-inline: var(--_padding);
+    border: 1px solid var(--_edge);
+    border-radius: var(--_radius);
+    background: var(--control-bg);
+    color: var(--fg-primary);
+    font: 400 var(--_font) / 1.4 var(--font-family-base);
+    cursor: text;
+  }
+
+  .unica-input[hidden] {
+    display: none;
+  }
+
+  .unica-input[data-unica-input-size='s'] {
+    --_height: var(--size-s-height);
+    --_radius: var(--size-s-radius);
+    --_padding: var(--size-s-padding-x);
+    --_gap: var(--size-s-gap);
+    --_font: var(--size-s-control-font);
+    --_icon-size: var(--size-s-icon);
+  }
+
+  .unica-input[data-unica-input-size='l'] {
+    --_height: var(--size-l-height);
+    --_radius: var(--size-l-radius);
+    --_padding: var(--size-l-padding-x);
+    --_gap: var(--size-l-gap);
+    --_font: var(--text-size-body-m);
+    --_icon-size: var(--size-l-icon);
+    --_clear-size: 28px;
+  }
+
+  .unica-input[data-unica-input-width='auto'] {
+    inline-size: min(100%, 20rem);
+  }
+
+  .unica-input[data-unica-input-variant='ghost'] {
+    border-color: transparent;
+    background: transparent;
+  }
+
+  .unica-input[data-unica-input-variant='ghost']::after {
+    position: absolute;
+    inset-inline: -1px;
+    inset-block-end: -1px;
+    border-block-end: 1px solid var(--_edge);
+    content: '';
+    pointer-events: none;
+  }
+
+  .unica-input[data-unica-input-status='neutral']:where(
+      :hover:not(:has(> .unica-input-native:disabled, > .unica-input-native[readonly]))
+    ) {
+    --_edge: var(--control-border-hover);
+  }
+
+  .unica-input[data-unica-input-status='neutral']:where(
+      :has(> .unica-input-native:focus:not([readonly]))
+    ) {
+    --_edge: var(--control-border-focus);
+  }
+
+  .unica-input[data-unica-input-status='info'] {
+    --_edge: var(--status-info-border);
+    --_focus: var(--status-info-signal);
+    --_status: var(--status-info-soft-fg);
+  }
+
+  .unica-input[data-unica-input-status='success'] {
+    --_edge: var(--status-success-border);
+    --_focus: var(--status-success-signal);
+    --_status: var(--status-success-soft-fg);
+  }
+
+  .unica-input[data-unica-input-status='warning'] {
+    --_edge: var(--status-warning-border);
+    --_focus: var(--status-warning-signal);
+    --_status: var(--status-warning-soft-fg);
+  }
+
+  .unica-input[data-unica-input-status='danger'] {
+    --_edge: var(--status-danger-border);
+    --_focus: var(--status-danger-signal);
+    --_status: var(--status-danger-soft-fg);
+  }
+
+  .unica-input:has(> .unica-input-native:focus:not([data-unica-input-focus='pointer'])) {
+    outline: 2px solid var(--_focus);
+    outline-offset: 2px;
+  }
+
+  .unica-input-native {
+    box-sizing: border-box;
+    flex: 1 1 4ch;
+    inline-size: 4ch;
+    min-inline-size: 4ch;
+    block-size: calc(var(--_height) - 2px);
+    padding: var(--space-4) 0;
+    margin: 0;
+    border: 0;
+    outline: 0;
+    border-radius: 0;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    text-align: start;
+    text-overflow: ellipsis;
+  }
+
+  .unica-input-native::placeholder {
+    color: var(--fg-muted);
+    opacity: 1;
+  }
+
+  .unica-input-native:focus {
+    text-overflow: clip;
+  }
+
+  .unica-input-native::selection {
+    background: var(--accent-soft-bg);
+    color: var(--accent-soft-fg);
+  }
+
+  .unica-input-native::-webkit-search-decoration,
+  .unica-input-native::-webkit-search-cancel-button {
+    appearance: none;
+  }
+
+  .unica-input-affix {
+    flex: 0 1 auto;
+    min-inline-size: 0;
+    max-inline-size: 35%;
+    overflow: hidden;
+    color: var(--_affix);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    unicode-bidi: isolate;
+  }
+
+  .unica-input-icon,
+  .unica-input-status,
+  .unica-input-spinner {
+    flex: none;
+  }
+
+  .unica-input-icon {
+    color: var(--_affix);
+  }
+
+  .unica-input-glyph {
+    display: block;
+    inline-size: var(--_icon-size);
+    block-size: var(--_icon-size);
+  }
+
+  .unica-input-status {
+    color: var(--_status);
+  }
+
+  .unica-input-clear {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    inline-size: var(--_clear-size);
+    block-size: var(--_clear-size);
+    margin-inline: calc(-1 * var(--_clear-bleed));
+    padding: 0;
+    border: 1px solid transparent;
+    border-radius: max(0px, calc(var(--_radius) - 3px));
+    background: transparent;
+    color: var(--fg-muted);
+    cursor: pointer;
+    touch-action: manipulation;
+  }
+
+  .unica-input-clear:last-child {
+    margin-inline-end: calc(-1 * var(--_clear-inset));
+  }
+
+  .unica-input-clear:enabled:not([aria-disabled='true']):hover {
+    background: var(--bg-surface-subtle);
+    color: var(--fg-primary);
+  }
+
+  .unica-input-clear:enabled:not([aria-disabled='true']):active {
+    border-color: var(--control-border-hover);
+  }
+
+  .unica-input-clear:focus-visible {
+    outline: 2px solid var(--focus-ring-color);
+    outline-offset: 0;
+  }
+
+  .unica-input:has(> .unica-input-native:placeholder-shown, > .unica-input-native:disabled)
+    > .unica-input-clear,
+  .unica-input-clear:disabled {
+    visibility: hidden;
+    pointer-events: none;
+  }
+
+  .unica-input-clear[aria-disabled='true'] {
+    color: var(--fg-disabled);
+    cursor: progress;
+  }
+
+  .unica-input:has(> .unica-input-native:disabled) {
+    --_edge: var(--border-subtle);
+    --_affix: var(--fg-disabled);
+    background: var(--bg-surface-subtle);
+    color: var(--fg-disabled);
+    cursor: not-allowed;
+  }
+
+  .unica-input[data-unica-input-variant='ghost']:has(> .unica-input-native:disabled) {
+    background: transparent;
+  }
+
+  .unica-input-native:disabled {
+    cursor: not-allowed;
+    -webkit-text-fill-color: var(--fg-disabled);
+    opacity: 1;
+  }
+
+  .unica-input-native:disabled::placeholder {
+    color: var(--fg-disabled);
+  }
+
+  .unica-input-native:disabled ~ :is(.unica-input-status, .unica-input-spinner) {
+    visibility: hidden;
+  }
+
+  @media (pointer: coarse) {
+    .unica-input[data-unica-input-size='l'] {
+      --_clear-size: 44px;
+    }
+
+    .unica-input[data-unica-input-size='l'] .unica-input-clear:focus-visible {
+      outline-offset: -2px;
+    }
+  }
+
+  @media (forced-colors: active) {
+    .unica-input.unica-input {
+      --_edge: ButtonText;
+      --_focus: Highlight;
+      --_affix: CanvasText;
+      background: Canvas;
+      color: CanvasText;
+    }
+
+    .unica-input[data-unica-input-variant='ghost'] {
+      background: transparent;
+    }
+
+    .unica-input:has(> .unica-input-native:focus) {
+      outline: 2px solid Highlight;
+      outline-offset: 2px;
+    }
+
+    .unica-input-clear:focus-visible {
+      outline-color: Highlight;
+    }
+
+    .unica-input:has(> .unica-input-native:disabled) {
+      --_edge: GrayText;
+      --_affix: GrayText;
+    }
+
+    .unica-input-native:disabled {
+      -webkit-text-fill-color: GrayText;
+    }
+
+    .unica-input-clear[aria-disabled='true'] {
+      color: GrayText;
+    }
+  }
+}

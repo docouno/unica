@@ -1,8 +1,9 @@
+import { FormField } from '../form-field/form-field.proto.js';
 import { useId, useRef, useState } from 'react';
 import type { ReactElement, ReactNode } from 'react';
-import type { ControlSize } from '../input/input.proto.js';
+import type { ControlSize } from '@docouno/unica';
 import { Button } from '../button/button.proto.js';
-import { Input } from '../input/input.proto.js';
+import { Input } from '@docouno/unica';
 import { TagGroup } from '../tag/tag.proto.js';
 import { TagsInput } from './tags-input.proto.js';
 import './tags-input.examples.css';
@@ -91,6 +92,7 @@ export function TagsShape(): ReactElement {
 }
 
 export function TagsAnatomy(): ReactElement {
+  const id = useId();
   return (
     <div className="tags-examples-proto">
       <Example title="One shared field">
@@ -112,7 +114,9 @@ export function TagsAnatomy(): ReactElement {
       {(['s', 'm', 'l'] as const).map((size) => (
         <Example title={`${size.toUpperCase()} · shared control rhythm`} key={size}>
           <div className="tags-demo-stack-proto">
-            <Input size={size} label="Collection title" defaultValue="Field notes" />
+            <FormField htmlFor={`${id}-title-${size}`} label="Collection title" size={size}>
+              <Input id={`${id}-title-${size}`} size={size} defaultValue="Field notes" />
+            </FormField>
             <TagsInput size={size} label="Topics" initialValues={['Research']} />
             <Button size={size} variant="secondary" tone="neutral">
               Save collection
@@ -519,11 +523,14 @@ export function TagsDrafts(): ReactElement {
 }
 
 export function TagsSurfaces(): ReactElement {
+  const id = useId();
   return (
     <div className="tags-examples-proto">
       <div className="tags-material-proto" data-surface="base">
         <div className="tags-example-title-proto">Base · a form slot</div>
-        <Input label="Collection" defaultValue="Field notes" />
+        <FormField htmlFor={`${id}-base`} label="Collection">
+          <Input id={`${id}-base`} defaultValue="Field notes" />
+        </FormField>
         <TagsInput
           label="Topics"
           initialValues={['Research', 'Oral history']}
@@ -544,7 +551,9 @@ export function TagsSurfaces(): ReactElement {
         </div>
         <div className="tags-material-proto" data-surface="overlay">
           <div className="tags-example-title-proto">Overlay · the same field</div>
-          <Input label="Collection" defaultValue="Field notes" />
+          <FormField htmlFor={`${id}-overlay`} label="Collection">
+            <Input id={`${id}-overlay`} defaultValue="Field notes" />
+          </FormField>
           <TagsInput
             label="Topics"
             initialValues={['Research', 'Oral history']}

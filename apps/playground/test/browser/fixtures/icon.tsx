@@ -1,4 +1,4 @@
-import { Icon, UnicaProvider, defineGlyph, Link } from '@docouno/unica';
+import { Icon, UnicaProvider, defineGlyph, Link, Input } from '@docouno/unica';
 import type { IconAdapter } from '@docouno/unica';
 import { ArrowRightIcon, BellIcon, CheckIcon, IconContext } from '@phosphor-icons/react';
 import { useId, useState } from 'react';
@@ -30,7 +30,6 @@ import {
   ModalTrigger,
 } from '../../../src/prototypes/dialog/dialog.proto.js';
 import { Empty, EmptyMedia } from '../../../src/prototypes/empty/empty.proto.js';
-import { Input } from '../../../src/prototypes/input/input.proto.js';
 import { Tabs, TabsList, TabsTab } from '../../../src/prototypes/tabs/tabs.proto.js';
 
 function ProjectSvg({ children, ...props }: ComponentPropsWithRef<'svg'>) {
@@ -102,7 +101,9 @@ export default function IconFixture() {
           <Button size="m" iconLeft={ArrowRightIcon} data-testid="disabled-button" disabled>
             Unavailable
           </Button>
-          <Input aria-label="Disabled input" disabled iconLeft={BellIcon} />
+          <div data-testid="disabled-field">
+            <Input aria-label="Disabled input" disabled iconLeft={BellIcon} />
+          </div>
           <span data-testid="semantic-host" style={{ color: 'rgb(21, 77, 133)' }}>
             <Icon icon={ArrowRightIcon} size="m" color="danger" data-testid="semantic-danger" />
           </span>

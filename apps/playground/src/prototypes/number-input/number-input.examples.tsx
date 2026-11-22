@@ -1,8 +1,9 @@
+import { FormField } from '../form-field/form-field.proto.js';
 import { useId, useState } from 'react';
 import type { ReactElement, ReactNode } from 'react';
 import { Button } from '../button/button.proto.js';
-import { Input } from '../input/input.proto.js';
-import type { FieldStatus, FieldVariant } from '../input/input.proto.js';
+import { Input } from '@docouno/unica';
+import type { FieldStatus, FieldVariant } from '@docouno/unica';
 import { NumberInput } from './number-input.proto.js';
 import './number-input.examples.css';
 
@@ -57,6 +58,7 @@ export function NumberRoles(): ReactElement {
 }
 
 export function NumberAnatomy(): ReactElement {
+  const id = useId();
   return (
     <div className="number-examples-proto">
       <Example title="An amount">
@@ -106,7 +108,9 @@ export function NumberAnatomy(): ReactElement {
       {(['s', 'm', 'l'] as const).map((size) => (
         <Example key={size} title={`${size.toUpperCase()} · shared control rhythm`}>
           <div className="number-size-comparison-proto">
-            <Input size={size} label="Reference" defaultValue="Document" />
+            <FormField htmlFor={`${id}-reference-${size}`} label="Reference" size={size}>
+              <Input id={`${id}-reference-${size}`} size={size} defaultValue="Document" />
+            </FormField>
             <NumberInput
               size={size}
               aria-label={`${size} copies`}

@@ -6,7 +6,7 @@ import {
   SwitchIndicator,
 } from '../binary-controls/binary-controls.proto.js';
 import type { BinaryPreviewState } from '../binary-controls/binary-controls.proto.js';
-import type { ControlSize } from '../input/input.proto.js';
+import type { ControlSize } from '@docouno/unica';
 import './choice-card.css';
 
 type ChoiceKind = 'checkbox' | 'radio' | 'switch';

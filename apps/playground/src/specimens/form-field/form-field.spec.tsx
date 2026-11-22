@@ -1,6 +1,6 @@
 import { previewProps } from '../preview-code.js';
 import { FormField } from '../../prototypes/form-field/form-field.proto.js';
-import { Input } from '../../prototypes/input/input.proto.js';
+import { Input } from '@docouno/unica';
 import { size, status, disabled, required, choice, toggle, eventProp } from '../control-props.js';
 import { defineComponent } from '../../workbench/types.js';
 import {
@@ -53,6 +53,9 @@ export default defineComponent({
         disabled={disabled}
         required={required}
         description="Visible to members."
+        descriptionId={`${ctx.id}-description`}
+        messageId={values.status === 'neutral' || disabled ? undefined : `${ctx.id}-message`}
+        feedbackIcon={false}
         message={
           values.status === 'danger' ? 'Use a name that identifies the workspace.' : undefined
         }
@@ -64,6 +67,8 @@ export default defineComponent({
           size={size}
           disabled={disabled}
           required={required}
+          status={values.status}
+          aria-describedby={`${ctx.id}-description${values.status === 'neutral' || disabled ? '' : ` ${ctx.id}-message`}`}
           onChange={(event) => ctx.action('onChange')(event.currentTarget.value)}
         />
       </FormField>
@@ -74,11 +79,12 @@ export default defineComponent({
     const message =
       status === 'danger' ? ' message="Use a name that identifies the workspace."' : '';
     const inputAttributes = previewProps(
-      { size, disabled, required },
-      { size: 'm', disabled: false, required: false },
+      { size, disabled, required, status },
+      { size: 'm', disabled: false, required: false, status: 'neutral' },
     );
-    return `<FormField htmlFor="workspace"${fieldLabel} description="Visible to members."${message}${attributes}>
-  <Input id="workspace" name="workspace" defaultValue="Folio"${inputAttributes} onChange={handleChange} />
+    const feedbackId = status === 'neutral' || disabled ? '' : ' workspace-message';
+    return `<FormField htmlFor="workspace"${fieldLabel} description="Visible to members." descriptionId="workspace-description" messageId="workspace-message" feedbackIcon={false}${message}${attributes}>
+  <Input id="workspace" name="workspace" defaultValue="Folio" aria-describedby="workspace-description${feedbackId}"${inputAttributes} onChange={handleChange} />
 </FormField>`;
   },
   matrixViews: [

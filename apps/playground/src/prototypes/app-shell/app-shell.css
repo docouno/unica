@@ -145,7 +145,7 @@
   font-size: 16px;
 }
 
-.app-shell-search.input-shell-proto {
+.app-shell-search {
   inline-size: min(340px, 100%);
 }
 

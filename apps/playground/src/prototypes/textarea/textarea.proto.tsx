@@ -2,9 +2,8 @@ import { fieldStatusGlyphs } from '../control-glyphs.js';
 import { useId } from 'react';
 import type { ComponentPropsWithRef, CSSProperties, ReactElement, ReactNode } from 'react';
 import { Icon } from '@docouno/unica';
-import type { ControlSize, FieldStatus, FieldVariant } from '../input/input.proto.js';
-import { useInputFocus } from '../input/input-focus.proto.js';
-import '../input/input.css';
+import type { ControlSize, FieldStatus, FieldVariant } from '@docouno/unica';
+import { useControlFocus } from '../control-focus.js';
 import './textarea.css';
 
 const statusLabels: Record<Exclude<FieldStatus, 'neutral'>, string> = {
@@ -60,7 +59,7 @@ export function Textarea({
   ...props
 }: TextareaProps): ReactElement {
   const generatedId = useId();
-  const focusScope = useInputFocus();
+  const focusScope = useControlFocus();
   const textareaId = id ?? generatedId;
   const effectiveStatus = disabled ? 'neutral' : status;
   const StatusGlyph = effectiveStatus === 'neutral' ? null : fieldStatusGlyphs[effectiveStatus];
@@ -88,7 +87,8 @@ export function Textarea({
     <span
       ref={focusScope}
       className="textarea-shell-proto"
-      data-input-focus-scope=""
+      data-preview-focus-scope=""
+      data-native-context-region=""
       data-size={size}
       data-variant={variant}
       data-status={effectiveStatus}
@@ -122,16 +122,16 @@ export function Textarea({
   );
   return label || description || feedback || hasCounter ? (
     <div
-      className="form-field-proto textarea-field-proto"
+      className="textarea-field-proto"
       data-status={effectiveStatus}
       data-width={width}
       hidden={hidden}
     >
       {label && (
-        <label className="form-field-label-proto" htmlFor={textareaId}>
+        <label className="textarea-label-proto" htmlFor={textareaId}>
           <span>{label}</span>
           {required && (
-            <span className="form-field-required-proto" aria-hidden="true">
+            <span className="textarea-required-proto" aria-hidden="true">
               *
             </span>
           )}
@@ -141,7 +141,7 @@ export function Textarea({
       {(description || feedback || hasCounter) && (
         <div className="textarea-support-proto">
           {description && (
-            <div id={`${textareaId}-description`} className="form-field-description-proto">
+            <div id={`${textareaId}-description`} className="textarea-description-proto">
               {description}
             </div>
           )}
@@ -150,7 +150,7 @@ export function Textarea({
               {feedback && (
                 <div
                   id={`${textareaId}-message`}
-                  className="form-field-message-proto textarea-message-proto"
+                  className="textarea-message-proto"
                   data-status-glyph={(footerStatus && !!StatusGlyph) || undefined}
                 >
                   {footerStatus && StatusGlyph && (

@@ -1,52 +1,194 @@
-.input-shell-proto.number-input-proto {
+.number-input-proto {
+  --number-height: var(--size-m-height);
+  --number-radius: var(--size-m-radius);
+  --number-gap: var(--size-m-gap);
+  --number-font: var(--text-size-body-s);
+  --number-edge: var(--control-border);
+  --number-focus: var(--focus-ring-color);
+  --number-status: var(--fg-secondary);
+  --number-icon-size: var(--size-m-icon);
   --number-action-width: 34px;
   --number-input-content-width: 8ch;
+  position: relative;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--number-gap);
+  inline-size: 100%;
+  min-inline-size: 0;
+  min-block-size: var(--number-height);
   padding-inline: 0;
+  border: 1px solid var(--number-edge);
+  border-radius: var(--number-radius);
+  background: var(--control-bg);
+  color: var(--fg-primary);
+  font-family: var(--font-family-base);
+  font-size: var(--number-font);
+  line-height: 1.4;
+  cursor: text;
 }
 
 .number-input-proto[data-size='s'] {
+  --number-height: var(--size-s-height);
+  --number-radius: var(--size-s-radius);
+  --number-gap: var(--size-s-gap);
+  --number-font: var(--size-s-control-font);
+  --number-icon-size: var(--size-s-icon);
   --number-action-width: 28px;
 }
+
 .number-input-proto[data-size='l'] {
+  --number-height: var(--size-l-height);
+  --number-radius: var(--size-l-radius);
+  --number-gap: var(--size-l-gap);
+  --number-font: var(--text-size-body-m);
+  --number-icon-size: var(--size-l-icon);
   --number-action-width: 44px;
 }
 
-.input-shell-proto.number-input-proto[data-width='auto'] {
-  inline-size: fit-content;
-  max-inline-size: 100%;
-}
-.form-field-proto.number-field-proto[data-width='auto'] {
-  inline-size: fit-content;
-  max-inline-size: 100%;
-}
-.number-field-proto[data-size='s'] .form-field-label-proto {
-  font-size: var(--size-s-control-font);
-}
-.number-field-proto[data-size='l'] .form-field-label-proto {
-  font-size: var(--text-size-body-m);
+.number-input-proto[data-variant='ghost'] {
+  border-color: transparent;
+  background: transparent;
 }
 
-.number-input-proto .input-native-proto {
+/* Keep the baseline straight without changing the full focus contour's radius. */
+.number-input-proto[data-variant='ghost']::after {
+  position: absolute;
+  inset-inline: -1px;
+  inset-block-end: -1px;
+  border-block-end: 1px solid var(--number-edge);
+  content: '';
+  pointer-events: none;
+}
+
+.number-input-proto:is([data-status='neutral'], :not([data-status])):not(
+    :has(.number-native-proto:disabled, .number-native-proto[readonly])
+  ):is(:hover, [data-preview='hover']) {
+  --number-edge: var(--control-border-hover);
+}
+
+.number-input-proto:is([data-status='neutral'], :not([data-status])):not(
+    :has(.number-native-proto:disabled, .number-native-proto[readonly])
+  ):is(
+    :has(.number-native-proto:focus),
+    [data-preview='pointer-focus'],
+    [data-preview='keyboard-focus']
+  ) {
+  --number-edge: var(--control-border-focus);
+}
+
+.number-input-proto[data-status='info'] {
+  --number-edge: var(--status-info-border);
+  --number-focus: var(--status-info-signal);
+  --number-status: var(--status-info-soft-fg);
+}
+
+.number-input-proto[data-status='success'] {
+  --number-edge: var(--status-success-border);
+  --number-focus: var(--status-success-signal);
+  --number-status: var(--status-success-soft-fg);
+}
+
+.number-input-proto[data-status='warning'] {
+  --number-edge: var(--status-warning-border);
+  --number-focus: var(--status-warning-signal);
+  --number-status: var(--status-warning-soft-fg);
+}
+
+.number-input-proto[data-status='danger'] {
+  --number-edge: var(--status-danger-border);
+  --number-focus: var(--status-danger-signal);
+  --number-status: var(--status-danger-soft-fg);
+}
+
+.number-native-proto {
+  box-sizing: border-box;
   appearance: textfield;
   flex: 0 1 auto;
   min-inline-size: 3ch;
   max-inline-size: 100%;
+  block-size: calc(var(--number-height) - 2px);
+  padding: var(--space-4) 0;
+  margin: 0;
+  border: 0;
+  outline: 0;
+  border-radius: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
   font-variant-numeric: tabular-nums;
   text-align: center;
   text-overflow: clip;
 }
-.number-input-proto .input-native-proto::-webkit-inner-spin-button,
-.number-input-proto .input-native-proto::-webkit-outer-spin-button {
+
+.number-native-proto::placeholder {
+  color: var(--fg-muted);
+  opacity: 1;
+}
+
+.number-native-proto::selection {
+  background: var(--accent-soft-bg);
+  color: var(--accent-soft-fg);
+}
+
+.number-affix-proto {
+  flex: 0 1 auto;
+  min-inline-size: 0;
+  max-inline-size: 5ch;
+  overflow: hidden;
+  color: var(--fg-secondary);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.number-input-proto:has(.number-native-proto:disabled) {
+  --number-edge: var(--border-subtle);
+  border-color: var(--border-subtle);
+  background: var(--bg-surface-subtle);
+  color: var(--fg-disabled);
+  cursor: not-allowed;
+  outline: none;
+}
+
+.number-input-proto[data-variant='ghost']:has(.number-native-proto:disabled) {
+  border-color: transparent;
+  background: transparent;
+}
+
+.number-input-proto:has(.number-native-proto:disabled) .number-affix-proto,
+.number-native-proto:disabled::placeholder {
+  color: var(--fg-disabled);
+}
+
+.number-native-proto:disabled {
+  cursor: not-allowed;
+  -webkit-text-fill-color: var(--fg-disabled);
+  opacity: 1;
+}
+
+.number-input-proto:not([data-focus-origin='pointer']):has(.number-native-proto:focus-visible),
+.number-input-proto[data-preview='keyboard-focus'] {
+  outline: 2px solid var(--number-focus);
+  outline-offset: 2px;
+}
+
+.number-input-proto[data-width='auto'] {
+  inline-size: fit-content;
+  max-inline-size: 100%;
+}
+.number-field-proto[data-width='auto'] {
+  container-type: normal;
+  inline-size: fit-content;
+  max-inline-size: 100%;
+}
+.number-input-proto .number-native-proto::-webkit-inner-spin-button,
+.number-input-proto .number-native-proto::-webkit-outer-spin-button {
   display: none;
   appearance: none;
   margin: 0;
 }
-.number-input-proto .number-affix-proto {
-  flex: 0 1 auto;
-  max-inline-size: 5ch;
-}
 .number-input-body-proto {
-  --number-feedback-space: calc(var(--field-icon-size) + var(--field-gap));
+  --number-feedback-space: calc(var(--number-icon-size) + var(--number-gap));
   position: relative;
   display: grid;
   grid-template-columns: minmax(0, 1fr);
@@ -68,8 +210,8 @@
 .number-input-body-proto:has(.number-feedback-proto) {
   padding-inline: var(--number-feedback-space);
 }
-.number-input-body-proto:has(.input-status-proto):has(.control-spinner-proto) {
-  --number-feedback-space: calc(var(--field-icon-size) * 2 + var(--space-4) + var(--field-gap));
+.number-input-body-proto:has(.number-status-proto):has(.number-spinner-proto) {
+  --number-feedback-space: calc(var(--number-icon-size) * 2 + var(--space-4) + var(--number-gap));
 }
 .number-input-value-proto {
   grid-area: 1 / 1;
@@ -90,13 +232,13 @@
   align-items: center;
   gap: var(--space-4);
 }
-.number-feedback-proto .input-status-proto {
-  color: var(--field-status);
+.number-feedback-proto .number-status-proto {
+  color: var(--number-status);
 }
-.number-feedback-proto .control-spinner-proto {
+.number-feedback-proto .number-spinner-proto {
   color: var(--fg-muted);
 }
-.number-input-proto:has(.input-native-proto:disabled) .number-feedback-proto {
+.number-input-proto:has(.number-native-proto:disabled) .number-feedback-proto {
   display: none;
 }
 
@@ -107,7 +249,7 @@
   place-items: center;
   box-sizing: border-box;
   inline-size: var(--number-action-width);
-  min-block-size: calc(var(--field-height) - 2px);
+  min-block-size: calc(var(--number-height) - 2px);
   padding: 0;
   margin: 0;
   border: 0;
@@ -118,17 +260,17 @@
   touch-action: manipulation;
 }
 .number-input-action-proto[data-action='decrement'] {
-  border-start-start-radius: max(0px, calc(var(--field-radius) - 1px));
-  border-end-start-radius: max(0px, calc(var(--field-radius) - 1px));
+  border-start-start-radius: max(0px, calc(var(--number-radius) - 1px));
+  border-end-start-radius: max(0px, calc(var(--number-radius) - 1px));
 }
 .number-input-action-proto[data-action='increment'] {
-  border-start-end-radius: max(0px, calc(var(--field-radius) - 1px));
-  border-end-end-radius: max(0px, calc(var(--field-radius) - 1px));
+  border-start-end-radius: max(0px, calc(var(--number-radius) - 1px));
+  border-end-end-radius: max(0px, calc(var(--number-radius) - 1px));
 }
 .number-input-proto[data-variant='ghost'] .number-input-action-proto {
   border-radius: 0;
-  border-start-start-radius: max(0px, calc(var(--field-radius) - 3px));
-  border-start-end-radius: max(0px, calc(var(--field-radius) - 3px));
+  border-start-start-radius: max(0px, calc(var(--number-radius) - 3px));
+  border-start-end-radius: max(0px, calc(var(--number-radius) - 3px));
 }
 .number-input-action-proto:enabled:hover,
 .number-input-proto[data-action-preview='decrement-hover']
@@ -154,25 +296,22 @@
   color: var(--fg-disabled);
   cursor: default;
 }
-.number-input-proto:has(.input-native-proto:disabled) .number-input-action-proto {
+.number-input-proto:has(.number-native-proto:disabled) .number-input-action-proto {
   cursor: not-allowed;
-}
-
-/* The numeric editor now sits inside the centered value group. */
-.input-shell-proto.number-input-proto[data-status='neutral']:has(.input-native-proto:focus):not(
-    :has(.input-native-proto[readonly], .input-native-proto:disabled)
-  ) {
-  --field-edge: var(--control-border-focus);
-}
-.input-shell-proto.number-input-proto[data-status='neutral']:has(.input-native-proto[readonly]) {
-  --field-edge: var(--control-border);
-}
-.input-shell-proto.number-input-proto[data-status='neutral']:has(.input-native-proto:disabled) {
-  --field-edge: var(--border-subtle);
 }
 
 /* The field stays still in every material. Only the activated segment changes tone. */
 @media (forced-colors: active) {
+  .number-input-proto:has(.number-native-proto:focus) {
+    outline: 2px solid Highlight;
+    outline-offset: 2px;
+  }
+  .number-input-proto[data-variant='ghost']::after {
+    border-block-end-color: ButtonText;
+  }
+  .number-native-proto:disabled {
+    -webkit-text-fill-color: GrayText;
+  }
   .number-input-action-proto {
     color: ButtonText;
   }

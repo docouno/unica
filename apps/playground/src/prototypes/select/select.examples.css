@@ -96,7 +96,7 @@
   background: var(--bg-canvas);
   border-radius: var(--radius-xs);
 }
-.select-study-proto .form-field-label-proto {
+.select-study-proto .ff-label {
   inline-size: fit-content;
   max-inline-size: 100%;
   padding-inline: var(--space-4);

@@ -30,8 +30,7 @@ import {
   EmptyTitle,
 } from '../prototypes/empty/empty.proto.js';
 import { ToastCard } from '../prototypes/toast/toast.proto.js';
-import { Badge, Icon, Spinner, Text, Title } from '@docouno/unica';
-import { Input } from '../prototypes/input/input.proto.js';
+import { Badge, Icon, Spinner, Text, Title, Input } from '@docouno/unica';
 import { List, ListItem } from '../prototypes/list/list.proto.js';
 import { FolioScene, FolioWorkspace, PageIntro, SectionHeading } from './folio/folio.shared.js';
 import './folio/folio.settings.css';

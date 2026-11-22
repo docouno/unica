@@ -1,4 +1,4 @@
-import { Link, SkeletonText, Text } from '@docouno/unica';
+import { Link, SkeletonText, Text, Badge, Input } from '@docouno/unica';
 import { useId, useRef, useState } from 'react';
 import type { ReactElement } from 'react';
 import {
@@ -10,7 +10,6 @@ import {
   ArrowCounterClockwiseIcon,
 } from '@phosphor-icons/react';
 import { Alert, AlertDescription, AlertTitle } from '../alert/alert.proto.js';
-import { Badge } from '@docouno/unica';
 import { Checkbox } from '../binary-controls/binary-controls.proto.js';
 import { Button, IconButton } from '../button/button.proto.js';
 import { Card } from '../card/card.proto.js';
@@ -23,7 +22,6 @@ import {
   DrawerTrigger,
 } from '../dialog/dialog.proto.js';
 import { Empty, EmptyDescription, EmptyMedia, EmptyTitle } from '../empty/empty.proto.js';
-import { Input } from '../input/input.proto.js';
 import { ContextMenu } from '../menu/context-menu.proto.js';
 import { Menu } from '../menu/menu.live.js';
 import { Pagination } from '../pagination/pagination.proto.js';
@@ -145,8 +143,10 @@ function RouteRow({
     <TableRow>
       <TableCell control="field">
         <Input
+          className="table-route-editor"
           aria-label={`Path for ${route.id}`}
           variant="ghost"
+          placeholder="/runbooks/document-name"
           size={size}
           dir="ltr"
           value={path}

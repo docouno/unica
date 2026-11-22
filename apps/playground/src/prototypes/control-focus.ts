@@ -16,7 +16,7 @@ function trackFocus(doc: Document): FocusTracker {
     if (!(target instanceof Element)) {
       return;
     }
-    const shell = target.closest<HTMLElement>('[data-input-focus-scope]');
+    const shell = target.closest<HTMLElement>('[data-preview-focus-scope]');
     if (shell) {
       shell.dataset.focusOrigin = origin;
     }
@@ -57,7 +57,7 @@ function trackFocus(doc: Document): FocusTracker {
   };
 }
 
-export function useInputFocus(): RefObject<HTMLSpanElement | null> {
+export function useControlFocus(): RefObject<HTMLSpanElement | null> {
   const ref = useRef<HTMLSpanElement>(null);
   useEffect(() => {
     const shell = ref.current;
