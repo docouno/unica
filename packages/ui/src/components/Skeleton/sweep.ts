@@ -20,6 +20,7 @@ const geometryProperties = [
 const [bandWidth, sweepStart, sweepEnd, bandAngle] = geometryProperties;
 const bandSlope = Math.tan((12 * Math.PI) / 180);
 
+type GeometryProperty = (typeof geometryProperties)[number];
 type BrowserWindow = NonNullable<Document['defaultView']>;
 
 interface Sweep {
@@ -54,7 +55,7 @@ function createSweep(view: BrowserWindow, start: number, duration: number): Swee
     const overhang = middleY * bandSlope;
     // Sample the rendered boxes together. A remote CSS selector or a CSSOM edit can
     // move a clipped paint without changing its size or its intersection ratio.
-    const changes: { node: HTMLElement; property: string; value: string }[] = [];
+    const changes: { node: HTMLElement; property: GeometryProperty; value: string }[] = [];
     function measure(node: HTMLElement): void {
       const rect = node.getBoundingClientRect();
       const style = view.getComputedStyle(node);
@@ -71,7 +72,7 @@ function createSweep(view: BrowserWindow, start: number, duration: number): Swee
       const offset = (slope * (top - middleY) - rect.left) / scaleX - borderLeft;
       const before = offset - (band + overhang) / scaleX;
       const after = offset + (clientWidth + overhang) / scaleX;
-      function queueIfChanged(property: string, value: string): void {
+      function queueIfChanged(property: GeometryProperty, value: string): void {
         if (node.style.getPropertyValue(property) !== value) {
           changes.push({ node, property, value });
         }
