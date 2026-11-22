@@ -92,7 +92,7 @@ For each logical side, its own active value takes precedence over the axis and t
 
 `Grid` takes responsive `columns` from 1 through 12 and responsive `gap` (default 0). Each column is an equal-width track that can shrink to zero. `flow` sets native auto-placement to `row` (default) or `column`.
 
-Without an area map, `Grid` defaults to one column. An optional `areas` array describes a fixed map, one string per row. A dot marks an empty cell. Named cells must form rectangles. All rows must have the same width, and any supplied column counts must match that width across breakpoints. The map sets the default column count.
+Without an area map, `Grid` defaults to one column. An optional `areas` array describes a fixed map, one string per row. A dot marks an empty cell. Named cells must form rectangles. All rows must have the same width, and any supplied column counts must match that width across breakpoints. The map sets the default column count. For nonrectangular areas and missing or invalid `GridItem` area names, development builds report the first example of each problem.
 
 ```tsx
 <Grid areas={['nav body body', 'nav foot .']} gap={8}>

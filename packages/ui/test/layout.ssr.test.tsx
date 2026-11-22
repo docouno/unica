@@ -76,6 +76,23 @@ it('renders native inner HTML in a Stack without children', () => {
   ).toBe('<div class="unica-stack"><p>Content</p></div>');
 });
 
+it('warns once per Grid area problem across different user-supplied names', () => {
+  vi.stubEnv('NODE_ENV', 'development');
+  const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+  for (const name of ['first', 'second']) {
+    renderToStaticMarkup(
+      <Grid areas={[`${name} ${name}`, `${name} .`]}>
+        <GridItem area={`${name}?`} />
+      </Grid>,
+    );
+  }
+  expect(warn.mock.calls.map(([message]) => message)).toEqual([
+    'Grid areas cell "first" must form a single rectangle.',
+    'GridItem area "first?" is absent from its parent Grid areas.',
+    'GridItem area "first?" is not a valid cell name.',
+  ]);
+});
+
 it('reports malformed maps, incompatible tracks and invalid direct item placements in development', () => {
   vi.stubEnv('NODE_ENV', 'development');
   const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);

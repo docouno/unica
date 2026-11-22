@@ -78,7 +78,7 @@ function checkAreas({ rows }: GridAreas): Set<string> {
     const rectangle = rows.slice(top, bottom + 1);
     if (!rectangle.every((row) => row.slice(left, right + 1).every((cell) => cell === name))) {
       warnOnce(
-        `grid-areas-non-rectangular:${name}`,
+        'grid-areas-non-rectangular',
         `Grid areas cell "${name}" must form a single rectangle.`,
       );
     }
@@ -110,7 +110,7 @@ function checkGrid(
     if (child.props.area !== undefined) {
       if (!names?.has(child.props.area)) {
         warnOnce(
-          `grid-item-area-missing:${child.props.area}`,
+          'grid-item-area-missing',
           `GridItem area "${child.props.area}" is absent from its parent Grid areas.`,
         );
       }
@@ -190,7 +190,7 @@ export function GridItem({ className, style, area, span, ...props }: GridItemPro
       layout['--_grid-item-area-end'] = areaLine(area, 'end');
     } else if (devWarningsEnabled()) {
       warnOnce(
-        `grid-item-invalid-area:${area}`,
+        'grid-item-invalid-area',
         `GridItem area "${area}" is not a valid cell name.`,
       );
     }
