@@ -1,3 +1,67 @@
+.textarea-field-proto {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+  min-inline-size: 0;
+  font-family: var(--font-family-base);
+  color: var(--fg-primary);
+}
+
+.textarea-field-proto[data-width='auto'] {
+  inline-size: min(100%, 20rem);
+}
+
+.textarea-label-proto {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-4);
+  font-size: var(--text-size-body-s);
+  font-weight: 500;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.textarea-required-proto {
+  flex: none;
+  color: var(--status-danger-soft-fg);
+}
+
+.textarea-description-proto,
+.textarea-message-proto {
+  font-size: var(--text-size-caption-l);
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+  color: var(--fg-muted);
+}
+
+.textarea-message-proto {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-4);
+}
+
+.textarea-message-proto > svg {
+  flex: none;
+  align-self: start;
+  margin-block-start: 0.25em;
+}
+
+.textarea-field-proto[data-status='info'] .textarea-message-proto {
+  color: var(--status-info-soft-fg);
+}
+
+.textarea-field-proto[data-status='success'] .textarea-message-proto {
+  color: var(--status-success-soft-fg);
+}
+
+.textarea-field-proto[data-status='warning'] .textarea-message-proto {
+  color: var(--status-warning-soft-fg);
+}
+
+.textarea-field-proto[data-status='danger'] .textarea-message-proto {
+  color: var(--status-danger-soft-fg);
+}
+
 .textarea-shell-proto {
   --textarea-padding: var(--size-m-padding-x);
   --textarea-padding-y: var(--space-12);
@@ -237,7 +301,7 @@
   display: none;
 }
 
-.textarea-field-proto:has(textarea:disabled) .form-field-message-proto {
+.textarea-field-proto:has(textarea:disabled) .textarea-message-proto {
   color: var(--fg-muted);
 }
 
@@ -255,7 +319,7 @@
   min-inline-size: 0;
 }
 
-.textarea-footer-proto > .form-field-message-proto {
+.textarea-footer-proto > .textarea-message-proto {
   display: block;
   flex: 1 1 16rem;
 }

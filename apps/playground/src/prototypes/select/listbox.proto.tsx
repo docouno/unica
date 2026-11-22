@@ -2,8 +2,7 @@ import { useId, useLayoutEffect, useRef, useState } from 'react';
 import type { ComponentPropsWithRef, ReactElement, ReactNode } from 'react';
 import { CheckIcon } from '@phosphor-icons/react';
 import { Icon } from '@docouno/unica';
-import type { GlyphSource } from '@docouno/unica';
-import type { ControlSize } from '../input/input.proto.js';
+import type { GlyphSource, ControlSize } from '@docouno/unica';
 
 export interface SelectOption {
   readonly value: string;

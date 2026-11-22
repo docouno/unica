@@ -100,17 +100,16 @@ function Roles(): ReactElement {
 function Choices(): ReactElement {
   return (
     <div className="suggestion-study-grid-proto">
-      <Study title="Catalog reopened · keyboard focus">
+      <Study title="Catalog reopened · Tab to edit">
         <Combobox
           label="Owning team"
           options={[teams[0], teams[1], teams[4]]}
           defaultSelection={teams[0]}
           previewOpen
           previewActive="network"
-          previewState="keyboard-focus"
         />
       </Study>
-      <Study title="Replacement in progress · pointer focus">
+      <Study title="Replacement in progress · Click to edit">
         <Combobox
           label="Owning team"
           options={teams}
@@ -118,7 +117,6 @@ function Choices(): ReactElement {
           previewDraft="cloud"
           previewOpen
           previewActive="cloud"
-          previewState="pointer-focus"
         />
       </Study>
       <Study title="Replacement after dismissal">

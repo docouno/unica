@@ -10,7 +10,7 @@ import {
 import type { ComponentPropsWithRef, HTMLAttributes, ReactElement, ReactNode } from 'react';
 import { CheckIcon, CircleNotchIcon, MinusIcon } from '@phosphor-icons/react';
 import type { IconProps as PhosphorIconProps } from '@phosphor-icons/react';
-import type { ControlSize } from '../input/input.proto.js';
+import type { ControlSize } from '@docouno/unica';
 import './binary-controls.css';
 
 export type BinaryStatus = 'neutral' | 'danger';

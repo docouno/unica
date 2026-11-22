@@ -1,3 +1,4 @@
+import { FormField } from '../../prototypes/form-field/form-field.proto.js';
 import { useId } from 'react';
 import type { ReactElement } from 'react';
 import {
@@ -10,9 +11,8 @@ import {
 } from '@phosphor-icons/react';
 import { defineComponent } from '../../workbench/types.js';
 import { Card } from '../../prototypes/card/card.proto.js';
-import { Input } from '../../prototypes/input/input.proto.js';
+import { Input, Text } from '@docouno/unica';
 import { PopoverContent } from '../../prototypes/popover/popover.proto.js';
-import { Text } from '@docouno/unica';
 import { Tabs, TabsContent, TabsList, TabsTab } from '../../prototypes/tabs/tabs.proto.js';
 import type { TabsListProps, TabsProps, TabsTabProps } from '../../prototypes/tabs/tabs.proto.js';
 import '../../prototypes/tabs/tabs.examples.css';
@@ -267,7 +267,9 @@ function ManualExample(): ReactElement {
         </TabsList>
         <div className="tabs-example-panels">
           <TabsContent value="overview">
-            <Input label="Report name" defaultValue="Weekly summary" />
+            <FormField htmlFor={`${heading}-report`} label="Report name">
+              <Input id={`${heading}-report`} defaultValue="Weekly summary" />
+            </FormField>
           </TabsContent>
           <TabsContent value="people">
             <Text size="body-s" color="secondary">

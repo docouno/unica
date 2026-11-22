@@ -3,7 +3,7 @@ import { folioSceneHref } from './folio/folio.routes.js';
 import type { ReactElement } from 'react';
 import { PlusIcon } from '@phosphor-icons/react';
 import { AsidePanel, WorkspaceNavigation } from '../prototypes/app-shell/app-shell.proto.js';
-import { Badge } from '@docouno/unica';
+import { Badge, Input, Text, Title } from '@docouno/unica';
 import { Button } from '../prototypes/button/button.proto.js';
 import { Card } from '../prototypes/card/card.proto.js';
 import {
@@ -18,7 +18,7 @@ import {
   ModalTrigger,
 } from '../prototypes/dialog/dialog.proto.js';
 import { ToastCard } from '../prototypes/toast/toast.proto.js';
-import { FormField, Input } from '../prototypes/input/input.proto.js';
+import { FormField } from '../prototypes/form-field/form-field.proto.js';
 import { Select } from '../prototypes/select/select.proto.js';
 import { CheckboxCard } from '../prototypes/choice-card/choice-card.proto.js';
 import {
@@ -32,7 +32,6 @@ import {
   TableScroll,
 } from '../prototypes/table/table.proto.js';
 import { Textarea } from '../prototypes/textarea/textarea.proto.js';
-import { Text, Title } from '@docouno/unica';
 import {
   Breadcrumb,
   BreadcrumbLink,
@@ -238,14 +237,23 @@ function InviteScene(): ReactElement {
                 onValuesChange={setInvites}
                 placeholder="Add address…"
               />
-              <Input
+              <FormField
                 size="s"
                 label="External contractor"
+                htmlFor={`${formId}-contractor`}
                 status="danger"
-                defaultValue="contractor@external.example"
                 message="External domains require SAML guest approval."
-                aria-invalid="true"
-              />
+                messageId={`${formId}-contractor-message`}
+                feedbackIcon={false}
+              >
+                <Input
+                  id={`${formId}-contractor`}
+                  size="s"
+                  status="danger"
+                  defaultValue="contractor@external.example"
+                  aria-describedby={`${formId}-contractor-message`}
+                />
+              </FormField>
               <fieldset className="folio-fieldset">
                 <legend>Initial space capabilities</legend>
                 <div className="folio-grid-2">

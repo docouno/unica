@@ -94,7 +94,7 @@
   gap: var(--space-8);
 }
 
-.empty-example-search-form > .input-shell-proto {
+.empty-example-search-input {
   flex: 1 1 12em;
   min-inline-size: 0;
 }

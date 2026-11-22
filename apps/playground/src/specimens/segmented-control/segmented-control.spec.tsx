@@ -10,7 +10,7 @@ import {
   DesktopIcon,
 } from '@phosphor-icons/react';
 import { Button } from '../../prototypes/button/button.proto.js';
-import { Input } from '../../prototypes/input/input.proto.js';
+import { Input } from '@docouno/unica';
 import { defineComponent } from '../../workbench/types.js';
 import {
   SegmentedControl,
@@ -428,7 +428,12 @@ function ToolbarExamples(): ReactElement {
                 { value: 'grid', label: 'Grid' },
               ]}
             />
-            <Input size={size} aria-label={`Find items ${size}`} placeholder="Find…" />
+            <Input
+              className="segment-search-example"
+              size={size}
+              aria-label={`Find items ${size}`}
+              placeholder="Find…"
+            />
             <Button size={size} variant="secondary" tone="neutral">
               Apply
             </Button>

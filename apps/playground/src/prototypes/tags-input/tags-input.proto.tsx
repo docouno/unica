@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
 import type { ComponentPropsWithRef, ReactElement, ReactNode } from 'react';
-import { FormField } from '../input/input.proto.js';
-import type { ControlSize, FieldStatus, FieldVariant } from '../input/input.proto.js';
-import { useInputFocus } from '../input/input-focus.proto.js';
+import { FormField } from '../form-field/form-field.proto.js';
+import type { ControlSize, FieldStatus, FieldVariant } from '@docouno/unica';
+import { useControlFocus } from '../control-focus.js';
 import { Tag } from '../tag/tag.proto.js';
 import './tags-input.css';
 
@@ -68,7 +68,7 @@ export function TagsInput({
 }: TagsInputProps): ReactElement {
   const generatedId = useId();
   const editorId = id ?? generatedId;
-  const shell = useInputFocus();
+  const shell = useControlFocus();
   const editor = useRef<HTMLTextAreaElement | null>(null);
   const editorRef = useCallback(
     (node: HTMLTextAreaElement | null) => {
@@ -277,14 +277,17 @@ export function TagsInput({
       <FormField
         label={label}
         htmlFor={editorId}
+        descriptionId={description ? `${editorId}-description` : undefined}
+        messageId={feedback ? `${editorId}-message` : undefined}
         required={required}
         description={description}
-        message={feedback ? support : undefined}
+        message={feedback ? support : ''}
         status={effectiveStatus}
       >
         <span
           ref={shell}
-          data-input-focus-scope=""
+          data-preview-focus-scope=""
+          data-native-context-region=""
           data-wb-subject={subject}
           className="tags-editor-proto"
           data-size={size}

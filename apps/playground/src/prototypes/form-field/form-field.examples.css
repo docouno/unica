@@ -63,3 +63,24 @@
 .ff-example-overlay {
   justify-self: center;
 }
+
+.ff-example-time {
+  box-sizing: border-box;
+  inline-size: 100%;
+  min-block-size: var(--size-m-height);
+  padding-inline: var(--size-m-padding-x);
+  border: 1px solid var(--control-border);
+  border-radius: var(--size-m-radius);
+  background: var(--control-bg);
+  color: var(--fg-primary);
+  font: 400 var(--text-size-body-s) / 1.4 var(--font-family-base);
+}
+
+.ff-example-time[aria-invalid='true'] {
+  border-color: var(--status-danger-border);
+}
+
+.ff-example-time:focus-visible {
+  outline: 2px solid var(--focus-ring-color);
+  outline-offset: 2px;
+}

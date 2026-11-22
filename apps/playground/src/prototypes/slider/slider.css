@@ -1,5 +1,3 @@
-@import '../input/input.css';
-
 .slider-proto {
   --slider-short: 5px;
   --slider-long: 12px;
@@ -491,7 +489,7 @@
   gap: 20px;
   align-items: start;
 }
-.slider-pair-proto > .input-shell-proto {
+.slider-pair-proto > .number-input-proto {
   margin-block-start: calc(var(--text-size-body-s) * 1.5 + 6px);
 }
 @container artboard (max-width: 380px) {
@@ -504,7 +502,7 @@
   .slider-pair-proto {
     grid-template-columns: minmax(0, 1fr);
   }
-  .slider-pair-proto > .input-shell-proto {
+  .slider-pair-proto > .number-input-proto {
     margin-block-start: 0;
     inline-size: min(100%, 220px);
   }

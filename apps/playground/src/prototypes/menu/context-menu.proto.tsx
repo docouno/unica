@@ -45,7 +45,7 @@ interface Hold {
 }
 
 const nativeSelector =
-  'a[href], input, select, textarea, [data-input-focus-scope], audio[controls], video[controls], img';
+  'a[href], input, select, textarea, [data-native-context-region], audio[controls], video[controls], img';
 const HOLD_DURATION = 500;
 const HOLD_DRIFT = 10;
 

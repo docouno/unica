@@ -3,7 +3,7 @@ import type { ReactElement, ReactNode } from 'react';
 import { Button } from '../button/button.proto.js';
 import { Dropzone, FileInput, FileItem, FileList } from './file-input.proto.js';
 import type { FileItemStatus, FilePreviewState } from './file-input.proto.js';
-import type { ControlSize, FieldStatus, FieldVariant } from '../input/input.proto.js';
+import type { ControlSize, FieldStatus, FieldVariant } from '@docouno/unica';
 import { formatFileSize } from './file-input.utils.js';
 import './file-input.examples.css';
 

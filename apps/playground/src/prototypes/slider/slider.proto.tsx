@@ -9,7 +9,7 @@ import type {
   ReactNode,
 } from 'react';
 import { WarningCircleIcon } from '@phosphor-icons/react';
-import type { ControlSize } from '../input/input.proto.js';
+import type { ControlSize } from '@docouno/unica';
 import './slider.css';
 
 export interface SliderMark {

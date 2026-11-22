@@ -1,9 +1,9 @@
-import { useState } from 'react';
+import { useId, useState } from 'react';
 import type { HTMLAttributes, ReactElement, ReactNode } from 'react';
 import { CaretDownIcon, MagnifyingGlassIcon } from '@phosphor-icons/react';
-import { Input } from '../input/input.proto.js';
-import type { ControlSize, FieldVariant } from '../input/input.proto.js';
-import type { GlyphSource } from '@docouno/unica';
+import { Input } from '@docouno/unica';
+import type { ControlSize, FieldVariant, GlyphSource } from '@docouno/unica';
+import { FormField } from '../form-field/form-field.proto.js';
 import { Listbox } from './listbox.proto.js';
 import type { SelectOption } from './listbox.proto.js';
 import { SelectPanel } from './select-control.proto.js';
@@ -51,6 +51,7 @@ export function Combobox({
   className = '',
   ...props
 }: ComboboxProps): ReactElement {
+  const inputId = useId();
   const [localValue, setLocalValue] = useState(defaultValue);
   const [query, setQuery] = useState<string | null>(null);
   const [open, setOpen] = useState(defaultOpen);
@@ -69,20 +70,23 @@ export function Combobox({
   };
   return (
     <div {...props} className={`combobox-proto ${className}`}>
-      <Input
-        label={label}
-        size={size}
-        variant={variant}
-        disabled={disabled}
-        placeholder={placeholder}
-        iconLeft={iconLeft}
-        value={open && query !== null ? query : (selected?.label ?? current)}
-        aria-label={label ? undefined : 'Search choices'}
-        onChange={(event) => {
-          setQuery(event.currentTarget.value);
-          setOpen(true);
-        }}
-        suffix={
+      <FormField label={label} htmlFor={inputId} size={size}>
+        <div className="select-search-row-proto" data-size={size}>
+          <Input
+            id={inputId}
+            className="select-search-input-proto"
+            size={size}
+            variant={variant}
+            disabled={disabled}
+            placeholder={placeholder}
+            iconLeft={iconLeft}
+            value={open && query !== null ? query : (selected?.label ?? current)}
+            aria-label={label ? undefined : 'Search choices'}
+            onChange={(event) => {
+              setQuery(event.currentTarget.value);
+              setOpen(true);
+            }}
+          />
           <button
             type="button"
             className="field-icon-button-proto"
@@ -96,8 +100,8 @@ export function Combobox({
           >
             <CaretDownIcon size="1em" />
           </button>
-        }
-      />
+        </div>
+      </FormField>
       {open && !disabled && (
         <SelectPanel className="combobox-panel-proto" size={size}>
           <Listbox

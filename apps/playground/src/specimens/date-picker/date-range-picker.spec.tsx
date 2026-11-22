@@ -128,15 +128,13 @@ export default defineComponent({
           <DateRangePicker label="Required date window" required description="Enter both dates." />
           <DateRangePicker label="No date filter" description="DD/MM/YYYY – DD/MM/YYYY" clearable />
           <DateRangePicker
-            label="Hover · pinned"
+            label="Pointer editing"
             defaultValue={['2026-09-14', '2026-09-23']}
-            previewState="hover"
             clearable
           />
           <DateRangePicker
-            label="Keyboard focus · pinned"
+            label="Keyboard editing"
             defaultValue={['2026-09-14', '2026-09-23']}
-            previewState="keyboard-focus"
             clearable
           />
           <DateRangePicker
@@ -147,8 +145,7 @@ export default defineComponent({
             clearable
           />
           <DateRangePicker
-            label="Reversed dates · keyboard focus pinned"
-            previewState="keyboard-focus"
+            label="Reversed dates · keyboard editing"
             previewText="23/09/2026 – 14/09/2026"
             status="danger"
             message="The end date must be on or after the start date."

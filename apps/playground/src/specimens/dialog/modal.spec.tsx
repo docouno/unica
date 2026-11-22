@@ -1,10 +1,11 @@
+import { FormField } from '../../prototypes/form-field/form-field.proto.js';
 import { useId, useRef, useState } from 'react';
 import type { ReactElement } from 'react';
 import { defineComponent } from '../../workbench/types.js';
 import { Alert, AlertDescription, AlertTitle } from '../../prototypes/alert/alert.proto.js';
 import { Button } from '../../prototypes/button/button.proto.js';
 import { CheckboxCard } from '../../prototypes/choice-card/choice-card.proto.js';
-import { Input } from '../../prototypes/input/input.proto.js';
+import { Input } from '@docouno/unica';
 import { Select } from '../../prototypes/select/select.proto.js';
 import { Textarea } from '../../prototypes/textarea/textarea.proto.js';
 import { ToastCard } from '../../prototypes/toast/toast.proto.js';
@@ -180,15 +181,26 @@ function EditProject({
                 </Alert>
               )}
               <div className="dialog-study-form-section">
-                <Input
+                <FormField
+                  htmlFor={`${formId}-project`}
                   label="Project name"
-                  ref={nameRef}
-                  defaultValue={projectName}
                   required
-                  status={status === 'invalid' ? 'danger' : undefined}
+                  status={status === 'invalid' ? 'danger' : 'neutral'}
                   message={status === 'invalid' ? 'A project already uses this name.' : undefined}
-                  aria-invalid={status === 'invalid' || undefined}
-                />
+                  messageId={`${formId}-project-message`}
+                  feedbackIcon={false}
+                >
+                  <Input
+                    id={`${formId}-project`}
+                    ref={nameRef}
+                    defaultValue={projectName}
+                    required
+                    status={status === 'invalid' ? 'danger' : undefined}
+                    aria-describedby={
+                      status === 'invalid' ? `${formId}-project-message` : undefined
+                    }
+                  />
+                </FormField>
                 <Textarea
                   label="Description"
                   defaultValue="Source files and review notes for the quarterly editorial release."
@@ -197,7 +209,9 @@ function EditProject({
               </div>
               {!guarded && (
                 <div className="dialog-study-fields">
-                  <Input label="Owner" defaultValue="Editorial team" />
+                  <FormField htmlFor={`${formId}-owner`} label="Owner">
+                    <Input id={`${formId}-owner`} defaultValue="Editorial team" />
+                  </FormField>
                   <Select label="Default access" options={roles} defaultValue="reviewer" />
                 </div>
               )}
@@ -217,7 +231,9 @@ function EditProject({
                   </div>
                   <div className="dialog-study-form-section">
                     <h3>Review</h3>
-                    <Input label="Review owner" defaultValue="Content operations" />
+                    <FormField htmlFor={`${formId}-review-owner`} label="Review owner">
+                      <Input id={`${formId}-review-owner`} defaultValue="Content operations" />
+                    </FormField>
                     <Textarea
                       label="Review instructions"
                       rows={3}

@@ -8,8 +8,8 @@ import type {
   Ref,
   RefObject,
 } from 'react';
-import { Divider, Icon, Indicator, defineGlyph } from '@docouno/unica';
-import type { GlyphSource } from '@docouno/unica';
+import { Divider, Icon, Indicator, defineGlyph, Input } from '@docouno/unica';
+import type { GlyphSource, InputProps } from '@docouno/unica';
 import {
   BookOpenIcon,
   GearIcon,
@@ -35,8 +35,6 @@ import {
   TrashGlyph,
 } from '../control-glyphs.js';
 import { Button, IconButton } from '../button/button.proto.js';
-import { Input } from '../input/input.proto.js';
-import type { InputProps } from '../input/input.proto.js';
 import { PopoverContent } from '../popover/popover.proto.js';
 import { useShellPopoverPosition, windowBounds } from './app-shell-position.js';
 import { HintPreview } from '../tooltip/tooltip.preview.js';

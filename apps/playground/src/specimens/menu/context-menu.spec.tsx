@@ -1,3 +1,5 @@
+import { FormField } from '../../prototypes/form-field/form-field.proto.js';
+import { useId } from 'react';
 import { useState } from 'react';
 import type { ReactElement, ReactNode } from 'react';
 import {
@@ -13,8 +15,7 @@ import { defineComponent } from '../../workbench/types.js';
 import { Checkbox } from '../../prototypes/binary-controls/binary-controls.proto.js';
 import { IconButton } from '../../prototypes/button/button.proto.js';
 import { Card } from '../../prototypes/card/card.proto.js';
-import { Icon, Link, Text } from '@docouno/unica';
-import { Input } from '../../prototypes/input/input.proto.js';
+import { Icon, Link, Text, Input } from '@docouno/unica';
 import { ContextMenu } from '../../prototypes/menu/context-menu.proto.js';
 import type { MenuEntry } from '../../prototypes/menu/menu.entries.js';
 import { MenuPreview } from '../../prototypes/menu/menu.proto.js';
@@ -141,6 +142,7 @@ function InspectFile({ touch = false }: { readonly touch?: boolean }): ReactElem
 }
 
 function NativeBehavior(): ReactElement {
+  const id = useId();
   const [allowSelection, setAllowSelection] = useState(false);
   const [selection, setSelection] = useState('');
   const [notice, setNotice] = useState('');
@@ -202,7 +204,11 @@ function NativeBehavior(): ReactElement {
             <Text className="context-study-selection" size="body-s" color="secondary" dir="auto">
               Select part of this sentence and right-click it.
             </Text>
-            <Input size="s" label="Revision note" defaultValue="Fixes in this release" />
+            <FormField htmlFor={id} label="Revision note" size="s">
+              <div data-native-context-region="">
+                <Input id={id} size="s" defaultValue="Fixes in this release" />
+              </div>
+            </FormField>
             <Link href="?item=04-document-reader">Open the source document</Link>
             {panel}
           </Card>
@@ -338,7 +344,8 @@ export default defineComponent({
   trigger={(bindings) => <IconButton {...bindings} icon={DotsThreeIcon} aria-label="Text actions" />}
   target={(bindings, trigger, panel) => (
     <Card {...bindings}>
-      <Input label="Reference name" />
+      <label htmlFor={referenceId}>Reference name</label>
+      <div data-native-context-region=""><Input id={referenceId} /></div>
       {trigger}
       {panel}
     </Card>

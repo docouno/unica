@@ -16,7 +16,7 @@ import {
   DrawerTrigger,
 } from '../prototypes/dialog/dialog.proto.js';
 import { ToastCard } from '../prototypes/toast/toast.proto.js';
-import { FormField } from '../prototypes/input/input.proto.js';
+import { FormField } from '../prototypes/form-field/form-field.proto.js';
 import { Combobox } from '../prototypes/combobox/combobox.proto.js';
 import type { Suggestion } from '../prototypes/combobox/combobox.proto.js';
 import { CheckboxCard, RadioCard } from '../prototypes/choice-card/choice-card.proto.js';

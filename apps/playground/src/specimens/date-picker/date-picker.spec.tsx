@@ -166,7 +166,7 @@ export default defineComponent({
       id: 'states',
       title: 'Field states & feedback',
       caption:
-        'Hover and keyboard focus are pinned for comparison. Semantic feedback is pinned too; use Live for validation recovery. Read only permits calendar inspection; disabled suppresses status and actions.',
+        'Hover or tab into each field. Semantic feedback is pinned for comparison; use Live for validation recovery. Read only permits calendar inspection; disabled suppresses status and actions.',
       kind: 'behavior',
       mode: 'pinned',
       render: () => (
@@ -177,21 +177,10 @@ export default defineComponent({
             description="DD/MM/YYYY · you can also paste an ISO date"
             clearable
           />
+          <DatePicker label="Pointer editing" defaultValue="2026-09-16" clearable />
+          <DatePicker label="Keyboard editing" defaultValue="2026-09-16" clearable />
           <DatePicker
-            label="Hover · pinned"
-            defaultValue="2026-09-16"
-            previewState="hover"
-            clearable
-          />
-          <DatePicker
-            label="Keyboard focus · pinned"
-            defaultValue="2026-09-16"
-            previewState="keyboard-focus"
-            clearable
-          />
-          <DatePicker
-            label="Invalid date · keyboard focus pinned"
-            previewState="keyboard-focus"
+            label="Invalid date · keyboard editing"
             previewText="31/02/2026"
             status="danger"
             message="February has no 31st day. Enter a real date."

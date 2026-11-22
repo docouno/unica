@@ -38,6 +38,13 @@ export type {
   IndicatorProps,
   IndicatorStatus,
 } from './components/Indicator/index.js';
+export { Input } from './components/Input/index.js';
+export type {
+  ControlSize,
+  FieldStatus,
+  FieldVariant,
+  InputProps,
+} from './components/Input/index.js';
 export { Kbd, KbdGroup } from './components/Kbd/index.js';
 export type { KbdGroupProps, KbdProps, KbdSize } from './components/Kbd/index.js';
 export {

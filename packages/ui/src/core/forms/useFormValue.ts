@@ -20,13 +20,18 @@ export interface FormValueOptions<T> extends ControllableStateOptions<T> {
   readonly readOnly?: boolean | undefined;
   readonly commitMode?: 'immediate' | 'deferred' | undefined;
   readonly cloneDefault?: ((value: T) => T) | undefined;
+  readonly readInitialValue?: ((control: FormControl) => T) | undefined;
+  readonly shouldWrite?: (() => boolean) | undefined;
+  readonly beforeReset?: (() => void) | undefined;
   readonly onReset?: (() => void) | undefined;
 }
 
 export interface FormValueState<T> {
   readonly value: T;
   readonly controlled: boolean;
+  readonly adopt: (next: T) => void;
   readonly propose: (next: T, source?: FormControl) => void;
+  readonly reconcile: () => void;
 }
 
 function defaultIsEqual<T>(a: T, b: T): boolean {
@@ -102,6 +107,7 @@ export function useFormValue<T>(options: FormValueOptions<T>): FormValueState<T>
   const controlledRef = useRef(controlled);
   const mountedRef = useRef(true);
   const writeEpoch = useRef(0);
+  const hasAttached = useRef(false);
   const binding = useRef<(NativeResetSubscription & { controls: readonly FormControl[] }) | null>(
     null,
   );
@@ -128,6 +134,9 @@ export function useFormValue<T>(options: FormValueOptions<T>): FormValueState<T>
   const writeWith = useCallback(
     (next: T, force: boolean, preReadControls?: readonly FormControl[]): void => {
       const currentOptions = config.current;
+      if (currentOptions.shouldWrite?.() === false) {
+        return;
+      }
       const controls = preReadControls ?? readControls(currentOptions);
       currentOptions.write(next, {
         controlled: controlledRef.current,
@@ -147,6 +156,7 @@ export function useFormValue<T>(options: FormValueOptions<T>): FormValueState<T>
 
   const write = useCallback((next: T): void => writeWith(next, false), [writeWith]);
   const forceWrite = useCallback((next: T): void => writeWith(next, true), [writeWith]);
+  const reconcile = useCallback((): void => write(read()), [read, write]);
 
   const request = useCallback(
     (next: T, source?: FormControl): void => {
@@ -198,6 +208,7 @@ export function useFormValue<T>(options: FormValueOptions<T>): FormValueState<T>
           return;
         }
         if (result === 'reset') {
+          config.current.beforeReset?.();
           restore(initial, forceWrite);
           config.current.onReset?.();
         } else {
@@ -207,6 +218,16 @@ export function useFormValue<T>(options: FormValueOptions<T>): FormValueState<T>
       binding.current = { controls, ...subscription };
     } else {
       previous.syncRoots();
+    }
+
+    if (!hasAttached.current) {
+      hasAttached.current = true;
+      const readInitialValue = config.current.readInitialValue;
+      const control = controls[0];
+      if (!controlledRef.current && control && readInitialValue) {
+        restore(readInitialValue(control), (next) => writeWith(next, true, controls));
+        return;
+      }
     }
 
     const current = read();
@@ -226,5 +247,5 @@ export function useFormValue<T>(options: FormValueOptions<T>): FormValueState<T>
     }
   });
 
-  return { value, controlled, propose: request };
+  return { value, controlled, adopt: restore, propose: request, reconcile };
 }

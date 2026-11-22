@@ -1,5 +1,3 @@
-@import '../input/input.css';
-
 /* The in-flow list owns no surface, elevation or decorative variants. */
 .choice-list-frame-proto {
   --option-height: var(--size-m-height);
@@ -192,17 +190,84 @@
   inline-size: fit-content;
   max-inline-size: 100%;
 }
-.select-trigger-proto.input-shell-proto {
+.select-trigger-proto {
+  --select-trigger-height: var(--size-m-height);
+  --select-trigger-radius: var(--size-m-radius);
+  --select-trigger-padding: var(--size-m-padding-x);
+  --select-trigger-gap: var(--size-m-gap);
+  --select-trigger-font: var(--text-size-body-s);
+  --select-trigger-edge: var(--control-border);
+  --select-trigger-focus: var(--focus-ring-color);
+  --select-trigger-status: var(--fg-secondary);
+  --select-trigger-icon-size: var(--size-m-icon);
+  position: relative;
   box-sizing: border-box;
-  block-size: var(--field-height);
-  min-block-size: var(--field-height);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--select-trigger-gap);
+  inline-size: 100%;
+  min-inline-size: 0;
+  block-size: var(--select-trigger-height);
+  min-block-size: var(--select-trigger-height);
   padding-block: 0;
+  padding-inline: var(--select-trigger-padding);
+  border: 1px solid var(--select-trigger-edge);
+  border-radius: var(--select-trigger-radius);
+  background: var(--control-bg);
+  color: var(--fg-primary);
+  font-family: var(--font-family-base);
+  font-size: var(--select-trigger-font);
+  line-height: 1.4;
   text-align: start;
   cursor: pointer;
 }
-.select-trigger-proto[data-variant='ghost']::after {
-  display: none;
+
+.select-trigger-proto[data-size='s'] {
+  --select-trigger-height: var(--size-s-height);
+  --select-trigger-radius: var(--size-s-radius);
+  --select-trigger-padding: var(--size-s-padding-x);
+  --select-trigger-gap: var(--size-s-gap);
+  --select-trigger-font: var(--size-s-control-font);
+  --select-trigger-icon-size: var(--size-s-icon);
 }
+
+.select-trigger-proto[data-size='l'] {
+  --select-trigger-height: var(--size-l-height);
+  --select-trigger-radius: var(--size-l-radius);
+  --select-trigger-padding: var(--size-l-padding-x);
+  --select-trigger-gap: var(--size-l-gap);
+  --select-trigger-font: var(--text-size-body-m);
+  --select-trigger-icon-size: var(--size-l-icon);
+}
+
+.select-trigger-proto[data-variant='ghost'] {
+  border-color: transparent;
+  background: transparent;
+}
+.select-trigger-proto[data-status='info'] {
+  --select-trigger-edge: var(--status-info-border);
+  --select-trigger-focus: var(--status-info-signal);
+  --select-trigger-status: var(--status-info-soft-fg);
+}
+
+.select-trigger-proto[data-status='success'] {
+  --select-trigger-edge: var(--status-success-border);
+  --select-trigger-focus: var(--status-success-signal);
+  --select-trigger-status: var(--status-success-soft-fg);
+}
+
+.select-trigger-proto[data-status='warning'] {
+  --select-trigger-edge: var(--status-warning-border);
+  --select-trigger-focus: var(--status-warning-signal);
+  --select-trigger-status: var(--status-warning-soft-fg);
+}
+
+.select-trigger-proto[data-status='danger'] {
+  --select-trigger-edge: var(--status-danger-border);
+  --select-trigger-focus: var(--status-danger-signal);
+  --select-trigger-status: var(--status-danger-soft-fg);
+}
+
 .select-trigger-proto[data-variant='ghost']:is(
     :hover,
     [data-open],
@@ -212,13 +277,13 @@
   background: var(--neutral-soft-bg);
 }
 .select-trigger-proto[data-status='neutral']:not(:disabled):is(:hover, [data-preview='hover']) {
-  --field-edge: var(--control-border-hover);
+  --select-trigger-edge: var(--control-border-hover);
 }
-.select-trigger-proto.input-shell-proto[data-status='neutral'][data-open]:not(:disabled) {
-  --field-edge: var(--control-border-focus);
+.select-trigger-proto[data-status='neutral'][data-open]:not(:disabled) {
+  --select-trigger-edge: var(--control-border-focus);
 }
 .select-trigger-proto:not([data-open]):is(:focus-visible, [data-preview='focus']) {
-  outline: 2px solid var(--field-focus);
+  outline: 2px solid var(--select-trigger-focus);
   outline-offset: 2px;
 }
 .select-trigger-proto[data-open] {
@@ -376,7 +441,7 @@
   }
 }
 @media (forced-colors: active) {
-  .select-trigger-proto.input-shell-proto {
+  .select-trigger-proto {
     background: ButtonFace;
     color: ButtonText;
     border-color: ButtonText;
@@ -397,7 +462,31 @@
   }
 }
 
+.select-search-row-proto {
+  --select-search-padding: var(--size-m-padding-x);
+  --select-search-gap: var(--size-m-gap);
+  position: relative;
+}
+
+.select-search-row-proto[data-size='s'] {
+  --select-search-padding: var(--size-s-padding-x);
+  --select-search-gap: var(--size-s-gap);
+}
+
+.select-search-row-proto[data-size='l'] {
+  --select-search-padding: var(--size-l-padding-x);
+  --select-search-gap: var(--size-l-gap);
+}
+
+.select-search-input-proto {
+  padding-inline-end: calc(1px + var(--select-search-padding) + 24px + var(--select-search-gap));
+}
+
 .field-icon-button-proto {
+  position: absolute;
+  inset-inline-end: calc(1px + var(--select-search-padding));
+  inset-block-start: 50%;
+  translate: 0 -50%;
   display: inline-grid;
   place-items: center;
   inline-size: 24px;
@@ -452,8 +541,8 @@
 
 .select-trigger-proto
   > :is(.select-disclosure-proto, .select-readonly-icon-proto, .select-spinner-proto) {
-  inline-size: var(--field-icon-size);
-  block-size: var(--field-icon-size);
+  inline-size: var(--select-trigger-icon-size);
+  block-size: var(--select-trigger-icon-size);
 }
 
 .choice-option-check-proto {
@@ -471,9 +560,9 @@
 
 .select-status-proto {
   flex: none;
-  inline-size: var(--field-icon-size);
-  block-size: var(--field-icon-size);
-  color: var(--field-status);
+  inline-size: var(--select-trigger-icon-size);
+  block-size: var(--select-trigger-icon-size);
+  color: var(--select-trigger-status);
 }
 
 .select-panel-proto:focus-visible {

@@ -24,9 +24,9 @@ import {
   Stack,
   Text,
   Title,
+  Input,
 } from '@docouno/unica';
 import { CloseGlyph } from '../../prototypes/control-glyphs.js';
-import { Input } from '../../prototypes/input/input.proto.js';
 import {
   AppShell,
   AsidePanel,
@@ -500,7 +500,14 @@ function InspectorRows({ children }: { readonly children?: ReactNode }): ReactEl
         </Text>
       </PropertyRow>
       <PropertyRow label="Reference" controlId={keyId}>
-        <Input id={keyId} dir="ltr" size="s" variant="ghost" defaultValue="RS-104" />
+        <Input
+          id={keyId}
+          dir="ltr"
+          size="s"
+          variant="ghost"
+          defaultValue="RS-104"
+          placeholder="Enter a reference"
+        />
       </PropertyRow>
       {children}
     </div>

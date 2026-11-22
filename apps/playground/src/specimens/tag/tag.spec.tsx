@@ -1,3 +1,4 @@
+import { FormField } from '../../prototypes/form-field/form-field.proto.js';
 import { useId, useRef, useState } from 'react';
 import type { ReactElement } from 'react';
 import {
@@ -14,9 +15,8 @@ import {
 } from '@phosphor-icons/react';
 import { defineComponent } from '../../workbench/types.js';
 import type { BadgeStatus } from '@docouno/unica';
-import { Badge } from '@docouno/unica';
+import { Badge, Input } from '@docouno/unica';
 import { Button } from '../../prototypes/button/button.proto.js';
-import { Input } from '../../prototypes/input/input.proto.js';
 import { Tag, TagGroup } from '../../prototypes/tag/tag.proto.js';
 import type { TagGroupItem, TagProps, TagSize } from '../../prototypes/tag/tag.proto.js';
 import '../../prototypes/tag/tag.examples.css';
@@ -80,6 +80,7 @@ function Anatomy(): ReactElement {
 }
 
 function SizeFit(): ReactElement {
+  const id = useId();
   const [values, setValues] = useState<readonly string[]>(['Design systems']);
   return (
     <div className="tag-demo-stack">
@@ -89,7 +90,9 @@ function SizeFit(): ReactElement {
             {size.toUpperCase()} · {heights[size]} px tag / {controlHeights[size]} px control
           </span>
           <div className="tag-demo-fit-fields">
-            <Input size={size} label="Single value" defaultValue="Design systems" />
+            <FormField htmlFor={`${id}-value-${size}`} label="Single value" size={size}>
+              <Input id={`${id}-value-${size}`} size={size} defaultValue="Design systems" />
+            </FormField>
             <TagsInput
               size={size}
               label="Assigned values"

@@ -1,3 +1,4 @@
+import { FormField } from '../prototypes/form-field/form-field.proto.js';
 import {
   Badge,
   Blockquote,
@@ -9,6 +10,7 @@ import {
   Spinner,
   Text,
   Title,
+  Input,
 } from '@docouno/unica';
 import { useId, useRef, useState } from 'react';
 import { folioSceneHref } from './folio/folio.routes.js';
@@ -27,7 +29,6 @@ import {
 import { Subbar } from '../prototypes/app-shell/app-shell.proto.js';
 import { Button, IconButton } from '../prototypes/button/button.proto.js';
 import { ToastCard } from '../prototypes/toast/toast.proto.js';
-import { Input } from '../prototypes/input/input.proto.js';
 import {
   PopoverBody,
   PopoverClose,
@@ -439,18 +440,20 @@ function EditorScene(): ReactElement {
                   setNotice('Document reference updated.');
                 }}
               >
-                <Input
-                  ref={referenceInputRef}
-                  size="s"
-                  label="Document path"
-                  name="reference"
-                  value={draftReference}
-                  onChange={(event) => setDraftReference(event.currentTarget.value)}
-                  required
-                  pattern={'.*\\S.*'}
-                  dir="ltr"
-                  placeholder="/runbooks/document-name"
-                />
+                <FormField htmlFor={`${referenceId}-path`} label="Document path" size="s" required>
+                  <Input
+                    id={`${referenceId}-path`}
+                    ref={referenceInputRef}
+                    size="s"
+                    name="reference"
+                    value={draftReference}
+                    onChange={(event) => setDraftReference(event.currentTarget.value)}
+                    required
+                    pattern={'.*\\S.*'}
+                    dir="ltr"
+                    placeholder="/runbooks/document-name"
+                  />
+                </FormField>
                 <Checkbox
                   size="s"
                   checked={draftPinned}
@@ -518,6 +521,7 @@ export default defineScene({
     'divider',
     'icon',
     'indicator',
+    'form-field',
     'input',
     'kbd',
     'link',

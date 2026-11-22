@@ -7,10 +7,10 @@ import {
 } from '../control-glyphs.js';
 import { useId, useLayoutEffect, useRef, useState } from 'react';
 import type { KeyboardEvent, MouseEvent, ReactElement, ReactNode, RefObject } from 'react';
-import { Icon, Kbd } from '@docouno/unica';
-import type { GlyphSource } from '@docouno/unica';
-import { Input } from '../input/input.proto.js';
-import type { InputProps } from '../input/input.proto.js';
+import { Icon, Input, Kbd, Spinner } from '@docouno/unica';
+import type { GlyphSource, InputProps } from '@docouno/unica';
+import { CloseGlyph } from '../control-glyphs.js';
+import { FormField } from '../form-field/form-field.proto.js';
 import { ListboxGroup, ListboxOption } from '../select/listbox.proto.js';
 import type { SelectOption } from '../select/listbox.proto.js';
 import { SelectPanel } from '../select/select-control.proto.js';
@@ -24,9 +24,6 @@ export interface Suggestion extends SelectOption {
 
 interface FieldProps extends Pick<
   InputProps,
-  | 'label'
-  | 'description'
-  | 'message'
   | 'placeholder'
   | 'status'
   | 'size'
@@ -36,10 +33,13 @@ interface FieldProps extends Pick<
   | 'disabled'
   | 'readOnly'
   | 'required'
-  | 'previewState'
   | 'aria-label'
-  | 'data-wb-subject'
+  | 'aria-describedby'
 > {
+  readonly label?: ReactNode;
+  readonly description?: ReactNode;
+  readonly message?: ReactNode;
+  readonly 'data-wb-subject'?: string | undefined;
   readonly options: readonly Suggestion[];
   readonly iconLeft?: GlyphSource | null | undefined;
   readonly minimumQueryLength?: number;
@@ -88,9 +88,11 @@ function useSuggestionPlacement(
 ): {
   readonly panel: RefObject<HTMLDivElement | null>;
   readonly input: RefObject<HTMLInputElement | null>;
+  readonly row: RefObject<HTMLDivElement | null>;
 } {
   const panel = useRef<HTMLDivElement>(null);
   const input = useRef<HTMLInputElement>(null);
+  const row = useRef<HTMLDivElement>(null);
   const closeRef = useRef(close);
   useLayoutEffect(() => {
     closeRef.current = close;
@@ -98,7 +100,7 @@ function useSuggestionPlacement(
 
   useLayoutEffect(() => {
     const node = panel.current;
-    const anchor = input.current?.parentElement;
+    const anchor = row.current;
     if (!open || !node || !anchor) {
       return;
     }
@@ -172,7 +174,7 @@ function useSuggestionPlacement(
     };
   }, [open]);
 
-  return { panel, input };
+  return { panel, input, row };
 }
 
 function RestoreButton({
@@ -354,7 +356,11 @@ function SuggestionField({
   iconLeft,
   disabled,
   readOnly,
+  label,
+  description,
   message,
+  'aria-describedby': authoredDescription,
+  'data-wb-subject': subject,
   ...fieldProps
 }: SuggestionFieldProps): ReactElement {
   const id = useId();
@@ -390,10 +396,11 @@ function SuggestionField({
     setOpen(false);
     setRequested(undefined);
   };
-  const { panel: popup, input } = useSuggestionPlacement(
-    open && !previewOpen && !unavailable,
-    close,
-  );
+  const {
+    panel: popup,
+    input,
+    row,
+  } = useSuggestionPlacement(open && !previewOpen && !unavailable, close);
   const focusInput = (): void => input.current?.focus({ preventScroll: true });
   const changeText = (next: string): void => {
     setText(next);
@@ -416,9 +423,27 @@ function SuggestionField({
     }
   };
   const clear = (): void => {
+    const editor = input.current;
+    if (
+      !editor ||
+      unavailable ||
+      composing.current ||
+      editor.matches(':disabled') ||
+      editor.closest('[inert]') ||
+      (!editor.value && !confirmed)
+    ) {
+      return;
+    }
     close();
     setSelection(undefined);
     setEditing(false);
+    if (text) {
+      changeText('');
+    }
+    if (confirmed) {
+      onSelectionChange?.(null);
+    }
+    focusInput();
   };
 
   useLayoutEffect(() => {
@@ -551,7 +576,7 @@ function SuggestionField({
   const browsingCopy = unconfirmed && recoveryCopy && enabled.length > 0;
   const panel = shown && (
     <SelectPanel
-      data-wb-subject={fieldProps['data-wb-subject']}
+      data-wb-subject={subject}
       ref={popup}
       popover={previewOpen ? undefined : 'manual'}
       className={
@@ -593,44 +618,109 @@ function SuggestionField({
     </SelectPanel>
   );
 
+  const describedBy =
+    [
+      ...new Set(
+        [
+          authoredDescription,
+          description ? `${id}-description` : undefined,
+          message ? `${id}-message` : undefined,
+          (shown ? browsingCopy : unconfirmed && recoveryCopy) ? recoveryId : undefined,
+        ]
+          .flatMap((part) => part?.trim().split(/\s+/) ?? [])
+          .filter(Boolean),
+      ),
+    ].join(' ') || undefined;
+
   return (
     <div ref={root} className="suggestion-field-proto" data-width={width}>
-      <Input
-        {...fieldProps}
-        ref={input}
-        id={id}
-        className="suggestion-input-proto"
+      <FormField
+        htmlFor={id}
+        label={label}
+        required={fieldProps.required}
         size={size}
-        width={width}
-        placeholder={placeholder}
-        disabled={disabled}
-        readOnly={readOnly}
-        clearable={clearable}
-        clearLabel={catalog ? 'Clear selection and search text' : 'Clear text'}
-        onClear={clear}
-        message={message}
-        iconLeft={iconLeft ?? undefined}
-        value={text}
-        role="combobox"
-        autoComplete="off"
-        aria-autocomplete="list"
-        aria-expanded={shown}
-        aria-controls={shown ? listId : undefined}
-        aria-activedescendant={active ? optionId(listId, active.value) : undefined}
-        aria-describedby={
-          (shown ? browsingCopy : unconfirmed && recoveryCopy) ? recoveryId : undefined
-        }
-        suffix={
-          pending || readOnly || disclosure ? (
-            <>
-              {pending && (
-                <Icon
-                  usage="slot"
-                  icon={BusyGlyph}
-                  size={size}
-                  color="muted"
-                  className="suggestion-spinner-proto control-spinner-proto"
-                />
+        description={description}
+        descriptionId={`${id}-description`}
+        message={message ?? ''}
+        messageId={`${id}-message`}
+        status={disabled ? 'neutral' : fieldProps.status}
+        feedbackIcon={false}
+      >
+        <div
+          ref={row}
+          data-wb-subject={subject}
+          className="suggestion-editor-row-proto"
+          data-size={size}
+          data-status={
+            !disabled && fieldProps.status && fieldProps.status !== 'neutral' ? '' : undefined
+          }
+        >
+          <Input
+            {...fieldProps}
+            ref={input}
+            id={id}
+            className="suggestion-input-proto"
+            size={size}
+            placeholder={placeholder}
+            disabled={disabled}
+            readOnly={readOnly}
+            iconLeft={iconLeft ?? undefined}
+            value={text}
+            role="combobox"
+            autoComplete="off"
+            aria-autocomplete="list"
+            aria-expanded={shown}
+            aria-controls={shown ? listId : undefined}
+            aria-activedescendant={active ? optionId(listId, active.value) : undefined}
+            aria-label={
+              fieldProps['aria-label'] ??
+              (label ? undefined : catalog ? 'Search options' : 'Enter text')
+            }
+            aria-describedby={describedBy}
+            onKeyDown={onKeyDown}
+            onBlur={() => {
+              composing.current = false;
+              close();
+            }}
+            onCompositionStart={() => {
+              composing.current = true;
+            }}
+            onCompositionEnd={(event) => {
+              composing.current = false;
+              setOpen(catalog || event.currentTarget.value.trim().length > 0);
+            }}
+            onChange={(event) => {
+              const next = event.currentTarget.value;
+              changeText(next);
+              if (catalog) {
+                setEditing(true);
+              }
+              if (confirmed) {
+                onSelectionChange?.(null);
+              }
+              setRequested(undefined);
+              if (!composing.current) {
+                setOpen(catalog || next.trim().length > 0);
+              }
+            }}
+          />
+          {pending && <Spinner className="suggestion-spinner-proto" size={size} tone="muted" />}
+          {(clearable || readOnly || disclosure) && (
+            <span className="suggestion-actions-proto">
+              {clearable && (
+                <button
+                  type="button"
+                  className="suggestion-action-proto suggestion-clear-proto"
+                  aria-label={catalog ? 'Clear selection and search text' : 'Clear text'}
+                  aria-controls={id}
+                  disabled={disabled || readOnly}
+                  data-empty={!(text || confirmed) || undefined}
+                  onPointerDown={(event) => event.preventDefault()}
+                  onMouseDown={(event) => event.preventDefault()}
+                  onClick={clear}
+                >
+                  <Icon usage="slot" icon={CloseGlyph} size={size} />
+                </button>
               )}
               {readOnly && !disabled ? (
                 <Icon
@@ -644,7 +734,7 @@ function SuggestionField({
                 disclosure && (
                   <button
                     type="button"
-                    className="suggestion-disclosure-proto"
+                    className="suggestion-action-proto suggestion-disclosure-proto"
                     aria-label={
                       catalog
                         ? shown
@@ -668,37 +758,14 @@ function SuggestionField({
                       }
                     }}
                   >
-                    <Icon usage="slot" icon={CaretDownGlyph} />
+                    <Icon usage="slot" icon={CaretDownGlyph} size={size} />
                   </button>
                 )
               )}
-            </>
-          ) : undefined
-        }
-        onKeyDown={onKeyDown}
-        onBlur={close}
-        onCompositionStart={() => {
-          composing.current = true;
-        }}
-        onCompositionEnd={(event) => {
-          composing.current = false;
-          setOpen(catalog || event.currentTarget.value.trim().length > 0);
-        }}
-        onChange={(event) => {
-          const next = event.currentTarget.value;
-          changeText(next);
-          if (catalog) {
-            setEditing(true);
-          }
-          if (confirmed) {
-            onSelectionChange?.(null);
-          }
-          setRequested(undefined);
-          if (!composing.current) {
-            setOpen(catalog || next.trim().length > 0);
-          }
-        }}
-      />
+            </span>
+          )}
+        </div>
+      </FormField>
       {unconfirmed && !unavailable && !shown && (recoveryCopy || replacement) && (
         <div className="suggestion-recovery-proto">
           {recoveryCopy && <span id={recoveryId}>{recoveryCopy}</span>}
