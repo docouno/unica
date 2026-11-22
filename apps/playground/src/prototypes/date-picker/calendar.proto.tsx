@@ -1,8 +1,8 @@
-import { useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import type { HTMLAttributes, KeyboardEvent, ReactElement } from 'react';
+import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import type { HTMLAttributes, KeyboardEvent, ReactElement, Ref } from 'react';
+import { Tooltip } from '@docouno/unica';
+import type { ControlSize, HoverPreviewChangeDetails } from '@docouno/unica';
 import { CaretLeftIcon, CaretRightIcon } from '@phosphor-icons/react';
-import type { ControlSize } from '@docouno/unica';
-import { Tooltip } from '../tooltip/tooltip.proto.js';
 import {
   addDays,
   addMonths,
@@ -20,6 +20,15 @@ export interface CalendarFeedback {
   readonly message: string;
   readonly draftPrompt?: string | undefined;
   readonly longestPreview?: string | undefined;
+}
+
+interface DateIssueBinding {
+  readonly gridKey: string;
+  readonly date: string;
+  readonly label: string;
+  readonly anchor: HTMLButtonElement;
+  readonly avoid: HTMLElement | null;
+  readonly open: boolean;
 }
 
 export interface CalendarProps extends Omit<
@@ -51,6 +60,7 @@ export interface CalendarProps extends Omit<
   readonly onViewAvailability?: ((empty: boolean) => void) | undefined;
   readonly showFeedback?: boolean | undefined;
   readonly onFeedback?: ((feedback: CalendarFeedback) => void) | undefined;
+  readonly issueTooltipRef?: Ref<HTMLSpanElement> | undefined;
   readonly onToday?: (() => void) | undefined;
   readonly previewAnchor?: string | undefined;
   readonly previewCandidate?: string | undefined;
@@ -67,58 +77,6 @@ function dayInMonth(day: string, month: string): string {
 
 function orderedRange(first: string, second: string): DateRange {
   return first <= second ? [first, second] : [second, first];
-}
-
-function positionIssueTooltip(
-  tooltip: HTMLSpanElement,
-  anchor: HTMLButtonElement,
-  calendar: HTMLDivElement,
-  persistent: boolean,
-): void {
-  const viewport = window.visualViewport;
-  const left = viewport?.offsetLeft ?? 0;
-  const top = viewport?.offsetTop ?? 0;
-  const width = viewport?.width ?? window.innerWidth;
-  const height = viewport?.height ?? window.innerHeight;
-  const right = left + width;
-  const bottom = top + height;
-  const day = anchor.getBoundingClientRect();
-  const panel = calendar.closest('.date-picker-panel-proto');
-  const surface = (panel ?? calendar).getBoundingClientRect();
-  const clip = panel?.hasAttribute('popover') ? surface : undefined;
-  if (
-    day.right <= Math.max(left, clip?.left ?? left) ||
-    day.left >= Math.min(right, clip?.right ?? right) ||
-    day.bottom <= Math.max(top, clip?.top ?? top) ||
-    day.top >= Math.min(bottom, clip?.bottom ?? bottom)
-  ) {
-    tooltip.style.visibility = 'hidden';
-    return;
-  }
-  tooltip.style.visibility = '';
-  tooltip.style.maxInlineSize = `${Math.min(240, width - 16)}px`;
-  const size = tooltip.getBoundingClientRect();
-  const leftSide = surface.left - left >= size.width + 14;
-  const rightSide = right - surface.right >= size.width + 14;
-  const above = surface.top - size.height - 6;
-  const below = surface.bottom + 6;
-  const aboveFits = above >= top + 8;
-  const belowFits = below + size.height <= bottom - 8;
-  const aboveDay = day.top - size.height - 6;
-  let x = day.left + (day.width - size.width) / 2;
-  let y = aboveDay >= top + 8 ? aboveDay : day.bottom + 6;
-
-  // Keep a retained explanation clear of the dates whenever the viewport has room.
-  if (persistent && (leftSide || rightSide)) {
-    const preferLeft = day.left - surface.left < surface.right - day.right;
-    x = leftSide && (!rightSide || preferLeft) ? surface.left - size.width - 6 : surface.right + 6;
-    y = day.top + (day.height - size.height) / 2;
-  } else if (persistent && (aboveFits || belowFits)) {
-    const preferAbove = day.top - surface.top < surface.bottom - day.bottom;
-    y = aboveFits && (!belowFits || preferAbove) ? above : below;
-  }
-  tooltip.style.left = `${Math.max(left + 8, Math.min(x, right - size.width - 8))}px`;
-  tooltip.style.top = `${Math.max(top + 8, Math.min(y, bottom - size.height - 8))}px`;
 }
 
 export function Calendar({
@@ -145,6 +103,7 @@ export function Calendar({
   readOnly,
   disabled,
   onFeedback,
+  issueTooltipRef,
   onToday,
   showFeedback = true,
   onViewAvailability,
@@ -159,7 +118,7 @@ export function Calendar({
 }: CalendarProps): ReactElement {
   const id = useId();
   const root = useRef<HTMLDivElement>(null);
-  const issueTooltip = useRef<HTMLSpanElement>(null);
+  const [issueBinding, setIssueBinding] = useState<DateIssueBinding | null>(null);
   const hoverExit = useRef<number | undefined>(undefined);
   const [viewMonth, setViewMonth] = useState(`${month.slice(0, 7)}-01`);
   const [view, setView] = useState(initialView);
@@ -241,6 +200,7 @@ export function Calendar({
     blockedReason(day) || (candidate ? rangeIssue(candidate, constraints) : '');
   const visibleStart = layout === 'year' ? `${year}-01-01` : viewMonth;
   const visibleEnd = addMonths(visibleStart, count);
+  const gridKey = `${visibleStart}/${visibleEnd}/${weekStartsOn}`;
   const visibleDays = Math.round(
     (dateObject(visibleEnd).getTime() - dateObject(visibleStart).getTime()) / 86400000,
   );
@@ -264,65 +224,48 @@ export function Calendar({
     feedbackDate < visibleEnd &&
     !dismissedTooltips.includes(feedbackDate),
   );
-  const tooltipId = `${id}-date-issue`;
+  const issueDescriptionId = `${id}-date-issue`;
   const persistentIssue = Boolean(rejectedIssue && feedbackDate === rejectedDate);
-  const dismissTooltip = useCallback(() => {
-    setDismissedTooltips((dates) => [...dates, feedbackDate]);
-  }, [feedbackDate]);
-  useLayoutEffect(() => {
-    const tooltip = issueTooltip.current;
+  // The current day remains the tooltip source while another day in this grid is resolved.
+  const mountedIssue = issueBinding?.gridKey === gridKey ? issueBinding : null;
+  const dismissTooltip = (date: string): void => {
+    setDismissedTooltips((dates) => (dates.includes(date) ? dates : [...dates, date]));
+  };
+  const handleTooltipChange = (open: boolean, details: HoverPreviewChangeDetails): void => {
     const calendar = root.current;
-    const day = calendar?.querySelector<HTMLButtonElement>(`[data-date="${feedbackDate}"]`);
-    if (!showIssueTooltip || !tooltip?.showPopover || !calendar || !day) {
+    const boundary = calendar?.closest('.date-picker-proto') ?? calendar;
+    if (
+      open ||
+      !mountedIssue ||
+      (details.reason === 'outside-press' &&
+        boundary &&
+        details.originalEvent?.composedPath().includes(boundary))
+    ) {
       return;
     }
-    const position = (): void => positionIssueTooltip(tooltip, day, calendar, persistentIssue);
-    const dismissHover = (event: globalThis.KeyboardEvent): void => {
-      const target = event.target as Node;
-      const field = calendar.closest('.date-picker-proto');
-      if (
-        event.key === 'Escape' &&
-        tooltip.style.visibility !== 'hidden' &&
-        !calendar.contains(target) &&
-        (field?.contains(target) ||
-          day.matches(':hover') ||
-          tooltip.matches(':hover') ||
-          (persistentIssue && calendar.matches(':hover')))
-      ) {
-        event.preventDefault();
-        event.stopPropagation();
-        dismissTooltip();
-      }
-    };
-    tooltip.showPopover();
-    position();
-    const observer =
-      typeof ResizeObserver === 'undefined' ? undefined : new ResizeObserver(position);
-    observer?.observe(calendar);
-    window.addEventListener('resize', position);
-    window.addEventListener('scroll', position, true);
-    window.visualViewport?.addEventListener('resize', position);
-    window.visualViewport?.addEventListener('scroll', position);
-    document.addEventListener('keydown', dismissHover, true);
-    return () => {
-      observer?.disconnect();
-      window.removeEventListener('resize', position);
-      window.removeEventListener('scroll', position, true);
-      window.visualViewport?.removeEventListener('resize', position);
-      window.visualViewport?.removeEventListener('scroll', position);
-      document.removeEventListener('keydown', dismissHover, true);
-      if (tooltip.matches(':popover-open')) {
-        tooltip.hidePopover();
-      }
-    };
-  }, [
-    showIssueTooltip,
-    feedbackDate,
-    feedbackIssue,
-    persistentIssue,
-    dismissTooltip,
-    visibleStart,
-  ]);
+    dismissTooltip(mountedIssue.date);
+  };
+  useLayoutEffect(() => {
+    const calendar = root.current;
+    const day =
+      feedbackIssue && view === 'days'
+        ? calendar?.querySelector<HTMLButtonElement>(`[data-date="${feedbackDate}"]`)
+        : null;
+    setIssueBinding(
+      calendar && day
+        ? {
+            gridKey,
+            date: feedbackDate,
+            label: feedbackIssue,
+            anchor: day,
+            avoid: persistentIssue
+              ? (calendar.closest<HTMLElement>('.date-picker-panel-proto') ?? calendar)
+              : null,
+            open: showIssueTooltip,
+          }
+        : null,
+    );
+  }, [feedbackDate, feedbackIssue, gridKey, persistentIssue, showIssueTooltip, view]);
   useEffect(() => () => window.clearTimeout(hoverExit.current), []);
   const stopHoverExit = (): void => window.clearTimeout(hoverExit.current);
   const clearInspection = (): void => {
@@ -576,7 +519,7 @@ export function Calendar({
                         aria-current={day === today ? 'date' : undefined}
                         aria-describedby={
                           showIssueTooltip && day === feedbackDate && !unavailableReason
-                            ? tooltipId
+                            ? issueDescriptionId
                             : undefined
                         }
                         aria-label={`${dayLabel.format(dateObject(day))}${isFixed && (anchor || !currentRange) ? ', start date' : ''}${unavailableReason ? `, ${unavailableReason}` : ''}${indicators.includes(day) ? ', has events' : ''}`}
@@ -599,8 +542,12 @@ export function Calendar({
                             leaveInspection();
                           }
                         }}
-                        onMouseEnter={() => inspect(day)}
-                        onMouseLeave={leaveInspection}
+                        onPointerEnter={(event) => {
+                          if (event.pointerType !== 'touch') {
+                            inspect(day);
+                          }
+                        }}
+                        onPointerLeave={leaveInspection}
                       >
                         <span>{Number(day.slice(8))}</span>
                         {indicators.includes(day) && (
@@ -638,16 +585,6 @@ export function Calendar({
       data-disabled={disabled || undefined}
       data-readonly={readOnly || undefined}
       onKeyDownCapture={(event) => {
-        if (
-          event.key === 'Escape' &&
-          showIssueTooltip &&
-          issueTooltip.current?.style.visibility !== 'hidden'
-        ) {
-          event.preventDefault();
-          event.stopPropagation();
-          dismissTooltip();
-          return;
-        }
         if (event.key === 'Escape' && view !== 'days') {
           event.preventDefault();
           event.stopPropagation();
@@ -715,25 +652,23 @@ export function Calendar({
         <div
           className="calendar-months-proto"
           data-year={layout === 'year' || undefined}
-          onMouseLeave={leaveInspection}
+          onPointerLeave={leaveInspection}
         >
           {Array.from({ length: count }, (_, index) =>
             renderMonth(addMonths(layout === 'year' ? `${year}-01-01` : viewMonth, index), index),
           )}
-          {showIssueTooltip && (
-            <Tooltip
-              id={tooltipId}
-              ref={issueTooltip}
-              className="calendar-date-tooltip-proto"
-              popover="manual"
-              data-persistent={persistentIssue || undefined}
-              onMouseEnter={stopHoverExit}
-              onMouseLeave={leaveInspection}
-              onClick={persistentIssue ? dismissTooltip : undefined}
-            >
-              <bdi>{feedbackIssue}</bdi>
-            </Tooltip>
-          )}
+          <Tooltip
+            anchor={mountedIssue?.anchor ?? null}
+            open={showIssueTooltip && mountedIssue?.open === true}
+            avoid={mountedIssue?.avoid ?? null}
+            label={mountedIssue?.label ?? ''}
+            ref={issueTooltipRef}
+            className="calendar-date-feedback"
+            onPointerEnter={stopHoverExit}
+            onPointerLeave={leaveInspection}
+            onClick={mountedIssue?.avoid ? () => dismissTooltip(mountedIssue.date) : undefined}
+            onOpenChange={handleTooltipChange}
+          />
         </div>
       ) : (
         <div
@@ -790,8 +725,11 @@ export function Calendar({
           })}
         </div>
       )}
+      <span id={issueDescriptionId} hidden>
+        {showIssueTooltip && !blockedReason(feedbackDate) ? feedbackIssue : ''}
+      </span>
       <span className="calendar-issue-announcement-proto" role="status">
-        {rejectedIssue}
+        {blockedReason(rejectedDate) ? '' : rejectedIssue}
       </span>
       {showFeedback && view === 'days' && feedbackMessage && (
         <div className="calendar-feedback-proto" aria-live="polite">

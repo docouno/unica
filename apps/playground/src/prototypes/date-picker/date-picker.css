@@ -324,17 +324,8 @@
   line-height: 1.4;
   overflow-wrap: anywhere;
 }
-.calendar-date-tooltip-proto.tooltip-proto[popover] {
-  position: fixed;
-  inset: auto;
-  margin: 0;
-  inline-size: max-content;
-  max-inline-size: min(240px, calc(100vw - 16px));
-  white-space: normal;
-  overflow-wrap: anywhere;
-}
-.calendar-date-tooltip-proto.tooltip-proto[popover]:not(:popover-open) {
-  display: none;
+.calendar-date-feedback {
+  max-inline-size: min(240px, var(--overlay-available-width, calc(100vw - 32px)));
 }
 .date-picker-proto {
   position: relative;

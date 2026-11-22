@@ -1,5 +1,5 @@
-import { Fragment, isValidElement, useRef } from 'react';
-import type { ComponentPropsWithoutRef, ReactElement, ReactNode } from 'react';
+import { Fragment, createContext, isValidElement, useRef } from 'react';
+import type { ComponentPropsWithoutRef, Context, ReactElement, ReactNode } from 'react';
 import {
   containsSafe,
   getComputedStyleSafe,
@@ -8,17 +8,32 @@ import {
   getRootNodeSafe,
   isElementNode,
   reportErrorSafe,
-} from '../../core/dom.js';
-import { useIsoLayoutEffect } from '../../core/useIsoLayoutEffect.js';
+} from './dom.js';
+import { useIsoLayoutEffect } from './useIsoLayoutEffect.js';
+
+interface DescriptionContribution {
+  readonly id: string;
+  readonly fallbackId: string;
+}
+
+// A contribution surrounds one slotted trigger. Link identifies it by its IDREF,
+// so it does not affect other links rendered inside the same React subtree.
+export const DescriptionScope: Context<DescriptionContribution | null> =
+  /* @__PURE__ */ createContext<DescriptionContribution | null>(null);
+
+export function descriptionIds(value?: string): string[] {
+  return [...new Set(value?.split(/[\t\n\f\r ]+/).filter(Boolean))];
+}
 
 interface DescriptionProps {
-  readonly id: string;
-  readonly hint: string;
+  readonly id?: string | undefined;
+  readonly trigger?: HTMLElement | null | undefined;
   readonly authorIds: readonly string[];
-  readonly authorDescription: string | undefined;
-  readonly title: string | undefined;
-  readonly hasExplicitName: boolean;
-  readonly label: ReactNode;
+  readonly authorDescription?: string | undefined;
+  readonly title?: string | undefined;
+  readonly hasExplicitName?: boolean | undefined;
+  readonly label?: ReactNode;
+  readonly source?: ReactElement | undefined;
   readonly nameIds: readonly string[];
 }
 
@@ -165,7 +180,7 @@ function staticLabelText(label: ReactNode, accessible: boolean): string {
   return staticLabelText(props.children, accessible);
 }
 
-// A native tooltip describes links that already have a name, unless it
+// A native tooltip describes sources that already have a name, unless it
 // repeats their rendered text.
 function titleDescription(
   title: string,
@@ -220,18 +235,68 @@ function hasReferencedName(element: Element | null): boolean {
   return Boolean(labelText(element, false).trim());
 }
 
-export function NewTabDescription({
+type NativeNameProps = Pick<
+  ComponentPropsWithoutRef<'input'>,
+  'alt' | 'type' | 'value' | 'defaultValue'
+>;
+
+function hasIntrinsicName(
+  tag: string,
+  { alt, type, value, defaultValue }: NativeNameProps,
+): boolean {
+  if (tag === 'img' || (tag === 'input' && type === 'image')) {
+    return Boolean(alt?.trim());
+  }
+  if (tag === 'input' && (type === 'button' || type === 'reset' || type === 'submit')) {
+    const text = value ?? defaultValue;
+    return text === undefined ? type !== 'button' : Boolean(String(text).trim());
+  }
+  return false;
+}
+
+function hasMountedName(anchor: HTMLElement): boolean {
+  const { localName } = anchor;
+  if ('labels' in anchor) {
+    const { labels } = anchor as HTMLInputElement;
+    if (labels && Array.from(labels).some((label) => Boolean(labelText(label, false).trim()))) {
+      return true;
+    }
+    if (localName === 'input') {
+      const input = anchor as HTMLInputElement;
+      return hasIntrinsicName(localName, {
+        alt: input.alt,
+        type: input.type,
+        value: input.getAttribute('value') ?? undefined,
+      });
+    }
+    if (localName !== 'button') {
+      return false;
+    }
+  }
+  if (localName === 'img') {
+    return (
+      !isPresentational(anchor.getAttribute('role')) &&
+      Boolean((anchor as HTMLImageElement).alt.trim())
+    );
+  }
+  return Boolean(labelText(anchor, false).trim());
+}
+
+export function DescriptionFallback({
   id,
-  hint,
+  trigger,
   authorIds,
-  authorDescription,
-  title,
-  hasExplicitName,
+  authorDescription: sourceDescription,
+  title: sourceTitle,
+  hasExplicitName = false,
   label,
+  source,
   nameIds,
 }: DescriptionProps): ReactElement {
   const fallback = useRef<HTMLSpanElement>(null);
   const syncOnCommit = useRef<(() => void) | null>(null);
+  const authorDescription = sourceDescription?.trim() || undefined;
+  const title = sourceTitle?.trim() || undefined;
   const authorIdsKey = authorIds.join(' ');
   const nameIdsKey = nameIds.join(' ');
   const initialDescription =
@@ -241,14 +306,21 @@ export function NewTabDescription({
           titleDescription(
             title,
             staticLabelText(label, false).replace(/ +/g, ' '),
-            () => hasExplicitName || Boolean(staticLabelText(label, true).trim()),
+            () =>
+              hasExplicitName ||
+              (isValidElement<NativeNameProps>(source) &&
+                typeof source.type === 'string' &&
+                hasIntrinsicName(source.type, source.props)) ||
+              Boolean(staticLabelText(label, true).trim()),
           )))
       : undefined;
 
   useIsoLayoutEffect(() => {
     syncOnCommit.current = null;
     const span = fallback.current;
-    const anchor = span?.closest('a');
+    // Link renders the fallback inside its own anchor, including router slots.
+    // Tooltip renders phrasing content beside the source, including void controls.
+    const anchor = trigger === undefined ? span?.closest('a') : trigger;
     if (!span || !anchor || (!authorDescription && !title)) {
       return;
     }
@@ -275,7 +347,7 @@ export function NewTabDescription({
               () =>
                 hasExplicitName ||
                 stableNameIds.some((refId) => hasReferencedName(scope.getElementById(refId))) ||
-                Boolean(labelText(anchor, false).trim()),
+                hasMountedName(anchor),
             ) ?? '';
         }
       }
@@ -326,7 +398,7 @@ export function NewTabDescription({
       }
     };
     return subscribeRootWatcher(scope, view, { onMutations, watchTitle });
-  }, [authorIdsKey, authorDescription, title, hasExplicitName, nameIdsKey]);
+  }, [trigger, authorIdsKey, authorDescription, title, hasExplicitName, nameIdsKey]);
 
   // A parent render may change CSS outside the observed label. Refresh after the commit
   // while keeping observer registrations stable across equivalent renders.
@@ -335,8 +407,8 @@ export function NewTabDescription({
   });
 
   return (
-    <span id={id} hidden>
-      {authorDescription || title ? <span ref={fallback}>{initialDescription}</span> : null} {hint}
+    <span id={id} hidden={id !== undefined} ref={fallback}>
+      {initialDescription}
     </span>
   );
 }

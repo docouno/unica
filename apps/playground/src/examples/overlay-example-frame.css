@@ -1,0 +1,33 @@
+.hint-example-frame {
+  display: block;
+  inline-size: 100%;
+  border: 1px solid var(--border-default);
+  border-radius: var(--surface-s-radius);
+  background: var(--bg-canvas);
+}
+
+.hint-example-document {
+  margin: 0;
+  background: var(--bg-canvas);
+  color: var(--fg-primary);
+  font-family: var(--font-family-base);
+}
+
+.hint-example-viewport {
+  position: relative;
+  block-size: 100dvh;
+  background: var(--motif-canvas-grid) var(--bg-canvas);
+  overflow: clip;
+}
+
+.hint-example-scrim {
+  position: absolute;
+  inset: 0;
+  background: var(--scrim-bg);
+  pointer-events: none;
+}
+
+.hint-example-viewport-content {
+  position: relative;
+  block-size: 100%;
+}

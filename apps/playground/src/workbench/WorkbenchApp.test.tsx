@@ -38,13 +38,19 @@ const scene = defineScene({
   render: function ExampleScene() {
     const [edited, setEdited] = useState(false);
     return (
-      <div role="alertdialog" aria-label="Scene confirmation">
-        <button type="button" onClick={() => setEdited(true)}>
-          Scene action
-        </button>
-        <p>{edited ? 'Edited scene' : 'Initial scene'}</p>
-        <input aria-label="Scene title" defaultValue="Initial title" />
-      </div>
+      <>
+        <div role="alertdialog" aria-label="Scene confirmation">
+          <button type="button" onClick={() => setEdited(true)}>
+            Scene action
+          </button>
+          <p>{edited ? 'Edited scene' : 'Initial scene'}</p>
+          <input aria-label="Scene title" defaultValue="Initial title" />
+        </div>
+        <dialog open role="presentation">
+          <input aria-label="Dock field" />
+          <button type="button">Dock action</button>
+        </dialog>
+      </>
     );
   },
 });
@@ -382,6 +388,18 @@ it('searches by id and category while preserving scene access and editable short
   expect(document.activeElement).toBe(modalAction);
   expect(fireEvent.keyDown(modalAction, { key: 'k', ctrlKey: true })).toBe(true);
   expect(document.activeElement).toBe(modalAction);
+
+  const dockField = screen.getByRole('textbox', { name: 'Dock field' });
+  dockField.focus();
+  expect(fireEvent.keyDown(dockField, { key: '/' })).toBe(true);
+  expect(document.activeElement).toBe(dockField);
+  expect(fireEvent.keyDown(dockField, { key: 'k', ctrlKey: true })).toBe(false);
+  expect(document.activeElement).toBe(search);
+
+  const dockAction = screen.getByRole('button', { name: 'Dock action' });
+  dockAction.focus();
+  expect(fireEvent.keyDown(dockAction, { key: '/' })).toBe(false);
+  expect(document.activeElement).toBe(search);
 });
 
 it('keeps catalog groups collapsible and reveals the active path after navigation', async () => {

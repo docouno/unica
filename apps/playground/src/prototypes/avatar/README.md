@@ -67,14 +67,12 @@ RTL mirrors logical overlap and the seam, preserving source order. Faces and let
 
 Name hints are opt-in (`showNames` in this prototype). The default group remains entirely passive and unfocusable. When enabled, each visible identity is a focusable information graphic, not a button or link: Tab / Shift+Tab visits names, and Enter / Space has no activation behavior. The full supplied name is its accessible name whether the tooltip is open or closed; do not announce a duplicate description.
 
-- Fine-pointer hover opens a name after 300ms; keyboard focus opens it immediately. Only one name is visible at a time. A new hover/focus target replaces the previous name; closing it does not resurrect the older bubble.
-- The bubble uses the shared Tooltip material, centered 8px above the full member frame. Flip below when there is insufficient room above, and keep 8px from viewport edges. Long names wrap within 20rem / the available viewport, without truncation or scrollbars. The local native-popover wrapper allows the shared material's decorative rim to paint outside its box; it does not turn that 1px rim into scrollable content. Name text keeps its own direction in LTR and RTL groups.
+- Each group configures its own 300 ms cold hover delay with `TooltipProvider`. For example, hover member A for 300 ms, then move to B. B appears immediately while A is open or within 300 ms of its closing. Keyboard focus opens the hint immediately. Opening a new hint replaces the visible one.
+- The [Tooltip](../../../../../docs/components/tooltip.md) is centered 8px above the full member frame and flips below when space is tight. Set `collisionPadding={8}` for the viewport edge. Long names wrap within 20rem and the available space. Name text keeps its own direction in LTR and RTL groups.
 - Keep the original stack, masks and member order on hover/focus. Keyboard focus draws one outer group contour; the positioned name identifies the current member. No avatar is raised, enlarged or turned into a selected state.
 - The tooltip is hoverable, remains visible while its trigger or bubble is hovered or the trigger focused, and has a 150ms pointer-transfer grace period. Escape dismisses it without moving focus; it stays dismissed until the trigger is left and revisited.
 - The bubble contains only the name. It is not a profile preview, menu, online-status badge or source of hidden member names. The remainder remains an unfocusable exact count.
 - Touch does not depend on hover or long press. Offer the external full member list when people need to discover identities; the live disclosure demonstrates this route.
-
-The local helper uses native manual popovers and demonstrates hover, focus, Escape, scrolling/resizing and bounded viewport placement. It is not a reusable Tooltip engine. Complete clipping-ancestor and visual-viewport handling, supported-engine coverage and overlay coordination belong to implementation; the above visual and interaction decisions are fixed.
 
 ## Avatar inside an action
 

@@ -30,6 +30,12 @@ export { Code } from './components/Code/index.js';
 export type { CodeProps, CodeStatus } from './components/Code/index.js';
 export { Divider } from './components/Divider/index.js';
 export type { DividerProps } from './components/Divider/index.js';
+export { HoverCard, HoverCardContent, HoverCardTrigger } from './components/HoverCard/index.js';
+export type {
+  HoverCardContentProps,
+  HoverCardProps,
+  HoverCardTriggerProps,
+} from './components/HoverCard/index.js';
 export { Icon } from './components/Icon/index.js';
 export type { IconColor, IconProps, IconSize, IconUsage } from './components/Icon/index.js';
 export { Indicator } from './components/Indicator/index.js';
@@ -90,6 +96,12 @@ export type {
   TextTag,
   TextWeight,
 } from './components/Text/index.js';
+export { Tooltip, TooltipProvider } from './components/Tooltip/index.js';
+export type {
+  HoverPreviewChangeDetails,
+  TooltipProps,
+  TooltipProviderProps,
+} from './components/Tooltip/index.js';
 export { Title } from './components/Title/index.js';
 export type {
   HeadingTag,

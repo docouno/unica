@@ -43,7 +43,7 @@ it('previews a corrected range while retaining the prior selection and error', (
   );
   expect(screen.getByText('First 14 Sept · Preview · 4 days')).toBeTruthy();
 
-  fireEvent.mouseEnter(day(container, 18));
+  fireEvent.pointerEnter(day(container, 18), { pointerType: 'mouse' });
   expect(container.querySelector('[role="tooltip"]')?.textContent).toBe(
     '18 Sept 2026 is unavailable',
   );
@@ -73,7 +73,7 @@ it('shows the range in the picker before the second date is confirmed', () => {
 
   fireEvent.click(first);
   expect(screen.queryByRole('button', { name: /^(start|end) date/i })).toBeNull();
-  fireEvent.mouseEnter(suggested);
+  fireEvent.pointerEnter(suggested, { pointerType: 'mouse' });
 
   expect(suggested.getAttribute('data-candidate')).toBe('true');
   expect(day(container, 15).parentElement?.getAttribute('data-preview-range')).toBe('true');
@@ -81,7 +81,7 @@ it('shows the range in the picker before the second date is confirmed', () => {
   expect(input.value).toBe('');
 
   fireEvent.click(blocked);
-  fireEvent.mouseEnter(suggested);
+  fireEvent.pointerEnter(suggested, { pointerType: 'mouse' });
 
   expect(suggested.getAttribute('data-candidate')).toBe('true');
   expect(day(container, 15).parentElement?.getAttribute('data-preview-range')).toBe('true');
@@ -114,7 +114,7 @@ it('replaces a filled range with two day choices in the same panel', () => {
   expect(screen.queryByRole('button', { name: /^(start|end) date/i })).toBeNull();
   fireEvent.click(first);
   expect(screen.getByText('First 15 Sept · Choose next date')).toBeTruthy();
-  fireEvent.mouseEnter(second);
+  fireEvent.pointerEnter(second, { pointerType: 'mouse' });
 
   expect(panel).toBeTruthy();
   expect(container.querySelector('.date-picker-panel-proto')).toBe(panel);

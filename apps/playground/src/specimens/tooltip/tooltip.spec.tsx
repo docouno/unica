@@ -1,149 +1,225 @@
+import { Tooltip } from '@docouno/unica';
 import { CopyIcon } from '@phosphor-icons/react';
+import { placementAlignments, placementSides } from '../../examples/overlay-placement-options.js';
 import { IconButton } from '../../prototypes/button/button.proto.js';
-import { HintPreview } from '../../prototypes/tooltip/tooltip.preview.js';
 import { defineComponent } from '../../workbench/types.js';
-
-const {
+import {
   TooltipContentExamples,
   TooltipContextExamples,
   TooltipLiveExamples,
+  TooltipNestedExample,
   TooltipOverflowExamples,
   TooltipPlacementExamples,
   TooltipStateExamples,
-} = await import('../../prototypes/tooltip/tooltip.examples.js');
+} from './tooltip.examples.js';
 
 export default defineComponent({
   id: 'tooltip',
   title: 'Tooltip',
   category: 'Overlays',
-  status: 'Proto',
-  summary: 'A quiet label or short explanation. No arrow, no actions, no interruption.',
+  status: 'UI',
+  summary: 'A quiet label or short explanation for an existing control.',
   defaultSurface: 'overlay',
   props: {
+    label: {
+      kind: 'string',
+      group: 'Content',
+      default: 'Copy link',
+      examples: ['Copy link', 'Copy the public link so anyone with access can open it.', ''],
+      description: 'Short text displayed in the tooltip.',
+    },
+    describe: {
+      kind: 'boolean',
+      group: 'Content',
+      default: false,
+      description: 'Adds the label as an accessible description of the source.',
+    },
+    shortcut: {
+      kind: 'slot',
+      group: 'Content',
+      default: 'none',
+      description: 'Passive keyboard shortcut shown beside the label.',
+      choices: [
+        { value: 'none', label: 'None' },
+        { value: 'copy', label: 'Ctrl+C', code: '"Ctrl+C"' },
+      ],
+    },
     side: {
       kind: 'enum',
       group: 'Placement',
       default: 'top',
-      description: 'Preferred placement relative to the trigger.',
-      choices: [{ value: 'top' }, { value: 'bottom' }, { value: 'start' }, { value: 'end' }],
+      description: 'Preferred logical side relative to the source.',
+      choices: placementSides.map((value) => ({ value })),
     },
     align: {
       kind: 'enum',
       group: 'Placement',
       default: 'center',
       description: 'Alignment within the chosen side.',
-      choices: [{ value: 'start' }, { value: 'center' }, { value: 'end' }],
+      choices: placementAlignments.map((value) => ({ value })),
     },
-    label: {
-      kind: 'string',
-      group: 'Example',
-      default: 'Copy link to this example',
-      description: 'Short tooltip text.',
+    collisionPadding: {
+      kind: 'number',
+      group: 'Placement',
+      default: 16,
+      examples: [0, 8, 16],
+      description: 'Minimum distance from the viewport edges in CSS pixels.',
+    },
+    disabled: {
+      kind: 'boolean',
+      group: 'State',
+      default: false,
+      description: 'Prevents the tooltip from opening while the source remains usable.',
+    },
+    defaultOpen: {
+      kind: 'boolean',
+      group: 'State',
+      default: false,
+      description: 'Starts the uncontrolled tooltip open.',
+    },
+    open: {
+      kind: 'enum',
+      group: 'State',
+      default: 'automatic',
       demo: true,
-    },
-    shortcut: {
-      kind: 'slot',
-      group: 'Content',
-      default: 'none',
-      description: 'Optional keyboard shortcut shown beside the label.',
+      description:
+        'Chooses whether to pass a controlled open value. One preview is visible per document.',
       choices: [
-        { value: 'none', label: 'None' },
-        { value: 'copy', label: 'Ctrl+C', code: '"Ctrl+C"' },
+        { value: 'automatic', label: 'Automatic' },
+        { value: 'open', label: 'Controlled open' },
+        { value: 'closed', label: 'Controlled closed' },
       ],
     },
     onOpenChange: {
       kind: 'action',
       group: 'Events',
-      description: 'Reports panel opening and dismissal.',
+      description: 'Reports requested visibility and the reason for the change.',
       code: 'handleOpenChange',
     },
   },
-  code: (
-    values,
-  ) => `<HintPreview${values.side === 'top' ? '' : ` side="${values.side}"`}${values.align === 'center' ? '' : ` align="${values.align}"`}${values.shortcut === 'copy' ? ' shortcut="Ctrl+C"' : ''} onOpenChange={handleOpenChange}
-  description={${JSON.stringify(values.label)}}
-  trigger={(bindings) => <IconButton {...bindings} aria-label="Copy link" icon={CopyIcon} />}
->
-  {${JSON.stringify(values.label)}}
-</HintPreview>`,
+  constraints: [
+    {
+      kind: 'ignored',
+      when: { label: '' },
+      affects: ['shortcut', 'describe', 'open', 'defaultOpen'],
+      reason: 'An empty label produces no tooltip or accessible description.',
+    },
+    {
+      kind: 'precedence',
+      when: { disabled: true },
+      affects: [
+        { key: 'open', value: 'open' },
+        { key: 'defaultOpen', value: true },
+      ],
+      reason: 'Disabling a tooltip suppresses its visual panel.',
+    },
+    {
+      kind: 'precedence',
+      when: { open: 'open' },
+      affects: [{ key: 'defaultOpen', value: true }],
+      reason: 'The controlled open value determines visibility.',
+    },
+    {
+      kind: 'precedence',
+      when: { open: 'closed' },
+      affects: [{ key: 'defaultOpen', value: true }],
+      reason: 'The controlled open value determines visibility.',
+    },
+  ],
+  code: (values, attributes) => {
+    const label = values.label === 'Copy link' ? ' label="Copy link"' : '';
+    const open = values.open === 'automatic' ? '' : ` open={${values.open === 'open'}}`;
+    return `<Tooltip${label}${attributes}${open}>
+  <button type="button" aria-label="Copy link"><CopyIcon aria-hidden="true" /></button>
+</Tooltip>`;
+  },
   render: ({ values, ctx }) => (
-    <HintPreview
+    <Tooltip
+      {...ctx.subject}
+      key={values.open === 'automatic' ? String(values.defaultOpen) : 'controlled'}
+      label={values.label}
+      describe={values.describe}
+      {...(values.shortcut === 'copy' ? { shortcut: 'Ctrl+C' } : {})}
       side={values.side}
       align={values.align}
-      description={values.label}
-      shortcut={values.shortcut === 'copy' ? 'Ctrl+C' : null}
-      panelAttributes={ctx.subject}
-      onOpenChange={ctx.action('onOpenChange')}
-      trigger={(bindings) => (
-        <IconButton {...bindings} {...ctx.subject} aria-label="Copy link" icon={CopyIcon} />
-      )}
+      collisionPadding={values.collisionPadding}
+      disabled={values.disabled}
+      defaultOpen={values.defaultOpen}
+      {...(values.open === 'automatic' ? {} : { open: values.open === 'open' })}
+      onOpenChange={(open, details) => ctx.action('onOpenChange')({ open, reason: details.reason })}
     >
-      {values.label}
-    </HintPreview>
+      <IconButton {...ctx.subject} aria-label="Copy link" icon={CopyIcon} />
+    </Tooltip>
   ),
   matrixViews: [
     {
       id: 'placement',
-      title: 'Twelve logical placements',
+      title: 'Logical placements',
       rows: 'side',
       cols: 'align',
+      surface: 'base',
       caption:
-        'Live native top layer in a bounded frame. Start/end mirror in RTL. Hover the source to inspect the selected placement.',
-      overlayStage: true,
-      reference: () => <TooltipPlacementExamples />,
+        'Hover a source to inspect its placement. The frame starts open so you can try collisions at the viewport edges.',
+      reference: TooltipPlacementExamples,
     },
   ],
   cases: [
     {
       id: 'content',
-      title: 'Label · Shortcut · Explanation',
+      title: 'Label, shortcut and explanation',
       caption:
-        'Pinned in flow for comparison. One compact size, 20rem ceiling, shared surface radius. Shortcuts are passive.',
-      overlayStage: true,
-      kind: 'behavior',
-      render: () => <TooltipContentExamples />,
+        'Change the visible content. Additional explanations are available to assistive technology while the tooltip is closed.',
+      mode: 'pinned',
+      kind: 'content',
+      render: TooltipContentExamples,
     },
     {
       id: 'interaction',
-      title: 'Hover · Focus · Dismiss',
+      title: 'Hover, focus and dismissal',
       caption:
-        'Live: first hover 600ms, nearby hints warm for 300ms. Keyboard focus opens immediately. Escape or activation hides the hint; touch activates directly.',
-      overlayStage: true,
+        'Start with Search, then move to Preferences. The first hover waits 600 ms and nearby hints appear immediately while the group is warm. Tab opens immediately. Escape dismisses the hint and activation runs the original action.',
+      mode: 'live',
       kind: 'behavior',
-      render: () => <TooltipLiveExamples />,
+      render: TooltipLiveExamples,
     },
     {
       id: 'states',
-      title: 'Focus · Selection · Availability',
+      title: 'Source states',
       caption:
-        'Pinned focus and selection belong to the source. A disabled control has no hover hint; its explanation remains visible.',
-      overlayStage: true,
+        'The source owns focus and selection styling. When unavailable, the explanation stays in the page.',
+      mode: 'pinned',
       kind: 'behavior',
-      render: () => <TooltipStateExamples />,
+      render: TooltipStateExamples,
     },
     {
       id: 'overflow',
-      title: 'Long content · Narrow space',
+      title: 'Long content in narrow space',
       caption:
-        'Text wraps without truncation. A chord moves below the label when needed. Empty labels produce no panel.',
-      overlayStage: true,
+        'The shortcut wraps as a unit. Try the full identifier and the source with an empty tooltip label.',
+      mode: 'pinned',
       kind: 'content',
-      render: () => <TooltipOverflowExamples />,
+      render: TooltipOverflowExamples,
+    },
+    {
+      id: 'nested',
+      title: 'Inside a settings popover',
+      caption:
+        'Open settings and hover or Tab to Restore default settings. Escape closes the tooltip first and settings on the next press.',
+      mode: 'live',
+      kind: 'behavior',
+      render: TooltipNestedExample,
     },
   ],
   usage: [
     {
       id: 'context',
-      title: 'Beside compact navigation',
-      caption:
-        'Pinned source and hint show their relationship. The floating label adds no extra focus target.',
-      overlayStage: true,
+      title: 'Compact navigation',
+      caption: 'The tooltip labels a real link and shows its shortcut.',
       mode: 'pinned',
-      code: `<>
-  <IconButton icon={GearIcon} aria-label="Preferences" variant="ghost" tone="neutral" />
-  <Tooltip shortcut="⌘,">Preferences</Tooltip>
-</>`,
-      render: () => <TooltipContextExamples />,
+      code: `<Tooltip label="Preferences & shortcuts" shortcut="⌘," side="end">
+  <Link href="/preferences" aria-label="Preferences"><GearIcon aria-hidden="true" /></Link>
+</Tooltip>`,
+      render: TooltipContextExamples,
     },
   ],
 });

@@ -107,23 +107,6 @@
   text-overflow: ellipsis;
 }
 
-.tag-full-label-proto {
-  position: fixed;
-  inset: auto;
-  inline-size: max-content;
-  max-inline-size: min(320px, calc(100vw - 24px));
-  margin: 0;
-  /* The decorative rim must not create a native popover scroll container. */
-  overflow: visible;
-  white-space: normal;
-  overflow-wrap: anywhere;
-  font-weight: 400;
-}
-
-.tag-full-label-proto:not(:popover-open) {
-  display: none;
-}
-
 .tag-remove-proto {
   display: inline-grid;
   flex: none;

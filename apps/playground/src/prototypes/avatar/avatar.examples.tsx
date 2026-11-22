@@ -6,7 +6,6 @@ import type { AvatarGroupMember, AvatarGroupSize, AvatarSize } from './avatar.pr
 import { Button } from '../button/button.proto.js';
 import type { ButtonProps } from '../button/button.proto.js';
 import { Icon, Text } from '@docouno/unica';
-import { Tooltip } from '../tooltip/tooltip.proto.js';
 import './avatar.examples.css';
 
 const lightPortrait = '/assets/avatar-person-light.png';
@@ -468,8 +467,8 @@ function Names(): ReactElement {
   return (
     <div className="avatar-example-stack avatar-example-names">
       <p className="avatar-example-note">
-        Optional names: hover a person or Tab to a visible member. Focus shows the name immediately;
-        hover waits 300ms. Escape dismisses it. The avatar stays in its original stacking order.
+        Hover a member for 300 ms, then move to the next one to see their name immediately. Tab
+        shows the focused name immediately, and Escape dismisses it.
       </p>
       <div className="avatar-example-row">
         {groupSizes.map((size) => (
@@ -487,10 +486,8 @@ function Names(): ReactElement {
         <Sample label="Default · no name hints or Tab stops">
           <AvatarGroup label="Passive contributors" members={members} size="s" max={3} />
         </Sample>
-        <Sample label="Long name · material reference">
-          <Tooltip className="avatar-example-name-reference">
-            Alexandra Montgomery-Wellington
-          </Tooltip>
+        <Sample label="Long name · live hint">
+          <AvatarGroup label="Long member name" members={[namedMembers[2]!]} size="s" showNames />
         </Sample>
       </div>
       <p className="avatar-example-note">

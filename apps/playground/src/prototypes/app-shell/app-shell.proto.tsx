@@ -8,7 +8,7 @@ import type {
   Ref,
   RefObject,
 } from 'react';
-import { Divider, Icon, Indicator, defineGlyph, Input } from '@docouno/unica';
+import { Divider, Icon, Indicator, Input, Tooltip, defineGlyph } from '@docouno/unica';
 import type { GlyphSource, InputProps } from '@docouno/unica';
 import {
   BookOpenIcon,
@@ -37,7 +37,6 @@ import {
 import { Button, IconButton } from '../button/button.proto.js';
 import { PopoverContent } from '../popover/popover.proto.js';
 import { useShellPopoverPosition, windowBounds } from './app-shell-position.js';
-import { HintPreview } from '../tooltip/tooltip.preview.js';
 import { NavList, TreeView } from './navigation.proto.js';
 import type { NavigationSection } from './navigation.proto.js';
 export { DocumentTabs } from './document-tabs.proto.js';
@@ -71,6 +70,7 @@ const DockControls = createContext<{
   readonly end?: ReactNode;
 }>({});
 const InspectorDockControl = createContext<ReactNode>(null);
+const SheetRail = createContext(false);
 
 function DockToggle({
   side,
@@ -89,34 +89,20 @@ function DockToggle({
 }): ReactElement {
   const label = `${expanded ? 'Hide' : 'Show'} ${name}`;
   return (
-    <HintPreview
-      side="bottom"
-      trigger={(bindings) => (
-        <IconButton
-          {...bindings}
-          ref={(button) => {
-            bindings.ref(button);
-            if (buttonRef) {
-              buttonRef.current = button;
-            }
-          }}
-          className={`app-shell-dock-toggle app-shell-dock-${side}`}
-          icon={SidebarGlyph}
-          size="s"
-          variant="ghost"
-          tone="neutral"
-          aria-label={label}
-          aria-controls={controls}
-          aria-expanded={expanded}
-          onClick={(event) => {
-            bindings.onClick?.(event);
-            onToggle();
-          }}
-        />
-      )}
-    >
-      {label}
-    </HintPreview>
+    <Tooltip side="bottom" label={label}>
+      <IconButton
+        ref={buttonRef ?? null}
+        className={`app-shell-dock-toggle app-shell-dock-${side}`}
+        icon={SidebarGlyph}
+        size="s"
+        variant="ghost"
+        tone="neutral"
+        aria-label={label}
+        aria-controls={controls}
+        aria-expanded={expanded}
+        onClick={onToggle}
+      />
+    </Tooltip>
   );
 }
 
@@ -128,12 +114,12 @@ interface PanelProps {
   readonly dialogRef: Ref<HTMLDialogElement>;
 }
 
-// The same panel stays mounted while it moves between docked and modal layouts.
+// The same open dialog stays in document flow until it is promoted to a modal sheet.
 function ShellPanel({ id, side, label, children, dialogRef }: PanelProps): ReactElement {
   const pressedBackdrop = useRef(false);
 
   function isBackdrop(event: MouseEvent<HTMLDialogElement>): boolean {
-    if (event.target !== event.currentTarget || !event.currentTarget.open) {
+    if (event.target !== event.currentTarget || !event.currentTarget.matches(':modal')) {
       return false;
     }
     const { left, right, top, bottom } = event.currentTarget.getBoundingClientRect();
@@ -150,6 +136,7 @@ function ShellPanel({ id, side, label, children, dialogRef }: PanelProps): React
       ref={dialogRef}
       id={id}
       className={`app-shell-panel app-shell-sheet app-shell-panel-${side} unica-scrollbar unica-scrollbar--compact`}
+      open
       role="presentation"
       onPointerDown={(event) => {
         pressedBackdrop.current =
@@ -173,7 +160,9 @@ function ShellPanel({ id, side, label, children, dialogRef }: PanelProps): React
           icon={CloseGlyph}
           className="app-shell-panel-close"
           aria-label={`Close ${label.toLowerCase()}`}
-          onClick={(event) => event.currentTarget.closest('dialog')?.close()}
+          onClick={(event) => {
+            event.currentTarget.closest<HTMLDialogElement>('dialog:modal')?.close();
+          }}
         />
       </div>
       {children}
@@ -183,7 +172,7 @@ function ShellPanel({ id, side, label, children, dialogRef }: PanelProps): React
 
 function openShellPanel(panel: HTMLDialogElement | null, trigger: HTMLButtonElement): void {
   const shell = trigger.closest<HTMLElement>('.app-shell-proto');
-  if (!panel || !shell || panel.open) {
+  if (!panel || !shell || panel.getAttribute('role') !== 'presentation') {
     return;
   }
   const body = panel.querySelector<HTMLElement>('.app-shell-aside-body');
@@ -236,6 +225,8 @@ function openShellPanel(panel: HTMLDialogElement | null, trigger: HTMLButtonElem
     panel.setAttribute('aria-label', title);
   }
   panel.dataset.surface = 'overlay';
+  // Clear the docked open attribute before showModal promotes the same element.
+  panel.removeAttribute('open');
   panel.showModal();
   position();
   heading?.focus({ preventScroll: true });
@@ -256,6 +247,7 @@ function openShellPanel(panel: HTMLDialogElement | null, trigger: HTMLButtonElem
       panel.removeAttribute('aria-label');
       panel.removeAttribute('data-whole-scroll');
       delete panel.dataset.surface;
+      panel.open = true;
       if (trigger.getClientRects().length) {
         trigger.focus({ preventScroll: true });
       }
@@ -373,14 +365,16 @@ export function AppShell({
             >
               {leftRail && (
                 <div className="app-shell-sheet-rail">
-                  {leftAside ? (
-                    <details>
-                      <summary>Workspace sections</summary>
-                      {leftRail}
-                    </details>
-                  ) : (
-                    leftRail
-                  )}
+                  <SheetRail value>
+                    {leftAside ? (
+                      <details>
+                        <summary>Workspace sections</summary>
+                        {leftRail}
+                      </details>
+                    ) : (
+                      leftRail
+                    )}
+                  </SheetRail>
                 </div>
               )}
               {leftAside}
@@ -554,6 +548,10 @@ export interface LeftRailProps extends ComponentPropsWithRef<'nav'> {
   readonly profile?: ReactNode;
   readonly onNavigate?: (value: RailDestination) => void;
   readonly links?: Partial<Record<RailDestination, string>>;
+  readonly preferencesShortcutHint?: {
+    readonly label: string;
+    readonly shortcut?: string | ReactElement;
+  };
 }
 
 export function LeftRail({
@@ -562,16 +560,19 @@ export function LeftRail({
   profile = 'PE',
   onNavigate,
   links,
+  preferencesShortcutHint,
   className = '',
   ...props
 }: LeftRailProps): ReactElement {
   const accountId = useId();
+  const inSheet = useContext(SheetRail);
   const accountTrigger = useRef<HTMLButtonElement>(null);
   const accountPanel = useRef<HTMLDivElement>(null);
   useShellPopoverPosition(accountTrigger, accountPanel, 186, 'account');
 
   function item(entry: RailItem): ReactElement {
     const href = links?.[entry.value];
+    const hint = entry.value === 'preferences' && href ? preferencesShortcutHint : undefined;
     const accessibleName =
       entry.count === undefined ? entry.label : `${entry.label}, ${entry.count} unread`;
     const contents = (
@@ -586,32 +587,29 @@ export function LeftRail({
         <span className="app-shell-rail-label">{entry.label}</span>
       </>
     );
+    const itemProps = {
+      className: 'app-shell-rail-item',
+      'aria-current': active === entry.value ? ('page' as const) : undefined,
+      'aria-label': accessibleName,
+      onClick: () => onNavigate?.(entry.value),
+    };
     return (
-      <HintPreview
+      <Tooltip
         key={entry.value}
         side="end"
-        canShow={(anchor) => !anchor.closest('.app-shell-sheet-rail')}
-        trigger={(bindings) => {
-          const itemProps = {
-            ...bindings,
-            className: 'app-shell-rail-item',
-            'aria-current': active === entry.value ? ('page' as const) : undefined,
-            'aria-label': accessibleName,
-            onClick: () => onNavigate?.(entry.value),
-          };
-          return href ? (
-            <a {...itemProps} href={href}>
-              {contents}
-            </a>
-          ) : (
-            <button {...itemProps} type="button">
-              {contents}
-            </button>
-          );
-        }}
+        label={inSheet ? '' : (hint?.label ?? entry.label)}
+        shortcut={hint?.shortcut}
       >
-        {entry.label}
-      </HintPreview>
+        {href ? (
+          <a {...itemProps} href={href}>
+            {contents}
+          </a>
+        ) : (
+          <button {...itemProps} type="button">
+            {contents}
+          </button>
+        )}
+      </Tooltip>
     );
   }
   return (

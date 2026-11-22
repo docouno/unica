@@ -60,19 +60,3 @@
   min-block-size: 88px;
   align-content: center;
 }
-.hover-demo-constrained {
-  max-block-size: 200px;
-}
-.hover-demo-stage {
-  --hint-stage-height: 560px;
-}
-.hover-demo-stage .hint-demo-anchor {
-  max-inline-size: calc(100% - 32px);
-}
-.hover-demo-destination {
-  display: grid;
-  gap: var(--space-4);
-  padding: var(--space-12);
-  border-inline-start: 2px solid var(--border-strong);
-  scroll-margin-block-start: 16px;
-}

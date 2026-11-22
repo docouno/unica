@@ -1,4 +1,4 @@
-import { Kbd, KbdGroup } from '@docouno/unica';
+import { Kbd, KbdGroup, Tooltip } from '@docouno/unica';
 import { TableIcon } from '@phosphor-icons/react';
 import { useRef, useState } from 'react';
 import { hydrateRoot } from 'react-dom/client';
@@ -7,7 +7,6 @@ import '@fontsource-variable/jetbrains-mono';
 import { Button } from '../../../src/prototypes/button/button.proto.js';
 import { Autocomplete } from '../../../src/prototypes/combobox/combobox.proto.js';
 import { MenuRows, MenuSurface } from '../../../src/prototypes/menu/menu.proto.js';
-import { Tooltip } from '../../../src/prototypes/tooltip/tooltip.proto.js';
 import KbdSsrFixture from './kbd-ssr.js';
 
 const typeSizes = ['caption-l', 'body-s', 'body-m', 'body-l', 'heading-m'] as const;
@@ -202,6 +201,8 @@ export default function KbdFixture() {
         </div>
       </div>
       <Tooltip
+        data-testid="shortcut-tooltip"
+        label="Duplicate the selection"
         style={{ inlineSize: 178 }}
         shortcut={
           <KbdGroup>
@@ -210,7 +211,9 @@ export default function KbdFixture() {
           </KbdGroup>
         }
       >
-        Duplicate the selection
+        <Button variant="ghost" tone="neutral">
+          Duplicate selection
+        </Button>
       </Tooltip>
       <MenuSurface data-testid="shortcut-menu" style={{ inlineSize: 400 }}>
         <MenuRows

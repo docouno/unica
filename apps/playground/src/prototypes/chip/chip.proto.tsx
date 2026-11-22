@@ -1,9 +1,9 @@
 import { CheckGlyph } from '../control-glyphs.js';
 import { useEffect, useId, useRef, useState } from 'react';
 import type { ComponentPropsWithRef, ReactElement, ReactNode } from 'react';
-import { Icon } from '@docouno/unica';
+import { Icon, Tooltip } from '@docouno/unica';
 import type { GlyphSource } from '@docouno/unica';
-import { Tooltip } from '../tooltip/tooltip.proto.js';
+import { useClippedLabel } from '../use-clipped-label.js';
 import './chip.css';
 
 export type ChipSize = 's' | 'm' | 'l';
@@ -31,37 +31,17 @@ export function Chip({
   className = '',
   style,
   hidden,
-  onFocus,
-  onBlur,
-  onKeyDown,
+  id,
   'data-wb-subject': subject,
   ...props
 }: ChipProps): ReactElement {
-  const label = useRef<HTMLSpanElement>(null);
-  const tooltip = useRef<HTMLDivElement>(null);
-  const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
-  useEffect(() => () => clearTimeout(timer.current), []);
-  const hide = (): void => {
-    clearTimeout(timer.current);
-    tooltip.current?.hidePopover();
-  };
-  const reveal = (): void => {
-    clearTimeout(timer.current);
-    if (
-      !label.current ||
-      label.current.scrollWidth <= label.current.clientWidth + 1 ||
-      !tooltip.current
-    ) {
-      return;
-    }
-    tooltip.current.showPopover();
-    const anchor = label.current.getBoundingClientRect();
-    const bounds = tooltip.current.getBoundingClientRect();
-    tooltip.current.style.left = `${Math.max(12, Math.min(anchor.left, window.innerWidth - bounds.width - 12))}px`;
-    tooltip.current.style.top = `${anchor.top > bounds.height + 12 ? anchor.top - bounds.height - 8 : anchor.bottom + 8}px`;
-  };
+  const generatedId = useId();
+  const inputId = id ?? generatedId;
+  const text = typeof children === 'string' ? children : undefined;
+  const [label, clipped] = useClippedLabel<HTMLSpanElement>(text);
+
   return (
-    <label
+    <span
       data-wb-subject={subject}
       className={`chip-proto ${className}`}
       data-size={size}
@@ -69,41 +49,11 @@ export function Chip({
       data-preview={previewState}
       style={style}
       hidden={hidden}
-      onPointerEnter={(event) => {
-        if (event.pointerType !== 'touch') {
-          reveal();
-        }
-      }}
-      onPointerLeave={(event) => {
-        if (!event.currentTarget.querySelector(':focus-visible')) {
-          timer.current = setTimeout(hide, 160);
-        }
-      }}
     >
-      <input
-        {...props}
-        type={type}
-        className="chip-native-proto"
-        onFocus={(event) => {
-          if (event.currentTarget.matches(':focus-visible')) {
-            reveal();
-          }
-          onFocus?.(event);
-        }}
-        onBlur={(event) => {
-          hide();
-          onBlur?.(event);
-        }}
-        onKeyDown={(event) => {
-          if (event.key === 'Escape' && tooltip.current?.matches(':popover-open')) {
-            hide();
-            event.preventDefault();
-            event.stopPropagation();
-          }
-          onKeyDown?.(event);
-        }}
-      />
-      <span className="chip-face-proto">
+      <Tooltip label={text ?? ''} disabled={!clipped} align="start">
+        <input {...props} id={inputId} type={type} className="chip-native-proto" />
+      </Tooltip>
+      <label htmlFor={inputId} className="chip-face-proto">
         <span className="chip-leading-proto" aria-hidden="true">
           {iconLeft && (
             <Icon usage="slot" icon={iconLeft} size={size} className="chip-option-icon-proto" />
@@ -113,23 +63,8 @@ export function Chip({
         <span className="chip-label-proto" ref={label}>
           {children}
         </span>
-      </span>
-      {typeof children === 'string' && (
-        <Tooltip
-          ref={tooltip}
-          popover="manual"
-          className="chip-full-label-proto"
-          aria-hidden="true"
-          onPointerEnter={() => clearTimeout(timer.current)}
-          onPointerLeave={() => {
-            timer.current = setTimeout(hide, 160);
-          }}
-          onClick={(event) => event.preventDefault()}
-        >
-          {children}
-        </Tooltip>
-      )}
-    </label>
+      </label>
+    </span>
   );
 }
 
@@ -241,8 +176,11 @@ export function ChipGroup(props: ChipGroupProps): ReactElement {
                 ? controls.length - 1
                 : (index + (backwards ? -1 : 1) + controls.length) % controls.length;
           event.preventDefault();
-          controls[next]?.focus();
-          controls[next]?.click();
+          const target = controls[next];
+          if (target && target !== event.target) {
+            target.click();
+            target.focus();
+          }
         }}
       >
         {items.map((item) => (

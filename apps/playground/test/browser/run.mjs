@@ -9,7 +9,7 @@ import react from '@vitejs/plugin-react';
 import { chromium } from 'playwright-core';
 import { createElement } from 'react';
 import { renderToString } from 'react-dom/server';
-import { createServer } from 'vite';
+import { build, createServer } from 'vite';
 
 const scenarioFiles = globSync('suites/**/*.browser.mjs', { cwd: import.meta.dirname }).sort();
 const scenarios = [];
@@ -21,6 +21,50 @@ assert.ok(scenarios.length, 'No browser tests found in suites/**/*.browser.mjs')
 
 // Cold Vite transforms for a fixture can compete with build processes in nearby worktrees.
 const fixtureStartupTimeout = 20_000;
+
+function hoverPreviewCopy(root) {
+  const id = '\0unica-hover-preview-copy';
+  let bundle;
+  async function compile() {
+    // Rebuild the dependency graph to duplicate its module state while sharing React peers.
+    const result = await build({
+      configFile: false,
+      logLevel: 'error',
+      root,
+      plugins: [react()],
+      build: {
+        lib: {
+          entry: resolve(root, '../../packages/ui/test/browser/hover-preview-copy.ts'),
+          formats: ['es'],
+          fileName: 'hover-preview-copy',
+        },
+        minify: false,
+        write: false,
+        rolldownOptions: { external: [/^react(?:-dom)?(?:\/|$)/] },
+      },
+    });
+    const output = Array.isArray(result)
+      ? result.flatMap((bundle) => bundle.output)
+      : result.output;
+    const entry = output.find((chunk) => chunk.type === 'chunk' && chunk.isEntry);
+    assert.ok(entry && entry.dynamicImports.length === 0);
+    return entry.code;
+  }
+  return {
+    name: 'unica-browser-hover-preview-copy',
+    enforce: 'pre',
+    resolveId(source) {
+      return source.endsWith('/hover-preview-copy.js') ? id : undefined;
+    },
+    load(resolved) {
+      if (resolved === id) {
+        bundle ??= compile();
+        return bundle;
+      }
+      return undefined;
+    },
+  };
+}
 
 async function runScenario(t, browser, origin, renderFixture, scenario) {
   const context = await browser.newContext({ viewport: { width: 800, height: 600 } });
@@ -96,12 +140,13 @@ let browser;
 let server;
 try {
   browser = await launchChromium();
+  const root = resolve(import.meta.dirname, '../..');
   server = await createServer({
     configFile: false,
-    root: resolve(import.meta.dirname, '../..'),
+    root,
     cacheDir,
     logLevel: 'error',
-    plugins: [devkitWorkspaceSource(), react()],
+    plugins: [hoverPreviewCopy(root), devkitWorkspaceSource(), react()],
     resolve: { dedupe: ['react', 'react-dom'] },
     optimizeDeps: {
       entries: ['test/browser/index.html'],

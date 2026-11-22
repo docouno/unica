@@ -391,7 +391,13 @@ export default {
     mount,
   }) => {
     await mount('kbd', { theme: 'frost-dark', textScale: 120 });
-    const tooltip = page.getByRole('tooltip');
+    const source = page.getByRole('button', { name: 'Duplicate selection' });
+    await source.scrollIntoViewIfNeeded();
+    await source.focus();
+    const tooltip = page
+      .getByTestId('shortcut-tooltip')
+      .and(page.locator(':popover-open[data-side]'));
+    await tooltip.waitFor({ state: 'visible' });
     const label = await getBox(tooltip.getByText('Duplicate the selection'));
     const chord = tooltip.locator(group);
     const bounds = await getBox(chord);
@@ -405,6 +411,9 @@ export default {
       (await getBox(keys.last())).y,
       'Tooltip keycaps stay on one line',
     );
+    await pressKeys(page, 'Escape');
+    await tooltip.waitFor({ state: 'hidden' });
+    await assertFocused(source);
 
     const menu = page.getByTestId('shortcut-menu');
     const row = menu.getByRole('menuitem', { name: 'Open help' });

@@ -60,10 +60,15 @@ export interface OverlayOptions {
 
 export type Registration =
   | (OverlayOptions & { readonly kind: 'auto' })
-  | (OverlayOptions & { readonly kind: 'manual'; readonly passive?: boolean | undefined })
+  | (OverlayOptions & {
+      readonly kind: 'manual';
+      readonly passive?: boolean | undefined;
+      readonly returnFocus?: boolean | undefined;
+    })
   | (OverlayOptions & { readonly kind: 'modal'; readonly element: HTMLDialogElement });
 
 export interface OverlayHandle {
+  isOpen: () => boolean;
   update: (patch: OverlayUpdate) => void;
   setTrigger: (trigger: HTMLElement | null) => void;
   setOpen: (open: boolean, options?: CloseOptions) => void;
@@ -240,7 +245,6 @@ class Layer {
   readonly document: Document;
   phase: Phase = 'closed';
   runtime: OverlayRuntime | undefined;
-  trigger: HTMLElement | null = null;
   observedTrigger: HTMLElement | null = null;
   passive: boolean;
   onOpenChange: (open: boolean, reason: DismissReason) => void;
@@ -249,7 +253,8 @@ class Layer {
   internal = false;
   disposed = false;
   focused = false;
-  previousFocus: WeakRef<Element> | null = null;
+  private anchor: HTMLElement | null = null;
+  private focusBeforeOpen: WeakRef<Element> | null = null;
   private suppressNextTriggerClick = false;
   private cancelSuppressClick: (() => void) | undefined;
   private previousInert: boolean | undefined;
@@ -281,6 +286,27 @@ class Layer {
     return this.phase === 'open';
   }
 
+  isOpen = (): boolean => this.active && isNativeOpen(this);
+
+  private get restoresFocus(): boolean {
+    const { options } = this;
+    return options.kind !== 'manual' || options.returnFocus !== false;
+  }
+
+  // The shared runtime reads these targets across module boundaries. A manual
+  // layer can follow its anchor while open without offering a closed focus target.
+  get trigger(): HTMLElement | null {
+    return this.phase === 'closed' && !this.restoresFocus ? null : this.anchor;
+  }
+
+  get previousFocus(): WeakRef<Element> | null {
+    return this.focusBeforeOpen;
+  }
+
+  set previousFocus(value: WeakRef<Element> | null) {
+    this.focusBeforeOpen = this.restoresFocus ? value : null;
+  }
+
   get ownsCarrier(): boolean {
     return ownerDocumentOf(this.options.element) === this.document;
   }
@@ -301,13 +327,13 @@ class Layer {
   };
 
   setTrigger = (trigger: HTMLElement | null): void => {
-    if (this.disposed || this.trigger === trigger) {
+    if (this.disposed || this.anchor === trigger) {
       return;
     }
     this.unbindTrigger?.();
     this.unbindTrigger = undefined;
     this.clearSuppressTriggerClick();
-    this.trigger = trigger;
+    this.anchor = trigger;
     const sameDocument = trigger !== null && ownerDocumentOf(trigger) === this.document;
     if (sameDocument && this.options.kind === 'auto') {
       const restoreInvoker = bindPopoverInvoker(
@@ -437,8 +463,8 @@ class Layer {
     removeListener(element, 'beforetoggle', this.beforeToggle);
     removeListener(element, 'close', this.onClose);
     removeListener(element, 'cancel', this.onCancel);
-    this.runtime?.close(this);
-    this.trigger = null;
+    this.runtime?.close(this, this.restoresFocus ? undefined : { returnFocus: false });
+    this.anchor = null;
     this.previousFocus = null;
   };
 
@@ -691,7 +717,7 @@ class OverlayRuntime implements OverlayRuntimeProtocol {
   close(layer: Layer, options?: CloseOptions): void {
     this.transactions++;
     try {
-      const shouldReturnFocus = options?.returnFocus !== false;
+      const shouldReturnFocus = options?.returnFocus !== false && this.canReturnFocus(layer);
       const hadFocus = shouldReturnFocus && this.ownedFocus(layer);
       const previousFocus = layer.previousFocus?.deref() ?? null;
       layer.beginExit();
@@ -968,6 +994,11 @@ class OverlayRuntime implements OverlayRuntimeProtocol {
     }
   }
 
+  private canReturnFocus(layer: Layer): boolean {
+    const { options } = layer;
+    return options.kind !== 'manual' || options.returnFocus !== false;
+  }
+
   private reportDismiss(
     layer: Layer,
     reason: DismissReason,
@@ -999,7 +1030,10 @@ class OverlayRuntime implements OverlayRuntimeProtocol {
 
   private finalDismiss(layer: Layer, reason: DismissReason, browserClosing = false): void {
     const wasActive = layer.active;
-    const hadFocus = (wasActive || layer.phase === 'exiting') && this.ownedFocus(layer);
+    const hadFocus =
+      (wasActive || layer.phase === 'exiting') &&
+      this.canReturnFocus(layer) &&
+      this.ownedFocus(layer);
     const previousFocus = layer.previousFocus?.deref() ?? null;
     this.transactions++;
     try {
