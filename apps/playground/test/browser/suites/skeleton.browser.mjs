@@ -752,6 +752,13 @@ scenarios[
     const meta = document.head.appendChild(document.createElement('meta'));
     meta.setAttribute('name', 'application-name');
     meta.remove();
+    const metadataLink = document.createElement('link');
+    metadataLink.rel = 'canonical';
+    document.head.append(metadataLink);
+    await nextFrames();
+    metadataLink.rel = 'alternate';
+    await nextFrames();
+    metadataLink.remove();
     const unrelated = document.querySelector('[data-testid="unrelated-subtree"]');
     unrelated.textContent = 'Mutated unrelated text 12345';
     unrelated.setAttribute('data-noise', '1');
@@ -990,22 +997,32 @@ scenarios['Skeleton follows translation from a dynamic document stylesheet'] = a
     style.remove();
     await settle();
     result.push(sample());
+    // A route can own CSS in a separate body fragment with no layout dependency on the paint.
+    const route = document.body.appendChild(document.createElement('aside'));
+    const assets = route.appendChild(document.createElement('div'));
     const link = document.createElement('link');
     link.rel = 'stylesheet';
     link.href = `data:text/css,${encodeURIComponent(rule(70))}`;
     await new Promise((resolve, reject) => {
       link.onload = resolve;
       link.onerror = reject;
-      document.head.append(link);
+      assets.append(link);
     });
     await settle();
     result.push(sample());
-    link.remove();
+    link.media = 'print';
+    await settle();
+    result.push(sample());
+    link.media = 'all';
+    await settle();
+    result.push(sample());
+    route.remove();
+    link.rel = 'alternate';
     await settle();
     result.push(sample());
     return result;
   });
-  for (const [i, delta] of [0, 100, 45, 0, 70, 0].entries()) {
+  for (const [i, delta] of [0, 100, 45, 0, 70, 0, 70, 0].entries()) {
     assert.ok(Math.abs(samples[i][0] - samples[0][0] - delta) < 1, 'paint translation');
     assert.ok(
       Math.abs(samples[0][1] - samples[i][1] - delta) < 1,

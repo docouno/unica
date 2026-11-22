@@ -164,6 +164,7 @@ function getCache(): DescriptorCache {
     shadowActiveElement: makeGetter<Node, Element | null>(shadowProto, 'activeElement'),
     docElement: makeGetter<Document, HTMLElement | null>(documentProto, 'documentElement'),
     docFonts: makeGetter<Document, FontFaceSet>(documentProto, 'fonts'),
+    docStyleSheets: makeGetter<Document, StyleSheetList>(documentProto, 'styleSheets'),
     docBody: makeGetter<Document, HTMLElement | null>(documentProto, 'body'),
     docHasFocus: makeZeroArgMethod<Document, boolean>(documentProto, 'hasFocus'),
     docCreateElement: makeOneArgMethod<Document, string, HTMLElement>(
@@ -476,6 +477,11 @@ export function isRTL(element: Element, computed?: CSSStyleDeclaration | null): 
 export function getDocumentElement(doc: Document): HTMLElement | null {
   const fn = getCache().docElement;
   return fn ? fn(doc) : doc.documentElement;
+}
+
+export function getDocumentStyleSheets(doc: Document): StyleSheetList {
+  const fn = getCache().docStyleSheets;
+  return fn ? fn(doc) : doc.styleSheets;
 }
 
 export function getDocumentFonts(doc: Document): FontFaceSet | undefined {

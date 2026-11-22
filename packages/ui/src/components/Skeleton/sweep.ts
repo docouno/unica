@@ -3,16 +3,17 @@ import type { Ref, RefCallback } from 'react';
 import {
   addListenerSafe,
   composedContains,
-  containsSafe,
   getAttributeSafe,
   getComposedParentElement,
   getComputedStyleSafe,
-  getDocumentElement,
+  getDocumentStyleSheets,
   getLiveView,
   getLocalName,
   getOwnerDocument,
   isElementNode,
   isRTL,
+  matchesSafe,
+  parentNodeOf,
   removeListenerSafe,
 } from '../../core/dom.js';
 import { mergeRefs } from '../../core/mergeRefs.js';
@@ -84,7 +85,7 @@ function isStyleSource(node: EventTarget | null): boolean {
   return (
     isElementNode(node) &&
     (getLocalName(node) === 'style' ||
-      (getLocalName(node) === 'link' && node.matches('link[rel~="stylesheet" i]')))
+      (getLocalName(node) === 'link' && matchesSafe(node, 'link[rel~="stylesheet" i]')))
   );
 }
 
@@ -110,7 +111,8 @@ function createSweep(view: BrowserWindow, start: number, duration: number): Swee
   const pendingInvisible = new Set<HTMLElement>();
   const writtenStyles = new WeakMap<HTMLElement, string | null>();
   const pendingDisplayChecks = new Set<Element>();
-  let styleHead: HTMLHeadElement | null = null;
+  const sheetPaths = new Set<Node>();
+  let sheetsDirty = true;
   let visibleLayoutParents = new Set<Element>();
   let layoutModes = new Map<Element, ReturnType<typeof layoutMode>>();
   let observedResize = new Set<Element>();
@@ -119,6 +121,41 @@ function createSweep(view: BrowserWindow, start: number, duration: number): Swee
   let layoutDirty = true;
   let motionDirty = true;
   let frame: number | undefined;
+
+  function observeStyleSheets(): void {
+    if (visiblePaints.size && !sheetsDirty) {
+      return;
+    }
+    sheetMutations.disconnect();
+    sheetPaths.clear();
+    sheetsDirty = visiblePaints.size === 0;
+    if (sheetsDirty) {
+      return;
+    }
+    // Track real stylesheet owners, wherever the application mounted them.
+    // Shallow child-list subscriptions catch removal of an owner or its route.
+    for (const sheet of getDocumentStyleSheets(document)) {
+      const owner = sheet.ownerNode;
+      if (!owner) {
+        continue;
+      }
+      sheetPaths.add(owner);
+      sheetMutations.observe(owner, {
+        attributes: true,
+        childList: true,
+        characterData: true,
+        subtree: true,
+      });
+      for (
+        let parent = parentNodeOf(owner);
+        parent && !sheetPaths.has(parent);
+        parent = parentNodeOf(parent)
+      ) {
+        sheetPaths.add(parent);
+        sheetMutations.observe(parent, { childList: true });
+      }
+    }
+  }
 
   function observeLayout(): void {
     const parents = new Set<Element>();
@@ -188,10 +225,7 @@ function createSweep(view: BrowserWindow, start: number, duration: number): Swee
       ...autoDirs,
       ...visiblePaints,
     ])) {
-      const subtree =
-        autoDirs.has(element) ||
-        modes.get(element) === 'inline' ||
-        getLocalName(element) === 'style';
+      const subtree = autoDirs.has(element) || modes.get(element) === 'inline';
       mutations.observe(element, {
         attributes: true,
         childList: subtree || containers.has(element),
@@ -207,18 +241,7 @@ function createSweep(view: BrowserWindow, start: number, duration: number): Swee
       }
     }
 
-    styleHead = visiblePaints.size
-      ? (getDocumentElement(document)?.querySelector(':scope > head') ?? null)
-      : null;
-    if (styleHead) {
-      // Stylesheets can move a paint without resizing any observed box.
-      mutations.observe(styleHead, {
-        subtree: true,
-        childList: true,
-        characterData: true,
-        attributes: true,
-      });
-    }
+    observeStyleSheets();
     layoutDirty = false;
     motionDirty = true;
   }
@@ -421,22 +444,6 @@ function createSweep(view: BrowserWindow, start: number, duration: number): Swee
       if (!target.isConnected) {
         continue;
       }
-      const source = isElementNode(target) ? target : target.parentElement;
-      if (
-        isStyleSource(source) ||
-        (attributeName === 'rel' && source && getLocalName(source) === 'link')
-      ) {
-        layoutDirty = true;
-        shouldSchedule = true;
-        continue;
-      }
-      if (styleHead && containsSafe(styleHead, target)) {
-        if ([...record.addedNodes, ...record.removedNodes].some(isStyleSource)) {
-          layoutDirty = true;
-          shouldSchedule = true;
-        }
-        continue;
-      }
       if (
         type === 'attributes' &&
         attributeName === 'style' &&
@@ -501,10 +508,27 @@ function createSweep(view: BrowserWindow, start: number, duration: number): Swee
     pendingDisplayChecks.add(document.documentElement);
     schedule();
   }
+  function onStyleSheetChange(): void {
+    sheetsDirty = true;
+    layoutDirty = true;
+    schedule();
+  }
+  const sheetMutations = new view.MutationObserver((records) => {
+    const changed = records.some(
+      (record) =>
+        record.type !== 'childList' ||
+        isStyleSource(record.target) ||
+        [...record.addedNodes, ...record.removedNodes].some(
+          (node) => sheetPaths.has(node) || isStyleSource(node),
+        ),
+    );
+    if (changed) {
+      onStyleSheetChange();
+    }
+  });
   function onStylesheetLoad(event: Event): void {
     if (isStyleSource(event.target)) {
-      layoutDirty = true;
-      schedule();
+      onStyleSheetChange();
     }
   }
   addListenerSafe(document, 'load', onStylesheetLoad, true);
@@ -526,6 +550,8 @@ function createSweep(view: BrowserWindow, start: number, duration: number): Swee
     resize.disconnect();
     intersection?.disconnect();
     mutations.disconnect();
+    sheetMutations.disconnect();
+    sheetPaths.clear();
     removeListenerSafe(document, 'load', onStylesheetLoad, true);
     removeListenerSafe(view, 'resize', onViewportResize);
     removeListenerSafe(view, 'scroll', onScroll, true);
