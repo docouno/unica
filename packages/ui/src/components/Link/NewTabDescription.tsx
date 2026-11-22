@@ -305,43 +305,34 @@ export function NewTabDescription({
       return;
     }
 
-    const ids = [...stableAuthorIds, ...stableNameIds];
-    let references = ids.map((refId) => scope.getElementById(refId));
     const onMutations = (records: readonly MutationRecord[]): void => {
-      if (ids.length && records.some((r) => r.type === 'childList' || r.attributeName === 'id')) {
-        const next = ids.map((refId) => scope.getElementById(refId));
-        const changed = next.some((node, index) => node !== references[index]);
-        references = next;
-        if (changed) {
+      if (watchReferences) {
+        // Sibling selectors and stylesheet edits can change a referenced name without
+        // mutating the link or the IDREF. A plain description only depends on ID presence.
+        if (watchTitle || records.some((r) => r.type === 'childList' || r.attributeName === 'id')) {
           syncDescription();
-          return;
         }
-      }
-      if (!watchTitle) {
         return;
       }
-      const touches = (node: Element, record: MutationRecord): boolean => {
-        if (containsSafe(node, record.target)) {
+
+      // Ordinary titled links read layout only for changes to their own label or ancestors.
+      const affectsAnchor = records.some((record) => {
+        if (containsSafe(anchor, record.target)) {
           return true;
         }
         if (record.type === 'attributes') {
-          return containsSafe(record.target, node);
+          return containsSafe(record.target, anchor);
         }
         if (record.type === 'childList') {
-          // A move can change inherited visibility while preserving IDREF identity.
           for (const added of record.addedNodes) {
-            if (containsSafe(added, node)) {
+            if (containsSafe(added, anchor)) {
               return true;
             }
           }
         }
         return false;
-      };
-      if (
-        records.some(
-          (r) => touches(anchor, r) || references.some((node) => node && touches(node, r)),
-        )
-      ) {
+      });
+      if (affectsAnchor) {
         syncDescription();
       }
     };

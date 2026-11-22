@@ -59,7 +59,8 @@ export default {
     await page.getByRole('button', { name: 'Add title watcher' }).click();
     await fallback.filter({ hasText: 'Fallback' }).waitFor({ state: 'detached' });
     assert.equal(await fallback.textContent(), '');
-    const reads = await page.evaluate(async () => {
+    const reads = await page.getByTestId('title-list').evaluate(async (list) => {
+      const anchors = new Set(list.querySelectorAll('a[title]'));
       const descriptor = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'innerText');
       const clock = document.body.appendChild(document.createTextNode('one'));
       await new Promise(requestAnimationFrame);
@@ -67,7 +68,7 @@ export default {
       Object.defineProperty(HTMLElement.prototype, 'innerText', {
         ...descriptor,
         get() {
-          if (this.matches('a[title]')) {
+          if (anchors.has(this)) {
             count++;
           }
           return descriptor.get.call(this);
@@ -76,13 +77,16 @@ export default {
       try {
         clock.data = 'two';
         await new Promise(requestAnimationFrame);
-        return count;
+        const unrelated = count;
+        list.querySelector('a').setAttribute('class', 'updated');
+        await new Promise(requestAnimationFrame);
+        return { links: anchors.size, unrelated, local: count - unrelated };
       } finally {
         Object.defineProperty(HTMLElement.prototype, 'innerText', descriptor);
         clock.remove();
       }
     });
-    assert.equal(reads, 0);
+    assert.deepEqual(reads, { links: 80, unrelated: 0, local: 1 });
   },
   'Link follows its new line container when a sibling narrows the grid': async ({
     page,
@@ -281,6 +285,22 @@ export default {
         document.querySelector('.moved-name-target').append(document.getElementById('report-name')),
       );
       assert.deepEqual(await a11y('idref-name'), ['Named via IDREF', 'Opens in a new tab']);
+      // CSS can also change the referenced name without touching the link or its IDREF.
+      await page.evaluate(() => {
+        const style = document.head.appendChild(document.createElement('style'));
+        style.textContent =
+          '.moved-name-target .moved-name-piece {display:inline} .collapse-name + .moved-name-target .moved-name-piece {display:none}';
+      });
+      const visibleName = ['Annual report', 'Named via IDREF Opens in a new tab'];
+      assert.deepEqual(await a11y('idref-name'), visibleName);
+      await page.evaluate(() => {
+        const sibling = document.createElement('div');
+        sibling.className = 'collapse-name';
+        document.querySelector('.moved-name-target').before(sibling);
+      });
+      assert.deepEqual(await a11y('idref-name'), ['Named via IDREF', 'Opens in a new tab']);
+      await page.locator('.collapse-name').evaluate((el) => el.remove());
+      assert.deepEqual(await a11y('idref-name'), visibleName);
       await session.detach();
     },
 

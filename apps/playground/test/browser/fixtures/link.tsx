@@ -358,9 +358,13 @@ function WatchModeLinks(): ReactElement {
       {full && (
         <>
           <span id="mode-note">Author note</span>
-          <Link href="#other" target="_blank" title="Details">
-            More
-          </Link>
+          <div data-testid="title-list">
+            {Array.from({ length: 80 }, (_, index) => (
+              <Link key={index} href={`#report-${index}`} target="_blank" title="Details">
+                Details
+              </Link>
+            ))}
+          </div>
         </>
       )}
     </>
