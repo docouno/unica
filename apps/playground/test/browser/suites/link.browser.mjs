@@ -260,6 +260,27 @@ export default {
         'Ready report',
         'PDF coming soon Opens in a new tab',
       ]);
+      // Move the same IDREF under a rule hiding its text. The title now supplies the name.
+      await page.evaluate(() => {
+        const name = document.getElementById('report-name');
+        name.hidden = false;
+        const piece = document.createElement('span');
+        piece.className = 'moved-name-piece';
+        piece.textContent = name.textContent;
+        name.replaceChildren(piece);
+        const target = document.body.appendChild(document.createElement('div'));
+        target.className = 'moved-name-target';
+        const style = document.head.appendChild(document.createElement('style'));
+        style.textContent = '.moved-name-target .moved-name-piece {display:none}';
+      });
+      assert.deepEqual(await a11y('idref-name'), [
+        'Annual report',
+        'Named via IDREF Opens in a new tab',
+      ]);
+      await page.evaluate(() =>
+        document.querySelector('.moved-name-target').append(document.getElementById('report-name')),
+      );
+      assert.deepEqual(await a11y('idref-name'), ['Named via IDREF', 'Opens in a new tab']);
       await session.detach();
     },
 

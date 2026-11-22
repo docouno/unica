@@ -337,6 +337,7 @@ function createSweep(view: BrowserWindow, start: number, duration: number): Swee
       if (pendingInitialResize.delete(target)) {
         continue;
       }
+      pendingDisplayChecks.add(target);
       resized = true;
     }
     if (resized) {
@@ -449,7 +450,11 @@ function createSweep(view: BrowserWindow, start: number, duration: number): Swee
     'animationend',
     'animationcancel',
   ] as const;
-  addListenerSafe(view, 'resize', schedule);
+  function onViewportResize(): void {
+    pendingDisplayChecks.add(document.documentElement);
+    schedule();
+  }
+  addListenerSafe(view, 'resize', onViewportResize);
   addListenerSafe(view, 'scroll', onScroll, { capture: true, passive: true });
   for (const event of motionEvents) {
     addListenerSafe(view, event, onSurfaceMotion, true);
@@ -467,7 +472,7 @@ function createSweep(view: BrowserWindow, start: number, duration: number): Swee
     resize.disconnect();
     intersection?.disconnect();
     mutations.disconnect();
-    removeListenerSafe(view, 'resize', schedule);
+    removeListenerSafe(view, 'resize', onViewportResize);
     removeListenerSafe(view, 'scroll', onScroll, true);
     for (const event of motionEvents) {
       removeListenerSafe(view, event, onSurfaceMotion, true);

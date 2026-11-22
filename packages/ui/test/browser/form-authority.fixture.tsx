@@ -13,6 +13,7 @@ import {
   writeTextareaValue,
 } from '../../src/core/forms/carriers.js';
 import { useFormValue } from '../../src/core/forms/useFormValue.js';
+import { registerOverlay } from '../../src/core/overlay/runtime.js';
 import { useFixtureSelect } from './form-fixture-helpers.js';
 
 function AuthorityFixture(): JSX.Element {
@@ -114,6 +115,37 @@ function AuthorityFixture(): JSX.Element {
       )}
       <button ref={trigger} type="button" onClick={() => local.propose('b')}>
         Change local to B
+      </button>
+      <button
+        type="button"
+        onClick={(event) => {
+          const button = event.currentTarget;
+          const host = document.body.appendChild(document.createElement('div'));
+          const dialog = host
+            .attachShadow({ mode: 'open' })
+            .appendChild(document.createElement('dialog'));
+          dialog.appendChild(document.createElement('input'));
+          const modal = registerOverlay({ kind: 'modal', element: dialog, onOpenChange() {} });
+          try {
+            button.focus();
+            button.addEventListener(
+              'blur',
+              () => {
+                button.dataset.modalBlur = String(dialog.matches(':modal'));
+                local.propose('b');
+              },
+              { once: true },
+            );
+            modal.setOpen(true);
+            modal.beginExit();
+            local.propose('b');
+          } finally {
+            modal.dispose();
+            host.remove();
+          }
+        }}
+      >
+        Open shadow modal
       </button>
       <output data-testid="local-value">{local.value}</output>
       <FormSelect

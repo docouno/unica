@@ -913,4 +913,44 @@ scenarios[
   assert.equal(offscreenAndIdle.clearedStart, '', 'Animation finish clears --_skeleton-* at idle');
 };
 
+scenarios['Skeleton tracks formatting changes at viewport and container breakpoints'] = async ({
+  page,
+  mount,
+}) => {
+  await mount('skeleton-responsive');
+  await page.waitForFunction(() =>
+    [...document.querySelectorAll('.unica-skeleton')].every((el) =>
+      el.style.getPropertyValue('--_skeleton-sweep-start'),
+    ),
+  );
+  await page.evaluate(() => document.getAnimations().forEach((animation) => animation.pause()));
+  for (const id of ['viewport', 'container']) {
+    const row = page.getByTestId(id);
+    if (id === 'viewport') {
+      await page.setViewportSize({ width: 550, height: 600 });
+    } else {
+      await row.evaluate((node) => {
+        node.parentElement.style.width = '400px';
+      });
+    }
+    const shift = await row.evaluate(async (node) => {
+      const settle = () =>
+        new Promise((r) =>
+          requestAnimationFrame(() => requestAnimationFrame(() => requestAnimationFrame(r))),
+        );
+      await settle();
+      const skeleton = node.querySelector('.unica-skeleton');
+      const start = () => parseFloat(skeleton.style.getPropertyValue('--_skeleton-sweep-start'));
+      const previous = start();
+      const wrap = node.firstElementChild;
+      const display = getComputedStyle(wrap).display;
+      wrap.firstElementChild.style.width = '130px';
+      await settle();
+      return [display, previous - start()];
+    });
+    assert.equal(shift[0], 'contents');
+    assert.ok(Math.abs(shift[1] - 110) < 1, `${id} shifted the projected sweep by ${shift[1]}px`);
+  }
+};
+
 export default scenarios;

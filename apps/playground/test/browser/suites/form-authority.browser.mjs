@@ -13,6 +13,20 @@ const initial = [
 ];
 
 export default {
+  'Form proposals stay blocked through native modal autofocus and exit': async ({
+    page,
+    mount,
+  }) => {
+    await mount('form-authority');
+    const open = button(page, 'Open shadow modal');
+    await open.click();
+    assert.equal(await open.getAttribute('data-modal-blur'), 'true');
+    assert.deepEqual(await log(page), []);
+    assert.deepEqual(await entries(page.locator('#first')), initial);
+    await button(page, 'Change local to B').click();
+    assert.equal(await page.getByTestId('local-value').textContent(), 'c');
+  },
+
   'form reads inside reentrant and controlled callbacks use current authority': async ({
     page,
     mount,

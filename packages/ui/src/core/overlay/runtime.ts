@@ -727,7 +727,20 @@ class OverlayRuntime implements OverlayRuntimeProtocol {
     }
   }
 
-  resolveModal(includeExiting = false): HTMLDialogElement | null {
+  resolveModal(physical = false): HTMLDialogElement | null {
+    if (physical) {
+      // showModal dispatches blur and focus before focusin admits the opening layer.
+      // Reentrant opens are deferred, so at most one pending layer is natively open.
+      for (const layer of this.pending) {
+        if (
+          layer.options.kind === 'modal' &&
+          inDocument(layer.options.element, this.document) &&
+          isNativeOpen(layer)
+        ) {
+          return layer.options.element;
+        }
+      }
+    }
     for (let index = this.stack.length - 1; index >= 0; index--) {
       const layer = this.stack[index]!;
       const { options } = layer;
@@ -735,9 +748,7 @@ class OverlayRuntime implements OverlayRuntimeProtocol {
         continue;
       }
       if (
-        includeExiting
-          ? inDocument(options.element, this.document)
-          : layer.active && this.alive(layer)
+        physical ? inDocument(options.element, this.document) : layer.active && this.alive(layer)
       ) {
         return options.element;
       }

@@ -320,9 +320,23 @@ export function NewTabDescription({
       if (!watchTitle) {
         return;
       }
-      const touches = (node: Element, record: MutationRecord): boolean =>
-        containsSafe(node, record.target) ||
-        (record.type === 'attributes' && containsSafe(record.target, node));
+      const touches = (node: Element, record: MutationRecord): boolean => {
+        if (containsSafe(node, record.target)) {
+          return true;
+        }
+        if (record.type === 'attributes') {
+          return containsSafe(record.target, node);
+        }
+        if (record.type === 'childList') {
+          // A move can change inherited visibility while preserving IDREF identity.
+          for (const added of record.addedNodes) {
+            if (containsSafe(added, node)) {
+              return true;
+            }
+          }
+        }
+        return false;
+      };
       if (
         records.some(
           (r) => touches(anchor, r) || references.some((node) => node && touches(node, r)),
