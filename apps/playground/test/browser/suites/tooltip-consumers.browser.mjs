@@ -223,6 +223,7 @@ export default {
     await page.clock.runFor(1);
     assert.equal(await hint.textContent(), 'Workspace writer');
 
+    await page.locator('.unica-tooltip:popover-open[data-side]').waitFor();
     await page.keyboard.press('Escape');
     assert.equal(await hint.count(), 0);
     await page.clock.runFor(600);
