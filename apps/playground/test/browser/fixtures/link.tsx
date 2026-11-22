@@ -371,6 +371,49 @@ function WatchModeLinks(): ReactElement {
   );
 }
 
+function WatchedNames(): ReactElement {
+  const [open, setOpen] = useState(true);
+  return (
+    <>
+      <style>{`
+        [data-state="closed"] .watched-name,
+        [data-names-closed] ~ .context-link .context-name { display: none; }
+      `}</style>
+      <button
+        type="button"
+        data-names-closed={open ? undefined : ''}
+        onClick={() => setOpen(!open)}
+      >
+        Toggle report names
+      </button>
+      <div data-testid="watched-names" data-state={open ? 'open' : 'closed'}>
+        <Link href="#target" target="_blank" title="Details" data-testid="watched-inline-name">
+          <span className="watched-name">Report</span>
+        </Link>
+        <Link
+          href="#target"
+          target="_blank"
+          title="Details"
+          aria-labelledby="watched-name"
+          data-testid="watched-idref-name"
+        />
+        <span id="watched-name">
+          <span className="watched-name">Report</span>
+        </span>
+      </div>
+      <Link
+        href="#target"
+        target="_blank"
+        title="Details"
+        className="context-link"
+        data-testid="context-name"
+      >
+        <span className="context-name">Report</span>
+      </Link>
+    </>
+  );
+}
+
 function S2ObserverProbes(): ReactElement {
   const [hideText, setHideText] = useState(false);
   const [mountLateId, setMountLateId] = useState(false);
@@ -458,6 +501,7 @@ function S2ObserverProbes(): ReactElement {
         </p>
         <div data-testid="dynamic-sidebar" />
       </div>
+      <WatchedNames />
       <div id="s2-shadow-desc-host" ref={shadowHostRef} />
     </section>
   );

@@ -62,7 +62,7 @@ export default {
     const reads = await page.getByTestId('title-list').evaluate(async (list) => {
       const anchors = new Set(list.querySelectorAll('a[title]'));
       const descriptor = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'innerText');
-      const clock = document.body.appendChild(document.createTextNode('one'));
+      const clock = list.appendChild(document.createTextNode('one'));
       await new Promise(requestAnimationFrame);
       let count = 0;
       Object.defineProperty(HTMLElement.prototype, 'innerText', {
@@ -87,6 +87,36 @@ export default {
       }
     });
     assert.deepEqual(reads, { links: 80, unrelated: 0, local: 1 });
+  },
+  'Link updates titled descriptions when custom CSS attributes control label visibility': async ({
+    page,
+    mount,
+  }) => {
+    await mount('link');
+    const session = await page.context().newCDPSession(page);
+    const { root } = await session.send('DOM.getDocument');
+    const check = async (visible, ids = ['watched-inline-name', 'watched-idref-name']) => {
+      for (const id of ids) {
+        assert.deepEqual(
+          await accessibleLink(session, root.nodeId, id),
+          visible ? ['Report', 'Details Opens in a new tab'] : ['Details', 'Opens in a new tab'],
+          id,
+        );
+      }
+    };
+    await check(true);
+    await page.getByRole('button', { name: 'Toggle report names' }).click();
+    await check(false);
+    await check(false, ['context-name']);
+    const group = page.getByTestId('watched-names');
+    await group.evaluate((node) => node.setAttribute('data-state', 'open'));
+    await check(true);
+    await group.evaluate((node) => node.setAttribute('data-state', 'closed'));
+    await check(false);
+    await page.getByRole('button', { name: 'Toggle report names' }).click();
+    await check(true);
+    await check(true, ['context-name']);
+    await session.detach();
   },
   'Link follows its new line container when a sibling narrows the grid': async ({
     page,

@@ -23,19 +23,6 @@ interface DescriptionProps {
 }
 
 const nonLabelElements = /* @__PURE__ */ new Set(['script', 'style', 'template']);
-const FULL_TITLE_ATTRIBUTES = [
-  'id',
-  'aria-label',
-  'aria-hidden',
-  'alt',
-  'class',
-  'hidden',
-  'inert',
-  'role',
-  'style',
-  'title',
-];
-
 type WatchMode = 'none' | 'idOnly' | 'fullTitle';
 
 interface DescriptionSubscriber {
@@ -92,8 +79,8 @@ function subscribeRootWatcher(
             subtree: true,
             childList: true,
             characterData: true,
+            // Author CSS can change the visible label through any attribute.
             attributes: true,
-            attributeFilter: FULL_TITLE_ATTRIBUTES,
           });
         } else if (nextMode === 'idOnly') {
           observer.observe(scope, {
@@ -244,6 +231,7 @@ export function NewTabDescription({
   nameIds,
 }: DescriptionProps): ReactElement {
   const fallback = useRef<HTMLSpanElement>(null);
+  const syncOnCommit = useRef<(() => void) | null>(null);
   const authorIdsKey = authorIds.join(' ');
   const nameIdsKey = nameIds.join(' ');
   const initialDescription =
@@ -258,6 +246,7 @@ export function NewTabDescription({
       : undefined;
 
   useIsoLayoutEffect(() => {
+    syncOnCommit.current = null;
     const span = fallback.current;
     const anchor = span?.closest('a');
     if (!span || !anchor || (!authorDescription && !title)) {
@@ -296,7 +285,7 @@ export function NewTabDescription({
       }
     };
 
-    syncDescription();
+    syncOnCommit.current = syncDescription;
     const watchTitle = Boolean(title && !authorDescription);
     const watchReferences =
       stableAuthorIds.length > 0 || (watchTitle && !hasExplicitName && stableNameIds.length > 0);
@@ -338,6 +327,12 @@ export function NewTabDescription({
     };
     return subscribeRootWatcher(scope, view, { onMutations, watchTitle });
   }, [authorIdsKey, authorDescription, title, hasExplicitName, nameIdsKey]);
+
+  // A parent render may change CSS outside the observed label. Refresh after the commit
+  // while keeping observer registrations stable across equivalent renders.
+  useIsoLayoutEffect(() => {
+    syncOnCommit.current?.();
+  });
 
   return (
     <span id={id} hidden>
