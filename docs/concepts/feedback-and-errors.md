@@ -17,7 +17,7 @@ Components never mix these three axes:
 - **Framed fields and `FormField`:** `FieldStatus = 'neutral' | 'info' | 'success' | 'warning' | 'danger'` (default `'neutral'`). Reserve `info` and `success` for asynchronous verification outcomes (such as slug availability or token checks), `warning` for non-blocking advisories, and `danger` for blocking validation failures.
 - **Discrete and range controls** (`Checkbox`, `Radio`, `CheckboxCard`, `RadioCard`, `Slider`, `RangeSlider`, `SegmentedControl`, `ChipGroup`, `Dropzone`): `ControlStatus = 'neutral' | 'danger'`.
 - **Immediate switches** (`Switch`, `SwitchCard`): **zero `status` prop**. A switch performs an immediate toggle; failed persistence belongs in application feedback.
-- **`aria-invalid="true"`:** Emitted strictly when `status === 'danger'` and the control is not `disabled`. When `readOnly` is true, both the visual status and `aria-invalid="true"` remain visible so the user understands why a locked value needs attention.
+- **Validation status** sets `aria-invalid="true"` on an available control or group with `status="danger"`. Read-only values can still show this state and explain why a locked value needs attention.
 - **Unified supporting slots:** `description` holds persistent instructions and `message` holds validation/status feedback. Controls do not introduce `invalid`, `error`, `errorMessage`, `initialError`, or `issue`.
 
 ## Four Feedback Channels
@@ -62,6 +62,8 @@ Use `target="group"` for `CheckboxGroup` and `RadioGroup`:
 - `FormField` renders a non-interactive group heading (`labelId`), shared `description` (`descriptionId`), and shared `message` (`messageId`).
 - The nested group container receives `role="group"` or `role="radiogroup"`, `aria-labelledby={labelId}`, `aria-describedby` (`author → descriptionId → messageId`), and `aria-invalid="true"` when `status === 'danger' && !disabled`.
 - Individual `Checkbox`, `Radio`, and `*Card` items retain their own option labels and descriptions. `FormField`'s `required` prop is **never** propagated onto every individual `Checkbox` (a required checkbox group validates a minimum selection rule, not that every box must be checked).
+
+When composing directly with `CheckboxGroup` or `RadioGroup`, pass the field heading ID as `aria-labelledby` and include shared help and error IDs in `aria-describedby`. Set the group's own `required` and `status` props to pair native validation with the visible message. Render the shared error once. See [CheckboxGroup](../components/checkbox.md#checkboxgroup) and [RadioGroup](../components/radio.md#radiogroup).
 
 ### 3. Composite Multi-Input Editor (`target="group"`)
 

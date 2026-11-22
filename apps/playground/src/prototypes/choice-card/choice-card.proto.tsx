@@ -1,21 +1,26 @@
-import { createContext, useContext, useId } from 'react';
-import type { ComponentPropsWithRef, HTMLAttributes, ReactElement, ReactNode } from 'react';
-import {
-  CheckboxIndicator,
-  RadioIndicator,
-  SwitchIndicator,
-} from '../binary-controls/binary-controls.proto.js';
-import type { BinaryPreviewState } from '../binary-controls/binary-controls.proto.js';
+import { CheckboxIndicator, RadioIndicator, SwitchIndicator } from '@docouno/unica';
 import type { ControlSize } from '@docouno/unica';
+import { createContext, useContext, useId, useRef } from 'react';
+import type { ComponentPropsWithRef, HTMLAttributes, ReactElement, ReactNode } from 'react';
+import { repairCanceledChoiceActivation, useChoiceInput } from './choice-card-state.js';
 import './choice-card.css';
 
 type ChoiceKind = 'checkbox' | 'radio' | 'switch';
+type ChoicePreviewState = 'rest' | 'hover' | 'active' | 'focus';
 interface ChoiceContextValue {
   readonly id: string;
   readonly size: ControlSize;
+  readonly checked: boolean;
+  readonly disabled: boolean;
   readonly loading: boolean;
 }
-const ChoiceContext = createContext<ChoiceContextValue>({ id: '', size: 'm', loading: false });
+const ChoiceContext = createContext<ChoiceContextValue>({
+  id: '',
+  size: 'm',
+  checked: false,
+  disabled: false,
+  loading: false,
+});
 
 export interface ChoiceCardProps extends Omit<
   ComponentPropsWithRef<'input'>,
@@ -31,7 +36,7 @@ export interface ChoiceCardProps extends Omit<
   readonly indicatorPlacement?: 'start' | 'end' | 'none' | undefined;
   readonly status?: 'neutral' | 'danger' | undefined;
   /** Pins appearance, never DOM focus or interaction. */
-  readonly previewState?: BinaryPreviewState | undefined;
+  readonly previewState?: ChoicePreviewState | undefined;
   readonly previewFocus?: boolean | undefined;
 }
 export interface SwitchCardProps extends Omit<ChoiceCardProps, 'status'> {
@@ -59,8 +64,11 @@ function ChoiceCard({
   style,
   hidden,
   id,
+  ref,
   readOnly,
   disabled,
+  checked,
+  defaultChecked,
   onClick,
   onChange,
   onKeyDown,
@@ -69,16 +77,19 @@ function ChoiceCard({
 }: RootProps): ReactElement {
   const generatedId = useId();
   const inputId = id ?? generatedId;
-  const busy = kind === 'switch' && loading && !disabled;
+  const inputRef = useRef<HTMLInputElement>(null);
+  const inputState = useChoiceInput(inputRef, ref, checked, defaultChecked, disabled);
+  const busy = kind === 'switch' && loading && !inputState.disabled;
+  const indicator = { size, ...inputState };
   return (
-    <ChoiceContext value={{ id: inputId, size, loading: busy }}>
+    <ChoiceContext value={{ id: inputId, ...indicator, loading: busy }}>
       <div
         data-wb-subject={subject}
         className={`choice-card-proto ${className}`}
         data-kind={kind}
         data-size={size}
         data-placement={indicatorPlacement}
-        data-status={disabled ? 'neutral' : status}
+        data-status={inputState.disabled ? 'neutral' : status}
         data-readonly={readOnly || undefined}
         data-busy={busy || undefined}
         data-preview={previewState}
@@ -89,15 +100,20 @@ function ChoiceCard({
         <span className="choice-card-control">
           <input
             {...props}
+            ref={inputRef}
             id={inputId}
             type={kind === 'radio' ? 'radio' : 'checkbox'}
             role={kind === 'switch' ? 'switch' : undefined}
-            className="binary-native choice-card-native"
+            className="choice-card-native"
             disabled={disabled}
+            checked={checked}
+            defaultChecked={checked === undefined ? defaultChecked : undefined}
             aria-readonly={readOnly || undefined}
             aria-busy={busy || undefined}
             aria-disabled={busy || undefined}
-            aria-invalid={status === 'danger' || props['aria-invalid'] || undefined}
+            aria-invalid={
+              inputState.disabled ? undefined : status === 'danger' || props['aria-invalid']
+            }
             aria-labelledby={
               props['aria-labelledby'] ?? (!props['aria-label'] ? `${inputId}-label` : undefined)
             }
@@ -107,7 +123,7 @@ function ChoiceCard({
                 .join(' ') || undefined
             }
             onChange={(event) => {
-              if (!readOnly && !busy) {
+              if (!event.defaultPrevented && !readOnly && !busy) {
                 onChange?.(event);
               }
             }}
@@ -116,6 +132,7 @@ function ChoiceCard({
               if (readOnly || busy) {
                 event.preventDefault();
               }
+              repairCanceledChoiceActivation(event.currentTarget, event.nativeEvent);
             }}
             onKeyDown={(event) => {
               onKeyDown?.(event);
@@ -138,12 +155,8 @@ function ChoiceCard({
               }
             }}
           />
-          {kind === 'checkbox' ? (
-            <CheckboxIndicator size={size} />
-          ) : kind === 'radio' ? (
-            <RadioIndicator size={size} />
-          ) : (
-            <SwitchIndicator size={size} loading={busy} />
+          {indicatorPlacement !== 'none' && (
+            <ChoiceIndicator kind={kind} {...indicator} loading={busy} />
           )}
         </span>
         <label className="choice-card-hit" htmlFor={inputId} aria-hidden="true" />
@@ -206,29 +219,43 @@ export function ChoiceCardSecondary({
     <div {...props} data-unica-card-secondary="" className={`choice-card-secondary ${className}`} />
   );
 }
-export function CheckboxCardIndicator(): ReactElement {
-  const { size } = useContext(ChoiceContext);
+function ChoiceIndicator({
+  kind,
+  loading,
+  ...state
+}: Omit<ChoiceContextValue, 'id'> & { readonly kind: ChoiceKind }): ReactElement {
+  switch (kind) {
+    case 'checkbox':
+      return <CheckboxIndicator {...state} />;
+    case 'radio':
+      return <RadioIndicator {...state} />;
+    case 'switch':
+      return <SwitchIndicator {...state} loading={loading} />;
+  }
+}
+
+function CustomChoiceIndicator({ kind }: { readonly kind: ChoiceKind }): ReactElement {
+  const { size, checked, disabled, loading } = useContext(ChoiceContext);
   return (
     <span className="choice-card-custom-indicator">
-      <CheckboxIndicator size={size} />
+      <ChoiceIndicator
+        kind={kind}
+        size={size}
+        checked={checked}
+        disabled={disabled}
+        loading={loading}
+      />
     </span>
   );
+}
+export function CheckboxCardIndicator(): ReactElement {
+  return <CustomChoiceIndicator kind="checkbox" />;
 }
 export function RadioCardIndicator(): ReactElement {
-  const { size } = useContext(ChoiceContext);
-  return (
-    <span className="choice-card-custom-indicator">
-      <RadioIndicator size={size} />
-    </span>
-  );
+  return <CustomChoiceIndicator kind="radio" />;
 }
 export function SwitchCardIndicator(): ReactElement {
-  const { size, loading } = useContext(ChoiceContext);
-  return (
-    <span className="choice-card-custom-indicator">
-      <SwitchIndicator size={size} loading={loading} />
-    </span>
-  );
+  return <CustomChoiceIndicator kind="switch" />;
 }
 export {
   ChoiceCardContent as CheckboxCardContent,

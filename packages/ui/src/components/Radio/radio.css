@@ -1,0 +1,22 @@
+@layer unica.components {
+  .unica-radio-indicator {
+    border-radius: var(--radius-circular);
+  }
+
+  .unica-radio-dot {
+    /* Percentages start at the inner edge. Add half of the two 1px borders. */
+    inline-size: calc(50% + 1px);
+    block-size: calc(50% + 1px);
+    border-radius: var(--radius-circular);
+    background: currentcolor;
+    visibility: hidden;
+  }
+
+  .unica-radio-indicator:where(
+      .unica-binary-native:checked + *,
+      [data-unica-radio-checked]:not(.unica-binary-native + *)
+    )
+    > .unica-radio-dot {
+    visibility: visible;
+  }
+}

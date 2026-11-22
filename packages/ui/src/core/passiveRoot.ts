@@ -64,7 +64,7 @@ const PROGRESS_RESERVED = [
 
 type ProgressReserved = (typeof PROGRESS_RESERVED)[number];
 
-export type PassiveIndicatorProps<Tag extends 'div' | 'svg'> = Omit<
+export type PassiveIndicatorProps<Tag extends 'div' | 'span' | 'svg'> = Omit<
   ComponentPropsWithRef<Tag>,
   ProgressReserved
 > & {

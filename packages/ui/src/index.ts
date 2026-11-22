@@ -42,6 +42,12 @@ export { Badge } from './components/Badge/index.js';
 export type { BadgeProps, BadgeStatus } from './components/Badge/index.js';
 export { Blockquote } from './components/Blockquote/index.js';
 export type { BlockquoteProps, BlockquoteStatus } from './components/Blockquote/index.js';
+export { Checkbox, CheckboxGroup, CheckboxIndicator } from './components/Checkbox/index.js';
+export type {
+  CheckboxGroupProps,
+  CheckboxIndicatorProps,
+  CheckboxProps,
+} from './components/Checkbox/index.js';
 export { Code } from './components/Code/index.js';
 export type { CodeProps, CodeStatus } from './components/Code/index.js';
 export { Divider } from './components/Divider/index.js';
@@ -101,8 +107,16 @@ export type {
   SpinnerSize,
   SpinnerTone,
 } from './components/Progress/index.js';
+export { Radio, RadioGroup, RadioIndicator } from './components/Radio/index.js';
+export type { RadioGroupProps, RadioIndicatorProps, RadioProps } from './components/Radio/index.js';
 export { Skeleton, SkeletonText } from './components/Skeleton/index.js';
 export type { SkeletonProps, SkeletonTextProps } from './components/Skeleton/index.js';
+export { Switch, SwitchGroup, SwitchIndicator } from './components/Switch/index.js';
+export type {
+  SwitchGroupProps,
+  SwitchIndicatorProps,
+  SwitchProps,
+} from './components/Switch/index.js';
 export { Text } from './components/Text/index.js';
 export type {
   TextAlign,

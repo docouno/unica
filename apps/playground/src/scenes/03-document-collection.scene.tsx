@@ -17,13 +17,12 @@ import { dateLabel, dateObject } from '../prototypes/date-picker/date-utils.prot
 import type { DateRange } from '../prototypes/date-picker/date-utils.proto.js';
 import { Card, CardMedia } from '../prototypes/card/card.proto.js';
 import { ChipGroup } from '../prototypes/chip/chip.proto.js';
-import { Progress } from '@docouno/unica';
+import { Checkbox, Progress, Switch } from '@docouno/unica';
 import { ContextMenu } from '../prototypes/menu/context-menu.proto.js';
 import type { MenuEntry } from '../prototypes/menu/menu.entries.js';
 import { Pagination } from '../prototypes/pagination/pagination.proto.js';
 import { SegmentedControl } from '../prototypes/segmented-control/segmented-control.proto.js';
 import { Select } from '../prototypes/select/select.proto.js';
-import { Checkbox, Switch } from '../prototypes/binary-controls/binary-controls.proto.js';
 import {
   Table,
   TableBody,
@@ -330,8 +329,8 @@ function CollectionScene(): ReactElement {
                 size="s"
                 checked={verifiedOnly}
                 label="Verified only"
-                onChange={(event) => {
-                  setVerifiedOnly(event.currentTarget.checked);
+                onCheckedChange={(next) => {
+                  setVerifiedOnly(next);
                   setPage(1);
                 }}
               />

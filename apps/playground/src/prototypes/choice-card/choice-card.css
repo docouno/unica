@@ -58,7 +58,14 @@
   order: 1;
 }
 .choice-card-native {
+  position: absolute;
   z-index: 2;
+  inset: 0;
+  inline-size: 100%;
+  block-size: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: inherit;
 }
 .choice-card-hit {
   position: absolute;
@@ -170,10 +177,6 @@
   outline: 2px solid var(--focus-ring-color);
   outline-offset: 2px;
 }
-/* The input has one focus contour, around the complete card. */
-.choice-card-native:focus-visible + :is(.binary-indicator, .switch-indicator) {
-  outline: none;
-}
 .choice-card-proto[data-status='danger']:not(:has(.choice-card-native:disabled)) {
   --choice-error-edge: var(--status-danger-soft-fg);
   box-shadow: inset 0 0 0 1px var(--status-danger-soft-fg);
@@ -215,42 +218,6 @@
   align-items: center;
   block-size: var(--choice-line);
 }
-.choice-card-proto:has(.choice-card-native:checked)
-  .choice-card-custom-indicator
-  .binary-indicator {
-  background: var(--accent-solid);
-  border-color: var(--accent-solid);
-}
-.choice-card-proto:has(.choice-card-native:checked)
-  .choice-card-custom-indicator
-  :is(.binary-check, .binary-dot) {
-  visibility: visible;
-}
-.choice-card-proto:has(.choice-card-native:checked)
-  .choice-card-custom-indicator
-  .switch-indicator {
-  background: var(--_switch-track-on);
-  border-color: var(--accent-signal);
-}
-.choice-card-proto:has(.choice-card-native:checked) .choice-card-custom-indicator .switch-thumb {
-  inset-inline-start: calc(100% - var(--switch-thumb-size) - 1px);
-}
-.choice-card-proto:has(.choice-card-native:disabled)
-  .choice-card-custom-indicator
-  .binary-indicator {
-  background: var(--bg-surface-subtle);
-  border-color: var(--border-default);
-  color: var(--fg-disabled);
-}
-.choice-card-proto:has(.choice-card-native:disabled)
-  .choice-card-custom-indicator
-  .switch-indicator {
-  background: var(--bg-surface-subtle);
-  border-color: var(--border-default);
-}
-.choice-card-proto:has(.choice-card-native:disabled) .choice-card-custom-indicator .switch-thumb {
-  background: var(--fg-disabled);
-}
 .choice-card-proto[hidden] {
   display: none;
 }
@@ -287,32 +254,5 @@
   .choice-card-proto[data-preview='focus'],
   .choice-card-proto[data-preview-focus] {
     outline-color: Highlight;
-  }
-  .choice-card-proto:has(.choice-card-native:checked)
-    .choice-card-custom-indicator
-    .binary-indicator {
-    background: Highlight;
-    border-color: Highlight;
-    color: HighlightText;
-  }
-  .choice-card-proto:has(.choice-card-native:checked)
-    .choice-card-custom-indicator
-    .switch-indicator {
-    background: Highlight;
-    border-color: Highlight;
-  }
-  .choice-card-proto:has(.choice-card-native:checked) .choice-card-custom-indicator .switch-thumb {
-    background: HighlightText;
-    color: Highlight;
-  }
-  .choice-card-proto:has(.choice-card-native:disabled)
-    .choice-card-custom-indicator
-    :is(.binary-indicator, .switch-indicator) {
-    background: Canvas;
-    border-color: GrayText;
-    color: GrayText;
-  }
-  .choice-card-proto:has(.choice-card-native:disabled) .choice-card-custom-indicator .switch-thumb {
-    background: GrayText;
   }
 }

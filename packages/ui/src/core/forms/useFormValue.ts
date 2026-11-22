@@ -28,10 +28,14 @@ export interface FormValueOptions<T> extends ControllableStateOptions<T> {
 
 export interface FormValueState<T> {
   readonly value: T;
+  readonly defaultValue: T;
   readonly controlled: boolean;
   readonly adopt: (next: T) => void;
+  readonly read: () => T;
   readonly propose: (next: T, source?: FormControl) => void;
   readonly reconcile: () => void;
+  readonly repair: () => void;
+  readonly sync: () => void;
 }
 
 function defaultIsEqual<T>(a: T, b: T): boolean {
@@ -190,7 +194,10 @@ export function useFormValue<T>(options: FormValueOptions<T>): FormValueState<T>
     [propose, read, write, writeWith],
   );
 
-  useIsoLayoutEffect(() => {
+  const sync = useCallback((): void => {
+    if (!mountedRef.current) {
+      return;
+    }
     const controls = readControls(config.current);
     const previous = binding.current;
     if (controls.length === 0) {
@@ -245,7 +252,25 @@ export function useFormValue<T>(options: FormValueOptions<T>): FormValueState<T>
       // flag is set and later defaultValue syncs never bypass React's _valueTracker.
       writeWith(current, controlsChanged, controls);
     }
-  });
+  }, [forceWrite, initial, read, restore, writeWith]);
 
-  return { value, controlled, adopt: restore, propose: request, reconcile };
+  const repair = useCallback((): void => {
+    if (mountedRef.current) {
+      forceWrite(read());
+    }
+  }, [forceWrite, read]);
+
+  useIsoLayoutEffect(sync);
+
+  return {
+    value,
+    defaultValue: initial,
+    controlled,
+    adopt: restore,
+    read,
+    propose: request,
+    reconcile,
+    repair,
+    sync,
+  };
 }

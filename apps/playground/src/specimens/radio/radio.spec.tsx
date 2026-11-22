@@ -1,11 +1,11 @@
-import { size, disabled, readOnly, choice, eventProp } from '../control-props.js';
+import { size, disabled, readOnly, required, choice, eventProp } from '../control-props.js';
 import { useId, useState } from 'react';
 import type { ReactElement } from 'react';
 import { WarningCircleIcon } from '@phosphor-icons/react';
 import { defineComponent } from '../../workbench/types.js';
 import { Button } from '../../prototypes/button/button.proto.js';
-import { Radio, RadioGroup } from '../../prototypes/binary-controls/binary-controls.proto.js';
-import { Sample, SurfacePair } from '../../prototypes/binary-controls/binary-controls.examples.js';
+import { Radio, RadioGroup } from '@docouno/unica';
+import { Sample, SurfacePair } from '../binary-examples.js';
 
 function Sizes(): ReactElement {
   return (
@@ -36,30 +36,12 @@ function Sizes(): ReactElement {
   );
 }
 function Interaction(): ReactElement {
-  const id = useId();
   return (
-    <div>
-      {(['rest', 'hover', 'active', 'focus'] as const).map((state) => (
-        <div className="binary-demo-state" data-columns="2" key={state}>
-          <span className="binary-demo-caption">
-            {state === 'focus'
-              ? 'Keyboard focus'
-              : state === 'active'
-                ? 'Pressed'
-                : state === 'hover'
-                  ? 'Hover'
-                  : 'Rest'}
-          </span>
-          <Radio aria-label={`${state} unselected`} name={`${id}-${state}`} previewState={state} />
-          <Radio
-            aria-label={`${state} selected`}
-            name={`${id}-${state}`}
-            defaultChecked
-            previewState={state}
-          />
-        </div>
-      ))}
-    </div>
+    <RadioGroup aria-label="Delivery frequency" orientation="horizontal" defaultValue="weekly">
+      <Radio value="daily" label="Daily" />
+      <Radio value="weekly" label="Weekly" />
+      <Radio value="monthly" label="Monthly" />
+    </RadioGroup>
   );
 }
 function Availability(): ReactElement {
@@ -164,13 +146,19 @@ function Validation(): ReactElement {
   const invalid = attempted && selected === null;
   return (
     <div className="binary-demo-grid">
-      <div className="binary-demo-field">
+      <form
+        className="binary-demo-field"
+        onInvalid={() => setAttempted(true)}
+        onSubmit={(event) => event.preventDefault()}
+      >
         <span className="binary-demo-legend" id={id}>
           Default visibility
         </span>
         <RadioGroup
           aria-labelledby={id}
           aria-describedby={invalid ? `${id}-error` : undefined}
+          name="visibility"
+          required
           value={selected}
           onValueChange={setSelected}
           status={invalid ? 'danger' : 'neutral'}
@@ -180,23 +168,22 @@ function Validation(): ReactElement {
         </RadioGroup>
         {invalid && (
           <span className="binary-demo-message" id={`${id}-error`} role="alert">
-            <WarningCircleIcon size={16} />
+            <WarningCircleIcon size={16} aria-hidden="true" />
             Choose a visibility setting.
           </span>
         )}
         <div className="binary-demo-action-row">
-          <Button variant="secondary" size="s" onClick={() => setAttempted(true)}>
+          <Button variant="secondary" size="s" type="submit">
             Check selection
           </Button>
         </div>
-      </div>
-      <Sample title="Pinned invalid selection with keyboard focus">
+      </form>
+      <Sample title="Invalid selected value">
         <RadioGroup aria-label="Invalid visibility" status="danger" defaultValue="public">
           <Radio
             value="public"
             label="Public"
             description="Public access conflicts with the current policy."
-            previewState="focus"
           />
           <Radio value="team" label="Team only" />
         </RadioGroup>
@@ -248,16 +235,29 @@ export default defineComponent({
   id: 'radio',
   title: 'Radio',
   category: 'Forms',
-  status: 'Proto',
-  summary:
-    'One deliberate choice, visible alternatives, and circular indicators in every material.',
+  status: 'UI',
+  summary: 'One choice from a named group of visible options.',
   componentName: 'RadioGroup',
   form: 'owned',
   props: {
     size,
     disabled,
     readOnly,
-    status: choice('Field', 'Feedback tone of the selection.', ['neutral', 'danger'], 'neutral'),
+    required,
+    selection: {
+      kind: 'enum',
+      group: 'Selection',
+      label: 'Initial selection',
+      description: 'Sets the starting choice restored by a form reset.',
+      choices: [
+        { value: '', label: 'No choice yet' },
+        { value: 'daily', label: 'Daily' },
+        { value: 'weekly', label: 'Weekly' },
+      ],
+      default: 'daily',
+      demo: true,
+    },
+    status: choice('Field', 'Validation state of the group.', ['neutral', 'danger'], 'neutral'),
     orientation: choice(
       'Geometry',
       'Stack choices or place them side by side.',
@@ -266,29 +266,41 @@ export default defineComponent({
     ),
     onValueChange: eventProp('Reports the selected delivery option.', 'handleValueChange'),
   },
-  render: function RadioPreview({ values, ctx }) {
-    const [value, setValue] = useState('daily');
-    return (
-      <form {...ctx.form} onReset={() => setValue('daily')}>
-        <RadioGroup
-          {...values}
-          {...ctx.subject}
-          name="delivery"
-          value={value}
-          aria-label="Delivery frequency"
-          onValueChange={(next) => {
-            setValue(next);
-            ctx.action('onValueChange')(next);
-          }}
-        >
-          <Radio id={`${ctx.id}-daily`} value="daily" label="Daily" />
-          <Radio id={`${ctx.id}-weekly`} value="weekly" label="Weekly" />
-        </RadioGroup>
-      </form>
-    );
-  },
-  code: (_values, attributes) =>
-    `<RadioGroup aria-label="Delivery frequency" name="delivery" value={delivery}${attributes}>
+  constraints: [
+    {
+      kind: 'ignored',
+      when: { disabled: true },
+      affects: [{ key: 'status', value: 'danger' }],
+      reason: 'Disabled groups suppress invalid styling and semantics.',
+    },
+    {
+      kind: 'precedence',
+      when: { disabled: true },
+      affects: [
+        { key: 'readOnly', value: true },
+        { key: 'required', value: true },
+      ],
+      reason: 'Disabled groups are excluded from focus, validation, and submission.',
+    },
+  ],
+  render: ({ values: { selection, ...props }, ctx }) => (
+    <form {...ctx.form}>
+      <RadioGroup
+        key={selection}
+        {...props}
+        {...ctx.subject}
+        name="delivery"
+        defaultValue={selection || null}
+        aria-label="Delivery frequency"
+        onValueChange={ctx.action('onValueChange')}
+      >
+        <Radio value="daily" label="Daily" />
+        <Radio value="weekly" label="Weekly" />
+      </RadioGroup>
+    </form>
+  ),
+  code: ({ selection }, attributes) =>
+    `<RadioGroup aria-label="Delivery frequency" name="delivery" defaultValue={${JSON.stringify(selection || null)}}${attributes}>
   <Radio value="daily" label="Daily" />
   <Radio value="weekly" label="Weekly" />
 </RadioGroup>`,
@@ -300,13 +312,16 @@ export default defineComponent({
       title: 'Size & selection',
       reference: () => <Sizes />,
     },
+    { id: 'selection', rows: 'selection', cols: 'required', title: 'Selection & required' },
   ],
   cases: [
     {
       id: 'interaction',
       title: 'Interaction states',
-      caption: 'Pinned appearances; live native radio pairs. Focus pins do not move actual focus.',
+      caption:
+        'Tab enters the group. Use the arrow keys to move the choice, or point at a label and hold the pointer button to inspect press.',
       kind: 'behavior',
+      mode: 'live',
       render: () => <Interaction />,
     },
     {
@@ -319,8 +334,9 @@ export default defineComponent({
       id: 'validation',
       title: 'Validation',
       caption:
-        'Check selection reveals the error; a choice clears it. The neighboring invalid selection is a pinned review case.',
+        'Submit without a choice to see the required-group error. A selection clears it. Tab to the invalid selected value to inspect its focus ring.',
       kind: 'behavior',
+      mode: 'live',
       render: () => <Validation />,
     },
     {
@@ -347,6 +363,7 @@ export default defineComponent({
       title: 'Groups & empty selection',
       caption:
         'Tab enters the group; arrows move selection. Space selects; Home/End choose the first/last available option. Selecting the chosen option never clears it.',
+      mode: 'live',
       code: `<RadioGroup aria-label="Delivery schedule" value={selected} onValueChange={setSelected}>
   <Radio value="immediate" label="As events happen" />
   <Radio value="daily" label="Daily summary" />

@@ -1,11 +1,10 @@
-import { size, disabled, readOnly, loading, eventProp } from '../control-props.js';
-import { useId, useState } from 'react';
+import { size, disabled, readOnly, loading, toggle, eventProp } from '../control-props.js';
+import { useEffect, useId, useState } from 'react';
 import type { ReactElement } from 'react';
 import { BellIcon, WarningCircleIcon } from '@phosphor-icons/react';
 import { defineComponent } from '../../workbench/types.js';
-import { Button } from '../../prototypes/button/button.proto.js';
-import { Switch, SwitchGroup } from '../../prototypes/binary-controls/binary-controls.proto.js';
-import { Sample, SurfacePair } from '../../prototypes/binary-controls/binary-controls.examples.js';
+import { Checkbox, Switch, SwitchGroup } from '@docouno/unica';
+import { Sample, SurfacePair } from '../binary-examples.js';
 
 function Sizes(): ReactElement {
   return (
@@ -23,7 +22,7 @@ function Sizes(): ReactElement {
           <div className="binary-demo-row">
             <Switch size={size} label="Email alerts" />
             <Switch size={size} label="Background sync" defaultChecked />
-            <Switch size={size} label="Activity alerts" thumbIcon={BellIcon} defaultChecked />
+            <Switch size={size} label="Activity alerts" thumbIcon={<BellIcon />} defaultChecked />
           </div>
         </div>
       ))}
@@ -32,22 +31,9 @@ function Sizes(): ReactElement {
 }
 function Interaction(): ReactElement {
   return (
-    <div>
-      {(['rest', 'hover', 'active', 'focus'] as const).map((state) => (
-        <div className="binary-demo-state" data-columns="2" key={state}>
-          <span className="binary-demo-caption">
-            {state === 'focus'
-              ? 'Keyboard focus'
-              : state === 'active'
-                ? 'Pressed'
-                : state === 'hover'
-                  ? 'Hover'
-                  : 'Rest'}
-          </span>
-          <Switch aria-label={`${state} off`} previewState={state} />
-          <Switch aria-label={`${state} on`} defaultChecked previewState={state} />
-        </div>
-      ))}
+    <div className="binary-demo-row">
+      <Switch label="Email alerts" />
+      <Switch label="Background sync" defaultChecked />
     </div>
   );
 }
@@ -90,7 +76,7 @@ function Availability(): ReactElement {
           defaultChecked
           disabled
           loading
-          thumbIcon={BellIcon}
+          thumbIcon={<BellIcon />}
         />
       </Sample>
     </div>
@@ -115,66 +101,65 @@ function FeedbackSizes(): ReactElement {
 }
 function AsyncSetting(): ReactElement {
   const [saved, setSaved] = useState(false);
-  const [pending, setPending] = useState<boolean | null>(null);
+  const [failNextSave, setFailNextSave] = useState(false);
+  const [pending, setPending] = useState<{
+    readonly value: boolean;
+    readonly fail: boolean;
+  } | null>(null);
   const [result, setResult] = useState<'idle' | 'saved' | 'error'>('idle');
   const id = useId();
+
+  useEffect(() => {
+    if (pending === null) {
+      return;
+    }
+    const response = window.setTimeout(() => {
+      if (!pending.fail) {
+        setSaved(pending.value);
+      }
+      setPending(null);
+      setResult(pending.fail ? 'error' : 'saved');
+    }, 1000);
+    return () => window.clearTimeout(response);
+  }, [pending]);
+
   return (
     <div className="binary-demo-narrow binary-demo-stack">
-      <Switch
-        label="Email notifications"
-        checked={saved}
-        loading={pending !== null}
-        thumbIcon={BellIcon}
-        aria-describedby={id}
-        onCheckedChange={(next) => {
-          setResult('idle');
-          setPending(next);
-        }}
-        description="Receive a message when a followed item changes."
+      <Checkbox
+        label="Fail the next save"
+        checked={failNextSave}
+        onCheckedChange={setFailNextSave}
       />
-      <div
-        id={id}
-        role={result === 'error' ? 'alert' : 'status'}
-        className={result === 'error' ? 'binary-demo-message' : 'binary-demo-caption'}
-      >
-        {result === 'error' && <WarningCircleIcon size={16} />}
-        <span>
-          {pending !== null
-            ? `Turning notifications ${pending ? 'on' : 'off'}…`
-            : result === 'error'
-              ? `Could not save. Notifications are still ${saved ? 'on' : 'off'}. Activate the switch to retry.`
-              : result === 'saved'
-                ? `Saved. Notifications are ${saved ? 'on' : 'off'}.`
-                : 'Try the switch, then choose the simulated response below.'}
-        </span>
-      </div>
-      <div className="binary-demo-action-row">
-        <Button
-          size="s"
-          variant="secondary"
-          disabled={pending === null}
-          onClick={() => {
-            if (pending !== null) {
-              setSaved(pending);
-            }
-            setPending(null);
-            setResult('saved');
+      <div className="binary-demo-field">
+        <Switch
+          label="Email notifications"
+          checked={saved}
+          loading={pending !== null}
+          thumbIcon={<BellIcon />}
+          aria-describedby={id}
+          onCheckedChange={(next: boolean) => {
+            setResult('idle');
+            setPending({ value: next, fail: failNextSave });
+            setFailNextSave(false);
           }}
+          description="Receive a message when a followed item changes."
+        />
+        <div
+          id={id}
+          role="status"
+          className={result === 'error' ? 'binary-demo-message' : 'binary-demo-caption'}
         >
-          Succeed
-        </Button>
-        <Button
-          size="s"
-          variant="ghost"
-          tone="neutral"
-          disabled={pending === null}
-          onClick={() => {
-            setPending(null);
-            setResult('error');
-          }}
-        >
-          Fail
-        </Button>
+          {result === 'error' && <WarningCircleIcon size={16} aria-hidden="true" />}
+          <span>
+            {pending !== null
+              ? `Turning notifications ${pending.value ? 'on' : 'off'}…`
+              : result === 'error'
+                ? `Could not save. Notifications are still ${saved ? 'on' : 'off'}. Activate the switch to retry.`
+                : result === 'saved'
+                  ? `Saved. Notifications are ${saved ? 'on' : 'off'}.`
+                  : ''}
+          </span>
+        </div>
       </div>
     </div>
   );
@@ -214,6 +199,7 @@ function Groups(): ReactElement {
             </span>
           </div>
           <Switch
+            className="binary-demo-setting-control"
             id={id}
             checked={enabled}
             onCheckedChange={setEnabled}
@@ -248,8 +234,8 @@ export default defineComponent({
   id: 'switch',
   title: 'Switch',
   category: 'Forms',
-  status: 'Proto',
-  summary: 'Immediate settings, stable thumb polarity, and honest pending feedback.',
+  status: 'UI',
+  summary: 'Immediate settings with a focusable pending state.',
   componentName: 'Switch',
   form: 'owned',
   props: {
@@ -257,37 +243,68 @@ export default defineComponent({
     disabled,
     readOnly,
     loading,
+    defaultChecked: {
+      ...toggle('Selection', 'Starts with notifications on.', true),
+      demo: true,
+    },
+    thumbIcon: {
+      kind: 'slot',
+      group: 'Content',
+      description: 'A decorative icon in the thumb.',
+      choices: [
+        { value: '', label: 'None' },
+        { value: 'bell', label: 'Bell', code: '<BellIcon />' },
+      ],
+      default: '',
+    },
+    description: {
+      kind: 'string',
+      group: 'Content',
+      description: 'Supporting text for the notifications setting.',
+      default: '',
+    },
     onCheckedChange: eventProp('Reports whether notifications are on.', 'handleCheckedChange'),
   },
   constraints: [
     {
       kind: 'ignored',
       when: { disabled: true },
-      affects: ['loading'],
-      reason: 'The disabled state suppresses pending work.',
+      affects: [{ key: 'loading', value: true }],
+      reason: 'The disabled state suppresses the pending indicator.',
+    },
+    {
+      kind: 'precedence',
+      when: { disabled: true },
+      affects: [
+        { key: 'readOnly', value: true },
+        { key: 'thumbIcon', value: 'bell' },
+      ],
+      reason: 'A disabled switch leaves the tab order and hides its thumb icon.',
+    },
+    {
+      kind: 'precedence',
+      when: { loading: true, disabled: false },
+      affects: [{ key: 'thumbIcon', value: 'bell' }],
+      reason: 'A pending indicator fills the thumb icon slot.',
     },
   ],
-  render: function SwitchPreview({ values, ctx }) {
-    const [enabled, setEnabled] = useState(true);
-    return (
-      <form {...ctx.form} onReset={() => setEnabled(true)}>
+  render: ({ values: { defaultChecked, thumbIcon, ...props }, ctx }) => (
+    <form {...ctx.form}>
+      <div {...ctx.subject} className="binary-demo-subject">
         <Switch
-          {...values}
-          {...ctx.subject}
-          id={ctx.id}
+          key={String(defaultChecked)}
+          {...props}
           label="Notifications"
-          checked={enabled}
+          defaultChecked={defaultChecked}
           name="notifications"
-          onCheckedChange={(checked) => {
-            setEnabled(checked);
-            ctx.action('onCheckedChange')(checked);
-          }}
+          thumbIcon={thumbIcon === 'bell' ? <BellIcon /> : undefined}
+          onCheckedChange={ctx.action('onCheckedChange')}
         />
-      </form>
-    );
-  },
-  code: (_values, attributes) =>
-    `<Switch label="Notifications" name="notifications" checked={enabled}${attributes} />`,
+      </div>
+    </form>
+  ),
+  code: ({ defaultChecked }, attributes) =>
+    `<Switch label="Notifications" name="notifications"${defaultChecked ? ' defaultChecked' : ''}${attributes} />`,
   matrixViews: [
     {
       id: 'sizes',
@@ -296,21 +313,23 @@ export default defineComponent({
       title: 'Size & anatomy',
       reference: () => <Sizes />,
     },
+    { id: 'pending', rows: 'defaultChecked', cols: 'loading', title: 'Value during pending' },
   ],
   cases: [
     {
       id: 'interaction',
       title: 'Interaction states',
       caption:
-        'Pinned appearances, live switches. Space or a single Enter toggles; the setting label stays constant.',
+        'Tab to a switch or hold the pointer button over its label. Space or a single Enter toggles the setting.',
       kind: 'behavior',
+      mode: 'live',
       render: () => <Interaction />,
     },
     {
       id: 'availability',
       title: 'Availability & pending',
       caption:
-        'Pending examples are pinned. The live save example below demonstrates success, failure, and retry.',
+        'These examples hold their pending state. Use Save, fail & retry to see the result of a request.',
       kind: 'behavior',
       render: () => <Availability />,
     },
@@ -318,14 +337,16 @@ export default defineComponent({
       id: 'feedback',
       title: 'Pending at every size',
       kind: 'behavior',
+      mode: 'pinned',
       render: () => <FeedbackSizes />,
     },
     {
       id: 'live',
       title: 'Save, fail & retry',
       caption:
-        'Local response harness, not a network service. Pending retains the committed state and focus; Succeed/Fail explicitly resolve it.',
+        'Toggle notifications to simulate a save. To see a failure, select Fail the next save first, then toggle notifications and retry.',
       kind: 'behavior',
+      mode: 'live',
       render: () => <AsyncSetting />,
     },
     {
@@ -343,7 +364,7 @@ export default defineComponent({
         <SurfacePair>
           <Switch label="Email notifications" />
           <Switch label="Background sync" defaultChecked />
-          <Switch label="Activity alerts" thumbIcon={BellIcon} defaultChecked />
+          <Switch label="Activity alerts" thumbIcon={<BellIcon />} defaultChecked />
         </SurfacePair>
       ),
     },

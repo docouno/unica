@@ -5,6 +5,7 @@ import {
   HoverCardTrigger,
   Link,
   Progress,
+  Switch,
   Text,
 } from '@docouno/unica';
 import { useState } from 'react';
@@ -28,7 +29,6 @@ import { Menu } from '../prototypes/menu/menu.live.js';
 import type { MenuEntry } from '../prototypes/menu/menu.entries.js';
 import { IconButton } from '../prototypes/button/button.proto.js';
 import { TeamPreview } from '../examples/hover-card-content.js';
-import { Switch } from '../prototypes/binary-controls/binary-controls.proto.js';
 import { Tabs, TabsContent, TabsList, TabsTab } from '../prototypes/tabs/tabs.proto.js';
 import {
   Breadcrumb,

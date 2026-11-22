@@ -155,34 +155,30 @@ scenarios[
   );
 
   // 7. Real Chromium SSR -> hydrate with getUnicaRootProps and local portalContainer.
-  const hydration = await page.evaluate(async (html) => {
-    const handle = window.__runPortalHydration(html);
-    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
-    const leaf = document.querySelector(
-      '[data-testid="hydrate-portal-host"] [data-testid="ssr-portaled-leaf"]',
-    );
-    const status = document.querySelector(
-      '[data-testid="hydrate-box"] [data-testid="ssr-portal-status"]',
-    );
-    const result = {
-      ok: handle.ok,
-      preservedNode: handle.preservedNode(),
-      errors: handle.getErrors(),
-      statusText: status?.textContent ?? null,
-      leafMounted: Boolean(leaf),
-      leafColorScheme: leaf ? getComputedStyle(leaf).colorScheme : null,
-      leafBgCanvas: leaf ? getComputedStyle(leaf).getPropertyValue('--bg-canvas').trim() : null,
-    };
-    handle.unmount();
-    return result;
-  }, hydratableHtml);
+  const handle = await page.evaluateHandle(
+    (html) => window.__runPortalHydration(html),
+    hydratableHtml,
+  );
+  const leaf = page.getByTestId('hydrate-portal-host').getByTestId('ssr-portaled-leaf');
+  const status = page.getByTestId('hydrate-box').getByTestId('ssr-portal-status');
+  await leaf.waitFor({ state: 'attached' });
+  const hydration = await handle.evaluate((result) => ({
+    ok: result.ok,
+    preservedNode: result.preservedNode(),
+    errors: result.getErrors(),
+  }));
   assert.equal(hydration.ok, true);
   assert.equal(hydration.preservedNode, true, 'Hydration preserves server DOM node');
   assert.deepEqual(hydration.errors, [], 'Hydration produces 0 recoverable errors');
-  assert.equal(hydration.statusText, 'ready');
-  assert.equal(hydration.leafMounted, true);
-  assert.equal(hydration.leafColorScheme, 'light');
-  assert.equal(hydration.leafBgCanvas, scopedSection.bgCanvas);
+  assert.equal(await status.textContent(), 'ready');
+  const hydratedTheme = await leaf.evaluate((node) => ({
+    colorScheme: getComputedStyle(node).colorScheme,
+    bgCanvas: getComputedStyle(node).getPropertyValue('--bg-canvas').trim(),
+  }));
+  assert.equal(hydratedTheme.colorScheme, 'light');
+  assert.equal(hydratedTheme.bgCanvas, scopedSection.bgCanvas);
+  await handle.evaluate((result) => result.unmount());
+  await handle.dispose();
 };
 
 export default scenarios;

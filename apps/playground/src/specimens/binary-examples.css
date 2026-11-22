@@ -37,8 +37,9 @@
   align-items: start;
   gap: var(--space-8);
 }
-.binary-demo-external-row > .binary-control[data-standalone] {
+.binary-demo-external-control {
   min-inline-size: 0;
+  justify-content: flex-end;
 }
 .binary-demo-external-label {
   min-inline-size: 0;
@@ -51,6 +52,10 @@
   cursor: pointer;
 }
 @media (pointer: coarse) {
+  .binary-demo-external-control {
+    min-inline-size: 44px;
+  }
+
   .binary-demo-external-label {
     padding-block: max(
       4px,
@@ -68,17 +73,11 @@
   border: 0;
   padding: 0;
 }
-.binary-demo-state {
+.binary-demo-subject {
   display: grid;
-  grid-template-columns: minmax(5.5rem, 1fr) repeat(3, minmax(0, 1fr));
-  align-items: center;
-  gap: 8px;
-}
-.binary-demo-state + .binary-demo-state {
-  border-block-start: 1px solid var(--border-subtle);
-}
-.binary-demo-state > .binary-control {
-  justify-self: start;
+  inline-size: fit-content;
+  min-inline-size: 0;
+  max-inline-size: 100%;
 }
 .binary-demo-options {
   display: grid;
@@ -152,10 +151,6 @@
   }
 }
 
-.binary-demo-state[data-columns='2'] {
-  grid-template-columns: minmax(5.5rem, 1fr) repeat(2, minmax(0, 1fr));
-}
-
 .binary-demo-setting {
   display: flex;
   align-items: flex-start;
@@ -169,6 +164,6 @@
 .binary-demo-setting label[for] {
   cursor: pointer;
 }
-.binary-demo-setting > .binary-control {
+.binary-demo-setting-control {
   flex: 0 0 auto;
 }
