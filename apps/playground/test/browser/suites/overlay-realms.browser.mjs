@@ -164,6 +164,7 @@ export default {
           bgInert: true,
         },
         fakeKeyPreserved: true,
+        versionsCleaned: true,
         bgAfterIdle: false,
       };
       assert.deepEqual(m.reversePrimary, expectedReverse);

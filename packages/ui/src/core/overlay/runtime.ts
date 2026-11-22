@@ -1257,8 +1257,9 @@ class OverlayRuntime implements OverlayRuntimeProtocol {
       }
       removeListener(view, 'blur', this.clearPointer);
     }
+    const isCurrent = resolveOverlayRuntime(this.document) === this;
     deleteFallbackOverlayRuntime(this.document, this);
-    if (resolveOverlayRuntime(this.document) !== this) {
+    if (!isCurrent) {
       return;
     }
     try {

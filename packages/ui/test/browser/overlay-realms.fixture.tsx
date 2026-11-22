@@ -418,11 +418,15 @@ export default function OverlayRealmsFixture(): JSX.Element {
         const fakeKeyPreserved = withFakeKey
           ? Reflect.get(document, OVERLAY_RUNTIME_KEY) === fakeObj
           : true;
+        const versionsCleaned = !Reflect.has(
+          document,
+          Symbol.for('@docouno/unica/OverlayRuntimeVersions'),
+        );
         if (withFakeKey) {
           Reflect.deleteProperty(document, OVERLAY_RUNTIME_KEY);
         }
         const bgAfterIdle = isInertElement(bgInput);
-        return { bgBeforeModals, during, fakeKeyPreserved, bgAfterIdle };
+        return { bgBeforeModals, during, fakeKeyPreserved, versionsCleaned, bgAfterIdle };
       };
       const reversePrimary = testReverseOrder(false);
       const reverseFallback = testReverseOrder(true);
