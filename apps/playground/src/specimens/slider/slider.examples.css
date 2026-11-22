@@ -1,0 +1,126 @@
+.slider-examples {
+  display: grid;
+  gap: 28px;
+  min-inline-size: 0;
+}
+
+.slider-example,
+.slider-field {
+  display: grid;
+  min-inline-size: 0;
+}
+
+.slider-example {
+  gap: 10px;
+}
+
+.slider-example-title,
+.slider-field-message {
+  color: var(--fg-muted);
+  font-size: var(--text-size-caption-l);
+  line-height: 1.5;
+}
+
+.slider-field-message[data-danger] {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  color: var(--status-danger-soft-fg);
+}
+
+.slider-field-message > svg {
+  flex: none;
+}
+
+.slider-field-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 16px;
+  color: var(--fg-primary);
+  font-family: var(--font-family-base);
+  font-size: var(--text-size-body-s);
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.slider-field-heading[data-size='s'] {
+  font-size: var(--size-s-control-font);
+}
+
+.slider-field-heading[data-size='l'] {
+  font-size: var(--text-size-body-m);
+}
+
+.slider-field-heading[data-vertical] {
+  justify-content: center;
+  text-align: center;
+}
+
+.slider-field-value {
+  margin-inline-start: auto;
+  color: var(--fg-secondary);
+  font-size: var(--text-size-caption-l);
+  font-variant-numeric: tabular-nums;
+}
+
+.slider-field-heading[data-vertical] .slider-field-value {
+  margin-inline-start: 0;
+}
+
+.slider-field-heading[data-disabled] .slider-field-value {
+  color: var(--fg-muted);
+}
+
+.slider-vertical-examples {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px;
+}
+
+.slider-overlay-example {
+  inline-size: min(100%, 420px);
+  padding: var(--space-24);
+  border: 1px solid var(--_overlay-border);
+  border-radius: var(--surface-m-radius);
+  background: var(--bg-overlay);
+  backdrop-filter: var(--_overlay-backdrop);
+  box-shadow: var(--_overlay-shadow-popover);
+}
+
+.slider-pair-example {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 176px;
+  gap: 20px;
+  align-items: start;
+}
+
+.slider-pair-example > :last-child {
+  margin-block-start: calc(var(--text-size-body-s) * 1.5 + 6px);
+}
+
+.slider-form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-8);
+}
+
+.slider-inspector-form {
+  inline-size: 28rem;
+  max-inline-size: 100%;
+}
+
+@container artboard (max-width: 380px) {
+  .slider-vertical-examples {
+    gap: 8px;
+  }
+}
+
+@container artboard (max-width: 560px) {
+  .slider-pair-example {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .slider-pair-example > :last-child {
+    margin-block-start: 0;
+  }
+}

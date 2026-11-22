@@ -5,7 +5,9 @@ import {
   KbdGroup,
   Radio,
   RadioGroup,
+  RangeSlider,
   SegmentedControl,
+  Slider,
   Text,
 } from '@docouno/unica';
 import { useId, useRef, useState } from 'react';
@@ -30,7 +32,6 @@ import {
 } from '../prototypes/disclosure/disclosure.proto.js';
 import { ToastCard } from '../prototypes/toast/toast.proto.js';
 import { Select } from '../prototypes/select/select.proto.js';
-import { RangeSlider, Slider } from '../prototypes/slider/slider.proto.js';
 import { NumberInput } from '../prototypes/number-input/number-input.proto.js';
 import {
   Table,
@@ -78,6 +79,8 @@ function PreferencesScene(): ReactElement {
   const [saved, setSaved] = useState<Preferences>(defaults);
   const [notice, setNotice] = useState('');
   const measureName = useId();
+  const scaleId = useId();
+  const contextId = useId();
   const stage = useRef<HTMLDivElement>(null);
   const lastEdited = useRef<HTMLElement>(null);
   const typeface = useRef<HTMLButtonElement>(null);
@@ -234,16 +237,25 @@ function PreferencesScene(): ReactElement {
                   </Text>
                 </div>
                 <div className="folio-preference-numeric-row">
-                  <Slider
-                    size="s"
-                    label="Typography scale"
-                    min={80}
-                    max={140}
-                    step={5}
-                    value={preferences.scale}
-                    onValueChange={(value) => update('scale', value)}
-                    formatValue={(value) => `${value}%`}
-                  />
+                  <div>
+                    <div className="folio-row folio-between folio-preference-value">
+                      <label htmlFor={scaleId}>Typography scale</label>
+                      <Text size="caption-l" color="muted">
+                        <bdi>{preferences.scale}%</bdi>
+                      </Text>
+                    </div>
+                    <Slider
+                      id={scaleId}
+                      size="s"
+                      showValue={false}
+                      min={80}
+                      max={140}
+                      step={5}
+                      value={preferences.scale}
+                      onValueChange={(value) => update('scale', value)}
+                      formatValue={(value) => `${value}%`}
+                    />
+                  </div>
                   <NumberInput
                     size="s"
                     label="Autosave interval"
@@ -273,9 +285,13 @@ function PreferencesScene(): ReactElement {
                 <div className="folio-preference-context">
                   <div className="folio-stack">
                     <div className="folio-row folio-between">
-                      <Text size="caption-l">Context lines</Text>
+                      <Text id={contextId} size="caption-l">
+                        Context lines
+                      </Text>
                       <Text size="caption-l" color="muted">
-                        {preferences.context[0]} — {preferences.context[1]} lines
+                        <bdi dir="ltr">
+                          {preferences.context[0]} — {preferences.context[1]} lines
+                        </bdi>
                       </Text>
                     </div>
                     <RangeSlider
@@ -284,7 +300,10 @@ function PreferencesScene(): ReactElement {
                       max={20}
                       value={preferences.context}
                       onValueChange={(value) => update('context', value)}
-                      aria-label="Diff context lines"
+                      aria-labelledby={contextId}
+                      thumbLabels={['Minimum context lines', 'Maximum context lines']}
+                      formatValue={(value) => `${value} lines`}
+                      showValue={false}
                     />
                   </div>
                   <Checkbox
@@ -461,6 +480,7 @@ export default defineScene({
     'kbd-group',
     'number-input',
     'radio',
+    'range-slider',
     'segmented-control',
     'select',
     'slider',

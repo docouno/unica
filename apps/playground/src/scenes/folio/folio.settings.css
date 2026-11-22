@@ -176,8 +176,11 @@
   gap: 20px;
 }
 
-.folio-preference-context .range-slider-heading-proto {
-  display: none;
+.folio-preference-value {
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px var(--space-16);
+  font-size: var(--size-s-control-font);
 }
 
 .folio-governance-card {

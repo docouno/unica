@@ -156,6 +156,17 @@ export type {
 } from './components/SegmentedControl/index.js';
 export { Skeleton, SkeletonText } from './components/Skeleton/index.js';
 export type { SkeletonProps, SkeletonTextProps } from './components/Skeleton/index.js';
+export { RangeSlider, Slider } from './components/Slider/index.js';
+export type {
+  RangeSliderProps,
+  RangeSliderValue,
+  SliderMark,
+  SliderOrientation,
+  SliderProps,
+  SliderSize,
+  SliderStatus,
+  SliderValueFormatter,
+} from './components/Slider/index.js';
 export { Switch, SwitchGroup, SwitchIndicator } from './components/Switch/index.js';
 export type {
   SwitchGroupProps,

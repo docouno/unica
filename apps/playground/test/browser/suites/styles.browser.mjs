@@ -79,7 +79,7 @@ scenarios['Slider, Drawer and AppShell honor nested explicit direction without n
   async ({ page }) => {
     const files = [
       'packages/ui/src/styles.css',
-      'apps/playground/src/prototypes/slider/slider.css',
+      'packages/ui/src/components/Slider/slider.css',
       'apps/playground/src/prototypes/dialog/dialog.css',
       'apps/playground/src/prototypes/app-shell/app-shell.css',
     ];
@@ -98,7 +98,7 @@ scenarios['Slider, Drawer and AppShell honor nested explicit direction without n
       }),
     );
     await page.setContent(`<html lang="en" dir="rtl"><body><main data-theme="pixel-light">
-      <div style="position:relative; width:300px; height:30px; --slider-position:.5; --slider-short:16px; --slider-long:20px"><div class="slider-thumb-wrap-proto"></div></div>
+      <div class="unica-slider" data-unica-slider-orientation="horizontal" style="width:300px"><div class="unica-slider-scale"><div class="unica-slider-hit"><span class="unica-slider-thumb-wrap" style="--_slider-position:.5"><input type="range" class="unica-slider-native" aria-label="Value"><span class="unica-slider-thumb"></span></span></div></div></div>
       <div class="dialog-layer" data-dialog-side="start"><div class="dialog-placement"><div class="dialog-surface"></div></div></div>
       <dialog class="app-shell-panel app-shell-panel-start" style="--shell-sheet-left:11px;--shell-sheet-right:27px"></dialog>
       </main></body></html>`);
@@ -114,7 +114,7 @@ scenarios['Slider, Drawer and AppShell honor nested explicit direction without n
           main.dir = dir;
           main.lang = 'ar';
         }
-        const thumb = main.querySelector('.slider-thumb-wrap-proto');
+        const thumb = main.querySelector('.unica-slider-thumb-wrap');
         const box = thumb.getBoundingClientRect();
         const track = thumb.parentElement.getBoundingClientRect();
         const shell = getComputedStyle(main.querySelector('dialog'));

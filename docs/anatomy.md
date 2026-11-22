@@ -24,7 +24,7 @@ Never assign `<Name>.displayName = '<Name>'` on an exported component function. 
 
 `packages/ui/src/consts.ts` defines the **10 shared axes** used across multiple shipped families or package-wide layout contracts:
 
-- **Shared component axes (8):** `SIZE`, `STATUS`, `MARK_STATUS`, `TEXT_COLOR`, `TYPOGRAPHY_STEP`, `TYPOGRAPHY_WEIGHT`, `TEXT_ALIGN`, `ORIENTATION` (Card and Divider).
+- **Shared component axes (8):** `SIZE`, `STATUS`, `MARK_STATUS`, `TEXT_COLOR`, `TYPOGRAPHY_STEP`, `TYPOGRAPHY_WEIGHT`, `TEXT_ALIGN`, `ORIENTATION` (Card, Divider, and Slider).
 - **Package layout scales (2):** numeric `SPACING` (`[0, 2, 4, 8, 12, 16, 24, 32, 48, 64] as const` → `Spacing`) and `BREAKPOINT` (`mobile | tablet | desktop | wide`).
 
 Single-family axes (`WIDTH` in `Indicator`, overlay placement axes in `core/overlay/positioning.ts`) stay local until a second shipped family consumes them.

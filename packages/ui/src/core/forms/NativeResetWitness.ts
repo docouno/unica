@@ -36,6 +36,7 @@ export function createResetOperation(event: ResetEvent): ResetOperation {
 interface Subscription {
   notify: (result: ResetResult) => void;
   readonly controls: readonly FormControl[];
+  readonly prepare?: (() => () => void) | undefined;
 }
 
 type PendingReset = (subscription?: Subscription) => void;
@@ -43,7 +44,7 @@ type PendingReset = (subscription?: Subscription) => void;
 interface ResetObservation {
   readonly control: FormControl;
   readonly owned: boolean;
-  readonly appliedDefault: (allowUnchanged: boolean) => boolean;
+  readonly appliedDefault: (retainedOwner: boolean) => boolean;
 }
 
 const resetTargets = /* @__PURE__ */ new WeakMap<Node, Set<Subscription>>();
@@ -71,12 +72,12 @@ function captureResetValue(control: FormControl): ResetObservation['appliedDefau
   if (tag === 'select') {
     const select = control as HTMLSelectElement;
     const before = Array.from(select.selectedOptions);
-    return (allowUnchanged) => {
+    return (retainedOwner) => {
       const after = Array.from(select.selectedOptions);
       const changed =
         before.length !== after.length || before.some((option, index) => option !== after[index]);
       return (
-        (changed || allowUnchanged) &&
+        (changed || retainedOwner) &&
         Array.from(select.options).every((option) => option.selected === option.defaultSelected)
       );
     };
@@ -84,14 +85,19 @@ function captureResetValue(control: FormControl): ResetObservation['appliedDefau
   const input = control as HTMLInputElement;
   if (tag === 'input' && (input.type === 'checkbox' || input.type === 'radio')) {
     const before = input.checked;
-    return (allowUnchanged) =>
-      (before !== input.checked || allowUnchanged) && matchesCheckedDefault(input);
+    return (retainedOwner) =>
+      (before !== input.checked || retainedOwner) && matchesCheckedDefault(input);
   }
   const field = control as HTMLInputElement | HTMLTextAreaElement;
   const before = field.value;
-  return (allowUnchanged) => {
+  return (retainedOwner) => {
+    // A follow-on range event can replace the reset value before this witness
+    // settles. With the same form owner, the trusted reset still ends its edit.
+    if (retainedOwner && tag === 'input' && input.type === 'range') {
+      return true;
+    }
     const value = field.value;
-    if (!allowUnchanged && value === before) {
+    if (!retainedOwner && value === before) {
       return false;
     }
     if (tag === 'input' && input.type === 'file') {
@@ -152,13 +158,18 @@ function handleReset(event: Event): void {
   const observations = observeReset(form, root);
   const view = getDefaultView(getOwnerDocument(form));
   let active = true;
-  let completed: { result: ResetResult; targets: Set<Subscription> } | undefined;
+  let completed: Map<Subscription, ResetResult> | undefined;
   let cancelFallback: (() => void) | undefined;
+  const prepared = new Map<Subscription, () => void>();
 
   const cleanup = (): void => {
     active = false;
     dispatches.delete(event);
     pendingResets.delete(finish);
+    for (const end of prepared.values()) {
+      end();
+    }
+    prepared.clear();
     if (cancelFallback) {
       cancelFallback();
       cancelFallback = undefined;
@@ -196,18 +207,27 @@ function handleReset(event: Event): void {
         }
       }
       ordered.sort((first, second) => first.position - second.position);
-      completed = { result, targets: new Set(ordered.map(({ subscription }) => subscription)) };
+      completed = new Map(ordered.map(({ subscription }) => [subscription, result]));
+      for (const subscription of prepared.keys()) {
+        if (!completed.has(subscription)) {
+          completed.set(subscription, 'repair');
+        }
+      }
       observations.clear();
     }
     if (!only) {
       cleanup();
     }
-    const { result, targets } = completed;
     let failure: { error: unknown } | undefined;
-    for (const subscription of only ? [only] : targets) {
-      if (!targets.delete(subscription)) {
+    for (const subscription of only ? [only] : completed.keys()) {
+      const result = completed.get(subscription);
+      if (!result) {
         continue;
       }
+      completed.delete(subscription);
+      const end = prepared.get(subscription);
+      prepared.delete(subscription);
+      end?.();
       try {
         subscription.notify(result);
       } catch (error) {
@@ -227,6 +247,15 @@ function handleReset(event: Event): void {
 
   dispatches.set(event, cleanup);
   pendingResets.add(finish);
+  if (event.isTrusted && !event.defaultPrevented) {
+    // A pair of range inputs may need temporary bounds even if it only joins
+    // this form from a reset handler later in the native dispatch.
+    for (const [subscription, controls] of observations) {
+      if (controls.length && subscription.prepare) {
+        prepared.set(subscription, subscription.prepare());
+      }
+    }
+  }
   queueMicrotask(() => {
     if (!active) {
       return;
@@ -302,6 +331,7 @@ export interface NativeResetSubscription {
 export function subscribeNativeReset(
   input: FormControl | readonly FormControl[],
   notify: (result: ResetResult) => void,
+  prepare?: () => () => void,
 ): NativeResetSubscription {
   const controls: FormControl[] = Array.isArray(input)
     ? Array.from(new Set<FormControl>(input as readonly FormControl[]))
@@ -309,6 +339,7 @@ export function subscribeNativeReset(
   let active = true;
   const subscription: Subscription = {
     controls,
+    prepare,
     notify(result) {
       if (active) {
         notify(result);
