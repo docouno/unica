@@ -1,8 +1,7 @@
-import { Skeleton, SkeletonText, Text } from '@docouno/unica';
+import { Card, Skeleton, SkeletonText, Text } from '@docouno/unica';
 import { useState } from 'react';
 import type { CSSProperties, ReactElement } from 'react';
 import { Avatar } from '../../../src/prototypes/avatar/avatar.proto.js';
-import { Card } from '../../../src/prototypes/card/card.proto.js';
 import { PopoverContent } from '../../../src/prototypes/popover/popover.proto.js';
 
 function SurfaceSamples(): ReactElement {

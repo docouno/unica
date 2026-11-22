@@ -4,6 +4,7 @@ import {
   AlertClose,
   AlertDescription,
   AlertTitle,
+  Card,
   Code,
   defineGlyph,
   Link,
@@ -11,7 +12,6 @@ import {
 import type { AlertStatus, GlyphSvgProps } from '@docouno/unica';
 import type { JSX } from 'react';
 import { Button, IconButton } from '../../../src/prototypes/button/button.proto.js';
-import { Card } from '../../../src/prototypes/card/card.proto.js';
 
 const statuses: readonly AlertStatus[] = ['neutral', 'info', 'success', 'warning', 'danger'];
 const sizes = ['s', 'm', 'l'] as const;

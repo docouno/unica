@@ -2,7 +2,6 @@ import { useId, useState } from 'react';
 import type { CSSProperties, ReactElement } from 'react';
 import { defineComponent } from '../../workbench/types.js';
 import type { PreviewContext } from '../../workbench/types.js';
-import { Card, CardAction, CardHeader } from '../../prototypes/card/card.proto.js';
 import { CodeBlock } from '../../prototypes/code-block/code-block.proto.js';
 import {
   PopoverBody,
@@ -13,7 +12,7 @@ import {
   PopoverTitle,
 } from '../../prototypes/popover/popover.proto.js';
 import { Button } from '../../prototypes/button/button.proto.js';
-import { Text, Title } from '@docouno/unica';
+import { Card, CardAction, CardHeader, Text, Title } from '@docouno/unica';
 import './scrollbar.examples.css';
 
 const densityClasses = {

@@ -1,0 +1,37 @@
+.test-card-surface {
+  display: grid;
+  gap: 12px;
+  padding: 22px;
+  background: var(--bg-canvas);
+}
+
+[data-surface='overlay'] .test-card-surface {
+  background: var(--bg-overlay);
+  backdrop-filter: var(--_overlay-backdrop);
+}
+
+.test-card-hover-reference {
+  background: var(--card-bg-hover);
+  border: 1px solid var(--card-border-hover);
+}
+
+.test-card-press-reference {
+  background: var(--card-bg-subtle);
+  border: 1px solid var(--card-border-hover);
+}
+
+.test-card-restricted {
+  border-style: dashed;
+  box-shadow: none;
+}
+
+@media (forced-colors: active) {
+  .test-card-restricted {
+    border-color: GrayText;
+  }
+}
+
+.test-card-geometry {
+  max-inline-size: 100%;
+  inline-size: 510px;
+}

@@ -4,16 +4,16 @@ import type { JSX, ReactNode } from 'react';
 import {
   Alert,
   Blockquote,
+  Card,
   Code,
-  defineGlyph,
   Link,
   Text,
   Title,
   UnicaProvider,
+  defineGlyph,
 } from '@docouno/unica';
 import type { GlyphSource, GlyphSvgProps } from '@docouno/unica';
 import { Button } from '../../../src/prototypes/button/button.proto.js';
-import { Card } from '../../../src/prototypes/card/card.proto.js';
 import { PopoverContent } from '../../../src/prototypes/popover/popover.proto.js';
 import { unicaWorkbenchBase } from '../../../src/unica.workbench.shared.js';
 

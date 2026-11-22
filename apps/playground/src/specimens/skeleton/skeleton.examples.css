@@ -93,12 +93,12 @@
   white-space: nowrap;
 }
 
-.skeleton-demo-report.card-proto {
+.skeleton-demo-report {
   gap: var(--space-16);
   padding: var(--space-12);
 }
 
-.skeleton-demo-media.card-media-proto {
+.skeleton-demo-media {
   --element-radius: var(--radius-xs);
   aspect-ratio: 16 / 9;
   border-radius: var(--radius-xs);

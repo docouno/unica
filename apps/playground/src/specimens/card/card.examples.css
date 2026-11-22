@@ -16,7 +16,7 @@
   gap: var(--space-8);
   min-inline-size: 0;
 }
-.card-example-cell > .card-proto {
+.card-example-cell > [data-unica-card-variant] {
   flex: 1;
 }
 .card-example-cell > .button-proto {
@@ -74,16 +74,6 @@
 .card-example-quiet-section {
   background: var(--bg-surface-subtle);
 }
-.card-title-link-proto {
-  color: inherit;
-  text-decoration: underline;
-  text-decoration-color: var(--border-strong);
-  text-underline-offset: 0.2em;
-}
-.card-title-link-proto:hover {
-  text-decoration-color: currentColor;
-}
-.card-title-link-proto:focus-visible,
 .card-example-inline-link:focus-visible {
   outline: 2px solid var(--focus-ring-color);
   outline-offset: 2px;
@@ -194,4 +184,44 @@
   min-block-size: calc(
     var(--text-size-body-m-lh) + 4 * var(--text-size-body-s-lh) + 2 * var(--space-12)
   );
+}
+
+.card-example-unavailable {
+  border-style: dashed;
+  box-shadow: none;
+}
+
+.card-example-unavailable::after {
+  display: none;
+}
+
+.card-example-state[data-preview='hover'] {
+  background: var(--card-bg-hover);
+  border-color: var(--card-border-hover);
+}
+
+.card-example-state[data-preview='active'] {
+  background: var(--card-bg-subtle);
+  border-color: var(--card-border-hover);
+  box-shadow: none;
+}
+
+.card-example-state:is([data-preview='hover'], [data-preview='active']) .card-example-state-title {
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
+.card-example-state[data-preview-focus] {
+  outline: 2px solid var(--focus-ring-color);
+  outline-offset: 2px;
+}
+
+@media (forced-colors: active) {
+  .card-example-unavailable {
+    border-color: GrayText;
+  }
+
+  .card-example-state[data-preview-focus] {
+    outline: 1px solid ButtonText;
+  }
 }

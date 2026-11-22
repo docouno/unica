@@ -71,6 +71,11 @@ export const TEXT_ALIGN = {
   end: 'end',
 } as const;
 
+export const ORIENTATION = {
+  horizontal: 'horizontal',
+  vertical: 'vertical',
+} as const;
+
 export const SPACING = [0, 2, 4, 8, 12, 16, 24, 32, 48, 64] as const;
 
 export const BREAKPOINT = {

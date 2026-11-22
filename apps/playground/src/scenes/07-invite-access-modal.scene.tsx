@@ -3,9 +3,8 @@ import { folioSceneHref } from './folio/folio.routes.js';
 import type { ReactElement } from 'react';
 import { PlusIcon } from '@phosphor-icons/react';
 import { AsidePanel, WorkspaceNavigation } from '../prototypes/app-shell/app-shell.proto.js';
-import { Badge, Input, Text, Textarea, Title } from '@docouno/unica';
+import { Badge, Card, Input, Text, Textarea, Title } from '@docouno/unica';
 import { Button } from '../prototypes/button/button.proto.js';
-import { Card } from '../prototypes/card/card.proto.js';
 import {
   Modal,
   ModalBody,

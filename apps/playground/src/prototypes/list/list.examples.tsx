@@ -1,4 +1,4 @@
-import { Code, Link, Switch } from '@docouno/unica';
+import { Card, Code, Link, Switch } from '@docouno/unica';
 import { useId, useState } from 'react';
 import type { ComponentPropsWithoutRef, ReactElement } from 'react';
 import {
@@ -13,12 +13,11 @@ import {
 import { Avatar } from '../avatar/avatar.proto.js';
 import { Badge } from '@docouno/unica';
 import { Button, IconButton } from '../button/button.proto.js';
-import { Card } from '../card/card.proto.js';
 import { Menu } from '../menu/menu.live.js';
 import { PopoverContent } from '../popover/popover.proto.js';
 import { Text, Title } from '@docouno/unica';
 import { List, ListItem } from './list.proto.js';
-import '../card/display.examples.css';
+import '../../specimens/shared/display.examples.css';
 import './list.examples.css';
 
 export function ProseExamples(): ReactElement {

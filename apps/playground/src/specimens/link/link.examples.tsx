@@ -1,9 +1,8 @@
 import { useId, useState, useSyncExternalStore } from 'react';
 import type { ComponentPropsWithRef, ReactElement, ReactNode } from 'react';
 import { ArrowRightIcon, FileTextIcon } from '@phosphor-icons/react';
-import { Alert, AlertTitle, Icon, Link, Text, Title } from '@docouno/unica';
+import { Alert, AlertTitle, Card, Icon, Link, Text, Title } from '@docouno/unica';
 import type { LinkProps } from '@docouno/unica';
-import { Card } from '../../prototypes/card/card.proto.js';
 import './link.examples.css';
 
 const reference = 'https://www.w3.org/WAI/';

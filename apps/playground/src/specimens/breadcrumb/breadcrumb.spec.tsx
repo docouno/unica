@@ -9,7 +9,7 @@ import {
   BreadcrumbLink,
   BreadcrumbPage,
 } from '../../prototypes/breadcrumb/breadcrumb.proto.js';
-import '../../prototypes/card/display.examples.css';
+import '../shared/display.examples.css';
 import '../../prototypes/breadcrumb/breadcrumb.examples.css';
 
 const workspace = '?item=02-workspace-overview';

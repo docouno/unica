@@ -1,10 +1,9 @@
-import { Checkbox, Code } from '@docouno/unica';
+import { Card, Checkbox, Code } from '@docouno/unica';
 import { useEffect, useState } from 'react';
 import type { ReactElement } from 'react';
 import { StarIcon } from '@phosphor-icons/react';
 import { defineComponent } from '../../workbench/types.js';
 import { Button, IconButton } from '../../prototypes/button/button.proto.js';
-import { Card } from '../../prototypes/card/card.proto.js';
 import { CodeBlock } from '../../prototypes/code-block/code-block.proto.js';
 import type { IconProps as PhosphorIconProps } from '@phosphor-icons/react';
 import {

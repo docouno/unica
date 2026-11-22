@@ -1,6 +1,5 @@
-import { Skeleton, Text, Title } from '@docouno/unica';
+import { Card, Skeleton, Text, Title } from '@docouno/unica';
 import { defineComponent } from '../../workbench/types.js';
-import { Card } from '../../prototypes/card/card.proto.js';
 import { PopoverContent } from '../../prototypes/popover/popover.proto.js';
 import { previewProps } from '../preview-code.js';
 import { dimension, propValues, widthControl } from './skeleton.controls.js';

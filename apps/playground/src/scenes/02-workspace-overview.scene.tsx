@@ -3,13 +3,13 @@ import type { ReactElement } from 'react';
 import { ArrowRightIcon, FileTextIcon, PushPinIcon } from '@phosphor-icons/react';
 import { Avatar } from '../prototypes/avatar/avatar.proto.js';
 import { Button } from '../prototypes/button/button.proto.js';
-import { Card } from '../prototypes/card/card.proto.js';
 import { ToastCard } from '../prototypes/toast/toast.proto.js';
 import {
   Alert,
   AlertDescription,
   AlertTitle,
   Badge,
+  Card,
   Icon,
   Link,
   Text,

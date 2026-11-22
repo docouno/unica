@@ -42,6 +42,34 @@ export { Badge } from './components/Badge/index.js';
 export type { BadgeProps, BadgeStatus } from './components/Badge/index.js';
 export { Blockquote } from './components/Blockquote/index.js';
 export type { BlockquoteProps, BlockquoteStatus } from './components/Blockquote/index.js';
+export {
+  Card,
+  CardAction,
+  CardBody,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardMedia,
+  CardSection,
+  CardTitle,
+} from './components/Card/index.js';
+export type {
+  CardActionProps,
+  CardBodyProps,
+  CardDescriptionProps,
+  CardFooterJustify,
+  CardFooterProps,
+  CardHeaderProps,
+  CardMediaFit,
+  CardMediaProps,
+  CardOrientation,
+  CardProps,
+  CardSectionPlacement,
+  CardSectionProps,
+  CardSize,
+  CardTitleProps,
+  CardVariant,
+} from './components/Card/index.js';
 export { Checkbox, CheckboxGroup, CheckboxIndicator } from './components/Checkbox/index.js';
 export type {
   CheckboxGroupProps,

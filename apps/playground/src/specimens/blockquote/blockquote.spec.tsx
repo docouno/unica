@@ -1,10 +1,9 @@
-import { Blockquote, Code, Link, Text } from '@docouno/unica';
+import { Blockquote, Card, Code, Link, Text } from '@docouno/unica';
 import { previewProps, previewText } from '../preview-code.js';
 import type { ReactElement } from 'react';
 import type { IconProps as PhosphorIconProps } from '@phosphor-icons/react';
 import { QuotesIcon } from '@phosphor-icons/react';
 import { defineComponent } from '../../workbench/types.js';
-import { Card } from '../../prototypes/card/card.proto.js';
 import {
   PopoverBody,
   PopoverContent,

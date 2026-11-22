@@ -4,6 +4,7 @@ import {
   AlertDescription,
   AlertTitle,
   Badge,
+  Card,
   Checkbox,
   Input,
   Link,
@@ -21,7 +22,6 @@ import {
   ArrowCounterClockwiseIcon,
 } from '@phosphor-icons/react';
 import { Button, IconButton } from '../button/button.proto.js';
-import { Card } from '../card/card.proto.js';
 import {
   Drawer,
   DrawerBody,

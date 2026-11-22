@@ -13,8 +13,7 @@ import {
   TrayIcon,
 } from '@phosphor-icons/react';
 import { Button } from '../button/button.proto.js';
-import { Card, CardTitle } from '../card/card.proto.js';
-import { Input, Text, Title } from '@docouno/unica';
+import { Card, CardTitle, Input, Text, Title } from '@docouno/unica';
 import { Empty, EmptyActions, EmptyDescription, EmptyMedia, EmptyTitle } from './empty.proto.js';
 import './empty.examples.css';
 

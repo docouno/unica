@@ -58,11 +58,18 @@
   --table-sort-icon: var(--size-l-icon);
   --table-sort-radius: var(--size-l-radius);
 }
-:where(.card-proto) .table-proto {
-  --_table-head-ground: var(--_table-sticky-header-bg, var(--card-bg));
+/* Inherit the variant and resolve its surface color in the table's local theme. */
+:where([data-unica-card-variant='default']) {
+  --_table-card-subtle-share: 0%;
 }
-:where(.card-proto[data-variant='subtle']) .table-proto {
-  --_table-head-ground: var(--_table-sticky-header-bg, var(--card-bg-subtle));
+:where([data-unica-card-variant='subtle']) {
+  --_table-card-subtle-share: 100%;
+}
+:where([data-unica-card-variant]) .table-proto {
+  --_table-head-ground: var(
+    --_table-sticky-header-bg,
+    color-mix(in srgb, var(--card-bg-subtle) var(--_table-card-subtle-share), var(--card-bg))
+  );
 }
 
 .table-proto > :is(thead, tbody, tfoot) > tr > :is(th, td) {

@@ -78,7 +78,10 @@
     max-inline-size: 100%;
   }
 
-  :is(.unica-text, .unica-title)[data-unica-type-overflow='clamp']:not([hidden]) {
+  :is(.unica-text, .unica-title)[data-unica-type-overflow='clamp']:not(
+      [hidden],
+      :where([popover]:not(:popover-open))
+    ) {
     display: -webkit-box;
     -webkit-box-orient: vertical;
     overflow: hidden;

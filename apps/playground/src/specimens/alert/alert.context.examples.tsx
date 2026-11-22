@@ -4,6 +4,7 @@ import {
   AlertClose,
   AlertDescription,
   AlertTitle,
+  Card,
   Code,
   Link,
   Text,
@@ -13,7 +14,6 @@ import type { ReactElement } from 'react';
 import { ArrowClockwiseIcon } from '@phosphor-icons/react';
 import type { AlertSize, AlertStatus } from '@docouno/unica';
 import { Button, IconButton } from '../../prototypes/button/button.proto.js';
-import { Card } from '../../prototypes/card/card.proto.js';
 import './alert.examples.css';
 
 const statuses: readonly AlertStatus[] = ['neutral', 'info', 'success', 'warning', 'danger'];

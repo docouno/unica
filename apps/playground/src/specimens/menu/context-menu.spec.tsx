@@ -13,8 +13,7 @@ import {
 } from '@phosphor-icons/react';
 import { defineComponent } from '../../workbench/types.js';
 import { IconButton } from '../../prototypes/button/button.proto.js';
-import { Card } from '../../prototypes/card/card.proto.js';
-import { Checkbox, Icon, Input, Link, Text } from '@docouno/unica';
+import { Card, Checkbox, Icon, Input, Link, Text } from '@docouno/unica';
 import { ContextMenu } from '../../prototypes/menu/context-menu.proto.js';
 import type { MenuEntry } from '../../prototypes/menu/menu.entries.js';
 import { MenuPreview } from '../../prototypes/menu/menu.proto.js';
