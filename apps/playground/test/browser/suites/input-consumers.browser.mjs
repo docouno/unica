@@ -106,7 +106,7 @@ export default {
       );
       await panel.locator('.calendar-day-proto:focus').waitFor();
       await panel.locator('[data-date="2026-09-17"]').focus();
-      const tooltip = panel.locator('.calendar-date-tooltip-proto:popover-open');
+      const tooltip = panel.locator('.calendar-date-feedback:popover-open');
       await tooltip.waitFor();
       await page.keyboard.press('Escape');
       await tooltip.waitFor({ state: 'detached' });
