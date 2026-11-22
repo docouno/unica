@@ -746,7 +746,9 @@ scenarios[
     const sample = async (change) => {
       reads = 0;
       change();
-      for (let i = 0; i < 4; i++) await new Promise(requestAnimationFrame);
+      for (let i = 0; i < 4; i++) {
+        await new Promise(requestAnimationFrame);
+      }
       return reads;
     };
     let styleChanges = 0;
@@ -1047,7 +1049,9 @@ scenarios['Skeleton follows remote selectors and CSSOM moves through a fixed cli
     const css = document.head.appendChild(document.createElement('style')).sheet;
     css.insertRule('body:has(details[open]) [data-testid="viewport"] { translate: 80px 0; }');
     const settle = async () => {
-      for (let frame = 0; frame < 4; frame++) await new Promise(requestAnimationFrame);
+      for (let frame = 0; frame < 4; frame++) {
+        await new Promise(requestAnimationFrame);
+      }
     };
     const sample = () => {
       const rect = paint.getBoundingClientRect();
@@ -1089,7 +1093,9 @@ scenarios['Skeleton suspends offscreen measurements and releases finished paints
     .locator('.unica-skeleton')
     .evaluate(async (node) => {
       const settle = async () => {
-        for (let frame = 0; frame < 5; frame++) await new Promise(requestAnimationFrame);
+        for (let frame = 0; frame < 5; frame++) {
+          await new Promise(requestAnimationFrame);
+        }
       };
       await settle();
       const animation = node.getAnimations({ subtree: true })[0];

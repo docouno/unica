@@ -45,7 +45,9 @@ function createSweep(view: BrowserWindow, start: number, duration: number): Swee
 
   function update(): void {
     frame = undefined;
-    if (!visible.size && !initial.size) return;
+    if (!visible.size && !initial.size) {
+      return;
+    }
     const { clientWidth, clientHeight } = document.documentElement;
     const band = Math.max(64, Math.min(320, 64 + (clientWidth - 480) * 0.27));
     const middleY = clientHeight / 2;
