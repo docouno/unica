@@ -19,7 +19,7 @@
 .card-example-cell > [data-unica-card-variant] {
   flex: 1;
 }
-.card-example-cell > .button-proto {
+.card-example-toggle-content {
   align-self: start;
 }
 .card-example-note,

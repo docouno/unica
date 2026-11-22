@@ -11,7 +11,7 @@ import { useId, useLayoutEffect, useRef, useState } from 'react';
 import type { ReactElement } from 'react';
 import { LightbulbIcon } from '@phosphor-icons/react';
 import type { AlertSize, AlertStatus, GlyphSvgProps } from '@docouno/unica';
-import { Button } from '../../prototypes/button/button.proto.js';
+import { Button } from '@docouno/unica';
 import './alert.examples.css';
 
 export function EditorialGlyph(props: GlyphSvgProps): ReactElement {
@@ -197,8 +197,8 @@ export function ActionStateExamples(): ReactElement {
   return (
     <div className="alert-demo-stack">
       <p className="alert-demo-note">
-        Action appearances below are pinned. Use Recovery to try state changes. Only actions change
-        appearance; the message stays readable.
+        Hover, hold, or Tab to the available actions. The message stays readable as the action
+        changes. Use Recovery to try state changes.
       </p>
       <Alert role="none" status="warning">
         <AlertTitle>Publication needs an owner</AlertTitle>
@@ -218,10 +218,10 @@ export function ActionStateExamples(): ReactElement {
           Your local changes are safe. Discarding them cannot be undone.
         </AlertDescription>
         <AlertActions>
-          <Button size="s" variant="secondary" tone="neutral" previewState="hover" previewFocus>
+          <Button size="s" variant="secondary" tone="neutral">
             Reconnect
           </Button>
-          <Button size="s" variant="ghost" tone="danger" previewState="active">
+          <Button size="s" variant="ghost" tone="danger">
             Discard draft
           </Button>
         </AlertActions>

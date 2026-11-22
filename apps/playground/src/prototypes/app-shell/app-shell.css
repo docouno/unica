@@ -506,22 +506,22 @@
   justify-content: end;
 }
 
-:is(.app-shell-inspector-toggle, .app-shell-dock-end) .button-leading-glyph {
+:is(.app-shell-inspector-toggle, .app-shell-dock-end) svg {
   scale: calc(-1 * var(--_dir-mirror, 1)) 1;
 }
 
-:is(.app-shell-navigation-toggle, .app-shell-dock-start) .button-leading-glyph {
+:is(.app-shell-navigation-toggle, .app-shell-dock-start) svg {
   scale: var(--_dir-scale, none);
 }
 
-.app-shell-dock-toggle.button-proto,
+.app-shell-dock-toggle,
 .app-shell-header[data-dock-only],
 .app-shell-aside-header[data-dock-only],
 .app-shell-inspector-control {
   display: none;
 }
 
-.app-shell-dock-toggle.button-proto {
+.app-shell-dock-toggle {
   flex: none;
 }
 
@@ -547,7 +547,7 @@
 }
 
 @container folio-shell (width >= 800px) {
-  .app-shell-dock-start.button-proto {
+  .app-shell-dock-start {
     display: inline-flex;
   }
 
@@ -557,7 +557,7 @@
 }
 
 @container folio-shell (width >= 1100px) {
-  .app-shell-inspector-control .app-shell-dock-end.button-proto {
+  .app-shell-inspector-control .app-shell-dock-end {
     display: inline-flex;
   }
 

@@ -122,7 +122,7 @@
 .table-proto > tbody > tr > .table-example-feedback {
   padding-block: var(--space-16);
 }
-.table-example-feedback .button-proto {
+.table-example-feedback-action {
   margin-block-start: var(--space-8);
 }
 .table-example-visually-hidden {

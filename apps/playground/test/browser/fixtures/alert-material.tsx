@@ -11,7 +11,7 @@ import {
 } from '@docouno/unica';
 import type { AlertStatus, GlyphSvgProps } from '@docouno/unica';
 import type { JSX } from 'react';
-import { Button, IconButton } from '../../../src/prototypes/button/button.proto.js';
+import { Button, IconButton } from '@docouno/unica';
 
 const statuses: readonly AlertStatus[] = ['neutral', 'info', 'success', 'warning', 'danger'];
 const sizes = ['s', 'm', 'l'] as const;

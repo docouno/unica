@@ -12,7 +12,7 @@ import {
   TrashIcon,
 } from '@phosphor-icons/react';
 import { defineComponent } from '../../workbench/types.js';
-import { IconButton } from '../../prototypes/button/button.proto.js';
+import { IconButton } from '@docouno/unica';
 import { Card, Checkbox, Icon, Input, Link, Text } from '@docouno/unica';
 import { ContextMenu } from '../../prototypes/menu/context-menu.proto.js';
 import type { MenuEntry } from '../../prototypes/menu/menu.entries.js';

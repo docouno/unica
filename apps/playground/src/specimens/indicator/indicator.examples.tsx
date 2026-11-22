@@ -8,7 +8,7 @@ import {
   TrayIcon,
 } from '@phosphor-icons/react';
 import { Avatar } from '../../prototypes/avatar/avatar.proto.js';
-import { Button, IconButton } from '../../prototypes/button/button.proto.js';
+import { Button, IconButton } from '@docouno/unica';
 import { Badge, Icon, Indicator } from '@docouno/unica';
 import type { IndicatorPosition, IndicatorProps, IndicatorStatus } from '@docouno/unica';
 import './indicator.examples.css';
@@ -373,17 +373,11 @@ export function IndicatorHostStates(): ReactElement {
   return (
     <div className="indicator-example-stack">
       <div className="indicator-example-data-grid">
-        {(['rest', 'hover', 'active', 'focus'] as const).map((state) => (
-          <Sample key={state} label={state}>
-            <Indicator count={12} size="s">
-              <IconButton
-                icon={BellIcon}
-                aria-label="Notifications, 12 unread"
-                previewState={state}
-              />
-            </Indicator>
-          </Sample>
-        ))}
+        <Sample label="Hover, hold, or Tab">
+          <Indicator count={12} size="s">
+            <IconButton icon={BellIcon} aria-label="Notifications, 12 unread" />
+          </Indicator>
+        </Sample>
         <Sample label="Disabled host">
           <Indicator count={12} size="s" status="neutral">
             <IconButton
@@ -395,32 +389,23 @@ export function IndicatorHostStates(): ReactElement {
         </Sample>
         <Sample label="Busy host">
           <Indicator count={12} size="s">
-            <IconButton
-              icon={BellIcon}
-              aria-label="Refreshing notifications, 12 unread"
-              loading
-              previewFocus
-            />
+            <IconButton icon={BellIcon} aria-label="Refreshing notifications, 12 unread" loading />
           </Indicator>
         </Sample>
-        <Sample label="Dot + focus">
+        <Sample label="Dot">
           <Indicator dot>
-            <IconButton
-              icon={ChatCircleIcon}
-              aria-label="Messages, new activity"
-              previewState="focus"
-            />
+            <IconButton icon={ChatCircleIcon} aria-label="Messages, new activity" />
           </Indicator>
         </Sample>
-        <Sample label="Count + focus">
+        <Sample label="Count">
           <Indicator count={105}>
-            <IconButton icon={TrayIcon} aria-label="Inbox, 105 unread" previewState="focus" />
+            <IconButton icon={TrayIcon} aria-label="Inbox, 105 unread" />
           </Indicator>
         </Sample>
       </div>
       <p className="indicator-example-note">
-        Pinned host states for comparison. The marker has no hover, press, focus or loading state of
-        its own. A known count can remain when its action is unavailable.
+        The host owns its focus and interaction feedback. A known count can remain when the host is
+        unavailable.
       </p>
       <div className="indicator-example-actions">
         <Indicator count={3} size="s">

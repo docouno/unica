@@ -3,8 +3,8 @@ import type { ReactElement, ReactNode } from 'react';
 import { ArrowClockwiseIcon, UsersIcon } from '@phosphor-icons/react';
 import { Avatar, AvatarGroup } from './avatar.proto.js';
 import type { AvatarGroupMember, AvatarGroupSize, AvatarSize } from './avatar.proto.js';
-import { Button } from '../button/button.proto.js';
-import type { ButtonProps } from '../button/button.proto.js';
+import { Button } from '@docouno/unica';
+import type { ButtonProps } from '@docouno/unica';
 import { Icon, Text } from '@docouno/unica';
 import './avatar.examples.css';
 
@@ -505,9 +505,18 @@ function AccountAction({
   source = 'photo',
   children = 'Account',
   ...props
-}: ButtonProps & { readonly source?: 'photo' | 'initials' | 'unknown' }): ReactElement {
+}: Exclude<ButtonProps, { asChild: true }> & {
+  readonly source?: 'photo' | 'initials' | 'unknown';
+}): ReactElement {
   return (
-    <Button variant="ghost" tone="neutral" {...props} size={size} className="avatar-example-action">
+    <Button
+      variant="ghost"
+      tone="neutral"
+      {...props}
+      size={size}
+      className="avatar-example-action"
+      data-avatar-action-size={size}
+    >
       <span className="avatar-example-action-row">
         <Avatar
           src={source === 'photo' ? lightPortrait : undefined}
@@ -546,15 +555,15 @@ function Actions(): ReactElement {
       ))}
       <div className="avatar-example-rule" />
       <div className="avatar-example-row">
-        {(['rest', 'hover', 'active', 'focus', 'disabled', 'loading'] as const).map((state) => (
-          <Sample key={state} label={state}>
-            <AccountAction
-              disabled={state === 'disabled'}
-              loading={state === 'loading'}
-              previewState={state === 'disabled' || state === 'loading' ? undefined : state}
-            />
-          </Sample>
-        ))}
+        <Sample label="Hover, hold, or Tab">
+          <AccountAction />
+        </Sample>
+        <Sample label="Disabled">
+          <AccountAction disabled />
+        </Sample>
+        <Sample label="Loading">
+          <AccountAction loading />
+        </Sample>
       </div>
       <div className="avatar-example-row">
         <Sample label="Unavailable initials">
@@ -569,8 +578,8 @@ function Actions(): ReactElement {
         </Sample>
       </div>
       <p className="avatar-example-note">
-        State previews are pinned. Avatar itself has no hover, pressed, selected or disabled state;
-        this enclosing action subdues its identity together with the label when unavailable.
+        The enclosing action owns interaction feedback. It subdues the identity and label when
+        unavailable.
       </p>
     </div>
   );

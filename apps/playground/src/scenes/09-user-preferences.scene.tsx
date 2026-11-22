@@ -12,7 +12,7 @@ import {
 } from '../prototypes/app-shell/app-shell.proto.js';
 import { Badge } from '@docouno/unica';
 import { Breadcrumb, BreadcrumbPage } from '../prototypes/breadcrumb/breadcrumb.proto.js';
-import { Button } from '../prototypes/button/button.proto.js';
+import { Button } from '@docouno/unica';
 import {
   Accordion,
   AccordionContent,

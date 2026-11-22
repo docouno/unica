@@ -9,7 +9,7 @@ import {
   FileTextGlyph,
   PlusGlyph,
 } from '../control-glyphs.js';
-import { IconButton } from '../button/button.proto.js';
+import { IconButton } from '@docouno/unica';
 import { PopoverContent } from '../popover/popover.proto.js';
 import { useShellPopoverPosition } from './app-shell-position.js';
 import { useClippedLabel } from '../use-clipped-label.js';

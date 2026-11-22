@@ -86,35 +86,44 @@
   min-block-size: calc(var(--disclosure-label-line) + 2 * var(--disclosure-block-pad));
 }
 
-.disclosure-trigger-proto.button-proto[data-variant='ghost'] {
-  --button-border-width: 0px;
-
-  min-block-size: var(--disclosure-target);
-  padding: var(--disclosure-block-pad) var(--disclosure-inset);
-  border-radius: var(--disclosure-radius);
-  font-size: var(--disclosure-label-size);
-  line-height: var(--disclosure-label-line);
-  text-align: start;
-}
-
-.disclosure-trigger-proto.button-proto[data-variant='ghost'][aria-expanded='true'] {
-  --button-bg: transparent;
-  --button-hover-bg: var(--button-ghost-hover-bg);
-}
-
-.disclosure-trigger-proto > .button-proto-content,
-.disclosure-trigger-proto .button-proto-label {
-  inline-size: 100%;
-}
-
-.disclosure-trigger-proto .button-proto-label {
+.disclosure-trigger-proto {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
   align-items: start;
   gap: var(--disclosure-gap);
+  inline-size: 100%;
+  min-block-size: var(--disclosure-target);
+  /* Reserve the system contour while keeping the label inset and row height. */
+  padding: calc(var(--disclosure-block-pad) - 1px) calc(var(--disclosure-inset) - 1px);
+  border: 1px solid transparent;
+  border-radius: var(--disclosure-radius);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: var(--disclosure-label-size);
+  font-weight: 600;
+  line-height: var(--disclosure-label-line);
+  text-align: start;
+  cursor: pointer;
+  transition: background-color var(--_btn-state-duration);
 }
 
-.disclosure-trigger-proto[data-indicator='end'] .button-proto-label {
+@media (hover: hover) {
+  .disclosure-trigger-proto:hover:not(:disabled) {
+    background: color-mix(in srgb, var(--fg-primary) 10%, transparent);
+  }
+}
+
+.disclosure-trigger-proto:active:not(:disabled) {
+  background: color-mix(in srgb, var(--fg-primary) 15%, transparent);
+}
+
+.disclosure-trigger-proto:disabled {
+  color: var(--fg-disabled);
+  cursor: default;
+}
+
+.disclosure-trigger-proto[data-indicator='end'] {
   grid-template-columns: minmax(0, 1fr) auto;
 }
 
@@ -122,11 +131,7 @@
   > .collapsible-proto {
   --disclosure-start: var(--disclosure-label-inset);
 
-  &
-    > .accordion-header-proto
-    > .accordion-heading-proto
-    > .disclosure-trigger-proto
-    .button-proto-label {
+  & > .accordion-header-proto > .accordion-heading-proto > .disclosure-trigger-proto {
     grid-template-columns: auto minmax(0, 1fr);
 
     & > .disclosure-caret-proto {
@@ -167,7 +172,8 @@
   color: var(--fg-secondary);
 }
 
-.disclosure-trigger-proto.button-proto:not(:disabled):is(:focus-visible, [data-preview='focus']) {
+.disclosure-trigger-proto:focus-visible {
+  outline: 2px solid var(--focus-ring-color);
   outline-offset: -2px;
 }
 
@@ -212,7 +218,8 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .disclosure-caret-proto {
+  .disclosure-caret-proto,
+  .disclosure-trigger-proto {
     transition: none;
   }
 }
@@ -224,8 +231,23 @@
     border-color: GrayText;
   }
 
+  .disclosure-trigger-proto {
+    border-color: ButtonText;
+    color: ButtonText;
+  }
+
+  .disclosure-trigger-proto:disabled {
+    border-color: GrayText;
+    color: GrayText;
+  }
+
   .disclosure-caret-proto,
   .disclosure-trigger-proto[aria-expanded='true']:not(:disabled) .disclosure-caret-proto {
     color: inherit;
+  }
+
+  .disclosure-trigger-proto:focus-visible {
+    outline-color: Highlight;
+    outline-offset: -3px;
   }
 }

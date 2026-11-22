@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import type { ReactElement } from 'react';
 import { CheckIcon, WarningCircleIcon } from '@phosphor-icons/react';
-import { Button } from '../../prototypes/button/button.proto.js';
+import { Button } from '@docouno/unica';
 import { Icon, Spinner } from '@docouno/unica';
 import './progress.examples.css';
 

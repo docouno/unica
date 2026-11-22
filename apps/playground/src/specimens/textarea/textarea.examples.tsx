@@ -2,7 +2,7 @@ import { useId, useState } from 'react';
 import type { ReactElement, ReactNode } from 'react';
 import { Textarea, VisuallyHidden } from '@docouno/unica';
 import type { TextareaProps } from '@docouno/unica';
-import { Button } from '../../prototypes/button/button.proto.js';
+import { Button } from '@docouno/unica';
 import type { PreviewContext } from '../../workbench/types.js';
 import { textareaFeedback } from './textarea.feedback.js';
 import './textarea.examples.css';

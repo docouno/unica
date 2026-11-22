@@ -4,7 +4,7 @@ import { TextBIcon, TextItalicIcon, ListBulletsIcon, ListNumbersIcon } from '@ph
 import { Card, Divider, Text } from '@docouno/unica';
 import { defineComponent } from '../../workbench/types.js';
 import type { ComponentValues, PreviewContext, PropSchema } from '../../workbench/types.js';
-import { IconButton } from '../../prototypes/button/button.proto.js';
+import { IconButton } from '@docouno/unica';
 import { PopoverContent } from '../../prototypes/popover/popover.proto.js';
 import { previewProps } from '../preview-code.js';
 import './divider.examples.css';

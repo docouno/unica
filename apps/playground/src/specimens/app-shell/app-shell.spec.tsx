@@ -12,7 +12,7 @@ import {
   WarningCircleIcon,
 } from '@phosphor-icons/react/ssr';
 import { defineComponent } from '../../workbench/types.js';
-import { Button, IconButton } from '../../prototypes/button/button.proto.js';
+import { Button, IconButton } from '@docouno/unica';
 import {
   Badge,
   Box,

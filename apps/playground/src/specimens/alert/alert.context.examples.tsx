@@ -13,7 +13,7 @@ import { useId, useLayoutEffect, useRef, useState } from 'react';
 import type { ReactElement } from 'react';
 import { ArrowClockwiseIcon } from '@phosphor-icons/react';
 import type { AlertSize, AlertStatus } from '@docouno/unica';
-import { Button, IconButton } from '../../prototypes/button/button.proto.js';
+import { Button, IconButton } from '@docouno/unica';
 import './alert.examples.css';
 
 const statuses: readonly AlertStatus[] = ['neutral', 'info', 'success', 'warning', 'danger'];
@@ -169,29 +169,13 @@ export function ContextExamples(): ReactElement {
   );
 }
 
-type ContextState =
-  | 'rest'
-  | 'hover'
-  | 'active'
-  | 'focus'
-  | 'hover-focus'
-  | 'active-focus'
-  | 'pending'
-  | 'disabled'
-  | 'open'
-  | 'selected';
-const states: readonly ContextState[] = [
-  'rest',
-  'hover',
-  'active',
-  'focus',
-  'hover-focus',
-  'active-focus',
-  'pending',
-  'disabled',
-  'open',
-  'selected',
-];
+const states = [
+  { value: 'ready', label: 'Ready' },
+  { value: 'pending', label: 'Pending' },
+  { value: 'disabled', label: 'Disabled' },
+  { value: 'open', label: 'Expanded' },
+  { value: 'selected', label: 'Selected' },
+] as const;
 
 export function ContextStateExamples(): ReactElement {
   const [status, setStatus] = useState<AlertStatus>('danger');
@@ -213,8 +197,7 @@ export function ContextStateExamples(): ReactElement {
         </label>
       </div>
       <p className="alert-demo-note">
-        Button states are pinned for comparison. Hover, press, or Tab to Guidance to inspect the
-        live link with the selected status and underline.
+        Hover, hold, or Tab to compare focus and pointer feedback on the available actions.
       </p>
       <Alert role="none" status={status}>
         <AlertTitle>{messages[status].title}</AlertTitle>
@@ -225,74 +208,48 @@ export function ContextStateExamples(): ReactElement {
           </Link>
         </AlertDescription>
         <div className="alert-context-state-list">
-          {states.map((state) => {
-            const preview =
-              state === 'hover-focus'
-                ? 'hover'
-                : state === 'active-focus'
-                  ? 'active'
-                  : state === 'hover' || state === 'active' || state === 'focus'
-                    ? state
-                    : 'rest';
-            return (
-              <div key={state} className="alert-context-state-row">
-                <span className="alert-context-state-label">
-                  {state === 'active'
-                    ? 'Pressed'
-                    : state === 'hover-focus'
-                      ? 'Hover + focus'
-                      : state === 'active-focus'
-                        ? 'Pressed + focus'
-                        : state === 'pending'
-                          ? 'Pending + focus'
-                          : state}
-                </span>
-                <div className="alert-demo-actions">
-                  {(['secondary', 'ghost'] as const).map((variant) => (
-                    <Button
-                      key={variant}
-                      size="s"
-                      variant={variant}
-                      tone="neutral"
-                      previewState={preview}
-                      previewFocus={
-                        state === 'pending' || state === 'hover-focus' || state === 'active-focus'
-                      }
-                      loading={state === 'pending'}
-                      disabled={state === 'disabled'}
-                      aria-expanded={state === 'open' ? true : undefined}
-                      pressed={state === 'selected' ? true : undefined}
-                    >
-                      {state === 'open'
-                        ? variant === 'secondary'
-                          ? 'Hide details'
-                          : 'Options'
-                        : state === 'selected'
-                          ? variant === 'secondary'
-                            ? 'Pin notice'
-                            : 'Mute notice'
-                          : variant === 'secondary'
-                            ? 'Try again'
-                            : 'Details'}
-                    </Button>
-                  ))}
-                  <IconButton
+          {states.map(({ value: state, label }) => (
+            <div key={state} className="alert-context-state-row">
+              <span className="alert-context-state-label">{label}</span>
+              <div className="alert-demo-actions">
+                {(['secondary', 'ghost'] as const).map((variant) => (
+                  <Button
+                    key={variant}
                     size="s"
-                    variant="ghost"
+                    variant={variant}
                     tone="neutral"
-                    icon={ArrowClockwiseIcon}
-                    aria-label={`${state} refresh appearance`}
-                    previewState={preview}
-                    previewFocus={
-                      state === 'pending' || state === 'hover-focus' || state === 'active-focus'
-                    }
                     loading={state === 'pending'}
                     disabled={state === 'disabled'}
-                  />
-                </div>
+                    aria-expanded={state === 'open' ? true : undefined}
+                    pressed={state === 'selected' ? true : undefined}
+                  >
+                    {state === 'open'
+                      ? variant === 'secondary'
+                        ? 'Hide details'
+                        : 'Options'
+                      : state === 'selected'
+                        ? variant === 'secondary'
+                          ? 'Pin notice'
+                          : 'Mute notice'
+                        : variant === 'secondary'
+                          ? 'Try again'
+                          : 'Details'}
+                  </Button>
+                ))}
+                <IconButton
+                  size="s"
+                  variant="ghost"
+                  tone="neutral"
+                  icon={ArrowClockwiseIcon}
+                  aria-label={`Refresh notice · ${label}`}
+                  loading={state === 'pending'}
+                  disabled={state === 'disabled'}
+                  aria-expanded={state === 'open' ? true : undefined}
+                  pressed={state === 'selected' ? true : undefined}
+                />
               </div>
-            );
-          })}
+            </div>
+          ))}
         </div>
       </Alert>
     </div>

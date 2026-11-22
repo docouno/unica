@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Button } from '../../prototypes/button/button.proto.js';
+import { Button } from '@docouno/unica';
 import { ToastCard } from '../../prototypes/toast/toast.proto.js';
 import { defineComponent } from '../../workbench/types.js';
 const {
@@ -90,6 +90,7 @@ export default defineComponent({
     if (dismissed) {
       return (
         <Button
+          tone="accent"
           variant="secondary"
           autoFocus
           onClick={() => {
@@ -152,8 +153,7 @@ export default defineComponent({
       id: 'states',
       title: 'Action & dismiss states',
       overlayStage: true,
-      caption:
-        'Explicitly pinned rest, hover, press + focus, focus, unavailable, and pending comparisons. Only the targeted control responds.',
+      caption: 'Hover, hold, or Tab to the controls. Compare unavailable and pending actions.',
       kind: 'behavior',
       render: () => <ToastControlStates />,
     },

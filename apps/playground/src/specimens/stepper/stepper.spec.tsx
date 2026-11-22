@@ -2,7 +2,7 @@ import type { PreviewContext } from '../../workbench/types.js';
 import { useLayoutEffect, useRef, useState } from 'react';
 import type { ReactElement, ReactNode } from 'react';
 import { defineComponent } from '../../workbench/types.js';
-import { Button } from '../../prototypes/button/button.proto.js';
+import { Button } from '@docouno/unica';
 import { Card, Text, Title } from '@docouno/unica';
 import { Stepper, StepperStep } from '../../prototypes/stepper/stepper.proto.js';
 import type { StepperProps, StepperStepProps } from '../../prototypes/stepper/stepper.proto.js';

@@ -4,7 +4,7 @@ import { useRef, useState } from 'react';
 import { hydrateRoot } from 'react-dom/client';
 import '@fontsource-variable/inter';
 import '@fontsource-variable/jetbrains-mono';
-import { Button } from '../../../src/prototypes/button/button.proto.js';
+import { Button } from '@docouno/unica';
 import { Autocomplete } from '../../../src/prototypes/combobox/combobox.proto.js';
 import { MenuRows, MenuSurface } from '../../../src/prototypes/menu/menu.proto.js';
 import KbdSsrFixture from './kbd-ssr.js';
@@ -33,7 +33,7 @@ function MaterialSample({ surface }: { readonly surface: 'base' | 'overlay' }) {
         <Kbd>⌘</Kbd>
         <Kbd>K</Kbd>
       </KbdGroup>
-      <Button previewState="rest">
+      <Button>
         Search{' '}
         <KbdGroup>
           <Kbd>⌘</Kbd>

@@ -140,6 +140,12 @@
     --_btn-primary-fill: none;
     --_btn-primary-fill-hover: none;
     --_btn-primary-fill-active: none;
+    --_btn-primary-accent-selected-bg: #ce6747;
+    --_btn-primary-accent-selected-fill: initial;
+    --_btn-primary-neutral-selected-bg: #85949c;
+    --_btn-primary-neutral-selected-ink: var(--bg-canvas);
+    --_btn-primary-neutral-toggle-fill-duration: 0ms;
+    --_btn-primary-danger-selected-bg: #f5838a;
     --_btn-primary-shadow: none;
     --_btn-primary-shadow-hover: none;
     --_btn-primary-shadow-active: none;
@@ -344,6 +350,12 @@
     --_btn-primary-fill: none;
     --_btn-primary-fill-hover: none;
     --_btn-primary-fill-active: none;
+    --_btn-primary-accent-selected-bg: #8c3d28;
+    --_btn-primary-accent-selected-fill: initial;
+    --_btn-primary-neutral-selected-bg: #6f5a4f;
+    --_btn-primary-neutral-selected-ink: initial;
+    --_btn-primary-neutral-toggle-fill-duration: initial;
+    --_btn-primary-danger-selected-bg: #8b3036;
     --_btn-primary-shadow: none;
     --_btn-primary-shadow-hover: none;
     --_btn-primary-shadow-active: none;
@@ -554,6 +566,12 @@
     --_btn-primary-fill: linear-gradient(135deg, #5f4ad7 0%, #4931d1 50%, #3f2aba 100%);
     --_btn-primary-fill-hover: linear-gradient(135deg, #5f4ad7 0%, #5f4ad7 35%, #4931d1 100%);
     --_btn-primary-fill-active: linear-gradient(135deg, #4931d1 0%, #3f2aba 55%, #3f2aba 100%);
+    --_btn-primary-accent-selected-bg: initial;
+    --_btn-primary-accent-selected-fill: linear-gradient(135deg, #795de1, #735ce2 52%, #715de0);
+    --_btn-primary-neutral-selected-bg: #74839d;
+    --_btn-primary-neutral-selected-ink: var(--bg-canvas);
+    --_btn-primary-neutral-toggle-fill-duration: 0ms;
+    --_btn-primary-danger-selected-bg: #d14351;
     --_btn-primary-shadow:
       0 2px 0 rgb(38 27 94 / 0.9), 0 0 20px 2px rgb(73 49 209 / 0.45),
       0 0 44px 4px rgb(73 49 209 / 0.22);
@@ -771,6 +789,12 @@
     --_btn-primary-fill: linear-gradient(135deg, #5f4ad7 0%, #4931d1 50%, #3f2aba 100%);
     --_btn-primary-fill-hover: linear-gradient(135deg, #4931d1 0%, #3f2aba 55%, #3f2aba 100%);
     --_btn-primary-fill-active: linear-gradient(135deg, #3f2aba 0%, #35239e 100%);
+    --_btn-primary-accent-selected-bg: initial;
+    --_btn-primary-accent-selected-fill: initial;
+    --_btn-primary-neutral-selected-bg: initial;
+    --_btn-primary-neutral-selected-ink: initial;
+    --_btn-primary-neutral-toggle-fill-duration: initial;
+    --_btn-primary-danger-selected-bg: initial;
     --_btn-primary-shadow:
       0 2px 0 rgb(55 38 142 / 0.65), 0 0 20px 2px rgb(73 49 209 / 0.22),
       0 0 44px 4px rgb(73 49 209 / 0.1);
@@ -974,6 +998,12 @@
     --_btn-primary-fill: none;
     --_btn-primary-fill-hover: none;
     --_btn-primary-fill-active: none;
+    --_btn-primary-accent-selected-bg: #1696a9;
+    --_btn-primary-accent-selected-fill: initial;
+    --_btn-primary-neutral-selected-bg: #798794;
+    --_btn-primary-neutral-selected-ink: var(--bg-canvas);
+    --_btn-primary-neutral-toggle-fill-duration: initial;
+    --_btn-primary-danger-selected-bg: #fb8690;
     --_btn-primary-shadow: none;
     --_btn-primary-shadow-hover: none;
     --_btn-primary-shadow-active: none;
@@ -1181,6 +1211,12 @@
     --_btn-primary-fill: none;
     --_btn-primary-fill-hover: none;
     --_btn-primary-fill-active: none;
+    --_btn-primary-accent-selected-bg: #084f5d;
+    --_btn-primary-accent-selected-fill: initial;
+    --_btn-primary-neutral-selected-bg: #3f5262;
+    --_btn-primary-neutral-selected-ink: initial;
+    --_btn-primary-neutral-toggle-fill-duration: initial;
+    --_btn-primary-danger-selected-bg: #911928;
     --_btn-primary-shadow: none;
     --_btn-primary-shadow-hover: none;
     --_btn-primary-shadow-active: none;

@@ -31,7 +31,7 @@
   inline-size: min(100%, 27rem);
 }
 
-.disclosure-study-copy.button-proto {
+.disclosure-study-copy {
   min-inline-size: 8.25em;
 }
 

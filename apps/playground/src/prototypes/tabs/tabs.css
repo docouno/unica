@@ -111,10 +111,6 @@
   inset-inline-end: 0;
 }
 
-.tabs-list-frame-proto[data-scroll-rtl] > .tabs-scroll-arrow-proto .button-leading-glyph {
-  transform: scaleX(-1);
-}
-
 .tabs-scroll-arrow-proto[hidden] {
   display: none;
 }

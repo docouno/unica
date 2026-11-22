@@ -13,7 +13,7 @@ import {
 import { useState } from 'react';
 import type { ReactElement } from 'react';
 import { GlobeHemisphereWestIcon } from '@phosphor-icons/react';
-import { Button } from '../../prototypes/button/button.proto.js';
+import { Button } from '@docouno/unica';
 import { defineComponent } from '../../workbench/types.js';
 import { Select } from '../../prototypes/select/select.proto.js';
 import { regionOptions, roleOptions, simpleOptions } from '../../prototypes/select/select.data.js';
@@ -83,7 +83,13 @@ function DataStates(): ReactElement {
             <span className="select-empty-copy-proto">
               <strong>Regions couldn’t be loaded</strong>
               <span>Your saved selection is kept.</span>
-              <Button size="s" variant="secondary" tone="neutral" onClick={() => setState('ready')}>
+              <Button
+                className="select-empty-action"
+                size="s"
+                variant="secondary"
+                tone="neutral"
+                onClick={() => setState('ready')}
+              >
                 Try again
               </Button>
             </span>

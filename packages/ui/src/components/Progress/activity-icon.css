@@ -152,6 +152,7 @@
 
   @media (forced-colors: active) {
     .unica-activity-icon {
+      --_activity-forced-wait-ink: inherit;
       forced-color-adjust: none;
     }
     .unica-activity-icon-track {
@@ -159,10 +160,10 @@
       stroke: GrayText;
     }
     .unica-activity-icon-wait-arc {
-      stroke: CanvasText;
+      stroke: var(--_activity-forced-wait-ink, CanvasText);
     }
     .unica-activity-icon-wait-cell {
-      fill: CanvasText;
+      fill: var(--_activity-forced-wait-ink, CanvasText);
     }
     .unica-activity-icon-cell-track {
       opacity: 1;

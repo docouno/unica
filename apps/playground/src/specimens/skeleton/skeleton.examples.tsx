@@ -2,7 +2,7 @@ import { useEffect, useId, useRef, useState } from 'react';
 import type { ReactElement, ReactNode } from 'react';
 import { ArrowClockwiseIcon, FileTextIcon, WarningCircleIcon } from '@phosphor-icons/react';
 import { Avatar } from '../../prototypes/avatar/avatar.proto.js';
-import { Button } from '../../prototypes/button/button.proto.js';
+import { Button } from '@docouno/unica';
 import { Card, CardMedia, Icon, Skeleton, SkeletonText, Text, Title } from '@docouno/unica';
 import type { TextSize, TitleSize } from '@docouno/unica';
 import { textSizes } from './skeleton.controls.js';

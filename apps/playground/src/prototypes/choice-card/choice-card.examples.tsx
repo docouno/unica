@@ -3,7 +3,7 @@ import { useId, useState } from 'react';
 import type { ReactElement, ReactNode } from 'react';
 import { LockSimpleIcon, WarningCircleIcon } from '@phosphor-icons/react';
 import { Badge } from '@docouno/unica';
-import { Button } from '../button/button.proto.js';
+import { Button } from '@docouno/unica';
 import { PopoverContent } from '../popover/popover.proto.js';
 import {
   CheckboxCard,

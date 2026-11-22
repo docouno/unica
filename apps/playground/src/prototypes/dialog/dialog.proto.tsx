@@ -16,8 +16,8 @@ import type {
   ReactNode,
   RefObject,
 } from 'react';
-import { Button, IconButton } from '../button/button.proto.js';
-import type { ButtonProps } from '../button/button.proto.js';
+import { Button, IconButton } from '@docouno/unica';
+import type { ButtonProps } from '@docouno/unica';
 import './dialog.css';
 
 export type DialogSize = 's' | 'm' | 'l';
@@ -57,7 +57,9 @@ function DialogRoot({ open, onOpenChange, children }: DialogRootProps): ReactEle
   );
 }
 
-function DialogTrigger({ onClick, ...props }: Omit<ButtonProps, 'ref'>): ReactElement {
+type NativeButtonProps = Exclude<ButtonProps, { asChild: true }>;
+
+function DialogTrigger({ onClick, ...props }: Omit<NativeButtonProps, 'ref'>): ReactElement {
   const { id, open, onOpenChange, trigger, launchedRef } = useDialog();
   return (
     <Button
@@ -376,7 +378,7 @@ function DialogFooter({ children }: { readonly children: ReactNode }): ReactElem
   return <footer className="dialog-footer">{children}</footer>;
 }
 
-function DialogClose({ onClick, ...props }: ButtonProps): ReactElement {
+function DialogClose({ onClick, ...props }: NativeButtonProps): ReactElement {
   const { onOpenChange } = useDialog();
   return (
     <Button

@@ -2,7 +2,7 @@ import { FormField } from '../form-field/form-field.proto.js';
 import { useId, useRef, useState } from 'react';
 import type { ReactElement, ReactNode } from 'react';
 import type { ControlSize } from '@docouno/unica';
-import { Button } from '../button/button.proto.js';
+import { Button } from '@docouno/unica';
 import { Input } from '@docouno/unica';
 import { TagGroup } from '../tag/tag.proto.js';
 import { TagsInput } from './tags-input.proto.js';
@@ -324,13 +324,7 @@ function ReadingLab(): ReactElement {
             : 'A draft is separate from accepted values.'
         }
       />
-      <Button
-        size="s"
-        variant="secondary"
-        tone="neutral"
-        aria-pressed={readOnly}
-        onClick={() => setReadOnly(!readOnly)}
-      >
+      <Button size="s" variant="secondary" tone="neutral" onClick={() => setReadOnly(!readOnly)}>
         {readOnly ? 'Resume editing' : 'Switch to read only'}
       </Button>
     </div>

@@ -1,7 +1,7 @@
 import { FormField } from '../form-field/form-field.proto.js';
 import { useId, useState } from 'react';
 import type { ReactElement, ReactNode } from 'react';
-import { Button } from '../button/button.proto.js';
+import { Button } from '@docouno/unica';
 import { Input } from '@docouno/unica';
 import type { FieldStatus, FieldVariant } from '@docouno/unica';
 import { NumberInput } from './number-input.proto.js';

@@ -156,22 +156,29 @@
   padding-block-start: var(--space-8);
 }
 
-.button-proto.avatar-example-action[data-size] {
+.avatar-example-action {
   --avatar-action-size: 24px;
-  --avatar-action-inset: calc((var(--button-height) - var(--avatar-action-size)) / 2);
-  --button-pad-y: calc(var(--avatar-action-inset) - var(--button-border-width));
-  padding-inline-start: calc(var(--avatar-action-inset) - var(--button-border-width));
+  --avatar-action-height: var(--size-m-height);
+  --avatar-action-gap: var(--size-m-gap);
+  --avatar-action-inset: calc((var(--avatar-action-height) - var(--avatar-action-size)) / 2);
+
+  padding-block: var(--avatar-action-inset);
+  padding-inline-start: var(--avatar-action-inset);
 }
-.button-proto.avatar-example-action[data-size='s'] {
+.avatar-example-action[data-avatar-action-size='s'] {
   --avatar-action-size: 20px;
+  --avatar-action-height: var(--size-s-height);
+  --avatar-action-gap: var(--size-s-gap);
 }
-.button-proto.avatar-example-action[data-size='l'] {
+.avatar-example-action[data-avatar-action-size='l'] {
   --avatar-action-size: 32px;
+  --avatar-action-height: var(--size-l-height);
+  --avatar-action-gap: var(--size-l-gap);
 }
 .avatar-example-action-row {
   display: flex;
   align-items: center;
-  gap: var(--button-gap);
+  gap: var(--avatar-action-gap);
   min-inline-size: 0;
 }
 .avatar-example-action-label {

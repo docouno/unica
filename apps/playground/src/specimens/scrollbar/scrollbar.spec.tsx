@@ -11,7 +11,7 @@ import {
   PopoverHeader,
   PopoverTitle,
 } from '../../prototypes/popover/popover.proto.js';
-import { Button } from '../../prototypes/button/button.proto.js';
+import { Button } from '@docouno/unica';
 import { Card, CardAction, CardHeader, Text, Title } from '@docouno/unica';
 import './scrollbar.examples.css';
 

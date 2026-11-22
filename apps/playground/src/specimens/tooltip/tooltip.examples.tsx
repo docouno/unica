@@ -11,7 +11,7 @@ import {
 } from '@phosphor-icons/react';
 import { OverlayExampleFrame } from '../../examples/OverlayExampleFrame.js';
 import { OverlayPlacementStudy } from '../../examples/overlay-studies.js';
-import { Button, IconButton } from '../../prototypes/button/button.proto.js';
+import { Button, IconButton } from '@docouno/unica';
 import { PopoverContent, PopoverTitle } from '../../prototypes/popover/popover.proto.js';
 import type { PreviewContext } from '../../workbench/types.js';
 
@@ -59,7 +59,7 @@ export function TooltipStateExamples({ ctx }: ExampleProps): ReactElement {
         <label>
           Source state
           <select value={example} onChange={(event) => setExample(event.currentTarget.value)}>
-            <option value="focus">Keyboard focus appearance</option>
+            <option value="focus">Keyboard focus</option>
             <option value="selected">Selected</option>
             <option value="unavailable">Unavailable</option>
           </select>
@@ -71,13 +71,12 @@ export function TooltipStateExamples({ ctx }: ExampleProps): ReactElement {
             {...ctx.subject}
             key={example}
             label={unavailable ? 'Publish' : selected ? 'Remove from saved' : 'Preferences'}
-            defaultOpen={!unavailable}
+            defaultOpen={selected}
           >
             <IconButton
               icon={unavailable ? ArrowSquareOutIcon : selected ? StarIcon : GearIcon}
               aria-label={unavailable ? 'Publish' : selected ? 'Remove from saved' : 'Preferences'}
               {...(selected ? { pressed: true } : {})}
-              {...(example === 'focus' ? { previewState: 'focus' } : {})}
               disabled={unavailable}
               size="s"
             />
@@ -230,7 +229,13 @@ export function TooltipNestedExample({ ctx }: ExampleProps): ReactElement {
               />
             </Tooltip>
           </div>
-          <Button popoverTarget={panel} popoverTargetAction="hide" size="s" variant="secondary">
+          <Button
+            popoverTarget={panel}
+            popoverTargetAction="hide"
+            size="s"
+            variant="secondary"
+            tone="accent"
+          >
             Done
           </Button>
         </PopoverContent>

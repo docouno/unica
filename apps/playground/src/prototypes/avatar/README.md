@@ -92,7 +92,7 @@ Insets include the action border. The trailing label padding follows Button (S 1
 - Decorative identity next to the same person's name, or inside an already named action: `alt=""`; hide the entire visual subtree from accessibility. A loading or failed image must not change this choice.
 - Default group: named list, each visible person's full name, then a descriptive remainder. Without name hints, no member or counter creates a Tab stop. Hidden members are not silently presented as though they were visible; an external full-list action provides access when needed.
 - Custom fallback glyphs are decorative and passive. No focusable descendants belong inside an Avatar.
-- An enclosing Button/Link owns keyboard input, hit area, focus ring, hover, press and unavailable states. The avatar has no separate focus contour. The specimen's account buttons pin those external states for comparison.
+- An enclosing Button/Link owns keyboard input, hit area, focus ring, hover, press and unavailable states. The avatar has no separate focus contour. Use live hover, press, and keyboard focus on the account buttons. The loading and disabled samples hold their availability state for comparison.
 - The live “View all” example is an external inline disclosure: Enter/Space toggles it, `aria-expanded` changes, and focus stays on the button. Closing removes the visible list without a focus jump. The example does not define a built-in AvatarGroup menu or profile picker.
 - Forced colors retain frame geometry and use Canvas / CanvasText contours and text. Photographs remain photographs. Group cutouts continue to expose the surface.
 

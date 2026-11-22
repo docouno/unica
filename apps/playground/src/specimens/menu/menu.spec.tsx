@@ -11,7 +11,7 @@ import {
   SlidersHorizontalIcon,
   TrashIcon,
 } from '@phosphor-icons/react';
-import { Button, IconButton } from '../../prototypes/button/button.proto.js';
+import { Button, IconButton } from '@docouno/unica';
 import { Text } from '@docouno/unica';
 import { defineComponent } from '../../workbench/types.js';
 import { Menu } from '../../prototypes/menu/menu.live.js';

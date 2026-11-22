@@ -9,7 +9,7 @@ import {
   MoonIcon,
   DesktopIcon,
 } from '@phosphor-icons/react';
-import { Button } from '../../prototypes/button/button.proto.js';
+import { Button } from '@docouno/unica';
 import { Input } from '@docouno/unica';
 import { defineComponent } from '../../workbench/types.js';
 import {

@@ -16,7 +16,7 @@ import {
 } from '@docouno/unica';
 import { useId, useState } from 'react';
 import type { ReactElement, ReactNode } from 'react';
-import { IconButton } from '../../../src/prototypes/button/button.proto.js';
+import { IconButton } from '@docouno/unica';
 import { Table, TableScroll } from '../../../src/prototypes/table/table.proto.js';
 import { unicaWorkbenchBase } from '../../../src/unica.workbench.shared.js';
 import './card.fixture.css';

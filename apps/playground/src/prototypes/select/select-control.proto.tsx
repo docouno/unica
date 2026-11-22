@@ -5,7 +5,7 @@ import { Input, Icon, Spinner } from '@docouno/unica';
 import { FormField } from '../form-field/form-field.proto.js';
 import type { ControlSize, FieldStatus, FieldVariant, GlyphSource } from '@docouno/unica';
 import { PopoverContent } from '../popover/popover.proto.js';
-import { Button } from '../button/button.proto.js';
+import { Button } from '@docouno/unica';
 import type { PopoverContentProps } from '../popover/popover.proto.js';
 import { Listbox } from './listbox.proto.js';
 import type { SelectOption } from './listbox.proto.js';

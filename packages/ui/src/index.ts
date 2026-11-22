@@ -42,6 +42,14 @@ export { Badge } from './components/Badge/index.js';
 export type { BadgeProps, BadgeStatus } from './components/Badge/index.js';
 export { Blockquote } from './components/Blockquote/index.js';
 export type { BlockquoteProps, BlockquoteStatus } from './components/Blockquote/index.js';
+export { Button, IconButton } from './components/Button/index.js';
+export type {
+  ButtonProps,
+  ButtonSize,
+  ButtonTone,
+  ButtonVariant,
+  IconButtonProps,
+} from './components/Button/index.js';
 export {
   Card,
   CardAction,

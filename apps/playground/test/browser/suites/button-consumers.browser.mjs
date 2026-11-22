@@ -1,0 +1,264 @@
+import assert from 'node:assert/strict';
+import { assertBox, assertFocused, getBox, pressKeys } from '../helpers.mjs';
+
+async function open(page, route) {
+  await page.evaluate(
+    (params) => {
+      const url = new URL(window.location.href);
+      url.search = new URLSearchParams({ fixture: 'button-consumers', ...params }).toString();
+      history.pushState(null, '', url);
+      dispatchEvent(new PopStateEvent('popstate'));
+    },
+    { family: 'soft', scheme: 'dark', ...route },
+  );
+  return page.locator('.wb-artboard');
+}
+
+async function platePixel(locator) {
+  const screenshot = await locator.screenshot({ animations: 'disabled', scale: 'css' });
+  return locator.evaluate(async (node, png) => {
+    const image = new Image();
+    image.src = `data:image/png;base64,${png}`;
+    await image.decode();
+    const canvas = node.ownerDocument.createElement('canvas');
+    canvas.width = image.width;
+    canvas.height = image.height;
+    const pixels = canvas.getContext('2d');
+    pixels.drawImage(image, 0, 0);
+    return [...pixels.getImageData(7, 5, 1, 1).data].slice(0, 3);
+  }, screenshot.toString('base64'));
+}
+
+function assertSamePaint(actual, expected) {
+  assert.ok(
+    actual.every((channel, index) => Math.abs(channel - expected[index]) <= 1),
+    `expected ${actual} to match ${expected}`,
+  );
+}
+
+export default {
+  'Empty recovery uses native links for both routes and a button for Reload': async ({
+    page,
+    mount,
+  }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await mount('button-consumers');
+    const board = await open(page, { item: 'empty', tab: 'usage', block: 'routes' });
+    const destinations = board.getByRole('link', { name: 'Back to workspace', exact: true });
+    const href = '/?item=02-workspace-overview';
+    await destinations.last().waitFor();
+    assert.equal(await destinations.count(), 2);
+    assert.equal(await board.getByRole('button', { name: 'Back to workspace' }).count(), 0);
+    assert.equal(await board.getByRole('button', { name: 'Reload page', exact: true }).count(), 1);
+    for (const destination of await destinations.all()) {
+      assert.equal(await destination.getAttribute('href'), href);
+      const [popup] = await Promise.all([
+        page.context().waitForEvent('page'),
+        destination.click({ modifiers: ['Control'] }),
+      ]);
+      await popup.waitForURL((url) => url.pathname + url.search === href);
+      await popup.close();
+    }
+    assert.match(page.url(), /item=empty/u);
+    const code = await page.locator('[data-wb-block="routes"] > pre > code').textContent();
+    assert.equal((code.match(/<Button asChild/gu) ?? []).length, 2);
+    assert.equal((code.match(/href="\/\?item=02-workspace-overview"/gu) ?? []).length, 2);
+  },
+
+  'FileItem keeps compact fine-pointer actions and separates coarse targets in narrow rows':
+    async ({ page, mount }) => {
+      await page.setViewportSize({ width: 1440, height: 900 });
+      await mount('button-consumers');
+      const touch = await page.context().newCDPSession(page);
+      for (const dir of ['ltr', 'rtl']) {
+        const board = await open(page, {
+          item: 'dropzone',
+          tab: 'cases',
+          block: 'lifecycle',
+          vp: 360,
+          scale: 120,
+          dir,
+        });
+        const list = board.getByRole('list', { name: 'Pinned file lifecycle states' });
+        const retry = list.getByRole('button', { name: 'Retry supporting-research.zip' });
+        const remove = list.getByRole('button', { name: 'Remove supporting-research.zip' });
+        await list.evaluate((node) => {
+          node.style.maxInlineSize = '340px';
+        });
+
+        for (const coarse of [false, true]) {
+          await touch.send('Emulation.setTouchEmulationEnabled', {
+            enabled: coarse,
+            maxTouchPoints: 1,
+          });
+          await page.waitForFunction(
+            (coarse) => matchMedia('(pointer: coarse)').matches === coarse,
+            coarse,
+          );
+          assert.ok(await list.evaluate((node) => node.clientWidth <= 340));
+          const retryBox = await getBox(retry);
+          const removeBox = await getBox(remove);
+          const size = coarse ? 44 : 30;
+          assert.equal(retryBox.height, size);
+          assert.equal(removeBox.height, size);
+          assert.equal(removeBox.width, size);
+          assert.ok(retryBox.width >= size);
+          assert.ok(
+            retryBox.y >= removeBox.y + removeBox.height,
+            JSON.stringify({ retryBox, removeBox }),
+          );
+          assert.ok(dir === 'ltr' ? retryBox.x < removeBox.x : retryBox.x > removeBox.x);
+        }
+      }
+      await touch.detach();
+    },
+
+  'Sign in submits once and the editor keeps its controlled Bold toggle': async ({
+    page,
+    mount,
+  }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await mount('button-consumers');
+    const auth = await open(page, { item: '01-sign-in' });
+    const continueAction = auth.getByRole('button', { name: 'Continue to workspace' });
+    await continueAction.evaluate((node) => {
+      node.form.addEventListener('submit', (event) => {
+        if (event.submitter === node) {
+          node.dataset.submissions = String(Number(node.dataset.submissions ?? 0) + 1);
+        }
+      });
+    });
+    await continueAction.focus();
+    await pressKeys(page, 'Enter');
+    assert.equal(await continueAction.getAttribute('data-submissions'), '1');
+    await auth.getByRole('status').filter({ hasText: 'Your sign-in details are ready' }).waitFor();
+
+    const editor = await open(page, { item: '05-rich-editor' });
+    const bold = editor.getByRole('button', { name: 'Bold', exact: true });
+    await bold.focus();
+    assert.equal(await bold.getAttribute('aria-pressed'), 'false');
+    await pressKeys(page, 'Space');
+    await assertFocused(bold);
+    assert.equal(await bold.getAttribute('aria-pressed'), 'true');
+    await pressKeys(page, 'Enter');
+    assert.equal(await bold.getAttribute('aria-pressed'), 'false');
+  },
+
+  'Tabs uses the direction-appropriate scroll glyph without a second reflection': async ({
+    page,
+    mount,
+  }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await mount('button-consumers');
+    const glyphs = [];
+    for (const dir of ['ltr', 'rtl']) {
+      const board = await open(page, {
+        item: 'tabs',
+        tab: 'cases',
+        block: 'overflow',
+        vp: 360,
+        dir,
+      });
+      const example = board.getByText('Content · Scroll to the last tab').locator('..');
+      const arrow = example.getByRole('button', { name: 'Scroll tabs forward' });
+      const tablist = example.getByRole('tablist');
+      glyphs.push(await arrow.locator('svg path').first().getAttribute('d'));
+      const reflection = await arrow.locator('svg').evaluate((svg) => {
+        const { scale, transform } = getComputedStyle(svg);
+        return [scale, transform];
+      });
+      assert.deepEqual(reflection, ['none', 'none']);
+      await arrow.click();
+      await page.waitForFunction(
+        ({ node, dir }) => (dir === 'ltr' ? node.scrollLeft > 0 : node.scrollLeft < 0),
+        { node: await tablist.elementHandle(), dir },
+        { timeout: 5000 },
+      );
+    }
+    assert.notEqual(glyphs[0], glyphs[1]);
+  },
+
+  'Table inline picker and row menu share hover and open paint': async ({ page, mount }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await mount('button-consumers', { reducedMotion: 'reduce' });
+    const board = await open(page, {
+      item: 'table',
+      tab: 'cases',
+      block: 'editors',
+      family: 'frost',
+    });
+    const table = board.getByRole('table', { name: 'Route policies M', exact: true });
+    const picker = table.getByRole('button', { name: 'Policy for queue: Inherit', exact: true });
+    const menu = table.getByRole('button', { name: 'Actions for queue', exact: true });
+    await picker.waitFor();
+    await page.evaluate(() => document.fonts.ready);
+
+    const paint = [];
+    for (const trigger of [picker, menu]) {
+      await page.mouse.move(0, 0);
+      const rest = await platePixel(trigger);
+      await trigger.hover();
+      const hover = await platePixel(trigger);
+      assert.notDeepEqual(hover, rest);
+
+      await page.mouse.move(0, 0);
+      await trigger.focus();
+      await pressKeys(page, 'Enter');
+      await trigger.and(page.locator('[aria-expanded="true"]')).waitFor();
+      const expanded = await platePixel(trigger);
+      await trigger.hover();
+      const expandedHover = await platePixel(trigger);
+      await pressKeys(page, 'Escape');
+      await trigger.and(page.locator('[aria-expanded="false"]')).waitFor();
+      paint.push([hover, expanded, expandedHover]);
+    }
+
+    for (const [index, pixel] of paint[0].entries()) {
+      assertSamePaint(pixel, paint[1][index]);
+    }
+  },
+
+  'Disclosure keeps its system contour and distinct inset focus in forced colors': async ({
+    page,
+    mount,
+  }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await mount('button-consumers');
+    const board = await open(page, { item: 'collapsible', tab: 'cases' });
+    const available = board.getByRole('button', { name: 'Delivery window', exact: true }).first();
+    const unavailable = board.getByRole('button', { name: 'Provider diagnostics', exact: true });
+    const before = await getBox(available);
+    const disabledBefore = await getBox(unavailable);
+    await page.emulateMedia({ forcedColors: 'active' });
+    await available.focus();
+
+    async function paint(action, ink) {
+      return action.evaluate((node, color) => {
+        const probe = node.ownerDocument.createElement('span');
+        probe.style.forcedColorAdjust = 'none';
+        node.append(probe);
+        const system = (name) => {
+          probe.style.color = name;
+          return getComputedStyle(probe).color;
+        };
+        const style = getComputedStyle(node);
+        const result = {
+          contour: [style.borderTopWidth, style.borderTopStyle, style.borderTopColor],
+          focus: [style.outlineStyle, style.outlineWidth, style.outlineOffset, style.outlineColor],
+          expected: [system(color), system('Highlight')],
+        };
+        probe.remove();
+        return result;
+      }, ink);
+    }
+
+    const enabledPaint = await paint(available, 'ButtonText');
+    const disabledPaint = await paint(unavailable, 'GrayText');
+    assert.deepEqual(enabledPaint.contour, ['1px', 'solid', enabledPaint.expected[0]]);
+    assert.deepEqual(disabledPaint.contour, ['1px', 'solid', disabledPaint.expected[0]]);
+    assert.deepEqual(enabledPaint.focus, ['solid', '2px', '-3px', enabledPaint.expected[1]]);
+    assert.equal(disabledPaint.focus[0], 'none');
+    await assertBox(available, { width: before.width, height: before.height });
+    await assertBox(unavailable, { width: disabledBefore.width, height: disabledBefore.height });
+  },
+};

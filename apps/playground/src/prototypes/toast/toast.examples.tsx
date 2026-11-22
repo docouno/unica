@@ -1,9 +1,9 @@
 import { useEffect, useId, useRef, useState } from 'react';
 import type { ReactElement } from 'react';
 import { createPortal } from 'react-dom';
-import { Button } from '../button/button.proto.js';
+import { Button } from '@docouno/unica';
 import { ToastCard, ToastViewport } from './toast.proto.js';
-import type { ToastItem, ToastPlacement, ToastPreviewState, ToastStatus } from './toast.proto.js';
+import type { ToastItem, ToastPlacement, ToastStatus } from './toast.proto.js';
 import './toast.examples.css';
 
 const noop = (): void => {};
@@ -171,30 +171,16 @@ export function ToastAnatomy(): ReactElement {
 }
 
 export function ToastControlStates(): ReactElement {
-  const states: readonly ToastPreviewState[] = ['rest', 'hover', 'active', 'focus'];
   return (
     <div className="toast-examples-stack">
-      {states.map((state) => (
-        <div className="toast-example" key={state}>
-          <span className="toast-example-label">{state} · action and close comparisons</span>
-          <ToastCard
-            title="Document archived"
-            action={{ label: 'Undo', onClick: noop }}
-            onDismiss={noop}
-            previewControl="action"
-            previewState={state}
-            previewFocus={state === 'active'}
-          />
-          <ToastCard
-            title="Changes saved"
-            status="success"
-            onDismiss={noop}
-            previewControl="dismiss"
-            previewState={state}
-            previewFocus={state === 'active'}
-          />
-        </div>
-      ))}
+      <div className="toast-example">
+        <span className="toast-example-label">Hover, hold, or Tab to Undo and Dismiss</span>
+        <ToastCard
+          title="Document archived"
+          action={{ label: 'Undo', onClick: noop }}
+          onDismiss={noop}
+        />
+      </div>
       <div className="toast-example">
         <span className="toast-example-label">Action unavailable · close remains available</span>
         <ToastCard
@@ -215,8 +201,6 @@ export function ToastControlStates(): ReactElement {
           title="Changes could not be saved"
           onDismiss={noop}
           action={{ label: 'Retry', pending: true }}
-          previewControl="action"
-          previewFocus
         >
           Your draft is safe on this device.
         </ToastCard>

@@ -12,7 +12,7 @@ import {
   PlusIcon,
   TrayIcon,
 } from '@phosphor-icons/react';
-import { Button } from '../button/button.proto.js';
+import { Button } from '@docouno/unica';
 import { Card, CardTitle, Input, Text, Title } from '@docouno/unica';
 import { Empty, EmptyActions, EmptyDescription, EmptyMedia, EmptyTitle } from './empty.proto.js';
 import './empty.examples.css';
@@ -186,6 +186,8 @@ function EmptyIllustrations(): ReactElement {
   );
 }
 
+export const workspaceHref = '/?item=02-workspace-overview';
+
 function EmptyRoutes(): ReactElement {
   return (
     <div className="empty-example-grid empty-example-routes">
@@ -198,7 +200,9 @@ function EmptyRoutes(): ReactElement {
           This page may have moved, or the address may be incorrect.
         </ExampleDescription>
         <EmptyActions>
-          <Button>Back to workspace</Button>
+          <Button asChild>
+            <a href={workspaceHref}>Back to workspace</a>
+          </Button>
         </EmptyActions>
       </Empty>
       <Empty size="l">
@@ -209,8 +213,8 @@ function EmptyRoutes(): ReactElement {
         </ExampleDescription>
         <EmptyActions>
           <Button>Reload page</Button>
-          <Button variant="secondary" tone="neutral">
-            Back to workspace
+          <Button asChild variant="secondary" tone="neutral">
+            <a href={workspaceHref}>Back to workspace</a>
           </Button>
         </EmptyActions>
       </Empty>
@@ -397,6 +401,7 @@ function EmptyRecovery(): ReactElement {
         </Text>
         <Button
           ref={reset}
+          className="empty-example-reset-action"
           size="s"
           variant="ghost"
           tone="neutral"

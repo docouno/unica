@@ -3,7 +3,7 @@ import { useId, useState } from 'react';
 import { folioSceneHref } from './folio/folio.routes.js';
 import type { ReactElement } from 'react';
 import { SlidersHorizontalIcon } from '@phosphor-icons/react';
-import { Button } from '../prototypes/button/button.proto.js';
+import { Button } from '@docouno/unica';
 import { DatePicker } from '../prototypes/date-picker/date-picker.proto.js';
 import {
   Drawer,

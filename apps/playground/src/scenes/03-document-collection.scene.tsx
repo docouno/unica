@@ -11,7 +11,7 @@ import {
 } from '@phosphor-icons/react';
 import { AsidePanel } from '../prototypes/app-shell/app-shell.proto.js';
 import { Badge } from '@docouno/unica';
-import { Button, IconButton } from '../prototypes/button/button.proto.js';
+import { Button, IconButton } from '@docouno/unica';
 import { DatePicker, DateRangePicker } from '../prototypes/date-picker/date-picker.proto.js';
 import { dateLabel, dateObject } from '../prototypes/date-picker/date-utils.proto.js';
 import type { DateRange } from '../prototypes/date-picker/date-utils.proto.js';
@@ -205,7 +205,7 @@ function RunbookMenu<T extends HTMLElement>({
           size="s"
           variant="ghost"
           icon={DotsThreeIcon}
-          className="folio-runbook-menu-button"
+          className="folio-runbook-menu-button table-cell-action-proto"
           aria-label={`Actions for ${title}`}
         />
       )}
