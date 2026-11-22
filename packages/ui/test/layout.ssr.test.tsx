@@ -86,10 +86,10 @@ it('warns once per Grid area problem across different user-supplied names', () =
       </Grid>,
     );
   }
-  expect(warn.mock.calls.map(([message]) => message)).toEqual([
-    'Grid areas cell "first" must form a single rectangle.',
-    'GridItem area "first?" is absent from its parent Grid areas.',
-    'GridItem area "first?" is not a valid cell name.',
+  expect(warn.mock.calls).toEqual([
+    ['Grid areas cell "first" must form a single rectangle.'],
+    ['GridItem area "first?" is absent from its parent Grid areas.'],
+    ['GridItem area "first?" is not a valid cell name.'],
   ]);
 });
 
