@@ -543,3 +543,33 @@ it('does not recreate TrailingGlyph or NewTabDescription observers on equivalent
     errorSpy.mockRestore();
   }
 });
+
+it('observes glyph layout only while the link has a measurable terminal word', () => {
+  const observe = vi.spyOn(MutationObserver.prototype, 'observe');
+  const disconnect = vi.spyOn(MutationObserver.prototype, 'disconnect');
+  const OpaqueLabel = () => <span>Localized name</span>;
+  const link = (children: ReactNode) => (
+    <Link href="/report" external>
+      {children}
+    </Link>
+  );
+  try {
+    const { rerender } = render(link(<OpaqueLabel />));
+    expect(observe).not.toHaveBeenCalled();
+    rerender(link(''));
+    expect(observe).not.toHaveBeenCalled();
+    rerender(link('Report'));
+    expect(observe).toHaveBeenCalled();
+    const registrations = observe.mock.calls.length;
+    rerender(link(<strong>Updated report</strong>));
+    expect(observe).toHaveBeenCalledTimes(registrations);
+    rerender(link(<OpaqueLabel />));
+    expect(disconnect).toHaveBeenCalled();
+    expect(observe).toHaveBeenCalledTimes(registrations);
+    rerender(link('Late report'));
+    expect(observe.mock.calls.length).toBeGreaterThan(registrations);
+  } finally {
+    observe.mockRestore();
+    disconnect.mockRestore();
+  }
+});

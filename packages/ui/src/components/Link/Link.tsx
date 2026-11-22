@@ -135,6 +135,7 @@ export function Link({
   const showExternal = external || newTab;
   const authorIds = showHint ? [...new Set(tokens(effective['aria-describedby']))] : [];
   const nameIds = tokens(effective['aria-labelledby']);
+  const terminal = showExternal || iconRight ? markTerminalText(label) : null;
   const content = (
     <>
       {iconLeft && (
@@ -142,9 +143,9 @@ export function Link({
           <Icon icon={iconLeft} usage="slot" />
         </span>
       )}
-      {showExternal || iconRight ? markTerminalText(label) : label}
-      {(showExternal || iconRight) && (
-        <TrailingGlyph>
+      {terminal ? terminal.content : label}
+      {terminal && (
+        <TrailingGlyph measureLine={terminal.end === 'text'}>
           {showExternal ? (
             <ExternalLinkGlyph />
           ) : (

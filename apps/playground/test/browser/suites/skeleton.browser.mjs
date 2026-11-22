@@ -749,6 +749,9 @@ scenarios[
     const nextFrames = () =>
       new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
 
+    const meta = document.head.appendChild(document.createElement('meta'));
+    meta.setAttribute('name', 'application-name');
+    meta.remove();
     const unrelated = document.querySelector('[data-testid="unrelated-subtree"]');
     unrelated.textContent = 'Mutated unrelated text 12345';
     unrelated.setAttribute('data-noise', '1');
@@ -950,6 +953,64 @@ scenarios['Skeleton tracks formatting changes at viewport and container breakpoi
     });
     assert.equal(shift[0], 'contents');
     assert.ok(Math.abs(shift[1] - 110) < 1, `${id} shifted the projected sweep by ${shift[1]}px`);
+  }
+};
+
+scenarios['Skeleton follows translation from a dynamic document stylesheet'] = async ({
+  page,
+  mount,
+}) => {
+  await mount('skeleton-responsive');
+  const paint = page.getByTestId('viewport').locator('.unica-skeleton');
+  await page.waitForFunction(() =>
+    document.querySelector('.unica-skeleton')?.style.getPropertyValue('--_skeleton-sweep-start'),
+  );
+  const samples = await paint.evaluate(async (node) => {
+    document.getAnimations().forEach((animation) => animation.pause());
+    const settle = () =>
+      new Promise((r) =>
+        requestAnimationFrame(() => requestAnimationFrame(() => requestAnimationFrame(r))),
+      );
+    const sample = () => [
+      node.getBoundingClientRect().left,
+      parseFloat(node.style.getPropertyValue('--_skeleton-sweep-start')),
+    ];
+    await settle();
+    const result = [sample()];
+    const style = document.createElement('style');
+    const rule = (x) => `[data-testid="viewport"] { transform: translateX(${x}px); }`;
+    const text = document.createTextNode(rule(100));
+    style.append(text);
+    document.head.append(style);
+    await settle();
+    result.push(sample());
+    text.data = rule(45);
+    await settle();
+    result.push(sample());
+    style.remove();
+    await settle();
+    result.push(sample());
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = `data:text/css,${encodeURIComponent(rule(70))}`;
+    await new Promise((resolve, reject) => {
+      link.onload = resolve;
+      link.onerror = reject;
+      document.head.append(link);
+    });
+    await settle();
+    result.push(sample());
+    link.remove();
+    await settle();
+    result.push(sample());
+    return result;
+  });
+  for (const [i, delta] of [0, 100, 45, 0, 70, 0].entries()) {
+    assert.ok(Math.abs(samples[i][0] - samples[0][0] - delta) < 1, 'paint translation');
+    assert.ok(
+      Math.abs(samples[0][1] - samples[i][1] - delta) < 1,
+      `projected band after translation by ${delta}px`,
+    );
   }
 };
 

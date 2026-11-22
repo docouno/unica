@@ -3,9 +3,11 @@ import type { Ref, RefCallback } from 'react';
 import {
   addListenerSafe,
   composedContains,
+  containsSafe,
   getAttributeSafe,
   getComposedParentElement,
   getComputedStyleSafe,
+  getDocumentElement,
   getLiveView,
   getLocalName,
   getOwnerDocument,
@@ -78,6 +80,14 @@ function findDefiningAutoDirAncestor(node: Element): Element | null {
   return null;
 }
 
+function isStyleSource(node: EventTarget | null): boolean {
+  return (
+    isElementNode(node) &&
+    (getLocalName(node) === 'style' ||
+      (getLocalName(node) === 'link' && node.matches('link[rel~="stylesheet" i]')))
+  );
+}
+
 // Inline boxes do not deliver ResizeObserver notifications for text changes.
 function layoutMode(element: Element): 'inline' | 'contents' | 'box' {
   const display = getComputedStyleSafe(element)?.display;
@@ -100,6 +110,7 @@ function createSweep(view: BrowserWindow, start: number, duration: number): Swee
   const pendingInvisible = new Set<HTMLElement>();
   const writtenStyles = new WeakMap<HTMLElement, string | null>();
   const pendingDisplayChecks = new Set<Element>();
+  let styleHead: HTMLHeadElement | null = null;
   let visibleLayoutParents = new Set<Element>();
   let layoutModes = new Map<Element, ReturnType<typeof layoutMode>>();
   let observedResize = new Set<Element>();
@@ -177,7 +188,10 @@ function createSweep(view: BrowserWindow, start: number, duration: number): Swee
       ...autoDirs,
       ...visiblePaints,
     ])) {
-      const subtree = autoDirs.has(element) || modes.get(element) === 'inline';
+      const subtree =
+        autoDirs.has(element) ||
+        modes.get(element) === 'inline' ||
+        getLocalName(element) === 'style';
       mutations.observe(element, {
         attributes: true,
         childList: subtree || containers.has(element),
@@ -193,6 +207,18 @@ function createSweep(view: BrowserWindow, start: number, duration: number): Swee
       }
     }
 
+    styleHead = visiblePaints.size
+      ? (getDocumentElement(document)?.querySelector(':scope > head') ?? null)
+      : null;
+    if (styleHead) {
+      // Stylesheets can move a paint without resizing any observed box.
+      mutations.observe(styleHead, {
+        subtree: true,
+        childList: true,
+        characterData: true,
+        attributes: true,
+      });
+    }
     layoutDirty = false;
     motionDirty = true;
   }
@@ -390,6 +416,27 @@ function createSweep(view: BrowserWindow, start: number, duration: number): Swee
     for (let index = 0; index < records.length; index++) {
       const record = records[index]!;
       const { type, target, attributeName } = record;
+      // A detached subtree may still deliver records queued before its removal.
+      // Its removal is reported separately on the connected parent.
+      if (!target.isConnected) {
+        continue;
+      }
+      const source = isElementNode(target) ? target : target.parentElement;
+      if (
+        isStyleSource(source) ||
+        (attributeName === 'rel' && source && getLocalName(source) === 'link')
+      ) {
+        layoutDirty = true;
+        shouldSchedule = true;
+        continue;
+      }
+      if (styleHead && containsSafe(styleHead, target)) {
+        if ([...record.addedNodes, ...record.removedNodes].some(isStyleSource)) {
+          layoutDirty = true;
+          shouldSchedule = true;
+        }
+        continue;
+      }
       if (
         type === 'attributes' &&
         attributeName === 'style' &&
@@ -454,6 +501,13 @@ function createSweep(view: BrowserWindow, start: number, duration: number): Swee
     pendingDisplayChecks.add(document.documentElement);
     schedule();
   }
+  function onStylesheetLoad(event: Event): void {
+    if (isStyleSource(event.target)) {
+      layoutDirty = true;
+      schedule();
+    }
+  }
+  addListenerSafe(document, 'load', onStylesheetLoad, true);
   addListenerSafe(view, 'resize', onViewportResize);
   addListenerSafe(view, 'scroll', onScroll, { capture: true, passive: true });
   for (const event of motionEvents) {
@@ -472,6 +526,7 @@ function createSweep(view: BrowserWindow, start: number, duration: number): Swee
     resize.disconnect();
     intersection?.disconnect();
     mutations.disconnect();
+    removeListenerSafe(document, 'load', onStylesheetLoad, true);
     removeListenerSafe(view, 'resize', onViewportResize);
     removeListenerSafe(view, 'scroll', onScroll, true);
     for (const event of motionEvents) {

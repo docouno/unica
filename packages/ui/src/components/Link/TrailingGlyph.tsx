@@ -12,13 +12,14 @@ import { createFrameJob } from '../../core/frame-scheduler.js';
 import { useIsoLayoutEffect } from '../../core/useIsoLayoutEffect.js';
 
 interface TrailingGlyphProps {
+  readonly measureLine: boolean;
   readonly children: ReactNode;
 }
 
 const wrapAttribute = 'data-unica-link-wrap-terminal';
 const layoutAttributes = ['class', 'style', 'dir', 'hidden'];
 
-export function TrailingGlyph({ children }: TrailingGlyphProps): ReactElement {
+export function TrailingGlyph({ children, measureLine }: TrailingGlyphProps): ReactElement {
   const marker = useRef<HTMLSpanElement>(null);
   const scheduleOnCommit = useRef<(() => void) | null>(null);
 
@@ -29,6 +30,9 @@ export function TrailingGlyph({ children }: TrailingGlyphProps): ReactElement {
   });
 
   useIsoLayoutEffect(() => {
+    if (!measureLine) {
+      return;
+    }
     const end = marker.current;
     const anchor = end?.parentElement;
     const doc = end ? getOwnerDocument(end) : null;
@@ -134,7 +138,7 @@ export function TrailingGlyph({ children }: TrailingGlyphProps): ReactElement {
       }
       anchor.removeAttribute(wrapAttribute);
     };
-  }, []);
+  }, [measureLine]);
 
   return (
     <span ref={marker} aria-hidden="true" className="unica-link-glyph unica-link-glyph-end">

@@ -28,10 +28,10 @@ const phrasingElements = /* @__PURE__ */ new Set([
 
 interface TerminalRun {
   readonly content: ReactNode;
-  readonly found: boolean;
+  readonly end: 'text' | 'opaque' | 'empty';
 }
 
-function markFromEnd(label: ReactNode): TerminalRun {
+export function markTerminalText(label: ReactNode): TerminalRun {
   if (typeof label === 'string' || typeof label === 'number' || typeof label === 'bigint') {
     const original = String(label);
     const text = original.trimEnd();
@@ -49,47 +49,43 @@ function markFromEnd(label: ReactNode): TerminalRun {
           {spaces && <span className="unica-link-terminal-space">{spaces}</span>}
         </>
       ),
-      found: terminal !== null,
+      end: terminal ? 'text' : 'empty',
     };
   }
 
   if (Array.isArray(label)) {
     const children = [...(label as readonly ReactNode[])];
-    let found = false;
-    for (let index = children.length - 1; index >= 0 && !found; index -= 1) {
-      const result = markFromEnd(children[index]);
+    let end: TerminalRun['end'] = 'empty';
+    for (let index = children.length - 1; index >= 0 && end === 'empty'; index -= 1) {
+      const result = markTerminalText(children[index]);
       children[index] = result.content;
-      found = result.found;
+      end = result.end;
     }
     // Static sibling positions keep the caller's explicit and implicit keys.
-    return { content: createElement(Fragment, null, ...children), found };
+    return { content: createElement(Fragment, null, ...children), end };
   }
 
   if (isValidElement<HTMLAttributes<HTMLElement>>(label)) {
     const { props, type } = label;
     if (props.hidden || props.style?.display === 'none' || props.style?.visibility === 'hidden') {
-      return { content: label, found: false };
+      return { content: label, end: 'empty' };
     }
     // Preserve authored inline markup and direction. Opaque output owns its
     // layout and forms the boundary of the static search.
     if (type === Fragment || (typeof type === 'string' && phrasingElements.has(type))) {
-      const result = markFromEnd(props.children);
+      const result = markTerminalText(props.children);
       return {
         content:
           result.content === props.children
             ? label
             : cloneElement(label, undefined, result.content),
-        found: result.found,
+        end: result.end,
       };
     }
   }
 
   return {
     content: label,
-    found: label !== null && label !== undefined && typeof label !== 'boolean',
+    end: label === null || label === undefined || typeof label === 'boolean' ? 'empty' : 'opaque',
   };
-}
-
-export function markTerminalText(label: ReactNode): ReactNode {
-  return markFromEnd(label).content;
 }
