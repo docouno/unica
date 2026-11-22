@@ -1,11 +1,19 @@
-import { Code, Link, Text } from '@docouno/unica';
+import {
+  Alert,
+  AlertActions,
+  AlertClose,
+  AlertDescription,
+  AlertTitle,
+  Code,
+  Link,
+  Text,
+} from '@docouno/unica';
 import { useId, useLayoutEffect, useRef, useState } from 'react';
 import type { ReactElement } from 'react';
 import { ArrowClockwiseIcon } from '@phosphor-icons/react';
-import { Alert, AlertActions, AlertDescription, AlertTitle } from './alert.proto.js';
-import type { AlertSize, AlertStatus } from './alert.proto.js';
-import { Button, IconButton } from '../button/button.proto.js';
-import { Card } from '../card/card.proto.js';
+import type { AlertSize, AlertStatus } from '@docouno/unica';
+import { Button, IconButton } from '../../prototypes/button/button.proto.js';
+import { Card } from '../../prototypes/card/card.proto.js';
 import './alert.examples.css';
 
 const statuses: readonly AlertStatus[] = ['neutral', 'info', 'success', 'warning', 'danger'];
@@ -69,10 +77,18 @@ function ContextCase({
   const [details, setDetails] = useState(false);
   const [acknowledged, setAcknowledged] = useState(false);
   const restore = useRef<HTMLButtonElement>(null);
+  const surface = useRef<HTMLDivElement>(null);
+  const hadFocus = useRef(false);
   const id = useId();
   useLayoutEffect(() => {
-    if (!open) {
-      restore.current?.focus();
+    const button = restore.current;
+    if (
+      !open &&
+      hadFocus.current &&
+      button &&
+      button.ownerDocument.activeElement === button.ownerDocument.body
+    ) {
+      button.focus();
     }
   }, [open]);
   if (!open) {
@@ -84,10 +100,20 @@ function ContextCase({
   }
   return (
     <Alert
+      role="none"
       status={status}
       size={size}
-      onClose={() => setOpen(false)}
-      closeLabel={`Dismiss ${status} color example`}
+      ref={surface}
+      close={
+        <AlertClose
+          aria-label={`Dismiss ${status} color example`}
+          onClose={() => {
+            hadFocus.current =
+              surface.current?.contains(surface.current.ownerDocument.activeElement) ?? false;
+            setOpen(false);
+          }}
+        />
+      }
     >
       <AlertTitle>{messages[status].title}</AlertTitle>
       <AlertDescription>
@@ -190,7 +216,7 @@ export function ContextStateExamples(): ReactElement {
         Button states are pinned for comparison. Hover, press, or Tab to Guidance to inspect the
         live link with the selected status and underline.
       </p>
-      <Alert status={status}>
+      <Alert role="none" status={status}>
         <AlertTitle>{messages[status].title}</AlertTitle>
         <AlertDescription>
           Reference <Code>{messages[status].reference}</Code> keeps its own tonal step.{' '}
@@ -280,7 +306,7 @@ export function ContextBoundaryExamples(): ReactElement {
         Transparent content passes the context through. A painted Card or new overlay supplies its
         own context; the outer notice resumes after it. These are read-only color studies.
       </p>
-      <Alert status="danger">
+      <Alert role="none" status="danger">
         <AlertTitle>The source is unavailable</AlertTitle>
         <AlertDescription>
           Inherited code: <Code>connection_timeout</Code>.
@@ -315,7 +341,7 @@ export function ContextBoundaryExamples(): ReactElement {
           </Button>
         </AlertActions>
       </Alert>
-      <Alert status="warning">
+      <Alert role="none" status="warning">
         <AlertTitle>A floating surface starts a new context</AlertTitle>
         <AlertDescription>
           Outer reference: <Code>owner_id</Code>. The static panel below paints the actual overlay
@@ -341,7 +367,7 @@ export function ContextBoundaryExamples(): ReactElement {
           </Button>
         </AlertActions>
       </Alert>
-      <Alert status="warning">
+      <Alert role="none" status="warning">
         <AlertTitle>Explicit action tones retain their meaning</AlertTitle>
         <AlertDescription>
           The supporting action adapts to this surface. Explicit accent and danger actions keep

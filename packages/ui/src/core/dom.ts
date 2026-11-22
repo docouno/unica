@@ -522,9 +522,9 @@ export function getRootActiveElement(root: Node, doc: Document): Element | null 
   return getDocumentActiveElement(doc);
 }
 
-export function getDeepActiveElement(doc: Document): Element | null {
+export function getDeepActiveElement(doc: Document, root: Node = doc): Element | null {
   const { shadowActiveElement } = getCache();
-  let active = getDocumentActiveElement(doc);
+  let active = getRootActiveElement(root, doc);
   if (!shadowActiveElement) {
     return active;
   }

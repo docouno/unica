@@ -97,12 +97,11 @@ export function verifyHoverPreviewCss(transform, sources, output) {
             }
           },
         },
-        RuleExit: {
-          supports(rule) {
-            if (lacksBackdropFilter(rule.value.condition)) {
-              fallbackDepth--;
-            }
-          },
+        // Lightning CSS calls the generic exit visitor as each rule's subtree ends.
+        RuleExit(rule) {
+          if (rule.type === 'supports' && lacksBackdropFilter(rule.value.condition)) {
+            fallbackDepth--;
+          }
         },
       },
     });

@@ -22,6 +22,22 @@ export type {
   IconAdapterRenderContext,
 } from './core/glyph.js';
 
+export {
+  Alert,
+  AlertActions,
+  AlertClose,
+  AlertDescription,
+  AlertTitle,
+} from './components/Alert/index.js';
+export type {
+  AlertActionsProps,
+  AlertCloseProps,
+  AlertDescriptionProps,
+  AlertProps,
+  AlertSize,
+  AlertStatus,
+  AlertTitleProps,
+} from './components/Alert/index.js';
 export { Badge } from './components/Badge/index.js';
 export type { BadgeProps, BadgeStatus } from './components/Badge/index.js';
 export { Blockquote } from './components/Blockquote/index.js';

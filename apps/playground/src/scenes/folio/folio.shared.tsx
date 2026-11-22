@@ -1,4 +1,14 @@
-import { Badge, Blockquote, Code, Icon, Text, Title } from '@docouno/unica';
+import {
+  Alert,
+  AlertDescription,
+  AlertTitle,
+  Badge,
+  Blockquote,
+  Code,
+  Icon,
+  Text,
+  Title,
+} from '@docouno/unica';
 import type { ReactElement, ReactNode } from 'react';
 import { CopyIcon, FileTextIcon, PlusIcon } from '@phosphor-icons/react';
 import {
@@ -21,7 +31,6 @@ import type { LeftRailProps, RailDestination } from '../../prototypes/app-shell/
 import { Avatar, AvatarGroup } from '../../prototypes/avatar/avatar.proto.js';
 import { Button, IconButton } from '../../prototypes/button/button.proto.js';
 import { CodeBlock } from '../../prototypes/code-block/code-block.proto.js';
-import { Alert, AlertTitle, AlertDescription } from '../../prototypes/alert/alert.proto.js';
 import { List, ListItem } from '../../prototypes/list/list.proto.js';
 import {
   Table,
@@ -368,7 +377,7 @@ export function RunbookArticle({ compact = false }: { readonly compact?: boolean
           degradation without dropping pooled transactions.
         </Text>
       </div>
-      <Alert status="warning" size="s">
+      <Alert role="none" status="warning" size="s">
         <AlertTitle>Pre-flight quorum verification required</AlertTitle>
         <AlertDescription>
           Confirm synchronous replication lag is 0 B on pg-replica-01 and pause schema migrations

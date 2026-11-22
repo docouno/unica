@@ -1,9 +1,8 @@
 import { useId, useState, useSyncExternalStore } from 'react';
 import type { ComponentPropsWithRef, ReactElement, ReactNode } from 'react';
 import { ArrowRightIcon, FileTextIcon } from '@phosphor-icons/react';
-import { Icon, Link, Text, Title } from '@docouno/unica';
+import { Alert, AlertTitle, Icon, Link, Text, Title } from '@docouno/unica';
 import type { LinkProps } from '@docouno/unica';
-import { Alert, AlertTitle } from '../../prototypes/alert/alert.proto.js';
 import { Card } from '../../prototypes/card/card.proto.js';
 import './link.examples.css';
 
@@ -282,7 +281,7 @@ export function SurfaceExamples({ overlay = false }: { readonly overlay?: boolea
 
 export function ContextExamples(): ReactElement {
   return (
-    <Alert status="danger">
+    <Alert role="none" status="danger">
       <AlertTitle>The source is unavailable</AlertTitle>
       <Text color="secondary">
         <Link href={reference} tone="inherit">

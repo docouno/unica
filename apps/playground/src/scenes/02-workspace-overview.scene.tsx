@@ -4,9 +4,17 @@ import { ArrowRightIcon, FileTextIcon, PushPinIcon } from '@phosphor-icons/react
 import { Avatar } from '../prototypes/avatar/avatar.proto.js';
 import { Button } from '../prototypes/button/button.proto.js';
 import { Card } from '../prototypes/card/card.proto.js';
-import { Alert, AlertTitle, AlertDescription } from '../prototypes/alert/alert.proto.js';
 import { ToastCard } from '../prototypes/toast/toast.proto.js';
-import { Badge, Icon, Link, Text, Title } from '@docouno/unica';
+import {
+  Alert,
+  AlertDescription,
+  AlertTitle,
+  Badge,
+  Icon,
+  Link,
+  Text,
+  Title,
+} from '@docouno/unica';
 import { List, ListItem } from '../prototypes/list/list.proto.js';
 import { SegmentedControl } from '../prototypes/segmented-control/segmented-control.proto.js';
 import { Breadcrumb, BreadcrumbPage } from '../prototypes/breadcrumb/breadcrumb.proto.js';
@@ -258,7 +266,7 @@ function OverviewScene(): ReactElement {
                   </div>
                 ))}
               </Card>
-              <Alert status="info">
+              <Alert role="none" status="info">
                 <AlertTitle>Scheduled DR game-day</AlertTitle>
                 <AlertDescription>
                   Quarterly failover game-day runs Thu 17 Sep at 10:00 UTC. Verify replica lag

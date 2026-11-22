@@ -1,11 +1,22 @@
-import { Code, Link } from '@docouno/unica';
+import {
+  Alert,
+  AlertActions,
+  AlertClose,
+  AlertDescription,
+  AlertTitle,
+  Code,
+  Link,
+} from '@docouno/unica';
 import { useId, useLayoutEffect, useRef, useState } from 'react';
 import type { ReactElement } from 'react';
 import { LightbulbIcon } from '@phosphor-icons/react';
-import { Alert, AlertActions, AlertDescription, AlertTitle } from './alert.proto.js';
-import type { AlertSize, AlertStatus } from './alert.proto.js';
-import { Button } from '../button/button.proto.js';
+import type { AlertSize, AlertStatus, GlyphSvgProps } from '@docouno/unica';
+import { Button } from '../../prototypes/button/button.proto.js';
 import './alert.examples.css';
+
+export function EditorialGlyph(props: GlyphSvgProps): ReactElement {
+  return <LightbulbIcon {...props} weight="fill" />;
+}
 
 const statuses: readonly AlertStatus[] = ['neutral', 'info', 'success', 'warning', 'danger'];
 const sizes: readonly AlertSize[] = ['s', 'm', 'l'];
@@ -33,7 +44,7 @@ export function StatusExamples(): ReactElement {
   return (
     <div className="alert-demo-stack">
       {statuses.map((status) => (
-        <Alert key={status} status={status}>
+        <Alert role="none" key={status} status={status}>
           <AlertTitle>{copy[status].title}</AlertTitle>
           <AlertDescription>{copy[status].body}</AlertDescription>
         </Alert>
@@ -52,7 +63,7 @@ export function SizeExamples(): ReactElement {
             {size === 's' ? 'Dense sections' : size === 'm' ? 'Forms & sections' : 'Page notices'}
           </p>
           {statuses.map((status) => (
-            <Alert key={status} status={status} size={size}>
+            <Alert role="none" key={status} status={status} size={size}>
               {copy[status].title}
             </Alert>
           ))}
@@ -68,23 +79,25 @@ export function AnatomyExamples(): ReactElement {
     <div className="alert-demo-stack">
       <div className="alert-demo-case">
         <p className="alert-demo-label">Bare text · no icon on neutral</p>
-        <Alert size="s">Times are shown in your local timezone.</Alert>
+        <Alert role="none" size="s">
+          Times are shown in your local timezone.
+        </Alert>
       </div>
       <div className="alert-demo-case">
         <p className="alert-demo-label">Title only</p>
-        <Alert status="success">
+        <Alert role="none" status="success">
           <AlertTitle>All checks passed</AlertTitle>
         </Alert>
       </div>
       <div className="alert-demo-case">
         <p className="alert-demo-label">Description only</p>
-        <Alert status="info">
+        <Alert role="none" status="info">
           <AlertDescription>Only workspace members can open this link.</AlertDescription>
         </Alert>
       </div>
       <div className="alert-demo-case">
         <p className="alert-demo-label">Editorial icon · rich text</p>
-        <Alert icon={<LightbulbIcon weight="fill" />}>
+        <Alert role="none" icon={EditorialGlyph}>
           <AlertTitle>Keep a recovery copy</AlertTitle>
           <AlertDescription>
             Run <Code>backup --verify</Code> before you begin. Store the output outside the cluster.
@@ -110,98 +123,70 @@ export function AnatomyExamples(): ReactElement {
   );
 }
 
-export function DismissExample(): ReactElement {
+export function DismissExample({ size = 'm' }: { readonly size?: AlertSize }): ReactElement {
   const [open, setOpen] = useState(true);
+  const alert = useRef<HTMLDivElement>(null);
   const restore = useRef<HTMLButtonElement>(null);
+  const hadFocus = useRef(false);
   useLayoutEffect(() => {
-    if (!open) {
-      restore.current?.focus();
+    const button = restore.current;
+    if (
+      !open &&
+      hadFocus.current &&
+      button &&
+      button.ownerDocument.activeElement === button.ownerDocument.body
+    ) {
+      button.focus();
     }
   }, [open]);
+  function dismiss(): void {
+    hadFocus.current = alert.current?.contains(alert.current.ownerDocument.activeElement) ?? false;
+    setOpen(false);
+  }
   return (
     <div className="alert-demo-case">
       {open && (
         <Alert
+          ref={alert}
+          role="none"
+          size={size}
           status="info"
-          closeLabel="Dismiss keyboard shortcut tip"
-          onClose={() => setOpen(false)}
+          close={<AlertClose aria-label="Dismiss keyboard shortcut tip" onClose={dismiss} />}
         >
           <AlertTitle>A quicker way to find a page</AlertTitle>
           <AlertDescription>Search by title or paste a document link.</AlertDescription>
           <AlertActions>
-            <Button size="s" variant="secondary" tone="neutral" onClick={() => setOpen(false)}>
+            <Button size="s" variant="secondary" tone="neutral" onClick={dismiss}>
               Got it
             </Button>
           </AlertActions>
         </Alert>
       )}
-      <div className="alert-demo-actions">
-        <Button
-          ref={restore}
-          size="s"
-          variant="ghost"
-          tone="neutral"
-          disabled={open}
-          onClick={() => setOpen(true)}
-        >
-          Show tip again
-        </Button>
-        <span className="alert-demo-note">
-          {open
-            ? 'Tab to × or Got it; Escape leaves the message open.'
-            : 'Tip dismissed. Focus moves to Show tip again.'}
-        </span>
-      </div>
+      <Button
+        ref={restore}
+        size="s"
+        variant="ghost"
+        tone="neutral"
+        disabled={open}
+        onClick={() => setOpen(true)}
+      >
+        Show tip again
+      </Button>
     </div>
   );
 }
 
 export function CloseStates(): ReactElement {
-  const [dismissed, setDismissed] = useState('');
   return (
     <div className="alert-demo-stack">
       <p className="alert-demo-note">
-        Close states are pinned for comparison. Each × still dismisses its sample. The surface
-        itself never responds to hover or press.
+        Hover or hold × to inspect pointer states. Tab to × for its focus ring. Enter, Space or a
+        click dismiss the notice. Escape leaves it open.
       </p>
-      {(['rest', 'hover', 'active', 'focus'] as const).map((state) => (
-        <div className="alert-demo-case" key={state}>
-          <p className="alert-demo-label">
-            {state === 'active' ? 'Pressed' : state === 'focus' ? 'Keyboard focus' : state}
-          </p>
-          {dismissed === state ? (
-            <Button size="s" variant="ghost" tone="neutral" onClick={() => setDismissed('')}>
-              Restore {state} sample
-            </Button>
-          ) : (
-            <Alert
-              size="s"
-              status="warning"
-              previewClose={state}
-              onClose={() => setDismissed(state)}
-              closeLabel={`Dismiss ${state} example`}
-            >
-              <AlertTitle>Review recommended</AlertTitle>
-              <AlertDescription>
-                This notice can be dismissed without changing the review status.
-              </AlertDescription>
-            </Alert>
-          )}
-        </div>
-      ))}
       {sizes.map((size) => (
         <div key={size} className="alert-demo-case">
-          <p className="alert-demo-label">{size.toUpperCase()} · pinned focus geometry</p>
-          <Alert
-            size={size}
-            status="neutral"
-            previewClose="focus"
-            onClose={() => setDismissed(size)}
-            closeLabel={`Dismiss ${size} focus sample`}
-            hidden={dismissed === size}
-          >
-            A short note with a close action.
-          </Alert>
+          <p className="alert-demo-label">{size.toUpperCase()}</p>
+          <DismissExample size={size} />
         </div>
       ))}
     </div>
@@ -215,7 +200,7 @@ export function ActionStateExamples(): ReactElement {
         Action appearances below are pinned. Use Recovery to try state changes. Only actions change
         appearance; the message stays readable.
       </p>
-      <Alert status="warning">
+      <Alert role="none" status="warning">
         <AlertTitle>Publication needs an owner</AlertTitle>
         <AlertDescription>
           Assign an owner in document properties to enable publication. You can continue editing
@@ -227,7 +212,7 @@ export function ActionStateExamples(): ReactElement {
           </Button>
         </AlertActions>
       </Alert>
-      <Alert status="danger">
+      <Alert role="none" status="danger">
         <AlertTitle>Reconnect to publish your draft</AlertTitle>
         <AlertDescription>
           Your local changes are safe. Discarding them cannot be undone.
@@ -247,27 +232,28 @@ export function ActionStateExamples(): ReactElement {
 
 export function RecoveryExample(): ReactElement {
   const [phase, setPhase] = useState<'error' | 'pending' | 'success'>('error');
+  const [failures, setFailures] = useState(0);
   const [detail, setDetail] = useState(false);
+  const detailsId = useId();
   const result = useRef<HTMLParagraphElement>(null);
+
   return (
     <div className="alert-demo-stack">
       <p className="alert-demo-note">
-        Controlled recovery preview. Try again holds a pending state; choose an explicit result
-        below. The message stays readable while its action waits.
+        Try again starts a simulated request. Choose the result when it is pending.
       </p>
       {phase === 'success' ? (
-        <Alert status="success" role="status">
+        <Alert key="success" status="success">
           <AlertTitle>Changes saved</AlertTitle>
           <AlertDescription>Your draft and the published revision are up to date.</AlertDescription>
         </Alert>
       ) : (
-        <Alert status="danger" role="alert">
+        <Alert key="error" status="danger" role={failures === 0 ? 'none' : 'alert'}>
           <AlertTitle>We couldn’t save your changes</AlertTitle>
           <AlertDescription>
-            {phase === 'pending'
-              ? 'Trying to reconnect. Keep this page open; your draft is safe.'
+            {failures
+              ? `Attempt ${failures} failed. Your draft is safe on this device.`
               : 'Your draft is safe on this device. Reconnect to publish your changes.'}
-            {detail && <p>The server did not respond. No changes were discarded.</p>}
           </AlertDescription>
           <AlertActions>
             <Button
@@ -284,6 +270,7 @@ export function RecoveryExample(): ReactElement {
               variant="ghost"
               tone="neutral"
               aria-expanded={detail}
+              aria-controls={detailsId}
               onClick={() => setDetail(!detail)}
             >
               {detail ? 'Hide details' : 'Show details'}
@@ -291,15 +278,21 @@ export function RecoveryExample(): ReactElement {
           </AlertActions>
         </Alert>
       )}
+      <p id={detailsId} hidden={!detail || phase === 'success'} className="alert-demo-note">
+        The server did not respond. No changes were discarded.
+      </p>
       <div className="alert-demo-actions">
         <Button
           size="s"
           variant="secondary"
           tone="neutral"
           disabled={phase !== 'pending'}
-          onClick={() => {
+          onClick={({ currentTarget }) => {
+            if (currentTarget === currentTarget.ownerDocument.activeElement) {
+              result.current?.focus();
+            }
+            setFailures(failures + 1);
             setPhase('error');
-            result.current?.focus();
           }}
         >
           Simulate failure
@@ -309,14 +302,25 @@ export function RecoveryExample(): ReactElement {
           variant="secondary"
           tone="neutral"
           disabled={phase !== 'pending'}
-          onClick={() => {
+          onClick={({ currentTarget }) => {
+            if (currentTarget === currentTarget.ownerDocument.activeElement) {
+              result.current?.focus();
+            }
             setPhase('success');
-            result.current?.focus();
           }}
         >
           Simulate success
         </Button>
-        <Button size="s" variant="ghost" tone="neutral" onClick={() => setPhase('error')}>
+        <Button
+          size="s"
+          variant="ghost"
+          tone="neutral"
+          onClick={() => {
+            setFailures(0);
+            setDetail(false);
+            setPhase('error');
+          }}
+        >
           Reset
         </Button>
       </div>
@@ -324,7 +328,7 @@ export function RecoveryExample(): ReactElement {
         {phase === 'pending'
           ? 'Request pending. Use the result controls.'
           : phase === 'success'
-            ? 'Recovery complete. No focus moved into the message.'
+            ? 'Recovery complete.'
             : 'The recovery action is available.'}
       </p>
     </div>
@@ -338,7 +342,7 @@ export function OverflowExamples(): ReactElement {
         A 360px maximum column. Use 120% Text and RTL in the toolbar; nothing is truncated or
         internally scrolled.
       </p>
-      <Alert status="warning" size="s">
+      <Alert role="none" status="warning" size="s">
         <AlertTitle>Review before replacing the current workspace configuration</AlertTitle>
         <AlertDescription>
           Your existing access rules and document links will remain available until this change is
@@ -353,7 +357,7 @@ export function OverflowExamples(): ReactElement {
           </Button>
         </AlertActions>
       </Alert>
-      <Alert status="danger">
+      <Alert role="none" status="danger">
         <AlertTitle>Three items need your attention</AlertTitle>
         <AlertDescription>
           <ul>
@@ -371,12 +375,19 @@ export function OverflowExamples(): ReactElement {
           .
         </AlertDescription>
       </Alert>
-      <Alert status="neutral" size="s">
+      <Alert role="none" status="neutral" size="s">
         <AlertDescription>
           Reference: <Code>workspace_configuration_validation_2026_11_16_unresolved_reference</Code>
         </AlertDescription>
       </Alert>
-      <Alert status="success" size="l" lang="ar" dir="rtl" className="alert-demo-arabic">
+      <Alert
+        role="none"
+        status="success"
+        size="l"
+        lang="ar"
+        dir="rtl"
+        className="alert-demo-arabic"
+      >
         <AlertTitle>تم حفظ التغييرات بنجاح</AlertTitle>
         <AlertDescription>
           يمكن لجميع أعضاء مساحة العمل قراءة الإصدار الجديد الآن. <bdi>release-2026.11</bdi>
@@ -389,13 +400,14 @@ export function OverflowExamples(): ReactElement {
 export function OverlayExample(): ReactElement {
   const id = useId();
   const [value, setValue] = useState('');
+  const [edited, setEdited] = useState(false);
   const field = useRef<HTMLInputElement>(null);
   return (
     <div className="alert-demo-overlay" data-surface="overlay">
       <h3 className="alert-demo-heading">Document properties</h3>
       <p className="alert-demo-note">A floating material sample with a native field stand-in.</p>
       {!value && (
-        <Alert size="s" status="danger">
+        <Alert key="required" role={edited ? undefined : 'none'} size="s" status="danger">
           <AlertTitle>Choose a document owner</AlertTitle>
           <AlertDescription id={`${id}-error`}>
             An owner is required before this document can be published.
@@ -413,7 +425,7 @@ export function OverlayExample(): ReactElement {
         </Alert>
       )}
       {value && (
-        <Alert size="s" status="success">
+        <Alert key="assigned" size="s" status="success">
           Owner assigned. The document is ready to publish.
         </Alert>
       )}
@@ -422,16 +434,19 @@ export function OverlayExample(): ReactElement {
         <input
           ref={field}
           value={value}
-          onChange={(event) => setValue(event.target.value)}
+          onChange={(event) => {
+            setEdited(true);
+            setValue(event.target.value);
+          }}
           aria-invalid={!value}
           aria-describedby={!value ? `${id}-error` : undefined}
           placeholder="Name or team"
         />
       </label>
-      <Alert size="s" status="warning">
+      <Alert role="none" size="s" status="warning">
         <AlertDescription>Changing the owner does not change document access.</AlertDescription>
       </Alert>
-      <Alert size="s" status="neutral">
+      <Alert role="none" size="s" status="neutral">
         Changes apply to this document only.
       </Alert>
     </div>
