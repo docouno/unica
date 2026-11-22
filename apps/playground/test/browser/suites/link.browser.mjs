@@ -140,6 +140,33 @@ export default {
       return el.parentElement.clientWidth === 157 && glyph.top + glyph.height / 2 <= last.bottom;
     });
   },
+  'Link keeps the trailing glyph on the last line after a typography-only React commit': async ({
+    page,
+    mount,
+  }) => {
+    await mount('link');
+    const link = page.getByTestId('tracking-link');
+    const geometry = () =>
+      link.evaluate(async (anchor) => {
+        await new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done)));
+        const last = Array.from(
+          anchor.querySelector('.unica-link-terminal-text').getClientRects(),
+        ).at(-1);
+        const glyph = anchor.querySelector('svg').getBoundingClientRect();
+        return {
+          width: anchor.parentElement.clientWidth,
+          wrap: anchor.hasAttribute('data-unica-link-wrap-terminal'),
+          onLastLine: glyph.top + glyph.height / 2 <= last.bottom && glyph.bottom >= last.top,
+        };
+      });
+    const toggle = page.getByRole('button', { name: 'Toggle link tracking' });
+    assert.deepEqual(await geometry(), { width: 120, wrap: false, onLastLine: true });
+    await toggle.click();
+    assert.deepEqual(await geometry(), { width: 120, wrap: true, onLastLine: true });
+    await toggle.click();
+    assert.deepEqual(await geometry(), { width: 120, wrap: false, onLastLine: true });
+  },
+
   'Link keeps native keyboard, history, form, and modified pointer navigation': async ({
     page,
     mount,

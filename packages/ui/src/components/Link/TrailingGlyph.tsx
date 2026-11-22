@@ -20,6 +20,13 @@ const layoutAttributes = ['class', 'style', 'dir', 'hidden'];
 
 export function TrailingGlyph({ children }: TrailingGlyphProps): ReactElement {
   const marker = useRef<HTMLSpanElement>(null);
+  const scheduleOnCommit = useRef<(() => void) | null>(null);
+
+  // Mount measures synchronously below. Later React commits can change the typography
+  // outside the line container, so recheck with other links in the shared frame.
+  useIsoLayoutEffect(() => {
+    scheduleOnCommit.current?.();
+  });
 
   useIsoLayoutEffect(() => {
     const end = marker.current;
@@ -104,6 +111,7 @@ export function TrailingGlyph({ children }: TrailingGlyphProps): ReactElement {
 
     const job = createFrameJob(doc, task);
     schedule = (): void => job.schedule();
+    scheduleOnCommit.current = schedule;
 
     addListenerSafe(view, 'resize', schedule);
     const fonts = getDocumentFonts(doc);
@@ -116,6 +124,7 @@ export function TrailingGlyph({ children }: TrailingGlyphProps): ReactElement {
     task.measure()?.();
 
     return () => {
+      scheduleOnCommit.current = null;
       job.dispose();
       resize?.disconnect();
       mutations.disconnect();

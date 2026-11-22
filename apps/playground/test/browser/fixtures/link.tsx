@@ -346,15 +346,6 @@ function WatchModeLinks(): ReactElement {
       <button type="button" onClick={() => setFull(true)}>
         Add title watcher
       </button>
-      <Link
-        href="#target"
-        target="_blank"
-        aria-describedby="mode-note"
-        aria-description="Fallback"
-        data-testid="mode-link"
-      >
-        Report
-      </Link>
       {full && (
         <>
           <span id="mode-note">Author note</span>
@@ -414,6 +405,25 @@ function WatchedNames(): ReactElement {
   );
 }
 
+function TrackingLink(): ReactElement {
+  const [tight, setTight] = useState(true);
+  return (
+    <>
+      <style>{'[data-tracking="tight"] p { letter-spacing: -2px; }'}</style>
+      <button type="button" onClick={() => setTight(!tight)}>
+        Toggle link tracking
+      </button>
+      <section data-tracking={tight ? 'tight' : 'normal'}>
+        <p style={{ font: '24px / 38.4px Arial', inlineSize: 120, blockSize: 160 }}>
+          <Link href="#target" external data-testid="tracking-link">
+            handbook
+          </Link>
+        </p>
+      </section>
+    </>
+  );
+}
+
 function S2ObserverProbes(): ReactElement {
   const [hideText, setHideText] = useState(false);
   const [mountLateId, setMountLateId] = useState(false);
@@ -444,7 +454,20 @@ function S2ObserverProbes(): ReactElement {
     const modeHost = document.createElement('div');
     shadow.append(modeHost);
     const modeRoot = createRoot(modeHost.attachShadow({ mode: 'open' }));
-    modeRoot.render(<WatchModeLinks />);
+    modeRoot.render(
+      <>
+        <Link
+          href="#target"
+          target="_blank"
+          aria-describedby="mode-note"
+          aria-description="Fallback"
+          data-testid="mode-link"
+        >
+          Report
+        </Link>
+        <WatchModeLinks />
+      </>,
+    );
     return () => {
       modeRoot.unmount();
       root.unmount();
@@ -502,6 +525,7 @@ function S2ObserverProbes(): ReactElement {
         <div data-testid="dynamic-sidebar" />
       </div>
       <WatchedNames />
+      <TrackingLink />
       <div id="s2-shadow-desc-host" ref={shadowHostRef} />
     </section>
   );
