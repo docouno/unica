@@ -12,7 +12,7 @@ import {
 } from '@phosphor-icons/react';
 import { Avatar } from '../avatar/avatar.proto.js';
 import { Badge } from '@docouno/unica';
-import { Button, IconButton } from '../button/button.proto.js';
+import { Button, IconButton } from '@docouno/unica';
 import { Menu } from '../menu/menu.live.js';
 import { PopoverContent } from '../popover/popover.proto.js';
 import { Text, Title } from '@docouno/unica';

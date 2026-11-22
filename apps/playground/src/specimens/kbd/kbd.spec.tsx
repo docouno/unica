@@ -4,8 +4,8 @@ import { useState } from 'react';
 import type { ReactElement, ReactNode } from 'react';
 import { previewProps, previewText } from '../preview-code.js';
 import { defineComponent } from '../../workbench/types.js';
-import { Button } from '../../prototypes/button/button.proto.js';
-import type { ButtonTone, ButtonVariant } from '../../prototypes/button/button.proto.js';
+import { Button } from '@docouno/unica';
+import type { ButtonTone, ButtonVariant } from '@docouno/unica';
 import { Text, Title, Tooltip } from '@docouno/unica';
 import { GlobalSearch } from '../../prototypes/app-shell/app-shell.proto.js';
 import { MenuPreview } from '../../prototypes/menu/menu.proto.js';
@@ -177,9 +177,9 @@ function Notation(): ReactElement {
   );
 }
 
-type OwnerState = 'rest' | 'hover' | 'active' | 'focus' | 'disabled' | 'loading';
+type OwnerState = 'ready' | 'disabled' | 'loading';
 function ActionContext(): ReactElement {
-  const [state, setState] = useState<OwnerState>('rest');
+  const [state, setState] = useState<OwnerState>('ready');
   const [variant, setVariant] = useState<ButtonVariant>('primary');
   const [tone, setTone] = useState<ButtonTone>('accent');
   const [count, setCount] = useState(0);
@@ -189,7 +189,7 @@ function ActionContext(): ReactElement {
         <label>
           Action state
           <select value={state} onChange={(event) => setState(event.target.value as OwnerState)}>
-            {['rest', 'hover', 'active', 'focus', 'disabled', 'loading'].map((value) => (
+            {['ready', 'disabled', 'loading'].map((value) => (
               <option key={value}>{value}</option>
             ))}
           </select>
@@ -220,9 +220,6 @@ function ActionContext(): ReactElement {
           tone={tone}
           disabled={state === 'disabled'}
           loading={state === 'loading'}
-          previewState={
-            state === 'disabled' || state === 'loading' || state === 'rest' ? undefined : state
-          }
           onClick={() => setCount(count + 1)}
         >
           <span className="kbd-example-action-label">
@@ -259,8 +256,8 @@ function ActionContext(): ReactElement {
         </Button>
       </div>
       <Text size="caption-l" color="muted">
-        The controls pin the action’s appearance. Focus and movement belong to the action; loading
-        hides its full content. Shortcut hints do not register hotkeys.
+        Hover, hold, or Tab to the action. Loading hides its full content. Shortcut hints do not
+        register hotkeys.
       </Text>
     </div>
   );
@@ -477,7 +474,7 @@ export default defineComponent({
   usage: [
     {
       id: 'actions',
-      code: `<Button variant="secondary">
+      code: `<Button variant="secondary" tone="accent">
   Search <KbdGroup><Kbd>⌘</Kbd><Kbd>K</Kbd></KbdGroup>
 </Button>`,
       title: 'Inside an action',

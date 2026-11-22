@@ -17,7 +17,7 @@ import type {
   ReactElement,
   ReactNode,
 } from 'react';
-import { IconButton } from '../button/button.proto.js';
+import { IconButton } from '@docouno/unica';
 import { Badge, Icon, Tooltip } from '@docouno/unica';
 import type { GlyphSource } from '@docouno/unica';
 import { useClippedLabel } from '../use-clipped-label.js';
@@ -326,7 +326,6 @@ export function TabsList({
       data-size={size}
       data-scroll-start={start || undefined}
       data-scroll-end={end || undefined}
-      data-scroll-rtl={edges.rtl || undefined}
       dir={dir}
       style={style}
     >
@@ -373,7 +372,7 @@ export function TabsList({
             data-edge={toward}
             size={size}
             variant="ghost"
-            icon={toward === 'start' ? CaretLeftGlyph : CaretRightGlyph}
+            icon={(toward === 'start') !== edges.rtl ? CaretLeftGlyph : CaretRightGlyph}
             aria-label={toward === 'start' ? 'Scroll tabs back' : 'Scroll tabs forward'}
             tabIndex={-1}
             hidden={toward === 'start' ? !start : !end}

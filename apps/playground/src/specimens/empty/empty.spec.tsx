@@ -6,13 +6,14 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from '../../prototypes/empty/empty.proto.js';
-import { Button } from '../../prototypes/button/button.proto.js';
+import { Button } from '@docouno/unica';
 import { previewProps, previewText } from '../preview-code.js';
 import type { ReactElement } from 'react';
 import { defineComponent } from '../../workbench/types.js';
 import type { EmptyExampleSection } from '../../prototypes/empty/empty.examples.js';
 
-const { default: EmptyExamples } = await import('../../prototypes/empty/empty.examples.js');
+const { default: EmptyExamples, workspaceHref } =
+  await import('../../prototypes/empty/empty.examples.js');
 
 function example(section: EmptyExampleSection, note?: string): ReactElement {
   return <EmptyExamples section={section} note={note} />;
@@ -69,14 +70,18 @@ export default defineComponent({
       <EmptyTitle>{heading}</EmptyTitle>
       <EmptyDescription>Save a page to keep it close at hand.</EmptyDescription>
       <EmptyActions>
-        <Button variant="secondary" onClick={() => ctx.action('onBrowse')('Browse pages')}>
+        <Button
+          tone="accent"
+          variant="secondary"
+          onClick={() => ctx.action('onBrowse')('Browse pages')}
+        >
           Browse pages
         </Button>
       </EmptyActions>
     </Empty>
   ),
   code: ({ size, align, heading, media }) =>
-    `<Empty${previewProps({ size, align }, { size: 'm', align: 'center' })}>\n${media === 'icon' ? '  <EmptyMedia icon={FileTextIcon} />\n' : ''}  <EmptyTitle>${previewText(heading)}</EmptyTitle>\n  <EmptyDescription>Save a page to keep it close at hand.</EmptyDescription>\n  <EmptyActions><Button variant="secondary" onClick={handleBrowse}>Browse pages</Button></EmptyActions>\n</Empty>`,
+    `<Empty${previewProps({ size, align }, { size: 'm', align: 'center' })}>\n${media === 'icon' ? '  <EmptyMedia icon={FileTextIcon} />\n' : ''}  <EmptyTitle>${previewText(heading)}</EmptyTitle>\n  <EmptyDescription>Save a page to keep it close at hand.</EmptyDescription>\n  <EmptyActions><Button variant="secondary" tone="accent" onClick={handleBrowse}>Browse pages</Button></EmptyActions>\n</Empty>`,
   matrixViews: [
     {
       id: 'sizes',
@@ -158,10 +163,28 @@ export default defineComponent({
   usage: [
     {
       id: 'routes',
-      code: `<Empty align="start">
-  <EmptyTitle>No extensions installed</EmptyTitle>
-  <EmptyActions><Link href="/extensions">Browse extensions</Link></EmptyActions>
-</Empty>`,
+      code: `<>
+  <Empty size="l">
+    <EmptyMedia><img src="/assets/empty-landscape.svg" alt="" width="240" height="180" /></EmptyMedia>
+    <EmptyTitle as="h1">Page not found</EmptyTitle>
+    <EmptyDescription>This page may have moved, or the address may be incorrect.</EmptyDescription>
+    <EmptyActions>
+      <Button asChild><a href="${workspaceHref}">Back to workspace</a></Button>
+    </EmptyActions>
+  </Empty>
+
+  <Empty size="l">
+    <EmptyMedia icon={CloudSlashIcon} color="danger" />
+    <EmptyTitle as="h1">We couldn’t open this page</EmptyTitle>
+    <EmptyDescription>The server ran into a problem. Try reloading the page in a moment.</EmptyDescription>
+    <EmptyActions>
+      <Button>Reload page</Button>
+      <Button asChild variant="secondary" tone="neutral">
+        <a href="${workspaceHref}">Back to workspace</a>
+      </Button>
+    </EmptyActions>
+  </Empty>
+</>`,
       title: 'Full-page recovery',
       render: () => example('routes', 'Fixed examples for a missing page and a failed load.'),
     },

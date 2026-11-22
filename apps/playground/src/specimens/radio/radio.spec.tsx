@@ -3,7 +3,7 @@ import { useId, useState } from 'react';
 import type { ReactElement } from 'react';
 import { WarningCircleIcon } from '@phosphor-icons/react';
 import { defineComponent } from '../../workbench/types.js';
-import { Button } from '../../prototypes/button/button.proto.js';
+import { Button } from '@docouno/unica';
 import { Radio, RadioGroup } from '@docouno/unica';
 import { Sample, SurfacePair } from '../binary-examples.js';
 
@@ -173,7 +173,7 @@ function Validation(): ReactElement {
           </span>
         )}
         <div className="binary-demo-action-row">
-          <Button variant="secondary" size="s" type="submit">
+          <Button variant="secondary" tone="accent" size="s" type="submit">
             Check selection
           </Button>
         </div>

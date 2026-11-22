@@ -1,7 +1,7 @@
 import { Alert, AlertActions, AlertClose, AlertDescription, AlertTitle } from '@docouno/unica';
 import { useLayoutEffect, useRef, useState } from 'react';
 import type { ReactElement } from 'react';
-import { Button } from '../../prototypes/button/button.proto.js';
+import { Button } from '@docouno/unica';
 import { defineComponent } from '../../workbench/types.js';
 import type { ComponentValues, PreviewContext, PropSchema } from '../../workbench/types.js';
 import { previewProps, previewText } from '../preview-code.js';
@@ -206,6 +206,7 @@ function AlertSubject({
         <Button
           ref={restore}
           variant="secondary"
+          tone="accent"
           onClick={() => {
             setPublication(0);
             setShown(true);
@@ -387,7 +388,7 @@ export default defineComponent({
       code: `<Alert status={status} role="none" close={<AlertClose aria-label="Dismiss notice" onClose={dismiss} />}>
   <AlertTitle>{message.title}</AlertTitle>
   <AlertDescription>Reference <Code>{message.reference}</Code></AlertDescription>
-  <AlertActions><button type="button" onClick={acknowledge}>Acknowledge</button></AlertActions>
+  <AlertActions><Button variant="ghost" tone="neutral" onClick={acknowledge}>Acknowledge</Button></AlertActions>
 </Alert>`,
       render: () => <ContextExamples />,
     },

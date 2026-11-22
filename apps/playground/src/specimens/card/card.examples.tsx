@@ -27,7 +27,7 @@ import {
   SkeletonText,
   Text,
 } from '@docouno/unica';
-import { Button, IconButton } from '../../prototypes/button/button.proto.js';
+import { Button, IconButton } from '@docouno/unica';
 import { PopoverContent } from '../../prototypes/popover/popover.proto.js';
 import './card.examples.css';
 
@@ -605,7 +605,13 @@ export function Availability(): ReactElement {
               </Text>
             </CardFooter>
           </Card>
-          <Button size="s" variant="ghost" tone="neutral" onClick={() => setLoaded(!loaded)}>
+          <Button
+            className="card-example-toggle-content"
+            size="s"
+            variant="ghost"
+            tone="neutral"
+            onClick={() => setLoaded(!loaded)}
+          >
             {loaded ? 'Show loading' : 'Show content'}
           </Button>
         </div>

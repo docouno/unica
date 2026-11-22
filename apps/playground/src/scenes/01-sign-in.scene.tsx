@@ -3,7 +3,7 @@ import { useId, useState } from 'react';
 import type { ReactElement } from 'react';
 import { GithubLogoIcon, KeyIcon } from '@phosphor-icons/react';
 import { BrandMark } from '../prototypes/app-shell/app-shell.proto.js';
-import { Button } from '../prototypes/button/button.proto.js';
+import { Button } from '@docouno/unica';
 import { FormField } from '../prototypes/form-field/form-field.proto.js';
 import { SegmentedControl } from '../prototypes/segmented-control/segmented-control.proto.js';
 import { defineScene } from '../workbench/types.js';

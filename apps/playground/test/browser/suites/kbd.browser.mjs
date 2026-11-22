@@ -214,15 +214,17 @@ export default {
 
     const state = form.getByLabel('Action state');
     const readyBox = await getBox(action);
+    const capBox = await getBox(cap);
+    const isPainted = () =>
+      cap.evaluate((node) =>
+        node.checkVisibility({ opacityProperty: true, visibilityProperty: true }),
+      );
+    assert.equal(await isPainted(), true);
     await state.selectOption('loading');
     assert.equal(await action.getAttribute('aria-disabled'), 'true');
-    assert.equal(
-      await action
-        .locator('.button-proto-content')
-        .evaluate((node) => getComputedStyle(node).opacity),
-      '0',
-    );
+    assert.equal(await isPainted(), false);
     await assertBox(action, { width: readyBox.width, height: readyBox.height }, { tolerance });
+    await assertBox(cap, capBox, { tolerance });
     await action.focus();
     await assertFocused(action);
     await pressKeys(page, 'Enter', 'Space');
@@ -232,6 +234,7 @@ export default {
 
     await state.selectOption('disabled');
     assert.equal(await action.isDisabled(), true);
+    assert.equal(await isPainted(), true);
     box = await getBox(cap);
     await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
     await before.focus();

@@ -1,7 +1,7 @@
 import { Tooltip } from '@docouno/unica';
 import { CopyIcon } from '@phosphor-icons/react';
 import { placementAlignments, placementSides } from '../../examples/overlay-placement-options.js';
-import { IconButton } from '../../prototypes/button/button.proto.js';
+import { IconButton } from '@docouno/unica';
 import { defineComponent } from '../../workbench/types.js';
 import {
   TooltipContentExamples,
@@ -186,8 +186,9 @@ export default defineComponent({
       id: 'states',
       title: 'Source states',
       caption:
-        'The source owns focus and selection styling. When unavailable, the explanation stays in the page.',
-      mode: 'pinned',
+        'Tab to Preferences to see focus and the hint. A disabled source shows its explanation in the page.',
+      mode: 'live',
+      overlayStage: true,
       kind: 'behavior',
       render: TooltipStateExamples,
     },

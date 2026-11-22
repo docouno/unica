@@ -1,6 +1,6 @@
 # Link
 
-`Link` navigates to a URL, document fragment, or application route. Its inline anchor inherits surrounding typography and underlines destinations by default. Use a specific destination name and keep the underline in running prose. Use a button for commands and an anchor composed into a button for button-shaped navigation.
+`Link` navigates to a URL, document fragment, or application route. Its inline anchor inherits surrounding typography and underlines destinations by default. Use a specific destination name and keep the underline in running prose. Use `Button` for commands and `Button asChild` with an anchor for button-shaped navigation. [Button and IconButton](button.md)
 
 ```tsx
 import { Link } from '@docouno/unica';

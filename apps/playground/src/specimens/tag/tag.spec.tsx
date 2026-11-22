@@ -16,7 +16,7 @@ import {
 import { defineComponent } from '../../workbench/types.js';
 import type { BadgeStatus } from '@docouno/unica';
 import { Badge, Input } from '@docouno/unica';
-import { Button } from '../../prototypes/button/button.proto.js';
+import { Button } from '@docouno/unica';
 import { Tag, TagGroup } from '../../prototypes/tag/tag.proto.js';
 import type { TagGroupItem, TagProps, TagSize } from '../../prototypes/tag/tag.proto.js';
 import '../../prototypes/tag/tag.examples.css';
@@ -611,7 +611,7 @@ export default defineComponent({
     const [removed, setRemoved] = useState(false);
     if (removed) {
       return (
-        <Button variant="secondary" autoFocus onClick={() => setRemoved(false)}>
+        <Button tone="accent" variant="secondary" autoFocus onClick={() => setRemoved(false)}>
           Restore tag
         </Button>
       );

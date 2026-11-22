@@ -28,7 +28,7 @@ import {
   WarningIcon,
 } from '@phosphor-icons/react';
 import { Subbar } from '../prototypes/app-shell/app-shell.proto.js';
-import { Button, IconButton } from '../prototypes/button/button.proto.js';
+import { Button, IconButton } from '@docouno/unica';
 import { ToastCard } from '../prototypes/toast/toast.proto.js';
 import {
   PopoverBody,

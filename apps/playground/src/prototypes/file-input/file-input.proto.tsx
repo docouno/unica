@@ -8,7 +8,7 @@ import type {
   ReactNode,
 } from 'react';
 import { Icon, Progress, Spinner } from '@docouno/unica';
-import { Button, IconButton } from '../button/button.proto.js';
+import { Button, IconButton } from '@docouno/unica';
 import { FormField } from '../form-field/form-field.proto.js';
 import { useControlFocus } from '../control-focus.js';
 import type { ControlSize, FieldStatus, FieldVariant } from '@docouno/unica';
@@ -41,7 +41,7 @@ export interface FileInputProps extends Omit<
   readonly onClear?: () => void;
   readonly onFilesChange?: ((files: readonly File[]) => void) | undefined;
   /** Pinned visual comparison, not actual focus or drag. */
-  readonly previewState?: FilePreviewState;
+  readonly previewState?: 'dragging';
 }
 
 // Local selection only. Native form projection and reusable state authority belong to the library.
@@ -175,7 +175,6 @@ export function FileInput({
             tone="neutral"
             disabled={disabled}
             loading={busy}
-            previewState={previewState === 'dragging' ? undefined : previewState}
             aria-labelledby={fieldName ? `${actionId} ${fieldName}` : undefined}
             aria-label={
               fieldName ? undefined : [chooseLabel, props['aria-label']].filter(Boolean).join(' · ')
@@ -554,6 +553,7 @@ export function FileItem({
         <span className="file-item-actions-proto">
           {onRetry && effectiveStatus === 'danger' && (
             <Button
+              className="file-item-retry-proto"
               size={size}
               variant="ghost"
               tone="neutral"
@@ -571,6 +571,7 @@ export function FileItem({
           )}
           {onRemove && (
             <IconButton
+              className="file-item-remove-proto"
               icon={CloseGlyph}
               size={size}
               variant="ghost"

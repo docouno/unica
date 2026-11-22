@@ -67,6 +67,11 @@ export default {
       const show = page.getByRole('button', { name: 'Show inspector' });
       const buttonBox = await getBox(hide);
       const glyphBox = await getBox(hide.locator('svg'));
+      const navigation = page.getByRole('button', { name: 'Hide navigation' });
+      const isMirrored = (button) =>
+        button.locator('svg').evaluate((svg) => getComputedStyle(svg).scale.startsWith('-1'));
+      assert.equal(await isMirrored(hide), direction === 'ltr');
+      assert.equal(await isMirrored(navigation), direction === 'rtl');
 
       await hide.focus();
       await page.keyboard.press('Enter');

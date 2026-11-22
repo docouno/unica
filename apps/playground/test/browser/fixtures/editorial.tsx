@@ -13,7 +13,7 @@ import {
   defineGlyph,
 } from '@docouno/unica';
 import type { GlyphSource, GlyphSvgProps } from '@docouno/unica';
-import { Button } from '../../../src/prototypes/button/button.proto.js';
+import { Button } from '@docouno/unica';
 import { PopoverContent } from '../../../src/prototypes/popover/popover.proto.js';
 import { unicaWorkbenchBase } from '../../../src/unica.workbench.shared.js';
 

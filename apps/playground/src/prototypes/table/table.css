@@ -210,12 +210,25 @@
   outline-offset: -2px;
 }
 
-.table-proto td[data-control='action'] > .button-proto-icon[data-variant='ghost'] {
-  --button-height: var(--table-control-height);
-  --button-radius: var(--table-sort-radius);
-  --button-tint: var(--neutral-soft-bg);
-  --button-ghost-hover-bg: var(--neutral-soft-bg);
+.table-proto td[data-control='action'] > .table-cell-action-proto {
+  inline-size: var(--table-control-height);
+  min-inline-size: var(--table-control-height);
+  block-size: var(--table-control-height);
+  min-block-size: var(--table-control-height);
+  border-radius: var(--table-sort-radius);
   outline-offset: -2px;
+}
+.table-proto td[data-control='field'] .select-trigger-proto[data-variant='ghost'] {
+  /* Use the neutral ghost action's foreground veil in the inline picker as well. */
+  --table-control-plate: color-mix(in srgb, var(--fg-primary) 10%, transparent);
+  --select-ghost-plate: var(--table-control-plate);
+}
+@media (hover: hover) and (pointer: fine) {
+  .table-proto
+    td[data-control='field']
+    .select-trigger-proto[data-variant='ghost'][data-open]:hover {
+    --select-ghost-plate: color-mix(in oklab, var(--table-control-plate) 95%, var(--fg-primary));
+  }
 }
 .table-proto {
   --table-input-align: var(--_if-ltr, left) var(--_if-rtl, right);

@@ -3,7 +3,7 @@ import { FormField } from '../../prototypes/form-field/form-field.proto.js';
 import { useId, useRef, useState } from 'react';
 import type { ReactElement } from 'react';
 import { defineComponent } from '../../workbench/types.js';
-import { Button } from '../../prototypes/button/button.proto.js';
+import { Button } from '@docouno/unica';
 import { CheckboxCard } from '../../prototypes/choice-card/choice-card.proto.js';
 import { Select } from '../../prototypes/select/select.proto.js';
 import { ToastCard } from '../../prototypes/toast/toast.proto.js';

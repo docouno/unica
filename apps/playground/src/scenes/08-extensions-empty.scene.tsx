@@ -20,7 +20,7 @@ import {
 } from '../prototypes/breadcrumb/breadcrumb.proto.js';
 import { defineScene } from '../workbench/types.js';
 import { AsidePanel, WorkspaceNavigation } from '../prototypes/app-shell/app-shell.proto.js';
-import { Button } from '../prototypes/button/button.proto.js';
+import { Button } from '@docouno/unica';
 import {
   Empty,
   EmptyActions,

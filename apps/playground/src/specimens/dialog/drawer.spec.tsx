@@ -3,7 +3,7 @@ import { useId, useRef, useState } from 'react';
 import type { ReactElement } from 'react';
 import { SlidersHorizontalIcon } from '@phosphor-icons/react';
 import { defineComponent } from '../../workbench/types.js';
-import { Button } from '../../prototypes/button/button.proto.js';
+import { Button } from '@docouno/unica';
 import { CheckboxCard, SwitchCard } from '../../prototypes/choice-card/choice-card.proto.js';
 import { Input, Textarea } from '@docouno/unica';
 import { Select } from '../../prototypes/select/select.proto.js';

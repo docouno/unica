@@ -1,7 +1,7 @@
 import { Alert, AlertDescription, AlertTitle, Card, Code, Link, Text, Title } from '@docouno/unica';
 import { previewProps, previewText } from '../preview-code.js';
 import { defineComponent } from '../../workbench/types.js';
-import { Button } from '../../prototypes/button/button.proto.js';
+import { Button } from '@docouno/unica';
 import {
   PopoverContent,
   PopoverBody,
@@ -308,7 +308,9 @@ export default defineComponent({
     },
     {
       id: 'controls',
-      code: `<Button variant="secondary">Copy <Code plate={false}>PATH</Code></Button>`,
+      code: `<Button size="s" variant="secondary" tone="neutral">
+  Open <Code plate={false} status="inherit">config.ts</Code>
+</Button>`,
       title: 'Let the action keep its voice',
       caption:
         'Unplated code can inherit the enclosing control’s foreground. Only the Button or Link is interactive; Code adds no Tab stop.',

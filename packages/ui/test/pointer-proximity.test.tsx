@@ -132,7 +132,13 @@ function move(target: Element, x: number, y: number, pointerType = 'mouse'): voi
     throw new Error('Expected a window for pointer events');
   }
   target.dispatchEvent(
-    new view.PointerEvent('pointermove', { bubbles: true, clientX: x, clientY: y, pointerType }),
+    new view.PointerEvent('pointermove', {
+      bubbles: true,
+      composed: true,
+      clientX: x,
+      clientY: y,
+      pointerType,
+    }),
   );
 }
 
@@ -357,6 +363,81 @@ describe('PointerProximity', () => {
     env.flush();
     expect(observer.measure).toHaveBeenCalledTimes(2);
     expect(observer.measure).toHaveBeenLastCalledWith({ x: 7, y: 8 });
+  });
+
+  it('sees an iframe retargeted at an open shadow host from outside the root', () => {
+    const env = installEnvironment(document);
+    const host = document.createElement('div');
+    const root = host.attachShadow({ mode: 'open' });
+    const frame = document.createElement('iframe');
+    root.append(frame);
+    document.body.append(host);
+    const observer = { measure: vi.fn(), reset: vi.fn() };
+    const subscription = bind(document.body, observer);
+
+    move(document.body, 1, 2);
+    env.flush();
+    move(document.body, 3, 4);
+    frame.dispatchEvent(
+      new PointerEvent('pointerover', {
+        bubbles: true,
+        composed: true,
+        relatedTarget: document.body,
+      }),
+    );
+    subscription.refresh();
+    env.flush();
+
+    expect(observer.reset).toHaveBeenCalledTimes(1);
+    expect(observer.measure).toHaveBeenCalledExactlyOnceWith({ x: 1, y: 2 });
+    expect(env.cancel).toHaveBeenCalledTimes(1);
+  });
+
+  it('scopes boundary listeners to the sampled path and clears on internal iframe entry', () => {
+    const env = installEnvironment(document);
+    const host = document.createElement('div');
+    const root = host.attachShadow({ mode: 'open' });
+    const first = document.createElement('span');
+    const second = document.createElement('span');
+    const frame = document.createElement('iframe');
+    root.append(first, second, frame);
+    document.body.append(host);
+    const observer = { measure: vi.fn(), reset: vi.fn() };
+    const subscription = bind(document.body, observer);
+    const moveBetween = (from: Element, to: Element) => {
+      from.dispatchEvent(
+        new PointerEvent('pointerout', { bubbles: true, composed: true, relatedTarget: to }),
+      );
+      to.dispatchEvent(
+        new PointerEvent('pointerover', { bubbles: true, composed: true, relatedTarget: from }),
+      );
+    };
+
+    move(first, 1, 2);
+    env.flush();
+    moveBetween(first, second);
+    move(second, 3, 4);
+    env.flush();
+    expect(observer.reset).not.toHaveBeenCalled();
+    expect(observer.measure).toHaveBeenLastCalledWith({ x: 3, y: 4 });
+    expect(listenerTypes(added, root)).toEqual(['pointerover', 'pointerout']);
+
+    move(second, 5, 6);
+    moveBetween(second, frame);
+    subscription.refresh();
+    env.flush();
+    expect(observer.reset).toHaveBeenCalledTimes(1);
+    expect(observer.measure).toHaveBeenCalledTimes(2);
+    expect(listenerTypes(removed, root)).toEqual(['pointerover', 'pointerout']);
+
+    move(first, 7, 8);
+    env.flush();
+    expect(observer.measure).toHaveBeenLastCalledWith({ x: 7, y: 8 });
+    move(document.body, 9, 10);
+    expect(listenerTypes(removed, root)).toHaveLength(4);
+    move(first, 11, 12);
+    subscription.unsubscribe();
+    expect(listenerTypes(removed, root)).toHaveLength(6);
   });
 
   it.each([

@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import type { ReactElement } from 'react';
 import { StarIcon } from '@phosphor-icons/react';
 import { defineComponent } from '../../workbench/types.js';
-import { Button, IconButton } from '../../prototypes/button/button.proto.js';
+import { Button, IconButton } from '@docouno/unica';
 import { CodeBlock } from '../../prototypes/code-block/code-block.proto.js';
 import type { IconProps as PhosphorIconProps } from '@phosphor-icons/react';
 import {
@@ -90,11 +90,11 @@ function TriggerStudy(): ReactElement {
     <div className="disclosure-study disclosure-study-grid">
       <div className="disclosure-study-sample">
         <Text className="disclosure-study-label" size="caption-l" color="muted">
-          Keyboard focus
+          Tab to inspect keyboard focus
         </Text>
         <Accordion headingLevel={3}>
           <AccordionItem value="scope">
-            <AccordionTrigger previewState="focus">Access scope</AccordionTrigger>
+            <AccordionTrigger>Access scope</AccordionTrigger>
             <AccordionContent>Workspace members.</AccordionContent>
           </AccordionItem>
           <AccordionItem value="history" disabled>

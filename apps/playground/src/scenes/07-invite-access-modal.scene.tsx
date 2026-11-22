@@ -4,7 +4,7 @@ import type { ReactElement } from 'react';
 import { PlusIcon } from '@phosphor-icons/react';
 import { AsidePanel, WorkspaceNavigation } from '../prototypes/app-shell/app-shell.proto.js';
 import { Badge, Card, Input, Text, Textarea, Title } from '@docouno/unica';
-import { Button } from '../prototypes/button/button.proto.js';
+import { Button } from '@docouno/unica';
 import {
   Modal,
   ModalBody,

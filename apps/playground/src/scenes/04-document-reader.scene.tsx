@@ -27,7 +27,7 @@ import {
 import { List, ListItem } from '../prototypes/list/list.proto.js';
 import { Menu } from '../prototypes/menu/menu.live.js';
 import type { MenuEntry } from '../prototypes/menu/menu.entries.js';
-import { IconButton } from '../prototypes/button/button.proto.js';
+import { IconButton } from '@docouno/unica';
 import { TeamPreview } from '../examples/hover-card-content.js';
 import { Tabs, TabsContent, TabsList, TabsTab } from '../prototypes/tabs/tabs.proto.js';
 import {

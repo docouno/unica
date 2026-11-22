@@ -1,13 +1,15 @@
 import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
 import type { KeyboardEvent, MouseEvent, ReactElement, PointerEvent } from 'react';
-import type { ButtonProps } from '../button/button.proto.js';
+import type { ButtonProps } from '@docouno/unica';
 import { MenuBack, MenuRows, MenuSurface } from './menu.proto.js';
 import { menuRows } from './menu.entries.js';
 import type { MenuBranch, MenuEntry, MenuSize } from './menu.entries.js';
 
+type NativeButtonProps = Exclude<ButtonProps, { asChild: true }>;
+
 export type TriggerProps = Required<
   Pick<
-    ButtonProps,
+    NativeButtonProps,
     | 'ref'
     | 'onClick'
     | 'onKeyDown'
@@ -17,7 +19,7 @@ export type TriggerProps = Required<
     | 'aria-expanded'
   >
 > &
-  Pick<ButtonProps, 'onPointerDown'>;
+  Pick<NativeButtonProps, 'onPointerDown'>;
 
 export interface LiveMenuProps {
   readonly label: string;

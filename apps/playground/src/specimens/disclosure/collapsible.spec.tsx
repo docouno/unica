@@ -2,7 +2,7 @@ import { FormField } from '../../prototypes/form-field/form-field.proto.js';
 import { useId } from 'react';
 import type { ReactElement } from 'react';
 import { defineComponent } from '../../workbench/types.js';
-import { Button } from '../../prototypes/button/button.proto.js';
+import { Button } from '@docouno/unica';
 import { Card, Checkbox, Input, Text } from '@docouno/unica';
 import {
   PopoverBody,
@@ -41,18 +41,16 @@ function TriggerStates(): ReactElement {
     <div className="disclosure-study disclosure-study-grid">
       {(
         [
-          { state: 'rest', label: 'Rest', open: false },
-          { state: 'hover', label: 'Hover', open: false },
-          { state: 'active', label: 'Held press', open: true },
-          { state: 'focus', label: 'Keyboard focus', open: true },
+          { label: 'Closed', open: false },
+          { label: 'Open', open: true },
         ] as const
-      ).map(({ state, label, open }) => (
-        <div className="disclosure-study-sample" key={state}>
+      ).map(({ label, open }) => (
+        <div className="disclosure-study-sample" key={label}>
           <Text className="disclosure-study-label" size="caption-l" color="muted">
             {label}
           </Text>
           <Collapsible defaultOpen={open}>
-            <CollapsibleTrigger previewState={state}>Delivery window</CollapsibleTrigger>
+            <CollapsibleTrigger>Delivery window</CollapsibleTrigger>
             <CollapsibleContent>Weekdays, 09:00–17:00 UTC.</CollapsibleContent>
           </Collapsible>
         </div>
@@ -240,7 +238,7 @@ export default defineComponent({
     {
       id: 'states',
       title: 'Trigger feedback',
-      caption: 'Paint is pinned for comparison. The rows still toggle.',
+      caption: 'Hover, hold, or Tab to compare the closed and open rows.',
       kind: 'behavior',
       render: () => <TriggerStates />,
     },
@@ -288,11 +286,15 @@ export default defineComponent({
       title: 'Existing button and a second trigger',
       caption: 'Edit the address, close from inside, then reopen to see the draft preserved.',
       code: `<Collapsible defaultOpen>
-  <CollapsibleTrigger asChild><Button size="s">Delivery details</Button></CollapsibleTrigger>
+  <CollapsibleTrigger asChild>
+    <Button variant="secondary" tone="neutral" size="s">Delivery details</Button>
+  </CollapsibleTrigger>
   <CollapsibleContent padded={false}>
     <label htmlFor={replyId}>Reply-to address</label>
     <Input id={replyId} type="email" defaultValue="reviews@example.com" />
-    <CollapsibleTrigger asChild><Button variant="ghost">Close details</Button></CollapsibleTrigger>
+    <CollapsibleTrigger asChild>
+      <Button variant="ghost" tone="neutral" size="s">Close details</Button>
+    </CollapsibleTrigger>
   </CollapsibleContent>
 </Collapsible>`,
       render: () => <DeliveryDetails />,

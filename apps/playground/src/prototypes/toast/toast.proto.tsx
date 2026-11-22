@@ -8,14 +8,13 @@ import {
 } from '../control-glyphs.js';
 import { Fragment, useId, useLayoutEffect, useRef, useState } from 'react';
 import type { ComponentPropsWithRef, CSSProperties, ReactElement, ReactNode } from 'react';
-import { Button, IconButton } from '../button/button.proto.js';
+import { Button, IconButton } from '@docouno/unica';
 import { Divider, Icon, Spinner } from '@docouno/unica';
 import './toast.css';
 
 export type ToastStatus = 'neutral' | 'info' | 'success' | 'warning' | 'danger';
 export type ToastPlacement =
   'bottom-start' | 'bottom-center' | 'bottom-end' | 'top-start' | 'top-center' | 'top-end';
-export type ToastPreviewState = 'rest' | 'hover' | 'active' | 'focus';
 
 export interface ToastAction {
   readonly label: string;
@@ -39,10 +38,6 @@ export interface ToastCardProps extends Omit<ComponentPropsWithRef<'div'>, 'titl
         readonly issues?: number;
       }
     | undefined;
-  /** Pinned visual comparisons, never library states. */
-  readonly previewControl?: 'action' | 'dismiss';
-  readonly previewState?: ToastPreviewState;
-  readonly previewFocus?: boolean;
 }
 
 // Disposable visual anatomy. The provider and public API are designed in Wave 2.
@@ -55,9 +50,6 @@ export function ToastCard({
   actionLayout = 'auto',
   onDismiss,
   stackSummary,
-  previewControl,
-  previewState,
-  previewFocus,
   className = '',
   children,
   style,
@@ -130,8 +122,6 @@ export function ToastCard({
           disabled={action.disabled}
           loading={action.pending ?? false}
           onClick={action.onClick}
-          previewState={previewControl === 'action' ? previewState : undefined}
-          previewFocus={Boolean(previewControl === 'action' && previewFocus)}
         >
           {action.label}
         </Button>
@@ -145,8 +135,6 @@ export function ToastCard({
           tone="neutral"
           aria-label={`Dismiss: ${title}`}
           onClick={onDismiss}
-          previewState={previewControl === 'dismiss' ? previewState : undefined}
-          previewFocus={Boolean(previewControl === 'dismiss' && previewFocus)}
         />
       )}
       {stackSummary && (

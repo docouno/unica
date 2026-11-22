@@ -1,6 +1,6 @@
 import { useId, useState } from 'react';
 import type { ReactElement } from 'react';
-import { Button } from '../../prototypes/button/button.proto.js';
+import { Button } from '@docouno/unica';
 import { ProgressCircle, Spinner } from '@docouno/unica';
 import './progress.examples.css';
 

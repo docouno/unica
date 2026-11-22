@@ -4,7 +4,7 @@ import { useId, useState } from 'react';
 import type { ReactElement } from 'react';
 import { WarningCircleIcon } from '@phosphor-icons/react';
 import { defineComponent } from '../../workbench/types.js';
-import { Button } from '../../prototypes/button/button.proto.js';
+import { Button } from '@docouno/unica';
 import { Checkbox, CheckboxGroup } from '@docouno/unica';
 import { Sample, SurfacePair } from '../binary-examples.js';
 
@@ -113,7 +113,7 @@ function Validation(): ReactElement {
           </span>
         )}
         <div className="binary-demo-action-row">
-          <Button size="s" variant="secondary" type="submit">
+          <Button size="s" variant="secondary" tone="accent" type="submit">
             Check selection
           </Button>
         </div>

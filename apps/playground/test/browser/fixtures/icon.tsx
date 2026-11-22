@@ -15,7 +15,7 @@ import { Combobox } from '../../../src/prototypes/combobox/combobox.proto.js';
 import { MenuRows, MenuSurface } from '../../../src/prototypes/menu/menu.proto.js';
 import { Listbox } from '../../../src/prototypes/select/listbox.proto.js';
 import { Select } from '../../../src/prototypes/select/select.proto.js';
-import { Button } from '../../../src/prototypes/button/button.proto.js';
+import { Button } from '@docouno/unica';
 import {
   Drawer,
   DrawerContent,

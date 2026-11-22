@@ -1,8 +1,8 @@
 import { useRef, useState } from 'react';
 import type { ReactElement, ReactNode } from 'react';
-import { Button } from '../button/button.proto.js';
+import { Button } from '@docouno/unica';
 import { Dropzone, FileInput, FileItem, FileList } from './file-input.proto.js';
-import type { FileItemStatus, FilePreviewState } from './file-input.proto.js';
+import type { FileItemStatus } from './file-input.proto.js';
 import type { ControlSize, FieldStatus, FieldVariant } from '@docouno/unica';
 import { formatFileSize } from './file-input.utils.js';
 import './file-input.examples.css';
@@ -47,23 +47,23 @@ export function FileRoles(): ReactElement {
 export function FileInteraction(): ReactElement {
   return (
     <div className="file-demo-grid">
-      {(['rest', 'hover', 'active', 'focus', 'dragging'] as const).map(
-        (state: FilePreviewState) => (
-          <Sample key={state} title={state === 'focus' ? 'Keyboard focus' : state}>
-            <FileInput
-              label="Reference file"
-              initialFileName="research-notes.pdf"
-              previewState={state}
-            />
-            <FileInput
-              variant="ghost"
-              label="Inline reference"
-              initialFileName="research-notes.pdf"
-              previewState={state}
-            />
-          </Sample>
-        ),
-      )}
+      <Sample title="Hover, hold, or Tab to compare roles">
+        <FileInput label="Reference file" initialFileName="research-notes.pdf" />
+        <FileInput variant="ghost" label="Inline reference" initialFileName="research-notes.pdf" />
+      </Sample>
+      <Sample title="Dragging">
+        <FileInput
+          label="Reference file"
+          initialFileName="research-notes.pdf"
+          previewState="dragging"
+        />
+        <FileInput
+          variant="ghost"
+          label="Inline reference"
+          initialFileName="research-notes.pdf"
+          previewState="dragging"
+        />
+      </Sample>
       <Sample title="Try the picker and Remove">
         <FileInput
           variant="ghost"

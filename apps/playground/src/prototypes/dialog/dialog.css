@@ -123,7 +123,7 @@
 .dialog-description {
   color: var(--fg-secondary);
 }
-.dialog-dismiss.button-proto {
+.dialog-dismiss {
   margin-block-start: -8px;
   margin-inline-end: -8px;
   min-inline-size: 44px;
@@ -163,12 +163,6 @@
   gap: var(--space-8);
   padding-block: var(--dialog-gap) var(--dialog-inset);
 }
-.dialog-footer > .button-proto {
-  max-inline-size: 100%;
-  white-space: normal;
-  overflow-wrap: anywhere;
-}
-
 .dialog-header::after,
 .dialog-footer::before {
   content: '';

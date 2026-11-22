@@ -274,7 +274,7 @@
     [data-preview='hover'],
     [data-preview='pressed']
   ) {
-  background: var(--neutral-soft-bg);
+  background: var(--select-ghost-plate, var(--neutral-soft-bg));
 }
 .select-trigger-proto[data-status='neutral']:not(:disabled):is(:hover, [data-preview='hover']) {
   --select-trigger-edge: var(--control-border-hover);
@@ -425,7 +425,7 @@
   color: var(--fg-secondary);
   font-weight: 500;
 }
-.select-empty-copy-proto > .button-proto {
+.select-empty-action {
   margin-block-start: var(--space-8);
 }
 .select-proto[hidden] {

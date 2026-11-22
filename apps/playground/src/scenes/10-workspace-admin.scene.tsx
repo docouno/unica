@@ -20,7 +20,7 @@ import {
   BreadcrumbLink,
   BreadcrumbPage,
 } from '../prototypes/breadcrumb/breadcrumb.proto.js';
-import { Button } from '../prototypes/button/button.proto.js';
+import { Button } from '@docouno/unica';
 import { ToastViewport } from '../prototypes/toast/toast.proto.js';
 import {
   Dropzone,

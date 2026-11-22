@@ -45,10 +45,10 @@ async function collectFiles(dirPath: string, exts: readonly string[]): Promise<s
   return results;
 }
 
-it('discovers real Proto and scene entries and renders six themed Subjects', () => {
+it('discovers shipped actions and scene entries and renders six themed Subjects', () => {
   expect(() => validateCatalog(unicaWorkbench)).not.toThrow();
   expect(unicaWorkbench.themes).toHaveLength(6);
-  expect(unicaWorkbench.components.find(({ id }) => id === 'button')?.status).toBe('Proto');
+  expect(unicaWorkbench.components.find(({ id }) => id === 'button')?.status).toBe('UI');
   expect(unicaWorkbench.scenes.find(({ id }) => id === '01-sign-in')?.uses).toContain('button');
 
   window.history.replaceState(null, '', '/?item=button');
@@ -75,6 +75,104 @@ it('emits valid Textarea JSX for uncontrolled and controlled log examples', asyn
       '<>',
     );
   }
+});
+
+it('keeps Button and IconButton role and tone choices in sync with the JSX readout', () => {
+  const specimen = unicaWorkbench.components.find(({ id }) => id === 'button')!;
+  const Subject = specimen.render;
+  const ctx = {
+    id: 'button-contract',
+    theme: unicaWorkbench.themes[0]!,
+    surface: 'base',
+    comparing: false,
+    subject: { 'data-wb-subject': '' },
+    form: { 'data-wb-form': '' },
+    action: () => (): void => {},
+  } as const;
+  const initial = defaultValues(specimen.props);
+  const { rerender } = render(<Subject ctx={ctx} values={initial} />);
+
+  for (const content of ['text', 'icon']) {
+    for (const variant of ['auto', 'primary', 'secondary', 'ghost']) {
+      for (const tone of ['auto', 'accent', 'neutral', 'danger']) {
+        const values = { ...initial, content, variant, tone };
+        rerender(<Subject ctx={ctx} values={values} />);
+
+        const role = variant === 'auto' ? (content === 'icon' ? 'secondary' : 'primary') : variant;
+        const ink = tone === 'auto' ? (role === 'primary' ? 'accent' : 'neutral') : tone;
+        const subject = screen.getByRole('button', { name: 'Create' });
+        expect(subject.getAttribute('data-unica-button-variant')).toBe(role);
+        expect(subject.getAttribute('data-unica-button-tone')).toBe(ink);
+
+        const jsx = componentCode(specimen, values);
+        expect(jsx).toContain(content === 'icon' ? '<IconButton ' : '<Button ');
+        expect(jsx.match(/variant="([\w-]+)"/)?.[1]).toBe(variant === 'auto' ? undefined : variant);
+        expect(jsx.match(/tone="([\w-]+)"/)?.[1]).toBe(tone === 'auto' ? undefined : tone);
+      }
+    }
+  }
+});
+
+it('connects the Button inspector to the toggle authority and a real anchor host', () => {
+  window.history.replaceState(null, '', '/?item=button&family=frost&scheme=dark');
+  render(<WorkbenchApp config={unicaWorkbench} />);
+
+  const command = () => screen.getByRole('button', { name: 'Create' });
+  const jsx = () => screen.getByRole('region', { name: 'JSX' }).textContent;
+  const host = screen.getByRole('checkbox', { name: 'asChild' });
+  const toggle = screen.getByRole('combobox', { name: 'toggle' });
+  expect(command().getAttribute('aria-pressed')).toBeNull();
+
+  fireEvent.change(toggle, { target: { value: 'controlled' } });
+  expect(command().getAttribute('aria-pressed')).toBe('false');
+  expect(jsx()).toContain('pressed={pressed}');
+  fireEvent.click(command());
+  expect(command().getAttribute('aria-pressed')).toBe('true');
+  fireEvent.click(screen.getByRole('checkbox', { name: 'loading' }));
+  fireEvent.click(command());
+  expect(command().getAttribute('aria-pressed')).toBe('true');
+  expect((host as HTMLInputElement).disabled).toBe(true);
+  fireEvent.click(screen.getByRole('checkbox', { name: 'loading' }));
+
+  fireEvent.change(toggle, { target: { value: 'uncontrolled' } });
+  expect(jsx()).toContain('defaultPressed={false}');
+  fireEvent.click(command());
+  expect(command().getAttribute('aria-pressed')).toBe('true');
+  fireEvent.change(toggle, { target: { value: 'none' } });
+
+  fireEvent.click(host);
+  const link = screen.getByRole('link', { name: 'Create' });
+  expect(link.tagName).toBe('A');
+  expect(link.getAttribute('href')).toBe('/?item=02-workspace-overview');
+  expect(jsx()).toContain('<a href="/?item=02-workspace-overview">Create</a>');
+  expect(screen.getByRole<HTMLOptionElement>('option', { name: 'submit' }).disabled).toBe(true);
+});
+
+it('covers allowed Button combinations and exposes Pairwise availability rules', () => {
+  const specimen = unicaWorkbench.components.find(({ id }) => id === 'button')!;
+  const search = buildPairwise(specimen.props, specimen.constraints, {});
+  let step = search.next();
+  while (!step.done) {
+    step = search.next();
+  }
+  const { rows } = step.value;
+  for (const [key, prop] of Object.entries(specimen.props)) {
+    for (const value of finiteDomain(prop)) {
+      expect(
+        rows.some((row) => row[key] === value),
+        `${key}=${value}`,
+      ).toBe(true);
+    }
+  }
+  expect(rows.every((row) => evaluate(specimen.constraints, row).valid)).toBe(true);
+  const square = rows.find((row) => row.content === 'icon' && row.width === 'full')!;
+  const unavailable = rows.find((row) => row.disabled === true && row.loading === true)!;
+  expect(evaluate(specimen.constraints, square).matches.map(({ kind }) => kind)).toContain(
+    'ignored',
+  );
+  expect(evaluate(specimen.constraints, unavailable).matches.map(({ kind }) => kind)).toContain(
+    'precedence',
+  );
 });
 
 it('covers typography controls in Pairwise and renders only valid label bindings', () => {

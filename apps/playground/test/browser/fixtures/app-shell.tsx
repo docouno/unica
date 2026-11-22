@@ -9,7 +9,7 @@ import {
   LeftRail,
   TopRail,
 } from '../../../src/prototypes/app-shell/app-shell.proto.js';
-import { Button } from '../../../src/prototypes/button/button.proto.js';
+import { Button } from '@docouno/unica';
 
 const documents = [
   'Platform architecture',

@@ -34,7 +34,7 @@ import {
   SlidersGlyph,
   TrashGlyph,
 } from '../control-glyphs.js';
-import { Button, IconButton } from '../button/button.proto.js';
+import { Button, IconButton } from '@docouno/unica';
 import { PopoverContent } from '../popover/popover.proto.js';
 import { useShellPopoverPosition, windowBounds } from './app-shell-position.js';
 import { NavList, TreeView } from './navigation.proto.js';

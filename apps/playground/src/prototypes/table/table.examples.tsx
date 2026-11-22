@@ -21,7 +21,7 @@ import {
   PushPinIcon,
   ArrowCounterClockwiseIcon,
 } from '@phosphor-icons/react';
-import { Button, IconButton } from '../button/button.proto.js';
+import { Button, IconButton } from '@docouno/unica';
 import {
   Drawer,
   DrawerBody,
@@ -202,6 +202,7 @@ function RouteRow({
           trigger={(props) => (
             <IconButton
               {...props}
+              className="table-cell-action-proto"
               aria-label={`Actions for ${route.id}`}
               icon={DotsThreeIcon}
               size={size}
@@ -395,6 +396,7 @@ export function BuildQueue(): ReactElement {
                     trigger={(props) => (
                       <IconButton
                         {...props}
+                        className="table-cell-action-proto"
                         aria-label={`${build.name} actions`}
                         icon={DotsThreeIcon}
                         size="m"
@@ -669,6 +671,7 @@ export function ResultExamples(): ReactElement {
                       <AlertDescription>Retry to refresh the current results.</AlertDescription>
                       <AlertActions>
                         <Button
+                          className="table-example-feedback-action"
                           size="s"
                           variant="secondary"
                           tone="neutral"

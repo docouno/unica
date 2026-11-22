@@ -14,10 +14,9 @@ import {
   TrashIcon,
   UploadSimpleIcon,
 } from '@phosphor-icons/react';
-import { Text } from '@docouno/unica';
+import { Button, IconButton, Text } from '@docouno/unica';
+import type { ButtonSize, ButtonTone, ButtonVariant } from '@docouno/unica';
 import type { IconProps as PhosphorIconProps } from '@phosphor-icons/react';
-import { Button, IconButton } from './button.proto.js';
-import type { ButtonProps, ButtonSize, ButtonTone, ButtonVariant } from './button.proto.js';
 import './button.examples.css';
 
 const variants: readonly ButtonVariant[] = ['primary', 'secondary', 'ghost'];
@@ -41,38 +40,26 @@ export function ForwardArrowIcon(props: PhosphorIconProps): ReactElement {
 
 interface StateSample {
   readonly label: string;
-  readonly props: Pick<
-    ButtonProps,
-    'previewState' | 'previewFocus' | 'loading' | 'disabled' | 'pressed'
-  >;
+  readonly props: {
+    readonly loading?: boolean;
+    readonly disabled?: boolean;
+    readonly pressed?: boolean;
+  };
 }
 
 const actionStates: readonly StateSample[] = [
-  { label: 'Rest', props: { previewState: 'rest' } },
-  { label: 'Hover', props: { previewState: 'hover' } },
-  { label: 'Active · held down', props: { previewState: 'active' } },
-  { label: 'Keyboard focus', props: { previewState: 'focus' } },
-  { label: 'Focus + active', props: { previewState: 'active', previewFocus: true } },
-  { label: 'Loading', props: { loading: true } },
-  { label: 'Loading + focus', props: { loading: true, previewFocus: true } },
+  { label: 'Available', props: {} },
+  { label: 'Pending', props: { loading: true } },
   { label: 'Disabled', props: { disabled: true } },
-  { label: 'Disabled + loading', props: { disabled: true, loading: true } },
+  { label: 'Disabled + pending', props: { disabled: true, loading: true } },
 ];
 
 const toggleStates: readonly StateSample[] = [
   { label: 'Off', props: { pressed: false } },
   { label: 'On', props: { pressed: true } },
-  { label: 'On + hover', props: { pressed: true, previewState: 'hover' } },
-  { label: 'On + active', props: { pressed: true, previewState: 'active' } },
-  { label: 'On + focus', props: { pressed: true, previewFocus: true } },
-  {
-    label: 'On + active + focus',
-    props: { pressed: true, previewState: 'active', previewFocus: true },
-  },
-  { label: 'On + loading', props: { pressed: true, loading: true } },
-  { label: 'On + loading + focus', props: { pressed: true, loading: true, previewFocus: true } },
+  { label: 'On + pending', props: { pressed: true, loading: true } },
   { label: 'On + disabled', props: { pressed: true, disabled: true } },
-  { label: 'On + disabled + loading', props: { pressed: true, disabled: true, loading: true } },
+  { label: 'On + disabled + pending', props: { pressed: true, disabled: true, loading: true } },
 ];
 
 export function LightExample(): ReactElement {
@@ -134,45 +121,8 @@ export function LightExample(): ReactElement {
           ? 'Actions unavailable.'
           : loading
             ? 'Request pending.'
-            : `Activations: ${activations}. Approach, hover, hold a press, or focus with Tab.`}
+            : `Activations: ${activations}.`}
       </Text>
-      <Text size="caption-l" color="muted">
-        Pinned comparison · primary accent. Approach places the pointer 12px outside the left edge.
-      </Text>
-      <div className="button-study-response" data-proximity-comparison>
-        {(
-          [
-            ['Rest', 'rest'],
-            ['Approach · pointer outside', 'near'],
-            ['Hover', 'hover'],
-          ] as const
-        ).map(([label, previewState]) => (
-          <div className="button-study-group" key={label}>
-            <Text size="caption-l" color="muted">
-              {label}
-            </Text>
-            <div className="button-study-pair">
-              <Button
-                iconLeft={PlusIcon}
-                previewState={previewState}
-                loading={loading}
-                disabled={disabled}
-              >
-                Create
-              </Button>
-              <IconButton
-                variant="primary"
-                tone="accent"
-                icon={PlusIcon}
-                aria-label={`Create · ${label}`}
-                previewState={previewState}
-                loading={loading}
-                disabled={disabled}
-              />
-            </div>
-          </div>
-        ))}
-      </div>
     </div>
   );
 }
@@ -308,7 +258,6 @@ export function ToggleExamples(): ReactElement {
   const [tone, setTone] = useState<ButtonTone>('neutral');
   const [size, setSize] = useState<ButtonSize>('s');
   const [bold, setBold] = useState(true);
-  const [pinned, setPinned] = useState(false);
   const [muted, setMuted] = useState(false);
   const action =
     tone === 'danger'
@@ -327,13 +276,7 @@ export function ToggleExamples(): ReactElement {
           pressed={bold}
           onPressedChange={setBold}
         />
-        <Button
-          variant="secondary"
-          tone="accent"
-          iconLeft={PushPinIcon}
-          pressed={pinned}
-          onPressedChange={setPinned}
-        >
+        <Button variant="secondary" tone="accent" iconLeft={PushPinIcon} defaultPressed={false}>
           Pin
         </Button>
         <IconButton
@@ -509,30 +452,43 @@ export function OpenTriggerExample(): ReactElement {
             </Text>
           </div>
         ))}
-        <div className="button-study-sample">
-          <div className="button-study-pair">
-            <Button
-              variant="secondary"
-              tone="neutral"
-              iconRight={CaretDownIcon}
-              aria-expanded
-              previewFocus
-            >
-              Actions
-            </Button>
-            <IconButton
-              variant="ghost"
-              icon={DotsThreeIcon}
-              aria-label="Document actions"
-              aria-expanded
-              previewFocus
-            />
-          </div>
-          <Text size="caption-m" color="muted">
-            Open + focus
-          </Text>
-        </div>
       </div>
     </div>
+  );
+}
+
+export const workspaceDestination = '/?item=02-workspace-overview';
+
+export function FormExample(): ReactElement {
+  const [message, setMessage] = useState('');
+  return (
+    <form
+      className="button-study-form"
+      onSubmit={(event) => {
+        event.preventDefault();
+        const data = new FormData(event.currentTarget, event.nativeEvent.submitter);
+        const title = data.get('title');
+        if (typeof title === 'string') {
+          setMessage(`${data.get('intent') === 'save' ? 'Saved' : 'Submitted'} “${title}”.`);
+        }
+      }}
+      onReset={() => setMessage('Draft title reset.')}
+    >
+      <label className="button-study-field">
+        Draft title
+        <input name="title" defaultValue="Untitled" required />
+      </label>
+      <div className="button-study-row">
+        <Button type="reset" variant="ghost">
+          Reset
+        </Button>
+        <Button type="submit" name="intent" value="save">
+          Save draft
+        </Button>
+      </div>
+      <Text size="body-s" color="muted" role="status">
+        {message}
+      </Text>
+    </form>
   );
 }

@@ -96,7 +96,7 @@ The production host uses `popover="manual"`, portaled into the topmost active Un
 | ----------- | ------------------------------------------------------------------------------------------------- |
 | `roles`     | Five statuses, loading, neutral material in all six presets; pinned cards.                        |
 | `anatomy`   | Single line, adaptive action, detailed recovery, brief confirmation without ×; live Undo.         |
-| `states`    | Pinned control feedback, focus + press, unavailable action, pending recovery.                     |
+| `states`    | Live pointer and focus feedback, unavailable action, pending recovery.                            |
 | `stack`     | Shared action group, persistent right-hand toggle, empty/single/group transitions, six positions. |
 | `reading`   | Stacks at both scroll edges, four-card depth, automatic arrivals, and collapse.                   |
 | `operation` | Controlled loading/success/failure/retry; Resolve/Reject are preview controls.                    |

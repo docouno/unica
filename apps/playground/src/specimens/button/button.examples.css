@@ -113,6 +113,41 @@
   max-inline-size: 320px;
 }
 
-.button-example-forward-glyph {
-  scale: var(--_dir-scale, none);
+.button-example-forward-glyph:dir(rtl) {
+  scale: -1 1;
+}
+
+.button-study-form,
+.button-study-field {
+  display: grid;
+  min-inline-size: 0;
+  justify-items: start;
+}
+
+.button-study-form {
+  inline-size: 100%;
+  gap: var(--space-12);
+}
+
+.button-study-field {
+  inline-size: min(100%, 18rem);
+  gap: var(--space-4);
+  color: var(--fg-primary);
+  font-size: var(--text-size-body-s);
+}
+
+.button-study-field input {
+  inline-size: 100%;
+  min-inline-size: 0;
+  min-block-size: var(--size-m-height);
+  padding-inline: var(--space-8);
+  border: 1px solid var(--control-border);
+  border-radius: var(--size-m-radius);
+  background: var(--control-bg);
+  color: var(--fg-primary);
+}
+
+.button-study-field input:focus-visible {
+  outline: 2px solid var(--focus-ring-color);
+  outline-offset: 2px;
 }

@@ -2,7 +2,7 @@ import { FormField } from '../form-field/form-field.proto.js';
 import { useEffect, useId, useRef, useState } from 'react';
 import type { ReactElement, ReactNode } from 'react';
 import { CheckIcon, ClockIcon, LinkSimpleIcon, WarningCircleIcon } from '@phosphor-icons/react';
-import { Button } from '../button/button.proto.js';
+import { Button } from '@docouno/unica';
 import { Input, Text } from '@docouno/unica';
 import {
   Popover,

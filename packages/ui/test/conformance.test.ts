@@ -391,10 +391,14 @@ describe('Unica package conformance gate', () => {
 
   it('compiles positive consumer contracts and rejects invalid usages under exactOptionalPropertyTypes', () => {
     const positiveMain = `
+      import { createRef } from 'react';
       import {
         Badge,
         Blockquote,
         Box,
+        Button,
+        IconButton,
+        defineGlyph,
         Code,
         Container,
         Divider,
@@ -408,6 +412,8 @@ describe('Unica package conformance gate', () => {
       } from '../src/index.js';
       import type {
         BlockquoteStatus,
+        ButtonProps,
+        IconButtonProps,
         CodeStatus,
         IconSize,
         LinkSize,
@@ -426,8 +432,18 @@ describe('Unica package conformance gate', () => {
       const rootAttrs: UnicaRootAttributes = { 'data-theme': 'soft-dark' };
       const vhProps: VisuallyHiddenProps<'div'> = { as: 'div', children: 'Hidden' };
 
+      const buttonRef = createRef<HTMLButtonElement>();
+      const anchorRef = createRef<HTMLAnchorElement>();
+      const glyph = defineGlyph(() => null);
+      const action: ButtonProps = { type: 'submit', form: 'edit', ref: buttonRef, pressed: undefined };
+      const square: IconButtonProps = { icon: glyph, 'aria-labelledby': 'guide', size: undefined };
+
       export const view = (
         <div {...rootAttrs} data-i={iSize} data-l={lSize}>
+          <Button {...action} onClick={(event) => event.currentTarget.form?.checkValidity()}>Save</Button>
+          <Button asChild ref={anchorRef} onClick={(event) => event.currentTarget.href}><a href="#guide">Guide</a></Button>
+          <IconButton {...square} />
+          <IconButton asChild icon={glyph} aria-label="Guide" ref={anchorRef}><a href="#guide" /></IconButton>
           <Box padding={s0} margin={{ tablet: s12, desktop: s64 }}>
             <Container size="m" centered={false} gutter={16}>
               <Flex gap={12}>
@@ -458,6 +474,9 @@ describe('Unica package conformance gate', () => {
       import { THEME_PRESETS, defineGlyph, getUnicaRootProps } from '../src/server.js';
       import type {
         BlockquoteStatus,
+        ButtonSize,
+        ButtonTone,
+        ButtonVariant,
         CodeStatus,
         IconSize,
         LinkSize,
@@ -472,6 +491,7 @@ describe('Unica package conformance gate', () => {
         attrs: getUnicaRootProps({ theme: 'frost-dark' }) satisfies UnicaRootAttributes,
         spacing: 12 satisfies Spacing,
         b: 'info' satisfies BlockquoteStatus,
+        action: ['s' satisfies ButtonSize, 'danger' satisfies ButtonTone, 'ghost' satisfies ButtonVariant],
         c: 'success' satisfies CodeStatus,
         i: 's' satisfies IconSize,
         l: 'inherit' satisfies LinkSize,
@@ -520,6 +540,51 @@ describe('Unica package conformance gate', () => {
         'ProgressCircle rejects label prop',
         `import { ProgressCircle } from '../src/index.js'; export const x = <ProgressCircle value={50} label="Nope" />;`,
       ],
+      [
+        '__virtual_neg_button_native_ref.tsx',
+        'Button requires a button ref on its native branch',
+        `import { createRef } from 'react'; import { Button } from '../src/index.js'; export const x = <Button ref={createRef<HTMLAnchorElement>()}>Save</Button>;`,
+      ],
+      [
+        '__virtual_neg_button_anchor_ref.tsx',
+        'Button requires an anchor ref when slotted',
+        `import { createRef } from 'react'; import { Button } from '../src/index.js'; export const x = <Button asChild ref={createRef<HTMLButtonElement>()}><a href='#x'>Link</a></Button>;`,
+      ],
+      [
+        '__virtual_neg_button_anchor_form.tsx',
+        'Button rejects form props on a slotted anchor',
+        `import { Button } from '../src/index.js'; export const x = <Button asChild type='submit'><a href='#x'>Link</a></Button>;`,
+      ],
+      [
+        '__virtual_neg_button_anchor_toggle.tsx',
+        'Button rejects toggle props on a slotted anchor',
+        `import { Button } from '../src/index.js'; export const x = <Button asChild pressed><a href='#x'>Link</a></Button>;`,
+      ],
+      [
+        '__virtual_neg_button_anchor_string.tsx',
+        'Button asChild requires a React element',
+        `import { Button } from '../src/index.js'; export const x = <Button asChild>Link</Button>;`,
+      ],
+      [
+        '__virtual_neg_button_owned_aria.tsx',
+        'Button reserves aria-pressed, aria-disabled and aria-busy',
+        `import { Button } from '../src/index.js'; export const x = <Button aria-pressed>Save</Button>; export const y = <Button aria-disabled>Save</Button>; export const z = <Button aria-busy>Save</Button>;`,
+      ],
+      [
+        '__virtual_neg_button_size.tsx',
+        'Button rejects off-axis sizes',
+        `import { Button } from '../src/index.js'; export const x = <Button size='xs'>Save</Button>;`,
+      ],
+      [
+        '__virtual_neg_button_icon_name.tsx',
+        'IconButton requires an author-provided accessible name',
+        `import { IconButton, defineGlyph } from '../src/index.js'; export const x = <IconButton icon={defineGlyph(() => null)} />;`,
+      ],
+      [
+        '__virtual_neg_button_icon_width.tsx',
+        'IconButton rejects width customization',
+        `import { IconButton, defineGlyph } from '../src/index.js'; export const x = <IconButton aria-label='Save' icon={defineGlyph(() => null)} width='full' />;`,
+      ],
     ];
 
     const virtualFiles: Record<string, string> = {
@@ -549,7 +614,7 @@ describe('Unica package conformance gate', () => {
         `Expected type error for: ${label}`,
       ).toBeGreaterThan(0);
     }
-  });
+  }, 15_000);
 
   it('enforces Anatomy v2 folder structure, zero displayName assignments, and JSDoc on components', async () => {
     const families = (await readdir(COMPONENTS_ROOT, { withFileTypes: true }))
