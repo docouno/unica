@@ -50,7 +50,7 @@ it('exports all 6 canonical theme presets with symmetric, self-contained CSS tok
     }
   }
 
-  for (const m of css.matchAll(/var\(\s*(--[a-zA-Z0-9_-]+)\s*\)/g)) {
+  for (const m of css.matchAll(/var\(\s*(--[a-zA-Z0-9_-]+)/g)) {
     const refName = m[1];
     if (refName !== undefined) {
       expect(declaredVars.has(refName), `Unresolved CSS variable reference ${refName}`).toBe(true);

@@ -10,7 +10,12 @@ export default [
         {
           patterns: [
             {
-              group: ['../components/*', '../../components/*'],
+              group: [
+                '../components/*',
+                '../../components/*',
+                '../../../components/*',
+                '**/components/*',
+              ],
               message: 'Core modules must not import from component modules.',
             },
           ],

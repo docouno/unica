@@ -188,8 +188,15 @@ it('warns once in development and ignores non-positive lineClamp values', () => 
     <>
       <Text lineClamp={0}>Zero</Text>
       <Text lineClamp={-2}>Negative</Text>
+      <Text lineClamp={2}>Valid</Text>
     </>,
   );
   expect(warn).toHaveBeenCalledTimes(1);
-  expect(container.querySelector('[data-unica-type-clamp]')).toBeNull();
+  const paragraphs = container.querySelectorAll('p');
+  expect(paragraphs[0]?.hasAttribute('data-unica-type-overflow')).toBe(false);
+  expect(paragraphs[0]?.style.webkitLineClamp).toBe('');
+  expect(paragraphs[1]?.hasAttribute('data-unica-type-overflow')).toBe(false);
+  expect(paragraphs[1]?.style.webkitLineClamp).toBe('');
+  expect(paragraphs[2]?.getAttribute('data-unica-type-overflow')).toBe('clamp');
+  expect(paragraphs[2]?.style.webkitLineClamp).toBe('2');
 });

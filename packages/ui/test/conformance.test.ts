@@ -517,7 +517,7 @@ describe('Unica package conformance gate', () => {
           if (
             ts.isImportDeclaration(stmt) &&
             ts.isStringLiteral(stmt.moduleSpecifier) &&
-            !/^(\.\.\/\.\.\/(consts|types)\.js|\.\/.+\.js)$/.test(stmt.moduleSpecifier.text)
+            !/^\.\.\/\.\.\/(consts|types)\.js$/.test(stmt.moduleSpecifier.text)
           ) {
             violations.push(
               `${family}/consts.ts: disallowed import "${stmt.moduleSpecifier.text}"`,

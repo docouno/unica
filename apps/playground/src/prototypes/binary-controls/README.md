@@ -26,7 +26,7 @@ Soft uses a matte resting well, Frost uses the contextual control surface, and P
 
 | State            | Appearance and outcome                                                                                                                                                    |
 | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Rest             | Quiet well with the essential `--binary-border` outline.                                                                                                                  |
+| Rest             | Quiet well with the essential `--_binary-border` outline.                                                                                                                 |
 | Selected / mixed | Same accent fill; distinct check or dash. Mixed takes visual priority over the boolean value.                                                                             |
 | Hover            | Slightly stronger empty edge; selected/mixed use the theme's hovered accent. No row background.                                                                           |
 | Pressed          | Stronger empty edge and quiet plate; selected/mixed use the active accent. No displacement, scaling, or bounce in any theme.                                              |
@@ -94,9 +94,9 @@ Open `/?item=switch`. Use Switch for an immediate on/off setting with a stable l
 
 The thumb stays light in both states; its position and the on-track accent jointly identify the value. Soft/Frost use capsules; Pixel uses rectangular tracks and thumbs. The spinner remains circular. The 1px track edge is included in the specified dimensions, and the thumb sits another 1px inside it. No extra shadow, halo, thumb expansion, or row translation appears on press. The icon is optional decoration, never the setting's only accessible name. It is replaced by a spinner while pending without changing any geometry.
 
-Off uses the dedicated neutral track recipe and binary edge. Light themes use a medium neutral off track to maintain thumb separation; this is an intentional correction to the earlier pale tracks, which had only 1.44–1.50:1 thumb separation. On uses `--switch-track-on` and an accent-signal edge; the dedicated darker track keeps the same light thumb readable in dark themes. The inner icon/spinner uses the on-track ink against the thumb. All fills remain calm enough for a settings panel with many independent rows.
+Off uses the dedicated neutral track recipe and binary edge. Light themes use a medium neutral off track to maintain thumb separation; this is an intentional correction to the earlier pale tracks, which had only 1.44–1.50:1 thumb separation. On uses `--_switch-track-on` and an accent-signal edge; the dedicated darker track keeps the same light thumb readable in dark themes. The inner icon/spinner uses the on-track ink against the thumb. All fills remain calm enough for a settings panel with many independent rows.
 
-Soft uses 160ms lateral thumb travel, Frost 140ms, Pixel an immediate positional change. The track color changes immediately. These durations belong to `--switch-travel-duration`, independently of radii. Hover changes the neutral/accent track recipe; press uses the active on recipe or a stronger neutral edge. There is no displacement perpendicular to the track. Reduced motion removes travel and freezes the spinner; adjacent “Turning … on/off” copy preserves pending meaning.
+Soft uses 160ms lateral thumb travel, Frost 140ms, Pixel an immediate positional change. The track color changes immediately. These durations belong to `--_switch-travel-duration`, independently of radii. Hover changes the neutral/accent track recipe; press uses the active on recipe or a stronger neutral edge. There is no displacement perpendicular to the track. Reduced motion removes travel and freezes the spinner; adjacent “Turning … on/off” copy preserves pending meaning.
 
 ### State outcomes and priorities
 

@@ -1257,10 +1257,10 @@ class OverlayRuntime implements OverlayRuntimeProtocol {
       }
       removeListener(view, 'blur', this.clearPointer);
     }
+    deleteFallbackOverlayRuntime(this.document, this);
     if (resolveOverlayRuntime(this.document) !== this) {
       return;
     }
-    deleteFallbackOverlayRuntime(this.document, this);
     try {
       if (Reflect.get(this.document, OVERLAY_RUNTIME_KEY) === this) {
         Reflect.deleteProperty(this.document, OVERLAY_RUNTIME_KEY);

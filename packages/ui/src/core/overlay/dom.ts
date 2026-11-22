@@ -407,8 +407,8 @@ export function lockDocumentScroll(document: Document): () => void {
   let appliedPadding: string | null = null;
   if (compensate && computed) {
     const existing = Number.parseFloat(computed.paddingInlineEnd) || 0;
-    appliedPadding = `${existing + scrollbarWidth}px`;
-    style.setProperty('padding-inline-end', appliedPadding);
+    style.setProperty('padding-inline-end', `${existing + scrollbarWidth}px`);
+    appliedPadding = style.getPropertyValue('padding-inline-end');
   }
   style.setProperty('overflow-x', 'hidden', 'important');
   style.setProperty('overflow-y', 'hidden', 'important');

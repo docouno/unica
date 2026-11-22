@@ -2,7 +2,7 @@
 
 The [Scrollbar reference](../components/scrollbar.md) covers the package classes, density options and keyboard setup.
 
-The track and corner are transparent. Each scroll owner mixes its local `--fg-primary` with transparency. Themes supply the opacity for rest, thumb hover or direct keyboard focus, and thumb drag through `--scrollbar-thumb-opacity`, `--scrollbar-thumb-hover-opacity`, and `--scrollbar-thumb-active-opacity`.
+The track and corner are transparent. Each scroll owner mixes its local `--fg-primary` with transparency. Themes supply internal preset opacity recipes for rest, thumb hover or direct keyboard focus, and thumb drag through `--_scrollbar-thumb-opacity`, `--_scrollbar-thumb-hover-opacity`, and `--_scrollbar-thumb-active-opacity`.
 
 | Preset | Rest | Hover / focus | Drag |
 | --- | --- | --- | --- |

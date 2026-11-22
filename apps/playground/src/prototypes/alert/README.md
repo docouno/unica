@@ -32,7 +32,7 @@ Every size uses `--surface-m-radius`: 12px in Soft/Frost, 0px in Pixel. Title us
 - Frost: status ground and uniform 1px semantic contour. No independent blur, rim light, elevation, or shadow; an enclosing overlay owns its glass.
 - Pixel: opaque status ground, 1px semantic perimeter, 2px **total** logical inline-start edge. The edge mirrors in RTL. No surface press displacement or motion.
 
-The bounded theme recipe `--alert-edge-width` is 0px in Soft/Frost and 2px in Pixel. `--alert-border-width` controls the perimeter. Component CSS does not branch on theme names. Existing consumers use this Alert rather than a second callout implementation in the feedback sketch.
+The bounded theme recipe `--_alert-edge-width` is 0px in Soft/Frost and 2px in Pixel. `--_alert-border-width` controls the perimeter. Component CSS does not branch on theme names. Existing consumers use this Alert rather than a second callout implementation in the feedback sketch.
 
 Glyphs use readable status ink, matching the copy. Some general signal colors are too dark on Frost Dark status grounds. Hierarchy comes from weight, spacing, and wording. Do not dim descriptions or turn an error into a saturated red billboard. Inline links inherit ink with a persistent underline; Code inherits Alert's status plate recipe. Focus uses local ink for reliable contrast on each ground.
 

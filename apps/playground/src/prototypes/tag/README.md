@@ -40,7 +40,7 @@ TagsInput uses 2 / 5 / 6 px vertical padding plus its 1 px border, preserving th
 
 The six statuses are `neutral`, `accent`, `info`, `success`, `warning`, and `danger`. Default to neutral. A colored tag still has an ordinary remove action; the × does not turn red on hover. Use meaningful text and, where useful, a leading icon so color is not the only distinction.
 
-The current prototype consumes the existing semantic marker palette and the theme's action timing (`--btn-state-duration`, 120 ms for Soft/Frost and 0 ms for Pixel). No new theme recipe or theme-name selector is needed. There is no translated, scaled, raised, or glowing press state.
+The current prototype consumes the existing semantic marker palette and the theme's action timing (`--_btn-state-duration`, 120 ms for Soft/Frost and 0 ms for Pixel). No new theme recipe or theme-name selector is needed. There is no translated, scaled, raised, or glowing press state.
 
 ## Removal states
 
