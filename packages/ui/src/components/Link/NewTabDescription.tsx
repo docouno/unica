@@ -1,10 +1,12 @@
 import { Fragment, isValidElement, useRef } from 'react';
 import type { ComponentPropsWithoutRef, ReactElement, ReactNode } from 'react';
 import {
+  containsSafe,
   getComputedStyleSafe,
   getLiveView,
   getOwnerDocument,
   getRootNodeSafe,
+  isElementNode,
   reportErrorSafe,
 } from '../../core/dom.js';
 import { useIsoLayoutEffect } from '../../core/useIsoLayoutEffect.js';
@@ -37,7 +39,7 @@ const FULL_TITLE_ATTRIBUTES = [
 type WatchMode = 'none' | 'idOnly' | 'fullTitle';
 
 interface DescriptionSubscriber {
-  readonly sync: () => void;
+  readonly onMutations: (records: readonly MutationRecord[]) => void;
   readonly watchTitle: boolean;
 }
 
@@ -58,10 +60,10 @@ function subscribeRootWatcher(
   let watcher = rootWatchers.get(scope);
   if (!watcher) {
     const subscribers = new Set<DescriptionSubscriber>();
-    const observer = new view.MutationObserver(() => {
+    const observer = new view.MutationObserver((records) => {
       for (const entry of [...subscribers]) {
         try {
-          entry.sync();
+          entry.onMutations(records);
         } catch (error) {
           reportErrorSafe(view, error);
         }
@@ -83,7 +85,7 @@ function subscribeRootWatcher(
         if (nextMode === created.mode) {
           return;
         }
-        observer.disconnect();
+        // Calling observe again preserves pending records for existing subscribers.
         created.mode = nextMode;
         if (nextMode === 'fullTitle') {
           observer.observe(scope, {
@@ -211,10 +213,10 @@ function labelText(element: Element, includeHidden: boolean): string {
     return element.getAttribute('alt') ?? element.getAttribute('title') ?? '';
   }
   return Array.from(element.childNodes, (child) => {
-    if (child.nodeType === Node.ELEMENT_NODE) {
-      return labelText(child as Element, includeHidden);
+    if (isElementNode(child)) {
+      return labelText(child, includeHidden);
     }
-    return child.nodeType === Node.TEXT_NODE ? (child.textContent ?? '') : '';
+    return child.nodeType === 3 ? (child.textContent ?? '') : '';
   }).join('');
 }
 
@@ -303,7 +305,33 @@ export function NewTabDescription({
       return;
     }
 
-    return subscribeRootWatcher(scope, view, { sync: syncDescription, watchTitle });
+    const ids = [...stableAuthorIds, ...stableNameIds];
+    let references = ids.map((refId) => scope.getElementById(refId));
+    const onMutations = (records: readonly MutationRecord[]): void => {
+      if (ids.length && records.some((r) => r.type === 'childList' || r.attributeName === 'id')) {
+        const next = ids.map((refId) => scope.getElementById(refId));
+        const changed = next.some((node, index) => node !== references[index]);
+        references = next;
+        if (changed) {
+          syncDescription();
+          return;
+        }
+      }
+      if (!watchTitle) {
+        return;
+      }
+      const touches = (node: Element, record: MutationRecord): boolean =>
+        containsSafe(node, record.target) ||
+        (record.type === 'attributes' && containsSafe(record.target, node));
+      if (
+        records.some(
+          (r) => touches(anchor, r) || references.some((node) => node && touches(node, r)),
+        )
+      ) {
+        syncDescription();
+      }
+    };
+    return subscribeRootWatcher(scope, view, { onMutations, watchTitle });
   }, [authorIdsKey, authorDescription, title, hasExplicitName, nameIdsKey]);
 
   return (

@@ -144,9 +144,7 @@
   x: calc(var(--avatar-step) - 2px);
   rx: var(--radius-full);
   ry: var(--radius-full);
-}
-.avatar-group-proto-cutout:dir(rtl) {
-  transform: translateX(calc(-2 * var(--avatar-step)));
+  transform: translateX(calc((var(--_dir-mirror, 1) - 1) * var(--avatar-step)));
 }
 .avatar-group-proto-overflow {
   align-items: center;

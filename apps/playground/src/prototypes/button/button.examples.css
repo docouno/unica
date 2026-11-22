@@ -113,18 +113,6 @@
   max-inline-size: 320px;
 }
 
-.button-example-forward-glyph:dir(rtl) {
-  scale: -1 1;
-}
-
-@supports not selector(:dir(rtl)) {
-  [dir='rtl' i] {
-    --button-example-direction: -1;
-  }
-  [dir='ltr' i] {
-    --button-example-direction: 1;
-  }
-  .button-example-forward-glyph {
-    scale: var(--button-example-direction, 1) 1;
-  }
+.button-example-forward-glyph {
+  scale: var(--_dir-scale, none);
 }

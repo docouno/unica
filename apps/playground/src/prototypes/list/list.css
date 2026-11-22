@@ -198,8 +198,8 @@ ol.list-proto[data-markers='true'] {
   color: var(--fg-muted);
 }
 
-.list-caret-proto:dir(rtl) {
-  transform: scaleX(-1);
+.list-caret-proto {
+  scale: var(--_dir-scale, none);
 }
 
 .list-action-proto[aria-current]:not([aria-current='false'])::before {

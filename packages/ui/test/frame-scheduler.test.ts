@@ -1,3 +1,4 @@
+import { getDefaultView } from '../src/core/dom.js';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createFrameJob } from '../src/core/frame-scheduler.js';
 
@@ -16,7 +17,7 @@ function replaceProp(target: object, key: string, value: unknown): void {
 }
 
 function mockRaf(doc: Document) {
-  const view = doc.defaultView!;
+  const view = getDefaultView(doc)!;
   const pending = new Map<number, FrameRequestCallback>();
   let nextId = 0;
   const reported: unknown[] = [];

@@ -51,6 +51,18 @@ async function seekAnimations(locator, time, property) {
 }
 
 export default {
+  'Activity SVGs stay hidden until the author removes the attribute': async ({ page, mount }) => {
+    await mount('progress');
+    for (const id of ['spinner', 'circle']) {
+      const display = await page.getByTestId(id).evaluate((svg) => {
+        svg.setAttribute('hidden', 'until-found');
+        const hidden = getComputedStyle(svg).display;
+        svg.removeAttribute('hidden');
+        return [hidden, getComputedStyle(svg).display];
+      });
+      assert.deepEqual(display, ['none', 'inline-block']);
+    }
+  },
   'Progress: delay follows elapsed time on the same SVG and preserves its slot': async ({
     page,
     mount,

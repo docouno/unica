@@ -187,6 +187,24 @@ async function captionContrast(page) {
 }
 
 const scenarios = {
+  'Inline Code skips text before native fragment reveal': async ({ page, mount }) => {
+    await mount('editorial');
+    const code = page.getByTestId('canvas');
+    const before = await code.evaluate((el) => {
+      el.id = 'hidden-code';
+      el.setAttribute('hidden', 'until-found');
+      return [getComputedStyle(el).display, getComputedStyle(el).contentVisibility];
+    });
+    assert.deepEqual(before, ['block', 'hidden']);
+    await page.evaluate(() => {
+      location.hash = 'hidden-code';
+    });
+    await page.waitForFunction(
+      () => !document.getElementById('hidden-code').hasAttribute('hidden'),
+    );
+    assert.equal(await code.evaluate((el) => getComputedStyle(el).display), 'inline');
+  },
+
   'Code inherits context from real surfaces without replacing the text color of its host action':
     async ({ page, mount }) => {
       await mount('editorial', { theme: 'frost-light' });

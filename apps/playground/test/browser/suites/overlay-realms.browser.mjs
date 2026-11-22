@@ -171,6 +171,15 @@ export default {
       assert.deepEqual(m.reverseFallback, expectedReverse);
       assert.deepEqual(m.lightInertHost, { inert: false, focus: true, bgInert: true });
       assert.deepEqual(m.shadowInertHost, { inert: false, focus: true });
+      assert.deepEqual(m.exitingShadow, {
+        stillModal: true,
+        lowerInert: true,
+        upperInert: true,
+        lowerFocus: false,
+        backgroundInert: true,
+      });
+      assert.equal(m.lowerAfterExit, false);
+      assert.equal(m.backgroundDuringLastExit, true);
       assert.deepEqual(m.cssModalUnderInertMain, { inert: false, focus: true });
       assert.deepEqual(m.cssInertDialogItself, { inert: true, focus: false });
       assert.deepEqual(m.cssNestedInert, {

@@ -9,7 +9,6 @@ import {
   getLiveView,
   getLocalName,
   getOwnerDocument,
-  isConnectedNode,
   isElementNode,
   isRTL,
   removeListenerSafe,
@@ -79,21 +78,10 @@ function findDefiningAutoDirAncestor(node: Element): Element | null {
   return null;
 }
 
-function collectLayoutChildren(
-  container: Element,
-  siblings: Set<Element>,
-  wrappers: Set<Element>,
-): void {
-  for (const child of container.children) {
-    if (getComputedStyleSafe(child)?.display === 'contents') {
-      if (!wrappers.has(child)) {
-        wrappers.add(child);
-        collectLayoutChildren(child, siblings, wrappers);
-      }
-    } else {
-      siblings.add(child);
-    }
-  }
+// Inline boxes do not deliver ResizeObserver notifications for text changes.
+function layoutMode(element: Element): 'inline' | 'contents' | 'box' {
+  const display = getComputedStyleSafe(element)?.display;
+  return display === 'inline' || display === 'contents' ? display : 'box';
 }
 
 interface Sweep {
@@ -113,8 +101,7 @@ function createSweep(view: BrowserWindow, start: number, duration: number): Swee
   const writtenStyles = new WeakMap<HTMLElement, string | null>();
   const pendingDisplayChecks = new Set<Element>();
   let visibleLayoutParents = new Set<Element>();
-  let contentsWrappers = new Set<Element>();
-  let layoutSiblings = new Set<Element>();
+  let layoutModes = new Map<Element, ReturnType<typeof layoutMode>>();
   let observedResize = new Set<Element>();
   const pendingInitialResize = new Set<Element>();
   let moving: Animation[] = [];
@@ -124,10 +111,26 @@ function createSweep(view: BrowserWindow, start: number, duration: number): Swee
 
   function observeLayout(): void {
     const parents = new Set<Element>();
-    const wrappers = new Set<Element>();
-    const siblings = new Set<Element>();
+    const modes = new Map<Element, ReturnType<typeof layoutMode>>();
+    const containers = new Set<Element>();
     const autoDirs = new Set<Element>();
     const resizeBoxes = new Set<Element>();
+
+    function collectChildren(container: Element): void {
+      if (containers.has(container)) {
+        return;
+      }
+      containers.add(container);
+      for (const child of container.children) {
+        const mode = layoutMode(child);
+        modes.set(child, mode);
+        if (mode === 'contents') {
+          collectChildren(child);
+        } else {
+          resizeBoxes.add(child);
+        }
+      }
+    }
 
     if (visiblePaints.size > 0 && document.documentElement) {
       resizeBoxes.add(document.documentElement);
@@ -147,14 +150,8 @@ function createSweep(view: BrowserWindow, start: number, duration: number): Swee
       ) {
         parents.add(parent);
         resizeBoxes.add(parent);
-        if (getComputedStyleSafe(parent)?.display === 'contents') {
-          wrappers.add(parent);
-        }
-        collectLayoutChildren(parent, siblings, wrappers);
+        collectChildren(parent);
       }
-    }
-    for (const sibling of siblings) {
-      resizeBoxes.add(sibling);
     }
 
     for (const box of observedResize) {
@@ -171,58 +168,28 @@ function createSweep(view: BrowserWindow, start: number, duration: number): Swee
     }
     observedResize = resizeBoxes;
     visibleLayoutParents = parents;
-    contentsWrappers = wrappers;
-    layoutSiblings = siblings;
+    layoutModes = modes;
 
-    // Register each unique target once in strict priority order (per DOM Standard, repeated
-    // observe() calls on the same target replace earlier options).
     mutations.disconnect();
-    if (visiblePaints.size > 0) {
-      const registered = new Set<Node>();
-      // Priority 1: nearest defining dir="auto" / <bdi> ancestors
-      for (const ancestor of autoDirs) {
-        if (!registered.has(ancestor)) {
-          registered.add(ancestor);
-          mutations.observe(ancestor, {
-            subtree: true,
-            childList: true,
-            characterData: true,
-            attributes: true,
-          });
-        }
-      }
-      // Priority 2: (visibleLayoutParents U contentsWrappers) \ autoDirAncestors
-      const containers = new Set<Element>([...parents, ...wrappers]);
-      for (const container of containers) {
-        if (!registered.has(container)) {
-          registered.add(container);
-          mutations.observe(container, { attributes: true, childList: true });
-        }
-      }
-      // Priority 3: (visiblePaints U layoutSiblings) \ (autoDirAncestors U containers)
-      for (const item of [...visiblePaints, ...siblings]) {
-        if (!registered.has(item)) {
-          registered.add(item);
-          mutations.observe(item, { attributes: true });
-        }
-      }
-      // Priority 4: direct Text children of containers outside autoDirAncestors
-      for (const container of containers) {
-        if (autoDirs.has(container)) {
-          continue;
-        }
-        for (let child = container.firstChild; child; child = child.nextSibling) {
-          if (child.nodeType === 3 && !registered.has(child)) {
-            registered.add(child);
+    for (const element of new Set([
+      ...containers,
+      ...modes.keys(),
+      ...autoDirs,
+      ...visiblePaints,
+    ])) {
+      const subtree = autoDirs.has(element) || modes.get(element) === 'inline';
+      mutations.observe(element, {
+        attributes: true,
+        childList: subtree || containers.has(element),
+        characterData: subtree,
+        subtree,
+      });
+      if (containers.has(element) && !subtree) {
+        for (const child of element.childNodes) {
+          if (child.nodeType === 3) {
             mutations.observe(child, { characterData: true });
           }
         }
-      }
-      // Priority 5: documentElement dir attribute (only when not already covered)
-      const docEl = document.documentElement;
-      if (docEl && !registered.has(docEl)) {
-        registered.add(docEl);
-        mutations.observe(docEl, { attributes: true, attributeFilter: ['dir'] });
       }
     }
 
@@ -259,16 +226,26 @@ function createSweep(view: BrowserWindow, start: number, duration: number): Swee
 
   function update(): void {
     frame = undefined;
-    if (pendingDisplayChecks.size > 0) {
-      for (const el of pendingDisplayChecks) {
-        const isContents = isConnectedNode(el) && getComputedStyleSafe(el)?.display === 'contents';
-        if (contentsWrappers.has(el) !== isContents) {
+    if (!layoutDirty && pendingDisplayChecks.size) {
+      // Rules on an ancestor can change which descendants produce layout boxes.
+      for (const target of pendingDisplayChecks) {
+        const mode = layoutModes.get(target);
+        if (
+          (mode && layoutMode(target) !== mode) ||
+          ((visibleLayoutParents.has(target) || mode === 'contents') &&
+            [...layoutModes].some(
+              ([child, previous]) =>
+                child !== target &&
+                composedContains(target, child) &&
+                layoutMode(child) !== previous,
+            ))
+        ) {
           layoutDirty = true;
           break;
         }
       }
-      pendingDisplayChecks.clear();
     }
+    pendingDisplayChecks.clear();
     if (layoutDirty) {
       observeLayout();
     }
@@ -508,8 +485,7 @@ function createSweep(view: BrowserWindow, start: number, duration: number): Swee
     pendingInvisible.clear();
     pendingDisplayChecks.clear();
     visibleLayoutParents.clear();
-    contentsWrappers.clear();
-    layoutSiblings.clear();
+    layoutModes.clear();
     observedResize.clear();
     pendingInitialResize.clear();
     moving = [];

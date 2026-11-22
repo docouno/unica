@@ -13,7 +13,7 @@
     vertical-align: -0.125em;
   }
 
-  .unica-activity-icon[hidden]:not([hidden='until-found' i]) {
+  .unica-activity-icon[hidden] {
     display: none;
   }
 

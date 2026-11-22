@@ -268,7 +268,7 @@ export default {
         contentVisibility: style.contentVisibility,
       };
     });
-    assert.deepEqual(hiddenState, { display: 'flex', contentVisibility: 'hidden' });
+    assert.deepEqual(hiddenState, { display: 'block', contentVisibility: 'hidden' });
 
     await page.evaluate(() => {
       window.location.hash = '#until-found-divider';

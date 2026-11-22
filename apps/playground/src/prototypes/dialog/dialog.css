@@ -204,33 +204,21 @@
 }
 .dialog-layer[data-dialog-side='start'] > .dialog-placement {
   justify-content: start;
-  --dialog-enter-x: -20px;
+  --dialog-enter-x: calc(-20px * var(--_dir-mirror, 1));
 }
 .dialog-layer[data-dialog-side='end'] > .dialog-placement {
   justify-content: end;
-  --dialog-enter-x: 20px;
-}
-.dialog-layer[data-dialog-side='start']:dir(rtl) > .dialog-placement {
-  --dialog-enter-x: 20px;
-}
-.dialog-layer[data-dialog-side='end']:dir(rtl) > .dialog-placement {
-  --dialog-enter-x: -20px;
+  --dialog-enter-x: calc(20px * var(--_dir-mirror, 1));
 }
 .dialog-layer:not([data-dialog-side='center']) > .dialog-placement {
   --dialog-duration: 200ms;
 }
 .dialog-layer:not([data-dialog-side='center']) > .dialog-placement > .dialog-surface {
   --dialog-shadow: var(--_overlay-shadow-drawer);
-  --dialog-safe-start: env(safe-area-inset-left);
-  --dialog-safe-end: env(safe-area-inset-right);
-}
-.dialog-layer:dir(rtl) > .dialog-placement > .dialog-surface {
-  --dialog-safe-start: env(safe-area-inset-right);
-  --dialog-safe-end: env(safe-area-inset-left);
-}
-.dialog-layer[data-dialog-side='start']:dir(ltr) > .dialog-placement > .dialog-surface,
-.dialog-layer[data-dialog-side='end']:dir(rtl) > .dialog-placement > .dialog-surface {
-  --dialog-shadow: var(--_overlay-shadow-drawer-right, var(--_overlay-shadow-drawer));
+  --dialog-safe-start: var(--_if-ltr, env(safe-area-inset-left))
+    var(--_if-rtl, env(safe-area-inset-right));
+  --dialog-safe-end: var(--_if-ltr, env(safe-area-inset-right))
+    var(--_if-rtl, env(safe-area-inset-left));
 }
 .dialog-layer[data-dialog-side='top'] > .dialog-placement > .dialog-surface {
   --dialog-shadow: var(--_overlay-shadow-drawer-down, var(--_overlay-shadow-drawer));
@@ -245,23 +233,28 @@
   padding-block: env(safe-area-inset-top) env(safe-area-inset-bottom);
 }
 .dialog-layer[data-dialog-side='start'] > .dialog-placement > .dialog-surface {
+  --dialog-shadow: var(
+      --_if-ltr,
+      var(--_overlay-shadow-drawer-right, var(--_overlay-shadow-drawer))
+    )
+    var(--_if-rtl, var(--_overlay-shadow-drawer));
+  --dialog-rim-mirror: calc(-1 * var(--_dir-mirror, 1));
   border-inline-start: 0;
   padding-inline-start: var(--dialog-safe-start);
 }
 .dialog-layer[data-dialog-side='end'] > .dialog-placement > .dialog-surface {
+  --dialog-shadow: var(--_if-ltr, var(--_overlay-shadow-drawer))
+    var(--_if-rtl, var(--_overlay-shadow-drawer-right, var(--_overlay-shadow-drawer)));
+  --dialog-rim-mirror: calc(1 * var(--_dir-mirror, 1));
   border-inline-end: 0;
   padding-inline-end: var(--dialog-safe-end);
 }
 .dialog-layer:is([data-dialog-side='start'], [data-dialog-side='end'])
   > .dialog-placement
   > .dialog-surface::before {
+  scale: var(--dialog-rim-mirror) 1;
   box-shadow: var(--_overlay-rim-drawer-inline, var(--_overlay-rim));
   mask-image: none;
-}
-.dialog-layer:is([data-dialog-side='start']:dir(ltr), [data-dialog-side='end']:dir(rtl))
-  > .dialog-placement
-  > .dialog-surface::before {
-  scale: -1 1;
 }
 .dialog-layer[data-dialog-side='top'] > .dialog-placement,
 .dialog-layer[data-dialog-side='bottom'] > .dialog-placement {

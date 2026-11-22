@@ -219,8 +219,11 @@
 .table-proto td[data-control='field'] .input-shell-proto:has(input[readonly])::after {
   display: none;
 }
-.table-proto:dir(rtl) td[data-control='field'] input[dir='ltr'] {
-  text-align: end;
+.table-proto {
+  --table-input-align: var(--_if-ltr, left) var(--_if-rtl, right);
+}
+.table-proto td[data-control='field'] input[dir='ltr'] {
+  text-align: var(--table-input-align);
 }
 
 @media (pointer: coarse) {

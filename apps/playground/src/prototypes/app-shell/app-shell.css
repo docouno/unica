@@ -506,9 +506,12 @@
   justify-content: end;
 }
 
-:is(.app-shell-inspector-toggle, .app-shell-dock-end):dir(ltr) .button-leading-glyph,
-:is(.app-shell-navigation-toggle, .app-shell-dock-start):dir(rtl) .button-leading-glyph {
-  scale: -1 1;
+:is(.app-shell-inspector-toggle, .app-shell-dock-end) .button-leading-glyph {
+  scale: calc(-1 * var(--_dir-mirror, 1)) 1;
+}
+
+:is(.app-shell-navigation-toggle, .app-shell-dock-start) .button-leading-glyph {
+  scale: var(--_dir-scale, none);
 }
 
 .app-shell-dock-toggle.button-proto,
@@ -606,12 +609,16 @@
 }
 
 .app-shell-panel:modal {
-  --dialog-enter-x: 20px;
+  --dialog-enter-x: calc(-20px * var(--_dir-mirror, 1));
   --dialog-enter-y: 0px;
-  --sheet-edge: var(--shell-sheet-left, 0px);
-  --sheet-opposite: var(--shell-sheet-right, 0px);
-  --sheet-safe-start: env(safe-area-inset-left);
-  --sheet-safe-end: env(safe-area-inset-right);
+  --sheet-edge: var(--_if-ltr, var(--shell-sheet-left, 0px))
+    var(--_if-rtl, var(--shell-sheet-right, 0px));
+  --sheet-opposite: var(--_if-ltr, var(--shell-sheet-right, 0px))
+    var(--_if-rtl, var(--shell-sheet-left, 0px));
+  --sheet-safe-start: var(--_if-ltr, env(safe-area-inset-left))
+    var(--_if-rtl, env(safe-area-inset-right));
+  --sheet-safe-end: var(--_if-ltr, env(safe-area-inset-right))
+    var(--_if-rtl, env(safe-area-inset-left));
   position: fixed;
   inset-block: var(--shell-sheet-top, 0px) auto;
   inset-inline: var(--sheet-edge) auto;
@@ -626,7 +633,8 @@
   border-inline-end: 1px solid var(--_overlay-border);
   background: var(--app-shell-sheet-fill);
   backdrop-filter: var(--_overlay-backdrop);
-  box-shadow: var(--_overlay-shadow-drawer);
+  box-shadow: var(--_if-ltr, var(--_overlay-shadow-drawer-right, var(--_overlay-shadow-drawer)))
+    var(--_if-rtl, var(--_overlay-shadow-drawer));
   animation: dialog-surface-enter 200ms cubic-bezier(0.2, 0.7, 0.25, 1);
 }
 
@@ -657,24 +665,14 @@
   padding: var(--space-8);
 }
 
-.app-shell-panel:modal:dir(rtl) {
-  --sheet-edge: var(--shell-sheet-right, 0px);
-  --sheet-opposite: var(--shell-sheet-left, 0px);
-  --sheet-safe-start: env(safe-area-inset-right);
-  --sheet-safe-end: env(safe-area-inset-left);
-}
-
 .app-shell-panel-end:modal {
+  --dialog-enter-x: calc(20px * var(--_dir-mirror, 1));
+  box-shadow: var(--_if-ltr, var(--_overlay-shadow-drawer))
+    var(--_if-rtl, var(--_overlay-shadow-drawer-right, var(--_overlay-shadow-drawer)));
   inset-inline: auto var(--sheet-opposite);
   padding-inline: 0 var(--sheet-safe-end);
   border-inline-start: 1px solid var(--_overlay-border);
   border-inline-end: 0;
-}
-
-.app-shell-panel-start:modal:dir(ltr),
-.app-shell-panel-end:modal:dir(rtl) {
-  --dialog-enter-x: -20px;
-  box-shadow: var(--_overlay-shadow-drawer-right, var(--_overlay-shadow-drawer));
 }
 
 .app-shell-panel:modal::backdrop {
@@ -1138,12 +1136,11 @@
   overflow-wrap: anywhere;
 }
 
-.app-shell-nav-row:dir(ltr) > .app-shell-nav-label {
-  text-align: left;
+.app-shell-nav-row {
+  --row-label-align: var(--_if-ltr, left) var(--_if-rtl, right);
 }
-
-.app-shell-nav-row:dir(rtl) > .app-shell-nav-label {
-  text-align: right;
+.app-shell-nav-row > .app-shell-nav-label {
+  text-align: var(--row-label-align);
 }
 
 .app-shell-nav-count {

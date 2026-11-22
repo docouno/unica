@@ -456,6 +456,26 @@ export default function OverlayRealmsFixture(): JSX.Element {
       };
       shadowModal.close();
 
+      const lower = registerOverlay({ kind: 'modal', element: lightModal, onOpenChange() {} });
+      const upper = registerOverlay({ kind: 'modal', element: shadowModal, onOpenChange() {} });
+      lower.setOpen(true);
+      upper.setOpen(true);
+      upper.beginExit();
+      const exitingShadow = {
+        stillModal: shadowModal.matches(':modal'),
+        lowerInert: isInertElement(lightModalIn),
+        upperInert: isInertElement(shadowModalIn),
+        lowerFocus: focusElement(lightModalIn, document),
+        backgroundInert: isInertElement(bgInput),
+      };
+      upper.finishExit();
+      const lowerAfterExit = isInertElement(lightModalIn);
+      lower.dispose();
+      upper.setOpen(true);
+      upper.beginExit();
+      const backgroundDuringLastExit = isInertElement(bgInput);
+      upper.dispose();
+
       // 5. CSS interactivity: inert cases + <dialog inert>
       const cssMain = box.appendChild(document.createElement('main'));
       cssMain.style.setProperty('interactivity', 'inert');
@@ -523,6 +543,9 @@ export default function OverlayRealmsFixture(): JSX.Element {
         reverseFallback,
         lightInertHost,
         shadowInertHost,
+        exitingShadow,
+        lowerAfterExit,
+        backgroundDuringLastExit,
         cssModalUnderInertMain,
         cssInertDialogItself,
         cssNestedInert,

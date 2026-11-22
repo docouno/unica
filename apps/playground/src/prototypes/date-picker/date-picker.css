@@ -119,8 +119,8 @@
   color: var(--fg-disabled);
   cursor: default;
 }
-.calendar-arrow-proto:dir(rtl) {
-  transform: scaleX(-1);
+.calendar-arrow-proto {
+  scale: var(--_dir-scale, none);
 }
 .calendar-months-proto {
   display: grid;

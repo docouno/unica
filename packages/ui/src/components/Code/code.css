@@ -80,6 +80,10 @@
     border-color: var(--code-context-border, var(--_code-edge));
   }
 
+  .unica-code[hidden='until-found' i] {
+    position: absolute;
+  }
+
   .unica-code[hidden]:not([hidden='until-found' i]) {
     display: none;
   }

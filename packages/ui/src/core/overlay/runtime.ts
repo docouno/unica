@@ -727,11 +727,18 @@ class OverlayRuntime implements OverlayRuntimeProtocol {
     }
   }
 
-  resolveModal(): HTMLDialogElement | null {
+  resolveModal(includeExiting = false): HTMLDialogElement | null {
     for (let index = this.stack.length - 1; index >= 0; index--) {
       const layer = this.stack[index]!;
       const { options } = layer;
-      if (layer.active && options.kind === 'modal' && this.alive(layer) && isNativeOpen(layer)) {
+      if (options.kind !== 'modal' || !isNativeOpen(layer)) {
+        continue;
+      }
+      if (
+        includeExiting
+          ? inDocument(options.element, this.document)
+          : layer.active && this.alive(layer)
+      ) {
         return options.element;
       }
     }

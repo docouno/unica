@@ -48,7 +48,7 @@
     "typecheck": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p tsconfig.test.json",
     "fix": "npm run format && eslint --max-warnings 0 --fix . && npm run format",
     "test": "vitest run --config vitest.config.mjs",
-    "build": "tsdown && node scripts/verify-dist-css.mjs && devkit-verify --pack && node --conditions=react-server --input-type=module -e \"import { THEME_PRESETS, defineGlyph, getUnicaRootProps } from '@docouno/unica'; if (!THEME_PRESETS.length || !defineGlyph(() => null)['~unica.glyph'] || getUnicaRootProps({ theme: 'frost-dark' })['data-theme'] !== 'frost-dark' || Object.keys(getUnicaRootProps()).length !== 0) process.exit(1)\"",
+    "build": "tsdown && node scripts/verify-dist-css.mjs && node scripts/verify-client-realm.mjs && devkit-verify --pack && node --conditions=react-server --input-type=module -e \"import { THEME_PRESETS, defineGlyph, getUnicaRootProps } from '@docouno/unica'; if (!THEME_PRESETS.length || !defineGlyph(() => null)['~unica.glyph'] || getUnicaRootProps({ theme: 'frost-dark' })['data-theme'] !== 'frost-dark' || Object.keys(getUnicaRootProps()).length !== 0) process.exit(1)\"",
     "package": "devkit-pack"
   },
   "devDependencies": {

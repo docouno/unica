@@ -1447,13 +1447,18 @@
     --text-size-heading-xl-lh: calc(var(--_base-text-size-heading-xl-lh) * var(--font-scale, 1));
   }
 
+  /* Whitespace omits a directional value; initial selects its var() fallback. */
   :root,
-  [dir='ltr' i] {
+  :is([dir='ltr' i], [dir='auto' i]:dir(ltr), bdi:dir(ltr)) {
+    --_if-ltr: initial;
+    --_if-rtl: ;
     --_dir-mirror: 1;
     --_dir-scale: none;
   }
 
-  [dir='rtl' i] {
+  :is([dir='rtl' i], [dir='auto' i]:dir(rtl), bdi:dir(rtl)) {
+    --_if-ltr: ;
+    --_if-rtl: initial;
     --_dir-mirror: -1;
     --_dir-scale: -1 1;
   }

@@ -55,7 +55,11 @@ describe('core/dom and zero-dep utilities', () => {
 
     const detachedDoc = document.implementation.createHTMLDocument();
     expect(getLiveView(detachedDoc)).toBeNull();
-    expect(getLiveView(document)).toBe(window);
+    const ownerWindow = Reflect.getOwnPropertyDescriptor(
+      Document.prototype,
+      'defaultView',
+    )!.get!.call(document) as Window;
+    expect(getLiveView(document)).toBe(ownerWindow);
 
     // Clobbering document.defaultView with an element must not fool getLiveView.
     const origDesc = Object.getOwnPropertyDescriptor(document, 'defaultView');
@@ -64,7 +68,7 @@ describe('core/dom and zero-dep utilities', () => {
         value: document.createElement('form'),
         configurable: true,
       });
-      expect(getLiveView(document)).toBe(window);
+      expect(getLiveView(document)).toBe(ownerWindow);
     } finally {
       if (origDesc) {
         Object.defineProperty(document, 'defaultView', origDesc);

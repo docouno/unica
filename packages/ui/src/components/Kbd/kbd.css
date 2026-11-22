@@ -1,4 +1,12 @@
 @layer unica.components {
+  :is(.unica-kbd, .unica-kbd-group):where(:not([hidden])) {
+    display: inline-flex;
+  }
+
+  :is(.unica-kbd, .unica-kbd-group)[hidden='until-found' i] {
+    position: absolute;
+  }
+
   .unica-kbd,
   .unica-kbd-group {
     direction: ltr;
@@ -24,7 +32,6 @@
   }
   .unica-kbd {
     position: relative;
-    display: inline-flex;
     align-items: center;
     justify-content: center;
     block-size: 1lh;
@@ -58,7 +65,6 @@
   }
   .unica-kbd-group {
     position: relative;
-    display: inline-flex;
     align-items: center;
     gap: 0.25em;
     color: var(--kbd-fg, var(--fg-muted));

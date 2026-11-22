@@ -106,7 +106,11 @@ function createSampler(doc: Document, view: Window & typeof globalThis): Pointer
     }
     const writes: { binding: PointerBinding; write: () => void }[] = [];
     for (const binding of [...enabledBindings]) {
-      if (!isConnectedNode(binding.element) || getOwnerDocument(binding.element) !== doc) {
+      if (
+        !enabledBindings.has(binding) ||
+        !isConnectedNode(binding.element) ||
+        getOwnerDocument(binding.element) !== doc
+      ) {
         continue;
       }
       binding.sampled = true;

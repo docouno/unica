@@ -1,3 +1,4 @@
+import { getDefaultView } from '../src/core/dom.js';
 import { cleanup, render } from '@testing-library/react';
 import { Profiler } from 'react';
 import type { ReactElement } from 'react';
@@ -78,7 +79,7 @@ function replaceProperty(target: object, key: string, value: unknown): void {
 }
 
 function installEnvironment(doc: Document) {
-  const view = doc.defaultView;
+  const view = getDefaultView(doc);
   if (!view) {
     throw new Error('Expected a window for the pointer test');
   }
@@ -241,6 +242,16 @@ describe('PointerProximity', () => {
     env.flush();
     expect(first.measure).toHaveBeenCalledTimes(2);
     expect(first.measure).toHaveBeenLastCalledWith({ x: 4, y: 8 });
+  });
+
+  it('skips a subscriber removed during an earlier measurement', () => {
+    const env = installEnvironment(document);
+    bind(document.body, { measure: () => later.unsubscribe(), reset: vi.fn() });
+    const measure = vi.fn();
+    const later = bind(document.body, { measure, reset: vi.fn() });
+    move(document.body, 10, 20);
+    env.flush();
+    expect(measure).not.toHaveBeenCalled();
   });
 
   it('samples only for nonzero demand and recalculates from a still pointer on geometry changes', () => {

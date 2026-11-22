@@ -339,6 +339,34 @@ function DescriptionSample(): ReactElement {
   );
 }
 
+function WatchModeLinks(): ReactElement {
+  const [full, setFull] = useState(false);
+  return (
+    <>
+      <button type="button" onClick={() => setFull(true)}>
+        Add title watcher
+      </button>
+      <Link
+        href="#target"
+        target="_blank"
+        aria-describedby="mode-note"
+        aria-description="Fallback"
+        data-testid="mode-link"
+      >
+        Report
+      </Link>
+      {full && (
+        <>
+          <span id="mode-note">Author note</span>
+          <Link href="#other" target="_blank" title="Details">
+            More
+          </Link>
+        </>
+      )}
+    </>
+  );
+}
+
 function S2ObserverProbes(): ReactElement {
   const [hideText, setHideText] = useState(false);
   const [mountLateId, setMountLateId] = useState(false);
@@ -366,7 +394,12 @@ function S2ObserverProbes(): ReactElement {
         Shadow report
       </Link>,
     );
+    const modeHost = document.createElement('div');
+    shadow.append(modeHost);
+    const modeRoot = createRoot(modeHost.attachShadow({ mode: 'open' }));
+    modeRoot.render(<WatchModeLinks />);
     return () => {
+      modeRoot.unmount();
       root.unmount();
     };
   }, []);
@@ -410,6 +443,17 @@ function S2ObserverProbes(): ReactElement {
           {lateLabel}
         </Link>
       </p>
+      <div style={{ display: 'grid', width: 800, gridTemplateColumns: 'minmax(0, 1fr) auto' }}>
+        <p style={{ margin: 0, font: '24px / 38.4px Arial' }}>
+          <Link href="#target" external style={{ display: 'block' }} data-testid="dynamic-line">
+            <bdi>
+              https://example.com/research/understanding-accessibility-in-collaborative-workspaces
+            </bdi>
+            <span> </span>
+          </Link>
+        </p>
+        <div data-testid="dynamic-sidebar" />
+      </div>
       <div id="s2-shadow-desc-host" ref={shadowHostRef} />
     </section>
   );

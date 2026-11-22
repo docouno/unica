@@ -1,7 +1,10 @@
 @layer unica.components {
+  .unica-progress:where(:not([hidden])) {
+    display: grid;
+  }
+
   .unica-progress {
     --_progress-height: 8px;
-    display: grid;
     gap: var(--space-8);
     min-inline-size: 0;
     font-family: var(--font-family-base);

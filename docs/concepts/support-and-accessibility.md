@@ -15,6 +15,7 @@ Unica enforces two explicit browser tiers across CSS compilation and runtime beh
 - **Guarded progressive enhancements:** Features above Baseline — `@starting-style` and `transition-behavior: allow-discrete` on overlays, `field-sizing: content` on autosizing `Textarea`, CSS `subgrid` on `Calendar`, and typed `@property` custom-property interpolation — are wrapped in `@supports` or paired with deterministic fallbacks so interaction never breaks.
 - **Native browser UI:** Scrollbar geometry remains platform-dependent where the browser does not expose its parts. The [scrollbar design reference](scrollbars.md) specifies desktop Chromium/WebKit geometry and the standard native fallback for Firefox and touch-primary devices; square Pixel thumb ends are not a Firefox guarantee.
 - **Logical directionality (`LTR` / `RTL`):** Layout, spacing, borders, and Drawer edges use CSS logical properties (`inline-start`, `inline-end`), and directional icons mirror against explicit `[dir='rtl' i]` / `[dir='ltr' i]` regions rather than `[lang]` heuristics so mirroring works consistently across supported browsers and CSS bundlers.
+- **Native fragment reveal:** On HTML component roots that support `hidden="until-found"`, set the attribute through the DOM. Supporting browsers reveal the content on a matching fragment or find-in-page result. Older engines keep it hidden until the attribute is removed. The SVG roots of Spinner and ProgressCircle stay hidden for any `hidden` value.
 
 ```css
 .textareaAutosize {

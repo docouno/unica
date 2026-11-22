@@ -249,11 +249,9 @@
   position: absolute;
   inset-inline-start: 50%;
   inset-block-start: 42%;
-  translate: -50% -50%;
+  translate: calc(-50% * var(--_dir-mirror, 1)) -50%;
 }
-.popover-demo-live-stage:dir(rtl) .popover-demo-live-trigger {
-  translate: 50% -50%;
-}
+
 .popover-demo-live-stage[data-anchor='top-start'] .popover-demo-live-trigger {
   inset-inline-start: 16px;
   inset-block-start: 48px;

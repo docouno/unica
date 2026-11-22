@@ -150,6 +150,15 @@ export default function SkeletonFixture(): ReactElement {
             ))}
             <Skeleton data-testid="probe-many-skel" width={60} />
           </div>
+          <style>{'.probe-flat [data-testid="probe-toggle-wrap"] { display: contents; }'}</style>
+          <div style={{ width: 680, height: 40 }}>
+            <span data-testid="probe-inline-label">
+              <em>Short</em>
+            </span>
+            <span style={{ display: 'inline-block', width: 60 }}>
+              <Skeleton data-testid="probe-inline-skel" width={60} />
+            </span>
+          </div>
           <div data-testid="probe-contents-row" style={{ display: 'flex', alignItems: 'center' }}>
             <div data-testid="probe-contents-wrap" style={{ display: 'contents' }}>
               <div

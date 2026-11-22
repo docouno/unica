@@ -1,11 +1,6 @@
 import { autoUpdate, computePosition, flip, offset, platform, shift, size } from '@floating-ui/dom';
 import type { Placement } from '@floating-ui/dom';
-import {
-  addListenerSafe,
-  isRTL as isElementRTL,
-  removeListenerSafe,
-  reportErrorSafe,
-} from '../dom.js';
+import { isRTL as isElementRTL, reportErrorSafe } from '../dom.js';
 import {
   composedAncestors,
   elementStyle,
@@ -216,16 +211,6 @@ export function positionOverlay({
   for (const ancestor of composedAncestors(anchor)) {
     direction.observe(ancestor, { attributes: true, attributeFilter: ['dir'] });
   }
-  const onFontsDone = (): void => {
-    if (isLive()) {
-      update();
-    }
-  };
-  const fonts = document.fonts;
-  if (fonts) {
-    addListenerSafe(fonts, 'loadingdone', onFontsDone);
-  }
-
   const cleanup = (): void => {
     if (!active) {
       return;
@@ -237,9 +222,6 @@ export function positionOverlay({
       // Ignore cross-origin frame teardown.
     }
     direction.disconnect();
-    if (fonts) {
-      removeListenerSafe(fonts, 'loadingdone', onFontsDone);
-    }
     updates.delete(floating);
     style.removeProperty('inset');
     style.removeProperty('margin');

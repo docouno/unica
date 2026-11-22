@@ -328,7 +328,7 @@ suite['Badge respects native focus, hidden, disabled, keyboard activation, and f
         contentVisibility: style.contentVisibility,
       };
     });
-    assert.deepEqual(untilFound, { display: 'inline-flex', contentVisibility: 'hidden' });
+    assert.deepEqual(untilFound, { display: 'block', contentVisibility: 'hidden' });
     await page.evaluate(() => {
       window.location.hash = '#until-found-badge';
     });

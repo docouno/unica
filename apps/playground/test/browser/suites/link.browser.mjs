@@ -52,6 +52,60 @@ async function navigateTabs(page, link) {
 }
 
 export default {
+  'Link preserves queued ID changes and skips unrelated title reads': async ({ page, mount }) => {
+    await mount('link');
+    const fallback = page.getByTestId('mode-link').locator('[hidden] > span');
+    assert.equal(await fallback.textContent(), 'Fallback');
+    await page.getByRole('button', { name: 'Add title watcher' }).click();
+    await fallback.filter({ hasText: 'Fallback' }).waitFor({ state: 'detached' });
+    assert.equal(await fallback.textContent(), '');
+    const reads = await page.evaluate(async () => {
+      const descriptor = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'innerText');
+      const clock = document.body.appendChild(document.createTextNode('one'));
+      await new Promise(requestAnimationFrame);
+      let count = 0;
+      Object.defineProperty(HTMLElement.prototype, 'innerText', {
+        ...descriptor,
+        get() {
+          if (this.matches('a[title]')) {
+            count++;
+          }
+          return descriptor.get.call(this);
+        },
+      });
+      try {
+        clock.data = 'two';
+        await new Promise(requestAnimationFrame);
+        return count;
+      } finally {
+        Object.defineProperty(HTMLElement.prototype, 'innerText', descriptor);
+        clock.remove();
+      }
+    });
+    assert.equal(reads, 0);
+  },
+  'Link follows its new line container when a sibling narrows the grid': async ({
+    page,
+    mount,
+  }) => {
+    await mount('link');
+    const anchor = page.getByTestId('dynamic-line');
+    await anchor.evaluate(async (el) => {
+      el.style.display = 'inline';
+      await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+    });
+    await page.getByTestId('dynamic-sidebar').evaluate((el) => {
+      el.style.width = '643px';
+    });
+    await page.waitForFunction(() => {
+      const el = document.querySelector('[data-testid="dynamic-line"]');
+      const last = Array.from(el.querySelector('.unica-link-terminal-text').getClientRects()).at(
+        -1,
+      );
+      const glyph = el.querySelector('svg').getBoundingClientRect();
+      return el.parentElement.clientWidth === 157 && glyph.top + glyph.height / 2 <= last.bottom;
+    });
+  },
   'Link keeps native keyboard, history, form, and modified pointer navigation': async ({
     page,
     mount,

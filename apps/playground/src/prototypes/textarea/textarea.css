@@ -87,18 +87,23 @@
 @supports selector(::-webkit-resizer) {
   @media (pointer: fine) and (forced-colors: none), (pointer: none) and (forced-colors: none) {
     .textarea-proto::-webkit-resizer {
+      --resizer-angle: calc(180deg - 45deg * var(--_dir-mirror, 1));
+      --resizer-edge: var(--_if-ltr, right) var(--_if-rtl, left);
       background:
-        linear-gradient(135deg, transparent 40%, var(--textarea-edge) 40% 56%, transparent 56%)
-          right 2px bottom 2px / 6px 6px no-repeat,
-        linear-gradient(135deg, transparent 40%, var(--textarea-edge) 40% 72%, transparent 72%)
-          right 2px bottom 2px / 3px 3px no-repeat;
-    }
-    .textarea-proto:dir(rtl)::-webkit-resizer {
-      background:
-        linear-gradient(225deg, transparent 40%, var(--textarea-edge) 40% 56%, transparent 56%) left
-          2px bottom 2px / 6px 6px no-repeat,
-        linear-gradient(225deg, transparent 40%, var(--textarea-edge) 40% 72%, transparent 72%) left
-          2px bottom 2px / 3px 3px no-repeat;
+        linear-gradient(
+            var(--resizer-angle),
+            transparent 40%,
+            var(--textarea-edge) 40% 56%,
+            transparent 56%
+          )
+          var(--resizer-edge) 2px bottom 2px / 6px 6px no-repeat,
+        linear-gradient(
+            var(--resizer-angle),
+            transparent 40%,
+            var(--textarea-edge) 40% 72%,
+            transparent 72%
+          )
+          var(--resizer-edge) 2px bottom 2px / 3px 3px no-repeat;
     }
   }
 }

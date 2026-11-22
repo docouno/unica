@@ -106,11 +106,9 @@
   inset-block-start: 50%;
   inline-size: var(--slider-short);
   block-size: var(--slider-long);
-  translate: -50% -50%;
+  translate: calc(-50% * var(--_dir-mirror, 1)) -50%;
 }
-.slider-thumb-wrap-proto:dir(rtl) {
-  translate: 50% -50%;
-}
+
 .slider-native-proto {
   position: absolute;
   inset: 0;
@@ -244,11 +242,9 @@
   display: grid;
   justify-items: center;
   gap: 5px;
-  translate: -50% 0;
+  translate: calc(-50% * var(--_dir-mirror, 1)) 0;
 }
-.slider-mark-proto:dir(rtl) {
-  translate: 50% 0;
-}
+
 .slider-tick-proto {
   inline-size: 1px;
   block-size: 4px;
@@ -262,12 +258,10 @@
   justify-items: start;
 }
 .slider-mark-proto[data-edge='end'] {
-  translate: -100% 0;
+  translate: calc(-100% * var(--_dir-mirror, 1)) 0;
   justify-items: end;
 }
-.slider-mark-proto[data-edge='end']:dir(rtl) {
-  translate: 100% 0;
-}
+
 @container (max-width: 280px) {
   .slider-scale-proto[data-orientation='horizontal']
     .slider-mark-proto[data-secondary]
@@ -304,7 +298,7 @@
   inset-inline-start: 50%;
   inline-size: var(--slider-rail-size);
   block-size: auto;
-  translate: -50% 0;
+  translate: calc(-50% * var(--_dir-mirror, 1)) 0;
 }
 .slider-scale-proto[data-orientation='vertical'] .slider-fill-proto {
   inset-block-start: calc(
@@ -313,12 +307,9 @@
   block-size: calc((100% - var(--slider-short)) * (var(--slider-end) - var(--slider-start)));
   inset-inline-start: 50%;
   inline-size: var(--slider-rail-size);
-  translate: -50% 0;
+  translate: calc(-50% * var(--_dir-mirror, 1)) 0;
 }
-.slider-scale-proto[data-orientation='vertical']
-  :is(.slider-rail-proto, .slider-fill-proto):dir(rtl) {
-  translate: 50% 0;
-}
+
 .slider-scale-proto[data-orientation='vertical'] .slider-thumb-wrap-proto {
   inset-inline-start: 50%;
   inset-block-start: calc(

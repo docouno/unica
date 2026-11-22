@@ -3,6 +3,7 @@ import type { ReactElement, ReactNode } from 'react';
 import {
   addListenerSafe,
   getComputedStyleSafe,
+  getDocumentFonts,
   getLiveView,
   getOwnerDocument,
   removeListenerSafe,
@@ -29,16 +30,7 @@ export function TrailingGlyph({ children }: TrailingGlyphProps): ReactElement {
       return;
     }
 
-    // Inline elements have no observable size. Find the block that lays out the line.
-    let container = anchor;
-    while (container.parentElement) {
-      const display = getComputedStyleSafe(container)?.display;
-      if (display !== 'inline' && display !== 'contents') {
-        break;
-      }
-      container = container.parentElement;
-    }
-
+    let container: Element | undefined;
     let watchedGlyph: SVGSVGElement | null = null;
     let schedule = (): void => {};
     const resize =
@@ -46,11 +38,44 @@ export function TrailingGlyph({ children }: TrailingGlyphProps): ReactElement {
         ? new view.ResizeObserver(() => schedule())
         : undefined;
 
+    const mutations = new view.MutationObserver(() => schedule());
+    function observeLine(anchorElement: Element): void {
+      // A style change can move line layout from the anchor to a different ancestor.
+      let next = anchorElement;
+      while (next.parentElement) {
+        const display = getComputedStyleSafe(next)?.display;
+        if (display !== 'inline' && display !== 'contents') {
+          break;
+        }
+        next = next.parentElement;
+      }
+      if (next === container) {
+        return;
+      }
+      if (container) {
+        resize?.unobserve(container);
+        mutations.disconnect();
+      }
+      container = next;
+      resize?.observe(next);
+      mutations.observe(next, {
+        subtree: true,
+        childList: true,
+        characterData: true,
+        attributes: true,
+        attributeFilter: layoutAttributes,
+      });
+      for (let ancestor = next.parentElement; ancestor; ancestor = ancestor.parentElement) {
+        mutations.observe(ancestor, { attributes: true, attributeFilter: layoutAttributes });
+      }
+    }
+
     const task = {
       prepare: (): void => {
         anchor.removeAttribute(wrapAttribute);
       },
       measure: (): (() => void) | undefined => {
+        observeLine(anchor);
         const text = anchor.querySelector('.unica-link-terminal-text');
         const glyph = end.querySelector('svg');
         if (glyph !== watchedGlyph) {
@@ -80,22 +105,8 @@ export function TrailingGlyph({ children }: TrailingGlyphProps): ReactElement {
     const job = createFrameJob(doc, task);
     schedule = (): void => job.schedule();
 
-    resize?.observe(container);
-    // Text, styles, or an adapter can change the line without resizing the block.
-    const mutations = new view.MutationObserver(schedule);
-    mutations.observe(container, {
-      subtree: true,
-      childList: true,
-      characterData: true,
-      attributes: true,
-      attributeFilter: layoutAttributes,
-    });
-    // Typography can inherit from an ancestor outside the line container.
-    for (let ancestor = container.parentElement; ancestor; ancestor = ancestor.parentElement) {
-      mutations.observe(ancestor, { attributes: true, attributeFilter: layoutAttributes });
-    }
     addListenerSafe(view, 'resize', schedule);
-    const fonts = doc.fonts;
+    const fonts = getDocumentFonts(doc);
     if (fonts) {
       addListenerSafe(fonts, 'loadingdone', schedule);
     }

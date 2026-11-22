@@ -1,4 +1,8 @@
 @layer unica.components {
+  .unica-divider:where(:not([hidden])) {
+    display: flex;
+  }
+
   .unica-divider {
     /* Inherit the surface choice and resolve both tokens in the local theme. */
     --_unica-divider-line-color: color-mix(
@@ -7,7 +11,6 @@
       var(--border-subtle)
     );
 
-    display: flex;
     flex: none;
     align-items: center;
     inline-size: 100%;

@@ -291,7 +291,7 @@ for (const direction of ['ltr', 'rtl']) {
     });
     assert.deepEqual(untilFound, [
       { display: 'block', contentVisibility: 'hidden' },
-      { display: 'grid', contentVisibility: 'hidden' },
+      { display: 'block', contentVisibility: 'hidden' },
     ]);
   };
 
@@ -808,8 +808,7 @@ scenarios[
     await nextFrames();
     const s2 = read();
 
-    const toggleWrap = document.querySelector('[data-testid="probe-toggle-wrap"]');
-    toggleWrap.style.display = 'contents';
+    document.querySelector('[data-testid="probe-contents-row"]').classList.add('probe-flat');
     await nextFrames();
     document.querySelector('[data-testid="probe-toggle-inner"]').style.inlineSize = '70px';
     await nextFrames();
@@ -875,6 +874,22 @@ scenarios[
     Math.abs(textAndMargin.marginShift - 40) <= 2,
     `Expected ~40px sibling margin shift, got ${textAndMargin.marginShift}`,
   );
+
+  const inline = await page.evaluate(async () => {
+    const skel = document.querySelector('[data-testid="probe-inline-skel"]');
+    const read = () => [
+      skel.getBoundingClientRect().left,
+      parseFloat(skel.style.getPropertyValue('--_skeleton-sweep-start')),
+    ];
+    const [left, start] = read();
+    document.querySelector('[data-testid="probe-inline-label"] em').firstChild.data =
+      'Substantially longer inline text';
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+    const [newLeft, newStart] = read();
+    return { shift: newLeft - left, sweepShift: start - newStart };
+  });
+  assert.ok(inline.shift > 20);
+  assert.ok(Math.abs(inline.shift - inline.sweepShift) < 2);
 
   // 6. Leaving viewport retains written --_skeleton-* geometry without clearing; finishing animation cleans up (idle = 0).
   const offscreenAndIdle = await page.evaluate(async () => {

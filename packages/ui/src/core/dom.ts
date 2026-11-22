@@ -110,6 +110,7 @@ interface DescriptorCache {
   readonly docActiveElement: Getter<Document, Element | null> | undefined;
   readonly shadowActiveElement: Getter<Node, Element | null> | undefined;
   readonly docElement: Getter<Document, HTMLElement | null> | undefined;
+  readonly docFonts: Getter<Document, FontFaceSet> | undefined;
   readonly docBody: Getter<Document, HTMLElement | null> | undefined;
   readonly docHasFocus: ZeroArgMethod<Document, boolean> | undefined;
   readonly docCreateElement: OneArgMethod<Document, string, HTMLElement> | undefined;
@@ -126,16 +127,18 @@ function getCache(): DescriptorCache {
   if (cache) {
     return cache;
   }
-  const nodeProto = typeof Node !== 'undefined' ? Node.prototype : undefined;
-  const elementProto = typeof Element !== 'undefined' ? Element.prototype : undefined;
-  const textProto = typeof Text !== 'undefined' ? Text.prototype : undefined;
-  const htmlElementProto = typeof HTMLElement !== 'undefined' ? HTMLElement.prototype : undefined;
-  const documentProto = typeof Document !== 'undefined' ? Document.prototype : undefined;
-  const shadowProto = typeof ShadowRoot !== 'undefined' ? ShadowRoot.prototype : undefined;
-  const formProto = typeof HTMLFormElement !== 'undefined' ? HTMLFormElement.prototype : undefined;
-  const targetProto = typeof EventTarget !== 'undefined' ? EventTarget.prototype : undefined;
+  // A Node consumer can supply a DOM window without copying its constructors to globalThis.
+  const view = typeof window === 'undefined' ? undefined : window;
+  const nodeProto = view?.Node?.prototype;
+  const elementProto = view?.Element?.prototype;
+  const textProto = view?.Text?.prototype;
+  const htmlElementProto = view?.HTMLElement?.prototype;
+  const documentProto = view?.Document?.prototype;
+  const shadowProto = view?.ShadowRoot?.prototype;
+  const formProto = view?.HTMLFormElement?.prototype;
+  const targetProto = view?.EventTarget?.prototype;
 
-  cache = {
+  const descriptors: DescriptorCache = {
     nodeType: makeGetter<Node, number>(nodeProto, 'nodeType'),
     isConnected: makeGetter<Node, boolean>(nodeProto, 'isConnected'),
     parentNode: makeGetter<Node, ParentNode | null>(nodeProto, 'parentNode'),
@@ -160,6 +163,7 @@ function getCache(): DescriptorCache {
     docActiveElement: makeGetter<Document, Element | null>(documentProto, 'activeElement'),
     shadowActiveElement: makeGetter<Node, Element | null>(shadowProto, 'activeElement'),
     docElement: makeGetter<Document, HTMLElement | null>(documentProto, 'documentElement'),
+    docFonts: makeGetter<Document, FontFaceSet>(documentProto, 'fonts'),
     docBody: makeGetter<Document, HTMLElement | null>(documentProto, 'body'),
     docHasFocus: makeZeroArgMethod<Document, boolean>(documentProto, 'hasFocus'),
     docCreateElement: makeOneArgMethod<Document, string, HTMLElement>(
@@ -175,7 +179,10 @@ function getCache(): DescriptorCache {
     removeEventListener: makeListenerMethod(targetProto, 'removeEventListener'),
     dispatchEvent: makeOneArgMethod<EventTarget, Event, boolean>(targetProto, 'dispatchEvent'),
   };
-  return cache;
+  if (documentProto) {
+    cache = descriptors;
+  }
+  return descriptors;
 }
 
 export function getNodeTypeSafe(node: unknown): number | undefined {
@@ -417,19 +424,7 @@ export function getLiveView(doc: Document | null): Realm | null {
     return null;
   }
   try {
-    if (view.document !== doc) {
-      return null;
-    }
-    // In VM-proxied test realms (e.g. Vitest jsdom), globalThis wraps jsdom's inner Window
-    // while pointing to the same Document; prefer globalThis so window spies/polyfills match.
-    if (
-      typeof globalThis !== 'undefined' &&
-      (view as unknown) !== globalThis &&
-      Reflect.get(globalThis, 'document') === doc
-    ) {
-      return globalThis as unknown as Realm;
-    }
-    return view;
+    return view.document === doc ? view : null;
   } catch {
     return null;
   }
@@ -481,6 +476,10 @@ export function isRTL(element: Element, computed?: CSSStyleDeclaration | null): 
 export function getDocumentElement(doc: Document): HTMLElement | null {
   const fn = getCache().docElement;
   return fn ? fn(doc) : doc.documentElement;
+}
+
+export function getDocumentFonts(doc: Document): FontFaceSet | undefined {
+  return getCache().docFonts?.(doc);
 }
 
 export function getDocumentBody(doc: Document): HTMLElement | null {
@@ -584,7 +583,7 @@ export function isInertElement(element: Element): boolean {
   let activeModal: HTMLDialogElement | null = null;
   if (runtime) {
     try {
-      const candidate = runtime.resolveModal();
+      const candidate = runtime.resolveModal(true);
       if (
         candidate &&
         isConnectedNode(candidate) &&

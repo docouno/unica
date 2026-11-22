@@ -1,7 +1,7 @@
 // @vitest-environment node
 import { readdir, readFile } from 'node:fs/promises';
 import { dirname, join, relative, resolve } from 'node:path';
-import { transform as lightningTransform } from 'lightningcss';
+import { Features, type Selector, transform as lightningTransform } from 'lightningcss';
 import postcss from 'postcss';
 import type { AtRule, Declaration, Rule } from 'postcss';
 import ts from 'typescript';
@@ -34,6 +34,98 @@ const EXTERNAL_CSS_HOOKS = new Set([
 ]);
 
 const SERVER_RUNTIME_EXPORTS = ['THEME_PRESETS', 'defineGlyph', 'getUnicaRootProps'] as const;
+
+// A sibling combinator leaves the current compound but keeps its ancestors.
+function componentScoped(selector: Selector): boolean {
+  let ancestor = false;
+  let subject = false;
+  for (const token of selector) {
+    if (token.type === 'combinator') {
+      if (token.value === 'child' || token.value === 'descendant') {
+        ancestor ||= subject;
+        subject = false;
+      } else if (token.value === 'next-sibling' || token.value === 'later-sibling') {
+        subject = false;
+      }
+    } else if (token.type === 'class' && token.name.startsWith('unica-')) {
+      subject = true;
+    } else if (token.type === 'pseudo-class' && (token.kind === 'is' || token.kind === 'where')) {
+      subject ||= token.selectors.every(componentScoped);
+    }
+  }
+  return ancestor || subject;
+}
+
+function unscopedRules(filename: string, source: string): string[] {
+  const flattened = lightningTransform({
+    filename,
+    code: Buffer.from(source),
+    include: Features.Nesting,
+  });
+  const violations: string[] = [];
+  lightningTransform({
+    filename,
+    code: flattened.code,
+    visitor: {
+      Rule: {
+        style(rule) {
+          if (!rule.value.selectors.every(componentScoped)) {
+            const lines = Buffer.from(flattened.code).toString().split('\n');
+            violations.push(
+              `${filename}: unscoped selector in ${lines[rule.value.loc.line]?.trim()}`,
+            );
+          }
+        },
+      },
+    },
+  });
+  return violations;
+}
+
+function isStyleType(type: ts.Type | undefined): boolean {
+  if (type?.isUnionOrIntersection()) {
+    return type.types.some(isStyleType);
+  }
+  const name = type?.getSymbol()?.name;
+  return name === 'CSSProperties' || name === 'CSSStyleDeclaration';
+}
+
+function privatePropertyWrites(source: ts.SourceFile, checker: ts.TypeChecker): Set<string> {
+  const written = new Set<string>();
+  function record(key: ts.Expression): void {
+    const type = checker.getTypeAtLocation(key);
+    for (const candidate of type.isUnion() ? type.types : [type]) {
+      if (candidate.isStringLiteral() && candidate.value.startsWith('--_')) {
+        written.add(candidate.value);
+      }
+    }
+  }
+  function visit(node: ts.Node): void {
+    if (ts.isPropertyAssignment(node) && ts.isStringLiteral(node.name)) {
+      if (node.name.text.startsWith('--_') && isStyleType(checker.getContextualType(node.parent))) {
+        written.add(node.name.text);
+      }
+    } else if (
+      ts.isBinaryExpression(node) &&
+      node.operatorToken.kind === ts.SyntaxKind.EqualsToken &&
+      ts.isElementAccessExpression(node.left) &&
+      isStyleType(checker.getTypeAtLocation(node.left.expression))
+    ) {
+      record(node.left.argumentExpression);
+    } else if (
+      ts.isCallExpression(node) &&
+      ts.isPropertyAccessExpression(node.expression) &&
+      node.expression.name.text === 'setProperty' &&
+      isStyleType(checker.getTypeAtLocation(node.expression.expression)) &&
+      node.arguments[0]
+    ) {
+      record(node.arguments[0]);
+    }
+    ts.forEachChild(node, visit);
+  }
+  visit(source);
+  return written;
+}
 
 async function collectFiles(dirPath: string, exts: readonly string[]): Promise<string[]> {
   const entries = await readdir(dirPath, { withFileTypes: true });
@@ -712,6 +804,32 @@ describe('Unica package conformance gate', () => {
     expect(violations).toEqual([]);
   });
 
+  it('checks each effective selector branch and ignores type-only token names', () => {
+    const check = (selector: string) => unscopedRules('control.css', selector);
+    expect(check('.unica-badge { & > svg, & > span + em { display: block } }')).toEqual([]);
+    for (const selector of [
+      'button, .unica-badge',
+      ':is(.unica-badge, input)',
+      ':not(.unica-badge)',
+      '.unica-badge + button',
+    ]) {
+      expect(check(`${selector} { display: block }`)).toHaveLength(1);
+    }
+    const source = ts.createSourceFile(
+      'control.ts',
+      `
+      type Vars = { '--_type-only': string };
+      const note = '--_mentioned';
+      const unrelated = { '--_ordinary-object': 'title' };
+    `,
+      ts.ScriptTarget.Latest,
+      true,
+    );
+    expect([...privatePropertyWrites(source, checker)]).toEqual([]);
+    const progress = program.getSourceFile(join(COMPONENTS_ROOT, 'Progress/Progress.tsx'))!;
+    expect(privatePropertyWrites(progress, checker)).toContain('--_progress-fraction');
+  });
+
   it('enforces the CSS contract gate across all component and internal stylesheets', async () => {
     const stylesCssRaw = await readFile(resolve(SRC_ROOT, 'styles.css'), 'utf8');
     const stylesRoot = postcss.parse(stylesCssRaw, { from: resolve(SRC_ROOT, 'styles.css') });
@@ -738,9 +856,11 @@ describe('Unica package conformance gate', () => {
       const written = new Set<string>();
       const tsFiles = await collectFiles(dir, ['.ts', '.tsx']);
       for (const tsFile of tsFiles) {
-        const text = await readFile(tsFile, 'utf8');
-        for (const match of text.matchAll(/['"](--_[a-z0-9-]+)['"]/g)) {
-          written.add(match[1]!);
+        const source = program.getSourceFile(tsFile);
+        if (source) {
+          for (const name of privatePropertyWrites(source, checker)) {
+            written.add(name);
+          }
         }
       }
       dirTsPrivateVars.set(dir, written);
@@ -752,12 +872,7 @@ describe('Unica package conformance gate', () => {
       const rel = relative(PKG_ROOT, cssFile);
       const raw = await readFile(cssFile, 'utf8');
 
-      // Verify Lightning CSS parses the stylesheet cleanly without errors
-      lightningTransform({
-        filename: cssFile,
-        code: Buffer.from(raw),
-        minify: false,
-      });
+      violations.push(...unscopedRules(rel, raw));
 
       const root = postcss.parse(raw, { from: cssFile });
 
@@ -808,14 +923,6 @@ describe('Unica package conformance gate', () => {
           }
           if (/:root\b/.test(selector)) {
             violations.push(`${rel}: forbidden bare :root selector "${selector}"`);
-          }
-          if (
-            (/\[dir\s*=/.test(selector) || /\[data-surface\b/.test(selector)) &&
-            !/\.unica-/.test(selector)
-          ) {
-            violations.push(
-              `${rel}: bare global selector "${selector}" must be scoped to .unica-*`,
-            );
           }
           const bemMatch = selector.match(/\.unica-[a-z0-9-]+(?:__|--)[a-z0-9-]+/);
           if (bemMatch) {

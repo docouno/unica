@@ -7,7 +7,7 @@ export interface OverlayRuntimeProtocol {
   readonly reconcile: () => unknown;
   readonly nativeDismiss: (...args: never[]) => unknown;
   readonly publishModal: () => unknown;
-  readonly resolveModal: () => HTMLDialogElement | null;
+  readonly resolveModal: (includeExiting?: boolean) => HTMLDialogElement | null;
   readonly watchTrigger: (...args: never[]) => unknown;
   readonly trackVersion: (version: string) => unknown;
   readonly isTrackedModal?: ((dialog: Element) => boolean) | undefined;
