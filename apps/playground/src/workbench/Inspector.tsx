@@ -1,15 +1,17 @@
 import { useCallback, useId, useRef, useState } from 'react';
-import type { MouseEvent, ReactElement, ReactNode, SyntheticEvent } from 'react';
+import type { ReactElement, ReactNode, SyntheticEvent } from 'react';
 import { InspectorCode } from './InspectorCode.js';
-import { Matrix } from './Matrix.js';
 import { PlaygroundControls } from './PlaygroundControls.js';
 import { PlaygroundPanels } from './PlaygroundPanels.js';
+import { StatesView } from './StatesView.js';
+import { StoryFrame } from './StoryFrame.js';
+import { UsageView } from './UsageView.js';
+import type { RouteDestination } from './UsageView.js';
 import { ViewSettings } from './ViewSettings.js';
-import { componentCode, defaultValues, evaluate } from './schema.js';
+import { componentCode, componentCompositions, defaultValues, evaluate } from './schema.js';
 import type { WorkbenchRoute } from './route.js';
 import { useSubjectBounds } from './subjectBounds.js';
 import type {
-  CaseBlock,
   ComponentDefinition,
   InspectorTab,
   MatrixView,
@@ -17,28 +19,42 @@ import type {
   PreviewContext,
   PropValue,
   SceneDefinition,
+  StoryContext,
   Surface,
   SurfaceMode,
   Values,
   WorkbenchConfig,
+  WorkbenchDocsConfig,
+  WorkbenchTabDefinition,
   WorkbenchTheme,
 } from './types.js';
 import './inspector.css';
 
-type RenderArtboards = (render: (theme: WorkbenchTheme) => ReactNode) => ReactElement;
+export interface ArtboardScope {
+  readonly block?: string | undefined;
+  readonly slice?: string | undefined;
+  readonly canFocus?: boolean | undefined;
+}
+
+type RenderArtboards = (
+  render: (theme: WorkbenchTheme) => ReactNode,
+  scope?: ArtboardScope,
+) => ReactElement;
 type RenderStage = WorkbenchConfig['renderStage'];
 type Action = PreviewContext['action'];
 
 export interface InspectorProps {
   readonly component: ComponentDefinition;
   readonly route: WorkbenchRoute;
+  readonly activeTab?: WorkbenchTabDefinition | undefined;
   readonly themes: readonly WorkbenchTheme[];
   readonly scenes: readonly SceneDefinition[];
+  readonly docsConfig?: WorkbenchDocsConfig | undefined;
   readonly update: (patch: Partial<WorkbenchRoute>, method?: 'push' | 'replace') => void;
-  readonly itemHref: (id: string) => string;
-  readonly navigateItem: (id: string) => void;
+  readonly itemHref: (destination: RouteDestination) => string;
+  readonly navigateItem: (destination: RouteDestination) => void;
   readonly renderArtboards: RenderArtboards;
-  readonly renderStage?: RenderStage;
+  readonly renderStage?: RenderStage | undefined;
 }
 
 interface StageSettings {
@@ -56,6 +72,7 @@ interface PreviewStageProps {
   readonly overlayStage: boolean | undefined;
   readonly renderStage: RenderStage;
   readonly action?: Action | undefined;
+  readonly story?: StoryContext | undefined;
   readonly children: (ctx: PreviewContext) => ReactNode;
 }
 
@@ -71,6 +88,7 @@ function PreviewStage({
   overlayStage: authoredOverlay,
   renderStage,
   action = () => ignoreAction,
+  story,
   children,
 }: PreviewStageProps): ReactElement {
   const id = useId();
@@ -88,6 +106,7 @@ function PreviewStage({
     subject: { 'data-wb-subject': '' },
     form: { 'data-wb-form': '' },
     action,
+    ...(story ? { story } : {}),
   };
   const content = children(ctx);
 
@@ -326,38 +345,6 @@ function FormDataPanel({
   );
 }
 
-const caseKinds: Record<CaseBlock['kind'], string> = {
-  behavior: 'Behavior',
-  content: 'Content & overflow',
-  surface: 'Surface',
-};
-
-function PreviewHeading({
-  block,
-  kind,
-}: {
-  readonly block: PreviewBlock;
-  readonly kind?: CaseBlock['kind'];
-}): ReactElement {
-  return (
-    <header className="wb-inspector-meta wb-block-heading wb-frame-heading" dir="auto">
-      <h3>{block.title}</h3>
-      {(kind || block.mode) && (
-        <span className="wb-inspector-note">
-          {kind ? caseKinds[kind] : ''}
-          {kind && block.mode ? ' · ' : ''}
-          {block.mode === 'live' ? 'Live' : block.mode === 'pinned' ? 'Pinned' : ''}
-        </span>
-      )}
-      {block.caption && (
-        <p className="wb-block-caption" dir="auto">
-          {block.caption}
-        </p>
-      )}
-    </header>
-  );
-}
-
 function BlockPicker({
   label,
   blocks,
@@ -380,7 +367,7 @@ function BlockPicker({
         value={selected ?? ''}
         onChange={(event) => onSelect(event.currentTarget.value || undefined)}
       >
-        <option value="">All examples</option>
+        <option value="">All compositions</option>
         {blocks.map((block) => (
           <option key={block.id} value={block.id}>
             {block.title}
@@ -409,11 +396,32 @@ function initialState(component: ComponentDefinition): PlaygroundState {
   return { values, draft: values, numberDrafts: {} };
 }
 
+function resolveTabKind(
+  tab: InspectorTab,
+  activeTab?: WorkbenchTabDefinition,
+): WorkbenchTabDefinition['kind'] {
+  if (activeTab) {
+    return activeTab.kind;
+  }
+  if (tab === 'states' || tab === 'matrix' || tab === 'cases') {
+    return 'states';
+  }
+  if (tab === 'compositions') {
+    return 'compositions';
+  }
+  if (tab === 'usage') {
+    return 'usage';
+  }
+  return 'playground';
+}
+
 export function Inspector({
   component,
   route,
+  activeTab,
   themes,
   scenes,
+  docsConfig,
   update,
   itemHref,
   navigateItem,
@@ -423,8 +431,16 @@ export function Inspector({
   const [playground, setPlayground] = useState(() => initialState(component));
   const [events, setEvents] = useState<EventLog>(emptyLog);
   const [submissions, setSubmissions] = useState<readonly SubmittedData[]>([]);
-  const { tab, surface, raw, bounds, block, slice, mode } = route;
+  const [formattedJsx, setFormattedJsx] = useState<{
+    readonly source: string;
+    readonly formatted: string;
+  }>();
+  const handleFormattedJsx = useCallback((formatted: string, source: string): void => {
+    setFormattedJsx({ source, formatted });
+  }, []);
+  const { tab, surface, raw, bounds, block } = route;
   const comparing = themes.length > 1;
+  const tabKind = resolveTabKind(tab, activeTab);
 
   const commitDraft = (state: PlaygroundState, draft: Values): PlaygroundState => ({
     ...state,
@@ -458,6 +474,7 @@ export function Inspector({
       render: (ctx: PreviewContext) => ReactNode,
       surfaceMode: SurfaceMode = surface,
       action?: Action,
+      story?: StoryContext,
     ): ReactElement => (
       <PreviewStage
         key={identity}
@@ -470,6 +487,7 @@ export function Inspector({
         overlayStage={settings?.overlayStage ?? component.overlayStage}
         renderStage={renderStage}
         action={action}
+        story={story}
       >
         {render}
       </PreviewStage>
@@ -487,171 +505,143 @@ export function Inspector({
 
   const Component = component.render;
   const renderMatrixSubject = useCallback(
-    (theme: WorkbenchTheme, values: Values, identity: string, settings?: StageSettings) =>
-      renderPreview(theme, identity, settings, (ctx) => <Component values={values} ctx={ctx} />),
-    [Component, renderPreview],
+    (
+      theme: WorkbenchTheme,
+      values: Values,
+      identity: string,
+      settings?: StageSettings,
+      story?: StoryContext,
+    ) =>
+      renderPreview(
+        theme,
+        identity,
+        settings,
+        (ctx) => <Component values={values} ctx={ctx} />,
+        surface,
+        undefined,
+        story,
+      ),
+    [Component, renderPreview, surface],
   );
   const renderMatrixReference = useCallback(
-    (theme: WorkbenchTheme, view: MatrixView) => {
+    (theme: WorkbenchTheme, view: MatrixView, story?: StoryContext) => {
       const Reference = view.reference;
       return Reference
-        ? renderPreview(theme, view.id, view, (ctx) => <Reference ctx={ctx} />)
+        ? renderPreview(
+            theme,
+            view.id,
+            view,
+            (ctx) => <Reference ctx={ctx} />,
+            surface,
+            undefined,
+            story,
+          )
         : null;
     },
-    [renderPreview],
+    [renderPreview, surface],
   );
-  if (tab === 'matrix') {
+
+  if (tabKind === 'custom' && activeTab?.render) {
     return (
-      <Matrix
+      <div className="wb-inspector">
+        {activeTab.render({ component, themes, scenes, raw, renderArtboards })}
+      </div>
+    );
+  }
+
+  if (tabKind === 'states') {
+    return (
+      <StatesView
         component={component}
-        slice={slice}
-        mode={mode}
-        raw={raw}
-        freeze={route.freeze}
+        route={route}
         themes={themes}
-        onSliceChange={(selected) => update({ slice: selected }, 'replace')}
-        onModeChange={(selected) => update({ mode: selected }, 'replace')}
+        update={update}
         renderArtboards={renderArtboards}
-        renderSubject={renderMatrixSubject}
-        renderReference={renderMatrixReference}
+        renderPreview={renderPreview}
+        renderMatrixSubject={renderMatrixSubject}
+        renderMatrixReference={renderMatrixReference}
       />
     );
   }
 
-  if (tab === 'cases') {
-    const cases = component.cases ?? [];
+  if (tabKind === 'compositions') {
+    const compositions = componentCompositions(component);
     return (
       <div className="wb-inspector">
-        {!raw && cases.length > 0 && (
+        {!raw && compositions.length > 0 && (
           <ViewSettings>
             <BlockPicker
-              label="Case"
-              blocks={cases}
+              label="Composition"
+              blocks={compositions}
               selected={block}
               onSelect={(id) => update({ block: id }, 'push')}
             />
           </ViewSettings>
         )}
-        {cases.length > 0 ? (
+        {compositions.length > 0 ? (
           <div className="wb-inspector-blocks">
-            {selectBlock(cases, block).map((item) => {
+            {selectBlock(compositions, block).map((item) => {
               const Sample = item.render;
-              const surfaces: readonly SurfaceMode[] = item.compareSurfaces
-                ? ['base', 'overlay']
-                : [surface];
+              const meta =
+                item.mode === 'live' ? 'Live' : item.mode === 'pinned' ? 'Pinned' : undefined;
               return (
-                <section key={item.id} className="wb-story-frame" data-wb-block={item.id}>
-                  <PreviewHeading block={item} kind={item.kind} />
-                  {renderArtboards((theme) => (
-                    <div className="wb-surface-previews">
-                      {surfaces.map((choice) => (
-                        <div key={choice} style={{ maxInlineSize: item.width }}>
-                          {item.compareSurfaces && (
-                            <p className="wb-inspector-meta wb-preview-surface">
-                              {choice === 'base' ? 'Base' : 'Overlay'}
-                            </p>
-                          )}
-                          {renderPreview(
-                            theme,
-                            choice,
-                            item,
-                            (ctx) => (
-                              <Sample ctx={ctx} />
-                            ),
-                            choice,
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  ))}
-                </section>
+                <StoryFrame
+                  key={item.id}
+                  title={item.title}
+                  headingLevel="h2"
+                  meta={meta}
+                  caption={item.caption}
+                  dataBlock={item.id}
+                  controls={item.controls}
+                  actions={item.actions}
+                  reset={item.reset}
+                  raw={raw}
+                  footer={
+                    item.code ? (
+                      <InspectorCode
+                        code={item.code}
+                        copyable={!raw}
+                        copyName={`Copy ${item.title} JSX`}
+                      />
+                    ) : undefined
+                  }
+                >
+                  {(story) =>
+                    renderArtboards(
+                      (theme) =>
+                        renderPreview(
+                          theme,
+                          item.id,
+                          item,
+                          (ctx) => <Sample ctx={ctx} />,
+                          surface,
+                          undefined,
+                          story,
+                        ),
+                      { block: item.id, canFocus: compositions.length > 1 },
+                    )
+                  }
+                </StoryFrame>
               );
             })}
           </div>
         ) : (
-          <p className="wb-inspector-note">No cases registered.</p>
+          <p className="wb-inspector-note">No compositions registered.</p>
         )}
       </div>
     );
   }
 
-  if (tab === 'usage') {
-    const usage = component.usage ?? [];
-    const navigate = (event: MouseEvent<HTMLAnchorElement>, id: string): void => {
-      if (
-        event.defaultPrevented ||
-        event.metaKey ||
-        event.ctrlKey ||
-        event.shiftKey ||
-        event.altKey
-      ) {
-        return;
-      }
-      event.preventDefault();
-      navigateItem(id);
-    };
+  if (tabKind === 'usage') {
     return (
-      <div className="wb-inspector">
-        {!raw && usage.length > 0 && (
-          <ViewSettings>
-            <BlockPicker
-              label="Example"
-              blocks={usage}
-              selected={block}
-              onSelect={(id) => update({ block: id }, 'push')}
-            />
-          </ViewSettings>
-        )}
-        {usage.length > 0 ? (
-          <div className="wb-inspector-blocks">
-            {selectBlock(usage, block).map((item) => {
-              const Sample = item.render;
-              return (
-                <section key={item.id} className="wb-story-frame" data-wb-block={item.id}>
-                  <PreviewHeading block={item} />
-                  {renderArtboards((theme) =>
-                    renderPreview(theme, item.id, item, (ctx) => <Sample ctx={ctx} />),
-                  )}
-                  {item.code && <InspectorCode code={item.code} />}
-                </section>
-              );
-            })}
-          </div>
-        ) : (
-          renderArtboards((theme) =>
-            renderPreview(theme, 'usage-default', undefined, (ctx) => (
-              <Component values={defaultValues(component.props)} ctx={ctx} />
-            )),
-          )
-        )}
-        {!raw && (
-          <>
-            {usage.length === 0 && (
-              <section className="wb-inspector-panel" aria-label="JSX">
-                <InspectorCode code={componentCode(component, defaultValues(component.props))} />
-              </section>
-            )}
-            <nav className="wb-inspector-panel wb-scene-usage" aria-label="Consuming scenes">
-              <header className="wb-inspector-panel-heading">
-                <h2>Consuming scenes</h2>
-              </header>
-              {scenes.length > 0 ? (
-                <ul>
-                  {scenes.map(({ id, title }) => (
-                    <li key={id}>
-                      <a href={itemHref(id)} onClick={(event) => navigate(event, id)}>
-                        {title}
-                      </a>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="wb-inspector-note">No linked scenes.</p>
-              )}
-            </nav>
-          </>
-        )}
-      </div>
+      <UsageView
+        component={component}
+        scenes={scenes}
+        docsConfig={docsConfig}
+        raw={raw}
+        itemHref={itemHref}
+        navigateItem={navigateItem}
+      />
     );
   }
 
@@ -687,6 +677,7 @@ export function Inspector({
   const propDefinitions = Object.values(component.props);
   const hasForm = component.form !== undefined;
   const showEvents = hasForm || propDefinitions.some((prop) => prop.kind === 'action');
+  const codeText = componentCode(component, playground.values);
   return (
     <div className="wb-inspector wb-inspector-playground">
       <div
@@ -698,7 +689,8 @@ export function Inspector({
         {preview}
       </div>
       <PlaygroundPanels
-        code={<InspectorCode code={componentCode(component, playground.values)} />}
+        code={<InspectorCode code={codeText} onFormatted={handleFormattedJsx} />}
+        codeText={formattedJsx?.source === codeText ? formattedJsx.formatted : codeText}
         controls={
           propDefinitions.length > 0 && (
             <PlaygroundControls

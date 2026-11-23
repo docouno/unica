@@ -64,7 +64,7 @@ export default {
 
     await openWorkbench(page, {
       item: 'skeleton-text',
-      tab: 'matrix',
+      tab: 'states',
       mode: 'pairwise',
       vp: '1280',
     });
@@ -77,7 +77,7 @@ export default {
     async ({ page, mount }) => {
       await page.setViewportSize({ width: 1440, height: 960 });
       await mount('native');
-      await openWorkbench(page, { item: 'skeleton', tab: 'cases', block: 'media' });
+      await openWorkbench(page, { item: 'skeleton', tab: 'states', block: 'media' });
       const mediaCase = page.locator('[data-wb-block="media"]');
       const status = mediaCase.getByRole('status');
       const figures = mediaCase.locator('figure');
@@ -170,7 +170,7 @@ export default {
       await assertBox(slot, slotBox, { tolerance: 0.1 });
       await assertBox(frame, frameBefore, { tolerance: 0.1 });
 
-      await openWorkbench(page, { item: 'skeleton', tab: 'usage', block: 'typography' });
+      await openWorkbench(page, { item: 'skeleton', tab: 'compositions', block: 'typography' });
       const usage = page.locator('[data-wb-block="typography"]');
       const code = await usage.locator('pre').innerText();
       assert.match(code, /<article\s+aria-busy=\{loading\}[\s\S]+<\/article>\s+<p role="status">/u);
@@ -197,7 +197,7 @@ export default {
   }) => {
     await page.setViewportSize({ width: 1440, height: 960 });
     await mount('native');
-    await openWorkbench(page, { item: 'skeleton', tab: 'cases', block: 'lifecycle' });
+    await openWorkbench(page, { item: 'skeleton', tab: 'states', block: 'lifecycle' });
     await page.clock.install({ time: new Date('2026-01-01T00:00:00Z') });
     await page.clock.pauseAt(new Date('2026-01-01T00:00:01Z'));
     const lifecycle = page.locator('[data-wb-block="lifecycle"]');
@@ -258,7 +258,7 @@ export default {
     mount,
   }) => {
     await mount('native');
-    const route = { item: 'skeleton', tab: 'cases', block: 'motion', dir: 'rtl' };
+    const route = { item: 'skeleton', tab: 'states', block: 'motion', dir: 'rtl' };
     await openWorkbench(page, route);
     const motion = page.locator('[data-wb-block="motion"]');
     const tiles = motion.locator('figure');
@@ -299,7 +299,7 @@ export default {
     for (const vp of ['360', '1280']) {
       await openWorkbench(page, {
         item: 'card',
-        tab: 'cases',
+        tab: 'states',
         block: 'availability',
         scale: '120',
         dir: 'rtl',

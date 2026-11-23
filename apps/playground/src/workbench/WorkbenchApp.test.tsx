@@ -17,6 +17,7 @@ const field = defineComponent({
   cases: [
     { id: 'overflow', title: 'Overflow', kind: 'content', render: () => <span>Long text</span> },
   ],
+  usage: [{ id: 'paired', title: 'Paired', render: () => <span>Paired example</span> }],
   render: ({ ctx }) => <input {...ctx.subject} aria-label="Test field" />,
 });
 
@@ -102,24 +103,33 @@ afterEach(() => {
   window.history.replaceState(null, '', '/');
 });
 
-it('normalizes v2 routes using definitions and ignores stale v1 switches', () => {
+it('normalizes v3 routes, resolves legacy tab aliases, and ignores stale switches', () => {
   expect(readRoute('?item=field&theme=day&section=basic&mode=focus', config)).toMatchObject({
     item: 'field',
     family: 'all',
     scheme: 'both',
     tab: 'playground',
-    mode: 'slice',
+    mode: 'overview',
   });
   expect(readRoute('?item=field&mode=pairwise&slice=basic', config)).toMatchObject({
-    tab: 'matrix',
+    tab: 'states',
     slice: 'basic',
     mode: 'pairwise',
+  });
+  expect(readRoute('?item=field&tab=matrix&slice=basic', config)).toMatchObject({
+    tab: 'states',
+    slice: 'basic',
+    mode: 'slice',
+  });
+  expect(readRoute('?item=field&tab=usage&block=paired', config)).toMatchObject({
+    tab: 'compositions',
+    block: 'paired',
   });
   expect(
     readRoute('?item=field&tab=usage&mode=full&slice=basic&block=missing', config),
   ).toMatchObject({
     tab: 'usage',
-    mode: 'slice',
+    mode: 'overview',
     slice: undefined,
     block: undefined,
   });
@@ -128,16 +138,16 @@ it('normalizes v2 routes using definitions and ignores stale v1 switches', () =>
     config,
   );
   expect(caseRoute).toMatchObject({
-    tab: 'cases',
+    tab: 'states',
     block: 'overflow',
     family: 'ink',
     scheme: 'both',
     vp: 360,
   });
   expect(routeSearch(caseRoute, config)).toBe(
-    '?item=field&tab=cases&family=ink&block=overflow&vp=360',
+    '?item=field&tab=states&family=ink&block=overflow&vp=360',
   );
-  expect(readRoute('?item=example-scene&tab=matrix&bounds=1', config)).toMatchObject({
+  expect(readRoute('?item=example-scene&tab=states&bounds=1', config)).toMatchObject({
     vp: 1440,
     tab: 'playground',
     bounds: false,
@@ -145,7 +155,7 @@ it('normalizes v2 routes using definitions and ignores stale v1 switches', () =>
   expect(readRoute('?item=example-scene&vp=auto', config).vp).toBe('auto');
 });
 
-it('keeps preview settings in the header and view settings in the inspector', () => {
+it('keeps preview settings in the header and view settings in the inspector across all four tabs', () => {
   open('/?item=field&family=haze&scheme=light');
   const inspector = within(screen.getByRole('complementary', { name: 'Workbench inspector' }));
   const workspace = within(screen.getByRole('main'));
@@ -160,18 +170,27 @@ it('keeps preview settings in the header and view settings in the inspector', ()
   expect(inspector.getByRole('region', { name: 'JSX' })).toBeTruthy();
   expect(workspace.queryByRole('region', { name: 'JSX' })).toBeNull();
 
-  fireEvent.click(views.getByRole('link', { name: 'Matrix' }));
+  fireEvent.click(views.getByRole('link', { name: 'States' }));
   expect(previewSettings.getByRole('group', { name: 'Family' })).toBe(family);
+  expect(inspector.getByRole('navigation', { name: 'State sections' })).toBeTruthy();
+  expect(workspace.getByRole('heading', { name: 'Basic' })).toBeTruthy();
+  expect(workspace.getByRole('heading', { name: 'Overflow' })).toBeTruthy();
+
+  fireEvent.click(inspector.getByRole('button', { name: 'Combinator' }));
   expect(inspector.getByRole('region', { name: 'Matrix settings' })).toBeTruthy();
   expect(inspector.getByRole('combobox', { name: 'Slice' })).toBeTruthy();
   expect(workspace.queryByRole('combobox', { name: 'Slice' })).toBeNull();
   expect(workspace.getByRole('region', { name: 'Component matrix' })).toBeTruthy();
 
-  fireEvent.click(views.getByRole('link', { name: 'Cases' }));
+  fireEvent.click(views.getByRole('link', { name: 'Compositions' }));
   expect(previewSettings.getByRole('group', { name: 'Family' })).toBe(family);
-  expect(inspector.getByRole('combobox', { name: 'Case' })).toBeTruthy();
-  expect(workspace.queryByRole('combobox', { name: 'Case' })).toBeNull();
+  expect(inspector.getByRole('combobox', { name: 'Composition' })).toBeTruthy();
+  expect(workspace.getByText('Paired example')).toBeTruthy();
   expect(inspector.queryByRole('region', { name: 'Matrix settings' })).toBeNull();
+
+  fireEvent.click(views.getByRole('link', { name: 'Usage' }));
+  expect(inspector.getByRole('navigation', { name: 'On this page' })).toBeTruthy();
+  expect(workspace.getByRole('navigation', { name: 'Consuming scenes' })).toBeTruthy();
 });
 
 it('applies the selected width to the frame and its viewport without changing the theme', () => {
@@ -212,11 +231,16 @@ it('keeps dark and light together and preserves the same artboard when isolating
   ).toEqual(['night', 'day']);
 
   const day = screen.getByRole('region', { name: 'Haze Day' });
-  fireEvent.click(within(day).getByRole('button', { name: 'Isolate Haze Day' }));
+  expect(day.getAttribute('data-color-scheme')).toBe('light');
+  expect(day.querySelector('.wb-cell-header')?.tagName).toBe('DIV');
+  fireEvent.click(within(day).getByRole('button', { name: 'Expand Haze Day' }));
   expect(screen.getByRole('region', { name: 'Haze Day' })).toBe(day);
   expect(container.querySelector('.wb-theme-slot')).toBe(pair);
   expect(container.querySelectorAll('.wb-cell')).toHaveLength(1);
   expect(pair.hasAttribute('data-wb-pair')).toBe(false);
+  expect(within(day).getByRole('button', { name: 'Collapse Haze Day' })).toBeTruthy();
+  fireEvent.click(within(day).getByRole('button', { name: 'Collapse Haze Day' }));
+  expect(container.querySelectorAll('.wb-cell')).toHaveLength(5);
 });
 
 it('preserves inspected matrix rows on isolation and bounds work when the selection expands', () => {
@@ -230,7 +254,10 @@ it('preserves inspected matrix rows on isolation and bounds work when the select
     default: '0',
   });
   const matrix = defineComponent({
-    ...field,
+    id: field.id,
+    title: field.title,
+    category: field.category,
+    status: field.status,
     props: { row: axis(4), col: axis(3) },
     matrixViews: [{ id: 'basic', title: 'Basic', rows: 'row', cols: 'col', reference }],
     render: sample,
@@ -252,17 +279,15 @@ it('preserves inspected matrix rows on isolation and bounds work when the select
   expect(sample).not.toHaveBeenCalled();
   expect(reference).not.toHaveBeenCalled();
   expect(cells()[3]).toBe(edited);
-  fireEvent.click(board.getByRole('button', { name: 'Isolate Haze Night' }));
+  fireEvent.click(board.getByRole('button', { name: 'Expand Haze Night' }));
   expect(cells()[3]).toBe(edited);
   expect(edited.value).toBe('Keep this edit');
-  fireEvent.click(
-    within(screen.getByRole('group', { name: 'Family' })).getByRole('link', { name: 'All' }),
-  );
+  fireEvent.click(board.getByRole('button', { name: 'Collapse Haze Night' }));
   expect(cells()).toHaveLength(3);
   expect(screen.getAllByRole('textbox', { name: 'Cell value' })).toHaveLength(9);
 });
 
-it('filters sparse theme axes independently and isolates an artboard with native Back', async () => {
+it('filters sparse theme axes independently and expands/collapses an artboard with top filter deselection, Back, and Escape', async () => {
   const { container } = open();
   const themeLayers = (): (string | null)[] =>
     Array.from(container.querySelectorAll('.wb-artboard'), (element) =>
@@ -281,17 +306,88 @@ it('filters sparse theme axes independently and isolates an artboard with native
   expect(themeLayers()).toEqual(['night', 'day']);
 
   const push = vi.spyOn(window.history, 'pushState');
-  fireEvent.click(screen.getByRole('button', { name: 'Isolate Haze Day' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Expand Haze Day' }));
   expect(themeLayers()).toEqual(['day']);
+  expect(window.location.search).toContain('solo=day');
+  expect(window.location.search).not.toContain('family=');
+  expect(window.location.search).not.toContain('scheme=');
+  // Top Family/Scheme filters deselect while an individual artboard is expanded.
+  expect(family.getByRole('link', { name: 'Haze' }).getAttribute('aria-current')).toBeNull();
+  expect(scheme.getByRole('link', { name: 'Both' }).getAttribute('aria-current')).toBeNull();
   expect(push).toHaveBeenCalledTimes(1);
-  expect(screen.queryByRole('button', { name: 'Isolate Haze Day' })).toBeNull();
+  expect(screen.getByRole('button', { name: 'Collapse Haze Day' })).toBeTruthy();
   expect(document.activeElement).toBe(screen.getByRole('region', { name: 'Haze Day' }));
+
+  // Native Back returns to the prior Haze + Both selection.
   window.history.back();
   await waitFor(() => {
     expect(themeLayers()).toEqual(['night', 'day']);
   });
+  expect(family.getByRole('link', { name: 'Haze' }).getAttribute('aria-current')).toBe('page');
+  expect(scheme.getByRole('link', { name: 'Both' }).getAttribute('aria-current')).toBe('page');
   expect(document.activeElement).toBe(screen.getByRole('region', { name: 'Haze Day' }));
   expect(push).toHaveBeenCalledTimes(1);
+
+  // Expanding again and pressing Escape restores the saved Haze + Both filters in one step.
+  fireEvent.click(screen.getByRole('button', { name: 'Expand Haze Day' }));
+  expect(themeLayers()).toEqual(['day']);
+  fireEvent.keyDown(window, { key: 'Escape' });
+  expect(themeLayers()).toEqual(['night', 'day']);
+  expect(family.getByRole('link', { name: 'Haze' }).getAttribute('aria-current')).toBe('page');
+  expect(scheme.getByRole('link', { name: 'Both' }).getAttribute('aria-current')).toBe('page');
+
+  // Expanding an artboard inside a States case focuses that case in URL and restores all sections on collapse.
+  cleanup();
+  open('/?item=field&tab=states&scheme=light');
+  expect(document.querySelector('.wb-canvas')?.getAttribute('data-canvas-scheme')).toBe('light');
+  const overflowFrame = document.querySelector<HTMLElement>(
+    '.wb-story-frame[data-wb-block="overflow"]',
+  )!;
+  fireEvent.click(within(overflowFrame).getByRole('button', { name: 'Expand Haze Day' }));
+  expect(window.location.search).toContain('block=overflow');
+  expect(window.location.search).toContain('solo=day');
+  expect(window.location.search).not.toContain('scheme=');
+  expect(document.querySelector('.wb-canvas')?.getAttribute('data-canvas-scheme')).toBe('light');
+  expect(document.querySelectorAll('.wb-story-frame')).toHaveLength(1);
+  fireEvent.click(screen.getByRole('button', { name: 'Collapse Haze Day' }));
+  expect(window.location.search).toContain('scheme=light');
+  expect(window.location.search).not.toContain('block=');
+  expect(window.location.search).not.toContain('solo=');
+  expect(document.querySelectorAll('.wb-story-frame').length).toBeGreaterThan(1);
+
+  // History Forward back into solo keeps its saved return snapshot, and Show all sections preserves solo.
+  window.history.back();
+  await waitFor(() => {
+    expect(window.location.search).toContain('solo=day');
+  });
+  fireEvent.click(screen.getByRole('button', { name: 'Show all sections' }));
+  expect(window.location.search).toContain('solo=day');
+  expect(window.location.search).not.toContain('block=');
+
+  // Direct-loaded solo falls back cleanly to All x Both on Collapse, and Usage keeps canvas dark even on scheme=light.
+  cleanup();
+  window.history.replaceState(null, '', '/?item=field&solo=day');
+  open('/?item=field&solo=day');
+  expect(document.querySelector('.wb-canvas')?.getAttribute('data-canvas-scheme')).toBe('light');
+  // Escape is ignored inside editable fields, then collapses solo once focus leaves.
+  const searchBox = screen.getByRole('searchbox');
+  searchBox.focus();
+  fireEvent.keyDown(searchBox, { key: 'Escape' });
+  expect(window.location.search).toContain('solo=day');
+  fireEvent.click(screen.getByRole('button', { name: 'Collapse Haze Day' }));
+  expect(window.location.search).not.toContain('solo=');
+  expect(window.location.search).not.toContain('family=');
+  expect(window.location.search).not.toContain('scheme=');
+
+  // Usage tab always stays dark even when scheme=light, while raw=1 light canvas uses light scheme.
+  cleanup();
+  open('/?item=field&tab=usage&scheme=light');
+  expect(document.querySelector('.wb-canvas')?.getAttribute('data-canvas-scheme')).toBe('dark');
+  cleanup();
+  open('/?item=field&scheme=light&raw=1');
+  expect(document.querySelector('.wb-raw-canvas')?.getAttribute('data-canvas-scheme')).toBe(
+    'light',
+  );
 });
 
 it('returns from a scene to the same Usage context through actual browser history', async () => {
@@ -317,9 +413,12 @@ it('returns from a scene to the same Usage context through actual browser histor
   await waitFor(() => {
     expect(screen.getByRole('link', { name: 'Usage' }).getAttribute('aria-current')).toBe('page');
   });
-  expect(
-    container.querySelector('.wb-artboard[data-theme="day"][dir="rtl"][data-text-scale="120"]'),
-  ).toBeTruthy();
+  expect(screen.getByRole('button', { name: '120% Text' }).getAttribute('aria-pressed')).toBe(
+    'true',
+  );
+  expect(screen.getByRole('button', { name: 'RTL' }).getAttribute('aria-pressed')).toBe('true');
+  expect(window.location.search).toContain('scale=120');
+  expect(window.location.search).toContain('dir=rtl');
 
   window.history.forward();
   await waitFor(() => {
@@ -464,6 +563,122 @@ it('opens an unknown item with navigation and renders raw only for the requested
   expect(screen.queryByRole('complementary', { name: 'Workbench inspector' })).toBeNull();
   expect(screen.getAllByText('Long text')).toHaveLength(5);
   const story = container.querySelector('.wb-story-frame[data-wb-block="overflow"]');
-  expect(story?.querySelector('.wb-frame-heading h3')?.textContent).toBe('Overflow');
+  expect(story?.querySelector('.wb-story-header h2')?.textContent).toBe('Overflow');
   expect(story?.querySelectorAll('.wb-artboard')).toHaveLength(5);
+});
+
+it('supports custom declarative componentTabs and synchronized scene StoryFrame controls', () => {
+  const customScene = defineScene({
+    id: 'controlled-scene',
+    title: 'Controlled scene',
+    group: 'Examples',
+    controls: {
+      dense: { kind: 'boolean', label: 'Dense', default: false },
+    },
+    render: ({ ctx }) => <p>dense={String(ctx?.story?.controls.dense)}</p>,
+  });
+  window.history.replaceState(null, '', '/?item=field&tab=notes&family=haze&scheme=light');
+  render(
+    <WorkbenchApp
+      config={{
+        ...config,
+        componentTabs: [
+          { id: 'playground', label: 'Playground', kind: 'playground' },
+          {
+            id: 'notes',
+            label: 'Design notes',
+            kind: 'custom',
+            render: ({ component }) => <p>Custom tab for {component.title}</p>,
+          },
+        ],
+        scenes: [customScene],
+      }}
+    />,
+  );
+  expect(screen.getByRole('link', { name: 'Design notes' }).getAttribute('aria-current')).toBe(
+    'page',
+  );
+  expect(screen.getByText('Custom tab for Field')).toBeTruthy();
+
+  cleanup();
+  window.history.replaceState(null, '', '/?item=controlled-scene&family=haze');
+  render(<WorkbenchApp config={{ ...config, scenes: [customScene] }} />);
+  expect(screen.getAllByText('dense=false')).toHaveLength(2);
+  fireEvent.click(screen.getByRole('checkbox', { name: 'Dense' }));
+  expect(screen.getAllByText('dense=true')).toHaveLength(2);
+  fireEvent.click(screen.getByRole('button', { name: 'Reset scene' }));
+  expect(screen.getAllByText('dense=false')).toHaveLength(2);
+
+  // Raw scene capture hides the StoryFrame header while preserving default ctx.story controls.
+  cleanup();
+  window.history.replaceState(null, '', '/?item=controlled-scene&family=haze&raw=1');
+  const rawScene = render(<WorkbenchApp config={{ ...config, scenes: [customScene] }} />);
+  expect(rawScene.container.querySelector('.wb-story-header')).toBeNull();
+  expect(screen.getAllByText('dense=false')).toHaveLength(2);
+
+  // Legacy ?tab=matrix&mode=overview preserves explicit overview mode.
+  cleanup();
+  open('/?item=field&tab=matrix&mode=overview&family=haze&scheme=light');
+  expect(screen.getByRole('link', { name: 'States' }).getAttribute('aria-current')).toBe('page');
+  expect(screen.getByRole('button', { name: 'Overview' }).getAttribute('aria-pressed')).toBe(
+    'true',
+  );
+
+  // Combinator modes clear block so capture routes never advertise unhonored block parameters.
+  cleanup();
+  const combinator = open(
+    '/?item=field&tab=states&mode=pairwise&block=overflow&family=haze&scheme=light&freeze=1',
+  );
+  const combinatorShell = combinator.container.querySelector('.wb-shell');
+  const captureRoute = JSON.parse(
+    combinatorShell?.getAttribute('data-wb-capture-route') ?? '{}',
+  ) as { mode?: string; block?: string };
+  expect(captureRoute.mode).toBe('pairwise');
+  expect(captureRoute.block).toBeUndefined();
+  expect(combinatorShell?.getAttribute('data-wb-block')).toBeNull();
+
+  // Rich Markdown internal links from Usage preserve mode/slice/legacy usage+block, strip #fragments, and allow same-item Playground navigation.
+  cleanup();
+  window.history.replaceState(null, '', '/?item=field&tab=usage&family=haze&scheme=light');
+  render(
+    <WorkbenchApp
+      config={{
+        ...config,
+        docs: {
+          resolve: () => ({
+            markdown: [
+              '[Open Field](/?item=field)',
+              '[Pairwise](/?item=field&mode=pairwise)',
+              '[Basic slice](/?item=field&slice=basic)',
+              '[Matrix overview](/?item=field&tab=matrix&mode=overview)',
+              '[With hash](/?item=field&tab=usage#wb-doc-props)',
+              '[Legacy composition](/?item=field&tab=usage&block=paired)',
+            ].join(' · '),
+          }),
+        },
+      }}
+    />,
+  );
+  expect(screen.getByRole('link', { name: 'Open Field' }).getAttribute('href')).toBe(
+    '/?item=field&family=haze&scheme=light',
+  );
+  expect(screen.getByRole('link', { name: 'Pairwise' }).getAttribute('href')).toBe(
+    '/?item=field&tab=states&family=haze&scheme=light&mode=pairwise',
+  );
+  expect(screen.getByRole('link', { name: 'Basic slice' }).getAttribute('href')).toBe(
+    '/?item=field&tab=states&family=haze&scheme=light&slice=basic',
+  );
+  expect(screen.getByRole('link', { name: 'Matrix overview' }).getAttribute('href')).toBe(
+    '/?item=field&tab=states&family=haze&scheme=light',
+  );
+  expect(screen.getByRole('link', { name: 'With hash' }).getAttribute('href')).toBe(
+    '/?item=field&tab=usage&family=haze&scheme=light',
+  );
+  expect(screen.getByRole('link', { name: 'Legacy composition' }).getAttribute('href')).toBe(
+    '/?item=field&tab=compositions&family=haze&scheme=light&block=paired',
+  );
+  fireEvent.click(screen.getByRole('link', { name: 'Open Field' }));
+  expect(screen.getByRole('link', { name: 'Playground' }).getAttribute('aria-current')).toBe(
+    'page',
+  );
 });

@@ -13,8 +13,12 @@ import {
 } from 'react';
 import type { CSSProperties, MouseEvent, ReactElement, ReactNode, RefObject } from 'react';
 import { Inspector } from './Inspector.js';
+import type { ArtboardScope } from './Inspector.js';
+import type { RouteDestination } from './UsageView.js';
+import { StoryFrame } from './StoryFrame.js';
 import { ThemeEditor } from './ThemeEditor.js';
 import { SettingsProvider } from './ViewSettings.js';
+import { componentStates } from './schema.js';
 import { useSubjectBounds } from './subjectBounds.js';
 import {
   EMPTY_BUCKET,
@@ -29,19 +33,22 @@ import {
 } from './themeEditorState.js';
 import type { ThemeOverridesStore } from './themeEditorState.js';
 import {
+  findComponentTab,
   patchRoute,
   readRoute,
+  resolveComponentTabs,
   routeSearch,
   schemes,
+  selectRouteThemes,
   selectThemes,
   surfaces,
-  tabs,
   viewports,
 } from './route.js';
 import type { WorkbenchRoute } from './route.js';
 import type {
   ComponentStatus,
   SceneDefinition,
+  StoryContext,
   ThemeMacroValue,
   ViewportSize,
   WorkbenchConfig,
@@ -50,13 +57,6 @@ import type {
 } from './types.js';
 import './workbench.css';
 import './controls.css';
-
-const tabLabels = {
-  playground: 'Playground',
-  matrix: 'Matrix',
-  cases: 'Cases',
-  usage: 'Usage',
-};
 
 const schemeLabels = { dark: 'Dark', light: 'Light', both: 'Both' };
 const surfaceLabels = { auto: 'Auto', base: 'Base', overlay: 'Overlay' };
@@ -171,6 +171,7 @@ function sceneArtboard(
   route: WorkbenchRoute,
   theme: WorkbenchTheme,
   scene: SceneDefinition | undefined,
+  story?: StoryContext,
 ): ReactNode {
   const surface = route.surface === 'auto' ? (scene?.surface ?? 'base') : route.surface;
   const overlayStage =
@@ -181,7 +182,7 @@ function sceneArtboard(
     surface,
     overlayStage,
     children: Scene ? (
-      <Scene />
+      <Scene ctx={{ theme, surface, ...(story ? { story } : {}) }} />
     ) : (
       (config.renderEmptyState?.({ theme, surface }) ?? (
         <p className="wb-empty-note">No components or scenes registered.</p>
@@ -401,7 +402,55 @@ function useSceneIndex(config: WorkbenchConfig): ReadonlyMap<string, readonly Sc
   }, [config.scenes]);
 }
 
-type Update = (patch: Partial<WorkbenchRoute>, behavior?: 'push' | 'replace') => void;
+interface SoloReturnSnapshot {
+  readonly item: string;
+  readonly tab: WorkbenchRoute['tab'];
+  readonly family: WorkbenchRoute['family'];
+  readonly scheme: WorkbenchRoute['scheme'];
+  readonly slice: WorkbenchRoute['slice'];
+  readonly block: WorkbenchRoute['block'];
+}
+
+function readSoloReturnFromHistory(): SoloReturnSnapshot | null {
+  const state = window.history.state as { readonly wbSoloReturn?: unknown } | null;
+  const candidate = state?.wbSoloReturn;
+  if (!candidate || typeof candidate !== 'object') {
+    return null;
+  }
+  const snap = candidate as Partial<SoloReturnSnapshot>;
+  if (
+    typeof snap.item !== 'string' ||
+    typeof snap.tab !== 'string' ||
+    typeof snap.family !== 'string' ||
+    (snap.scheme !== 'dark' && snap.scheme !== 'light' && snap.scheme !== 'both')
+  ) {
+    return null;
+  }
+  return {
+    item: snap.item,
+    tab: snap.tab,
+    family: snap.family,
+    scheme: snap.scheme,
+    slice: typeof snap.slice === 'string' ? snap.slice : undefined,
+    block: typeof snap.block === 'string' ? snap.block : undefined,
+  };
+}
+
+function hasOpenLightDismissPopover(): boolean {
+  try {
+    return Array.from(
+      document.querySelectorAll('[popover=""]:popover-open, [popover="auto"]:popover-open'),
+    ).some((node) => !node.classList.contains('wb-bounds-layer'));
+  } catch {
+    return false;
+  }
+}
+
+type Update = (
+  patch: Partial<WorkbenchRoute>,
+  behavior?: 'push' | 'replace',
+  historyState?: unknown,
+) => void;
 type Href = (patch: Partial<WorkbenchRoute>) => string;
 
 function Environment({
@@ -419,20 +468,22 @@ function Environment({
 }): ReactElement {
   const families = new Map(themes.map((theme) => [theme.family, theme.familyLabel]));
   const familyOptions = [...families, ['all', 'All'] as const];
+  const activeScheme = route.solo ? 'both' : route.scheme;
+  const activeFamily = route.solo ? 'all' : route.family;
   return (
     <div className="wb-environment" role="group" aria-label="Preview settings">
       <div className="wb-environment-group">
         <span aria-hidden="true">Family</span>
         <div className="wb-seg" role="group" aria-label="Family">
           {familyOptions.map(([family, label]) =>
-            selectThemes(themes, family, route.scheme).length > 0 ? (
+            selectThemes(themes, family, activeScheme).length > 0 ? (
               <Destination
                 key={family}
                 className="wb-seg-btn"
-                href={href({ family })}
-                active={route.family === family}
+                href={href({ family, solo: undefined })}
+                active={!route.solo && route.family === family}
                 navigate={() => {
-                  update({ family }, 'push');
+                  update({ family, solo: undefined }, 'push');
                 }}
               >
                 {label}
@@ -449,14 +500,14 @@ function Environment({
         <span aria-hidden="true">Scheme</span>
         <div className="wb-seg" role="group" aria-label="Scheme">
           {schemes.map((scheme) =>
-            selectThemes(themes, route.family, scheme).length > 0 ? (
+            selectThemes(themes, activeFamily, scheme).length > 0 ? (
               <Destination
                 key={scheme}
                 className="wb-seg-btn"
-                href={href({ scheme })}
-                active={route.scheme === scheme}
+                href={href({ scheme, solo: undefined })}
+                active={!route.solo && route.scheme === scheme}
                 navigate={() => {
-                  update({ scheme }, 'push');
+                  update({ scheme, solo: undefined }, 'push');
                 }}
               >
                 {schemeLabels[scheme]}
@@ -613,6 +664,59 @@ function Artboard({
   );
 }
 
+function destinationPatch(
+  destination: RouteDestination,
+  config: WorkbenchConfig,
+): Partial<WorkbenchRoute> {
+  const componentTabs = resolveComponentTabs(config);
+  const defaultTabId = componentTabs[0]!.id;
+  const statesTabId = componentTabs.find((entry) => entry.kind === 'states')?.id;
+  const tab =
+    destination.tab ??
+    (destination.slice || (destination.mode && destination.mode !== 'overview')
+      ? (statesTabId ?? defaultTabId)
+      : defaultTabId);
+  return {
+    item: destination.item,
+    tab,
+    slice: destination.slice,
+    block: destination.block,
+    ...(destination.mode !== undefined
+      ? { mode: destination.mode }
+      : tab !== 'matrix'
+        ? { mode: 'overview' as const }
+        : {}),
+  };
+}
+
+function ExpandIcon(): ReactElement {
+  return (
+    <svg width="13" height="13" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+      <path
+        d="M10 2.5h3.5V6M13.5 2.5 9.25 6.75M6 13.5H2.5V10M2.5 13.5l4.25-4.25"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+function CollapseIcon(): ReactElement {
+  return (
+    <svg width="13" height="13" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+      <path
+        d="M13.5 6H10V2.5M10 6l3.5-3.5M2.5 10H6v3.5M6 10l-3.5 3.5"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 const WorkbenchView = memo(function WorkbenchView({
   config,
   route,
@@ -622,6 +726,8 @@ const WorkbenchView = memo(function WorkbenchView({
   notFound,
   createHref,
   update,
+  expandArtboard,
+  collapseArtboard,
   navigateFromUsage,
 }: {
   readonly config: WorkbenchConfig;
@@ -632,72 +738,96 @@ const WorkbenchView = memo(function WorkbenchView({
   readonly notFound: boolean;
   readonly createHref: Href;
   readonly update: Update;
-  readonly navigateFromUsage: (item: string) => void;
+  readonly expandArtboard: (theme: WorkbenchTheme, scope?: ArtboardScope) => void;
+  readonly collapseArtboard: () => void;
+  readonly navigateFromUsage: (destination: RouteDestination) => void;
 }): ReactElement {
   const selectedThemes = useMemo(
-    () => selectThemes(config.themes, route.family, route.scheme),
-    [config.themes, route.family, route.scheme],
+    () => selectRouteThemes(config.themes, route),
+    [config.themes, route],
   );
   const themeGroups = useMemo(() => groupThemes(config.themes), [config.themes]);
   const selectedThemeIds = new Set(selectedThemes.map((theme) => theme.id));
   const sceneIndex = useSceneIndex(config);
-  const renderArtboards = (render: (theme: WorkbenchTheme) => ReactNode): ReactElement => (
-    <div
-      className="wb-artboards"
-      data-single={selectedThemes.length === 1 ? 'true' : undefined}
-      data-wb-fixed={route.vp !== 'auto' || undefined}
-    >
-      {themeGroups.map((group) => {
-        const visible = group.filter((theme) => selectedThemeIds.has(theme.id));
-        return visible.length ? (
-          <div
-            key={group[0]!.id}
-            className="wb-theme-slot"
-            data-wb-pair={visible.length > 1 || undefined}
-          >
-            {visible.map((theme) => (
-              <section
-                className="wb-cell"
-                key={theme.id}
-                aria-label={theme.label}
-                tabIndex={route.raw ? undefined : -1}
-              >
-                {route.raw || selectedThemes.length === 1 ? (
+  const renderArtboards = (
+    render: (theme: WorkbenchTheme) => ReactNode,
+    scope?: ArtboardScope,
+  ): ReactElement => {
+    const canFocusSection = Boolean(
+      scope?.canFocus !== false && (scope?.block || scope?.slice) && !route.block && !route.slice,
+    );
+    const expanded = Boolean(route.solo);
+    const showExpandControl =
+      !route.raw && (expanded || selectedThemes.length > 1 || canFocusSection);
+    return (
+      <div
+        className="wb-artboards"
+        data-single={selectedThemes.length === 1 ? 'true' : undefined}
+        data-wb-fixed={route.vp !== 'auto' || undefined}
+      >
+        {themeGroups.map((group) => {
+          const visible = group.filter((theme) => selectedThemeIds.has(theme.id));
+          return visible.length ? (
+            <div
+              key={group[0]!.id}
+              className="wb-theme-slot"
+              data-wb-pair={visible.length > 1 || undefined}
+            >
+              {visible.map((theme) => (
+                <section
+                  className="wb-cell"
+                  key={theme.id}
+                  aria-label={theme.label}
+                  data-color-scheme={theme.colorScheme}
+                  tabIndex={route.raw ? undefined : -1}
+                >
                   <div className="wb-cell-header">
                     <span className="wb-cell-title">{theme.label}</span>
-                    {theme.meta && <span className="wb-cell-meta">{theme.meta}</span>}
+                    {showExpandControl ? (
+                      <button
+                        className="wb-cell-expand"
+                        type="button"
+                        data-expanded={expanded || undefined}
+                        aria-label={expanded ? `Collapse ${theme.label}` : `Expand ${theme.label}`}
+                        title={expanded ? `Collapse ${theme.label} (Esc)` : `Expand ${theme.label}`}
+                        onClick={(event) => {
+                          event.currentTarget.closest<HTMLElement>('.wb-cell')?.focus();
+                          if (expanded) {
+                            collapseArtboard();
+                          } else {
+                            expandArtboard(theme, scope);
+                          }
+                        }}
+                      >
+                        {expanded ? <CollapseIcon /> : <ExpandIcon />}
+                      </button>
+                    ) : (
+                      theme.meta && <span className="wb-cell-meta">{theme.meta}</span>
+                    )}
                   </div>
-                ) : (
-                  <button
-                    className="wb-cell-header wb-isolate"
-                    type="button"
-                    aria-label={`Isolate ${theme.label}`}
-                    onClick={(event) => {
-                      event.currentTarget.parentElement?.focus();
-                      update({ family: theme.family, scheme: theme.colorScheme }, 'push');
-                    }}
-                  >
-                    <span className="wb-cell-title">{theme.label}</span>
-                    <span className="wb-cell-meta">Isolate</span>
-                  </button>
-                )}
-                <ViewportFrame vp={route.vp} scaleToFit={selectedThemes.length > 1}>
-                  <Artboard
-                    theme={theme}
-                    route={route}
-                    scene={!component}
-                    renderArtboard={config.renderArtboard}
-                  >
-                    {render(theme)}
-                  </Artboard>
-                </ViewportFrame>
-              </section>
-            ))}
-          </div>
-        ) : null;
-      })}
-      {!selectedThemes.length && <p className="wb-empty-note">No themes registered.</p>}
-    </div>
+                  <ViewportFrame vp={route.vp} scaleToFit={selectedThemes.length > 1}>
+                    <Artboard
+                      theme={theme}
+                      route={route}
+                      scene={!component}
+                      renderArtboard={config.renderArtboard}
+                    >
+                      {render(theme)}
+                    </Artboard>
+                  </ViewportFrame>
+                </section>
+              ))}
+            </div>
+          ) : null;
+        })}
+        {!selectedThemes.length && <p className="wb-empty-note">No themes registered.</p>}
+      </div>
+    );
+  };
+
+  const activeTab = component ? findComponentTab(config, route.tab) : undefined;
+  const sceneHasFrame = Boolean(
+    scene && (Object.keys(scene.controls ?? {}).length > 0 || scene.actions?.length || scene.reset),
   );
 
   return component ? (
@@ -705,10 +835,12 @@ const WorkbenchView = memo(function WorkbenchView({
       key={component.id}
       component={component}
       route={route}
+      activeTab={activeTab}
       themes={selectedThemes}
       scenes={sceneIndex.get(component.id) ?? []}
+      docsConfig={config.docs}
       update={update}
-      itemHref={(item) => createHref({ item })}
+      itemHref={(destination) => createHref(destinationPatch(destination, config))}
       navigateItem={navigateFromUsage}
       renderArtboards={renderArtboards}
       renderStage={config.renderStage}
@@ -717,6 +849,22 @@ const WorkbenchView = memo(function WorkbenchView({
     <p className="wb-empty-note">
       Item “{route.item}” was not found. Choose a component or scene from the catalog.
     </p>
+  ) : sceneHasFrame && scene ? (
+    <StoryFrame
+      key={scene.id}
+      title={scene.title}
+      headingLevel="h2"
+      caption={scene.summary}
+      controls={scene.controls}
+      actions={scene.actions}
+      reset={scene.reset}
+      externalRevision={sceneRevision}
+      raw={route.raw}
+      hideHeader={route.raw}
+      hideTitle
+    >
+      {(story) => renderArtboards((theme) => sceneArtboard(config, route, theme, scene, story))}
+    </StoryFrame>
   ) : (
     renderArtboards((theme) => (
       <Fragment key={`${route.item}:${sceneRevision}`}>
@@ -889,7 +1037,7 @@ export function WorkbenchApp({ config }: WorkbenchAppProps): ReactElement {
     [route, config],
   );
   const update = useCallback<Update>(
-    (patch, behavior = 'replace') => {
+    (patch, behavior = 'replace', historyState) => {
       const current = readRoute(window.location.search, config);
       const next = patchRoute(current, patch, config);
       const search = routeSearch(next, config);
@@ -898,9 +1046,13 @@ export function WorkbenchApp({ config }: WorkbenchAppProps): ReactElement {
       }
       const href = `${window.location.pathname}${search}${window.location.hash}`;
       if (behavior === 'push') {
-        window.history.pushState(null, '', href);
+        window.history.pushState(historyState ?? null, '', href);
       } else {
-        window.history.replaceState(null, '', href);
+        window.history.replaceState(
+          historyState !== undefined ? historyState : window.history.state,
+          '',
+          href,
+        );
       }
       if (next.item !== current.item) {
         revealCatalogPath(next.item);
@@ -920,15 +1072,21 @@ export function WorkbenchApp({ config }: WorkbenchAppProps): ReactElement {
   }, [route.item]);
 
   const visitItem = useCallback(
-    (item: string, focusDestination = true): void => {
+    (item: string, focusDestination = true, patch?: Partial<WorkbenchRoute>): void => {
       focusHeading.current = focusDestination && item !== route.item;
-      update({ item }, 'push');
+      update({ item, ...patch }, 'push');
       setCatalogOpen(false);
       if (focusDestination && item === route.item) {
         headingRef.current?.focus();
       }
     },
     [route.item, update],
+  );
+  const navigateFromUsage = useCallback(
+    (destination: RouteDestination): void => {
+      visitItem(destination.item, true, destinationPatch(destination, config));
+    },
+    [config, visitItem],
   );
   const navigateItem = (item: string): void => {
     visitItem(item, Boolean(mobileCatalogRef.current?.getClientRects().length && catalogOpen));
@@ -965,6 +1123,106 @@ export function WorkbenchApp({ config }: WorkbenchAppProps): ReactElement {
     };
   }
 
+  const componentTabs = resolveComponentTabs(config);
+  const activeTab = component ? findComponentTab(config, route.tab) : undefined;
+
+  const expandArtboard = useCallback(
+    (theme: WorkbenchTheme, scope?: ArtboardScope): void => {
+      const current = readRoute(window.location.search, config);
+      const snapshot: SoloReturnSnapshot | null = current.solo
+        ? readSoloReturnFromHistory()
+        : {
+            item: current.item,
+            tab: current.tab,
+            family: current.family,
+            scheme: current.scheme,
+            slice: current.slice,
+            block: current.block,
+          };
+      update(
+        {
+          solo: theme.id,
+          ...(scope?.block
+            ? { block: scope.block, slice: undefined }
+            : scope?.slice
+              ? { slice: scope.slice, block: undefined }
+              : {}),
+        },
+        'push',
+        snapshot ? { wbSoloReturn: snapshot } : null,
+      );
+    },
+    [config, update],
+  );
+
+  const collapseArtboard = useCallback((): void => {
+    const current = readRoute(window.location.search, config);
+    const saved = readSoloReturnFromHistory();
+    const keepCombinatorSlice = current.mode !== 'overview';
+    if (saved && saved.item === current.item && saved.tab === current.tab) {
+      update(
+        {
+          solo: undefined,
+          family: saved.family,
+          scheme: saved.scheme,
+          ...(keepCombinatorSlice ? {} : { slice: saved.slice, block: saved.block }),
+        },
+        'push',
+      );
+      return;
+    }
+    update(
+      {
+        solo: undefined,
+        family: 'all',
+        scheme: 'both',
+        ...(keepCombinatorSlice ? {} : { slice: undefined, block: undefined }),
+      },
+      'push',
+    );
+  }, [config, update]);
+
+  useEffect(() => {
+    if (route.raw || !route.solo) {
+      return;
+    }
+    const handleEscape = (event: KeyboardEvent): void => {
+      if (
+        event.key !== 'Escape' ||
+        event.defaultPrevented ||
+        event.isComposing ||
+        event.repeat ||
+        event.altKey ||
+        event.ctrlKey ||
+        event.metaKey ||
+        event.shiftKey
+      ) {
+        return;
+      }
+      const target = event.target instanceof HTMLElement ? event.target : null;
+      const editableTarget =
+        Boolean(target?.isContentEditable) ||
+        Boolean(
+          target?.closest(
+            'textarea, select, input:not([type="checkbox"], [type="radio"], [type="button"], [type="submit"], [type="reset"])',
+          ),
+        );
+      const hasOpenDialog =
+        Array.from(document.querySelectorAll('dialog[open]')).some(
+          (dialog) => !dialog.matches('[role="presentation"], [role="none"]'),
+        ) || Boolean(target?.closest('[role="dialog"], [role="alertdialog"]'));
+      if (editableTarget || hasOpenDialog || hasOpenLightDismissPopover()) {
+        return;
+      }
+      event.preventDefault();
+      collapseArtboard();
+    };
+    window.addEventListener('keydown', handleEscape);
+    return () => {
+      window.removeEventListener('keydown', handleEscape);
+    };
+  }, [collapseArtboard, route.raw, route.solo]);
+
   const body = (
     <WorkbenchView
       config={config}
@@ -975,7 +1233,9 @@ export function WorkbenchApp({ config }: WorkbenchAppProps): ReactElement {
       notFound={notFound}
       createHref={createHref}
       update={update}
-      navigateFromUsage={visitItem}
+      expandArtboard={expandArtboard}
+      collapseArtboard={collapseArtboard}
+      navigateFromUsage={navigateFromUsage}
     />
   );
 
@@ -984,9 +1244,13 @@ export function WorkbenchApp({ config }: WorkbenchAppProps): ReactElement {
     'data-wb-capture-route': route.freeze ? JSON.stringify(route) : undefined,
     'data-wb-fixed-view': route.vp !== 'auto' || undefined,
     'data-wb-tab': component ? route.tab : undefined,
+    'data-wb-tab-kind': component ? activeTab?.kind : undefined,
     'data-wb-slice':
-      route.tab === 'matrix' ? (route.slice ?? component?.matrixViews?.[0]?.id) : undefined,
-    'data-wb-mode': route.tab === 'matrix' ? route.mode : undefined,
+      component && activeTab?.kind === 'states'
+        ? (route.slice ?? (route.mode === 'slice' ? componentStates(component)[0]?.id : undefined))
+        : undefined,
+    'data-wb-mode':
+      activeTab?.kind === 'states' && route.mode !== 'overview' ? route.mode : undefined,
     'data-wb-block': route.block,
     'data-wb-not-found': notFound ? '1' : undefined,
   };
@@ -1099,9 +1363,16 @@ export function WorkbenchApp({ config }: WorkbenchAppProps): ReactElement {
   }, []);
 
   const visibleThemes = useMemo(
-    () => selectThemes(config.themes, route.family, route.scheme),
-    [config.themes, route.family, route.scheme],
+    () => selectRouteThemes(config.themes, route),
+    [config.themes, route],
   );
+  const isUsageTab = Boolean(component && activeTab?.kind === 'usage');
+  const canvasScheme: 'light' | 'dark' =
+    !isUsageTab &&
+    visibleThemes.length > 0 &&
+    visibleThemes.every((theme) => theme.colorScheme === 'light')
+      ? 'light'
+      : 'dark';
 
   const overrideCss = useMemo(
     () =>
@@ -1118,7 +1389,13 @@ export function WorkbenchApp({ config }: WorkbenchAppProps): ReactElement {
 
   if (route.raw) {
     return (
-      <div ref={rootRef} className="wb-raw-canvas wb-scroll" style={viewportStyle} {...identity}>
+      <div
+        ref={rootRef}
+        className="wb-raw-canvas wb-scroll"
+        data-canvas-scheme={canvasScheme}
+        style={viewportStyle}
+        {...identity}
+      >
         {body}
       </div>
     );
@@ -1225,9 +1502,12 @@ export function WorkbenchApp({ config }: WorkbenchAppProps): ReactElement {
             onResetToken={handleResetToken}
             onResetTheme={handleResetTheme}
             onResetAll={handleResetAll}
-            onFocusTheme={(theme) =>
-              update({ family: theme.family, scheme: theme.colorScheme }, 'push')
-            }
+            onFocusTheme={(theme) => {
+              if (route.solo === theme.id) {
+                return;
+              }
+              update({ family: theme.family, scheme: theme.colorScheme, solo: undefined }, 'push');
+            }}
           />
         </div>
       )}
@@ -1393,25 +1673,26 @@ export function WorkbenchApp({ config }: WorkbenchAppProps): ReactElement {
         </header>
         {component && (
           <nav className="wb-tabs" aria-label="Inspector tabs">
-            {tabs.map((tab) => (
+            {componentTabs.map((tabDef) => (
               <Destination
-                key={tab}
+                key={tabDef.id}
                 className="wb-tab"
-                href={createHref({ tab })}
-                active={route.tab === tab}
+                href={createHref({ tab: tabDef.id })}
+                active={route.tab === tabDef.id}
                 navigate={() => {
-                  update({ tab }, 'push');
+                  update({ tab: tabDef.id }, 'push');
                 }}
               >
-                {tabLabels[tab]}
+                {tabDef.label}
               </Destination>
             ))}
           </nav>
         )}
         <main
           className="wb-canvas wb-scroll"
+          data-canvas-scheme={canvasScheme}
           tabIndex={
-            route.vp !== 'auto' && (!component || route.tab !== 'playground') ? 0 : undefined
+            route.vp !== 'auto' && (!component || activeTab?.kind !== 'playground') ? 0 : undefined
           }
         >
           <SettingsProvider target={compact && !inspectorVisited ? null : settingsTarget}>

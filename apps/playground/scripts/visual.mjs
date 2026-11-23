@@ -19,6 +19,7 @@ for (const key of [
   'tab',
   'family',
   'scheme',
+  'solo',
   'slice',
   'mode',
   'block',
@@ -127,14 +128,26 @@ try {
     return {
       ...route,
       tab: shell.dataset.wbTab,
-      mode: shell.querySelector('[data-wb-matrix-mode]')?.dataset.wbMatrixMode,
+      mode:
+        shell.dataset.wbTabKind === 'states'
+          ? (shell.querySelector('[data-wb-matrix-mode]')?.dataset.wbMatrixMode ?? route.mode)
+          : undefined,
       slice: shell.dataset.wbSlice,
     };
   });
+  const expectedAliases = {
+    tab: {
+      matrix: 'states',
+      cases: 'states',
+      ...(params.has('block') ? { usage: 'compositions' } : {}),
+    },
+    mode: { combinator: 'slice' },
+  };
   for (const [key, requested] of params) {
     const value = actual[key];
     const rendered = typeof value === 'boolean' ? String(Number(value)) : String(value ?? '');
-    if (rendered !== requested) {
+    const normalized = expectedAliases[key]?.[requested] ?? requested;
+    if (rendered !== requested && rendered !== normalized) {
       throw new Error(
         `Requested ${key}=${requested}, but the rendered view has ${key}=${rendered || '(none)'}.`,
       );

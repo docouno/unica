@@ -1,3 +1,4 @@
+import type { ComponentType } from 'react';
 import { expect, it } from 'vitest';
 import {
   buildFull,
@@ -256,4 +257,142 @@ it('shows only changed values with real slot and action syntax and no demo props
   ).toBe(
     '<Control disabled={false} mode="ghost" title={"R&D"} icon={<AddIcon />} onChange={handleChange} />',
   );
+});
+
+it('validates StoryFrame controls/actions, combined states/compositions IDs, and custom componentTabs', () => {
+  const base = defineComponent({
+    id: 'frame-test',
+    title: 'Frame test',
+    category: 'Controls',
+    status: 'Proto',
+    props: flags,
+    render: () => null,
+  });
+
+  expect(() =>
+    validateComponent({
+      ...base,
+      cases: [
+        {
+          id: 'bad-control',
+          title: 'Bad',
+          kind: 'behavior',
+          controls: {
+            mode: { kind: 'enum', label: 'Mode', choices: ['a'], default: 'missing' },
+          },
+          render: () => null,
+        },
+      ],
+    }),
+  ).toThrow(/default outside its choices/);
+
+  expect(() =>
+    validateComponent({
+      ...base,
+      cases: [
+        {
+          id: 'dup-action',
+          title: 'Dup',
+          kind: 'behavior',
+          actions: [
+            { id: 'run', label: 'Run 1' },
+            { id: 'run', label: 'Run 2' },
+          ],
+          render: () => null,
+        },
+      ],
+    }),
+  ).toThrow(/unique/);
+
+  expect(() =>
+    validateComponent({
+      ...base,
+      states: [{ id: 'shared', title: 'New' }],
+      matrixViews: [{ id: 'other', title: 'Legacy' }],
+    }),
+  ).toThrow(/cannot declare both/i);
+
+  expect(() =>
+    validateComponent({
+      ...base,
+      compositions: [{ id: 'c1', title: 'New', render: () => null }],
+      usage: [{ id: 'c2', title: 'Legacy', render: () => null }],
+    }),
+  ).toThrow(/cannot declare both/i);
+
+  expect(() =>
+    validateComponent({
+      ...base,
+      cases: [
+        {
+          id: 'bad-step',
+          title: 'Bad step',
+          kind: 'behavior',
+          controls: {
+            pct: { kind: 'number', label: 'Percent', default: 50, min: 0, max: 100, step: 0 },
+          },
+          render: () => null,
+        },
+      ],
+    }),
+  ).toThrow(/positive finite number/i);
+
+  expect(() =>
+    defineComponent({
+      id: 'bad-slot',
+      title: 'BadSlot',
+      category: 'Controls',
+      status: 'Proto',
+      component: (() => null) as unknown as ComponentType<never>,
+      props: {
+        icon: {
+          kind: 'slot',
+          group: 'Content',
+          description: 'Icon slot.',
+          default: 'none',
+          choices: [{ value: 'none' }, { value: 'plus', code: '<Plus />' }],
+        },
+      },
+      slotRenderers: {
+        icon: { typo: null },
+      },
+    }),
+  ).toThrow(/unknown choice "typo"/i);
+
+  const omitSpec = defineComponent({
+    id: 'omit-enum',
+    title: 'OmitEnum',
+    category: 'Controls',
+    status: 'Proto',
+    props: {
+      variant: {
+        kind: 'enum',
+        group: 'Role',
+        description: 'Role.',
+        default: 'auto',
+        choices: [
+          { value: 'auto', label: 'Auto', omit: true },
+          { value: 'primary' },
+          { value: 'ghost' },
+        ],
+      },
+    },
+    render: () => null,
+  });
+  expect(componentCode(omitSpec, { variant: 'auto' })).toBe('<OmitEnum />');
+  expect(componentCode(omitSpec, { variant: 'ghost' })).toBe('<OmitEnum variant="ghost" />');
+
+  expect(() =>
+    validateCatalog({
+      title: 'Lab',
+      themes: [],
+      categories: ['Controls'],
+      components: [base],
+      scenes: [],
+      componentTabs: [
+        { id: 'playground', label: 'Playground', kind: 'playground' },
+        { id: 'states', label: 'States', kind: 'states', aliases: ['playground'] },
+      ],
+    }),
+  ).toThrow(/collides/);
 });

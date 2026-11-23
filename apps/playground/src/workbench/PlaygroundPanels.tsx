@@ -89,17 +89,20 @@ function PanelTabs({
 
 export function PlaygroundPanels({
   code,
+  codeText,
   controls,
   events,
   formData,
 }: {
   readonly code: ReactNode;
+  readonly codeText?: string;
   readonly controls: ReactNode;
   readonly events: ReactNode;
   readonly formData: ReactNode;
 }): ReactElement {
   const codeId = useId();
   const [selection, setSelection] = useState<PanelId>('controls');
+  const [copyStatus, setCopyStatus] = useState<{ text: string; source: string }>();
 
   const panels: Panel[] = [];
   if (controls) {
@@ -112,13 +115,46 @@ export function PlaygroundPanels({
     panels.push({ id: 'form-data', label: 'FormData', content: formData });
   }
 
+  const copyCode = (): void => {
+    if (!codeText) {
+      return;
+    }
+    const unavailable = (): void => {
+      setCopyStatus({ text: 'Copy unavailable', source: codeText });
+    };
+    if (!navigator.clipboard) {
+      unavailable();
+      return;
+    }
+    navigator.clipboard.writeText(codeText).then(() => {
+      setCopyStatus({ text: 'Copied', source: codeText });
+    }, unavailable);
+  };
+
   const selected = panels.find((panel) => panel.id === selection)?.id ?? panels[0]?.id;
   return (
     <ViewSettings>
       <div className="wb-inspector-split" data-wb-has-panes={selected !== undefined || undefined}>
         {selected && <PanelTabs panels={panels} selected={selected} onSelect={setSelection} />}
         <div className="wb-inspector-source">
-          <h2 id={codeId}>JSX</h2>
+          <div className="wb-inspector-source-header">
+            <h2 id={codeId}>JSX</h2>
+            {codeText && (
+              <>
+                <button
+                  type="button"
+                  className="wb-action-btn wb-code-copy"
+                  aria-label="Copy JSX"
+                  onClick={copyCode}
+                >
+                  {copyStatus?.source === codeText ? copyStatus.text : 'Copy'}
+                </button>
+                <span className="wb-sr-only" aria-live="polite" aria-atomic="true">
+                  {copyStatus?.source === codeText ? copyStatus.text : ''}
+                </span>
+              </>
+            )}
+          </div>
           <div
             className="wb-inspector-source-scroll wb-scroll"
             aria-labelledby={codeId}

@@ -91,7 +91,7 @@ export default {
       await mount('textarea');
       await openWorkbench(page, {
         item: 'textarea',
-        tab: 'cases',
+        tab: 'states',
         block: 'overflow',
         surface: 'overlay',
         dir: 'rtl',
@@ -128,7 +128,7 @@ export default {
         ['description', 'message', 'counter'],
       );
 
-      await openWorkbench(page, { item: 'textarea', tab: 'matrix', mode: 'pairwise', vp: '1280' });
+      await openWorkbench(page, { item: 'textarea', tab: 'states', mode: 'pairwise', vp: '1280' });
       assert.equal(
         await page
           .getByRole('region', { name: 'Component matrix' })
@@ -148,7 +148,7 @@ export default {
   }) => {
     await page.setViewportSize({ width: 1280, height: 900 });
     await mount('textarea');
-    await openWorkbench(page, { item: 'textarea', tab: 'cases', block: 'live' });
+    await openWorkbench(page, { item: 'textarea', tab: 'states', block: 'live' });
     const block = page.locator('[data-wb-block="live"]');
     const draft = block.getByRole('textbox', { name: 'Soft limit · live draft' });
     const check = button(block, 'Check note');

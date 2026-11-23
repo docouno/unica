@@ -1,27 +1,34 @@
-import { useState } from 'react';
+import { useId, useState } from 'react';
 import type { ReactElement } from 'react';
 import {
   ArrowRightIcon,
-  ArrowSquareOutIcon,
   BellSlashIcon,
   CaretDownIcon,
   DotsThreeIcon,
   FileTextIcon,
-  FolderIcon,
   PlusIcon,
   PushPinIcon,
   TextBIcon,
   TrashIcon,
   UploadSimpleIcon,
 } from '@phosphor-icons/react';
-import { Button, IconButton, Text } from '@docouno/unica';
+import { Button, IconButton, Input, Text } from '@docouno/unica';
 import type { ButtonSize, ButtonTone, ButtonVariant } from '@docouno/unica';
 import type { IconProps as PhosphorIconProps } from '@phosphor-icons/react';
+import type { PreviewContext } from '../../workbench/types.js';
 import './button.examples.css';
 
 const variants: readonly ButtonVariant[] = ['primary', 'secondary', 'ghost'];
 const tones: readonly ButtonTone[] = ['accent', 'neutral', 'danger'];
 const sizes: readonly ButtonSize[] = ['s', 'm', 'l'];
+
+function isTone(value: unknown): value is ButtonTone {
+  return typeof value === 'string' && (tones as readonly string[]).includes(value);
+}
+
+function isSize(value: unknown): value is ButtonSize {
+  return typeof value === 'string' && (sizes as readonly string[]).includes(value);
+}
 
 const toneActions = {
   accent: { label: 'Continue', icon: ForwardArrowIcon },
@@ -62,9 +69,9 @@ const toggleStates: readonly StateSample[] = [
   { label: 'On + disabled + pending', props: { pressed: true, disabled: true, loading: true } },
 ];
 
-export function LightExample(): ReactElement {
-  const [loading, setLoading] = useState(false);
-  const [disabled, setDisabled] = useState(false);
+export function LightExample({ ctx }: { readonly ctx?: PreviewContext | undefined }): ReactElement {
+  const loading = ctx?.story?.controls.loading === true;
+  const disabled = ctx?.story?.controls.disabled === true;
   const [activations, setActivations] = useState(0);
   return (
     <div className="button-study">
@@ -98,24 +105,6 @@ export function LightExample(): ReactElement {
           </div>
         ))}
       </div>
-      <div className="button-study-controls">
-        <label className="button-study-control">
-          <input
-            type="checkbox"
-            checked={loading}
-            onChange={(event) => setLoading(event.target.checked)}
-          />
-          Pending
-        </label>
-        <label className="button-study-control">
-          <input
-            type="checkbox"
-            checked={disabled}
-            onChange={(event) => setDisabled(event.target.checked)}
-          />
-          Disabled
-        </label>
-      </div>
       <Text size="body-s" color="muted" role="status">
         {disabled
           ? 'Actions unavailable.'
@@ -127,100 +116,17 @@ export function LightExample(): ReactElement {
   );
 }
 
-export function RoleExamples(): ReactElement {
+export function StateExamples({
+  ctx,
+}: {
+  readonly ctx?: PreviewContext | undefined;
+}): ReactElement {
+  const rawTone = ctx?.story?.controls.tone;
+  const rawSize = ctx?.story?.controls.size;
+  const tone: ButtonTone = isTone(rawTone) ? rawTone : 'accent';
+  const size: ButtonSize = isSize(rawSize) ? rawSize : 'm';
   return (
     <div className="button-study">
-      <div className="button-study-columns">
-        {tones.map((tone) => (
-          <Text key={tone} size="caption-l" color="muted">
-            {tone}
-          </Text>
-        ))}
-      </div>
-      {variants.map((variant) => (
-        <div className="button-study-group" key={variant}>
-          <Text size="caption-l" color="muted">
-            {variant}
-          </Text>
-          <div className="button-study-columns">
-            {tones.map((tone) => (
-              <Button key={tone} variant={variant} tone={tone} width="full">
-                {toneActions[tone].label}
-              </Button>
-            ))}
-          </div>
-          <div className="button-study-columns">
-            {tones.map((tone) => (
-              <IconButton
-                key={tone}
-                variant={variant}
-                tone={tone}
-                icon={tone === 'danger' ? TrashIcon : PlusIcon}
-                aria-label={tone === 'danger' ? 'Remove item' : 'Add item'}
-              />
-            ))}
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-export function SizeExamples(): ReactElement {
-  return (
-    <div className="button-study">
-      {sizes.map((size) => (
-        <div className="button-study-size-row" key={size}>
-          <Text size="caption-l" color="muted">
-            {size.toUpperCase()} · {size === 's' ? '30 / 14' : size === 'm' ? '40 / 16' : '48 / 20'}
-            px control / icon
-          </Text>
-          <div className="button-study-row">
-            <Button size={size}>Create</Button>
-            <Button size={size} variant="secondary" tone="neutral" iconLeft={PlusIcon}>
-              Create
-            </Button>
-            <Button size={size} variant="secondary" tone="neutral" iconRight={ForwardArrowIcon}>
-              Continue
-            </Button>
-            <Button
-              size={size}
-              variant="ghost"
-              tone="neutral"
-              iconLeft={FolderIcon}
-              iconRight={ArrowSquareOutIcon}
-            >
-              Open files
-            </Button>
-            <IconButton size={size} icon={PlusIcon} aria-label="Add item" />
-          </div>
-        </div>
-      ))}
-      <Button width="full" iconLeft={PlusIcon}>
-        Create collection
-      </Button>
-    </div>
-  );
-}
-
-export function StateExamples({ tone = 'accent' }: { readonly tone?: ButtonTone }): ReactElement {
-  const [size, setSize] = useState<ButtonSize>('m');
-  return (
-    <div className="button-study">
-      <div className="button-study-controls">
-        <label className="button-study-control">
-          Size
-          <select
-            aria-label="Action size"
-            value={size}
-            onChange={(event) => setSize(event.target.value as ButtonSize)}
-          >
-            {sizes.map((value) => (
-              <option key={value}>{value}</option>
-            ))}
-          </select>
-        </label>
-      </div>
       {variants.map((variant) => (
         <div className="button-study-group" key={variant}>
           <Text size="caption-l" weight="semibold" color="muted">
@@ -254,9 +160,15 @@ export function StateExamples({ tone = 'accent' }: { readonly tone?: ButtonTone 
   );
 }
 
-export function ToggleExamples(): ReactElement {
-  const [tone, setTone] = useState<ButtonTone>('neutral');
-  const [size, setSize] = useState<ButtonSize>('s');
+export function ToggleExamples({
+  ctx,
+}: {
+  readonly ctx?: PreviewContext | undefined;
+}): ReactElement {
+  const rawTone = ctx?.story?.controls.tone;
+  const rawSize = ctx?.story?.controls.size;
+  const tone: ButtonTone = isTone(rawTone) ? rawTone : 'neutral';
+  const size: ButtonSize = isSize(rawSize) ? rawSize : 's';
   const [bold, setBold] = useState(true);
   const [muted, setMuted] = useState(false);
   const action =
@@ -288,32 +200,6 @@ export function ToggleExamples(): ReactElement {
           pressed={muted}
           onPressedChange={setMuted}
         />
-      </div>
-      <div className="button-study-controls">
-        <label className="button-study-control">
-          Tone
-          <select
-            aria-label="Toggle tone"
-            value={tone}
-            onChange={(event) => setTone(event.target.value as ButtonTone)}
-          >
-            {tones.map((value) => (
-              <option key={value}>{value}</option>
-            ))}
-          </select>
-        </label>
-        <label className="button-study-control">
-          Size
-          <select
-            aria-label="Toggle size"
-            value={size}
-            onChange={(event) => setSize(event.target.value as ButtonSize)}
-          >
-            {sizes.map((value) => (
-              <option key={value}>{value}</option>
-            ))}
-          </select>
-        </label>
       </div>
       {variants.map((variant) => (
         <div className="button-study-group" key={variant}>
@@ -354,8 +240,12 @@ export function ToggleExamples(): ReactElement {
   );
 }
 
-export function OverflowExamples(): ReactElement {
-  const [loading, setLoading] = useState(false);
+export function OverflowExamples({
+  ctx,
+}: {
+  readonly ctx?: PreviewContext | undefined;
+}): ReactElement {
+  const loading = ctx?.story?.controls.loading === true;
   return (
     <div className="button-study">
       {sizes.map((size) => (
@@ -387,7 +277,7 @@ export function OverflowExamples(): ReactElement {
       </div>
       <div className="button-study-group">
         <Text size="caption-l" color="muted">
-          Stable width and height · toggle pending below
+          Stable width and height under pending state
         </Text>
         <div className="button-study-narrow">
           <Button
@@ -399,14 +289,6 @@ export function OverflowExamples(): ReactElement {
             Import documents into the shared collection
           </Button>
         </div>
-        <label className="button-study-control">
-          <input
-            type="checkbox"
-            checked={loading}
-            onChange={(event) => setLoading(event.target.checked)}
-          />
-          Pending request
-        </label>
       </div>
       <div className="button-study-row">
         {sizes.map((size) => (
@@ -459,8 +341,10 @@ export function OpenTriggerExample(): ReactElement {
 
 export const workspaceDestination = '/?item=02-workspace-overview';
 
-export function FormExample(): ReactElement {
+export function FormExample({ ctx }: { readonly ctx?: PreviewContext | undefined }): ReactElement {
   const [message, setMessage] = useState('');
+  const fallbackId = useId();
+  const fieldId = ctx ? `${ctx.id}-draft-title` : fallbackId;
   return (
     <form
       className="button-study-form"
@@ -474,10 +358,12 @@ export function FormExample(): ReactElement {
       }}
       onReset={() => setMessage('Draft title reset.')}
     >
-      <label className="button-study-field">
-        Draft title
-        <input name="title" defaultValue="Untitled" required />
-      </label>
+      <div className="button-study-field">
+        <Text as="label" size="body-s" color="secondary" htmlFor={fieldId}>
+          Draft title
+        </Text>
+        <Input id={fieldId} name="title" defaultValue="Untitled" required />
+      </div>
       <div className="button-study-row">
         <Button type="reset" variant="ghost">
           Reset
@@ -486,9 +372,11 @@ export function FormExample(): ReactElement {
           Save draft
         </Button>
       </div>
-      <Text size="body-s" color="muted" role="status">
-        {message}
-      </Text>
+      {message && (
+        <Text size="body-s" color="muted" role="status">
+          {message}
+        </Text>
+      )}
     </form>
   );
 }

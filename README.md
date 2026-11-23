@@ -42,7 +42,7 @@ The library ships theme tokens, preset metadata, `getUnicaRootProps`, `UnicaProv
 
 New component families are reviewed as live prototypes in the playground before their public package APIs ship. Playground scenes use shipped components alongside families still in design.
 
-The [Workbench](docs/workbench.md) has Playground, Matrix, Cases, and Usage views for each component. Choose Family and Scheme to compare themes or isolate one artboard, then inspect actual component bounds and interactions at different widths, text scales, and reading directions.
+The [Workbench](docs/workbench.md) has Playground, States, Compositions, and Usage views for each component. Choose Family and Scheme to compare themes or isolate one artboard, then inspect actual component bounds and interactions at different widths, text scales, and reading directions.
 
 The playground also includes ten [Folio scenes](docs/compositions/folio.md) assembled from shared components and visual prototypes. Open `/?item=02-workspace-overview` for the workspace, `/?item=05-rich-editor` for the editor, or `/?item=09-user-preferences` for settings. Component Usage views link to scenes that render the component. Scene interactions update local preview state.
 

@@ -126,7 +126,7 @@ function OpenStateNote() {
 function Subject({ values, ctx }: { readonly values: Values; readonly ctx: PreviewContext }) {
   const [name, setName] = useState('Release notes');
 
-  if (ctx.tab === 'matrix') {
+  if (ctx.tab === 'states' || ctx.tab === 'matrix') {
     return (
       <Button
         {...ctx.subject}

@@ -2,7 +2,16 @@ import { Progress } from '@docouno/unica';
 import { previewProps } from '../preview-code.js';
 import { defineComponent } from '../../workbench/types.js';
 import { activityNameReference, labelledByText, withActivityNameCode } from './activity-name.js';
-import Study from './progress.examples.js';
+import {
+  BoundariesExample,
+  InterruptedComposition,
+  LabelsExample,
+  MotionExample,
+  OverlayExample,
+  PhaseExample,
+  TransferRowComposition,
+  WaitingExample,
+} from './progress.examples.js';
 
 export default defineComponent({
   id: 'progress',
@@ -15,14 +24,14 @@ export default defineComponent({
   props: {
     size: {
       kind: 'enum',
-      group: 'Appearance',
+      group: 'Geometry',
       default: 'm',
       description: 'Track and label density.',
       choices: [{ value: 's' }, { value: 'm' }, { value: 'l' }],
     },
     status: {
       kind: 'enum',
-      group: 'Appearance',
+      group: 'Role',
       default: 'accent',
       description: 'Semantic color of the phase.',
       choices: [
@@ -187,13 +196,12 @@ export default defineComponent({
       labelledByText,
     );
   },
-  matrixViews: [
+  states: [
     {
       id: 'scale',
       rows: 'size',
       cols: 'value',
       title: 'Three weights · one measured range',
-      reference: () => <Study section="scale" />,
     },
     {
       id: 'statuses',
@@ -201,7 +209,6 @@ export default defineComponent({
       cols: 'paused',
       fixed: { active: true },
       title: 'Semantic color needs context',
-      reference: () => <Study section="statuses" />,
     },
     {
       id: 'activity',
@@ -216,52 +223,125 @@ export default defineComponent({
     {
       id: 'boundaries',
       title: 'Zero, a first byte & a finished phase',
+      caption:
+        '99.6% still reads 99%. Reaching 100% does not choose a success color or dismiss the task.',
       kind: 'content',
-      render: () => <Study section="boundaries" />,
+      mode: 'pinned',
+      render: () => <BoundariesExample />,
     },
     {
       id: 'waiting',
       title: 'Preparing & transferring · the same accent',
+      caption:
+        'Preparing and transferring share the same accent paint. The candy stripe changes texture without dimming the operation; reduced motion stops its travel.',
       kind: 'behavior',
-      render: () => <Study section="waiting" />,
+      mode: 'pinned',
+      render: () => <WaitingExample />,
     },
     {
       id: 'labels',
       title: 'Labels, units & compact placement',
+      caption:
+        'Custom units replace percentages, long labels wrap cleanly, and compact variants omit empty headers while keeping an accessible name.',
       kind: 'behavior',
-      render: () => <Study section="labels" />,
+      mode: 'pinned',
+      render: () => <LabelsExample />,
     },
     {
       id: 'motion',
-      mode: 'live',
       title: 'Active light & a quiet finish',
+      caption:
+        'Frost breathes behind an active measured edge. Pausing quiets the light; reaching 100% settles it. Soft and Pixel stay matte.',
       kind: 'behavior',
-      render: () => <Study section="motion" />,
+      mode: 'live',
+      controls: {
+        active: { kind: 'boolean', label: 'Active', default: true },
+      },
+      actions: [
+        { id: 'reach-100', label: 'Reach 100%' },
+        { id: 'replay', label: 'Replay' },
+      ],
+      reset: true,
+      render: ({ ctx }) => <MotionExample ctx={ctx} />,
     },
     {
       id: 'phases',
-      mode: 'live',
       title: 'A phase is not an outcome',
+      caption:
+        'Controlled phase study. Percent applies to Transferring, Paused, and Interrupted; Preparing/Verifying have no known total and Transferred/Complete are at 100%.',
       kind: 'behavior',
-      render: () => <Study section="phases" />,
+      mode: 'live',
+      controls: {
+        phase: {
+          kind: 'enum',
+          label: 'Phase',
+          default: 'Transferring',
+          choices: [
+            'Preparing',
+            'Transferring',
+            'Paused',
+            'Transferred',
+            'Verifying',
+            'Complete',
+            'Interrupted',
+          ],
+        },
+        value: { kind: 'number', label: 'Percent', default: 64, min: 0, max: 100, step: 1 },
+      },
+      reset: true,
+      render: ({ ctx }) => <PhaseExample ctx={ctx} />,
     },
     {
       id: 'overlay',
       title: 'Unknown & measured work on a floating surface',
+      caption: 'Progress adapts automatically inside an overlay container without changing props.',
       surface: 'overlay',
       overlayStage: true,
       kind: 'surface',
-      render: () => <Study section="overlay" />,
+      mode: 'pinned',
+      render: () => <OverlayExample />,
     },
   ],
-  usage: [
+  compositions: [
     {
-      id: 'units',
-      title: 'Transfer with custom units',
-      code: `<Progress label="Uploading archive" value={42} max={80} valueLabel="42 of 80 MB" />`,
-      render: () => (
-        <Progress label="Uploading archive" value={42} max={80} valueLabel="42 of 80 MB" />
-      ),
+      id: 'transfer-controls',
+      title: 'Transfer with pause & cancel actions',
+      caption: 'Pausing keeps the last measured bytes visible and quiets active motion.',
+      mode: 'live',
+      reset: true,
+      code: `<>
+  <Progress
+    label="Uploading archive"
+    value={42}
+    max={80}
+    valueLabel="42 of 80 MB"
+    active={!paused}
+    paused={paused}
+    status={paused ? 'neutral' : 'accent'}
+  />
+  <Button variant="secondary" size="s" onClick={togglePause}>
+    {paused ? 'Resume' : 'Pause'}
+  </Button>
+  <Button variant="ghost" size="s">Cancel</Button>
+</>`,
+      render: () => <TransferRowComposition />,
+    },
+    {
+      id: 'interrupted-recovery',
+      title: 'Interrupted transfer with explanation & retry',
+      caption: 'Danger preserves the measured amount while surrounding copy explains the recovery.',
+      mode: 'live',
+      reset: true,
+      code: `<>
+  <Progress label="Archive transfer" value={64} status="danger" />
+  <Icon usage="slot" icon={WarningCircleIcon} size="s" color="danger" />
+  <Text size="caption-l" color="muted">
+    Connection interrupted at 64%. Retry resumes without losing uploaded bytes.
+  </Text>
+  <Button variant="secondary" size="s" onClick={handleRetry}>Retry transfer</Button>
+  <Button variant="ghost" size="s">Dismiss</Button>
+</>`,
+      render: () => <InterruptedComposition />,
     },
   ],
 });

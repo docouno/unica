@@ -1,0 +1,55 @@
+.wb-states-sidebar {
+  display: grid;
+  gap: 4px;
+}
+
+.wb-states-mode-bar {
+  padding: 10px 12px 6px;
+  border-block-end: 1px solid var(--wb-border-subtle);
+}
+
+.wb-states-filter-banner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 12px;
+  border-block-end: 1px solid var(--wb-border-subtle);
+  background: var(--wb-card);
+}
+
+.wb-states-filters {
+  padding: 8px 12px 12px;
+  border-block-start: 1px solid var(--wb-border-subtle);
+}
+
+.wb-states-filter-fields {
+  display: grid;
+  gap: 8px;
+  padding-block-start: 8px;
+}
+
+.wb-states-section {
+  min-inline-size: 0;
+  scroll-margin-top: 12px;
+}
+
+.wb-states-section[data-wb-lazy='true'] {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 340px;
+}
+
+.wb-story-frame-placeholder {
+  min-block-size: 140px;
+}
+
+.wb-lazy-body {
+  display: grid;
+  place-items: center;
+  min-block-size: 96px;
+  padding: 16px;
+  border: 1px dashed var(--wb-border);
+  border-radius: 10px;
+  background: var(--wb-card);
+}

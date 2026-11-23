@@ -43,7 +43,7 @@ export default {
   }) => {
     await page.setViewportSize({ width: 1440, height: 900 });
     await mount('button-consumers');
-    const board = await open(page, { item: 'empty', tab: 'usage', block: 'routes' });
+    const board = await open(page, { item: 'empty', tab: 'compositions', block: 'routes' });
     const destinations = board.getByRole('link', { name: 'Back to workspace', exact: true });
     const href = '/?item=02-workspace-overview';
     await destinations.last().waitFor();
@@ -60,7 +60,7 @@ export default {
       await popup.close();
     }
     assert.match(page.url(), /item=empty/u);
-    const code = await page.locator('[data-wb-block="routes"] > pre > code').textContent();
+    const code = await page.locator('[data-wb-block="routes"] pre > code').textContent();
     assert.equal((code.match(/<Button asChild/gu) ?? []).length, 2);
     assert.equal((code.match(/href="\/\?item=02-workspace-overview"/gu) ?? []).length, 2);
   },
@@ -73,7 +73,7 @@ export default {
       for (const dir of ['ltr', 'rtl']) {
         const board = await open(page, {
           item: 'dropzone',
-          tab: 'cases',
+          tab: 'states',
           block: 'lifecycle',
           vp: 360,
           scale: 120,
@@ -154,7 +154,7 @@ export default {
     for (const dir of ['ltr', 'rtl']) {
       const board = await open(page, {
         item: 'tabs',
-        tab: 'cases',
+        tab: 'states',
         block: 'overflow',
         vp: 360,
         dir,
@@ -183,7 +183,7 @@ export default {
     await mount('button-consumers', { reducedMotion: 'reduce' });
     const board = await open(page, {
       item: 'table',
-      tab: 'cases',
+      tab: 'states',
       block: 'editors',
       family: 'frost',
     });
@@ -224,7 +224,7 @@ export default {
   }) => {
     await page.setViewportSize({ width: 1440, height: 900 });
     await mount('button-consumers');
-    const board = await open(page, { item: 'collapsible', tab: 'cases' });
+    const board = await open(page, { item: 'collapsible', tab: 'states' });
     const available = board.getByRole('button', { name: 'Delivery window', exact: true }).first();
     const unavailable = board.getByRole('button', { name: 'Provider diagnostics', exact: true });
     const before = await getBox(available);

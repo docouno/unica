@@ -1,4 +1,4 @@
-import { Button, IconButton } from '@docouno/unica';
+import { Button, IconButton, Input, Text } from '@docouno/unica';
 import { PlusIcon, TrashIcon } from '@phosphor-icons/react';
 import { useState } from 'react';
 import type { MouseEvent, ReactElement } from 'react';
@@ -11,8 +11,6 @@ import {
   LightExample,
   OpenTriggerExample,
   OverflowExamples,
-  RoleExamples,
-  SizeExamples,
   StateExamples,
   ToggleExamples,
   workspaceDestination,
@@ -25,7 +23,7 @@ const props = {
     description: 'Auto uses primary for Button and secondary for IconButton.',
     default: 'auto',
     choices: [
-      { value: 'auto', label: 'Auto' },
+      { value: 'auto', label: 'Auto', omit: true },
       { value: 'primary' },
       { value: 'secondary' },
       { value: 'ghost' },
@@ -37,7 +35,7 @@ const props = {
     description: 'Auto selects accent for primary and neutral for secondary and ghost.',
     default: 'auto',
     choices: [
-      { value: 'auto', label: 'Auto' },
+      { value: 'auto', label: 'Auto', omit: true },
       { value: 'accent' },
       { value: 'neutral' },
       { value: 'danger' },
@@ -103,7 +101,7 @@ const props = {
     description: 'Auto omits type. A native action defaults to button.',
     default: 'auto',
     choices: [
-      { value: 'auto', label: 'Auto' },
+      { value: 'auto', label: 'Auto', omit: true },
       { value: 'button' },
       { value: 'submit' },
       { value: 'reset' },
@@ -135,7 +133,7 @@ const props = {
     description: 'Expose the open or closed state of a separately managed panel.',
     default: 'auto',
     choices: [
-      { value: 'auto', label: 'Omitted' },
+      { value: 'auto', label: 'Omitted', omit: true },
       { value: 'false', label: 'Closed' },
       { value: 'true', label: 'Open' },
     ],
@@ -291,7 +289,7 @@ export default defineComponent({
   category: 'Actions',
   status: 'UI',
   summary: 'Action roles, tones, sizes, slots, and interaction states.',
-  form: 'owned',
+  form: 'inline',
   props,
   constraints: [
     {
@@ -325,36 +323,43 @@ export default defineComponent({
       reason: 'A disabled action keeps its label or icon and suppresses the loading indicator.',
     },
   ],
-  render: ({ ctx, values }) => (
-    <form {...ctx.form} className="button-study-form">
-      {(values.type === 'submit' || values.type === 'reset') && (
-        <label className="button-study-field">
-          Draft title
-          <input name="title" defaultValue="Untitled" required />
-        </label>
-      )}
+  render: ({ ctx, values }) => {
+    const subject = (
       <ButtonSubject
         key={`${values.toggle}/${values.initiallyPressed}`}
         ctx={ctx}
         values={values}
       />
-    </form>
-  ),
+    );
+    if (values.type !== 'submit' && values.type !== 'reset') {
+      return subject;
+    }
+    const fieldId = `${ctx.id}-draft-title`;
+    return (
+      <form {...ctx.form} className="button-study-form">
+        <div className="button-study-field">
+          <Text as="label" size="body-s" color="secondary" htmlFor={fieldId}>
+            Draft title
+          </Text>
+          <Input id={fieldId} name="title" defaultValue="Untitled" required />
+        </div>
+        {subject}
+      </form>
+    );
+  },
   code: buttonCode,
-  matrixViews: [
+  states: [
     {
       id: 'roles',
       title: 'Role × tone',
       rows: 'variant',
       cols: 'tone',
-      reference: () => <RoleExamples />,
     },
     {
       id: 'sizes',
-      title: 'Sizes, slots & squares',
+      title: 'Sizes & content',
       rows: 'size',
       cols: 'content',
-      reference: () => <SizeExamples />,
     },
   ],
   cases: [
@@ -365,31 +370,43 @@ export default defineComponent({
         'Approach the edge of the primary accent action. Cross the edge to hover, hold a press, or focus with Tab.',
       kind: 'behavior',
       mode: 'live',
-      render: () => <LightExample />,
+      controls: {
+        loading: { kind: 'boolean', label: 'Pending', default: false },
+        disabled: { kind: 'boolean', label: 'Disabled', default: false },
+      },
+      reset: true,
+      render: ({ ctx }) => <LightExample ctx={ctx} />,
     },
     {
       id: 'states',
-      title: 'Accent · interaction & availability',
+      title: 'Interaction & availability',
       caption: stateCaption,
       kind: 'behavior',
       mode: 'live',
-      render: () => <StateExamples />,
-    },
-    {
-      id: 'states-neutral',
-      title: 'Neutral · interaction & availability',
-      caption: stateCaption,
-      kind: 'behavior',
-      mode: 'live',
-      render: () => <StateExamples tone="neutral" />,
-    },
-    {
-      id: 'states-danger',
-      title: 'Danger · interaction & availability',
-      caption: stateCaption,
-      kind: 'behavior',
-      mode: 'live',
-      render: () => <StateExamples tone="danger" />,
+      controls: {
+        tone: {
+          kind: 'enum',
+          label: 'Tone',
+          default: 'accent',
+          choices: [
+            { value: 'accent', label: 'Accent' },
+            { value: 'neutral', label: 'Neutral' },
+            { value: 'danger', label: 'Danger' },
+          ],
+        },
+        size: {
+          kind: 'enum',
+          label: 'Size',
+          default: 'm',
+          choices: [
+            { value: 's', label: 'S' },
+            { value: 'm', label: 'M' },
+            { value: 'l', label: 'L' },
+          ],
+        },
+      },
+      reset: true,
+      render: ({ ctx }) => <StateExamples ctx={ctx} />,
     },
     {
       id: 'toggles',
@@ -398,7 +415,30 @@ export default defineComponent({
         'Toggle Bold, Pin, or Mute alerts. The samples below hold selection and availability constant for comparison.',
       kind: 'behavior',
       mode: 'live',
-      render: () => <ToggleExamples />,
+      controls: {
+        tone: {
+          kind: 'enum',
+          label: 'Tone',
+          default: 'neutral',
+          choices: [
+            { value: 'accent', label: 'Accent' },
+            { value: 'neutral', label: 'Neutral' },
+            { value: 'danger', label: 'Danger' },
+          ],
+        },
+        size: {
+          kind: 'enum',
+          label: 'Size',
+          default: 's',
+          choices: [
+            { value: 's', label: 'S' },
+            { value: 'm', label: 'M' },
+            { value: 'l', label: 'L' },
+          ],
+        },
+      },
+      reset: true,
+      render: ({ ctx }) => <ToggleExamples ctx={ctx} />,
     },
     {
       id: 'open',
@@ -412,12 +452,18 @@ export default defineComponent({
     {
       id: 'overflow',
       title: 'Long labels & stable loading',
+      caption:
+        'Long labels wrap naturally inside narrow containers while pending buttons preserve their resting width and height.',
       kind: 'content',
       mode: 'live',
-      render: () => <OverflowExamples />,
+      controls: {
+        loading: { kind: 'boolean', label: 'Pending request', default: false },
+      },
+      reset: true,
+      render: ({ ctx }) => <OverflowExamples ctx={ctx} />,
     },
   ],
-  usage: [
+  compositions: [
     {
       id: 'actions',
       title: 'Confirm or cancel',
@@ -436,15 +482,16 @@ export default defineComponent({
       id: 'form',
       title: 'Submit or reset a form',
       mode: 'live',
+      reset: true,
       code: `<form onSubmit={handleSubmit} onReset={handleReset}>
-  <label>
+  <Text as="label" size="body-s" color="secondary" htmlFor="draft-title">
     Draft title
-    <input name="title" defaultValue="Untitled" required />
-  </label>
+  </Text>
+  <Input id="draft-title" name="title" defaultValue="Untitled" required />
   <Button type="reset" variant="ghost">Reset</Button>
   <Button type="submit" name="intent" value="save">Save draft</Button>
 </form>`,
-      render: () => <FormExample />,
+      render: ({ ctx }) => <FormExample ctx={ctx} />,
     },
     {
       id: 'navigation',

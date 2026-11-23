@@ -1,9 +1,12 @@
 import { lazy, Suspense, useState } from 'react';
+import { componentCompositions } from '../../../src/workbench/schema.js';
 import type { SceneDefinition } from '../../../src/workbench/types.js';
 
 const ContextMenuExample = lazy(async () => {
   const { default: contextMenu } = await import('../../../src/specimens/menu/context-menu.spec.js');
-  const NativeContextMenu = contextMenu.usage?.find(({ id }) => id === 'native')?.render;
+  const NativeContextMenu = componentCompositions(contextMenu).find(
+    ({ id }) => id === 'native',
+  )?.render;
   if (!NativeContextMenu) {
     throw new Error('Missing native context menu example');
   }
@@ -12,7 +15,7 @@ const ContextMenuExample = lazy(async () => {
       <NativeContextMenu
         ctx={{
           id: 'context-menu-fixture',
-          tab: 'usage',
+          tab: 'compositions',
           theme: {
             id: 'soft-dark',
             label: 'Soft Dark',

@@ -1,12 +1,31 @@
 import type {
   ComponentDefinition,
+  CompositionBlock,
   Constraint,
+  MatrixView,
   PropDefinition,
   PropSchema,
   PropValue,
+  StoryFrameOptions,
   Values,
   WorkbenchConfig,
 } from './types.js';
+
+export function componentStates(component: ComponentDefinition): readonly MatrixView[] {
+  const states = component.states ?? [];
+  const legacy = component.matrixViews ?? [];
+  return states.length && legacy.length ? [...states, ...legacy] : states.length ? states : legacy;
+}
+
+export function componentCompositions(component: ComponentDefinition): readonly CompositionBlock[] {
+  const compositions = component.compositions ?? [];
+  const legacy = component.usage ?? [];
+  return compositions.length && legacy.length
+    ? [...compositions, ...legacy]
+    : compositions.length
+      ? compositions
+      : legacy;
+}
 
 export function finiteDomain(prop: PropDefinition): readonly PropValue[] {
   switch (prop.kind) {
@@ -59,8 +78,46 @@ export function evaluate(
   return { valid: matches.every(({ kind }) => kind !== 'forbidden'), matches };
 }
 
+function jsxChildText(text: string): string {
+  return /[{}<>]/.test(text) ? `{${JSON.stringify(text)}}` : text;
+}
+
+function formatPropAttribute(key: string, value: PropValue): string {
+  if (value === true) {
+    return key;
+  }
+  if (typeof value === 'string' && !/["&<>\r\n]/.test(value)) {
+    return `${key}="${value}"`;
+  }
+  return `${key}={${JSON.stringify(value)}}`;
+}
+
 export function componentCode(component: ComponentDefinition, values: Values): string {
   const props: string[] = [];
+  let childBody: string | undefined;
+  let defaultPropChildBody: string | undefined;
+  const customCode = component.code !== undefined;
+  const hasChildrenProp = Object.hasOwn(component.props, 'children');
+
+  if (!customCode && component.defaultProps) {
+    for (const [key, value] of Object.entries(component.defaultProps)) {
+      if (Object.hasOwn(component.props, key)) {
+        continue;
+      }
+      if (key === 'children') {
+        if (typeof value === 'string' && value.length > 0) {
+          defaultPropChildBody = jsxChildText(value);
+        } else if (typeof value === 'number') {
+          defaultPropChildBody = `{${String(value)}}`;
+        }
+        continue;
+      }
+      if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
+        props.push(formatPropAttribute(key, value));
+      }
+    }
+  }
+
   for (const [key, prop] of Object.entries(component.props)) {
     if (prop.demo) {
       continue;
@@ -70,25 +127,51 @@ export function componentCode(component: ComponentDefinition, values: Values): s
       continue;
     }
     const value = values[key];
+    if (!customCode && key === 'children') {
+      if (prop.kind === 'slot') {
+        const slotCode = prop.choices.find((choice) => choice.value === value)?.code;
+        childBody = slotCode
+          ? slotCode.trim().startsWith('<')
+            ? slotCode
+            : `{${slotCode}}`
+          : undefined;
+      } else if (typeof value === 'string') {
+        childBody = value.length > 0 ? jsxChildText(value) : undefined;
+      } else if (typeof value === 'number') {
+        childBody = `{${String(value)}}`;
+      }
+      continue;
+    }
     if (value === undefined || value === prop.default) {
       continue;
     }
-    if (value === true) {
-      props.push(key);
-    } else if (prop.kind === 'slot') {
+    if (prop.kind === 'enum' && prop.choices.find((choice) => choice.value === value)?.omit) {
+      continue;
+    }
+    if (prop.kind === 'slot') {
       const code = prop.choices.find((choice) => choice.value === value)?.code;
       props.push(`${key}={${code ?? JSON.stringify(value)}}`);
-    } else if (typeof value === 'string' && !/["&<>\r\n]/.test(value)) {
-      props.push(`${key}="${value}"`);
     } else {
-      props.push(`${key}={${JSON.stringify(value)}}`);
+      props.push(formatPropAttribute(key, value));
     }
   }
+
   const attributes = props.length ? ` ${props.join(' ')}` : '';
-  return (
-    component.code?.(values, attributes) ??
-    `<${component.componentName ?? component.title}${attributes} />`
-  );
+  if (component.code) {
+    return component.code(values, attributes);
+  }
+  const tag = component.componentName ?? component.title;
+  const fallbackChildBody =
+    typeof component.defaultChildren === 'string' && component.defaultChildren.length > 0
+      ? jsxChildText(component.defaultChildren)
+      : typeof component.defaultChildren === 'number'
+        ? `{${String(component.defaultChildren)}}`
+        : defaultPropChildBody;
+  const body = hasChildrenProp ? childBody : fallbackChildBody;
+  if (body !== undefined && body.length > 0) {
+    return `<${tag}${attributes}>${body}</${tag}>`;
+  }
+  return `<${tag}${attributes} />`;
 }
 
 function assert(condition: unknown, message: string): asserts condition {
@@ -142,9 +225,76 @@ function ids(entries: readonly { id: string }[], label: string): void {
   );
 }
 
+function validateStoryFrameOptions(options: StoryFrameOptions, label: string): void {
+  if (options.controls) {
+    for (const [key, control] of Object.entries(options.controls)) {
+      assert(key.trim().length > 0, `${label} control key must not be empty.`);
+      assert(control.label.trim().length > 0, `${label} control "${key}" needs a label.`);
+      if (control.kind === 'enum') {
+        const values = control.choices.map((choice) =>
+          typeof choice === 'string' ? choice : choice.value,
+        );
+        assert(values.length > 0, `${label} control "${key}" needs at least one choice.`);
+        distinct(values, `${label} "${key}" choices`);
+        assert(
+          values.includes(control.default),
+          `${label} control "${key}" has a default outside its choices.`,
+        );
+      } else if (control.kind === 'number') {
+        assert(
+          Number.isFinite(control.default),
+          `${label} control "${key}" default must be a finite number.`,
+        );
+        if (control.min !== undefined) {
+          assert(
+            Number.isFinite(control.min),
+            `${label} control "${key}" min must be a finite number.`,
+          );
+          assert(control.default >= control.min, `${label} control "${key}" default is below min.`);
+        }
+        if (control.max !== undefined) {
+          assert(
+            Number.isFinite(control.max),
+            `${label} control "${key}" max must be a finite number.`,
+          );
+          assert(control.default <= control.max, `${label} control "${key}" default exceeds max.`);
+        }
+        if (control.min !== undefined && control.max !== undefined) {
+          assert(control.min <= control.max, `${label} control "${key}" min exceeds max.`);
+        }
+        if (control.step !== undefined) {
+          assert(
+            Number.isFinite(control.step) && control.step > 0,
+            `${label} control "${key}" step must be a positive finite number.`,
+          );
+        }
+      }
+    }
+  }
+  if (options.actions) {
+    ids(options.actions, `${label} action`);
+    for (const action of options.actions) {
+      assert(action.label.trim().length > 0, `${label} action "${action.id}" needs a label.`);
+    }
+  }
+}
+
 export function validateComponent(component: ComponentDefinition): void {
   const prefix = `"${component.id}"`;
-  const { props, constraints, cases = [], usage = [], matrixViews = [] } = component;
+  const { props, constraints, cases = [] } = component;
+  assert(
+    !(component.states && component.matrixViews),
+    `${prefix} cannot declare both "states" and legacy "matrixViews".`,
+  );
+  assert(
+    !(component.compositions && component.usage),
+    `${prefix} cannot declare both "compositions" and legacy "usage".`,
+  );
+  const slices = componentStates(component);
+  const compositions = componentCompositions(component);
+
+  assert(typeof component.render === 'function', `${prefix} needs a render function or component.`);
+
   for (const [key, prop] of Object.entries(props)) {
     assert(
       /^[a-z][a-zA-Z0-9]*(?:-[a-zA-Z0-9]+)*$/.test(key),
@@ -200,10 +350,19 @@ export function validateComponent(component: ComponentDefinition): void {
   );
 
   ids(cases, `${prefix} case`);
-  ids(usage, `${prefix} usage`);
-  ids(matrixViews, `${prefix} slice`);
-  for (const view of matrixViews) {
+  for (const item of cases) {
+    validateStoryFrameOptions(item, `${prefix} case "${item.id}"`);
+  }
+
+  ids(compositions, `${prefix} composition`);
+  for (const item of compositions) {
+    validateStoryFrameOptions(item, `${prefix} composition "${item.id}"`);
+  }
+
+  ids(slices, `${prefix} slice`);
+  for (const view of slices) {
     const label = `${prefix} slice "${view.id}"`;
+    validateStoryFrameOptions(view, label);
     const axes = [view.rows, view.cols, view.group].filter((key) => key !== undefined);
     distinct(axes, `${label} axes`);
     for (const key of axes) {
@@ -227,6 +386,22 @@ export function validateCatalog(config: WorkbenchConfig): void {
     config.themes.map(({ id }) => id),
     'theme IDs',
   );
+  if (config.componentTabs) {
+    assert(config.componentTabs.length > 0, 'componentTabs must contain at least one tab.');
+    ids(config.componentTabs, 'tab');
+    const seenTokens = new Set<string>(config.componentTabs.map(({ id }) => id));
+    for (const tab of config.componentTabs) {
+      assert(tab.label.trim().length > 0, `tab "${tab.id}" needs a label.`);
+      if (tab.kind === 'custom') {
+        assert(typeof tab.render === 'function', `custom tab "${tab.id}" needs a render function.`);
+      }
+      for (const alias of tab.aliases ?? []) {
+        assert(/^[a-z0-9][a-z0-9-]*$/.test(alias), `invalid tab alias "${alias}".`);
+        assert(!seenTokens.has(alias), `tab alias "${alias}" collides with another tab or alias.`);
+        seenTokens.add(alias);
+      }
+    }
+  }
   const familyLabels = new Map<string, string>();
   for (const theme of config.themes) {
     assert(
@@ -252,6 +427,7 @@ export function validateCatalog(config: WorkbenchConfig): void {
     validateComponent(component);
   }
   for (const scene of config.scenes) {
+    validateStoryFrameOptions(scene, `"${scene.id}" scene`);
     distinct(scene.uses ?? [], `"${scene.id}" scene references`);
     for (const id of scene.uses ?? []) {
       assert(itemIds.has(id), `"${scene.id}" references missing component "${id}".`);
