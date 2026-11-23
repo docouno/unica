@@ -5,7 +5,9 @@ import { getDefaultView, getOwnerDocument } from '../dom.js';
 import { navigateCollection } from './navigation.js';
 import type { NavigationOptions, TypeaheadBuffer } from './navigation.js';
 
-export type CollectionNavigationOptions = Omit<NavigationOptions, 'direction'>;
+export interface CollectionNavigationOptions extends Omit<NavigationOptions, 'direction'> {
+  readonly navigateOnCurrent?: boolean | undefined;
+}
 
 export interface CollectionNavigation {
   onKeyDown: (event: KeyboardEvent<HTMLElement>, activeKey?: string | null) => void;
@@ -54,7 +56,7 @@ export function useCollectionNavigation(
       if (result.handled) {
         event.preventDefault();
         markKeyboardNavigation(currentTarget);
-        if (result.key !== null && result.key !== activeKey) {
+        if (result.key !== null && (result.key !== activeKey || currentOptions.navigateOnCurrent)) {
           navigate(result.key);
         }
       }

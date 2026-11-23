@@ -160,10 +160,23 @@ export function useFormValue<T>(options: FormValueOptions<T>): FormValueState<T>
 
   const write = useCallback((next: T): void => writeWith(next, false), [writeWith]);
   const forceWrite = useCallback((next: T): void => writeWith(next, true), [writeWith]);
-  const reconcile = useCallback((): void => write(read()), [read, write]);
+  const reconcileValue = useCallback(
+    (force: boolean): void => {
+      if (mountedRef.current) {
+        binding.current?.syncTargets();
+        binding.current?.flushCompleted();
+        writeWith(read(), force);
+      }
+    },
+    [read, writeWith],
+  );
+  const reconcile = useCallback((): void => reconcileValue(false), [reconcileValue]);
+  const repair = useCallback((): void => reconcileValue(true), [reconcileValue]);
 
   const request = useCallback(
     (next: T, source?: FormControl): void => {
+      binding.current?.syncTargets();
+      binding.current?.flushCompleted();
       const currentOptions = config.current;
       const controls = readControls(currentOptions);
       const isBlocked = (control: FormControl): boolean =>
@@ -207,6 +220,7 @@ export function useFormValue<T>(options: FormValueOptions<T>): FormValueState<T>
       return;
     }
 
+    previous?.flushCompleted();
     if (!previous || !sameList(previous.controls, controls)) {
       binding.current = null;
       previous?.unsubscribe();
@@ -224,7 +238,7 @@ export function useFormValue<T>(options: FormValueOptions<T>): FormValueState<T>
       });
       binding.current = { controls, ...subscription };
     } else {
-      previous.syncRoots();
+      previous.syncTargets();
     }
 
     if (!hasAttached.current) {
@@ -253,12 +267,6 @@ export function useFormValue<T>(options: FormValueOptions<T>): FormValueState<T>
       writeWith(current, controlsChanged, controls);
     }
   }, [forceWrite, initial, read, restore, writeWith]);
-
-  const repair = useCallback((): void => {
-    if (mountedRef.current) {
-      forceWrite(read());
-    }
-  }, [forceWrite, read]);
 
   useIsoLayoutEffect(sync);
 

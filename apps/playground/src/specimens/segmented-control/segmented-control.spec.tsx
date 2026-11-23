@@ -1,4 +1,4 @@
-import { size, disabled, readOnly, choice, toggle, eventProp } from '../control-props.js';
+import { size, disabled, readOnly, choice, required, eventProp } from '../control-props.js';
 import { useId, useState } from 'react';
 import type { ReactElement, ReactNode } from 'react';
 import {
@@ -9,20 +9,35 @@ import {
   MoonIcon,
   DesktopIcon,
 } from '@phosphor-icons/react';
-import { Button } from '@docouno/unica';
-import { Input } from '@docouno/unica';
+import { Button, Input, SegmentedControl } from '@docouno/unica';
 import { defineComponent } from '../../workbench/types.js';
-import {
-  SegmentedControl,
-  SegmentedControlItem,
-} from '../../prototypes/segmented-control/segmented-control.proto.js';
-import type { SegmentItem } from '../../prototypes/segmented-control/segmented-control.proto.js';
-import '../../prototypes/segmented-control/segmented-control.examples.css';
+import type { SegmentedControlOption } from '@docouno/unica';
+import './segmented-control.examples.css';
 
-const periods: readonly SegmentItem[] = [
+const periods: readonly SegmentedControlOption[] = [
   { value: 'day', label: 'Day' },
   { value: 'week', label: 'Week' },
   { value: 'month', label: 'Month' },
+];
+
+const layouts = [
+  { value: 'list', label: 'List', iconLeft: ListIcon },
+  { value: 'grid', label: 'Grid', iconLeft: SquaresFourIcon },
+  { value: 'columns', label: 'Columns', iconLeft: ColumnsIcon },
+] as const satisfies readonly SegmentedControlOption[];
+
+const glyphLayouts = layouts.map((item) => ({ ...item, iconOnly: true as const }));
+
+const settings = [
+  { value: 'light', label: 'Light', iconLeft: SunIcon },
+  { value: 'dark', label: 'Dark', iconLeft: MoonIcon },
+  { value: 'system', label: 'System', iconLeft: DesktopIcon },
+] as const satisfies readonly SegmentedControlOption[];
+
+const frequencies: readonly SegmentedControlOption[] = [
+  { value: 'daily', label: 'Daily' },
+  { value: 'weekly', label: 'Weekly' },
+  { value: 'monthly', label: 'Monthly' },
 ];
 
 function Example({
@@ -70,14 +85,12 @@ function LiveExample(): ReactElement {
         label="View mode"
         note="The view changes immediately; focus stays on the chosen option."
       >
-        <SegmentedControl value={mode} onValueChange={setMode} aria-label="View mode">
-          <SegmentedControlItem value="list" iconLeft={ListIcon}>
-            List
-          </SegmentedControlItem>
-          <SegmentedControlItem value="grid" iconLeft={SquaresFourIcon}>
-            Grid
-          </SegmentedControlItem>
-        </SegmentedControl>
+        <SegmentedControl
+          items={layouts.slice(0, 2)}
+          value={mode}
+          onValueChange={setMode}
+          aria-label="View mode"
+        />
         <div className="segment-view-preview" data-view={mode} aria-hidden="true">
           {['Project notes', 'Design assets', 'Release plan'].map((label) => (
             <div key={label}>
@@ -103,17 +116,12 @@ function SizeExamples(): ReactElement {
               defaultValue={periods[index]?.value}
               aria-label={`Time range ${size}`}
             />
-            <SegmentedControl size={size} defaultValue="grid" aria-label={`Layout ${size}`}>
-              <SegmentedControlItem value="list" iconLeft={ListIcon} iconOnly>
-                List
-              </SegmentedControlItem>
-              <SegmentedControlItem value="grid" iconLeft={SquaresFourIcon} iconOnly>
-                Grid
-              </SegmentedControlItem>
-              <SegmentedControlItem value="columns" iconLeft={ColumnsIcon} iconOnly>
-                Columns
-              </SegmentedControlItem>
-            </SegmentedControl>
+            <SegmentedControl
+              items={glyphLayouts}
+              size={size}
+              defaultValue="grid"
+              aria-label={`Layout ${size}`}
+            />
           </div>
         </Example>
       ))}
@@ -125,17 +133,12 @@ function LayoutExamples(): ReactElement {
   return (
     <div className="segment-examples">
       <Example label="Equal peers · full width">
-        <SegmentedControl width="full" defaultValue="system" aria-label="Color mode">
-          <SegmentedControlItem value="light" iconLeft={SunIcon}>
-            Light
-          </SegmentedControlItem>
-          <SegmentedControlItem value="dark" iconLeft={MoonIcon}>
-            Dark
-          </SegmentedControlItem>
-          <SegmentedControlItem value="system" iconLeft={DesktopIcon}>
-            System
-          </SegmentedControlItem>
-        </SegmentedControl>
+        <SegmentedControl
+          items={settings}
+          width="full"
+          defaultValue="system"
+          aria-label="Color mode"
+        />
       </Example>
       <Example label="Five short options">
         <SegmentedControl
@@ -171,57 +174,20 @@ function LayoutExamples(): ReactElement {
 }
 
 function StateExamples(): ReactElement {
-  const rows: readonly {
-    label: string;
-    target: string;
-    state?: 'hover' | 'active';
-    focus?: boolean;
-    orientation?: 'vertical';
-  }[] = [
-    { label: 'Rest', target: 'week' },
-    { label: 'Hover · unselected', target: 'month', state: 'hover' },
-    { label: 'Hover · selected', target: 'week', state: 'hover' },
-    { label: 'Press · unselected', target: 'month', state: 'active' },
-    { label: 'Press · selected', target: 'week', state: 'active' },
-    { label: 'Focus · selected', target: 'week', focus: true },
-    { label: 'Focus · before selection', target: 'month', focus: true },
-    { label: 'Focus + press', target: 'week', state: 'active', focus: true },
-    {
-      label: 'Vertical · adjacent hover',
-      target: 'month',
-      state: 'hover',
-      orientation: 'vertical',
-    },
-    {
-      label: 'Vertical · adjacent press',
-      target: 'month',
-      state: 'active',
-      orientation: 'vertical',
-    },
-  ];
   return (
-    <div className="segment-state-list">
-      {rows.map((row) => (
-        <Example key={row.label} label={row.label}>
-          <SegmentedControl
-            value="week"
-            size="s"
-            orientation={row.orientation ?? 'horizontal'}
-            aria-label={row.label}
-          >
-            {periods.map((item) => (
-              <SegmentedControlItem
-                key={item.value}
-                value={item.value}
-                {...(item.value === row.target && row.state ? { previewState: row.state } : {})}
-                previewFocus={item.value === row.target && row.focus === true}
-              >
-                {item.label}
-              </SegmentedControlItem>
-            ))}
-          </SegmentedControl>
-        </Example>
-      ))}
+    <div className="segment-examples">
+      <Example
+        label="Hover, held press, and selection"
+        note="Hold a pointer down on a segment, then release on it to select. Release outside the control to cancel."
+      >
+        <SegmentedControl items={periods} defaultValue="week" aria-label="Time range interaction" />
+      </Example>
+      <Example
+        label="Focus separate from selection"
+        note="Tab to Week and move with the arrow keys. This example keeps Week selected while focus moves."
+      >
+        <SegmentedControl items={periods} value="week" aria-label="Fixed time range" />
+      </Example>
     </div>
   );
 }
@@ -277,89 +243,57 @@ function AvailabilityExamples(): ReactElement {
 
 function FieldExample(): ReactElement {
   const id = useId();
-  const [value, setValue] = useState<string | null>(null);
   const [error, setError] = useState(false);
   const [result, setResult] = useState('');
   return (
-    <div className="segment-examples">
+    <form
+      className="segment-examples"
+      onSubmit={(event) => {
+        event.preventDefault();
+        const frequency = new FormData(event.currentTarget).get('frequency');
+        setResult(typeof frequency === 'string' ? frequency : '');
+      }}
+      onReset={() => {
+        setError(false);
+        setResult('');
+      }}
+    >
       <Example label="No initial answer · required choice">
         <p id={`${id}-label`} className="segment-field-label">
           Delivery frequency <span aria-hidden="true">*</span>
         </p>
         <SegmentedControl
-          value={value}
-          invalid={error}
-          aria-required="true"
+          defaultValue={null}
+          name="frequency"
+          required
+          status={error ? 'danger' : 'neutral'}
           aria-labelledby={`${id}-label`}
           aria-describedby={`${id}-help`}
-          onValueChange={(next) => {
-            setValue(next);
+          onInvalid={() => setError(true)}
+          onValueChange={() => {
             setError(false);
             setResult('');
           }}
-          items={[
-            { value: 'daily', label: 'Daily' },
-            { value: 'weekly', label: 'Weekly' },
-            { value: 'monthly', label: 'Monthly' },
-          ]}
+          items={frequencies}
         />
-        <p
-          id={`${id}-help`}
-          className="segment-example-note"
-          data-error={error || undefined}
-          role={error ? 'alert' : undefined}
-        >
+        <p id={`${id}-help`} className="segment-example-note" data-error={error || undefined}>
           {error
             ? 'Choose how often you want to receive a digest.'
             : 'One digest with the changes that matter to you.'}
         </p>
         <div className="segment-example-row">
-          <Button
-            size="s"
-            variant="secondary"
-            tone="neutral"
-            onClick={() => {
-              setError(value === null);
-              setResult(value ? 'Frequency saved.' : '');
-            }}
-          >
+          <Button type="submit" size="s" variant="secondary" tone="neutral">
             Save frequency
           </Button>
-          <Button
-            size="s"
-            variant="ghost"
-            tone="neutral"
-            onClick={() => {
-              setValue(null);
-              setError(false);
-              setResult('');
-            }}
-          >
+          <Button type="reset" size="s" variant="ghost" tone="neutral">
             Reset
           </Button>
-          <span className="segment-example-note" role="status">
-            {result}
-          </span>
+          <output className="segment-example-note">
+            {result && `Submitted frequency: ${result}`}
+          </output>
         </div>
       </Example>
-      <Example label="Error + focus · pinned preview">
-        <SegmentedControl
-          value={null}
-          invalid
-          aria-label="Delivery frequency, error preview"
-          aria-describedby={`${id}-error`}
-        >
-          <SegmentedControlItem value="daily" previewFocus>
-            Daily
-          </SegmentedControlItem>
-          <SegmentedControlItem value="weekly">Weekly</SegmentedControlItem>
-          <SegmentedControlItem value="monthly">Monthly</SegmentedControlItem>
-        </SegmentedControl>
-        <p id={`${id}-error`} className="segment-example-note" data-error>
-          Choose a frequency to continue.
-        </p>
-      </Example>
-    </div>
+    </form>
   );
 }
 
@@ -479,8 +413,8 @@ export default defineComponent({
   id: 'segmented-control',
   title: 'SegmentedControl',
   category: 'Selection & Pickers',
-  status: 'Proto',
-  summary: 'One value, 2–5 peer options. A quiet rail with a clear, stationary selection.',
+  status: 'UI',
+  summary: 'Choose one value from a compact group of short options.',
   componentName: 'SegmentedControl',
   form: 'owned',
   props: {
@@ -494,37 +428,78 @@ export default defineComponent({
       'horizontal',
     ),
     width: choice('Geometry', 'Size to the options or fill the slot.', ['auto', 'full'], 'auto'),
-    invalid: toggle('Field', 'Mark the value as invalid.'),
-    onValueChange: eventProp('Reports the selected period.', 'handleValueChange'),
+    required,
+    status: choice('Field', 'Validation feedback for the group.', ['neutral', 'danger'], 'neutral'),
+    defaultValue: {
+      kind: 'slot',
+      group: 'Field',
+      description: 'Mount with the first available option or an empty answer.',
+      choices: [
+        { value: 'implicit', label: 'First available' },
+        { value: 'empty', label: 'No selection', code: 'null' },
+      ],
+      default: 'implicit',
+    },
+    name: {
+      kind: 'string',
+      group: 'Field',
+      description: 'Form data key. An empty name omits the field from FormData.',
+      default: 'preference',
+      examples: ['preference', ''],
+    },
+    items: {
+      kind: 'slot',
+      group: 'Options',
+      description: 'The option array supplies stable values, labels, and optional leading glyphs.',
+      choices: [
+        { value: 'periods', label: 'Periods', code: 'periods' },
+        { value: 'layouts', label: 'Layouts with icons', code: 'layouts' },
+        { value: 'glyphLayouts', label: 'Icon-only layouts', code: 'glyphLayouts' },
+      ],
+      default: 'periods',
+    },
+    onValueChange: eventProp('Reports a requested or committed selection.', 'handleValueChange'),
   },
-  render: function SegmentPreview({ values, ctx }) {
-    const [period, setPeriod] = useState('week');
+  constraints: [
+    {
+      kind: 'precedence',
+      when: { disabled: true },
+      affects: ['required', 'readOnly', { key: 'status', value: 'danger' }],
+      reason:
+        'A disabled group is unavailable for input and excluded from validation and submission.',
+    },
+    {
+      kind: 'ignored',
+      when: { readOnly: true },
+      affects: ['required'],
+      reason:
+        'A read-only group preserves its value and allows focus. It cannot require a new choice.',
+    },
+  ],
+  render: function SegmentPreview({ values: { items, defaultValue, ...values }, ctx }) {
+    const options = { periods, layouts, glyphLayouts }[items];
     return (
-      <form {...ctx.form} onReset={() => setPeriod('week')}>
+      <form {...ctx.form}>
         <SegmentedControl
           {...values}
           {...ctx.subject}
-          aria-label="Time range"
-          items={periods}
-          name="period"
-          value={period}
-          onValueChange={(next) => {
-            setPeriod(next);
-            ctx.action('onValueChange')(next);
-          }}
+          key={`${items}-${defaultValue}`}
+          aria-label="View preference"
+          items={options}
+          defaultValue={defaultValue === 'empty' ? null : undefined}
+          onValueChange={ctx.action('onValueChange')}
         />
       </form>
     );
   },
-  code: (_values, attributes) =>
-    `<SegmentedControl aria-label="Time range" name="period" items={periods} value={period}${attributes} />`,
+  code: ({ items, name }, attributes) =>
+    `<SegmentedControl aria-label="View preference"${items === 'periods' ? ' items={periods}' : ''}${name === 'preference' ? ' name="preference"' : ''}${attributes} />`,
   matrixViews: [
     {
       id: 'sizes',
       rows: 'size',
       title: 'Three sizes · text & icons',
-      caption:
-        'Stable 500 weight in every state. Icon-only options retain their text names; native titles are tooltip stand-ins.',
+      caption: 'Icon-only options carry an accessible text name.',
       reference: () => <SizeExamples />,
     },
     {
@@ -539,8 +514,7 @@ export default defineComponent({
     {
       id: 'live',
       title: 'Choose a value',
-      caption:
-        'Live pointer and keyboard interaction. These controls change a parameter, without owning tabs or panels.',
+      caption: 'Use pointer or keyboard to change a time range or a view preference.',
       kind: 'behavior',
       render: () => <LiveExample />,
     },
@@ -548,7 +522,7 @@ export default defineComponent({
       id: 'states',
       title: 'Interaction states',
       caption:
-        'Pinned visual comparisons. Week stays selected; hover, held press, and focus are previewed independently.',
+        'Use the pointer to test hover and press. Use Tab and the arrow keys to compare focus with selection.',
       kind: 'behavior',
       render: () => <StateExamples />,
     },
@@ -562,7 +536,7 @@ export default defineComponent({
       id: 'field',
       title: 'Empty answer & validation',
       caption:
-        'Local validation and reset preview. Native form integration is part of the library implementation.',
+        'Save to validate and read the native form value. Reset returns the group to its initial empty answer.',
       kind: 'behavior',
       render: () => <FieldExample />,
     },
@@ -585,7 +559,6 @@ export default defineComponent({
     {
       id: 'alignment',
       title: 'Alongside other controls',
-      caption: 'An ordinary control row; this does not introduce an ARIA toolbar.',
       code: `<>
   <SegmentedControl size="m" items={layouts} aria-label="Layout" />
   <Input size="m" aria-label="Find items" />

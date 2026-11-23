@@ -2,6 +2,7 @@ import {
   addListenerSafe,
   getDefaultView,
   getFormElements,
+  getLocalName,
   getOwnerDocument,
   getRootNodeSafe,
   isHtmlForm,
@@ -34,24 +35,98 @@ export function createResetOperation(event: ResetEvent): ResetOperation {
 
 interface Subscription {
   notify: (result: ResetResult) => void;
+  readonly controls: readonly FormControl[];
 }
 
-const roots = /* @__PURE__ */ new WeakMap<Node, Set<Subscription>>();
-const controlSubscriptions = /* @__PURE__ */ new WeakMap<FormControl, Set<Subscription>>();
-const dispatches = /* @__PURE__ */ new WeakMap<Event, () => void>();
+type PendingReset = (subscription?: Subscription) => void;
 
-function collectFormSubscriptions(form: HTMLFormElement): Set<Subscription> {
-  const targets = new Set<Subscription>();
-  const elements = getFormElements(form);
-  for (let index = 0; index < elements.length; index++) {
-    const subs = controlSubscriptions.get(elements[index] as FormControl);
-    if (subs) {
-      for (const subscription of subs) {
-        targets.add(subscription);
-      }
-    }
+interface ResetObservation {
+  readonly control: FormControl;
+  readonly owned: boolean;
+  readonly appliedDefault: (allowUnchanged: boolean) => boolean;
+}
+
+const resetTargets = /* @__PURE__ */ new WeakMap<Node, Set<Subscription>>();
+const dispatches = /* @__PURE__ */ new WeakMap<Event, () => void>();
+const pendingResets = /* @__PURE__ */ new Set<PendingReset>();
+
+function matchesCheckedDefault(input: HTMLInputElement): boolean {
+  const { checked, defaultChecked, form, name, type } = input;
+  if (!defaultChecked || type !== 'radio' || !name || !form) {
+    return checked === defaultChecked;
   }
-  return targets;
+  // Reset evaluates the named radio set in form order. A later default can uncheck this radio.
+  const lastDefault = Array.from(getFormElements(form)).findLast((element) => {
+    if (getLocalName(element) !== 'input') {
+      return false;
+    }
+    const peer = element as HTMLInputElement;
+    return peer.type === 'radio' && peer.name === name && peer.defaultChecked;
+  }) as HTMLInputElement | undefined;
+  return lastDefault?.checked === true && checked === (lastDefault === input);
+}
+
+function captureResetValue(control: FormControl): ResetObservation['appliedDefault'] {
+  const tag = getLocalName(control);
+  if (tag === 'select') {
+    const select = control as HTMLSelectElement;
+    const before = Array.from(select.selectedOptions);
+    return (allowUnchanged) => {
+      const after = Array.from(select.selectedOptions);
+      const changed =
+        before.length !== after.length || before.some((option, index) => option !== after[index]);
+      return (
+        (changed || allowUnchanged) &&
+        Array.from(select.options).every((option) => option.selected === option.defaultSelected)
+      );
+    };
+  }
+  const input = control as HTMLInputElement;
+  if (tag === 'input' && (input.type === 'checkbox' || input.type === 'radio')) {
+    const before = input.checked;
+    return (allowUnchanged) =>
+      (before !== input.checked || allowUnchanged) && matchesCheckedDefault(input);
+  }
+  const field = control as HTMLInputElement | HTMLTextAreaElement;
+  const before = field.value;
+  return (allowUnchanged) => {
+    const value = field.value;
+    if (!allowUnchanged && value === before) {
+      return false;
+    }
+    if (tag === 'input' && input.type === 'file') {
+      return value === '';
+    }
+    if (value === field.defaultValue) {
+      return true;
+    }
+    // Inputs such as email can sanitize the default before applying it.
+    // Use a detached copy to observe the same normalization without touching the field.
+    const probe = field.cloneNode(false) as typeof field;
+    probe.value = field.defaultValue;
+    return probe.value === value;
+  };
+}
+
+function observeReset(form: HTMLFormElement, root: Node): Map<Subscription, ResetObservation[]> {
+  const observations = new Map<Subscription, ResetObservation[]>();
+  const subscriptions = new Set([
+    ...(resetTargets.get(root) ?? []),
+    ...(resetTargets.get(form) ?? []),
+  ]);
+  for (const subscription of subscriptions) {
+    observations.set(
+      subscription,
+      subscription.controls
+        .filter((control) => getRootNodeSafe(control) === root)
+        .map((control) => ({
+          control,
+          owned: control.form === form,
+          appliedDefault: captureResetValue(control),
+        })),
+    );
+  }
+  return observations;
 }
 
 function handleReset(event: Event): void {
@@ -59,41 +134,80 @@ function handleReset(event: Event): void {
     return;
   }
   const form = event.target;
-  if (event.currentTarget !== getRootNodeSafe(form)) {
+  const root = getRootNodeSafe(form);
+  if (event.currentTarget !== root && event.currentTarget !== form) {
+    return;
+  }
+  // The form binding survives a move to a new root. If the root already
+  // observed this native dispatch, the form listener has nothing more to collect.
+  if (event.currentTarget === form && form !== root && event.isTrusted && dispatches.has(event)) {
     return;
   }
 
   // Dispatch can reuse an Event object before the previous cleanup microtask.
   dispatches.get(event)?.();
+  // Settle earlier dispatches before this reset can overwrite their native values.
+  flushPendingResets();
   const operation = createResetOperation(event);
+  const observations = observeReset(form, root);
   const view = getDefaultView(getOwnerDocument(form));
   let active = true;
+  let completed: { result: ResetResult; targets: Set<Subscription> } | undefined;
   let cancelFallback: (() => void) | undefined;
 
   const cleanup = (): void => {
     active = false;
     dispatches.delete(event);
+    pendingResets.delete(finish);
     if (cancelFallback) {
       cancelFallback();
       cancelFallback = undefined;
     }
   };
 
-  const finish = (): void => {
+  function finish(only?: Subscription): void {
     if (!active) {
       return;
     }
-    const result = operation.finish();
-    cleanup();
-    if (!result) {
-      return;
+    if (!completed) {
+      const result = operation.finish();
+      if (!result) {
+        return;
+      }
+      // Use the native form order, since an earlier reset callback can unmount
+      // a later subscriber. React can register child effects before parent effects.
+      const positions = new Map(
+        Array.from(getFormElements(form), (control, index) => [control, index] as const),
+      );
+      const ordered: { subscription: Subscription; position: number }[] = [];
+      for (const [subscription, controls] of observations) {
+        const participants = controls.filter(({ control, owned, appliedDefault }) => {
+          const stayed = owned && control.form === form;
+          // Check what the browser applied even if the control returned to its
+          // previous owner before this checkpoint.
+          return result === 'reset' ? appliedDefault(stayed) : stayed;
+        });
+        if (participants.length > 0) {
+          const position = participants.reduce(
+            (first, { control }) => Math.min(first, positions.get(control) ?? Infinity),
+            Infinity,
+          );
+          ordered.push({ subscription, position });
+        }
+      }
+      ordered.sort((first, second) => first.position - second.position);
+      completed = { result, targets: new Set(ordered.map(({ subscription }) => subscription)) };
+      observations.clear();
     }
-    const targets = collectFormSubscriptions(form);
-    if (targets.size === 0) {
-      return;
+    if (!only) {
+      cleanup();
     }
+    const { result, targets } = completed;
     let failure: { error: unknown } | undefined;
-    for (const subscription of targets) {
+    for (const subscription of only ? [only] : targets) {
+      if (!targets.delete(subscription)) {
+        continue;
+      }
       try {
         subscription.notify(result);
       } catch (error) {
@@ -109,9 +223,10 @@ function handleReset(event: Event): void {
         throw failure.error;
       }
     }
-  };
+  }
 
   dispatches.set(event, cleanup);
+  pendingResets.add(finish);
   queueMicrotask(() => {
     if (!active) {
       return;
@@ -146,12 +261,21 @@ function handleReset(event: Event): void {
   });
 }
 
-function bindRoot(root: Node, subscription: Subscription): () => void {
-  let subscriptions = roots.get(root);
+function flushPendingResets(subscription?: Subscription): void {
+  if (pendingResets.size === 0) {
+    return;
+  }
+  for (const finish of [...pendingResets]) {
+    finish(subscription);
+  }
+}
+
+function bindResetTarget(target: Node, subscription: Subscription): () => void {
+  let subscriptions = resetTargets.get(target);
   if (!subscriptions) {
     subscriptions = new Set();
-    addListenerSafe(root, 'reset', handleReset, true);
-    roots.set(root, subscriptions);
+    addListenerSafe(target, 'reset', handleReset, true);
+    resetTargets.set(target, subscriptions);
   }
   subscriptions.add(subscription);
 
@@ -162,15 +286,16 @@ function bindRoot(root: Node, subscription: Subscription): () => void {
     }
     active = false;
     subscriptions.delete(subscription);
-    if (subscriptions.size === 0 && roots.get(root) === subscriptions) {
-      roots.delete(root);
-      removeListenerSafe(root, 'reset', handleReset, true);
+    if (subscriptions.size === 0 && resetTargets.get(target) === subscriptions) {
+      resetTargets.delete(target);
+      removeListenerSafe(target, 'reset', handleReset, true);
     }
   };
 }
 
 export interface NativeResetSubscription {
-  syncRoots: () => void;
+  flushCompleted: () => void;
+  syncTargets: () => void;
   unsubscribe: () => void;
 }
 
@@ -183,98 +308,76 @@ export function subscribeNativeReset(
     : [input as FormControl];
   let active = true;
   const subscription: Subscription = {
+    controls,
     notify(result) {
       if (active) {
         notify(result);
       }
     },
   };
-  const rootUnbinds = new Map<Node, () => void>();
+  const unbinds = new Map<Node, () => void>();
 
-  function syncRoots(): void {
+  function syncTargets(): void {
     if (!active) {
       return;
     }
-    // Zero-allocation fast path for single-control fields on an unchanged root.
+    // Avoid rebuilding bindings for a single control with the same root and form.
     if (controls.length === 1) {
-      const root = getRootNodeSafe(controls[0]!);
-      if (rootUnbinds.size === 1 && rootUnbinds.has(root)) {
+      const control = controls[0]!;
+      const root = getRootNodeSafe(control);
+      const form = control.form;
+      const count = form && form !== root ? 2 : 1;
+      if (unbinds.size === count && unbinds.has(root) && (!form || unbinds.has(form))) {
         return;
       }
-      for (const [existing, unbind] of rootUnbinds) {
-        if (existing !== root) {
-          rootUnbinds.delete(existing);
-          unbind();
-        }
-      }
-      if (!rootUnbinds.has(root)) {
-        rootUnbinds.set(root, bindRoot(root, subscription));
-      }
-      return;
     }
 
-    const nextRoots = new Set<Node>();
+    const nextTargets = new Set<Node>();
     for (const control of controls) {
-      nextRoots.add(getRootNodeSafe(control));
+      nextTargets.add(getRootNodeSafe(control));
+      const form = control.form;
+      if (form) {
+        nextTargets.add(form);
+      }
     }
-    for (const [root, unbind] of rootUnbinds) {
-      if (!nextRoots.has(root)) {
-        rootUnbinds.delete(root);
+    for (const [target, unbind] of unbinds) {
+      if (!nextTargets.has(target)) {
+        unbinds.delete(target);
         unbind();
       }
     }
-    for (const root of nextRoots) {
-      if (!rootUnbinds.has(root)) {
-        rootUnbinds.set(root, bindRoot(root, subscription));
+    for (const target of nextTargets) {
+      if (!unbinds.has(target)) {
+        unbinds.set(target, bindResetTarget(target, subscription));
       }
     }
-  }
-
-  for (const control of controls) {
-    let subs = controlSubscriptions.get(control);
-    if (!subs) {
-      subs = new Set();
-      controlSubscriptions.set(control, subs);
-    }
-    subs.add(subscription);
   }
 
   try {
-    syncRoots();
+    syncTargets();
   } catch (error) {
-    for (const control of controls) {
-      const subs = controlSubscriptions.get(control);
-      subs?.delete(subscription);
-      if (subs?.size === 0) {
-        controlSubscriptions.delete(control);
-      }
-    }
-    for (const unbind of rootUnbinds.values()) {
+    for (const unbind of unbinds.values()) {
       unbind();
     }
-    rootUnbinds.clear();
+    unbinds.clear();
     active = false;
     throw error;
   }
 
   return {
-    syncRoots,
+    flushCompleted() {
+      flushPendingResets(subscription);
+    },
+    syncTargets,
     unsubscribe() {
       if (!active) {
         return;
       }
       active = false;
-      for (const control of controls) {
-        const subs = controlSubscriptions.get(control);
-        subs?.delete(subscription);
-        if (subs?.size === 0) {
-          controlSubscriptions.delete(control);
-        }
-      }
-      for (const unbind of rootUnbinds.values()) {
+      for (const unbind of unbinds.values()) {
         unbind();
       }
-      rootUnbinds.clear();
+      unbinds.clear();
     },
   };
 }

@@ -283,12 +283,14 @@ export default {
       assert.deepEqual(await entries(outside), []);
       await resetForm(outside);
       assert.equal(await inert.inputValue(), '');
+      await email.fill('edited@example.com');
       await resetForm(other);
       assert.equal(await inert.inputValue(), 'retained');
       assert.equal(await field.inputValue(), 'inside');
       assert.equal(await email.inputValue(), '');
       await button(page, 'Change input type').click();
       assert.equal(await email.getAttribute('type'), 'text');
+      assert.equal(await email.inputValue(), '');
       await resetForm(other);
       assert.equal(await email.inputValue(), '   ');
     },

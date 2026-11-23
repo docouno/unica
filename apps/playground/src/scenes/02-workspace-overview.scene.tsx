@@ -16,7 +16,7 @@ import {
   Title,
 } from '@docouno/unica';
 import { List, ListItem } from '../prototypes/list/list.proto.js';
-import { SegmentedControl } from '../prototypes/segmented-control/segmented-control.proto.js';
+import { SegmentedControl } from '@docouno/unica';
 import { Breadcrumb, BreadcrumbPage } from '../prototypes/breadcrumb/breadcrumb.proto.js';
 import { defineScene } from '../workbench/types.js';
 import {

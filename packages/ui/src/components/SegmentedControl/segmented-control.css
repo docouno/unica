@@ -1,0 +1,279 @@
+@layer unica.components {
+  .unica-segmented-control {
+    --_segmented-height: var(--size-m-height);
+    --_segmented-radius: var(--size-m-radius);
+    --_segmented-padding-x: var(--size-m-padding-x);
+    --_segmented-font-size: var(--text-size-body-s);
+    --_segmented-content-gap: var(--size-m-gap);
+    --_segmented-inset: 3px;
+    display: inline-grid;
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(max-content, 1fr);
+    gap: var(--_segmented-inset);
+    flex: 0 1 auto;
+    align-items: stretch;
+    inline-size: fit-content;
+    min-inline-size: 0;
+    max-inline-size: 100%;
+    padding: var(--_segmented-inset);
+    border-radius: var(--_segmented-radius);
+    background: var(--_segmented-rail-bg);
+    overflow: auto;
+    overscroll-behavior-inline: contain;
+    scroll-padding-inline: var(--_segmented-inset);
+    font-family: var(--font-family-base);
+    font-size: var(--_segmented-font-size);
+    font-weight: 500;
+    line-height: 1.4;
+    vertical-align: middle;
+    isolation: isolate;
+  }
+
+  .unica-segmented-control[data-unica-segmented-size='s'] {
+    --_segmented-height: var(--size-s-height);
+    --_segmented-radius: var(--size-s-radius);
+    --_segmented-padding-x: var(--size-s-padding-x);
+    --_segmented-font-size: var(--size-s-control-font);
+    --_segmented-content-gap: var(--size-s-gap);
+  }
+
+  .unica-segmented-control[data-unica-segmented-size='l'] {
+    --_segmented-height: var(--size-l-height);
+    --_segmented-radius: var(--size-l-radius);
+    --_segmented-padding-x: var(--size-l-padding-x);
+    --_segmented-font-size: var(--text-size-body-m);
+    --_segmented-content-gap: var(--size-l-gap);
+  }
+
+  .unica-segmented-control[data-unica-segmented-width='full'] {
+    inline-size: 100%;
+  }
+
+  .unica-segmented-control[data-unica-segmented-overflow] {
+    /* Native scroll extents can round down: keep the outer focus edge intact. */
+    padding-inline-end: calc(var(--_segmented-inset) + 1px);
+  }
+
+  .unica-segmented-control[data-unica-segmented-orientation='vertical'] {
+    grid-auto-flow: row;
+    grid-auto-columns: auto;
+  }
+
+  .unica-segmented-control-item {
+    position: relative;
+    display: flex;
+    min-inline-size: max-content;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+  }
+
+  .unica-segmented-control-item > input {
+    position: absolute;
+    inset: 0;
+    inline-size: 100%;
+    block-size: 100%;
+    margin: 0;
+    opacity: 0;
+    cursor: inherit;
+  }
+
+  .unica-segmented-control-plate {
+    position: relative;
+    isolation: isolate;
+    pointer-events: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--_segmented-content-gap);
+    inline-size: 100%;
+    min-inline-size: 0;
+    min-block-size: calc(var(--_segmented-height) - 2 * var(--_segmented-inset));
+    padding: 0 var(--_segmented-padding-x);
+    border: 1px solid transparent;
+    border-radius: min(
+      var(--_segmented-radius),
+      max(var(--radius-xs), calc(var(--_segmented-radius) - var(--_segmented-inset)))
+    );
+    color: var(--fg-muted);
+    text-align: center;
+    white-space: nowrap;
+  }
+
+  .unica-segmented-control-item > input:checked + .unica-segmented-control-plate {
+    background: var(--_segmented-thumb-bg);
+    box-shadow: var(--_segmented-thumb-shadow);
+    color: var(--fg-primary);
+  }
+
+  @media (forced-colors: none) {
+    /* Animate the pointer veil independently of the stationary selected plate. */
+    .unica-segmented-control-plate::before {
+      content: '';
+      position: absolute;
+      z-index: -1;
+      inset: -1px;
+      border-radius: inherit;
+      background: var(--fg-primary);
+      opacity: var(--_segmented-veil-opacity, 0);
+      transition: opacity var(--_segmented-state-duration);
+    }
+
+    @media (hover: hover) {
+      .unica-segmented-control:not([data-unica-segmented-readonly])
+        .unica-segmented-control-item:hover
+        > input:not(:disabled, [aria-disabled='true']):not(:checked)
+        + .unica-segmented-control-plate {
+        --_segmented-veil-opacity: 0.06;
+        color: var(--fg-primary);
+      }
+
+      .unica-segmented-control:not([data-unica-segmented-readonly])
+        .unica-segmented-control-item:hover
+        > input:checked:not(:disabled, [aria-disabled='true'])
+        + .unica-segmented-control-plate {
+        --_segmented-veil-opacity: 0.03;
+      }
+    }
+
+    .unica-segmented-control:not([data-unica-segmented-readonly])
+      .unica-segmented-control-item:active
+      > input:not(:disabled, [aria-disabled='true']):not(:checked)
+      + .unica-segmented-control-plate {
+      --_segmented-veil-opacity: 0.1;
+      color: var(--fg-primary);
+    }
+
+    .unica-segmented-control:not([data-unica-segmented-readonly])
+      .unica-segmented-control-item:active
+      > input:checked:not(:disabled, [aria-disabled='true'])
+      + .unica-segmented-control-plate {
+      --_segmented-veil-opacity: 0.06;
+    }
+  }
+
+  .unica-segmented-control-item
+    > input:focus-visible:not([aria-disabled='true'])
+    + .unica-segmented-control-plate {
+    outline: 2px solid var(--focus-ring-color);
+    outline-offset: 0;
+  }
+
+  .unica-segmented-control-item:has(> input:focus-visible) {
+    z-index: 1;
+  }
+
+  .unica-segmented-control-item:has(> input:is(:disabled, [aria-disabled='true'])) {
+    cursor: not-allowed;
+  }
+
+  .unica-segmented-control-item
+    > input:is(:disabled, [aria-disabled='true'])
+    + .unica-segmented-control-plate {
+    color: var(--fg-disabled);
+    box-shadow: none;
+  }
+
+  .unica-segmented-control-item
+    > input:checked:is(:disabled, [aria-disabled='true'])
+    + .unica-segmented-control-plate {
+    background: color-mix(in srgb, var(--_segmented-thumb-bg) 70%, var(--_segmented-rail-bg));
+  }
+
+  .unica-segmented-control[data-unica-segmented-readonly] .unica-segmented-control-item {
+    cursor: default;
+  }
+
+  .unica-segmented-control[data-unica-segmented-invalid]:not(
+      :has(> .unica-segmented-control-carrier:disabled)
+    ) {
+    box-shadow: inset 0 0 0 1px var(--status-danger-signal);
+  }
+
+  .unica-segmented-control-item[data-unica-segmented-icon-only] .unica-segmented-control-plate {
+    min-inline-size: calc(var(--_segmented-height) - 2 * var(--_segmented-inset));
+    padding-inline: var(--_segmented-content-gap);
+  }
+
+  .unica-segmented-control-carrier {
+    pointer-events: none;
+  }
+
+  .unica-segmented-control:focus-visible {
+    outline: 2px solid var(--focus-ring-color);
+    outline-offset: -2px;
+  }
+
+  .unica-segmented-control[hidden] {
+    display: none;
+  }
+
+  @media (pointer: coarse) {
+    .unica-segmented-control[data-unica-segmented-size] {
+      --_segmented-height: max(48px, var(--size-m-height));
+    }
+
+    .unica-segmented-control-plate {
+      min-inline-size: calc(var(--_segmented-height) - 2 * var(--_segmented-inset));
+    }
+
+    .unica-segmented-control-item > input {
+      /* Keep 44px targets around 42px plates without changing the visual inset. */
+      inset: -1px;
+      inline-size: calc(100% + 2px);
+      block-size: calc(100% + 2px);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .unica-segmented-control-plate::before {
+      transition: none;
+    }
+  }
+
+  @media (forced-colors: active) {
+    .unica-segmented-control {
+      outline: 1px solid ButtonText;
+      outline-offset: -1px;
+      background: Canvas;
+    }
+
+    .unica-segmented-control[data-unica-segmented-invalid]:not(
+        :has(> .unica-segmented-control-carrier:disabled)
+      ) {
+      outline-style: dashed;
+    }
+
+    .unica-segmented-control:focus-visible {
+      outline-color: Highlight;
+    }
+
+    .unica-segmented-control-item > input:checked + .unica-segmented-control-plate {
+      forced-color-adjust: none;
+      border-color: Highlight;
+      background: Highlight;
+      color: HighlightText;
+      box-shadow: none;
+    }
+
+    .unica-segmented-control-item
+      > input:is(:disabled, [aria-disabled='true'])
+      + .unica-segmented-control-plate {
+      color: GrayText;
+    }
+
+    .unica-segmented-control-item
+      > input:checked:is(:disabled, [aria-disabled='true'])
+      + .unica-segmented-control-plate {
+      border-color: GrayText;
+      background: Canvas;
+    }
+
+    .unica-segmented-control-item
+      > input:focus-visible:not([aria-disabled='true'])
+      + .unica-segmented-control-plate {
+      outline-color: Highlight;
+      outline-offset: 0;
+    }
+  }
+}

@@ -1,4 +1,13 @@
-import { Card, Checkbox, Kbd, KbdGroup, Radio, RadioGroup, Text } from '@docouno/unica';
+import {
+  Card,
+  Checkbox,
+  Kbd,
+  KbdGroup,
+  Radio,
+  RadioGroup,
+  SegmentedControl,
+  Text,
+} from '@docouno/unica';
 import { useId, useRef, useState } from 'react';
 import type { ReactElement } from 'react';
 import { defineScene } from '../workbench/types.js';
@@ -20,7 +29,6 @@ import {
   AccordionTrigger,
 } from '../prototypes/disclosure/disclosure.proto.js';
 import { ToastCard } from '../prototypes/toast/toast.proto.js';
-import { SegmentedControl } from '../prototypes/segmented-control/segmented-control.proto.js';
 import { Select } from '../prototypes/select/select.proto.js';
 import { RangeSlider, Slider } from '../prototypes/slider/slider.proto.js';
 import { NumberInput } from '../prototypes/number-input/number-input.proto.js';
@@ -154,6 +162,7 @@ function PreferencesScene(): ReactElement {
                 <SegmentedControl
                   size="s"
                   aria-label="Interface color mode"
+                  className="folio-color-mode"
                   items={[
                     { value: 'system', label: 'System' },
                     { value: 'dark', label: 'Dark' },

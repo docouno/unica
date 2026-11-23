@@ -322,5 +322,15 @@ export default {
       assert.deepEqual(await entries(owner), [['primary', 'native']]);
       await second.press('Space');
       assert.deepEqual(await entries(owner), [['primary', 'second']]);
+
+      await first.press('Space');
+      const changes = page.getByTestId('reassociated-first-changes');
+      const beforeReset = Number(await changes.textContent());
+      await resetForm(owner);
+      assert.deepEqual(await entries(owner), [['primary', 'second']]);
+      assert.equal(Number(await changes.textContent()), beforeReset);
+      await first.press('Space');
+      assert.deepEqual(await entries(owner), [['primary', 'first']]);
+      assert.equal(Number(await changes.textContent()), beforeReset + 1);
     },
 };

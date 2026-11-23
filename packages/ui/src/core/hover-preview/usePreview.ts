@@ -1,6 +1,13 @@
 import { useCallback, useContext, useRef, useState } from 'react';
 import type { HTMLAttributes, RefCallback, RefObject } from 'react';
-import { getLiveView, getOwnerDocument } from '../dom.js';
+import {
+  composedContains,
+  getLiveView,
+  getOwnerDocument,
+  getRootActiveElement,
+  getRootNodeSafe,
+  isElementNode,
+} from '../dom.js';
 import type { Align, Side } from '../overlay/positioning.js';
 import { useStateAuthority } from '../useControllableState.js';
 import { useIsoLayoutEffect } from '../useIsoLayoutEffect.js';
@@ -54,6 +61,7 @@ export function usePreview({
   const domain = useContext(PreviewDomainContext);
   const [, authority] = useStateAuthority({ value: open, defaultValue: defaultOpen ?? false });
   const controller = useRef<PreviewController | null>(null);
+  const pendingFocus = useRef<{ event: FocusEvent; target: Element } | null>(null);
   const admission = useRef({ blocked: false, externalAnchor: null as HTMLElement | null });
 
   useIsoLayoutEffect(() => {
@@ -98,12 +106,35 @@ export function usePreview({
       write: authority.propose,
       notify: onOpenChange,
     });
+    const focus = pendingFocus.current;
+    if (focus && anchor) {
+      pendingFocus.current = null;
+      if (
+        composedContains(anchor, focus.target) &&
+        getRootActiveElement(getRootNodeSafe(focus.target), document) === focus.target
+      ) {
+        controller.current.focusTrigger(focus.event, focus.target);
+      }
+    }
   });
 
   return {
     trigger: {
-      onFocus: (event) => controller.current?.focusTrigger(event.nativeEvent, event.target),
-      onBlur: (event) => controller.current?.blurTrigger(event.nativeEvent),
+      onFocus: (event) => {
+        if (!isElementNode(event.target)) {
+          return;
+        }
+        if (controller.current && anchor && composedContains(anchor, event.target)) {
+          controller.current.focusTrigger(event.nativeEvent, event.target);
+        } else {
+          // A parent can restore focus before the anchor and carrier refs settle.
+          pendingFocus.current = { event: event.nativeEvent, target: event.target };
+        }
+      },
+      onBlur: (event) => {
+        pendingFocus.current = null;
+        controller.current?.blurTrigger(event.nativeEvent);
+      },
       onPointerEnter: (event) => controller.current?.enterTrigger(event.nativeEvent),
       onPointerLeave: (event) => controller.current?.leaveTrigger(event.nativeEvent),
       onClick: (event) => controller.current?.activate(event.nativeEvent),
