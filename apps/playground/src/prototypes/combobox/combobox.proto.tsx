@@ -584,7 +584,6 @@ function SuggestionField({
           ? 'suggestion-panel-proto suggestion-pinned-proto'
           : 'suggestion-panel-proto suggestion-native-proto'
       }
-      size="s"
       data-kind={kind}
     >
       <div className="choice-list-frame-proto suggestion-frame-proto" data-size={size}>

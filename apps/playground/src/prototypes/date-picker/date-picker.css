@@ -406,11 +406,21 @@
   color: var(--fg-muted);
   font-size: var(--date-field-icon);
 }
-.date-picker-panel-proto.popover-content-proto {
-  --popover-width: 282px;
+.date-picker-panel-proto {
+  --date-panel-width: 282px;
   --element-radius: var(--surface-m-radius);
+  position: relative;
+  flex-direction: column;
+  inline-size: min(100%, var(--date-panel-width));
+  min-inline-size: 0;
   gap: var(--space-8);
   padding: var(--space-12);
+  color: var(--fg-primary);
+  font-family: var(--font-family-base);
+}
+.date-picker-panel-proto:not([popover], [hidden]),
+.date-picker-panel-proto:popover-open:not([hidden]) {
+  display: flex;
 }
 .date-picker-panel-proto > .calendar-proto {
   --calendar-cell: 36px;
@@ -421,7 +431,7 @@
   position: fixed;
   inset: auto;
   margin: 0;
-  inline-size: min(var(--popover-width), calc(100vw - 16px));
+  inline-size: min(var(--date-panel-width), calc(100vw - 16px));
   max-block-size: calc(100dvh - 16px);
   overflow: auto;
   overscroll-behavior: contain;
@@ -561,11 +571,8 @@
     inline-size: 100%;
     block-size: 44px;
   }
-  .date-picker-panel-proto.popover-content-proto {
-    --popover-width: 336px;
-  }
-  .date-picker-panel-proto[popover] {
-    inline-size: min(336px, calc(100vw - 16px));
+  .date-picker-panel-proto {
+    --date-panel-width: 336px;
   }
   .date-field-row-proto {
     --date-action-size: 44px;

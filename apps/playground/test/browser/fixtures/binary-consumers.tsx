@@ -12,6 +12,7 @@ const ContextMenuExample = lazy(async () => {
       <NativeContextMenu
         ctx={{
           id: 'context-menu-fixture',
+          tab: 'usage',
           theme: {
             id: 'soft-dark',
             label: 'Soft Dark',

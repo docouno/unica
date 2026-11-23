@@ -10,7 +10,6 @@ import {
   PlusGlyph,
 } from '../control-glyphs.js';
 import { IconButton } from '@docouno/unica';
-import { PopoverContent } from '../popover/popover.proto.js';
 import { useShellPopoverPosition } from './app-shell-position.js';
 import { useClippedLabel } from '../use-clipped-label.js';
 
@@ -223,14 +222,14 @@ export function DocumentTabs({
         />
       )}
       {overflow && (
-        <PopoverContent
+        <div
           id={pickerId}
           ref={picker}
-          size="s"
           popover="auto"
           role="region"
           aria-label="All open documents"
-          className="app-shell-popover app-shell-document-popup"
+          className="unica-overlay-surface app-shell-popover app-shell-document-popup"
+          data-surface="overlay"
           onToggle={(event) => {
             if (event.newState === 'open') {
               const surface = event.currentTarget;
@@ -291,7 +290,7 @@ export function DocumentTabs({
               );
             })}
           </ul>
-        </PopoverContent>
+        </div>
       )}
       {onAdd && (
         <IconButton

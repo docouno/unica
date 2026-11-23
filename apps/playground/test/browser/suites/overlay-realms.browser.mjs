@@ -87,6 +87,17 @@ export default {
       );
     },
 
+  'Popover releases its scope after an iframe navigates to an opaque document': async ({
+    page,
+    mount,
+  }) => {
+    await mount('overlay-realms');
+    await dispatch(page, 'dispose-stale-popover');
+    const fixture = page.locator('#overlay-realms');
+    await fixture.and(page.locator('[data-stale-popover-disposed]')).waitFor();
+    assert.equal(await fixture.getAttribute('data-stale-popover-disposed'), 'true');
+  },
+
   'cross-document triggers are never mutated, active protocol joins warn, and moveBefore stays watched':
     async ({ page, mount }) => {
       await mount('overlay-realms');

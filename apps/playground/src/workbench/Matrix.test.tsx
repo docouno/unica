@@ -116,6 +116,7 @@ function MatrixFixture({
     id: 'test',
     theme,
     surface: 'base' as const,
+    tab: 'matrix' as const,
     comparing: themeCount > 1,
     subject: { 'data-wb-subject': '' as const },
     form: { 'data-wb-form': '' as const },

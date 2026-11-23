@@ -150,9 +150,13 @@
   font-size: var(--text-size-caption-l);
   line-height: var(--text-size-caption-l-lh);
 }
-.card-example-overlay.popover-content-proto {
-  --popover-width: 34rem;
+.card-example-overlay {
+  position: relative;
+  display: grid;
   gap: var(--space-16);
+  inline-size: min(100%, 34rem);
+  min-inline-size: 0;
+  padding: var(--surface-m-padding);
 }
 @media (forced-colors: active) {
   .card-example-controls select {

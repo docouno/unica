@@ -1,6 +1,5 @@
 import { Card, Skeleton, Text, Title } from '@docouno/unica';
 import { defineComponent } from '../../workbench/types.js';
-import { PopoverContent } from '../../prototypes/popover/popover.proto.js';
 import { previewProps } from '../preview-code.js';
 import { dimension, propValues, widthControl } from './skeleton.controls.js';
 import {
@@ -114,9 +113,9 @@ export default defineComponent({
         'Static panel preview. Its title and material are ready; only the unknown content is loading.',
       kind: 'surface',
       render: () => (
-        <PopoverContent
-          role="presentation"
-          className="skeleton-demo-overlay"
+        <div
+          className="unica-overlay-surface skeleton-demo-overlay"
+          data-surface="overlay"
           data-skeleton-demo-static
         >
           <Title as="h3" size="heading-s">
@@ -126,7 +125,7 @@ export default defineComponent({
           <Text size="caption-l" color="muted">
             Loading remaining documents…
           </Text>
-        </PopoverContent>
+        </div>
       ),
     },
     {

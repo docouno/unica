@@ -101,12 +101,15 @@ export default {
       });
       assert.equal(await code.evaluate((node) => getComputedStyle(node).direction), 'ltr');
 
-      const popover = page.getByRole('region', { name: 'Reference entries' });
+      await page.getByRole('button', { name: 'Open reference' }).click();
+      const panel = page.locator('[popover]:popover-open').getByRole('region', {
+        name: 'Reference entries',
+      });
       for (const scroller of [
         page.getByTestId('nested-compact'),
         page.getByRole('menu', { name: 'Documents' }),
         page.getByRole('textbox', { name: 'Document list' }),
-        popover,
+        panel,
       ]) {
         assert.equal((await nativeParts(scroller)).inlineGutter, 10);
       }
@@ -120,9 +123,11 @@ export default {
 
       const header = page.getByTestId('popover-header');
       const footer = page.getByTestId('popover-footer');
+      await page.locator('[popover]:popover-open[data-side]').waitFor();
       const before = [await header.boundingBox(), await footer.boundingBox()];
-      await scrollByKeyboard(page, popover, 'PageDown');
+      await scrollByKeyboard(page, panel, 'PageDown');
       assert.deepEqual([await header.boundingBox(), await footer.boundingBox()], before);
+      await page.getByRole('button', { name: 'Close popover' }).click();
     }
     const code = page.getByRole('region', { name: 'Query log' });
     await code.scrollIntoViewIfNeeded();

@@ -1,103 +1,314 @@
-import { FormField } from '../../prototypes/form-field/form-field.proto.js';
-import { Input } from '@docouno/unica';
 import {
+  Button,
+  Input,
+  Popover,
   PopoverBody,
+  PopoverClose,
   PopoverContent,
   PopoverDescription,
+  PopoverFooter,
   PopoverHeader,
   PopoverTitle,
-} from '../../prototypes/popover/popover.proto.js';
+  PopoverTrigger,
+  Text,
+} from '@docouno/unica';
+import { useState } from 'react';
 import { defineComponent } from '../../workbench/types.js';
+import type { ComponentValues, PreviewContext, PropSchema } from '../../workbench/types.js';
 import {
   ContentExamples,
+  DetailsExample,
   FormExamples,
   OverflowExamples,
-  SizeExamples,
+  PlacementExamples,
   StateExamples,
-} from '../../prototypes/popover/popover.examples.js';
-import { PlacementExamples } from '../../prototypes/popover/popover.preview.js';
+} from './popover.examples.js';
+
+const props = {
+  size: {
+    kind: 'enum',
+    group: 'PopoverContent',
+    default: 'm',
+    description: 'Panel width ceiling and internal spacing.',
+    choices: [{ value: 's' }, { value: 'm' }, { value: 'l' }],
+  },
+  side: {
+    kind: 'enum',
+    group: 'PopoverContent',
+    default: 'bottom',
+    description: 'Preferred side of the trigger. Start and end follow the writing direction.',
+    choices: [{ value: 'bottom' }, { value: 'top' }, { value: 'start' }, { value: 'end' }],
+  },
+  align: {
+    kind: 'enum',
+    group: 'PopoverContent',
+    default: 'center',
+    description: 'Alignment along the chosen side.',
+    choices: [{ value: 'start' }, { value: 'center' }, { value: 'end' }],
+  },
+  open: {
+    kind: 'enum',
+    group: 'Popover',
+    default: 'unset',
+    description: 'Hold the controlled prop at this value. Check opening requests in Events.',
+    choices: [
+      { value: 'unset', label: 'Unset' },
+      { value: 'true', label: 'True' },
+      { value: 'false', label: 'False' },
+    ],
+  },
+  defaultOpen: {
+    kind: 'boolean',
+    group: 'Popover',
+    default: false,
+    description: 'Open on the initial mount when open is unset. Changing it remounts this example.',
+  },
+  asChild: {
+    kind: 'boolean',
+    group: 'PopoverTrigger',
+    default: true,
+    description:
+      'Compose the library Button as the trigger. Turn this off to inspect the native trigger.',
+  },
+  disabled: {
+    kind: 'boolean',
+    group: 'PopoverTrigger',
+    default: false,
+    description: 'Disable the trigger and make it unavailable as an anchor.',
+  },
+  'aria-label': {
+    kind: 'enum',
+    group: 'PopoverContent',
+    default: '',
+    description: 'Give the dialog an explicit accessible name.',
+    choices: [{ value: '', label: 'Use the title' }, { value: 'Publication settings' }],
+  },
+  title: {
+    kind: 'slot',
+    group: 'PopoverTitle',
+    default: 'show',
+    description: 'Supply a heading or use an explicit accessible name.',
+    choices: [
+      { value: 'show', label: 'Show' },
+      { value: 'hide', label: 'Omit' },
+    ],
+  },
+  description: {
+    kind: 'slot',
+    group: 'PopoverDescription',
+    default: 'show',
+    description: 'Supply a short supporting description.',
+    choices: [
+      { value: 'show', label: 'Show' },
+      { value: 'hide', label: 'Omit' },
+    ],
+  },
+  onOpenChange: {
+    kind: 'action',
+    group: 'Popover',
+    description: 'Report requests to open or close, and completed native dismissals.',
+    code: 'handleOpenChange',
+  },
+} as const satisfies PropSchema;
+type Values = ComponentValues<typeof props>;
+
+const label = 'Page settings';
+const description = 'Change the display name for this workspace.';
+
+function OpenStateNote() {
+  return (
+    <Text size="caption-l" color="secondary">
+      Open and defaultOpen can start the panel in a single-theme Playground.
+    </Text>
+  );
+}
+
+function Subject({ values, ctx }: { readonly values: Values; readonly ctx: PreviewContext }) {
+  const [name, setName] = useState('Release notes');
+
+  if (ctx.tab === 'matrix') {
+    return (
+      <Button
+        {...ctx.subject}
+        variant="secondary"
+        inert
+        aria-hidden="true"
+        disabled={values.disabled}
+      >
+        {label}
+      </Button>
+    );
+  }
+
+  const controlled = !ctx.comparing && values.open !== 'unset';
+  const initialOpen = !ctx.comparing && values.defaultOpen;
+  const formId = `${ctx.id}-page-settings`;
+  const trigger = values.asChild ? (
+    <PopoverTrigger {...ctx.subject} asChild disabled={values.disabled}>
+      <Button variant="secondary">{label}</Button>
+    </PopoverTrigger>
+  ) : (
+    <PopoverTrigger {...ctx.subject} disabled={values.disabled}>
+      {label}
+    </PopoverTrigger>
+  );
+
+  return (
+    <div className="popover-demo-stack">
+      {ctx.comparing && (values.open !== 'unset' || values.defaultOpen) && <OpenStateNote />}
+      <div className="popover-demo-actions">
+        <Popover
+          key={controlled ? 'controlled' : String(initialOpen)}
+          open={controlled ? values.open === 'true' : undefined}
+          defaultOpen={initialOpen}
+          onOpenChange={ctx.action('onOpenChange')}
+        >
+          {trigger}
+          <PopoverContent
+            {...ctx.subject}
+            size={values.size}
+            side={values.side}
+            align={values.align}
+            aria-label={values['aria-label'] || undefined}
+          >
+            <PopoverHeader>
+              {values.title === 'show' && <PopoverTitle>{label}</PopoverTitle>}
+              <PopoverClose />
+              {values.description === 'show' && (
+                <PopoverDescription>
+                  <bdi>{description}</bdi>
+                </PopoverDescription>
+              )}
+            </PopoverHeader>
+            <PopoverBody>
+              <form
+                {...ctx.form}
+                id={formId}
+                onSubmit={(event) => {
+                  event.preventDefault();
+                  const value = new FormData(event.currentTarget).get('name');
+                  if (typeof value === 'string' && value.trim()) {
+                    setName(value.trim());
+                  }
+                }}
+              >
+                <div className="popover-demo-field">
+                  <Text as="label" htmlFor={`${formId}-name`} size="body-s" color="secondary">
+                    Display name
+                  </Text>
+                  <Input id={`${formId}-name`} name="name" defaultValue={name} required />
+                </div>
+              </form>
+            </PopoverBody>
+            <PopoverFooter>
+              <Button size="s" variant="secondary" type="reset" form={formId}>
+                Reset name
+              </Button>
+              <Button size="s" type="submit" form={formId}>
+                Save name
+              </Button>
+            </PopoverFooter>
+          </PopoverContent>
+        </Popover>
+      </div>
+      <Text size="body-s" color="secondary">
+        Page name: {name}
+      </Text>
+    </div>
+  );
+}
+
+function exampleCode(values: Values): string {
+  const stateProps =
+    (values.open === 'unset' ? '' : ` open={${values.open}}`) +
+    (values.defaultOpen ? ' defaultOpen' : '');
+  const trigger = values.asChild
+    ? `<PopoverTrigger asChild${values.disabled ? ' disabled' : ''}>
+    <Button variant="secondary">${label}</Button>
+  </PopoverTrigger>`
+    : `<PopoverTrigger${values.disabled ? ' disabled' : ''}>${label}</PopoverTrigger>`;
+  const contentProps = [
+    values.size === 'm' ? '' : ` size="${values.size}"`,
+    values.side === 'bottom' ? '' : ` side="${values.side}"`,
+    values.align === 'center' ? '' : ` align="${values.align}"`,
+    values['aria-label'] ? ` aria-label="${values['aria-label']}"` : '',
+  ].join('');
+  const title = values.title === 'show' ? `\n      <PopoverTitle>${label}</PopoverTitle>` : '';
+  const summary =
+    values.description === 'show'
+      ? `\n      <PopoverDescription><bdi>${description}</bdi></PopoverDescription>`
+      : '';
+  return `<Popover${stateProps} onOpenChange={handleOpenChange}>
+  ${trigger}
+  <PopoverContent${contentProps}>
+    <PopoverHeader>${title}
+      <PopoverClose />${summary}
+    </PopoverHeader>
+    <PopoverBody>
+      <form id={formId} onSubmit={saveName}>
+        <Text as="label" htmlFor={fieldId} size="body-s" color="secondary">Display name</Text>
+        <Input id={fieldId} name="name" defaultValue={name} required />
+      </form>
+    </PopoverBody>
+    <PopoverFooter>
+      <Button size="s" variant="secondary" type="reset" form={formId}>Reset name</Button>
+      <Button size="s" type="submit" form={formId}>Save name</Button>
+    </PopoverFooter>
+  </PopoverContent>
+</Popover>`;
+}
 
 export default defineComponent({
   id: 'popover',
   title: 'Popover',
   category: 'Overlays',
-  status: 'Proto',
-  summary: 'Short context, immediate settings and compact forms. One quiet surface, six materials.',
-  defaultSurface: 'overlay',
-  props: {
-    size: {
-      kind: 'enum',
-      group: 'PopoverContent',
-      default: 'm',
-      description: 'Width ceiling of the popover surface.',
-      choices: [{ value: 's' }, { value: 'm' }, { value: 'l' }],
+  status: 'UI',
+  summary: 'A non-modal panel for nearby information, immediate settings, or a short form.',
+  form: 'inline',
+  props,
+  constraints: [
+    {
+      kind: 'precedence',
+      when: { open: 'true' },
+      affects: [{ key: 'defaultOpen', value: true }],
+      reason: 'The controlled open prop determines the initial state.',
     },
-    presentation: {
-      kind: 'enum',
-      group: 'Example',
-      default: 'live',
-      description: 'Open the native surface or compare the pinned panel.',
-      demo: true,
-      choices: [{ value: 'live' }, { value: 'pinned' }],
+    {
+      kind: 'precedence',
+      when: { open: 'false' },
+      affects: [{ key: 'defaultOpen', value: true }],
+      reason: 'The controlled open prop determines the initial state.',
     },
-    onOpenChange: {
-      kind: 'action',
-      group: 'Events',
-      description: 'Reports the native popover toggle.',
-      code: 'handleToggle',
+    {
+      kind: 'precedence',
+      when: { 'aria-label': 'Publication settings' },
+      affects: [{ key: 'title', value: 'show' }],
+      reason:
+        'The explicit aria-label supplies the accessible name while the heading stays visible.',
     },
-  },
-  code: (values) => {
-    const size = values.size === 'm' ? '' : ` size="${values.size}"`;
-    const header = `<PopoverHeader>
-    <PopoverTitle id={titleId}>Page settings</PopoverTitle>
-    <PopoverDescription>Changes apply as you type.</PopoverDescription>
-  </PopoverHeader>`;
-    return values.presentation === 'pinned'
-      ? `<PopoverContent${size} aria-labelledby={titleId}>
-  ${header}
-  <PopoverBody><label htmlFor={nameId}>Display name</label><Input id={nameId} defaultValue="Release notes" /></PopoverBody>
-</PopoverContent>`
-      : `<>
-  <Button popoverTarget={panelId}>Settings</Button>
-  <PopoverContent id={panelId} popover="auto"${size} onToggle={handleToggle} aria-labelledby={titleId}>
-    ${header}
-    <PopoverBody><label htmlFor={nameId}>Display name</label><Input id={nameId} defaultValue="Release notes" /></PopoverBody>
-  </PopoverContent>
-</>`;
-  },
-  render: ({ values, ctx }) =>
-    values.presentation === 'pinned' ? (
-      <PopoverContent {...ctx.subject} size={values.size} aria-labelledby={`${ctx.id}-title`} inert>
-        <PopoverHeader>
-          <PopoverTitle id={`${ctx.id}-title`}>Page settings</PopoverTitle>
-          <PopoverDescription>Changes apply as you type.</PopoverDescription>
-        </PopoverHeader>
-        <PopoverBody>
-          <FormField label="Display name" htmlFor={`${ctx.id}-name`}>
-            <Input id={`${ctx.id}-name`} defaultValue="Release notes" />
-          </FormField>
-        </PopoverBody>
-      </PopoverContent>
-    ) : (
-      <PlacementExamples
-        preview={{
-          size: values.size,
-          subject: ctx.subject,
-          onOpenChange: ctx.action('onOpenChange'),
-        }}
-      />
-    ),
+    {
+      kind: 'forbidden',
+      when: { 'aria-label': '' },
+      affects: [{ key: 'title', value: 'hide' }],
+      reason: 'Give the dialog an accessible name through its title or aria-label.',
+    },
+  ],
+  code: exampleCode,
+  render: Subject,
   matrixViews: [
     {
       id: 'sizes',
-      title: 'One surface · Three uses',
+      title: 'Panel sizes',
       rows: 'size',
-      fixed: { presentation: 'pinned' },
       caption:
-        '18 / 22 / 28rem width ceilings. Shared 10px radius, square in Pixel. Native checkboxes are visual stand-ins.',
-      overlayStage: true,
-      reference: () => <SizeExamples />,
+        'The matrix shows closed triggers. Open a panel in the Playground or Cases to inspect its size.',
+    },
+    {
+      id: 'placement',
+      title: 'Preferred placement',
+      rows: 'side',
+      cols: 'align',
+      caption: 'Open the Anchoring & focus case to try the twelve preferred positions.',
     },
   ],
   cases: [
@@ -105,59 +316,69 @@ export default defineComponent({
       id: 'placements',
       title: 'Anchoring & focus',
       caption:
-        'Live native popover. Twelve logical placements with a bounded positioning preview; touch avoids an automatic keyboard. No entrance or exit motion.',
-      overlayStage: true,
+        'Choose a position, then open the panel. Use Tab or the next focus stop to leave it.',
       kind: 'behavior',
-      render: () => <PlacementExamples />,
+      overlayStage: true,
+      render: PlacementExamples,
     },
     {
       id: 'states',
-      title: 'Interaction & availability',
-      caption:
-        'Quiet close, clear keyboard focus. Read-only content stays selectable; unavailable controls explain why.',
-      overlayStage: true,
+      title: 'Immediate settings and availability',
+      caption: 'Edit the display name and reopen the panel to check that your change persisted.',
       kind: 'behavior',
-      render: () => <StateExamples />,
+      overlayStage: true,
+      render: StateExamples,
     },
     {
       id: 'content',
-      title: 'Content arrives in the same surface',
-      caption:
-        'Ready, loading, empty and load failure. Controlled previews keep the title and exit available.',
-      overlayStage: true,
+      title: 'Content states',
+      caption: 'Choose an activity state before opening the panel. Retry restores the ready state.',
       kind: 'behavior',
-      render: () => <ContentExamples />,
+      overlayStage: true,
+      render: ContentExamples,
     },
     {
       id: 'overflow',
-      title: 'Long text · Limited space',
+      title: 'Long content and body scrolling',
       caption:
-        'Wrapping, a scrollable body and an anchored footer. Inspect at 360px, 120% text and RTL.',
-      overlayStage: true,
+        'Open the page history and scroll the entries while the title and footer stay in place.',
       kind: 'content',
-      render: () => <OverflowExamples />,
+      overlayStage: true,
+      render: OverflowExamples,
+    },
+    {
+      id: 'form',
+      title: 'Edit, save, and retry',
+      caption:
+        'Submit a valid link, simulate a failed save, or dismiss the panel to discard your draft.',
+      kind: 'behavior',
+      overlayStage: true,
+      render: FormExamples,
     },
   ],
   usage: [
     {
-      id: 'form',
-      title: 'Edit · Save · Recover',
-      caption:
-        'A local transaction with validation, pending feedback, retry and a saved result. Pinned in flow for comparison.',
-      overlayStage: true,
-      code: `<PopoverContent aria-labelledby={titleId}>
-  <PopoverHeader><PopoverTitle id={titleId}>Edit link</PopoverTitle></PopoverHeader>
-  <form onSubmit={saveDraft}>
-    <PopoverBody>
-      <label htmlFor={textId}>Text</label>
-      <Input id={textId} value={draft.text} onChange={updateText} />
-      <label htmlFor={urlId}>URL</label>
-      <Input id={urlId} type="url" value={draft.url} onChange={updateUrl} />
-    </PopoverBody>
-    <PopoverFooter><Button type="submit" loading={saving}>Save changes</Button></PopoverFooter>
-  </form>
-</PopoverContent>`,
-      render: () => <FormExamples />,
+      id: 'details',
+      title: 'Show release details',
+      code: `import {
+  Button, Popover, PopoverBody, PopoverClose, PopoverContent,
+  PopoverHeader, PopoverTitle, PopoverTrigger,
+} from '@docouno/unica';
+import '@docouno/unica/styles.css';
+
+<Popover>
+  <PopoverTrigger asChild>
+    <Button variant="secondary">Release details</Button>
+  </PopoverTrigger>
+  <PopoverContent size="s">
+    <PopoverHeader>
+      <PopoverTitle>Release details</PopoverTitle>
+      <PopoverClose />
+    </PopoverHeader>
+    <PopoverBody>Published today for everyone in the workspace.</PopoverBody>
+  </PopoverContent>
+</Popover>`,
+      render: DetailsExample,
     },
   ],
 });

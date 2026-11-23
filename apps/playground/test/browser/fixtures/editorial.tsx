@@ -14,7 +14,6 @@ import {
 } from '@docouno/unica';
 import type { GlyphSource, GlyphSvgProps } from '@docouno/unica';
 import { Button } from '@docouno/unica';
-import { PopoverContent } from '../../../src/prototypes/popover/popover.proto.js';
 import { unicaWorkbenchBase } from '../../../src/unica.workbench.shared.js';
 
 function Mark(props: GlyphSvgProps): JSX.Element {
@@ -86,9 +85,17 @@ function ContextSample(): JSX.Element {
         <span data-theme="pixel-light">
           <Code data-testid="theme-reset">new theme</Code>
         </span>
-        <PopoverContent>
+        <div
+          className="unica-overlay-surface"
+          data-surface="overlay"
+          style={{
+            position: 'relative',
+            inlineSize: 'min(100%, 22rem)',
+            padding: 'var(--surface-m-padding)',
+          }}
+        >
           <Code data-testid="overlay">overlay</Code>
-        </PopoverContent>
+        </div>
         <Button data-testid="button" tone="accent">
           Run <Code plate={false}>retry()</Code>
         </Button>
@@ -120,7 +127,19 @@ function SurfaceSample(): JSX.Element {
         theme,
         surface: 'overlay',
         overlayStage: true,
-        children: <PopoverContent size="l">{sample}</PopoverContent>,
+        children: (
+          <div
+            className="unica-overlay-surface"
+            data-surface="overlay"
+            style={{
+              position: 'relative',
+              inlineSize: 'min(100%, 28rem)',
+              padding: 'var(--surface-l-padding)',
+            }}
+          >
+            {sample}
+          </div>
+        ),
       })}
     </div>
   ) : (

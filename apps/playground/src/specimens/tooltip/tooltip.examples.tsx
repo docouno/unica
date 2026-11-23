@@ -1,5 +1,21 @@
-import { Input, Kbd, KbdGroup, Link, Text, Tooltip, TooltipProvider } from '@docouno/unica';
-import { useId, useState } from 'react';
+import {
+  Input,
+  Kbd,
+  KbdGroup,
+  Link,
+  Popover,
+  PopoverBody,
+  PopoverClose,
+  PopoverContent,
+  PopoverFooter,
+  PopoverHeader,
+  PopoverTitle,
+  PopoverTrigger,
+  Text,
+  Tooltip,
+  TooltipProvider,
+} from '@docouno/unica';
+import { useState } from 'react';
 import type { ReactElement } from 'react';
 import {
   ArrowCounterClockwiseIcon,
@@ -12,7 +28,6 @@ import {
 import { OverlayExampleFrame } from '../../examples/OverlayExampleFrame.js';
 import { OverlayPlacementStudy } from '../../examples/overlay-studies.js';
 import { Button, IconButton } from '@docouno/unica';
-import { PopoverContent, PopoverTitle } from '../../prototypes/popover/popover.proto.js';
 import type { PreviewContext } from '../../workbench/types.js';
 
 type ExampleProps = { readonly ctx: PreviewContext };
@@ -201,44 +216,44 @@ export function TooltipPlacementExamples({ ctx }: ExampleProps): ReactElement {
 }
 
 export function TooltipNestedExample({ ctx }: ExampleProps): ReactElement {
-  const panel = useId();
-  const title = useId();
+  const [open, setOpen] = useState(false);
   const [name, setName] = useState('Release notes');
   return (
     <OverlayExampleFrame ctx={ctx} title="Tooltip inside a settings popover" height={332}>
       <div className="hint-study-anchor" data-position="top-start">
-        <Button popoverTarget={panel} size="s">
-          Page settings
-        </Button>
-        <PopoverContent id={panel} aria-labelledby={title} popover="auto" size="s">
-          <PopoverTitle id={title}>Page settings</PopoverTitle>
-          <div className="hint-study-row">
-            <Input
-              aria-label="Page name"
-              value={name}
-              onChange={(event) => setName(event.currentTarget.value)}
-              size="s"
-            />
-            <Tooltip {...ctx.subject} label="Restore default settings">
-              <IconButton
-                icon={ArrowCounterClockwiseIcon}
-                aria-label="Restore default settings"
-                variant="ghost"
+        <Popover open={open} onOpenChange={setOpen}>
+          <PopoverTrigger asChild>
+            <Button size="s">Page settings</Button>
+          </PopoverTrigger>
+          <PopoverContent size="s" align="start">
+            <PopoverHeader>
+              <PopoverTitle>Page settings</PopoverTitle>
+              <PopoverClose aria-label="Close page settings" />
+            </PopoverHeader>
+            <PopoverBody className="hint-study-row">
+              <Input
+                aria-label="Page name"
+                value={name}
+                onChange={(event) => setName(event.currentTarget.value)}
                 size="s"
-                onClick={() => setName('Release notes')}
               />
-            </Tooltip>
-          </div>
-          <Button
-            popoverTarget={panel}
-            popoverTargetAction="hide"
-            size="s"
-            variant="secondary"
-            tone="accent"
-          >
-            Done
-          </Button>
-        </PopoverContent>
+              <Tooltip {...ctx.subject} label="Restore default settings">
+                <IconButton
+                  icon={ArrowCounterClockwiseIcon}
+                  aria-label="Restore default settings"
+                  variant="ghost"
+                  size="s"
+                  onClick={() => setName('Release notes')}
+                />
+              </Tooltip>
+            </PopoverBody>
+            <PopoverFooter>
+              <Button size="s" variant="secondary" tone="accent" onClick={() => setOpen(false)}>
+                Done
+              </Button>
+            </PopoverFooter>
+          </PopoverContent>
+        </Popover>
       </div>
     </OverlayExampleFrame>
   );

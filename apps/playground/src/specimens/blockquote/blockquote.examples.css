@@ -10,3 +10,11 @@
   inline-size: 100%;
   justify-items: center;
 }
+.quote-example-panel {
+  position: relative;
+  display: grid;
+  gap: var(--surface-l-gap);
+  inline-size: min(100%, 28rem);
+  min-inline-size: 0;
+  padding: var(--surface-l-padding);
+}

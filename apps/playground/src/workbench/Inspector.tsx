@@ -11,6 +11,7 @@ import { useSubjectBounds } from './subjectBounds.js';
 import type {
   CaseBlock,
   ComponentDefinition,
+  InspectorTab,
   MatrixView,
   PreviewBlock,
   PreviewContext,
@@ -47,6 +48,7 @@ interface StageSettings {
 
 interface PreviewStageProps {
   readonly theme: WorkbenchTheme;
+  readonly tab: InspectorTab;
   readonly comparing: boolean;
   readonly bounds: boolean;
   readonly surfaceMode: SurfaceMode;
@@ -61,6 +63,7 @@ function ignoreAction(): void {}
 
 function PreviewStage({
   theme,
+  tab,
   comparing,
   bounds,
   surfaceMode,
@@ -80,6 +83,7 @@ function PreviewStage({
     id,
     theme,
     surface,
+    tab,
     comparing,
     subject: { 'data-wb-subject': '' },
     form: { 'data-wb-form': '' },
@@ -165,30 +169,24 @@ function PlaygroundForm({
     HTMLFormElement.prototype[operation].call(form);
   };
 
-  const commandButtons =
-    kind === 'wrap' ? (
-      <div className="wb-inspector-form-actions">
-        <button type="submit" className="wb-action-btn">
-          Submit
-        </button>
-        <button type="reset" className="wb-action-btn">
-          Reset
-        </button>
-      </div>
-    ) : (
-      <div className="wb-inspector-form-actions">
-        <button
-          type="button"
-          className="wb-action-btn"
-          onClick={() => invokeNativeForm('requestSubmit')}
-        >
-          Submit
-        </button>
-        <button type="button" className="wb-action-btn" onClick={() => invokeNativeForm('reset')}>
-          Reset
-        </button>
-      </div>
-    );
+  const commandButtons = showCommands && kind !== 'inline' && (
+    <div className="wb-inspector-form-actions">
+      <button
+        type={kind === 'wrap' ? 'submit' : 'button'}
+        className="wb-action-btn"
+        onClick={kind === 'owned' ? () => invokeNativeForm('requestSubmit') : undefined}
+      >
+        Submit
+      </button>
+      <button
+        type={kind === 'wrap' ? 'reset' : 'button'}
+        className="wb-action-btn"
+        onClick={kind === 'owned' ? () => invokeNativeForm('reset') : undefined}
+      >
+        Reset
+      </button>
+    </div>
+  );
 
   return (
     <div
@@ -200,12 +198,12 @@ function PlaygroundForm({
       {kind === 'wrap' ? (
         <form data-wb-form="" className="wb-inspector-wrapped-form">
           {children}
-          {showCommands && commandButtons}
+          {commandButtons}
         </form>
       ) : (
         <>
           {children}
-          {showCommands && commandButtons}
+          {commandButtons}
         </>
       )}
       {error && (
@@ -464,6 +462,7 @@ export function Inspector({
       <PreviewStage
         key={identity}
         theme={theme}
+        tab={tab}
         comparing={comparing}
         bounds={bounds}
         surfaceMode={surfaceMode}
@@ -475,7 +474,15 @@ export function Inspector({
         {render}
       </PreviewStage>
     ),
-    [bounds, comparing, component.defaultSurface, component.overlayStage, renderStage, surface],
+    [
+      bounds,
+      comparing,
+      component.defaultSurface,
+      component.overlayStage,
+      renderStage,
+      surface,
+      tab,
+    ],
   );
 
   const Component = component.render;

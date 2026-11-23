@@ -1,7 +1,6 @@
 import { Card, Skeleton, SkeletonText } from '@docouno/unica';
 import { useRef } from 'react';
 import type { ReactElement } from 'react';
-import { PopoverContent } from '../../../src/prototypes/popover/popover.proto.js';
 
 export default function SkeletonWaveFixture(): ReactElement {
   const overlay = useRef<HTMLDivElement>(null);
@@ -70,14 +69,26 @@ export default function SkeletonWaveFixture(): ReactElement {
         />
         <Skeleton data-wave-intrinsic="" width={250} />
       </div>
-      <PopoverContent
+      <div
         ref={overlay}
         popover="manual"
+        role="dialog"
         aria-label="Frost overlay"
-        style={{ position: 'fixed', inset: 'auto', left: 125, top: 315, margin: 0 }}
+        className="unica-overlay-surface"
+        data-surface="overlay"
+        style={{
+          position: 'fixed',
+          inset: 'auto',
+          left: 125,
+          top: 315,
+          margin: 0,
+          inlineSize: 'min(100%, 22rem)',
+          padding: 'var(--surface-m-padding)',
+          overflow: 'visible',
+        }}
       >
         <Skeleton data-wave-overlay="" width={215} />
-      </PopoverContent>
+      </div>
     </>
   );
 }

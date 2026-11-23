@@ -4,15 +4,21 @@ import { defineComponent } from '../../workbench/types.js';
 import type { PreviewContext } from '../../workbench/types.js';
 import { CodeBlock } from '../../prototypes/code-block/code-block.proto.js';
 import {
+  Button,
+  Card,
+  CardAction,
+  CardHeader,
+  Popover,
   PopoverBody,
   PopoverClose,
   PopoverContent,
   PopoverDescription,
   PopoverHeader,
   PopoverTitle,
-} from '../../prototypes/popover/popover.proto.js';
-import { Button } from '@docouno/unica';
-import { Card, CardAction, CardHeader, Text, Title } from '@docouno/unica';
+  PopoverTrigger,
+  Text,
+  Title,
+} from '@docouno/unica';
 import './scrollbar.examples.css';
 
 const densityClasses = {
@@ -130,26 +136,25 @@ function BaseExample({ ctx }: { readonly ctx: PreviewContext }): ReactElement {
 }
 
 function OverlayExample({ ctx }: { readonly ctx: PreviewContext }): ReactElement {
-  const id = useId();
-  const [open, setOpen] = useState(true);
   return (
     <div className="scrollbar-demo-stack">
-      {open ? (
-        <PopoverContent className="scrollbar-demo-overlay" aria-labelledby={id}>
+      <Popover>
+        <PopoverTrigger asChild>
+          <Button variant="secondary" tone="neutral">
+            Open reference
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="scrollbar-demo-overlay">
           <PopoverHeader>
-            <PopoverTitle id={id}>Quick reference</PopoverTitle>
+            <PopoverTitle>Quick reference</PopoverTitle>
             <PopoverDescription>Keep the guide close while you work.</PopoverDescription>
+            <PopoverClose />
           </PopoverHeader>
-          <PopoverClose onClick={() => setOpen(false)} />
           <PopoverBody {...ctx.subject} tabIndex={0} role="region" aria-label="Reference topics">
             <TopicList />
           </PopoverBody>
         </PopoverContent>
-      ) : (
-        <Button variant="secondary" tone="neutral" onClick={() => setOpen(true)}>
-          Open reference
-        </Button>
-      )}
+      </Popover>
       <Text className="scrollbar-demo-note" size="caption-l" color="secondary">
         A compact native scrollbar belongs to the body, inside the panel padding. The track stays
         transparent.
@@ -366,7 +371,7 @@ ${contents.replace(/^/gm, '    ')}
       surface: 'overlay',
       overlayStage: true,
       caption:
-        'Compact width in a tight panel. Only the body scrolls; the header and Close stay available.',
+        'Open the reference to inspect the compact scrollbar. The header and Close stay in place.',
       kind: 'surface',
       render: OverlayExample,
     },

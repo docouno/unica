@@ -2,11 +2,6 @@ import { Alert, AlertDescription, AlertTitle, Card, Code, Link, Text, Title } fr
 import { previewProps, previewText } from '../preview-code.js';
 import { defineComponent } from '../../workbench/types.js';
 import { Button } from '@docouno/unica';
-import {
-  PopoverContent,
-  PopoverBody,
-  PopoverTitle,
-} from '../../prototypes/popover/popover.proto.js';
 import './code.examples.css';
 
 const defaultLiteral = 'git status --short';
@@ -240,18 +235,23 @@ export default defineComponent({
       surface: 'overlay',
       kind: 'surface',
       render: () => (
-        <PopoverContent size="l" role="group" aria-label="Code on overlay material">
-          <PopoverBody>
-            <PopoverTitle>Request details</PopoverTitle>
-            <Text size="body-s">
-              Send <Code>content-type: application/json</Code> with the request. Keep{' '}
-              <Code>authorization</Code> out of shared logs.
-            </Text>
-            <Text size="body-s">
-              Accepted <Code status="success">202 ACCEPTED</Code>
-            </Text>
-          </PopoverBody>
-        </PopoverContent>
+        <div
+          className="unica-overlay-surface code-example-panel"
+          data-surface="overlay"
+          role="group"
+          aria-label="Code on overlay material"
+        >
+          <Title as="h3" size="heading-s">
+            Request details
+          </Title>
+          <Text size="body-s">
+            Send <Code>content-type: application/json</Code> with the request. Keep{' '}
+            <Code>authorization</Code> out of shared logs.
+          </Text>
+          <Text size="body-s">
+            Accepted <Code status="success">202 ACCEPTED</Code>
+          </Text>
+        </div>
       ),
     },
     {

@@ -9,7 +9,8 @@ Normal document flow uses only two stacking tokens (`--z-content: 0` and `--z-st
 | Overlay Family | Native Carrier | Dismissal & Focus Contract |
 | --- | --- | --- |
 | `Modal`, `Drawer` | `<dialog>` via `showModal()` | Browser-enforced background `inert`, focus containment inside the active dialog, native `cancel` / `Escape` coordination, and shared document scroll lock. |
-| `Popover`, `Menu`, `ContextMenu`, `Select`, `DatePicker`, `DateRangePicker` | `popover="auto"` (or `manual` when nested composite focus owns dismissal) | Native top-layer promotion, `Escape` and outside-press light dismissal, and deterministic focus restoration to the invoking trigger. |
+| [Popover](../components/popover.md) | `popover="auto"` | Named non-modal dialog with outside-press and Escape dismissal, free tab navigation, and focus restoration to the invoking trigger when it owned focus. |
+| `Menu`, `ContextMenu`, `Select`, `DatePicker`, `DateRangePicker` | `popover="auto"` (or `manual` when nested composite focus owns dismissal) | Native top-layer promotion, `Escape` and outside-press light dismissal, and deterministic focus restoration to the invoking trigger. |
 | `Combobox`, `Autocomplete` | `popover="manual"` | Trigger retains primary focus with `aria-activedescendant` while the anchored panel floats in the top layer. |
 | [`Tooltip`](../components/tooltip.md), [`HoverCard`](../components/hover-card.md) | `popover="manual"` | One visible preview per document. Hover and keyboard focus open it. Escape dismisses the current preview before its parent overlay. |
 | `Toast` (`ToastViewport`) | `popover="manual"` | Persistent non-modal top-layer host; outside clicks on workspace content or modal scrims never dismiss active notifications. |
@@ -20,7 +21,7 @@ Unica's internal runtime coordinates native admission and dismissal per document
 
 Nested `popover="auto"` chains should remain inside their parent popover's DOM subtree (in-place or via a nested `UnicaProvider` `portalContainer`) so native light-dismiss ancestry stays reliable across all Baseline and Guarantee browsers, including releases where `showPopover({ source })` is not yet supported. Tooltip and HoverCard render in place and preserve the native tab order of their source controls. Their previews leave focus where the user last placed it when they dismiss.
 
-A single bubble-phase `keydown` listener on the document respects `event.defaultPrevented` from inner React widgets and DOM controls before routing `Escape`. Passive notification viewports are skipped, and foreign open top-layer surfaces are respected. Inside any active Unica modal, `Escape` closes a nested `auto` panel first so browser close-watcher grouping never dismisses the modal on the same keypress; the next `Escape` reaches the modal owner. Outside a modal, `auto` popovers delegate `Escape` to the browser, while `manual` layers and modals receive a close request. The event still reaches application listeners.
+A bubble-phase `keydown` listener on the document respects `event.defaultPrevented` from inner React widgets and DOM controls before routing `Escape`. Passive notification viewports are skipped, and foreign open top-layer surfaces are respected. Inside a modal, `Escape` closes the innermost Popover first. After the nested panels close, the next `Escape` reaches the modal owner. Outside a modal, `auto` popovers delegate `Escape` to the browser, while `manual` layers and modals receive a close request. The event still reaches application listeners.
 
 The document scroll lock is shared across physical Unica modals, compensates classic scrollbar gutter width to avoid horizontal layout shift when `scrollbar-gutter: stable` is absent, and leaves scrolling inside a dialog intact.
 
@@ -42,7 +43,7 @@ Anchored panels pair native `popover` promotion with a lightweight positioning a
 
 - Computes collision-aware coordinates (`flip`, `shift`, configurable viewport `padding`, and logical `start` / `end` alignment across LTR and RTL), writes `--anchor-width`, `--overlay-available-height`, and `--overlay-available-width` during layout sizing so constrained panels measure in one pass, and publishes logical `data-side` / `data-align` attributes onto the floating element. The open panel follows anchor movement and changes to ancestor `dir` attributes.
 - Sets `data-surface="overlay"` on the positioned container so nested controls automatically bind overlay tokens (see [Themes and Roles](themes-and-roles.md#contextual-surface-adaptation-base-vs-overlay)).
-- Motion belongs to the family’s design and the active material. Native top-layer positioning does not require a shared slide or fade. The current [Popover design reference](../../apps/playground/src/prototypes/popover/README.md) uses immediate show/hide in every preset. Any future overlay transition must preserve focus and dismissal timing, respect `prefers-reduced-motion`, and fall back to immediate visibility when unsupported.
+- [Popover](../components/popover.md#placement-and-material) shows and hides immediately in every preset. Overlay transitions that use motion must preserve focus and dismissal timing, respect `prefers-reduced-motion`, and fall back to immediate visibility when unsupported.
 
 ## Native `<form>` Participation
 

@@ -80,6 +80,7 @@ export interface PreviewContext {
   readonly id: string;
   readonly theme: WorkbenchTheme;
   readonly surface: Surface;
+  readonly tab: InspectorTab;
   readonly comparing: boolean;
   readonly subject: { readonly 'data-wb-subject': '' };
   readonly form: { readonly 'data-wb-form': '' };
@@ -137,7 +138,7 @@ interface ComponentMetadata {
   readonly componentName?: string;
   readonly defaultSurface?: Surface;
   readonly overlayStage?: boolean;
-  readonly form?: 'wrap' | 'owned';
+  readonly form?: 'wrap' | 'owned' | 'inline';
   readonly constraints?: readonly Constraint[];
   readonly matrixViews?: readonly MatrixView[];
   readonly cases?: readonly CaseBlock[];

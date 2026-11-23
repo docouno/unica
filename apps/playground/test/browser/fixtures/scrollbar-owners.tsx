@@ -1,14 +1,17 @@
-import { Textarea } from '@docouno/unica';
-import type { JSX } from 'react';
-import { CodeBlock } from '../../../src/prototypes/code-block/code-block.proto.js';
-import { MenuRows, MenuSurface } from '../../../src/prototypes/menu/menu.proto.js';
 import {
+  Popover,
   PopoverBody,
+  PopoverClose,
   PopoverContent,
   PopoverFooter,
   PopoverHeader,
   PopoverTitle,
-} from '../../../src/prototypes/popover/popover.proto.js';
+  PopoverTrigger,
+  Textarea,
+} from '@docouno/unica';
+import type { JSX } from 'react';
+import { CodeBlock } from '../../../src/prototypes/code-block/code-block.proto.js';
+import { MenuRows, MenuSurface } from '../../../src/prototypes/menu/menu.proto.js';
 import {
   Table,
   TableBody,
@@ -22,19 +25,23 @@ const rows = Array.from({ length: 24 }, (_, index) => `Review document ${index +
 export default function ScrollbarOwnersFixture(): JSX.Element {
   return (
     <div style={{ display: 'grid', alignItems: 'start', gap: 16, inlineSize: 'min(100%, 360px)' }}>
-      <PopoverContent aria-label="Reference" style={{ maxBlockSize: 224 }}>
-        <PopoverHeader data-testid="popover-header">
-          <PopoverTitle>Reference</PopoverTitle>
-        </PopoverHeader>
-        <PopoverBody aria-label="Reference entries" role="region" tabIndex={0}>
-          <ol>
-            {rows.map((row) => (
-              <li key={row}>{row}</li>
-            ))}
-          </ol>
-        </PopoverBody>
-        <PopoverFooter data-testid="popover-footer">End of reference</PopoverFooter>
-      </PopoverContent>
+      <Popover>
+        <PopoverTrigger>Open reference</PopoverTrigger>
+        <PopoverContent style={{ maxBlockSize: 224 }}>
+          <PopoverHeader data-testid="popover-header">
+            <PopoverTitle>Reference</PopoverTitle>
+            <PopoverClose />
+          </PopoverHeader>
+          <PopoverBody aria-label="Reference entries" role="region" tabIndex={0}>
+            <ol>
+              {rows.map((row) => (
+                <li key={row}>{row}</li>
+              ))}
+            </ol>
+          </PopoverBody>
+          <PopoverFooter data-testid="popover-footer">End of reference</PopoverFooter>
+        </PopoverContent>
+      </Popover>
       <MenuSurface aria-label="Documents">
         <MenuRows
           items={rows.map((label) => ({ id: label, label }))}

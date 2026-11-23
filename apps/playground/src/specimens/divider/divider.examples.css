@@ -69,7 +69,9 @@
 }
 
 .divider-demo-overlay {
+  position: relative;
   inline-size: min(100%, 30rem);
+  padding: var(--surface-m-padding);
 }
 
 .divider-demo-toolbar {

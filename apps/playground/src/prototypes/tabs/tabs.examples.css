@@ -76,7 +76,8 @@
   padding: var(--space-8);
 }
 
-.tabs-overlay-example.popover-content-proto {
+.tabs-overlay-example {
+  position: relative;
   display: grid;
   inline-size: min(100%, 22rem);
   max-inline-size: 100%;

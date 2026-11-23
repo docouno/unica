@@ -48,8 +48,12 @@
   gap: var(--space-4) var(--space-12);
 }
 
-.disclosure-study-overlay.popover-content-proto {
+.disclosure-study-overlay {
+  position: relative;
+  display: grid;
+  gap: var(--surface-m-gap);
   inline-size: min(100%, 25rem);
+  padding: var(--surface-m-padding);
 }
 
 .disclosure-study-narrow {

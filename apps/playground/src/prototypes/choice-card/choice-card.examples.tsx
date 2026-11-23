@@ -4,7 +4,6 @@ import type { ReactElement, ReactNode } from 'react';
 import { LockSimpleIcon, WarningCircleIcon } from '@phosphor-icons/react';
 import { Badge } from '@docouno/unica';
 import { Button } from '@docouno/unica';
-import { PopoverContent } from '../popover/popover.proto.js';
 import {
   CheckboxCard,
   RadioCard,
@@ -497,7 +496,12 @@ export function Overlay({ kind }: { readonly kind: CardKind }): ReactElement {
   const Card = cards[kind];
   const id = useId();
   return (
-    <PopoverContent size="l" role="group" aria-label="Choice cards in a floating surface">
+    <div
+      className="unica-overlay-surface choice-study-surface"
+      data-surface="overlay"
+      role="group"
+      aria-label="Choice cards in a floating surface"
+    >
       <div className="choice-study-stack">
         <div className="choice-study-field">
           <span className="choice-study-legend" id={`${id}-question`}>
@@ -560,7 +564,7 @@ export function Overlay({ kind }: { readonly kind: CardKind }): ReactElement {
           />
         )}
       </div>
-    </PopoverContent>
+    </div>
   );
 }
 

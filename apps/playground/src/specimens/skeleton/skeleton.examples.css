@@ -195,7 +195,11 @@
 }
 
 .skeleton-demo-overlay {
+  position: relative;
+  display: grid;
+  gap: var(--surface-m-gap);
   inline-size: min(100%, 400px);
+  padding: var(--surface-m-padding);
 }
 
 .skeleton-demo-motion-sample {
