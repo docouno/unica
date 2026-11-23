@@ -75,6 +75,7 @@ visual: visual-setup
 		-e VISUAL_TAB="$${tab}" \
 		-e VISUAL_FAMILY="$${family}" \
 		-e VISUAL_SCHEME="$${scheme}" \
+		-e VISUAL_SOLO="$${solo}" \
 		-e VISUAL_SLICE="$${slice}" \
 		-e VISUAL_MODE="$${mode}" \
 		-e VISUAL_BLOCK="$${block}" \

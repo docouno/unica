@@ -156,7 +156,7 @@ export default {
     await page.setViewportSize({ width: 1280, height: 860 });
     await mount('input-workbench');
     for (const block of ['native-form', 'external-form']) {
-      await open(page, { item: 'input', tab: 'usage', block });
+      await open(page, { item: 'input', tab: 'compositions', block });
       const artboard = page.locator('.wb-artboard').first();
       const field = artboard.getByRole('textbox', { name: 'Workspace name' });
       await field.fill('Updated workspace');
@@ -186,7 +186,7 @@ export default {
       ['workspace', 'Folio'],
     ]);
 
-    await open(page, { item: 'form-field', tab: 'cases', block: 'overflow' });
+    await open(page, { item: 'form-field', tab: 'states', block: 'overflow' });
     const group = page.getByRole('group', { name: 'Review window' });
     const start = group.getByLabel('Start', { exact: true });
     const end = group.getByLabel('End', { exact: true });
@@ -199,7 +199,7 @@ export default {
     assert.equal(await start.inputValue(), '07:45');
     assert.equal(await end.inputValue(), '08:30');
 
-    await open(page, { item: 'context-menu', tab: 'usage', block: 'native' });
+    await open(page, { item: 'context-menu', tab: 'compositions', block: 'native' });
     const note = page.getByLabel('Revision note');
     const region = page.locator('[data-native-context-region]');
     const menu = page.getByRole('menu');
@@ -224,7 +224,7 @@ export default {
     await mount('input-workbench');
     await open(page, {
       item: 'input',
-      tab: 'cases',
+      tab: 'states',
       block: 'overflow',
       family: 'frost',
       surface: 'overlay',

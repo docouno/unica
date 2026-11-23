@@ -6,8 +6,7 @@
   color: var(--fg-primary);
 }
 
-.button-study-group,
-.button-study-size-row {
+.button-study-group {
   display: grid;
   gap: var(--space-16);
   min-inline-size: 0;
@@ -15,21 +14,7 @@
   justify-items: start;
 }
 
-.button-study-size-row + .button-study-size-row {
-  padding-block-start: var(--space-16);
-  border-block-start: 1px solid var(--border-subtle);
-}
-
-.button-study-columns {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  align-items: start;
-  gap: var(--space-12);
-  inline-size: 100%;
-}
-
 .button-study-row,
-.button-study-controls,
 .button-study-pair {
   display: flex;
   flex-wrap: wrap;
@@ -65,42 +50,6 @@
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
 }
 
-.button-study-controls {
-  padding: var(--space-12) var(--space-16);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--size-m-radius);
-  background: var(--bg-surface-subtle);
-}
-
-.button-study-control {
-  display: flex;
-  align-items: center;
-  gap: var(--space-8);
-  min-inline-size: 0;
-  font-size: var(--text-size-body-s);
-}
-
-.button-study-control input {
-  accent-color: var(--accent-solid);
-  flex: none;
-  inline-size: 16px;
-  block-size: 16px;
-}
-
-.button-study-control select {
-  min-block-size: var(--size-s-height);
-  padding-inline: var(--space-8);
-  border: 1px solid var(--control-border);
-  border-radius: var(--size-s-radius);
-  background: var(--control-bg);
-  color: var(--fg-primary);
-}
-
-.button-study-control :is(input, select):focus-visible {
-  outline: 2px solid var(--focus-ring-color);
-  outline-offset: 2px;
-}
-
 .button-study-response {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr));
@@ -132,22 +81,4 @@
 .button-study-field {
   inline-size: min(100%, 18rem);
   gap: var(--space-4);
-  color: var(--fg-primary);
-  font-size: var(--text-size-body-s);
-}
-
-.button-study-field input {
-  inline-size: 100%;
-  min-inline-size: 0;
-  min-block-size: var(--size-m-height);
-  padding-inline: var(--space-8);
-  border: 1px solid var(--control-border);
-  border-radius: var(--size-m-radius);
-  background: var(--control-bg);
-  color: var(--fg-primary);
-}
-
-.button-study-field input:focus-visible {
-  outline: 2px solid var(--focus-ring-color);
-  outline-offset: 2px;
 }

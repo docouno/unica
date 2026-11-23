@@ -15,7 +15,7 @@
 }
 
 .wb-matrix-artboard {
-  padding: 12px;
+  padding: 16px;
 }
 
 .wb-matrix-toolbar {
@@ -48,24 +48,10 @@
   padding-block-start: 8px;
 }
 
-.wb-matrix-heading h2,
-.wb-matrix-heading p,
 .wb-matrix-status {
   margin: 0;
-}
-
-.wb-matrix-heading h2 {
-  font: 650 0.875rem / 1.4 var(--wb-font);
-}
-
-.wb-matrix-heading p,
-.wb-matrix-status {
   font: 400 0.75rem / 1.5 var(--wb-font);
   color: var(--wb-fg-muted);
-}
-
-.wb-matrix-heading p {
-  margin-block-start: 4px;
 }
 
 .wb-matrix-scroll {
@@ -79,8 +65,8 @@
 
 .wb-matrix-group-label {
   inline-size: fit-content;
-  margin: 0 0 6px;
-  color: var(--wb-fg);
+  margin: 0 0 8px;
+  color: var(--wb-stage-fg);
   font: 600 0.75rem / 1.4 var(--wb-font);
 }
 
@@ -90,20 +76,24 @@
 }
 
 .wb-matrix-grid > :is(thead, tbody) > tr > :is(th, td) {
-  border-block-end: 1px solid var(--wb-border);
+  border-block-end: 1px solid var(--wb-stage-border);
+}
+
+.wb-matrix-grid > tbody > tr:last-child > :is(th, td) {
+  border-block-end: 0;
 }
 
 .wb-matrix-grid > :is(thead, tbody) > tr > th,
 .wb-matrix-coordinate {
-  padding: 6px 8px;
-  color: var(--wb-fg-muted);
+  padding: 6px 10px;
+  color: var(--wb-stage-fg-subtle);
   text-align: start;
   font: 500 0.7rem / 1.4 var(--wb-mono);
 }
 
 .wb-matrix-grid > tbody > tr > td {
-  padding: 1px;
-  vertical-align: top;
+  padding: 4px 6px;
+  vertical-align: middle;
 }
 
 .wb-matrix-grid > tbody > tr > td > .wb-inspector-preview {
@@ -120,7 +110,7 @@
     auto-fit,
     minmax(min(100%, max(10rem, calc(7rem / var(--wb-viewport-scale, 1) + 18px))), 1fr)
   );
-  gap: 10px;
+  gap: 12px;
   margin: 0;
   padding: 0;
   list-style: none;
@@ -131,11 +121,14 @@
   flex-direction: column;
   gap: 6px;
   min-inline-size: 0;
+  padding: 10px;
+  border: 1px solid var(--wb-stage-border);
+  border-radius: 8px;
 }
 
 .wb-matrix-combination > .wb-inspector-preview,
 .wb-matrix-grid > tbody > tr > td > .wb-inspector-preview {
-  --wb-sample-padding: calc(24px / var(--wb-viewport-scale, 1)) 10px;
+  --wb-sample-padding: calc(16px / var(--wb-viewport-scale, 1)) 10px;
 }
 
 .wb-matrix-coordinate {
@@ -151,20 +144,29 @@
 }
 
 .wb-matrix-coordinate dt {
-  color: var(--wb-fg-subtle);
+  color: var(--wb-stage-fg-subtle);
 }
 
 .wb-matrix-coordinate dd {
   margin: 0;
-  color: var(--wb-fg);
+  color: var(--wb-stage-fg);
   overflow-wrap: anywhere;
 }
 
 .wb-matrix-notes {
   inline-size: fit-content;
   max-inline-size: 100%;
-  color: var(--wb-fg-muted);
+  color: var(--wb-stage-fg-secondary);
   font: 500 0.7rem / 1.4 var(--wb-font);
+}
+
+.wb-matrix-notes .wb-disclosure {
+  color: var(--wb-stage-fg-subtle);
+}
+
+.wb-matrix-notes .wb-disclosure:hover {
+  background: color-mix(in srgb, var(--wb-stage-fg) 8%, transparent);
+  color: var(--wb-stage-fg);
 }
 
 .wb-matrix-notes ul {

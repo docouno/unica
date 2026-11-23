@@ -75,7 +75,7 @@ export default {
     await mount('typography-workbench');
     await open(page, {
       item: 'text',
-      tab: 'usage',
+      tab: 'compositions',
       block: 'settings',
       family: 'soft',
       scheme: 'both',
@@ -99,7 +99,7 @@ export default {
     await mount('typography-workbench', { forcedColors: 'active' });
     await open(page, {
       item: 'empty',
-      tab: 'cases',
+      tab: 'states',
       block: 'retry',
       family: 'soft',
       scheme: 'dark',

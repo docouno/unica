@@ -586,7 +586,7 @@ export function ThemeEditor({
               type="button"
               className="wb-action-btn"
               onClick={() => onFocusTheme(activeTheme)}
-              title={`Isolate ${activeTheme.label} in the preview`}
+              title={`Focus ${activeTheme.label} in the preview`}
             >
               Focus
             </button>

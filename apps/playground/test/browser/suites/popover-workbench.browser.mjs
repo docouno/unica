@@ -35,7 +35,7 @@ export default {
   }) => {
     await page.setViewportSize({ width: 1440, height: 760 });
     await mount('popover-workbench');
-    await openWorkbench(page, { tab: 'matrix', mode: 'pairwise' });
+    await openWorkbench(page, { tab: 'states', mode: 'pairwise' });
     const matrix = page.getByRole('region', { name: 'Component matrix' });
     await matrix.locator('[data-wb-subject]').first().waitFor();
     assert.equal(await matrix.getAttribute('data-wb-matrix-mode'), 'pairwise');
@@ -142,7 +142,7 @@ export default {
   }) => {
     await page.setViewportSize({ width: 1280, height: 850 });
     await mount('popover-workbench');
-    await openWorkbench(page, { tab: 'cases', block: 'form' });
+    await openWorkbench(page, { tab: 'states', block: 'form' });
     const sample = page.locator('[data-wb-block="form"]');
     const trigger = sample.getByRole('button', { name: 'Edit link' });
     const dialog = sample.getByRole('dialog', { name: 'Edit link' });
@@ -184,7 +184,7 @@ export default {
     mount,
   }) => {
     await mount('popover-workbench');
-    await openWorkbench(page, { tab: 'cases', block: 'content' });
+    await openWorkbench(page, { tab: 'states', block: 'content' });
     const sample = page.locator('[data-wb-block="content"]');
     await sample.getByRole('radio', { name: 'Load failed' }).check();
     await sample.getByRole('button', { name: 'Recent activity' }).click();

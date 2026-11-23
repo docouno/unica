@@ -61,7 +61,7 @@ export default {
     async ({ page, mount }) => {
       await mount('native');
       await page.addInitScript(observeAlerts, live);
-      await openWorkbench(page, { tab: 'matrix', mode: 'pairwise', family: 'all', scheme: 'both' });
+      await openWorkbench(page, { tab: 'states', mode: 'pairwise', family: 'all', scheme: 'both' });
       const matrix = page.getByRole('region', { name: 'Component matrix' });
       await matrix.locator('[data-wb-subject]').first().waitFor({ state: 'attached' });
       assert.equal(await matrix.getAttribute('data-wb-matrix-mode'), 'pairwise');
@@ -69,7 +69,7 @@ export default {
       assert.equal(await page.locator(live).count(), 0);
       assert.deepEqual(await page.evaluate(() => window.alertEntries), []);
 
-      await openWorkbench(page, { tab: 'usage', block: 'context' });
+      await openWorkbench(page, { tab: 'usage' });
       const usages = page.getByRole('navigation', { name: 'Consuming scenes' });
       await usages.getByRole('link', { name: /Document Reader/u }).click();
       const editorial = page.getByText('Pre-flight quorum verification required');
@@ -83,7 +83,7 @@ export default {
     async ({ page, mount }) => {
       await mount('native');
       await page.addInitScript(observeAlerts, live);
-      await openWorkbench(page, { tab: 'cases', block: 'recovery' });
+      await openWorkbench(page, { tab: 'states', block: 'recovery' });
       const sample = page.locator('[data-wb-block="recovery"]');
       const retry = sample.getByRole('button', { name: 'Try again' });
       const details = sample.getByRole('button', { name: 'Show details' });

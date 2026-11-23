@@ -1,0 +1,67 @@
+.wb-toc {
+  display: grid;
+  gap: 6px;
+  padding: 12px;
+}
+
+.wb-toc-heading {
+  margin: 0;
+  color: var(--wb-fg-subtle);
+  font: 650 11px / 1.4 var(--wb-font);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.wb-toc-list {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.wb-toc-link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  inline-size: 100%;
+  min-block-size: 28px;
+  padding: 4px 8px;
+  border: 1px solid transparent;
+  border-radius: var(--wb-control-radius);
+  background: transparent;
+  color: var(--wb-fg-secondary);
+  font: 500 12.5px / 1.35 var(--wb-font);
+  text-align: start;
+  cursor: pointer;
+  overflow-wrap: anywhere;
+}
+
+.wb-toc-link:hover {
+  background: var(--wb-bar);
+  color: var(--wb-fg);
+}
+
+.wb-toc-link[data-active='true'] {
+  background: var(--wb-bar);
+  color: var(--wb-fg);
+  font-weight: 600;
+}
+
+.wb-toc-link:focus-visible {
+  outline: 2px solid var(--wb-focus);
+  outline-offset: -2px;
+}
+
+.wb-toc-tag {
+  flex: none;
+  color: var(--wb-fg-subtle);
+  font: 500 10.5px / 1.2 var(--wb-mono);
+}
+
+@media (forced-colors: active) {
+  .wb-toc-link[data-active='true'] {
+    border-color: Highlight;
+  }
+}

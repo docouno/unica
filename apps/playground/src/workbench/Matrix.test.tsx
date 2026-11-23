@@ -252,3 +252,108 @@ it('renders each valid sample once while revealing a large slice and captures al
   const capture = render(<MatrixFixture definition={definition} raw />);
   expect(capture.container.querySelectorAll('tbody tr')).toHaveLength(9);
 });
+
+it('resets slice StoryFrame controls when switching slices or clicking Reset matrix', () => {
+  const definition = defineComponent({
+    id: 'sliced',
+    title: 'Sliced',
+    category: 'Actions',
+    status: 'Proto',
+    props: {
+      a: { ...fixture, label: 'A', kind: 'boolean', default: false },
+    },
+    states: [
+      {
+        id: 'first',
+        title: 'First slice',
+        rows: 'a',
+        controls: {
+          density: {
+            kind: 'enum',
+            label: 'Density',
+            default: 'comfortable',
+            choices: [
+              { value: 'comfortable', label: 'Comfortable' },
+              { value: 'compact', label: 'Compact' },
+            ],
+          },
+        },
+        reference: ({ ctx }) => (
+          <span data-testid="slice-control">first:{String(ctx.story?.controls.density)}</span>
+        ),
+      },
+      {
+        id: 'second',
+        title: 'Second slice',
+        rows: 'a',
+        controls: {
+          pinned: { kind: 'boolean', label: 'Pinned', default: false },
+        },
+        reference: ({ ctx }) => (
+          <span data-testid="slice-control">second:{String(ctx.story?.controls.pinned)}</span>
+        ),
+      },
+    ],
+    render: ({ values: { a }, ctx }) => <span {...ctx.subject}>{String(a)}</span>,
+  });
+
+  function ControlledMatrixFixture(): ReactElement {
+    const [mode, setMode] = useState<MatrixMode>('slice');
+    const [slice, setSlice] = useState<string>();
+    const Demo = definition.render;
+    const baseCtx = {
+      id: 'test',
+      theme,
+      surface: 'base' as const,
+      tab: 'states' as const,
+      comparing: false,
+      subject: { 'data-wb-subject': '' as const },
+      form: { 'data-wb-form': '' as const },
+      action: () => () => {},
+    };
+    return (
+      <Matrix
+        component={definition}
+        slice={slice}
+        mode={mode}
+        raw={false}
+        themes={[theme]}
+        onSliceChange={setSlice}
+        onModeChange={setMode}
+        renderArtboards={(draw) => <div>{draw(theme)}</div>}
+        renderSubject={(_theme, values, _identity, _view, story) => (
+          <Demo values={values} ctx={{ ...baseCtx, ...(story ? { story } : {}) }} />
+        )}
+        renderReference={(_theme, view: MatrixView, story) => {
+          const Reference = view.reference;
+          return Reference && <Reference ctx={{ ...baseCtx, ...(story ? { story } : {}) }} />;
+        }}
+      />
+    );
+  }
+
+  render(<ControlledMatrixFixture />);
+  expect(screen.getByTestId('slice-control').textContent).toBe('first:comfortable');
+  fireEvent.change(screen.getByRole('combobox', { name: 'Density' }), {
+    target: { value: 'compact' },
+  });
+  expect(screen.getByTestId('slice-control').textContent).toBe('first:compact');
+
+  // Clicking Reset matrix resets the slice StoryFrame controls via externalRevision.
+  fireEvent.click(screen.getByRole('button', { name: 'Reset matrix' }));
+  expect(screen.getByTestId('slice-control').textContent).toBe('first:comfortable');
+
+  // Switching to a slice with a different controls schema remounts cleanly without leaking values.
+  fireEvent.change(screen.getByRole('combobox', { name: 'Density' }), {
+    target: { value: 'compact' },
+  });
+  fireEvent.change(screen.getByLabelText('Slice'), { target: { value: 'second' } });
+  expect(screen.getByTestId('slice-control').textContent).toBe('second:false');
+  expect(screen.queryByRole('combobox', { name: 'Density' })).toBeNull();
+  fireEvent.click(screen.getByRole('checkbox', { name: 'Pinned' }));
+  expect(screen.getByTestId('slice-control').textContent).toBe('second:true');
+
+  // Returning to first slice starts from clean defaults.
+  fireEvent.change(screen.getByLabelText('Slice'), { target: { value: 'first' } });
+  expect(screen.getByTestId('slice-control').textContent).toBe('first:comfortable');
+});

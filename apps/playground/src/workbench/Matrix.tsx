@@ -4,6 +4,7 @@ import {
   buildFull,
   buildPairwise,
   buildSlice,
+  componentStates,
   defaultValues,
   evaluate,
   finiteDomain,
@@ -11,6 +12,7 @@ import {
   showValue,
 } from './schema.js';
 import type { PairwiseResult } from './schema.js';
+import { StoryFrame } from './StoryFrame.js';
 import type {
   ComponentDefinition,
   Constraint,
@@ -18,6 +20,7 @@ import type {
   MatrixView,
   PropDefinition,
   PropValue,
+  StoryContext,
   Values,
   WorkbenchTheme,
 } from './types.js';
@@ -39,6 +42,7 @@ interface MatrixProps {
   readonly raw: boolean;
   readonly freeze?: boolean;
   readonly themes: readonly WorkbenchTheme[];
+  readonly header?: ReactNode;
   readonly onSliceChange: (slice: string) => void;
   readonly onModeChange: (mode: MatrixMode) => void;
   readonly renderArtboards: (render: (theme: WorkbenchTheme) => ReactNode) => ReactNode;
@@ -47,11 +51,17 @@ interface MatrixProps {
     values: Values,
     identity: string,
     sample?: Pick<MatrixView, 'surface' | 'overlayStage'>,
+    story?: StoryContext,
   ) => ReactNode;
-  readonly renderReference: (theme: WorkbenchTheme, view: MatrixView) => ReactNode;
+  readonly renderReference: (
+    theme: WorkbenchTheme,
+    view: MatrixView,
+    story?: StoryContext,
+  ) => ReactNode;
 }
 
 interface MatrixViewProps extends MatrixProps {
+  readonly views: readonly MatrixView[];
   readonly view: MatrixView | undefined;
 }
 
@@ -168,16 +178,18 @@ const MatrixSample = memo(function MatrixSample({
   assignment,
   identity,
   view,
+  story,
   renderSubject,
 }: Pick<MatrixViewProps, 'component' | 'view' | 'renderSubject'> & {
   readonly theme: WorkbenchTheme;
   readonly assignment: Values;
   readonly identity: string;
+  readonly story?: StoryContext | undefined;
 }): ReactElement {
   const decision = evaluate(component.constraints, assignment);
   return (
     <>
-      {decision.valid && renderSubject(theme, assignment, identity, view)}
+      {decision.valid && renderSubject(theme, assignment, identity, view, story)}
       <RuleNotes rules={decision.matches} />
     </>
   );
@@ -186,20 +198,26 @@ const MatrixSample = memo(function MatrixSample({
 const MatrixReference = memo(function MatrixReference({
   theme,
   view,
+  story,
   renderReference,
 }: Pick<MatrixProps, 'renderReference'> & {
   readonly theme: WorkbenchTheme;
   readonly view: MatrixView;
+  readonly story?: StoryContext | undefined;
 }): ReactElement {
   return (
     <div className="wb-matrix-reference">
       <h3 className="wb-matrix-group-label">Reference example</h3>
-      {renderReference(theme, view)}
+      {renderReference(theme, view, story)}
     </div>
   );
 });
 
-function RuleNotes({ rules }: { readonly rules: readonly Constraint[] }): ReactElement | null {
+export function RuleNotes({
+  rules,
+}: {
+  readonly rules: readonly Constraint[];
+}): ReactElement | null {
   if (rules.length === 0) {
     return null;
   }
@@ -224,7 +242,7 @@ function RuleNotes({ rules }: { readonly rules: readonly Constraint[] }): ReactE
   );
 }
 
-interface SliceGridProps {
+export interface SliceGridProps {
   readonly grid: ReturnType<typeof buildSlice>;
   readonly rowLimit: number;
   readonly axes: Axes;
@@ -233,7 +251,7 @@ interface SliceGridProps {
   readonly renderSample: (values: Values, id: string) => ReactNode;
 }
 
-function SliceGrid({
+export function SliceGrid({
   grid,
   rowLimit,
   axes,
@@ -370,18 +388,20 @@ function MoreRows({
 }
 
 export function Matrix(props: MatrixProps): ReactElement {
-  const views = props.component.matrixViews;
-  const view = views?.find((candidate) => candidate.id === props.slice) ?? views?.[0];
-  return <MatrixContent key={props.component.id} {...props} view={view} />;
+  const views = componentStates(props.component);
+  const view = views.find((candidate) => candidate.id === props.slice) ?? views[0];
+  return <MatrixContent key={props.component.id} {...props} views={views} view={view} />;
 }
 
 function MatrixContent({
   component,
+  views,
   view,
   mode,
   raw,
   freeze = false,
   themes,
+  header,
   onSliceChange,
   onModeChange,
   renderArtboards,
@@ -408,6 +428,7 @@ function MatrixContent({
   const [axes, setAxes] = useState<Axes>(initialAxes);
   const [overridesOpen, setOverridesOpen] = useState(false);
   const [fixed, setFixed] = useState<Values>(() => ({ ...view?.fixed }));
+  const [matrixRevision, setMatrixRevision] = useState(0);
   const [previousView, setPreviousView] = useState(view);
   if (view !== previousView) {
     setPreviousView(view);
@@ -477,7 +498,12 @@ function MatrixContent({
   const labelValue = (key: string | undefined, value: PropValue | undefined): string =>
     key === undefined || value === undefined ? '' : showValue(props[key], value);
 
-  const sample = (theme: WorkbenchTheme, assignment: Values, id: string): ReactNode => (
+  const sample = (
+    theme: WorkbenchTheme,
+    assignment: Values,
+    id: string,
+    story?: StoryContext,
+  ): ReactNode => (
     <MatrixSample
       key={JSON.stringify([id, assignment])}
       component={component}
@@ -485,6 +511,7 @@ function MatrixContent({
       assignment={assignment}
       identity={id}
       view={view}
+      story={story}
       renderSubject={renderSubject}
     />
   );
@@ -492,6 +519,7 @@ function MatrixContent({
   function reset(): void {
     setAxes(initialAxes);
     setFixed({ ...view?.fixed });
+    setMatrixRevision((previous) => previous + 1);
   }
 
   function fixValue(key: string, value: PropValue | undefined): void {
@@ -509,113 +537,162 @@ function MatrixContent({
     });
   }
 
+  const renderBoards = (story?: StoryContext): ReactNode =>
+    renderArtboards((theme) => (
+      <div className="wb-matrix-artboard">
+        {grid && (
+          <SliceGrid
+            grid={grid}
+            rowLimit={visible}
+            axes={axes}
+            labelProp={labelProp}
+            labelValue={labelValue}
+            renderSample={(values, identity) => sample(theme, values, identity, story)}
+          />
+        )}
+        {renderedAssignments && renderedAssignments.length > 0 && (
+          <ul className="wb-matrix-combinations">
+            {renderedAssignments.slice(0, visible).map((assignment, index) => (
+              <li
+                key={JSON.stringify(assignment)}
+                className="wb-matrix-combination"
+                data-wb-result-row=""
+              >
+                <dl className="wb-matrix-coordinate">
+                  {varyingKeys.map((key) => (
+                    <div key={key}>
+                      <dt>{labelProp(key)}</dt>
+                      <dd>{labelValue(key, assignment[key])}</dd>
+                    </div>
+                  ))}
+                </dl>
+                {sample(theme, assignment, 'combination-' + String(index), story)}
+              </li>
+            ))}
+          </ul>
+        )}
+        {visible < rowCount && <MoreRows visible={visible} total={rowCount} onMore={showMore} />}
+        {modeShown === 'slice' && view?.reference && (
+          <MatrixReference
+            theme={theme}
+            view={view}
+            story={story}
+            renderReference={renderReference}
+          />
+        )}
+      </div>
+    ));
+
   return (
     <section className="wb-matrix" aria-label="Component matrix" data-wb-matrix-mode={modeShown}>
       {!raw && (
         <ViewSettings>
-          <section className="wb-matrix-controls" aria-label="Matrix settings">
-            <div className="wb-matrix-toolbar">
-              {component.matrixViews && component.matrixViews.length > 0 && (
-                <label className="wb-matrix-field">
-                  Slice
-                  <select
-                    className="wb-field"
-                    value={view?.id ?? ''}
-                    onChange={(event) => {
-                      onSliceChange(event.currentTarget.value);
-                    }}
-                  >
-                    {component.matrixViews.map((candidate) => (
-                      <option key={candidate.id} value={candidate.id}>
-                        {candidate.title}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-              )}
-              {finiteKeys.length > 0 &&
-                modeShown === 'slice' &&
-                AXES.map((axis) => (
-                  <label key={axis} className="wb-matrix-field">
-                    {AXIS_LABELS[axis]}
+          <>
+            {header}
+            <section className="wb-matrix-controls" aria-label="Matrix settings">
+              <div className="wb-matrix-toolbar">
+                {views.length > 0 && (
+                  <label className="wb-matrix-field">
+                    Slice
                     <select
                       className="wb-field"
-                      value={axes[axis] ?? ''}
+                      value={view?.id ?? ''}
                       onChange={(event) => {
-                        const key = event.currentTarget.value;
-                        if (key && Object.hasOwn(fixed, key)) {
-                          fixValue(key, undefined);
-                        }
-                        setAxes((previous) => {
-                          const next = { ...previous };
-                          if (key === '') {
-                            delete next[axis];
-                          } else {
-                            next[axis] = key;
-                          }
-                          return next;
-                        });
+                        onSliceChange(event.currentTarget.value);
                       }}
                     >
-                      <option value="">None</option>
-                      {finiteKeys.map((key) => (
-                        <option
-                          key={key}
-                          value={key}
-                          disabled={axes[axis] !== key && Object.values(axes).includes(key)}
-                        >
-                          {labelProp(key)}
+                      {views.map((candidate) => (
+                        <option key={candidate.id} value={candidate.id}>
+                          {candidate.title}
                         </option>
                       ))}
                     </select>
                   </label>
-                ))}
-              <div role="group" className="wb-seg" aria-label="Matrix mode">
-                {(Object.keys(MODES) as MatrixMode[]).map((candidate) => (
-                  <button
-                    type="button"
-                    className="wb-seg-btn"
-                    key={candidate}
-                    aria-pressed={candidate === modeShown}
-                    data-active={candidate === modeShown}
-                    disabled={candidate === 'full' && !fullAvailable}
-                    onClick={() => {
-                      onModeChange(candidate);
-                    }}
-                  >
-                    {MODES[candidate]}
-                  </button>
-                ))}
-              </div>
-              <button type="button" className="wb-action-btn" onClick={reset}>
-                Reset matrix
-              </button>
-            </div>
-            {overrideKeys.length > 0 && (
-              <details
-                className="wb-matrix-overrides"
-                open={overridesOpen}
-                onToggle={(event) => setOverridesOpen(event.currentTarget.open)}
-              >
-                <summary className="wb-disclosure">Global values</summary>
-                <div className="wb-matrix-toolbar">
-                  {overrideKeys.map((key) => (
-                    <ValuePicker
-                      key={key}
-                      name={key}
-                      prop={props[key]!}
-                      mode={modeShown}
-                      override={fixed[key]}
-                      value={defaults[key]!}
-                      onChange={(value) => {
-                        fixValue(key, value);
+                )}
+                {finiteKeys.length > 0 &&
+                  modeShown === 'slice' &&
+                  AXES.map((axis) => (
+                    <label key={axis} className="wb-matrix-field">
+                      {AXIS_LABELS[axis]}
+                      <select
+                        className="wb-field"
+                        value={axes[axis] ?? ''}
+                        onChange={(event) => {
+                          const key = event.currentTarget.value;
+                          if (key && Object.hasOwn(fixed, key)) {
+                            fixValue(key, undefined);
+                          }
+                          setAxes((previous) => {
+                            const next = { ...previous };
+                            if (key === '') {
+                              delete next[axis];
+                            } else {
+                              next[axis] = key;
+                            }
+                            return next;
+                          });
+                        }}
+                      >
+                        <option value="">None</option>
+                        {finiteKeys.map((key) => (
+                          <option
+                            key={key}
+                            value={key}
+                            disabled={axes[axis] !== key && Object.values(axes).includes(key)}
+                          >
+                            {labelProp(key)}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                  ))}
+                <div role="group" className="wb-seg" aria-label="Matrix mode">
+                  {(Object.keys(MODES) as MatrixMode[]).map((candidate) => (
+                    <button
+                      type="button"
+                      className="wb-seg-btn"
+                      key={candidate}
+                      aria-pressed={candidate === modeShown}
+                      data-active={candidate === modeShown}
+                      disabled={candidate === 'full' && !fullAvailable}
+                      onClick={() => {
+                        onModeChange(candidate);
                       }}
-                    />
+                    >
+                      {MODES[candidate]}
+                    </button>
                   ))}
                 </div>
-              </details>
-            )}
-          </section>
+                <button type="button" className="wb-action-btn" onClick={reset}>
+                  Reset matrix
+                </button>
+              </div>
+              {overrideKeys.length > 0 && (
+                <details
+                  className="wb-matrix-overrides"
+                  open={overridesOpen}
+                  onToggle={(event) => setOverridesOpen(event.currentTarget.open)}
+                >
+                  <summary className="wb-disclosure">Global values</summary>
+                  <div className="wb-matrix-toolbar">
+                    {overrideKeys.map((key) => (
+                      <ValuePicker
+                        key={key}
+                        name={key}
+                        prop={props[key]!}
+                        mode={modeShown}
+                        override={fixed[key]}
+                        value={defaults[key]!}
+                        onChange={(value) => {
+                          fixValue(key, value);
+                        }}
+                      />
+                    ))}
+                  </div>
+                </details>
+              )}
+            </section>
+          </>
         </ViewSettings>
       )}
 
@@ -650,55 +727,24 @@ function MatrixContent({
         </p>
       )}
 
-      <div className={view ? 'wb-story-frame' : undefined}>
-        {view && (
-          <header className="wb-matrix-heading wb-frame-heading">
-            <h2>{view.title}</h2>
-            {view.caption && <p>{view.caption}</p>}
-          </header>
-        )}
-        {renderArtboards((theme) => (
-          <div className="wb-matrix-artboard">
-            {grid && (
-              <SliceGrid
-                grid={grid}
-                rowLimit={visible}
-                axes={axes}
-                labelProp={labelProp}
-                labelValue={labelValue}
-                renderSample={(values, identity) => sample(theme, values, identity)}
-              />
-            )}
-            {renderedAssignments && renderedAssignments.length > 0 && (
-              <ul className="wb-matrix-combinations">
-                {renderedAssignments.slice(0, visible).map((assignment, index) => (
-                  <li
-                    key={JSON.stringify(assignment)}
-                    className="wb-matrix-combination"
-                    data-wb-result-row=""
-                  >
-                    <dl className="wb-matrix-coordinate">
-                      {varyingKeys.map((key) => (
-                        <div key={key}>
-                          <dt>{labelProp(key)}</dt>
-                          <dd>{labelValue(key, assignment[key])}</dd>
-                        </div>
-                      ))}
-                    </dl>
-                    {sample(theme, assignment, 'combination-' + String(index))}
-                  </li>
-                ))}
-              </ul>
-            )}
-            {visible < rowCount && (
-              <MoreRows visible={visible} total={rowCount} onMore={showMore} />
-            )}
-            {modeShown === 'slice' && view?.reference && (
-              <MatrixReference theme={theme} view={view} renderReference={renderReference} />
-            )}
-          </div>
-        ))}
-      </div>
+      {modeShown === 'slice' && view ? (
+        <StoryFrame
+          key={view.id}
+          title={view.title}
+          headingLevel="h2"
+          caption={view.caption}
+          dataSlice={view.id}
+          controls={view.controls}
+          actions={view.actions}
+          reset={view.reset}
+          externalRevision={matrixRevision}
+          raw={raw}
+        >
+          {(story) => renderBoards(story)}
+        </StoryFrame>
+      ) : (
+        <div>{renderBoards()}</div>
+      )}
     </section>
   );
 }

@@ -1,0 +1,151 @@
+.wb-markdown {
+  display: grid;
+  gap: 12px;
+  min-inline-size: 0;
+  max-inline-size: 76ch;
+  color: var(--wb-fg-secondary);
+  font: 400 13.5px / 1.65 var(--wb-font);
+}
+
+.wb-markdown > :first-child {
+  margin-block-start: 0;
+}
+
+.wb-markdown :is(h2, h3, h4, h5, h6) {
+  margin: 10px 0 0;
+  color: var(--wb-fg);
+  font-weight: 650;
+  line-height: 1.35;
+  scroll-margin-top: 16px;
+}
+
+.wb-markdown h2 {
+  font-size: 18px;
+  padding-block-end: 6px;
+  border-block-end: 1px solid var(--wb-border-subtle);
+}
+
+.wb-markdown h3 {
+  font-size: 15px;
+}
+
+.wb-markdown h4 {
+  font-size: 13.5px;
+}
+
+.wb-markdown p {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.wb-markdown a {
+  color: var(--wb-fg);
+  text-decoration: underline;
+  text-decoration-color: var(--wb-accent);
+  text-underline-offset: 3px;
+}
+
+.wb-markdown a:hover {
+  color: var(--wb-accent-hover);
+}
+
+.wb-markdown a:focus-visible {
+  outline: 2px solid var(--wb-focus);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+.wb-md-doc-ref {
+  color: var(--wb-fg-muted);
+  text-decoration: underline dotted var(--wb-border-strong);
+  text-underline-offset: 3px;
+}
+
+.wb-md-inline-code {
+  padding: 1px 5px;
+  border: 1px solid var(--wb-border-subtle);
+  border-radius: 4px;
+  background: var(--wb-bg);
+  color: var(--wb-fg);
+  font: 500 12px / 1.4 var(--wb-mono);
+}
+
+.wb-md-list {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding-inline-start: 20px;
+}
+
+.wb-md-list li {
+  overflow-wrap: anywhere;
+}
+
+.wb-md-list .wb-md-list {
+  margin-block-start: 6px;
+}
+
+.wb-md-quote {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 8px 12px;
+  border-inline-start: 3px solid var(--wb-border-strong);
+  border-start-end-radius: 6px;
+  border-end-end-radius: 6px;
+  background: var(--wb-card);
+  color: var(--wb-fg-muted);
+}
+
+.wb-md-alert-label {
+  margin: 0;
+  color: var(--wb-fg);
+  font: 650 11px / 1.3 var(--wb-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.wb-md-hr {
+  inline-size: 100%;
+  border: 0;
+  border-block-start: 1px solid var(--wb-border);
+  margin: 4px 0;
+}
+
+.wb-md-table-wrap {
+  max-inline-size: 100%;
+  overflow-x: auto;
+  border: 1px solid var(--wb-border);
+  border-radius: 6px;
+  background: var(--wb-card);
+}
+
+.wb-md-table-wrap:focus-visible {
+  outline: 2px solid var(--wb-focus);
+  outline-offset: 2px;
+}
+
+.wb-md-table {
+  inline-size: 100%;
+  border-collapse: collapse;
+  font: 400 12.5px / 1.5 var(--wb-font);
+  text-align: start;
+}
+
+.wb-md-table th,
+.wb-md-table td {
+  padding: 8px 10px;
+  border-block-end: 1px solid var(--wb-border-subtle);
+  vertical-align: top;
+}
+
+.wb-md-table thead th {
+  background: var(--wb-bar);
+  color: var(--wb-fg);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.wb-md-table tbody tr:last-child td {
+  border-block-end: 0;
+}

@@ -99,21 +99,21 @@ export default {
 
     await navigate(page, {
       item: 'card',
-      tab: 'matrix',
+      tab: 'states',
       slice: 'orientation',
       family: 'pixel',
       scheme: 'light',
       vp: '768',
       bounds: '1',
     });
-    await page.locator('[data-wb-slice="orientation"]').waitFor();
+    await page.locator('[data-wb-slice="orientation"]').first().waitFor();
     await page
       .locator('[data-wb-subject][data-unica-card-orientation="horizontal"]')
       .first()
       .waitFor();
     await navigate(page, {
       item: 'card',
-      tab: 'matrix',
+      tab: 'states',
       mode: 'pairwise',
       family: 'pixel',
       scheme: 'light',
@@ -124,7 +124,7 @@ export default {
     const audit = (await result.textContent()).match(/(\d+) \/ (\d+) compatible pairs/);
     assert.ok(audit && Number(audit[1]) > 0);
     assert.equal(audit[1], audit[2]);
-    await navigate(page, { item: 'card', tab: 'usage', family: 'soft', scheme: 'light' });
+    await navigate(page, { item: 'card', tab: 'compositions', family: 'soft', scheme: 'light' });
     const usage = page.locator('[data-wb-block="sections"]');
     await usage.locator('article[data-unica-card-variant]').waitFor();
     await usage.getByRole('heading', { name: 'Field guide', exact: true }).waitFor();
@@ -141,7 +141,7 @@ export default {
       assert.equal(await hoverStart(), true);
       await navigate(page, {
         item: 'card',
-        tab: 'cases',
+        tab: 'states',
         block: 'navigation',
         family: 'soft',
         scheme: 'dark',
@@ -191,7 +191,7 @@ export default {
     await page.setViewportSize({ width: 920, height: 780 });
     await navigate(page, {
       item: 'context-menu',
-      tab: 'cases',
+      tab: 'states',
       block: 'touch',
       family: 'soft',
       scheme: 'dark',

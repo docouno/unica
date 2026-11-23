@@ -12,6 +12,8 @@
   --wb-segment-thumb: #444444;
   --wb-action-bg: #353535;
   --wb-action-hover: #424242;
+  --wb-action-border: transparent;
+  --wb-action-border-hover: transparent;
   --wb-picker-bg: #2d2d2d;
   --wb-option-hover: #414141;
   --wb-accent-ink: #191919;
@@ -28,7 +30,7 @@
   border-radius: var(--wb-control-radius);
   background: var(--wb-field-bg);
   color: var(--wb-fg);
-  color-scheme: dark;
+  color-scheme: inherit;
   font: 400 var(--wb-control-font) / 20px var(--wb-font);
 }
 
@@ -200,6 +202,7 @@ select.wb-field:enabled {
 .wb-action-btn {
   min-block-size: var(--wb-control-height);
   padding: 4px 12px;
+  border-color: var(--wb-action-border);
   border-radius: var(--wb-control-radius);
   background: var(--wb-action-bg);
   color: var(--wb-fg);
@@ -207,6 +210,7 @@ select.wb-field:enabled {
 }
 
 .wb-action-btn:enabled:hover {
+  border-color: var(--wb-action-border-hover);
   background: var(--wb-action-hover);
 }
 
@@ -241,8 +245,8 @@ select.wb-field:enabled {
 }
 
 .wb-check-mark {
-  display: grid;
-  place-items: center;
+  position: relative;
+  display: inline-block;
   inline-size: 16px;
   block-size: 16px;
   border: 1px solid var(--wb-field-border-focus);
@@ -250,6 +254,9 @@ select.wb-field:enabled {
   background: var(--wb-field-bg);
   color: var(--wb-accent-ink);
   pointer-events: none;
+  transition:
+    background-color var(--wb-control-motion),
+    border-color var(--wb-control-motion);
 }
 
 .wb-checkbox input:where(:checked) + .wb-check-mark {
@@ -258,9 +265,12 @@ select.wb-field:enabled {
 }
 
 .wb-checkbox input:checked + .wb-check-mark::after {
+  position: absolute;
+  inset: 0;
+  margin: auto;
   inline-size: 8px;
   block-size: 5px;
-  margin-block-start: -2px;
+  translate: 0 -1px;
   border: solid currentColor;
   border-width: 0 0 2px 2px;
   rotate: -45deg;
@@ -268,7 +278,7 @@ select.wb-field:enabled {
 }
 
 :where(label:hover) .wb-checkbox input:where(:enabled) + .wb-check-mark {
-  border-color: var(--wb-fg-subtle);
+  border-color: var(--wb-fg-secondary);
 }
 
 :where(label:hover) .wb-checkbox input:where(:checked:enabled) + .wb-check-mark {
@@ -320,8 +330,9 @@ select.wb-field:enabled {
   .wb-nav-item,
   .wb-tab,
   .wb-cell,
-  .wb-cell-header,
+  .wb-cell-expand,
   .wb-matrix-scroll,
+  .wb-inspector-code[tabindex],
   .wb-scene-usage a
 ):focus-visible,
 .wb-checkbox input:focus-visible + .wb-check-mark {
@@ -338,18 +349,24 @@ select.wb-field:enabled {
   outline-color: var(--wb-invalid);
 }
 
-:where(.wb-seg-btn, .wb-tab, .wb-isolate, .wb-story-frame .wb-cell):focus-visible {
+:where(.wb-seg-btn, .wb-tab, .wb-inspector-code[tabindex]):focus-visible {
   outline-offset: -2px;
 }
 
+.wb-cell[data-color-scheme='light']
+  :is(.wb-cell-expand, .wb-action-btn, .wb-matrix-scroll, .wb-disclosure):focus-visible {
+  outline-color: var(--wb-cell-focus);
+}
+
 @media (prefers-reduced-motion: reduce) {
-  :is(.wb-action-btn, .wb-seg-btn) {
+  :is(.wb-action-btn, .wb-seg-btn, .wb-check-mark) {
     transition: none;
   }
 }
 
 @media (forced-colors: active) {
-  .wb-action-btn {
+  .wb-action-btn,
+  .wb-action-btn:enabled:hover {
     border-color: ButtonText;
   }
 

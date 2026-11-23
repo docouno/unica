@@ -1,0 +1,321 @@
+.wb-story-frame {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 14px;
+  min-inline-size: 0;
+}
+
+.wb-story-header {
+  display: grid;
+  gap: 4px;
+  min-inline-size: 0;
+  color: var(--wb-fg);
+  font-family: var(--wb-font);
+  text-align: start;
+}
+
+.wb-story-header-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+  min-block-size: 36px;
+}
+
+.wb-story-title-group {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  min-inline-size: 0;
+}
+
+.wb-story-title {
+  margin: 0;
+  color: var(--wb-fg);
+  font: 650 15px / 22px var(--wb-font);
+  letter-spacing: -0.01em;
+}
+
+.wb-story-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 7px;
+  border: 1px solid var(--wb-border-subtle);
+  border-radius: 5px;
+  background: var(--wb-card);
+  color: var(--wb-fg-subtle);
+  font: 500 11px / 16px var(--wb-font);
+  white-space: nowrap;
+}
+
+.wb-story-caption {
+  margin: 0;
+  max-inline-size: 76ch;
+  color: var(--wb-fg-muted);
+  font: 400 12.5px / 1.5 var(--wb-font);
+  overflow-wrap: anywhere;
+}
+
+.wb-story-toolbar {
+  --wb-control-height: 28px;
+  --wb-control-radius: 5px;
+  --wb-control-font: 12px;
+
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  max-inline-size: 100%;
+  padding: 4px;
+  border: 1px solid var(--wb-border-subtle);
+  border-radius: 9px;
+  background: var(--wb-rail);
+}
+
+.wb-story-toolbar:has(> .wb-story-reset:only-child) {
+  padding: 0;
+  border-color: transparent;
+  background: transparent;
+}
+
+.wb-story-control {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  block-size: var(--wb-control-height);
+  min-block-size: var(--wb-control-height);
+  padding-inline-start: 8px;
+  color: var(--wb-fg-muted);
+  font: 500 12px / 1 var(--wb-font);
+}
+
+.wb-story-toggle {
+  padding: 0 8px;
+  border-radius: var(--wb-control-radius);
+  color: var(--wb-fg-secondary);
+  cursor: pointer;
+  transition:
+    background-color var(--wb-control-motion),
+    color var(--wb-control-motion);
+}
+
+.wb-story-toggle:hover {
+  background: color-mix(in srgb, var(--wb-fg) 7%, transparent);
+  color: var(--wb-fg);
+}
+
+.wb-story-control-label {
+  white-space: nowrap;
+}
+
+.wb-story-toolbar .wb-story-select {
+  block-size: var(--wb-control-height);
+  min-block-size: var(--wb-control-height);
+  padding: 0 9px;
+  font-size: var(--wb-control-font);
+  line-height: 1;
+}
+
+.wb-story-toolbar .wb-story-number {
+  inline-size: 4.25rem;
+  block-size: var(--wb-control-height);
+  min-block-size: var(--wb-control-height);
+  padding: 0 8px;
+  font-size: var(--wb-control-font);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.wb-story-toolbar
+  :is(.wb-story-select, .wb-story-number):not(:hover, :focus, :disabled, [aria-invalid='true']) {
+  border-color: var(--wb-border);
+}
+
+.wb-story-divider {
+  inline-size: 0;
+  block-size: 16px;
+  margin-inline: 4px;
+  border-inline-start: 1px solid var(--wb-border);
+  flex: none;
+}
+
+.wb-story-toolbar .wb-story-btn {
+  block-size: var(--wb-control-height);
+  min-block-size: var(--wb-control-height);
+  padding: 0 10px;
+  border: 1px solid var(--wb-border);
+  border-radius: var(--wb-control-radius);
+  background: var(--wb-card);
+  color: var(--wb-fg-secondary);
+  font: 500 12px / 1 var(--wb-font);
+  transition:
+    background-color var(--wb-control-motion),
+    border-color var(--wb-control-motion),
+    color var(--wb-control-motion);
+}
+
+.wb-story-toolbar .wb-story-btn:enabled:hover {
+  border-color: var(--wb-border-strong);
+  background: color-mix(in srgb, var(--wb-fg) 6%, var(--wb-card));
+  color: var(--wb-fg);
+}
+
+.wb-story-toolbar .wb-story-btn:enabled:active {
+  border-color: var(--wb-border-strong);
+  background: color-mix(in srgb, var(--wb-fg) 11%, var(--wb-card));
+  color: var(--wb-fg);
+}
+
+.wb-story-toolbar .wb-story-btn.wb-story-reset {
+  border-color: transparent;
+  background: transparent;
+  color: var(--wb-fg-muted);
+}
+
+.wb-story-toolbar .wb-story-btn.wb-story-reset:enabled:hover {
+  border-color: transparent;
+  background: color-mix(in srgb, var(--wb-fg) 7%, transparent);
+  color: var(--wb-fg);
+}
+
+.wb-story-toolbar .wb-story-btn.wb-story-reset:enabled:active {
+  border-color: transparent;
+  background: color-mix(in srgb, var(--wb-fg) 12%, transparent);
+  color: var(--wb-fg);
+}
+
+.wb-story-toolbar .wb-story-btn.wb-story-reset:only-child {
+  border-color: var(--wb-border);
+  background: var(--wb-card);
+  color: var(--wb-fg-secondary);
+}
+
+.wb-story-toolbar .wb-story-btn.wb-story-reset:only-child:enabled:hover {
+  border-color: var(--wb-border-strong);
+  background: color-mix(in srgb, var(--wb-fg) 6%, var(--wb-card));
+  color: var(--wb-fg);
+}
+
+.wb-story-toolbar .wb-story-btn.wb-story-reset:only-child:enabled:active {
+  border-color: var(--wb-border-strong);
+  background: color-mix(in srgb, var(--wb-fg) 11%, var(--wb-card));
+  color: var(--wb-fg);
+}
+
+.wb-story-footer {
+  border: 1px solid var(--wb-border);
+  border-radius: 9px;
+  overflow: hidden;
+  background: var(--wb-bg);
+  color: var(--wb-fg);
+}
+
+[data-canvas-scheme='light'] .wb-story-footer {
+  --wb-bg: #f5f5f2;
+  --wb-card: #ecece8;
+  --wb-fg-subtle: #64645d;
+  --wb-action-bg: #f7f7f4;
+  --wb-action-hover: #e4e4df;
+
+  box-shadow: 0 1px 2px rgb(20 20 18 / 0.04);
+}
+
+.wb-story-footer > .wb-code-block {
+  border-block-start: 0;
+}
+
+.wb-story-footer > .wb-inspector-code {
+  border: 0;
+  border-radius: 0;
+}
+
+.wb-code-block {
+  position: relative;
+  border-block-start: 1px solid var(--wb-border);
+  background: var(--wb-bg);
+}
+
+.wb-code-block-standalone {
+  border: 1px solid var(--wb-border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.wb-code-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 5px 10px;
+  border-block-end: 1px solid var(--wb-border-subtle);
+  background: var(--wb-card);
+}
+
+.wb-code-lang {
+  color: var(--wb-fg-subtle);
+  font: 500 11px / 1.4 var(--wb-mono);
+  text-transform: lowercase;
+}
+
+.wb-code-bar .wb-code-copy {
+  --wb-control-height: 24px;
+  --wb-control-font: 11px;
+
+  block-size: var(--wb-control-height);
+  min-block-size: var(--wb-control-height);
+  padding: 0 8px;
+  margin-inline-start: auto;
+  border: 1px solid var(--wb-border);
+  background: var(--wb-action-bg);
+  color: var(--wb-fg-secondary);
+  font-weight: 500;
+}
+
+.wb-code-bar .wb-code-copy:enabled:hover {
+  border-color: var(--wb-border-strong);
+  background: var(--wb-action-hover);
+  color: var(--wb-fg);
+}
+
+.wb-code-bar .wb-code-copy:enabled:active {
+  border-color: var(--wb-border-strong);
+  background: color-mix(in srgb, var(--wb-fg) 10%, var(--wb-action-hover));
+  color: var(--wb-fg);
+}
+
+.wb-code-block > .wb-inspector-code {
+  border: 0;
+  border-radius: 0;
+}
+
+.wb-sr-only {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wb-story-toggle,
+  .wb-story-toolbar .wb-story-btn {
+    transition: none;
+  }
+}
+
+@media (forced-colors: active) {
+  .wb-story-badge {
+    border-color: CanvasText;
+  }
+
+  .wb-story-toolbar .wb-story-btn:is(:enabled, :enabled:hover, :enabled:active),
+  .wb-story-toolbar .wb-story-btn.wb-story-reset:is(:enabled, :enabled:hover, :enabled:active),
+  .wb-story-toolbar
+    .wb-story-btn.wb-story-reset:only-child:is(:enabled, :enabled:hover, :enabled:active),
+  .wb-code-bar .wb-code-copy:is(:enabled, :enabled:hover, :enabled:active) {
+    border-color: ButtonText;
+  }
+}

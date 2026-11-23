@@ -5,7 +5,9 @@ import { readdir, readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, beforeAll, expect, it } from 'vitest';
+import * as UnicaPackage from '@docouno/unica';
 import { unicaWorkbench } from './unica.workbench.js';
+import { UsageView } from './workbench/UsageView.js';
 import { WorkbenchApp } from './workbench/WorkbenchApp.js';
 import { macroBoundsForTheme } from './workbench/themeEditorState.js';
 import {
@@ -273,6 +275,83 @@ it('keeps src/workbench portable with zero app-specific imports or Unica token l
   expect(workbenchCss).toContain(':where(.wb-artboard)');
   const bridgeCss = await readFile(resolve(import.meta.dirname, 'unica.workbench.css'), 'utf8');
   expect(bridgeCss).toContain('.wb-artboard[data-theme]');
+});
+
+it('configures the 4-tab Workbench architecture and resolves Markdown docs for every component', async () => {
+  expect(unicaWorkbench.componentTabs?.map((tab) => [tab.id, tab.kind])).toEqual([
+    ['playground', 'playground'],
+    ['states', 'states'],
+    ['compositions', 'compositions'],
+    ['usage', 'usage'],
+  ]);
+  expect(unicaWorkbench.docs?.resolve).toBeDefined();
+
+  for (const component of unicaWorkbench.components) {
+    const source = unicaWorkbench.docs!.resolve!(component);
+    expect(source, `Missing docs source for ${component.id}`).toBeDefined();
+    expect(source?.markdown, `Missing Markdown loader for ${component.id}`).toBeDefined();
+    if (component.status === 'UI') {
+      expect(source?.importFrom, `Missing package importFrom for UI ${component.id}`).toBe(
+        '@docouno/unica',
+      );
+      expect(source?.sourceLabel).toMatch(/^docs\/components\/.+\.md$/);
+    } else {
+      expect(source?.sourceLabel).toMatch(/^apps\/playground\/src\/prototypes\/.+\/README\.md$/);
+    }
+    const content =
+      typeof source!.markdown === 'function' ? await source!.markdown() : source!.markdown!;
+    expect(content.trim().length, `Empty Markdown doc for ${component.id}`).toBeGreaterThan(20);
+  }
+
+  // Every UI component's Usage Quick Start only imports symbols actually exported by @docouno/unica.
+  const packageExports = new Set(Object.keys(UnicaPackage));
+  expect(unicaWorkbench.docs?.exportedNames).toEqual(packageExports);
+  for (const component of unicaWorkbench.components.filter((entry) => entry.status === 'UI')) {
+    const { container, unmount } = render(
+      <UsageView
+        component={component}
+        scenes={unicaWorkbench.scenes}
+        docsConfig={unicaWorkbench.docs}
+        raw
+        itemHref={({ item }) => `/?item=${item}`}
+        navigateItem={() => {}}
+      />,
+    );
+    const snippet = container.querySelector('#wb-usage-quick-start pre')?.textContent ?? '';
+    for (const match of snippet.matchAll(/import\s+\{([^}]+)\}\s+from\s+'@docouno\/unica'/g)) {
+      for (const symbol of match[1]!.split(',').map((part) => part.trim())) {
+        expect(
+          packageExports.has(symbol),
+          `Usage Quick Start for ${component.id} imports unknown symbol ${symbol}`,
+        ).toBe(true);
+      }
+    }
+    if (component.id === 'tooltip') {
+      expect(snippet).toContain("import { Tooltip } from '@docouno/unica'");
+      expect(snippet).not.toMatch(/import\s+\{[^}]*CopyIcon[^}]*\}/);
+    } else if (component.id === 'stack') {
+      expect(snippet).toContain("import { Stack } from '@docouno/unica'");
+      expect(snippet).not.toMatch(/import\s+\{[^}]*Fragment[^}]*\}\s+from\s+'@docouno\/unica'/);
+    } else if (component.id === 'scrollbar') {
+      expect(snippet).not.toContain("from '@docouno/unica'");
+    }
+    unmount();
+  }
+
+  // Relative docs/components/*.md links from prototype READMEs resolve cleanly to Usage routes, while external URLs are never hijacked.
+  const protoComponent = unicaWorkbench.components.find((entry) => entry.status === 'Proto')!;
+  expect(
+    unicaWorkbench.docs?.resolveDocLink?.(
+      '../../../../../docs/components/tooltip.md',
+      protoComponent,
+    ),
+  ).toEqual({ item: 'tooltip', tab: 'usage' });
+  expect(
+    unicaWorkbench.docs?.resolveDocLink?.(
+      'https://example.com/docs/components/button.md',
+      protoComponent,
+    ),
+  ).toBeUndefined();
 });
 
 it('keeps Unica theme editor tokens and macro outputs aligned with styles.css', async () => {

@@ -59,7 +59,7 @@ export default {
     mount,
   }) => {
     await mount('overlay-workbench');
-    await navigate(page, { item: 'portal-probe', tab: 'cases' });
+    await navigate(page, { item: 'portal-probe', tab: 'states' });
     const normal = await assertArtboards(page, 2);
     await page.getByRole('button', { name: '120% Text' }).click();
     await page.getByRole('button', { name: 'RTL', exact: true }).click();
@@ -71,7 +71,7 @@ export default {
     }
     await navigate(page, { item: 'overlay-probe' });
     await assertArtboards(page, 1);
-    await page.getByRole('button', { name: 'Isolate Soft · Dark' }).click();
+    await page.getByRole('button', { name: 'Expand Soft · Dark' }).click();
     await page.waitForFunction(() => document.querySelectorAll('[data-portal-probe]').length === 1);
     assert.equal(
       await page
@@ -79,6 +79,8 @@ export default {
         .evaluate((node) => node.parentElement.dataset.theme),
       'soft-dark',
     );
+    await page.getByRole('button', { name: 'Collapse Soft · Dark' }).click();
+    await assertArtboards(page, 1);
   },
 
   'Toast actions follow their artboard modal while a neighboring queue retains its messages':

@@ -10,8 +10,16 @@ import type {
   WorkbenchConfig,
   WorkbenchEmptyContext,
   WorkbenchStageContext,
+  WorkbenchTabDefinition,
   WorkbenchTheme,
 } from './workbench/types.js';
+
+const componentTabs: readonly WorkbenchTabDefinition[] = [
+  { id: 'playground', label: 'Playground', kind: 'playground' },
+  { id: 'states', label: 'States', kind: 'states', aliases: ['matrix', 'cases'] },
+  { id: 'compositions', label: 'Compositions', kind: 'compositions' },
+  { id: 'usage', label: 'Usage', kind: 'usage' },
+];
 
 const themes: readonly WorkbenchTheme[] = THEME_PRESETS.map((theme) => ({
   ...theme,
@@ -369,6 +377,7 @@ export const unicaWorkbenchBase: Omit<WorkbenchConfig, 'components' | 'scenes'> 
   title: 'Unica Workbench',
   themes,
   categories,
+  componentTabs,
   themeEditor: unicaThemeEditor,
   renderArtboard: renderUnicaArtboard,
   renderStage: renderUnicaStage,
