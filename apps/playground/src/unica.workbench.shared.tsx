@@ -3,6 +3,7 @@ import type { ReactElement } from 'react';
 import { THEME_PRESETS, UnicaProvider } from '@docouno/unica';
 import type { ThemeConfig } from '@docouno/unica';
 import { OverlayStage } from './workbench/WorkbenchApp.js';
+import { unicaThemeEditor } from './unica.theme-editor.js';
 import './unica.workbench.css';
 import type {
   WorkbenchArtboardContext,
@@ -368,6 +369,7 @@ export const unicaWorkbenchBase: Omit<WorkbenchConfig, 'components' | 'scenes'> 
   title: 'Unica Workbench',
   themes,
   categories,
+  themeEditor: unicaThemeEditor,
   renderArtboard: renderUnicaArtboard,
   renderStage: renderUnicaStage,
   renderEmptyState: renderUnicaEmptyState,

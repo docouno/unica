@@ -19,7 +19,7 @@
 .wb-artboard[data-theme='frost-dark'] {
   --folio-auth-stage-aura: radial-gradient(
     60% 50% at 50% 0%,
-    rgb(84 69 229 / 0.22) 0%,
+    color-mix(in srgb, var(--accent-solid) 22%, transparent) 0%,
     transparent 100%
   );
 }
@@ -27,7 +27,7 @@
 .wb-artboard[data-theme='frost-light'] {
   --folio-auth-stage-aura: radial-gradient(
     60% 50% at 50% 0%,
-    rgb(72 56 212 / 0.122) 0%,
+    color-mix(in srgb, var(--accent-solid) 12.2%, transparent) 0%,
     transparent 100%
   );
 }

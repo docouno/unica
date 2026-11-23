@@ -181,6 +181,81 @@ export interface WorkbenchArtboardContext {
   readonly children: ReactNode;
 }
 
+export type ThemeTokenKind = 'color' | 'length' | 'number' | 'choice' | 'text';
+
+export interface ThemeTokenDefinition {
+  readonly name: string;
+  readonly label: string;
+  readonly kind: ThemeTokenKind;
+  readonly group: string;
+  readonly description?: string;
+  readonly min?: number;
+  readonly max?: number;
+  readonly step?: number;
+  readonly unit?: string;
+  readonly choices?: readonly { readonly value: string; readonly label?: string }[];
+  readonly scope?: 'theme' | 'overlay';
+}
+
+export type ThemeMacroValue = number | string;
+export type ThemeMacroValues = Readonly<Record<string, ThemeMacroValue>>;
+
+export interface ThemeMacroRangeBounds {
+  readonly min: number;
+  readonly max: number;
+  readonly step?: number;
+}
+
+export type ThemeMacroControl =
+  | {
+      readonly id: string;
+      readonly label: string;
+      readonly description?: string;
+      readonly kind: 'range';
+      readonly min: number;
+      readonly max: number;
+      readonly step: number;
+      readonly unit?: string;
+      readonly schemeBounds?: Readonly<Partial<Record<'dark' | 'light', ThemeMacroRangeBounds>>>;
+      readonly defaults: Readonly<Record<string, number>>;
+    }
+  | {
+      readonly id: string;
+      readonly label: string;
+      readonly description?: string;
+      readonly kind: 'color';
+      readonly defaults: Readonly<Record<string, string>>;
+    }
+  | {
+      readonly id: string;
+      readonly label: string;
+      readonly description?: string;
+      readonly kind: 'choice';
+      readonly choices: readonly { readonly value: string; readonly label: string }[];
+      readonly defaults: Readonly<Record<string, string>>;
+    };
+
+export interface ThemeContrastPair {
+  readonly id: string;
+  readonly label: string;
+  readonly foreground: string;
+  readonly background: string;
+  readonly backdrop?: string;
+  readonly minRatio: number;
+}
+
+export interface ThemeEditorConfig {
+  readonly storageKey?: string;
+  readonly macros?: readonly ThemeMacroControl[];
+  readonly computeMacros?: (
+    theme: WorkbenchTheme,
+    values: ThemeMacroValues,
+    changedIds: ReadonlySet<string>,
+  ) => Readonly<Record<string, string>>;
+  readonly tokens: readonly ThemeTokenDefinition[];
+  readonly contrastPairs?: readonly ThemeContrastPair[];
+}
+
 export interface WorkbenchConfig {
   readonly title: string;
   readonly subtitle?: string;
@@ -188,6 +263,7 @@ export interface WorkbenchConfig {
   readonly categories: readonly string[];
   readonly components: readonly ComponentDefinition[];
   readonly scenes: readonly SceneDefinition[];
+  readonly themeEditor?: ThemeEditorConfig;
   readonly renderArtboard?: (ctx: WorkbenchArtboardContext) => ReactNode;
   readonly renderStage?: (ctx: WorkbenchStageContext) => ReactNode;
   readonly renderEmptyState?: (ctx: WorkbenchEmptyContext) => ReactNode;

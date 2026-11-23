@@ -7,6 +7,7 @@ import { cleanup, fireEvent, render, screen, within } from '@testing-library/rea
 import { afterEach, beforeAll, expect, it } from 'vitest';
 import { unicaWorkbench } from './unica.workbench.js';
 import { WorkbenchApp } from './workbench/WorkbenchApp.js';
+import { macroBoundsForTheme } from './workbench/themeEditorState.js';
 import {
   buildPairwise,
   componentCode,
@@ -257,7 +258,7 @@ it('keeps src/workbench portable with zero app-specific imports or Unica token l
   const workbenchFiles = await collectFiles(workbenchDir, ['.ts', '.tsx', '.css']);
   expect(workbenchFiles.length).toBeGreaterThanOrEqual(3);
 
-  const nonWorkbenchCustomProperty = /(?:^|[^\w-])--(?!wb-)[a-z][a-z0-9-]*/;
+  const nonWorkbenchCustomProperty = /(?:^|[^\w-])--(?!wb-)[a-zA-Z_][a-zA-Z0-9_-]*/;
   const nonPortableImport =
     /['"][^'"]*(?:@docouno\/|\/(?:prototypes|specimens|scenes|packages)\/|\/unica\.)[^'"]*['"]/;
   for (const file of workbenchFiles) {
@@ -272,6 +273,92 @@ it('keeps src/workbench portable with zero app-specific imports or Unica token l
   expect(workbenchCss).toContain(':where(.wb-artboard)');
   const bridgeCss = await readFile(resolve(import.meta.dirname, 'unica.workbench.css'), 'utf8');
   expect(bridgeCss).toContain('.wb-artboard[data-theme]');
+});
+
+it('keeps Unica theme editor tokens and macro outputs aligned with styles.css', async () => {
+  const editor = unicaWorkbench.themeEditor;
+  expect(editor).toBeDefined();
+
+  const stylesCss = (
+    await readFile(resolve(import.meta.dirname, '../../../packages/ui/src/styles.css'), 'utf8')
+  ).replace(/\/\*[\s\S]*?\*\//g, '');
+  const declaredVars = new Set<string>();
+  for (const match of stylesCss.matchAll(/(--[a-zA-Z0-9_-]+)\s*:/g)) {
+    declaredVars.add(match[1]!);
+  }
+
+  for (const token of editor!.tokens) {
+    expect(
+      declaredVars.has(token.name),
+      `Theme editor token ${token.name} missing in styles.css`,
+    ).toBe(true);
+  }
+  for (const pair of editor!.contrastPairs ?? []) {
+    expect(
+      declaredVars.has(pair.foreground),
+      `Contrast foreground ${pair.foreground} missing`,
+    ).toBe(true);
+    expect(
+      declaredVars.has(pair.background),
+      `Contrast background ${pair.background} missing`,
+    ).toBe(true);
+    if (pair.backdrop) {
+      expect(declaredVars.has(pair.backdrop), `Contrast backdrop ${pair.backdrop} missing`).toBe(
+        true,
+      );
+    }
+  }
+
+  // Every macro control must define on-step defaults for all 6 presets and emit valid declared CSS variables.
+  const allMacroIds = new Set((editor!.macros ?? []).map((macro) => macro.id));
+  for (const theme of unicaWorkbench.themes) {
+    const sampleValues: Record<string, number | string> = {};
+    for (const macro of editor!.macros ?? []) {
+      const def = macro.defaults[theme.id];
+      expect(def, `Missing macro default ${macro.id} for ${theme.id}`).toBeDefined();
+      if (macro.kind === 'range') {
+        const bounds = macroBoundsForTheme(macro, theme);
+        const steps = (Number(def) - bounds.min) / bounds.step;
+        expect(
+          Math.abs(steps - Math.round(steps)),
+          `Macro ${macro.id} default ${String(def)} for ${theme.id} is off-step`,
+        ).toBeLessThan(1e-6);
+        sampleValues[macro.id] = bounds.min;
+      } else {
+        sampleValues[macro.id] = macro.kind === 'color' ? '#ffd000' : macro.choices[0]!.value;
+      }
+    }
+    const derived = editor!.computeMacros!(theme, sampleValues, allMacroIds);
+    expect(Object.keys(derived).length).toBeGreaterThan(25);
+    for (const [name, value] of Object.entries(derived)) {
+      expect(declaredVars.has(name), `Macro output ${name} for ${theme.id} is not declared`).toBe(
+        true,
+      );
+      expect(value.trim().length, `Empty macro value for ${name}`).toBeGreaterThan(0);
+      expect(value, `Invalid NaN macro value for ${name}`).not.toContain('NaN');
+    }
+
+    // Nudging Layer Contrast on Soft Dark must preserve warm inks without snapping them cold.
+    if (theme.id === 'soft-dark') {
+      const contrastOnly = editor!.computeMacros!(
+        theme,
+        { neutralHue: 244, neutralChroma: 0.015, canvasDepth: 0.268, surfaceContrast: 1.05 },
+        new Set(['surfaceContrast']),
+      );
+      expect(contrastOnly['--fg-primary']).toBeUndefined();
+      expect(contrastOnly['--bg-surface']).toBeDefined();
+    }
+
+    // Nudging Neutral Hue on Light themes must keep near-white --fg-on-neutral without clamping dark.
+    if (theme.id === 'soft-light') {
+      const hueNudge = editor!.computeMacros!(
+        theme,
+        { neutralHue: 84, neutralChroma: 0.024, canvasDepth: 0.964, surfaceContrast: 1 },
+        new Set(['neutralHue']),
+      );
+      expect(hueNudge['--fg-on-neutral']).toMatch(/^#ff/);
+    }
+  }
 });
 
 it('enforces semantic CSS in prototypes, specimens and scenes, including their live entrypoints', async () => {
