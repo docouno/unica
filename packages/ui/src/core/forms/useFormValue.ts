@@ -24,6 +24,8 @@ export interface FormValueOptions<T> extends ControllableStateOptions<T> {
   readonly shouldWrite?: (() => boolean) | undefined;
   readonly beforeReset?: (() => void) | undefined;
   readonly onReset?: (() => void) | undefined;
+  readonly normalize?: ((value: T) => T) | undefined;
+  readonly prepareReset?: ((value: T, defaultValue: T) => () => void) | undefined;
 }
 
 export interface FormValueState<T> {
@@ -35,6 +37,7 @@ export interface FormValueState<T> {
   readonly propose: (next: T, source?: FormControl) => void;
   readonly reconcile: () => void;
   readonly repair: () => void;
+  readonly settleReset: () => void;
   readonly sync: () => void;
 }
 
@@ -101,9 +104,12 @@ export function useFormValue<T>(options: FormValueOptions<T>): FormValueState<T>
   const isEqual = options.isEqual ?? defaultIsEqual;
   const controlled = options.value !== undefined;
   const [initial] = useState(() => (options.cloneDefault ?? defaultClone)(options.defaultValue));
-  const [value, { read, propose, restore }] = useStateAuthority({
-    value: options.value,
-    defaultValue: initial,
+  const [rawValue, { read: readRaw, propose, restore }] = useStateAuthority({
+    value:
+      options.value === undefined
+        ? undefined
+        : (options.normalize?.(options.value) ?? options.value),
+    defaultValue: options.normalize?.(initial) ?? initial,
     onChange: options.onChange,
     isEqual,
   });
@@ -121,6 +127,11 @@ export function useFormValue<T>(options: FormValueOptions<T>): FormValueState<T>
     config.current = options;
     controlledRef.current = controlled;
   });
+
+  const read = useCallback((): T => {
+    const current = readRaw();
+    return config.current.normalize?.(current) ?? current;
+  }, [readRaw]);
 
   // Register unmount cleanup before the sync effect so a throwing initial write
   // can never strand a document-level reset subscription.
@@ -160,15 +171,16 @@ export function useFormValue<T>(options: FormValueOptions<T>): FormValueState<T>
 
   const write = useCallback((next: T): void => writeWith(next, false), [writeWith]);
   const forceWrite = useCallback((next: T): void => writeWith(next, true), [writeWith]);
+  const settleReset = useCallback((): void => binding.current?.flushCompleted(), []);
   const reconcileValue = useCallback(
     (force: boolean): void => {
       if (mountedRef.current) {
         binding.current?.syncTargets();
-        binding.current?.flushCompleted();
+        settleReset();
         writeWith(read(), force);
       }
     },
-    [read, writeWith],
+    [read, settleReset, writeWith],
   );
   const reconcile = useCallback((): void => reconcileValue(false), [reconcileValue]);
   const repair = useCallback((): void => reconcileValue(true), [reconcileValue]);
@@ -176,7 +188,7 @@ export function useFormValue<T>(options: FormValueOptions<T>): FormValueState<T>
   const request = useCallback(
     (next: T, source?: FormControl): void => {
       binding.current?.syncTargets();
-      binding.current?.flushCompleted();
+      settleReset();
       const currentOptions = config.current;
       const controls = readControls(currentOptions);
       const isBlocked = (control: FormControl): boolean =>
@@ -204,7 +216,7 @@ export function useFormValue<T>(options: FormValueOptions<T>): FormValueState<T>
       }
       propose(next, write);
     },
-    [propose, read, write, writeWith],
+    [propose, read, settleReset, write, writeWith],
   );
 
   const sync = useCallback((): void => {
@@ -224,18 +236,24 @@ export function useFormValue<T>(options: FormValueOptions<T>): FormValueState<T>
     if (!previous || !sameList(previous.controls, controls)) {
       binding.current = null;
       previous?.unsubscribe();
-      const subscription = subscribeNativeReset(controls, (result) => {
-        if (!mountedRef.current) {
-          return;
-        }
-        if (result === 'reset') {
-          config.current.beforeReset?.();
-          restore(initial, forceWrite);
-          config.current.onReset?.();
-        } else {
-          forceWrite(read());
-        }
-      });
+      const subscription = subscribeNativeReset(
+        controls,
+        (result) => {
+          if (!mountedRef.current) {
+            return;
+          }
+          if (result === 'reset') {
+            config.current.beforeReset?.();
+            restore(config.current.normalize?.(initial) ?? initial, forceWrite);
+            config.current.onReset?.();
+          } else {
+            forceWrite(read());
+          }
+        },
+        config.current.prepareReset
+          ? () => config.current.prepareReset?.(read(), initial) ?? (() => {})
+          : undefined,
+      );
       binding.current = { controls, ...subscription };
     } else {
       previous.syncTargets();
@@ -251,7 +269,8 @@ export function useFormValue<T>(options: FormValueOptions<T>): FormValueState<T>
       }
     }
 
-    const current = read();
+    const raw = readRaw();
+    const current = config.current.normalize?.(raw) ?? raw;
     const prevWritten = lastWritten.current;
     const eq = config.current.isEqual ?? defaultIsEqual;
     const controlsChanged = !prevWritten || !sameList(prevWritten.controls, controls);
@@ -261,17 +280,20 @@ export function useFormValue<T>(options: FormValueOptions<T>): FormValueState<T>
       !eq(prevWritten.value, current) ||
       !sameList(prevWritten.writeDeps, config.current.writeDeps);
 
-    if (needsWrite) {
+    if (!controlledRef.current && !eq(raw, current)) {
+      // Preserve a narrowed uncontrolled value when the domain expands again.
+      restore(current, (next) => writeWith(next, controlsChanged, controls));
+    } else if (needsWrite) {
       // Force the JS setter once on mount/hydration/control swap so the HTML dirty value/checkedness
       // flag is set and later defaultValue syncs never bypass React's _valueTracker.
       writeWith(current, controlsChanged, controls);
     }
-  }, [forceWrite, initial, read, restore, writeWith]);
+  }, [forceWrite, initial, read, readRaw, restore, writeWith]);
 
   useIsoLayoutEffect(sync);
 
   return {
-    value,
+    value: options.normalize?.(rawValue) ?? rawValue,
     defaultValue: initial,
     controlled,
     adopt: restore,
@@ -279,6 +301,7 @@ export function useFormValue<T>(options: FormValueOptions<T>): FormValueState<T>
     propose: request,
     reconcile,
     repair,
+    settleReset,
     sync,
   };
 }
