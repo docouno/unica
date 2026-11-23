@@ -21,9 +21,9 @@ export type ThemePreset =
 
 | Family | Presets | Material & Surface Physics |
 | --- | --- | --- |
-| **Soft** | `soft-dark`, `soft-light` | Dusty slate (`Dark`) and warm cream-vellum (`Light`) matte surfaces, luminous pastel solids, borderless pills and callouts, soft matte secondary plates, and 100% opaque floating overlays. |
-| **Frost** | `frost-dark`, `frost-light` | Obsidian (`Dark`) and crystalline alabaster (`Light`) neutrals, deep violet CTAs with a vertical contact edge and diffuse ambient light, quiet neutral and danger solids, `1px`-rimmed jewel badges, and `backdrop-filter` frosted glass exclusively on floating overlays. |
-| **Pixel** | `pixel-dark`, `pixel-light` | Carbon-phosphor (`Dark`) and drafting-paper (`Light`) surfaces, `0px` sharp corners (`--radius-factor: 0`), `JetBrains Mono` base typography, `1px` structural borders, `8px` corner registration ticks, coordinate grids, flat signal buttons, and crisp `{6px, 6px}` `blur: 0` block shadows on floating panels. |
+| **Soft** | `soft-dark`, `soft-light` | Warm matte graphite (`Dark`) and clean limestone paper (`Light`) surfaces, muted ochre and botanical accents, borderless pills and callouts, soft matte secondary plates, and 100% opaque floating overlays. |
+| **Frost** | `frost-dark`, `frost-light` | Deep obsidian-sapphire (`Dark`) and crystalline alabaster (`Light`) neutrals, deep violet CTAs with a vertical contact edge and diffuse ambient light, quiet neutral and danger solids, `1px`-rimmed jewel badges, and `backdrop-filter` frosted glass exclusively on floating overlays. |
+| **Pixel** | `pixel-dark`, `pixel-light` | Cozy twilight-plum (`Dark`) and soft cloud-paper (`Light`) surfaces, `0px` sharp corners (`--radius-factor: 0`), `JetBrains Mono` base typography, `1px` structural borders, `5×2px` integer corner registration ticks, coordinate grids, flat signal buttons, and crisp hue-shifted `{6px, 6px}` `blur: 0` block shadows on floating panels. |
 
 `THEME_PRESETS` exposes the six presets and their display metadata, and `getUnicaRootProps` builds the matching `data-theme` attribute for server or client root containers. React Server Components can import `THEME_PRESETS`, `defineGlyph`, and `getUnicaRootProps` from the package root under the `react-server` condition. Use `UnicaProvider` inside a client boundary.
 
@@ -73,7 +73,7 @@ Floating elevation is calibrated per family through `--_overlay-shadow-tooltip`,
 `--_overlay-shadow-hover`, `--_overlay-shadow-popover`, `--_overlay-shadow-drawer` and
 `--_overlay-shadow-modal`. A small passive preview needs a tighter shadow footprint than a
 large panel. Dark Soft/Frost tooltips use compact contact and ambient shadows; Dark Pixel
-uses a 2px hard tooltip offset while Light Pixel retains 4px. Frost HoverCard uses a short,
+uses a 3px hard tooltip offset while Light Pixel retains 4px. Frost HoverCard uses a short,
 quiet shadow in both color schemes without changing the shared glass fill or blur. These
 recipes belong to the theme, not to component material variants or theme-name selectors.
 Drawer can use the theme's optional `--_overlay-shadow-drawer-right`,
@@ -167,7 +167,7 @@ Soft keeps a matte capsule. Frost adds restrained vertical light and a short glo
 
 ### Tab selection
 
-Tabs use primary ink and a single 2px accent rule. Horizontally the rule is inset from each selected button edge by half its used inline padding, and follows the width of the button as it stretches. Vertically it stays at logical inline-start. The enclosing toolbar or panel supplies any structural divider. Soft uses a warm accent, Frost uses violet, and Pixel pairs cyan with square ends and monospaced labels. The same treatment reads over the canvas and inherited Overlay surfaces.
+Tabs use primary ink and a single 2px accent rule. Horizontally the rule is inset from each selected button edge by half its used inline padding, and follows the width of the button as it stretches. Vertically it stays at logical inline-start. The enclosing toolbar or panel supplies any structural divider. Soft uses a warm ochre accent, Frost uses violet, and Pixel pairs berry with square ends and monospaced labels. The same treatment reads over the canvas and inherited Overlay surfaces.
 
 In an overflowing horizontal list, `--_tabs-overflow-fade` sets the fade depth beside an available scroll chevron. Soft and Frost use 12px. Pixel sets it to 0px and sets `--_tabs-overflow-mask` to `none`, leaving a straight cut at the edge of the chevron's clear area. Forced colors and increased contrast use the same straight edge.
 
@@ -179,8 +179,8 @@ Cards, controls, and choice cards (`RadioCard`, `CheckboxCard`, `SwitchCard`) ad
 
 ```css
 [data-theme='frost-dark'] {
-  --_base-control-bg: #0c0f17;
-  --_overlay-control-bg: rgb(255 255 255 / 0.05);
+  --_base-control-bg: rgb(10 10 15 / 0.92);
+  --_overlay-control-bg: rgb(255 255 255 / 0.039);
 }
 
 :root,
@@ -215,7 +215,7 @@ Components reference only semantic tokens — never raw palette steps or `#hex` 
 
 1. **`Button` tones are restricted to `tone?: 'accent' | 'neutral' | 'danger'`.** Action triggers initiate operations: primary brand CTAs (`accent`), standard workspace actions (`neutral`), or destructive confirmations (`danger`). Never introduce `success`, `warning`, or `info` button tones. Supporting neutral actions may inherit a painted status surface’s palette while retaining their neutral action meaning.
 2. **Semantic statuses (`info | success | warning | danger`) belong to markers, feedback, editorial emphasis, and validation.** Passive status components (`Badge`, `Indicator`, `Blockquote`, `Code`, `Alert`, `Toast`, `Progress`) use `status` to report system state; `FormField` and framed fields use `FieldStatus` (`neutral | info | success | warning | danger`, reserving `info` and `success` for async verification outcomes), while binary/range controls use `ControlStatus` (`neutral | danger`) and `Switch` exposes zero `status` prop. See [Feedback and Errors](feedback-and-errors.md).
-3. **Solid-fill ink uses `--fg-on-accent` and per-status on-solid tokens.** High-luminance pastel (`soft-dark`) and phosphor (`pixel-dark`) solids automatically pair with dark espresso/carbon ink where white text would fail WCAG contrast.
+3. **Solid-fill ink uses `--fg-on-accent` and per-status on-solid tokens.** High-luminance pastel (`soft-dark`) and berry/cozy-pixel (`pixel-dark`) solids automatically pair with deep espresso/plum ink where white text would fail WCAG contrast.
 
 ```tsx
 <Button variant="primary" tone="accent">Publish release</Button>

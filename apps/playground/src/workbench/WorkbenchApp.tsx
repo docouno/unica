@@ -13,8 +13,21 @@ import {
 } from 'react';
 import type { CSSProperties, MouseEvent, ReactElement, ReactNode, RefObject } from 'react';
 import { Inspector } from './Inspector.js';
+import { ThemeEditor } from './ThemeEditor.js';
 import { SettingsProvider } from './ViewSettings.js';
 import { useSubjectBounds } from './subjectBounds.js';
+import {
+  EMPTY_BUCKET,
+  buildScopedOverrideStylesheet,
+  countAllChanges,
+  getThemeBucket,
+  hasOwn,
+  isSafeObjectKey,
+  loadThemeOverrides,
+  macroDefaultForTheme,
+  saveThemeOverrides,
+} from './themeEditorState.js';
+import type { ThemeOverridesStore } from './themeEditorState.js';
 import {
   patchRoute,
   readRoute,
@@ -29,6 +42,7 @@ import type { WorkbenchRoute } from './route.js';
 import type {
   ComponentStatus,
   SceneDefinition,
+  ThemeMacroValue,
   ViewportSize,
   WorkbenchConfig,
   WorkbenchStageContext,
@@ -712,6 +726,16 @@ const WorkbenchView = memo(function WorkbenchView({
   );
 });
 
+function omitKey<T>(record: Readonly<Record<string, T>>, key: string): Record<string, T> {
+  const next: Record<string, T> = {};
+  for (const [entryKey, entryValue] of Object.entries(record)) {
+    if (entryKey !== key && isSafeObjectKey(entryKey)) {
+      next[entryKey] = entryValue;
+    }
+  }
+  return next;
+}
+
 export function WorkbenchApp({ config }: WorkbenchAppProps): ReactElement {
   const [route, setRoute] = useState(() => readRoute(window.location.search, config));
   const [sceneRevision, setSceneRevision] = useState(0);
@@ -724,6 +748,12 @@ export function WorkbenchApp({ config }: WorkbenchAppProps): ReactElement {
   const [compact, setCompact] = useState(false);
   const [settingsTarget, setSettingsTarget] = useState<HTMLDivElement | null>(null);
   const [searchRequest, setSearchRequest] = useState(0);
+  const [inspectorMode, setInspectorMode] = useState<'inspector' | 'theme'>('inspector');
+  const [themeOverrides, setThemeOverrides] = useState<ThemeOverridesStore>(() =>
+    config.themeEditor && !route.raw ? loadThemeOverrides(config.themeEditor) : {},
+  );
+  const hydratedThemeStorageRef = useRef(!route.raw);
+  const persistThemeOverridesRef = useRef(false);
   const rootRef = useRef<HTMLDivElement>(null);
   const searchRef = useRef<HTMLInputElement>(null);
   const mobileCatalogRef = useRef<HTMLButtonElement>(null);
@@ -773,10 +803,20 @@ export function WorkbenchApp({ config }: WorkbenchAppProps): ReactElement {
     if (!compact && (!settingsTarget || !sidebar?.contains(settingsTarget))) {
       return;
     }
+    const visibleInteractive = (selector: string): HTMLElement | null => {
+      if (!sidebar) {
+        return null;
+      }
+      for (const candidate of sidebar.querySelectorAll<HTMLElement>(selector)) {
+        if (!candidate.closest('[hidden]')) {
+          return candidate;
+        }
+      }
+      return null;
+    };
     const target = compact
       ? inspectorLaunchRef.current
-      : (sidebar?.querySelector<HTMLElement>('[role="tab"][aria-selected="true"]') ??
-        sidebar?.querySelector<HTMLElement>('button'));
+      : (visibleInteractive('[role="tab"][aria-selected="true"]') ?? visibleInteractive('button'));
     target?.focus({ preventScroll: true });
     restoreInspectorFocus.current = false;
   }, [compact, settingsTarget, inspectorId]);
@@ -787,6 +827,10 @@ export function WorkbenchApp({ config }: WorkbenchAppProps): ReactElement {
       const next = readRoute(window.location.search, config);
       if (next.item !== route.item) {
         revealCatalogPath(next.item);
+      }
+      if (!next.raw && !hydratedThemeStorageRef.current && config.themeEditor) {
+        hydratedThemeStorageRef.current = true;
+        setThemeOverrides(loadThemeOverrides(config.themeEditor));
       }
       setRoute(next);
     };
@@ -952,6 +996,126 @@ export function WorkbenchApp({ config }: WorkbenchAppProps): ReactElement {
   const viewportStyle =
     route.vp === 'auto' ? undefined : ({ '--wb-preview-width': `${route.vp}px` } as CSSProperties);
 
+  const themeEditor = config.themeEditor;
+  useEffect(() => {
+    if (!themeEditor || route.raw || !persistThemeOverridesRef.current) {
+      return;
+    }
+    saveThemeOverrides(themeEditor, themeOverrides);
+  }, [route.raw, themeEditor, themeOverrides]);
+
+  const handleChangeMacro = useCallback(
+    (themeId: string, macroId: string, value: ThemeMacroValue): void => {
+      if (!themeEditor || !isSafeObjectKey(themeId) || !isSafeObjectKey(macroId)) {
+        return;
+      }
+      persistThemeOverridesRef.current = true;
+      const theme = config.themes.find((entry) => entry.id === themeId);
+      const macro = themeEditor.macros?.find((entry) => entry.id === macroId);
+      const isDefault = theme && macro ? macroDefaultForTheme(macro, theme) === value : false;
+      setThemeOverrides((previous) => {
+        const bucket = getThemeBucket(previous, themeId) ?? EMPTY_BUCKET;
+        const nextMacros = isDefault
+          ? omitKey(bucket.macros, macroId)
+          : { ...bucket.macros, [macroId]: value };
+        if (Object.keys(nextMacros).length === 0 && Object.keys(bucket.raw).length === 0) {
+          return omitKey(previous, themeId);
+        }
+        return { ...previous, [themeId]: { macros: nextMacros, raw: bucket.raw } };
+      });
+    },
+    [config.themes, themeEditor],
+  );
+
+  const handleResetMacro = useCallback((themeId: string, macroId: string): void => {
+    if (!isSafeObjectKey(themeId) || !isSafeObjectKey(macroId)) {
+      return;
+    }
+    persistThemeOverridesRef.current = true;
+    setThemeOverrides((previous) => {
+      const bucket = getThemeBucket(previous, themeId);
+      if (!bucket || !hasOwn(bucket.macros, macroId)) {
+        return previous;
+      }
+      const nextMacros = omitKey(bucket.macros, macroId);
+      if (Object.keys(nextMacros).length === 0 && Object.keys(bucket.raw).length === 0) {
+        return omitKey(previous, themeId);
+      }
+      return { ...previous, [themeId]: { macros: nextMacros, raw: bucket.raw } };
+    });
+  }, []);
+
+  const handleChangeToken = useCallback(
+    (themeId: string, tokenName: string, value: string): void => {
+      if (!isSafeObjectKey(themeId) || !isSafeObjectKey(tokenName)) {
+        return;
+      }
+      persistThemeOverridesRef.current = true;
+      setThemeOverrides((previous) => {
+        const bucket = getThemeBucket(previous, themeId) ?? EMPTY_BUCKET;
+        return {
+          ...previous,
+          [themeId]: { macros: bucket.macros, raw: { ...bucket.raw, [tokenName]: value } },
+        };
+      });
+    },
+    [],
+  );
+
+  const handleResetToken = useCallback((themeId: string, tokenName: string): void => {
+    if (!isSafeObjectKey(themeId) || !isSafeObjectKey(tokenName)) {
+      return;
+    }
+    persistThemeOverridesRef.current = true;
+    setThemeOverrides((previous) => {
+      const bucket = getThemeBucket(previous, themeId);
+      if (!bucket || !hasOwn(bucket.raw, tokenName)) {
+        return previous;
+      }
+      const nextRaw = omitKey(bucket.raw, tokenName);
+      if (Object.keys(bucket.macros).length === 0 && Object.keys(nextRaw).length === 0) {
+        return omitKey(previous, themeId);
+      }
+      return { ...previous, [themeId]: { macros: bucket.macros, raw: nextRaw } };
+    });
+  }, []);
+
+  const handleResetTheme = useCallback((themeId: string): void => {
+    if (!isSafeObjectKey(themeId)) {
+      return;
+    }
+    persistThemeOverridesRef.current = true;
+    setThemeOverrides((previous) => {
+      if (!hasOwn(previous, themeId)) {
+        return previous;
+      }
+      return omitKey(previous, themeId);
+    });
+  }, []);
+
+  const handleResetAll = useCallback((): void => {
+    persistThemeOverridesRef.current = true;
+    setThemeOverrides({});
+  }, []);
+
+  const visibleThemes = useMemo(
+    () => selectThemes(config.themes, route.family, route.scheme),
+    [config.themes, route.family, route.scheme],
+  );
+
+  const overrideCss = useMemo(
+    () =>
+      themeEditor && !route.raw
+        ? buildScopedOverrideStylesheet(themeEditor, config.themes, themeOverrides)
+        : '',
+    [config.themes, route.raw, themeEditor, themeOverrides],
+  );
+
+  const totalThemeChanges = useMemo(
+    () => (themeEditor ? countAllChanges(themeEditor, config.themes, themeOverrides) : 0),
+    [config.themes, themeEditor, themeOverrides],
+  );
+
   if (route.raw) {
     return (
       <div ref={rootRef} className="wb-raw-canvas wb-scroll" style={viewportStyle} {...identity}>
@@ -960,10 +1124,63 @@ export function WorkbenchApp({ config }: WorkbenchAppProps): ReactElement {
     );
   }
 
+  const showThemeEditor = Boolean(themeEditor) && (!component || inspectorMode === 'theme');
+
   const settings = (
     <>
       <div className="wb-inspector-toolbar">
-        <span>Inspector</span>
+        {themeEditor && component ? (
+          <div className="wb-seg" role="group" aria-label="Inspector panel">
+            <button
+              type="button"
+              className="wb-seg-btn"
+              aria-pressed={inspectorMode === 'inspector'}
+              onClick={() => setInspectorMode('inspector')}
+            >
+              Inspector
+            </button>
+            <button
+              type="button"
+              className="wb-seg-btn"
+              aria-pressed={inspectorMode === 'theme'}
+              onClick={() => setInspectorMode('theme')}
+            >
+              Theme
+              {totalThemeChanges > 0 && (
+                <>
+                  <span className="wb-theme-badge" aria-hidden="true">
+                    {totalThemeChanges}
+                  </span>
+                  <span className="wb-theme-sr-only">
+                    {' '}
+                    {totalThemeChanges === 1
+                      ? '1 override'
+                      : `${String(totalThemeChanges)} overrides`}
+                  </span>
+                </>
+              )}
+            </button>
+          </div>
+        ) : themeEditor ? (
+          <span>
+            Theme
+            {totalThemeChanges > 0 && (
+              <>
+                <span className="wb-theme-badge" aria-hidden="true">
+                  {totalThemeChanges}
+                </span>
+                <span className="wb-theme-sr-only">
+                  {' '}
+                  {totalThemeChanges === 1
+                    ? '1 override'
+                    : `${String(totalThemeChanges)} overrides`}
+                </span>
+              </>
+            )}
+          </span>
+        ) : (
+          <span>Inspector</span>
+        )}
         <div className="wb-inspector-actions">
           {scene && (
             <button
@@ -987,7 +1204,33 @@ export function WorkbenchApp({ config }: WorkbenchAppProps): ReactElement {
           )}
         </div>
       </div>
-      <div ref={setSettingsTarget} className="wb-view-settings wb-scroll" />
+      <div
+        ref={setSettingsTarget}
+        className="wb-view-settings wb-scroll"
+        hidden={showThemeEditor}
+      />
+      {themeEditor && (!compact || inspectorVisited) && (
+        <div className="wb-view-settings wb-scroll" hidden={!showThemeEditor}>
+          <ThemeEditor
+            config={themeEditor}
+            themes={config.themes}
+            visibleThemes={visibleThemes}
+            shellRef={rootRef}
+            store={themeOverrides}
+            active={showThemeEditor}
+            measureKey={`${route.item}|${route.tab}|${route.scale}|${notFound ? '1' : '0'}`}
+            onChangeMacro={handleChangeMacro}
+            onResetMacro={handleResetMacro}
+            onChangeToken={handleChangeToken}
+            onResetToken={handleResetToken}
+            onResetTheme={handleResetTheme}
+            onResetAll={handleResetAll}
+            onFocusTheme={(theme) =>
+              update({ family: theme.family, scheme: theme.colorScheme }, 'push')
+            }
+          />
+        </div>
+      )}
     </>
   );
 
@@ -999,6 +1242,7 @@ export function WorkbenchApp({ config }: WorkbenchAppProps): ReactElement {
       style={viewportStyle}
       {...identity}
     >
+      {overrideCss && <style data-wb-theme-overrides="">{overrideCss}</style>}
       <aside className="wb-rail" aria-label="Workbench catalog">
         <div className="wb-rail-sticky">
           <div className="wb-brand">

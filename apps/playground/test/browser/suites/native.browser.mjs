@@ -37,7 +37,7 @@ export default {
     await mount('native');
     const base = await readContext(probe);
     assert.equal(base.direction, 'ltr');
-    assert.equal(base.background, 'rgb(26, 32, 38)');
+    assert.equal(base.background, 'rgb(20, 19, 18)');
     assert.deepEqual(await readContext(portal), base);
 
     await mount('native', {
