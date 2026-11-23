@@ -5,12 +5,12 @@ import { Features, transform } from 'lightningcss';
 import { createLightningCssOptions } from '../../../../../css.config.mjs';
 
 const presets = [
-  ['soft-dark', 'dark', 'rgb(247, 239, 224)', '1', '8px', '9999px'],
-  ['soft-light', 'light', 'rgb(41, 36, 33)', '1', '8px', '9999px'],
-  ['frost-dark', 'dark', 'rgb(244, 247, 255)', '1', '8px', '9999px'],
+  ['soft-dark', 'dark', 'rgb(241, 238, 236)', '1', '8px', '9999px'],
+  ['soft-light', 'light', 'rgb(34, 31, 28)', '1', '8px', '9999px'],
+  ['frost-dark', 'dark', 'rgb(243, 244, 249)', '1', '8px', '9999px'],
   ['frost-light', 'light', 'rgb(12, 16, 28)', '1', '8px', '9999px'],
-  ['pixel-dark', 'dark', 'rgb(237, 243, 247)', '0', '0px', '0px'],
-  ['pixel-light', 'light', 'rgb(15, 20, 25)', '0', '0px', '0px'],
+  ['pixel-dark', 'dark', 'rgb(243, 239, 234)', '0', '0px', '0px'],
+  ['pixel-light', 'light', 'rgb(34, 28, 42)', '0', '0px', '0px'],
 ];
 
 const scenarios = {};

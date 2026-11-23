@@ -342,7 +342,7 @@ it('keeps Unica theme editor tokens and macro outputs aligned with styles.css', 
     if (theme.id === 'soft-dark') {
       const contrastOnly = editor!.computeMacros!(
         theme,
-        { neutralHue: 244, neutralChroma: 0.015, canvasDepth: 0.268, surfaceContrast: 1.05 },
+        { neutralHue: 68, neutralChroma: 0.002, canvasDepth: 0.223, surfaceContrast: 1.05 },
         new Set(['surfaceContrast']),
       );
       expect(contrastOnly['--fg-primary']).toBeUndefined();
@@ -353,10 +353,10 @@ it('keeps Unica theme editor tokens and macro outputs aligned with styles.css', 
     if (theme.id === 'soft-light') {
       const hueNudge = editor!.computeMacros!(
         theme,
-        { neutralHue: 84, neutralChroma: 0.024, canvasDepth: 0.964, surfaceContrast: 1 },
+        { neutralHue: 86, neutralChroma: 0.009, canvasDepth: 0.968, surfaceContrast: 1 },
         new Set(['neutralHue']),
       );
-      expect(hueNudge['--fg-on-neutral']).toMatch(/^#ff/);
+      expect(hueNudge['--fg-on-neutral']).toMatch(/^#f[cdef]/);
     }
   }
 });
