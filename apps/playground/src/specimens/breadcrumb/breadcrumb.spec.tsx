@@ -3,7 +3,6 @@ import type { ReactElement, ReactNode } from 'react';
 import { CaretRightIcon, HouseIcon } from '@phosphor-icons/react';
 import { defineComponent } from '../../workbench/types.js';
 import { Icon, Title } from '@docouno/unica';
-import { PopoverContent } from '../../prototypes/popover/popover.proto.js';
 import {
   Breadcrumb,
   BreadcrumbLink,
@@ -181,10 +180,10 @@ function Wrapping(): ReactElement {
 
 function OverlayHeader(): ReactElement {
   return (
-    <PopoverContent
-      role="region"
+    <section
       aria-label="Document details"
-      className="breadcrumb-example-overlay"
+      className="unica-overlay-surface breadcrumb-example-overlay"
+      data-surface="overlay"
     >
       <Breadcrumb size="s" underline="hover" aria-label="Document ancestors">
         <BreadcrumbLink href={workspace}>Platform Eng</BreadcrumbLink>
@@ -193,7 +192,7 @@ function OverlayHeader(): ReactElement {
       <Title as="h3" size="heading-s">
         Failover guide
       </Title>
-    </PopoverContent>
+    </section>
   );
 }
 
@@ -302,12 +301,18 @@ export default defineComponent({
   usage: [
     {
       id: 'overlay',
-      code: `<PopoverContent>
+      code: `<section
+  className="unica-overlay-surface"
+  data-surface="overlay"
+  aria-label="Document details"
+  style={{ position: 'relative', padding: 'var(--surface-m-padding)' }}
+>
   <Breadcrumb>
     <BreadcrumbLink href="/workspace">Workspace</BreadcrumbLink>
     <BreadcrumbPage>Document settings</BreadcrumbPage>
   </Breadcrumb>
-</PopoverContent>`,
+  <Title as="h3" size="heading-s">Failover guide</Title>
+</section>`,
       title: 'Ancestor trail above a panel title',
       surface: 'overlay',
       overlayStage: true,

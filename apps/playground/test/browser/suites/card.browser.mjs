@@ -503,22 +503,29 @@ export default {
     await pressKeys(page, 'Space');
     assert.equal(new URL(page.url()).hash, '');
     await whole.hover();
-    await page.waitForFunction(
-      () =>
-        getComputedStyle(document.querySelector('[data-testid="whole-link"]')).backgroundColor ===
-        getComputedStyle(document.querySelector('[data-testid="hover-reference"]')).backgroundColor,
-    );
+    await page.waitForFunction(() => {
+      const card = getComputedStyle(document.querySelector('[data-testid="whole-link"]'));
+      const reference = getComputedStyle(document.querySelector('[data-testid="hover-reference"]'));
+      return (
+        card.backgroundColor === reference.backgroundColor &&
+        card.borderTopColor === reference.borderTopColor
+      );
+    });
     assert.deepEqual(
       await readStyle(whole, ...paint.slice(0, 2)),
       await readStyle(page.getByTestId('hover-reference'), ...paint.slice(0, 2)),
     );
     assert.deepEqual(await readStyle(title, 'textDecorationLine'), ['underline']);
     await page.mouse.down();
-    await page.waitForFunction(
-      () =>
-        getComputedStyle(document.querySelector('[data-testid="whole-link"]')).backgroundColor ===
-        getComputedStyle(document.querySelector('[data-testid="press-reference"]')).backgroundColor,
-    );
+    await page.waitForFunction(() => {
+      const card = getComputedStyle(document.querySelector('[data-testid="whole-link"]'));
+      const reference = getComputedStyle(document.querySelector('[data-testid="press-reference"]'));
+      return (
+        card.backgroundColor === reference.backgroundColor &&
+        card.borderTopColor === reference.borderTopColor &&
+        card.boxShadow === 'none'
+      );
+    });
     assert.deepEqual(await readStyle(whole, ...paint.slice(0, 3)), [
       ...(await readStyle(page.getByTestId('press-reference'), ...paint.slice(0, 2))),
       'none',

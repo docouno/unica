@@ -67,6 +67,8 @@ export default {
     const pinName = 'Pin to verified revision (v14)';
     const pin = editor.getByRole('checkbox', { name: pinName });
     const pinLabel = editor.getByText(pinName, { exact: true });
+    await reopen.click();
+    await editor.waitFor();
     assert.equal(await pin.isChecked(), true);
     await pinLabel.click();
     assert.equal(await pin.isChecked(), false);

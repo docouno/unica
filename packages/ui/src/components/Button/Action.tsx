@@ -18,13 +18,13 @@ import {
   setAttributeSafe,
 } from '../../core/dom.js';
 import type { GlyphSource } from '../../core/glyph.js';
+import { guardActivation } from '../../core/guardActivation.js';
 import { mergeRefs } from '../../core/mergeRefs.js';
 import { nonBlank } from '../../core/passiveRoot.js';
 import { useStateAuthority } from '../../core/useControllableState.js';
 import { useIsoLayoutEffect } from '../../core/useIsoLayoutEffect.js';
 import { Icon } from '../Icon/Icon.js';
 import { Spinner } from '../Progress/Spinner.js';
-import { guardActivation } from './availability.js';
 import type { ButtonProps, ButtonSize, IconButtonProps, NativeInvokerAttributes } from './types.js';
 import { useButtonLight } from './useButtonLight.js';
 

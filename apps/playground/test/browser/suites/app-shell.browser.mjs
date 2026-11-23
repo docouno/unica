@@ -195,4 +195,18 @@ export default {
       );
     }
   },
+
+  'Account opens a named native region on the shared overlay surface': async ({ page, mount }) => {
+    await page.setViewportSize({ width: 1280, height: 720 });
+    await mount('app-shell', { theme: 'frost-light' });
+    const account = page.getByRole('button', { name: 'Account', exact: true });
+    await account.click();
+    const details = page.getByRole('region', { name: 'Account details' });
+    await details.waitFor();
+    assert.equal(await details.getAttribute('popover'), 'auto');
+    assert.equal(await details.getAttribute('data-surface'), 'overlay');
+    assert.ok(await details.getByText('Platform engineer').isVisible());
+    await account.click();
+    await details.waitFor({ state: 'hidden' });
+  },
 };

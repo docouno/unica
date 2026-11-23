@@ -14,7 +14,6 @@ import { Avatar } from '../avatar/avatar.proto.js';
 import { Badge } from '@docouno/unica';
 import { Button, IconButton } from '@docouno/unica';
 import { Menu } from '../menu/menu.live.js';
-import { PopoverContent } from '../popover/popover.proto.js';
 import { Text, Title } from '@docouno/unica';
 import { List, ListItem } from './list.proto.js';
 import '../../specimens/shared/display.examples.css';
@@ -259,9 +258,13 @@ export function LiveRows({ overlay = false }: { readonly overlay?: boolean }): R
   );
 
   return overlay ? (
-    <PopoverContent aria-labelledby={heading} className="list-example-context">
+    <section
+      aria-labelledby={heading}
+      className="unica-overlay-surface list-example-context list-example-overlay"
+      data-surface="overlay"
+    >
       {contents}
-    </PopoverContent>
+    </section>
   ) : (
     <Card className="list-example-context">{contents}</Card>
   );

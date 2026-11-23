@@ -35,7 +35,6 @@ import {
   TrashGlyph,
 } from '../control-glyphs.js';
 import { Button, IconButton } from '@docouno/unica';
-import { PopoverContent } from '../popover/popover.proto.js';
 import { useShellPopoverPosition, windowBounds } from './app-shell-position.js';
 import { NavList, TreeView } from './navigation.proto.js';
 import type { NavigationSection } from './navigation.proto.js';
@@ -640,17 +639,17 @@ export function LeftRail({
           <span>{profile}</span>
           <span className="app-shell-rail-label">Account</span>
         </button>
-        <PopoverContent
+        <div
           id={accountId}
           ref={accountPanel}
-          size="s"
           popover="auto"
           role="region"
           aria-label="Account details"
-          className="app-shell-popover"
+          className="unica-overlay-surface app-shell-popover"
+          data-surface="overlay"
         >
           <AccountLabel />
-        </PopoverContent>
+        </div>
       </div>
     </nav>
   );

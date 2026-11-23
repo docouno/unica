@@ -75,6 +75,8 @@
   }
 }
 
-.pagination-study-panel.popover-content-proto {
-  --popover-width: 360px;
+.pagination-study-panel {
+  position: relative;
+  inline-size: min(100%, 360px);
+  padding: var(--surface-m-padding);
 }

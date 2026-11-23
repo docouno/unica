@@ -17,7 +17,7 @@ On desktop and keyboard-only Chromium/WebKit, native scrollbar parts follow `--r
 
 Touch-primary browsers and Firefox retain standard native geometry and width, with `auto` for large regions and `thin` for compact ones. Firefox controls the shape of the thumb ends. Unsupported standard properties retain system behavior, including system color on touch Safari before 26.2. The browser owns the scroll viewport and interaction.
 
-Apply the recipe to the real scroll owner. In an overlay with fixed header and footer, only Body scrolls. Reset native `[popover]` outer overflow where necessary and keep decorative layers within the bounds. The owner sets its own overflow. Leave space for focus rings inside clipped content and reserve a stable gutter where content width needs it.
+Apply the recipe to the real scroll owner. In [Popover](../components/popover.md#placement-and-material), Body scrolls in the normal layout and the whole panel scrolls when there is too little room for the header and actions. Keep decorative layers within the bounds and leave space for focus rings inside clipped content. The owner sets its own overflow and can reserve a stable gutter where content width needs it.
 
 HoverCard reading areas and Menu lists inset the native scroll owner 4px inside the border on all four sides. The thumb clears the inline rim and the outer corners. Menu uses this inset for its row clearance. HoverCard adds 12px of inner padding to preserve its 16px content inset. The scroll owner's radius subtracts both the 1px border and 4px inset from the outer radius, clamped to zero. The same spacing applies in RTL and to system scrollbar fallbacks.
 

@@ -12,7 +12,7 @@
 }
 
 .scrollbar-demo-overlay {
-  --popover-available-height: 352px;
+  max-block-size: min(352px, var(--overlay-available-height, 352px));
 }
 
 .scrollbar-demo-note {

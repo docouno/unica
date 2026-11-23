@@ -1,5 +1,8 @@
 import { useLayoutEffect, useRef } from 'react';
 import type { JSX } from 'react';
+import { flushSync } from 'react-dom';
+import { createRoot } from 'react-dom/client';
+import { Popover, PopoverClose, PopoverContent, PopoverTrigger } from '../../src/index.js';
 import { getLiveView, isInertElement } from '../../src/core/dom.js';
 import { OVERLAY_RUNTIME_KEY } from '../../src/core/overlay-protocol.js';
 import { focusElement, lockDocumentScroll } from '../../src/core/overlay/dom.js';
@@ -149,6 +152,37 @@ export default function OverlayRealmsFixture(): JSX.Element {
         { once: true },
       );
       iframe.src = 'about:blank';
+    };
+
+    const disposePopoverAfterNavigation = () => {
+      const host = childDocument.body.appendChild(childDocument.createElement('div'));
+      const child = createRoot(host);
+      flushSync(() => {
+        child.render(
+          <Popover>
+            <PopoverTrigger>Open stale panel</PopoverTrigger>
+            <PopoverContent id="stale-panel" aria-label="Stale panel">
+              <PopoverClose />
+            </PopoverContent>
+          </Popover>,
+        );
+      });
+      const mounted = host.querySelector('[aria-controls="stale-panel"][aria-expanded="false"]');
+      iframe.addEventListener(
+        'load',
+        () => {
+          child.unmount();
+          root.dataset.stalePopoverDisposed = String(
+            mounted !== null &&
+              getLiveView(childDocument) === null &&
+              host.childElementCount === 0 &&
+              realmKeys(childDocument).length === 0,
+          );
+        },
+        { once: true },
+      );
+      iframe.sandbox.value = '';
+      iframe.srcdoc = '<p>New document</p>';
     };
 
     const checkCrossDocTrigger = () => {
@@ -571,6 +605,7 @@ export default function OverlayRealmsFixture(): JSX.Element {
     root.addEventListener('adopt-popover', adoptPopover);
     root.addEventListener('open-iframe-modal', openIframeModal);
     root.addEventListener('navigate-dispose-iframe', navigateAndDisposeIframe);
+    root.addEventListener('dispose-stale-popover', disposePopoverAfterNavigation);
     root.addEventListener('check-cross-doc-trigger', checkCrossDocTrigger);
     root.addEventListener('check-protocol-join-warning', startJoin);
     root.addEventListener('check-move-before-modal', checkMoveBeforeModal);

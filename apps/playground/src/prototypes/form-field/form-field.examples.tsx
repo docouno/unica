@@ -11,9 +11,8 @@ import {
 } from '@docouno/unica';
 import type { ControlSize, FieldStatus, FieldVariant } from '@docouno/unica';
 import { useId, useRef, useState } from 'react';
-import type { CSSProperties, ReactElement, ReactNode } from 'react';
+import type { ReactElement, ReactNode } from 'react';
 import { Button } from '@docouno/unica';
-import { PopoverContent } from '../popover/popover.proto.js';
 import { CheckboxCard } from '../choice-card/choice-card.proto.js';
 import {
   FormField,
@@ -725,11 +724,11 @@ export function Overlay(): ReactElement {
   const id = useId();
   const [danger, setDanger] = useState(true);
   return (
-    <PopoverContent
-      className="ff-example-overlay"
+    <div
+      className="unica-overlay-surface ff-example-overlay"
+      data-surface="overlay"
       role="group"
       aria-labelledby={`${id}-title`}
-      style={{ '--popover-width': '38rem' } as CSSProperties}
     >
       <p className="ff-example-title" id={`${id}-title`}>
         Sharing defaults
@@ -760,6 +759,6 @@ export function Overlay(): ReactElement {
       <Button variant="secondary" tone="neutral" onClick={() => setDanger(!danger)}>
         {danger ? 'Hide validation feedback' : 'Show validation feedback'}
       </Button>
-    </PopoverContent>
+    </div>
   );
 }

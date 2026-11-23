@@ -4,7 +4,6 @@ import { CalendarBlankIcon, XIcon } from '@phosphor-icons/react';
 import { Input } from '@docouno/unica';
 import type { ControlSize, FieldStatus, FieldVariant } from '@docouno/unica';
 import { FormField } from '../form-field/form-field.proto.js';
-import { PopoverContent } from '../popover/popover.proto.js';
 import { Calendar } from './calendar.proto.js';
 import type { CalendarFeedback } from './calendar.proto.js';
 import {
@@ -53,11 +52,13 @@ export function DatePickerPanel({
   ...props
 }: DatePickerPanelProps): ReactElement {
   return (
-    <PopoverContent
+    <div
+      role="dialog"
       {...props}
       ref={panelRef}
       popover={floating ? 'manual' : undefined}
-      className={`date-picker-panel-proto ${className}`}
+      className={`unica-overlay-surface date-picker-panel-proto ${className}`}
+      data-surface="overlay"
       aria-label={title || 'Choose dates'}
     >
       {children}
@@ -72,7 +73,7 @@ export function DatePickerPanel({
           <bdi>{feedback.message}</bdi>
         </div>
       )}
-    </PopoverContent>
+    </div>
   );
 }
 

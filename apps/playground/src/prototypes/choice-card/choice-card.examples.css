@@ -3,6 +3,12 @@
   gap: var(--space-24);
   min-inline-size: 0;
 }
+
+.choice-study-surface {
+  position: relative;
+  inline-size: min(100%, 28rem);
+  padding: var(--surface-l-padding);
+}
 .choice-study {
   align-content: start;
   display: grid;

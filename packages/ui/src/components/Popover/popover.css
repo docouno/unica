@@ -1,0 +1,186 @@
+@layer unica.components {
+  .unica-popover {
+    --_popover-width: 22rem;
+    --_popover-padding: var(--surface-m-padding);
+    --_popover-gap: var(--surface-m-gap);
+    --_popover-close-target: var(--size-s-height);
+    --element-radius: var(--surface-s-radius);
+    position: fixed;
+    inset: 0 auto auto 0;
+    margin: 0;
+    inline-size: var(--_popover-width);
+    min-inline-size: 0;
+    max-inline-size: var(--overlay-available-width, 100%);
+    max-block-size: var(--overlay-available-height, none);
+    padding: var(--_popover-padding);
+    color: var(--fg-primary);
+    font-family: var(--font-family-base);
+    overflow: visible;
+    overflow-wrap: anywhere;
+  }
+
+  .unica-popover:popover-open:not([hidden]) {
+    display: flex;
+    flex-direction: column;
+    gap: var(--_popover-gap);
+  }
+
+  .unica-popover[data-unica-popover-size='s'] {
+    --_popover-width: 18rem;
+    --_popover-padding: var(--surface-s-padding);
+    --_popover-gap: var(--surface-s-gap);
+  }
+
+  .unica-popover[data-unica-popover-size='l'] {
+    --_popover-width: 28rem;
+    --_popover-padding: var(--surface-l-padding);
+    --_popover-gap: var(--surface-l-gap);
+  }
+
+  .unica-popover-inner {
+    display: contents;
+  }
+
+  .unica-popover-header {
+    flex: none;
+    display: grid;
+    gap: var(--space-4);
+  }
+
+  .unica-popover-title,
+  .unica-popover-description {
+    margin: 0;
+  }
+
+  .unica-popover-title {
+    font-size: var(--text-size-heading-s);
+    line-height: var(--text-size-heading-s-lh);
+    font-weight: 600;
+    letter-spacing: calc(-0.15px * var(--font-scale));
+  }
+
+  .unica-popover-description {
+    font-size: var(--text-size-body-s);
+    line-height: var(--text-size-body-s-lh);
+    color: var(--fg-secondary);
+  }
+
+  .unica-popover:has(
+    > .unica-popover-inner > .unica-popover-close,
+    > .unica-popover-inner > .unica-popover-header > .unica-popover-close
+  ) {
+    > .unica-popover-inner > .unica-popover-title,
+    > .unica-popover-inner > .unica-popover-header > .unica-popover-title,
+    > .unica-popover-inner > .unica-popover-header:not(:has(> .unica-popover-title)) {
+      min-block-size: var(--_popover-close-target);
+      padding-inline-end: calc(var(--_popover-close-target) + var(--space-8));
+    }
+
+    &:not(:has(> .unica-popover-inner > :is(.unica-popover-header, .unica-popover-title))) {
+      padding-block-start: calc(
+        var(--_popover-padding) + var(--_popover-close-target) + var(--_popover-gap)
+      );
+    }
+  }
+
+  .unica-popover-body {
+    display: grid;
+    gap: var(--_popover-gap);
+    min-block-size: 0;
+    overflow: auto;
+    overscroll-behavior: contain;
+    /* Leave room for focus outlines at the scroll boundary. */
+    margin: calc(-1 * var(--space-4));
+    padding: var(--space-4);
+  }
+
+  .unica-popover-footer {
+    flex: none;
+    display: flex;
+    justify-content: end;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--space-8);
+  }
+
+  .unica-popover[data-unica-popover-scroll-panel] {
+    overflow: auto;
+    overscroll-behavior: contain;
+
+    > .unica-popover-inner > .unica-popover-body {
+      flex: none;
+      overflow: visible;
+    }
+  }
+
+  .unica-popover-close {
+    position: absolute;
+    inset-block-start: var(--_popover-padding);
+    inset-inline-end: var(--_popover-padding);
+    display: inline-grid;
+    place-items: center;
+    inline-size: var(--_popover-close-target);
+    block-size: var(--_popover-close-target);
+    border: 1px solid transparent;
+    border-radius: var(--size-s-radius);
+    padding: 0;
+    background: transparent;
+    color: var(--fg-secondary);
+    font-size: var(--size-m-icon);
+    cursor: pointer;
+  }
+
+  @media (hover: hover) {
+    .unica-popover-close:enabled:hover {
+      background: var(--neutral-soft-bg);
+    }
+  }
+
+  .unica-popover-close:enabled:active {
+    background: var(--neutral-solid);
+    color: var(--fg-on-neutral);
+  }
+
+  .unica-popover-close:disabled {
+    color: var(--fg-disabled);
+    cursor: default;
+  }
+
+  .unica-popover:focus-visible,
+  .unica-popover-close:focus-visible {
+    outline: 2px solid var(--focus-ring-color);
+    outline-offset: 2px;
+  }
+
+  @media (pointer: coarse) {
+    .unica-popover {
+      --_popover-close-target: 44px;
+    }
+  }
+
+  @media (forced-colors: active) {
+    .unica-popover {
+      color: CanvasText;
+    }
+
+    .unica-popover-description {
+      color: inherit;
+    }
+
+    .unica-popover-close {
+      background: ButtonFace;
+      color: ButtonText;
+      border-color: ButtonText;
+    }
+
+    .unica-popover-close:disabled {
+      color: GrayText;
+      border-color: GrayText;
+    }
+
+    .unica-popover:focus-visible,
+    .unica-popover-close:focus-visible {
+      outline-color: Highlight;
+    }
+  }
+}

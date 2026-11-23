@@ -141,7 +141,7 @@
   }
 }
 
-.suggestion-panel-proto.popover-content-proto {
+.suggestion-panel-proto {
   min-block-size: 0;
   container-type: inline-size;
 }

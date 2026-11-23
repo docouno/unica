@@ -28,7 +28,6 @@ import {
   Text,
 } from '@docouno/unica';
 import { Button, IconButton } from '@docouno/unica';
-import { PopoverContent } from '../../prototypes/popover/popover.proto.js';
 import './card.examples.css';
 
 function Note({ children }: { readonly children: ReactNode }): ReactElement {
@@ -769,8 +768,9 @@ export function Overflow(): ReactElement {
 export function Overlay(): ReactElement {
   const [study, setStudy] = useState('hierarchy');
   return (
-    <PopoverContent
-      className="card-example-overlay"
+    <div
+      className="unica-overlay-surface card-example-overlay"
+      data-surface="overlay"
       role="group"
       aria-label="Card inside a floating surface"
     >
@@ -816,6 +816,6 @@ export function Overlay(): ReactElement {
           </Card>
         </>
       )}
-    </PopoverContent>
+    </div>
   );
 }

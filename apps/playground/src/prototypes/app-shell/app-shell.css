@@ -743,17 +743,22 @@
   background: var(--bg-surface-raised);
 }
 
-.app-shell-popover.popover-content-proto {
+.app-shell-popover {
   position: fixed;
+  flex-direction: column;
   inset: var(--shell-popover-top, auto) auto var(--shell-popover-bottom, auto)
     var(--shell-popover-x, 8px);
   inline-size: var(--shell-popover-width, 186px);
   max-block-size: min(320px, var(--shell-popover-height, 50vh));
   margin: 0;
+  padding: var(--surface-s-padding);
+  color: var(--fg-primary);
+  font-family: var(--font-family-base);
+  overflow: visible;
 }
 
-.app-shell-popover:not(:popover-open) {
-  display: none;
+.app-shell-popover:popover-open {
+  display: flex;
 }
 
 .app-shell-property-row {
@@ -1378,7 +1383,7 @@
   margin-inline-end: var(--space-2);
 }
 
-.app-shell-document-popup.popover-content-proto {
+.app-shell-document-popup {
   padding: 0;
 }
 

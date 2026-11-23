@@ -2,7 +2,6 @@ import { Card, Skeleton, SkeletonText, Text } from '@docouno/unica';
 import { useState } from 'react';
 import type { CSSProperties, ReactElement } from 'react';
 import { Avatar } from '../../../src/prototypes/avatar/avatar.proto.js';
-import { PopoverContent } from '../../../src/prototypes/popover/popover.proto.js';
 
 function SurfaceSamples(): ReactElement {
   const swatch: CSSProperties = { inlineSize: 48, blockSize: 16, background: 'var(--fg-muted)' };
@@ -40,9 +39,20 @@ export default function SkeletonFixture(): ReactElement {
         <Card data-test-surface="card">
           <SurfaceSamples />
         </Card>
-        <PopoverContent role="presentation" data-test-surface="overlay">
+        <div
+          className="unica-overlay-surface"
+          data-surface="overlay"
+          data-test-surface="overlay"
+          style={{
+            position: 'relative',
+            display: 'grid',
+            gap: 'var(--surface-m-gap)',
+            inlineSize: 'min(100%, 22rem)',
+            padding: 'var(--surface-m-padding)',
+          }}
+        >
           <SurfaceSamples />
-        </PopoverContent>
+        </div>
       </div>
       <div data-testid="shapes" style={{ inlineSize: 160 }}>
         <Skeleton data-testid="rect" />

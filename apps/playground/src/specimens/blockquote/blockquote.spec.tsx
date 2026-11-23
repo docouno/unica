@@ -1,14 +1,9 @@
-import { Blockquote, Card, Code, Link, Text } from '@docouno/unica';
+import { Blockquote, Card, Code, Link, Text, Title } from '@docouno/unica';
 import { previewProps, previewText } from '../preview-code.js';
 import type { ReactElement } from 'react';
 import type { IconProps as PhosphorIconProps } from '@phosphor-icons/react';
 import { QuotesIcon } from '@phosphor-icons/react';
 import { defineComponent } from '../../workbench/types.js';
-import {
-  PopoverBody,
-  PopoverContent,
-  PopoverTitle,
-} from '../../prototypes/popover/popover.proto.js';
 import './blockquote.examples.css';
 
 const sourceUrl =
@@ -349,21 +344,26 @@ export default defineComponent({
       kind: 'surface',
       render: () => (
         <div className="quote-example-stack quote-example-overlay">
-          <PopoverContent size="l" role="group" aria-label="Quoted source on overlay material">
-            <PopoverBody>
-              <PopoverTitle>Source excerpt</PopoverTitle>
-              <Blockquote size="s" attribution={<cite>API guidelines · Cancellation</cite>}>
-                <p>
-                  An <Code>AbortSignal</Code> describes the lifetime of an operation. Once aborted,
-                  it cannot be reset.
-                </p>
-              </Blockquote>
-              <Text size="body-s" color="muted">
-                Static surface study. The panel supplies the glass; the quotation adds no blur or
-                shadow.
-              </Text>
-            </PopoverBody>
-          </PopoverContent>
+          <div
+            className="unica-overlay-surface quote-example-panel"
+            data-surface="overlay"
+            role="group"
+            aria-label="Quoted source on overlay material"
+          >
+            <Title as="h3" size="heading-s">
+              Source excerpt
+            </Title>
+            <Blockquote size="s" attribution={<cite>API guidelines · Cancellation</cite>}>
+              <p>
+                An <Code>AbortSignal</Code> describes the lifetime of an operation. Once aborted, it
+                cannot be reset.
+              </p>
+            </Blockquote>
+            <Text size="body-s" color="muted">
+              Static surface study. The panel supplies the glass; the quotation adds no blur or
+              shadow.
+            </Text>
+          </div>
         </div>
       ),
     },

@@ -9,6 +9,10 @@
 }
 
 .breadcrumb-example-overlay {
+  position: relative;
+  display: grid;
   gap: var(--space-4);
+  inline-size: min(100%, 22rem);
+  padding: var(--surface-m-padding);
   margin: var(--space-8);
 }

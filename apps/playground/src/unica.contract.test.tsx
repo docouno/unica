@@ -82,6 +82,7 @@ it('keeps Button and IconButton role and tone choices in sync with the JSX reado
   const Subject = specimen.render;
   const ctx = {
     id: 'button-contract',
+    tab: 'playground',
     theme: unicaWorkbench.themes[0]!,
     surface: 'base',
     comparing: false,
@@ -277,6 +278,7 @@ it('enforces semantic CSS in prototypes, specimens and scenes, including their l
   const srcDir = import.meta.dirname;
   const uiSrcDir = resolve(srcDir, '../../../packages/ui/src');
   const allowedUtilityClasses = new Set([
+    'unica-overlay-surface',
     'unica-scrollbar',
     'unica-scrollbar--compact',
     'unica-visually-hidden',

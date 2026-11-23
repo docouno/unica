@@ -6,12 +6,6 @@ import { defineComponent } from '../../workbench/types.js';
 import { Button, IconButton } from '@docouno/unica';
 import { CodeBlock } from '../../prototypes/code-block/code-block.proto.js';
 import type { IconProps as PhosphorIconProps } from '@phosphor-icons/react';
-import {
-  PopoverBody,
-  PopoverContent,
-  PopoverHeader,
-  PopoverTitle,
-} from '../../prototypes/popover/popover.proto.js';
 import { Text, Title } from '@docouno/unica';
 import {
   Accordion,
@@ -188,14 +182,12 @@ function ReleasePreview(): ReactElement {
 
 function OnOverlay(): ReactElement {
   return (
-    <PopoverContent role="presentation" className="disclosure-study-overlay">
-      <PopoverHeader>
-        <PopoverTitle as="h2">Workspace access</PopoverTitle>
-      </PopoverHeader>
-      <PopoverBody>
-        <AccessGroup />
-      </PopoverBody>
-    </PopoverContent>
+    <div className="unica-overlay-surface disclosure-study-overlay" data-surface="overlay">
+      <Title as="h2" size="heading-s">
+        Workspace access
+      </Title>
+      <AccessGroup />
+    </div>
   );
 }
 

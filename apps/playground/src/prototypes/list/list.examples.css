@@ -25,6 +25,14 @@
   inline-size: min(100%, 420px);
 }
 
+.list-example-overlay {
+  position: relative;
+  display: grid;
+  gap: var(--surface-m-gap);
+  min-inline-size: 0;
+  padding: var(--surface-m-padding);
+}
+
 .list-example-feedback {
   min-block-size: var(--text-size-caption-l-lh);
   margin: 0;

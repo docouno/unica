@@ -11,7 +11,6 @@ import {
 } from '@phosphor-icons/react';
 import { defineComponent } from '../../workbench/types.js';
 import { Card, Input, Text } from '@docouno/unica';
-import { PopoverContent } from '../../prototypes/popover/popover.proto.js';
 import { Tabs, TabsContent, TabsList, TabsTab } from '../../prototypes/tabs/tabs.proto.js';
 import type { TabsListProps, TabsProps, TabsTabProps } from '../../prototypes/tabs/tabs.proto.js';
 import '../../prototypes/tabs/tabs.examples.css';
@@ -293,7 +292,11 @@ function OverlayExample(): ReactElement {
   const heading = useId();
   return (
     <div className="tabs-overlay-stage">
-      <PopoverContent className="tabs-overlay-example" aria-labelledby={heading}>
+      <section
+        className="unica-overlay-surface tabs-overlay-example"
+        data-surface="overlay"
+        aria-labelledby={heading}
+      >
         <Text id={heading} size="body-m" weight="medium">
           Snapshot
         </Text>
@@ -317,7 +320,7 @@ function OverlayExample(): ReactElement {
             </TabsContent>
           </div>
         </Tabs>
-      </PopoverContent>
+      </section>
     </div>
   );
 }

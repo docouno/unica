@@ -1,6 +1,22 @@
-import { autoUpdate, computePosition, flip, offset, platform, shift, size } from '@floating-ui/dom';
-import type { Placement } from '@floating-ui/dom';
-import { isRTL as isElementRTL, reportErrorSafe } from '../dom.js';
+import {
+  autoUpdate,
+  computePosition,
+  flip,
+  hide,
+  offset,
+  platform,
+  shift,
+  size,
+} from '@floating-ui/dom';
+import type {
+  Middleware,
+  Padding,
+  Placement,
+  Side as PhysicalSide,
+  SideObject,
+} from '@floating-ui/dom';
+import { getComputedStyleSafe, isRTL, reportErrorSafe } from '../dom.js';
+import { createFrameJob } from '../frame-scheduler.js';
 import {
   composedAncestors,
   elementStyle,
@@ -28,6 +44,14 @@ export interface AnchoredOverlay {
   readonly align: Align;
   readonly gap: number;
   readonly padding?: number | undefined;
+  readonly popover?:
+    | {
+        readonly measureBlockSize: (floating: HTMLElement) => number;
+        readonly isAnchorAvailable: (anchor: HTMLElement) => boolean;
+        readonly onAnchorLost: () => void;
+        readonly onPositioned: () => void;
+      }
+    | undefined;
   readonly preview?:
     | {
         readonly avoid?: HTMLElement | null | undefined;
@@ -46,6 +70,108 @@ interface PositionBinding {
 }
 
 const updates = new WeakMap<HTMLElement, PositionBinding>();
+const safeAreaProperty = '--_overlay-safe-area';
+const safeAreaInsets =
+  'env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px)';
+const oppositeSide = { left: 'right', right: 'left', top: 'bottom', bottom: 'top' } as const;
+
+function intersectsViewport(rect: DOMRectReadOnly, view: Window): boolean {
+  const viewport = view.visualViewport;
+  const left = viewport?.offsetLeft ?? 0;
+  const top = viewport?.offsetTop ?? 0;
+  return (
+    rect.width > 0 &&
+    rect.height > 0 &&
+    rect.right > left &&
+    rect.bottom > top &&
+    rect.left < left + (viewport?.width ?? view.innerWidth) &&
+    rect.top < top + (viewport?.height ?? view.innerHeight)
+  );
+}
+
+export interface AnchorVisibility {
+  readonly observe: (anchor: HTMLElement) => void;
+  readonly unobserve: (anchor: HTMLElement) => void;
+  readonly dispose: () => void;
+}
+
+export function anchorIntersectsViewport(anchor: HTMLElement): boolean {
+  const view = liveViewOf(anchor.ownerDocument);
+  return view !== null && intersectsViewport(anchor.getBoundingClientRect(), view);
+}
+
+/** Catch scroll and paint clips before admission and keep the same sample for focus return. */
+export function watchVisibleAnchors(
+  document: Document,
+  candidates: readonly HTMLElement[],
+  onSample: (visible: ReadonlySet<HTMLElement>) => void,
+): AnchorVisibility {
+  const view = liveViewOf(document);
+  const observed = new Set<HTMLElement>();
+  const pending = new Set<HTMLElement>();
+  const visible = new Set<HTMLElement>();
+  let active = true;
+  const notify = (): void => {
+    if (active && pending.size === 0) {
+      onSample(visible);
+    }
+  };
+  const observer =
+    view && typeof view.IntersectionObserver === 'function'
+      ? new view.IntersectionObserver(
+          (entries) => {
+            for (const { target, intersectionRect } of entries) {
+              const anchor = target as HTMLElement;
+              if (!observed.has(anchor)) {
+                continue;
+              }
+              pending.delete(anchor);
+              if (intersectsViewport(intersectionRect, view)) {
+                visible.add(anchor);
+              } else {
+                visible.delete(anchor);
+              }
+            }
+            notify();
+          },
+          // Engines can round Number.MIN_VALUE to zero and miss edge-touching targets.
+          { threshold: [0, 1e-9] },
+        )
+      : undefined;
+
+  const observe = (anchor: HTMLElement): void => {
+    if (observed.has(anchor) || anchor.ownerDocument !== document) {
+      return;
+    }
+    observed.add(anchor);
+    if (observer) {
+      pending.add(anchor);
+      observer.observe(anchor);
+    } else if (anchorIntersectsViewport(anchor)) {
+      visible.add(anchor);
+    }
+  };
+  for (const anchor of candidates) {
+    observe(anchor);
+  }
+  queueMicrotask(notify);
+
+  return {
+    observe,
+    unobserve(anchor) {
+      observer?.unobserve(anchor);
+      observed.delete(anchor);
+      visible.delete(anchor);
+      if (pending.delete(anchor)) {
+        queueMicrotask(notify);
+      }
+    },
+    dispose() {
+      active = false;
+      observer?.disconnect();
+    },
+  };
+}
 
 function restoreAttribute(element: Element, name: string, value: string | null): void {
   if (value === null) {
@@ -63,6 +189,125 @@ function logicalSide(physical: string, rtl: boolean): Side {
     return rtl ? 'start' : 'end';
   }
   return physical === 'top' ? 'top' : 'bottom';
+}
+
+function viewportPadding(floating: HTMLElement, padding: number): Padding {
+  const insets = getComputedStyleSafe(floating)?.getPropertyValue(safeAreaProperty).trim() ?? '';
+  const [top = 0, right = 0, bottom = 0, left = 0] = insets
+    .split(/\s+/)
+    .map((value) => Math.max(0, Number.parseFloat(value) || 0));
+  return {
+    top: padding + top,
+    right: padding + right,
+    bottom: padding + bottom,
+    left: padding + left,
+  };
+}
+
+function preferredSide(
+  requested: PhysicalSide,
+  room: SideObject,
+  width: number,
+  height: number,
+): PhysicalSide {
+  const opposite = oppositeSide[requested];
+  if (requested === 'top' || requested === 'bottom') {
+    return room[requested] < height && room[opposite] > room[requested] ? opposite : requested;
+  }
+  if (room[requested] >= width) {
+    return requested;
+  }
+  if (room[opposite] >= width) {
+    return opposite;
+  }
+  return room.bottom < height && room.top > room.bottom ? 'top' : 'bottom';
+}
+
+interface PopoverLayout {
+  readonly floating: HTMLElement;
+  readonly placement: Placement;
+  readonly gap: number;
+  readonly padding: number;
+  readonly valid: () => boolean;
+  readonly measureBlockSize: (floating: HTMLElement) => number;
+  readonly setSize: (anchorWidth: number, availableHeight: number) => boolean;
+  readonly setWidth: (availableWidth: number) => boolean;
+}
+
+function popoverMiddleware({
+  floating,
+  placement: requestedPlacement,
+  gap,
+  padding,
+  valid,
+  measureBlockSize,
+  setSize,
+  setWidth,
+}: PopoverLayout): Middleware[] {
+  const [requested, alignment] = requestedPlacement.split('-') as [
+    PhysicalSide,
+    'start' | 'end' | undefined,
+  ];
+  const clippingPadding = viewportPadding(floating, padding);
+  const fitMainAxis = shift({ padding: clippingPadding, mainAxis: false, crossAxis: true });
+  return [
+    hide({ strategy: 'referenceHidden' }),
+    offset(gap),
+    {
+      name: 'viewportSide',
+      async fn(state) {
+        const overflow = await state.platform.detectOverflow(state, {
+          elementContext: 'reference',
+          // Measure room against the top layer viewport. The reference's own
+          // scrollport is checked by the visibility middleware.
+          altBoundary: true,
+          padding: clippingPadding,
+        });
+        if (!valid() || state.middlewareData.hide?.referenceHidden) {
+          return {};
+        }
+        const { reference, floating: floatingRect } = state.rects;
+        // Apply the viewport width before deciding which side fits.
+        const availableWidth = Math.max(0, reference.width - overflow.left - overflow.right);
+        if (setWidth(availableWidth)) {
+          const dimensions = await state.platform.getDimensions(state.elements.floating);
+          if (!valid()) {
+            return {};
+          }
+          if (
+            dimensions.width !== floatingRect.width ||
+            dimensions.height !== floatingRect.height
+          ) {
+            return { reset: { rects: true } };
+          }
+        }
+        const side = preferredSide(
+          requested,
+          {
+            top: -overflow.top - gap,
+            right: -overflow.right - gap,
+            bottom: -overflow.bottom - gap,
+            left: -overflow.left - gap,
+          },
+          floatingRect.width,
+          measureBlockSize(floating),
+        );
+        const next: Placement = alignment ? `${side}-${alignment}` : side;
+        return state.placement === next ? {} : { reset: { placement: next } };
+      },
+    },
+    shift({ padding: clippingPadding }),
+    size({
+      padding: clippingPadding,
+      apply({ availableHeight, rects, middlewareData }) {
+        if (valid() && !middlewareData.hide?.referenceHidden) {
+          setSize(rects.reference.width, Math.max(0, availableHeight));
+        }
+      },
+    }),
+    // Keep the gap unless a cut-off anchor puts it beyond the padded viewport.
+    { ...fitMainAxis, name: 'fitMainAxis' },
+  ];
 }
 
 function visualViewportMargin(document: Document, viewport: VisualViewport | null): string {
@@ -87,6 +332,7 @@ function initializeGeometry(
   floating: HTMLElement,
   style: CSSStyleDeclaration,
   preview: boolean,
+  safeArea: boolean,
 ): () => void {
   const margin = ['margin-top', 'margin-right', 'margin-bottom', 'margin-left'];
   const inset = ['top', 'right', 'bottom', 'left'];
@@ -98,6 +344,7 @@ function initializeGeometry(
     '--overlay-available-height',
     '--overlay-available-width',
     ...(preview ? previewBridgeProperties : []),
+    ...(safeArea ? [safeAreaProperty] : []),
   ];
   const original = properties.map((property) => ({
     property,
@@ -111,6 +358,9 @@ function initializeGeometry(
   style.position = 'fixed';
   style.margin = '0';
   style.inset = '0 auto auto 0';
+  if (safeArea) {
+    style.setProperty(safeAreaProperty, safeAreaInsets);
+  }
 
   return () => {
     style.removeProperty('inset');
@@ -132,6 +382,7 @@ export function positionOverlay({
   align,
   gap,
   padding = 0,
+  popover,
   preview,
 }: AnchoredOverlay): () => void {
   const previous = updates.get(floating);
@@ -158,7 +409,8 @@ export function positionOverlay({
       ? previous.restoreGeometry
       : undefined;
   previous?.cleanup(retained !== undefined);
-  const restoreGeometry = retained ?? initializeGeometry(floating, style, preview !== undefined);
+  const restoreGeometry =
+    retained ?? initializeGeometry(floating, style, preview !== undefined, popover !== undefined);
 
   let active = true;
   let revision = 0;
@@ -174,15 +426,20 @@ export function positionOverlay({
   let unavailable = false;
   let positioned = false;
 
-  const isRTL = (): boolean => isElementRTL(anchor);
-  const isLive = (): boolean =>
+  const isOpen = (): boolean =>
     active &&
     liveViewOf(document) === view &&
-    isConnectedNode(anchor) &&
     isConnectedNode(floating) &&
-    ownerDocumentOf(anchor) === document &&
     ownerDocumentOf(floating) === document &&
     matchesSelector(floating, ':popover-open');
+  const anchorIsConnected = (): boolean =>
+    isConnectedNode(anchor) && ownerDocumentOf(anchor) === document;
+  const anchorIsVisible = (computed: CSSStyleDeclaration | null): boolean =>
+    computed !== null &&
+    computed.visibility !== 'hidden' &&
+    computed.visibility !== 'collapse' &&
+    view.Element.prototype.getClientRects.call(anchor).length > 0;
+  const isLive = (): boolean => isOpen() && anchorIsConnected();
 
   const offsetMiddleware = offset(gap);
   const flipMiddleware = flip({ padding });
@@ -209,13 +466,14 @@ export function positionOverlay({
     }
     return anchorChanged;
   };
+  const onUnavailable = popover?.onAnchorLost ?? preview?.onUnavailable;
   const reportUnavailable = (): void => {
-    if (active && preview && !unavailable) {
+    if (active && onUnavailable && !unavailable) {
       unavailable = true;
       // An initial update can run before the caller receives its cleanup function.
       view.queueMicrotask(() => {
-        if (active) {
-          preview.onUnavailable();
+        if (active && (!popover || isOpen())) {
+          onUnavailable();
         }
       });
     }
@@ -225,7 +483,7 @@ export function positionOverlay({
     const current = ++revision;
     const valid = (): boolean => current === revision && !unavailable && isLive();
     if (!valid()) {
-      if (!isConnectedNode(anchor) || ownerDocumentOf(anchor) !== document) {
+      if (!anchorIsConnected()) {
         reportUnavailable();
       }
       return;
@@ -244,7 +502,12 @@ export function positionOverlay({
         return;
       }
     }
-    const rtl = isRTL();
+    const computed = getComputedStyleSafe(anchor);
+    if (popover && (!anchorIsVisible(computed) || !popover.isAnchorAvailable(anchor))) {
+      reportUnavailable();
+      return;
+    }
+    const rtl = isRTL(anchor, computed);
     lastRTL = rtl;
     const physical =
       side === 'start'
@@ -278,23 +541,38 @@ export function positionOverlay({
             setSize,
             setWidth,
           })
-        : [
-            offsetMiddleware,
-            flipMiddleware,
-            shiftMiddleware,
-            size({
+        : popover
+          ? popoverMiddleware({
+              floating,
+              placement,
+              gap,
               padding,
-              apply({ availableWidth, availableHeight, rects }) {
-                if (valid()) {
-                  setSize(rects.reference.width, Math.max(0, availableHeight));
-                  setWidth(Math.max(0, availableWidth));
-                }
-              },
-            }),
-          ],
+              valid,
+              measureBlockSize: popover.measureBlockSize,
+              setSize,
+              setWidth,
+            })
+          : [
+              offsetMiddleware,
+              flipMiddleware,
+              shiftMiddleware,
+              size({
+                padding,
+                apply({ availableWidth, availableHeight, rects }) {
+                  if (valid()) {
+                    setSize(rects.reference.width, Math.max(0, availableHeight));
+                    setWidth(Math.max(0, availableWidth));
+                  }
+                },
+              }),
+            ],
     }).then(
-      ({ x, y, placement: resolved }) => {
+      ({ x, y, placement: resolved, middlewareData }) => {
         if (!valid()) {
+          return;
+        }
+        if (middlewareData.hide?.referenceHidden) {
+          reportUnavailable();
           return;
         }
         if (x !== lastX) {
@@ -344,6 +622,7 @@ export function positionOverlay({
           positioned = true;
           preview.onPositioned?.();
         }
+        popover?.onPositioned();
       },
       (error: unknown) => {
         if (valid()) {
@@ -384,18 +663,77 @@ export function positionOverlay({
     }
     intersectionObserver.observe(anchor);
   };
-  const stop = autoUpdate(anchor, floating, refresh);
+  let stop = autoUpdate(anchor, floating, refresh);
   const mutations = new view.MutationObserver(() => {
-    if (preview || (isLive() && isRTL() !== lastRTL)) {
+    if (preview || (isLive() && (popover || isRTL(anchor) !== lastRTL))) {
       refresh();
     }
   });
-  for (const ancestor of composedAncestors(anchor)) {
-    mutations.observe(ancestor, {
-      attributes: true,
-      attributeFilter: preview ? ['class', 'dir', 'hidden', 'open', 'popover', 'style'] : ['dir'],
-    });
-  }
+  let ancestry: Element[] = [];
+  const observeAncestry = (next: Element[]): void => {
+    ancestry = next;
+    const attributeFilter = ['dir'];
+    if (preview || popover) {
+      attributeFilter.push('class', 'hidden', 'style');
+    }
+    if (preview) {
+      attributeFilter.push('open', 'popover');
+    }
+    if (popover) {
+      attributeFilter.push('aria-disabled', 'disabled', 'inert');
+    }
+    for (const ancestor of ancestry) {
+      mutations.observe(ancestor, { attributes: true, attributeFilter });
+    }
+  };
+  observeAncestry(Array.from(composedAncestors(anchor)));
+  const stopAutoUpdate = (): void => {
+    try {
+      stop();
+    } catch {
+      // Ignore cross-origin frame teardown.
+    }
+  };
+  const visibilityJob = popover
+    ? createFrameJob(document, {
+        measure() {
+          if (unavailable || !isOpen()) {
+            return;
+          }
+          const computed = getComputedStyleSafe(anchor);
+          if (!anchorIsConnected() || !anchorIsVisible(computed)) {
+            return reportUnavailable;
+          }
+          const next = Array.from(composedAncestors(anchor));
+          if (computed?.getPropertyValue('interactivity')) {
+            for (const ancestor of next) {
+              const ancestorStyle = ancestor === anchor ? computed : getComputedStyleSafe(ancestor);
+              if (ancestorStyle?.getPropertyValue('interactivity') === 'inert') {
+                return reportUnavailable;
+              }
+              if (matchesSelector(ancestor, 'dialog:modal')) {
+                break;
+              }
+            }
+          }
+          visibilityJob?.schedule();
+          if (
+            next.length !== ancestry.length ||
+            next.some((ancestor, index) => ancestor !== ancestry[index])
+          ) {
+            return () => {
+              mutations.disconnect();
+              observeAncestry(next);
+              stopAutoUpdate();
+              stop = autoUpdate(anchor, floating, refresh);
+            };
+          }
+          if (isRTL(anchor, computed) !== lastRTL) {
+            return refresh;
+          }
+        },
+      })
+    : undefined;
   if (reading) {
     mutations.observe(reading, {
       attributes: true,
@@ -416,7 +754,8 @@ export function positionOverlay({
       return;
     }
     active = false;
-    for (const dispose of [stop, stopAvoid]) {
+    stopAutoUpdate();
+    for (const dispose of [stopAvoid]) {
       try {
         dispose?.();
       } catch {
@@ -426,6 +765,7 @@ export function positionOverlay({
     intersectionObserver?.disconnect();
     intersectionObserver = undefined;
     mutations.disconnect();
+    visibilityJob?.dispose();
     if (reading) {
       floating.removeEventListener('load', refresh, true);
       document.fonts?.removeEventListener('loadingdone', refresh);
@@ -441,5 +781,6 @@ export function positionOverlay({
     restoreGeometry,
     cleanup,
   });
+  visibilityJob?.schedule();
   return () => cleanup();
 }

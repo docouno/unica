@@ -9,7 +9,6 @@ import {
 import { Input, Text } from '@docouno/unica';
 import type { FieldStatus } from '@docouno/unica';
 import { FormField } from '../../prototypes/form-field/form-field.proto.js';
-import { PopoverContent } from '../../prototypes/popover/popover.proto.js';
 import './input.examples.css';
 
 function Sample({
@@ -414,7 +413,13 @@ export function InputSurfaces({ overlay }: { readonly overlay: boolean }): React
       />
     </div>
   );
-  return overlay ? <PopoverContent size="l">{fields}</PopoverContent> : fields;
+  return overlay ? (
+    <div className="unica-overlay-surface input-study-overlay" data-surface="overlay">
+      {fields}
+    </div>
+  ) : (
+    fields
+  );
 }
 
 export function InputFormExample({

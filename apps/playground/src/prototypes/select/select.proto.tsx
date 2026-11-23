@@ -103,7 +103,7 @@ export function Combobox({
         </div>
       </FormField>
       {open && !disabled && (
-        <SelectPanel className="combobox-panel-proto" size={size}>
+        <SelectPanel className="combobox-panel-proto">
           <Listbox
             size={size}
             options={shown}

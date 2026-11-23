@@ -133,6 +133,31 @@ export type {
 } from './components/Layout/index.js';
 export { Link } from './components/Link/index.js';
 export type { LinkProps, LinkSize } from './components/Link/index.js';
+export {
+  Popover,
+  PopoverBody,
+  PopoverClose,
+  PopoverContent,
+  PopoverDescription,
+  PopoverFooter,
+  PopoverHeader,
+  PopoverTitle,
+  PopoverTrigger,
+} from './components/Popover/index.js';
+export type {
+  PopoverAlign,
+  PopoverBodyProps,
+  PopoverCloseProps,
+  PopoverContentProps,
+  PopoverDescriptionProps,
+  PopoverFooterProps,
+  PopoverHeaderProps,
+  PopoverProps,
+  PopoverSide,
+  PopoverSize,
+  PopoverTitleProps,
+  PopoverTriggerProps,
+} from './components/Popover/index.js';
 export { Progress, ProgressCircle, Spinner } from './components/Progress/index.js';
 export type {
   ProgressCircleProps,

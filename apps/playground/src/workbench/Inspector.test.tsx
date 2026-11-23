@@ -71,6 +71,42 @@ function showInspector(component: ComponentDefinition, query = '') {
   return { navigateItem, update };
 }
 
+it.each([
+  ['playground', 'subject'],
+  ['matrix', 'reference'],
+  ['cases', 'case'],
+  ['usage', 'usage'],
+] as const)('exposes the %s route to authored previews', (tab, marker) => {
+  showInspector(
+    defineComponent({
+      id: 'route',
+      title: 'Route',
+      category: 'Examples',
+      status: 'UI',
+      props: {},
+      render: ({ ctx }) => <p>subject: {ctx.tab}</p>,
+      matrixViews: [
+        {
+          id: 'default',
+          title: 'Default',
+          reference: ({ ctx }) => <p>reference: {ctx.tab}</p>,
+        },
+      ],
+      cases: [
+        {
+          id: 'case',
+          title: 'Case',
+          kind: 'behavior',
+          render: ({ ctx }) => <p>case: {ctx.tab}</p>,
+        },
+      ],
+      usage: [{ id: 'usage', title: 'Usage', render: ({ ctx }) => <p>usage: {ctx.tab}</p> }],
+    }),
+    '?tab=' + tab,
+  );
+  expect(screen.getAllByText(marker + ': ' + tab)).toHaveLength(2);
+});
+
 it('shares valid controls across themes while keeping the last valid Subject and live JSX', async () => {
   const component = defineComponent({
     id: 'choice',
@@ -272,6 +308,47 @@ it('submits ordered native data and resets one owned form without touching anoth
       .getAllByRole('listitem')
       .map((entry) => entry.textContent),
   ).toEqual(['Example Dark submit', 'Example Dark reset', 'Example Dark submit']);
+});
+
+it('inspects an inline form using only the actions supplied by the example', () => {
+  showInspector(
+    defineComponent({
+      id: 'inline-form',
+      title: 'Inline form',
+      category: 'Examples',
+      status: 'UI',
+      props: {},
+      form: 'inline',
+      render: ({ ctx }) => (
+        <form {...ctx.form}>
+          <label>
+            Name
+            <input name="name" defaultValue="Draft" />
+          </label>
+          <button type="submit">Apply</button>
+          <button type="reset">Restore</button>
+        </form>
+      ),
+    }),
+  );
+  expect(screen.queryByRole('button', { name: /^Submit$/ })).toBeNull();
+  expect(screen.queryByRole('button', { name: /^Reset$/ })).toBeNull();
+
+  const dark = within(screen.getByRole('region', { name: 'Example Dark' }));
+  const name = dark.getByRole<HTMLInputElement>('textbox', { name: 'Name' });
+  fireEvent.change(name, { target: { value: 'Published' } });
+  fireEvent.click(dark.getByRole('button', { name: 'Apply' }));
+  fireEvent.click(dark.getByRole('button', { name: 'Restore' }));
+  expect(name.value).toBe('Draft');
+
+  fireEvent.click(screen.getByRole('tab', { name: 'FormData' }));
+  expect(screen.getByRole('tabpanel', { name: 'FormData' }).textContent).toContain('"Published"');
+  fireEvent.click(screen.getByRole('tab', { name: 'Events' }));
+  expect(
+    within(screen.getByRole('tabpanel', { name: 'Events' }))
+      .getAllByRole('listitem')
+      .map((entry) => entry.textContent),
+  ).toEqual(['Example Dark submit', 'Example Dark reset']);
 });
 
 it.each(['matrix', 'usage'])('keeps a marked native form on the %s route after submit', (tab) => {

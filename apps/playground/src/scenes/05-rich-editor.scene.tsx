@@ -8,12 +8,21 @@ import {
   Icon,
   Kbd,
   Link,
+  Popover,
+  PopoverBody,
+  PopoverClose,
+  PopoverContent,
+  PopoverDescription,
+  PopoverFooter,
+  PopoverHeader,
+  PopoverTitle,
+  PopoverTrigger,
   Spinner,
   Text,
   Title,
   Input,
 } from '@docouno/unica';
-import { useId, useRef, useState } from 'react';
+import { useId, useState } from 'react';
 import { folioSceneHref } from './folio/folio.routes.js';
 import type { ReactElement } from 'react';
 import {
@@ -30,15 +39,6 @@ import {
 import { Subbar } from '../prototypes/app-shell/app-shell.proto.js';
 import { Button, IconButton } from '@docouno/unica';
 import { ToastCard } from '../prototypes/toast/toast.proto.js';
-import {
-  PopoverBody,
-  PopoverClose,
-  PopoverContent,
-  PopoverDescription,
-  PopoverFooter,
-  PopoverHeader,
-  PopoverTitle,
-} from '../prototypes/popover/popover.proto.js';
 import { Listbox, SelectPanel } from '../prototypes/select/select.proto.js';
 import { Tabs, TabsContent, TabsList, TabsTab } from '../prototypes/tabs/tabs.proto.js';
 import {
@@ -71,56 +71,21 @@ const blocks = [
 ] as const;
 
 function EditorScene(): ReactElement {
-  const referenceId = useId();
-  const referenceButtonRef = useRef<HTMLButtonElement>(null);
-  const referenceTriggerRef = useRef<HTMLElement | null>(null);
-  const referencePanelRef = useRef<HTMLDivElement>(null);
-  const referenceInputRef = useRef<HTMLInputElement>(null);
-  const referenceTouchRef = useRef(false);
+  const referenceFormId = useId();
   const [mode, setMode] = useState('write');
   const [preview, setPreview] = useState(false);
   const editing = mode === 'write' && !preview;
   const [bold, setBold] = useState(false);
   const [italic, setItalic] = useState(false);
   const [underline, setUnderline] = useState(false);
-  const [referenceOpen, setReferenceOpen] = useState(true);
+  const [referenceOpen, setReferenceOpen] = useState(false);
   const [reference, setReference] = useState<string | null>('/runbooks/zero-downtime-pg-failover');
   const [pinned, setPinned] = useState(true);
-  const [draftReference, setDraftReference] = useState(reference ?? '');
-  const [draftPinned, setDraftPinned] = useState(pinned);
   const [slashOpen, setSlashOpen] = useState(true);
   const [query, setQuery] = useState('/callout');
   const [insertedBlock, setInsertedBlock] = useState('');
   const [notice, setNotice] = useState('');
-  const closeReference = (): void => {
-    setReferenceOpen(false);
-    requestAnimationFrame(() => {
-      const trigger = referenceTriggerRef.current;
-      (trigger?.isConnected ? trigger : referenceButtonRef.current)?.focus();
-    });
-  };
-  const cancelReference = (): void => {
-    setDraftReference(reference ?? '');
-    setDraftPinned(pinned);
-    closeReference();
-  };
-  const toggleReference = (trigger: HTMLElement, keyboard: boolean): void => {
-    referenceTriggerRef.current = trigger;
-    setDraftReference(reference ?? '');
-    setDraftPinned(pinned);
-    if (referenceOpen) {
-      closeReference();
-      return;
-    }
-    setReferenceOpen(true);
-    requestAnimationFrame(() => {
-      if (referenceTouchRef.current && !keyboard) {
-        referencePanelRef.current?.focus();
-      } else {
-        referenceInputRef.current?.focus();
-      }
-    });
-  };
+  const referenceLabel = reference ? 'Edit document reference' : 'Add document reference';
   const workspace = (
     <FolioWorkspace
       breadcrumb={
@@ -148,6 +113,7 @@ function EditorScene(): ReactElement {
             variant="secondary"
             tone="neutral"
             onClick={() => {
+              setReferenceOpen(false);
               setPreview(mode === 'write' ? !preview : true);
               setMode('write');
             }}
@@ -210,20 +176,14 @@ function EditorScene(): ReactElement {
                   pressed={underline}
                   onPressedChange={setUnderline}
                 />
-                <IconButton
-                  ref={referenceButtonRef}
-                  size="s"
-                  variant="ghost"
-                  icon={LinkIcon}
-                  aria-label={reference ? 'Edit document reference' : 'Add document reference'}
-                  aria-haspopup="dialog"
-                  aria-expanded={referenceOpen}
-                  aria-controls={`${referenceId}-panel`}
-                  onPointerDown={(event) => {
-                    referenceTouchRef.current = event.pointerType === 'touch';
-                  }}
-                  onClick={(event) => toggleReference(event.currentTarget, event.detail === 0)}
-                />
+                <PopoverTrigger asChild>
+                  <IconButton
+                    size="s"
+                    variant="ghost"
+                    icon={LinkIcon}
+                    aria-label={referenceLabel}
+                  />
+                </PopoverTrigger>
                 <IconButton
                   size="s"
                   variant="ghost"
@@ -317,22 +277,12 @@ function EditorScene(): ReactElement {
               <Text size="body-s">
                 Regional drain budgets signal <Code>x-envoy-drain: 1</Code> and inherit quorum from{' '}
                 {reference && !preview ? (
-                  <Link
-                    href={reference}
-                    aria-haspopup="dialog"
-                    aria-expanded={referenceOpen}
-                    aria-controls={`${referenceId}-panel`}
-                    onPointerDown={(event) => {
-                      referenceTouchRef.current = event.pointerType === 'touch';
-                    }}
-                    onClick={(event) => {
-                      event.preventDefault();
-                      toggleReference(event.currentTarget, event.detail === 0);
-                    }}
-                  >
-                    Zero-Downtime PG Failover{' '}
-                    <Icon usage="slot" icon={ArrowUpRightIcon} size="inherit" />
-                  </Link>
+                  <PopoverTrigger asChild>
+                    <Link href={reference}>
+                      Zero-Downtime PG Failover{' '}
+                      <Icon usage="slot" icon={ArrowUpRightIcon} size="inherit" />
+                    </Link>
+                  </PopoverTrigger>
                 ) : (
                   'Zero-Downtime PG Failover'
                 )}
@@ -370,7 +320,7 @@ function EditorScene(): ReactElement {
                     onFocus={() => setSlashOpen(true)}
                   />
                   {slashOpen && (
-                    <SelectPanel className="choice-panel-proto" size="s">
+                    <SelectPanel className="choice-panel-proto">
                       <Listbox
                         size="s"
                         title="Editorial blocks"
@@ -403,98 +353,104 @@ function EditorScene(): ReactElement {
             )}
           </TabsContent>
         </article>
-        {editing && referenceOpen && (
-          <PopoverContent
-            ref={referencePanelRef}
-            id={`${referenceId}-panel`}
-            className="folio-editor-reference"
-            aria-labelledby={`${referenceId}-title`}
-            aria-describedby={`${referenceId}-description`}
-            tabIndex={-1}
-            onKeyDown={(event) => {
-              if (event.key === 'Escape') {
+        <PopoverContent>
+          <PopoverHeader>
+            <PopoverTitle>{referenceLabel}</PopoverTitle>
+            <PopoverDescription>
+              Keep the supporting runbook close to the decision.
+            </PopoverDescription>
+            <PopoverClose aria-label="Close reference editor" />
+          </PopoverHeader>
+          <PopoverBody>
+            <form
+              id={referenceFormId}
+              className="folio-stack"
+              onSubmit={(event) => {
                 event.preventDefault();
-                event.stopPropagation();
-                cancelReference();
-              }
-            }}
-          >
-            <PopoverHeader>
-              <PopoverTitle id={`${referenceId}-title`}>
-                {reference ? 'Edit document reference' : 'Add document reference'}
-              </PopoverTitle>
-              <PopoverDescription id={`${referenceId}-description`}>
-                Keep the supporting runbook close to the decision.
-              </PopoverDescription>
-            </PopoverHeader>
-            <PopoverClose aria-label="Close reference editor" onClick={cancelReference} />
-            <PopoverBody>
-              <form
-                id={`${referenceId}-form`}
-                className="folio-stack"
-                onSubmit={(event) => {
-                  event.preventDefault();
-                  setReference(draftReference.trim());
-                  setPinned(draftPinned);
-                  closeReference();
-                  setNotice('Document reference updated.');
-                }}
+                const values = new FormData(event.currentTarget);
+                const path = values.get('reference');
+                if (typeof path !== 'string') {
+                  return;
+                }
+                setReference(path.trim());
+                setPinned(values.has('pinned'));
+                setReferenceOpen(false);
+                setNotice('Document reference updated.');
+              }}
+            >
+              <FormField
+                htmlFor={`${referenceFormId}-path`}
+                label="Document path"
+                size="s"
+                required
               >
-                <FormField htmlFor={`${referenceId}-path`} label="Document path" size="s" required>
-                  <Input
-                    id={`${referenceId}-path`}
-                    ref={referenceInputRef}
-                    size="s"
-                    name="reference"
-                    value={draftReference}
-                    onChange={(event) => setDraftReference(event.currentTarget.value)}
-                    required
-                    pattern={'.*\\S.*'}
-                    dir="ltr"
-                    placeholder="/runbooks/document-name"
-                  />
-                </FormField>
-                <Checkbox
+                <Input
+                  id={`${referenceFormId}-path`}
                   size="s"
-                  checked={draftPinned}
-                  onCheckedChange={setDraftPinned}
-                  label="Pin to verified revision (v14)"
+                  name="reference"
+                  defaultValue={reference ?? ''}
+                  required
+                  pattern={'.*\\S.*'}
+                  dir="ltr"
+                  placeholder="/runbooks/document-name"
                 />
-              </form>
-            </PopoverBody>
-            <PopoverFooter className="folio-editor-reference-actions">
+              </FormField>
+              <Checkbox
+                size="s"
+                name="pinned"
+                defaultChecked={pinned}
+                label="Pin to verified revision (v14)"
+              />
+            </form>
+          </PopoverBody>
+          <PopoverFooter className="folio-editor-reference-actions">
+            <Button
+              size="s"
+              variant="ghost"
+              tone="danger"
+              disabled={!reference}
+              onClick={() => {
+                setReference(null);
+                setReferenceOpen(false);
+                setNotice('Document reference unlinked.');
+              }}
+            >
+              Unlink
+            </Button>
+            <div className="folio-row folio-wrap">
               <Button
                 size="s"
-                variant="ghost"
-                tone="danger"
-                disabled={!reference}
-                onClick={() => {
-                  setReference(null);
-                  closeReference();
-                  setNotice('Document reference unlinked.');
-                }}
+                variant="secondary"
+                tone="neutral"
+                onClick={() => setReferenceOpen(false)}
               >
-                Unlink
+                Cancel
               </Button>
-              <div className="folio-row folio-wrap">
-                <Button size="s" variant="secondary" tone="neutral" onClick={cancelReference}>
-                  Cancel
-                </Button>
-                <Button size="s" type="submit" form={`${referenceId}-form`}>
-                  Apply
-                </Button>
-              </div>
-            </PopoverFooter>
-          </PopoverContent>
-        )}
+              <Button size="s" type="submit" form={referenceFormId}>
+                Apply
+              </Button>
+            </div>
+          </PopoverFooter>
+        </PopoverContent>
       </div>
     </FolioWorkspace>
   );
   return (
     <FolioScene>
-      <Tabs size="s" value={mode} onValueChange={setMode}>
-        {workspace}
-      </Tabs>
+      <Popover open={referenceOpen} onOpenChange={setReferenceOpen}>
+        <Tabs
+          size="s"
+          value={mode}
+          onValueChange={(value) => {
+            if (value !== 'write') {
+              setReferenceOpen(false);
+            }
+            setMode(value);
+          }}
+        >
+          {workspace}
+        </Tabs>
+      </Popover>
       {notice && (
         <div className="folio-toast-dock">
           <ToastCard status="success" title={notice} onDismiss={() => setNotice('')} />

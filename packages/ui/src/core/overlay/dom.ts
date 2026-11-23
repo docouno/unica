@@ -345,6 +345,15 @@ export function focusElement(element: Element | null, document: Document): boole
   return active !== null && composedContains(element, active);
 }
 
+export function blurElement(element: Element): void {
+  const view = getLiveView(getOwnerDocument(element));
+  if (view && element instanceof view.HTMLElement) {
+    view.HTMLElement.prototype.blur.call(element);
+  } else if (view && element instanceof view.SVGElement) {
+    view.SVGElement.prototype.blur?.call(element);
+  }
+}
+
 interface PropertySnapshot {
   readonly value: string;
   readonly priority: string;

@@ -4,15 +4,21 @@ import type { ComponentPropsWithRef, ReactElement, ReactNode } from 'react';
 import { Input, Icon, Spinner } from '@docouno/unica';
 import { FormField } from '../form-field/form-field.proto.js';
 import type { ControlSize, FieldStatus, FieldVariant, GlyphSource } from '@docouno/unica';
-import { PopoverContent } from '../popover/popover.proto.js';
 import { Button } from '@docouno/unica';
-import type { PopoverContentProps } from '../popover/popover.proto.js';
 import { Listbox } from './listbox.proto.js';
 import type { SelectOption } from './listbox.proto.js';
 
-export function SelectPanel({ className = '', ...props }: PopoverContentProps): ReactElement {
+export function SelectPanel({
+  className = '',
+  ...props
+}: ComponentPropsWithRef<'div'>): ReactElement {
   return (
-    <PopoverContent role="presentation" {...props} className={`select-panel-proto ${className}`} />
+    <div
+      role="presentation"
+      {...props}
+      className={`unica-overlay-surface select-panel-proto ${className}`}
+      data-surface="overlay"
+    />
   );
 }
 
@@ -423,7 +429,6 @@ export function Select({
           ref={panel}
           id={`${controlId}-panel`}
           tabIndex={-1}
-          size={size}
           popover={previewOpen ? undefined : 'auto'}
           className={previewOpen ? 'select-panel-pinned-proto' : 'select-panel-native-proto'}
           role={searchable ? 'dialog' : 'presentation'}

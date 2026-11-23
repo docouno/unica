@@ -1,7 +1,6 @@
 import { useState, useSyncExternalStore } from 'react';
 import type { ReactElement, ReactNode } from 'react';
 import { defineComponent } from '../../workbench/types.js';
-import { PopoverContent } from '../../prototypes/popover/popover.proto.js';
 import { Text, Title } from '@docouno/unica';
 import { Pagination } from '../../prototypes/pagination/pagination.proto.js';
 import '../../prototypes/pagination/pagination.examples.css';
@@ -319,9 +318,9 @@ export default defineComponent({
       overlayStage: true,
       kind: 'surface',
       render: () => (
-        <PopoverContent role="presentation" className="pagination-study-panel">
+        <div className="unica-overlay-surface pagination-study-panel" data-surface="overlay">
           <DocumentCollection title="Related documents" results={documents} />
-        </PopoverContent>
+        </div>
       ),
     },
   ],

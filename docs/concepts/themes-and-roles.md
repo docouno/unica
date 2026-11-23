@@ -32,7 +32,7 @@ export type ThemePreset =
 Custom CSS properties in `packages/ui/src/styles.css` follow a strict three-tier ownership contract:
 
 - **Tier 1 — Public semantic tokens (151):** Core palette (`--bg-*`, `--fg-*`, `--fg-on-*`, `--border-*`, `--accent-*`, `--neutral-*`, `--status-*`), contextual surfaces (`--control-*`, `--card-*`, `--choice-card-*`, `--scrim-bg`, `--surface-shadow`), typography (`--font-scale`, `--font-family-{base,mono}`, `--text-size-*`), geometry (`--radius-{factor,circular,xs,full}`, `--size-{s,m,l}-*`, `--surface-{s,m,l}-*`, `--space-{0,2,4,8,12,16,24,32,48,64}`, `--container-{s,m,l}`), focus (`--focus-ring-color`), and stacking (`--z-{content,sticky}`).
-- **Tier 2 — Public contextual & integration hooks (7 declared + 10 external):** Declared contextual tokens `--code-context-{bg,fg,border}`, `--indicator-separator-color`, `--action-context-ink`, `--table-row-selected-bg`, and `--motif-canvas-grid`, plus the 10 external runtime/override hooks (`--anchor-width`, `--overlay-available-height`, `--overlay-available-width`, `--badge-max-width`, `--element-radius`, `--kbd-bg`, `--kbd-border`, `--kbd-fg`, `--kbd-forced-fg`, `--kbd-shadow`).
+- **Tier 2 — Public contextual & integration hooks:** Contextual tokens `--code-context-{bg,fg,border}`, `--indicator-separator-color`, `--action-context-ink`, `--table-row-selected-bg`, and `--motif-canvas-grid`, plus runtime and override hooks (`--anchor-width`, `--overlay-available-height`, `--overlay-available-width`, `--badge-max-width`, `--element-radius`, `--kbd-bg`, `--kbd-border`, `--kbd-fg`, `--kbd-forced-fg`, `--kbd-shadow`).
 - **Private theme & component recipes (`--_*`):** Internal mechanics for the six built-in presets (`--_btn-*`, `--_overlay-*`, `--_progress-*`, `--_switch-*`, `--_segmented-*`, etc.) and component-local style properties (`--_type-*`, `--_box-*`, `--_badge-*`, etc.).
 
 **Custom brand themes:** Override **Tier 1 and Tier 2** tokens on `[data-theme]` or an enclosing DOM container to tailor brand accents, surfaces, typography, spacing, or container widths. Internal `--_*` recipes belong to the built-in preset engine and carry **no external stability guarantee** for third-party stylesheets.
@@ -125,6 +125,26 @@ When nesting a different `[data-theme]` inside an outer theme, pass a local `por
 Import `@docouno/unica/styles.css` once at the application entry. The stylesheet declares the order `unica.base`, `unica.tokens`, `unica.components`, `unica.utilities`. These layers hold the base reset, theme and context tokens, colocated component rules, and shared utilities, respectively. For normal declarations a later layer wins over an earlier layer. Unlayered application styles can override library styles.
 
 Production CSS builds lower vendor prefixes and nested rules for the Baseline browser floor (`Chrome/Edge 114+`, `Firefox 125+`, `Safari/iOS 17+`) while preserving `:dir()` selectors under `@supports selector(:dir(rtl))` instead of rewriting them into language heuristics. Shared mark-status tokens bind directly on `[data-unica-mark-status]` inside `@layer unica.tokens`.
+
+### Overlay surface utility
+
+`.unica-overlay-surface` paints the same theme material used by [Popover](../components/popover.md). It provides the fill, edge, radius, shadow, backdrop filter, and decorative highlight and corner marks. Apply it with `data-surface="overlay"` to switch descendant controls to the overlay context. The host supplies positioning, layout, and semantics. Use a positioned host so the utility's two decorative pseudo-elements follow its bounds.
+
+```html
+<div class="unica-overlay-surface release-summary" data-surface="overlay">
+  This page is scheduled for publication.
+</div>
+```
+
+```css
+.release-summary {
+  position: relative;
+  padding: var(--surface-m-padding);
+  --element-radius: var(--surface-m-radius);
+}
+```
+
+The host's `--element-radius` defaults to `--surface-s-radius`. A local override also supplies the radius to descendants that consume the hook, such as Skeleton. The opaque surface token is the fallback when backdrop filtering is unavailable. Forced colors use a system canvas and border.
 
 ## Role-Based API Over Decorative `appearance`
 

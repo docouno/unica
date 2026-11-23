@@ -5,7 +5,6 @@ import { Card, Divider, Text } from '@docouno/unica';
 import { defineComponent } from '../../workbench/types.js';
 import type { ComponentValues, PreviewContext, PropSchema } from '../../workbench/types.js';
 import { IconButton } from '@docouno/unica';
-import { PopoverContent } from '../../prototypes/popover/popover.proto.js';
 import { previewProps } from '../preview-code.js';
 import './divider.examples.css';
 
@@ -360,9 +359,9 @@ export default defineComponent({
       caption: 'Static material preview over an underlay; the panel does not open or dismiss.',
       kind: 'surface',
       render: ({ ctx }) => (
-        <PopoverContent role="presentation" className="divider-demo-overlay">
+        <div className="unica-overlay-surface divider-demo-overlay" data-surface="overlay">
           <SurfaceSample ctx={ctx} />
-        </PopoverContent>
+        </div>
       ),
     },
   ],

@@ -82,3 +82,9 @@
 .input-study-subject > span {
   display: flex;
 }
+
+.input-study-overlay {
+  position: relative;
+  inline-size: min(28rem, 100%);
+  padding: var(--space-24);
+}

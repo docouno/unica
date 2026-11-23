@@ -2,14 +2,7 @@ import { FormField } from '../../prototypes/form-field/form-field.proto.js';
 import { useId } from 'react';
 import type { ReactElement } from 'react';
 import { defineComponent } from '../../workbench/types.js';
-import { Button } from '@docouno/unica';
-import { Card, Checkbox, Input, Text } from '@docouno/unica';
-import {
-  PopoverBody,
-  PopoverContent,
-  PopoverHeader,
-  PopoverTitle,
-} from '../../prototypes/popover/popover.proto.js';
+import { Button, Card, Checkbox, Input, Text, Title } from '@docouno/unica';
 import { Table, TableScroll } from '../../prototypes/table/table.proto.js';
 import {
   Collapsible,
@@ -159,17 +152,15 @@ function DeliveryDetails(): ReactElement {
 
 function OnOverlay(): ReactElement {
   return (
-    <PopoverContent role="presentation" className="disclosure-study-overlay">
-      <PopoverHeader>
-        <PopoverTitle>Delivery report</PopoverTitle>
-      </PopoverHeader>
-      <PopoverBody>
-        <Collapsible size="s" defaultOpen>
-          <CollapsibleTrigger>Retry attempts</CollapsibleTrigger>
-          <CollapsibleContent>Delivered on the second attempt at 09:04 UTC.</CollapsibleContent>
-        </Collapsible>
-      </PopoverBody>
-    </PopoverContent>
+    <div className="unica-overlay-surface disclosure-study-overlay" data-surface="overlay">
+      <Title as="h3" size="heading-s">
+        Delivery report
+      </Title>
+      <Collapsible size="s" defaultOpen>
+        <CollapsibleTrigger>Retry attempts</CollapsibleTrigger>
+        <CollapsibleContent>Delivered on the second attempt at 09:04 UTC.</CollapsibleContent>
+      </Collapsible>
+    </div>
   );
 }
 

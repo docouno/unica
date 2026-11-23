@@ -1,4 +1,5 @@
 import { devWarningsEnabled } from '../devWarningsEnabled.js';
+import { getComputedStyleSafe, isInertElement, querySelectorAllSafe } from '../dom.js';
 import {
   OVERLAY_RUNTIME_KEY,
   deleteFallbackOverlayRuntime,
@@ -10,6 +11,7 @@ import { PACKAGE_VERSION } from '../version.js';
 import {
   addListener,
   bindPopoverInvoker,
+  blurElement,
   closeDialog,
   composedAncestors,
   composedContains,
@@ -56,10 +58,17 @@ export interface OverlayOptions {
   readonly element: HTMLElement;
   readonly trigger?: HTMLElement | null | undefined;
   readonly onOpenChange: (open: boolean, reason: DismissReason) => void;
+  readonly resolveFocusTrigger?:
+    ((restore: (target: HTMLElement | null) => void) => void) | undefined;
 }
 
 export type Registration =
-  | (OverlayOptions & { readonly kind: 'auto' })
+  | (OverlayOptions & {
+      readonly kind: 'auto';
+      readonly activation?: 'component' | undefined;
+      readonly onDismissStart?:
+        ((reason: DismissReason, pointerTarget: Element | null) => void) | undefined;
+    })
   | (OverlayOptions & {
       readonly kind: 'manual';
       readonly passive?: boolean | undefined;
@@ -253,6 +262,7 @@ class Layer {
   internal = false;
   disposed = false;
   focused = false;
+  nativeRestoresFocus = false;
   private anchor: HTMLElement | null = null;
   private focusBeforeOpen: WeakRef<Element> | null = null;
   private suppressNextTriggerClick = false;
@@ -340,9 +350,12 @@ class Layer {
         trigger,
         this.phase === 'exiting' || !this.ownsCarrier ? null : this.options.element,
       );
-      const unregisterClick = registerTriggerClick(this.document, this);
+      const unregisterClick =
+        this.options.activation === 'component'
+          ? undefined
+          : registerTriggerClick(this.document, this);
       this.unbindTrigger = () => {
-        unregisterClick();
+        unregisterClick?.();
         if (ownerDocumentOf(trigger) === this.document) {
           restoreInvoker?.();
         }
@@ -568,7 +581,18 @@ class Layer {
   }
 
   private beforeToggle = (event: ToggleEvent): void => {
-    if (!this.ownsCarrier || this.internal || event.newState !== 'closed') {
+    if (!this.ownsCarrier || this.internal) {
+      return;
+    }
+    if (
+      event.newState === 'open' &&
+      this.options.kind === 'auto' &&
+      this.options.activation === 'component'
+    ) {
+      event.preventDefault();
+      return;
+    }
+    if (event.newState !== 'closed') {
       return;
     }
     if (this.options.kind === 'modal') {
@@ -610,6 +634,7 @@ class OverlayRuntime implements OverlayRuntimeProtocol {
   private releaseScroll: (() => void) | undefined;
   private modalAncestry: Element[] = [];
   private pointerTarget: Element | null = null;
+  private pointerPath: readonly EventTarget[] = [];
   private pointerTimeout: number | undefined;
   private pendingReports = 0;
 
@@ -716,21 +741,26 @@ class OverlayRuntime implements OverlayRuntimeProtocol {
 
   close(layer: Layer, options?: CloseOptions): void {
     this.transactions++;
+    let stopFocusWatch: (() => boolean) | undefined;
     try {
       const shouldReturnFocus = options?.returnFocus !== false && this.canReturnFocus(layer);
       const hadFocus = shouldReturnFocus && this.ownedFocus(layer);
       const previousFocus = layer.previousFocus?.deref() ?? null;
+      stopFocusWatch = hadFocus ? this.watchClosingFocus(layer, previousFocus) : undefined;
       layer.beginExit();
       // A projection subscriber may synchronously dispose this layer.
       if (layer.runtime === this) {
         layer.hide();
         this.detach(layer);
         this.reconcile();
-        if (hadFocus) {
+        const externalFocus = stopFocusWatch?.();
+        stopFocusWatch = undefined;
+        if (hadFocus && !externalFocus) {
           this.returnFocus(layer, previousFocus);
         }
       }
     } finally {
+      stopFocusWatch?.();
       this.completeTransaction();
     }
   }
@@ -739,6 +769,7 @@ class OverlayRuntime implements OverlayRuntimeProtocol {
     if (layer.active || layer.phase === 'exiting') {
       if (
         layer.options.kind === 'auto' &&
+        layer.options.activation !== 'component' &&
         layer.trigger &&
         this.pointerTarget &&
         composedContains(layer.trigger, this.pointerTarget)
@@ -856,6 +887,10 @@ class OverlayRuntime implements OverlayRuntimeProtocol {
       }
       this.pending.delete(layer);
       layer.clearSuppressTriggerClick();
+      layer.nativeRestoresFocus =
+        layer.options.kind === 'auto' &&
+        layer.options.resolveFocusTrigger !== undefined &&
+        !this.hasNativePopoverPeer(layer);
       layer.phase = 'open';
       this.stack.push(layer);
       layer.updateTrigger();
@@ -869,6 +904,22 @@ class OverlayRuntime implements OverlayRuntimeProtocol {
         this.watchModals();
       }
     }
+  }
+
+  private hasNativePopoverPeer(layer: Layer): boolean {
+    const own = layer.options.element;
+    const isPeer = (element: Element): boolean => {
+      if (element === own || !matchesSelector(element, ':popover-open')) {
+        return false;
+      }
+      const mode = getElementPopover(element);
+      return mode === 'auto' || mode === 'hint';
+    };
+    return (
+      this.stack.some(({ options }) => isPeer(options.element)) ||
+      [...composedAncestors(own), ...composedAncestors(layer.trigger)].some(isPeer) ||
+      querySelectorAllSafe(this.document, ':popover-open').some(isPeer)
+    );
   }
 
   private detach(layer: Layer): void {
@@ -979,24 +1030,108 @@ class OverlayRuntime implements OverlayRuntimeProtocol {
   }
 
   private returnFocus(layer: Layer, previousFocus: Element | null): void {
-    const current = deepFocus(this.document);
-    if (
-      (current &&
-        current !== documentBodyOf(this.document) &&
-        current !== previousFocus &&
-        !composedContains(layer.options.element, current)) ||
-      (this.pointerTarget && !composedContains(layer.options.element, this.pointerTarget))
-    ) {
+    const isStillOwned = (): boolean => {
+      const current = deepFocus(this.document);
+      return (
+        (!current ||
+          current === documentBodyOf(this.document) ||
+          current === previousFocus ||
+          composedContains(layer.options.element, current)) &&
+        (!this.pointerTarget ||
+          this.pointerPath.includes(layer.options.element) ||
+          composedContains(layer.options.element, this.pointerTarget))
+      );
+    };
+    if (!isStillOwned()) {
       return;
     }
-    if (!focusElement(layer.trigger, this.document)) {
-      focusElement(previousFocus, this.document);
+    const restore = (trigger: HTMLElement | null): void => {
+      if (focusElement(trigger, this.document)) {
+        return;
+      }
+      if (
+        layer.options.resolveFocusTrigger &&
+        previousFocus &&
+        matchesSelector(previousFocus, '[aria-disabled="true" i]')
+      ) {
+        if (deepFocus(this.document) === previousFocus) {
+          blurElement(previousFocus);
+        }
+      } else {
+        focusElement(previousFocus, this.document);
+      }
+    };
+    if (layer.options.resolveFocusTrigger) {
+      layer.options.resolveFocusTrigger((trigger) => {
+        if (!layer.disposed && layer.phase === 'closed' && isStillOwned()) {
+          restore(trigger);
+        }
+      });
+    } else {
+      restore(layer.trigger);
     }
   }
 
   private canReturnFocus(layer: Layer): boolean {
     const { options } = layer;
     return options.kind !== 'manual' || options.returnFocus !== false;
+  }
+
+  private watchClosingFocus(
+    layer: Layer,
+    previousFocus: Element | null,
+  ): (() => boolean) | undefined {
+    if (!layer.options.resolveFocusTrigger) {
+      return undefined;
+    }
+    // Only the first native auto or hint can have saved focus. It can restore
+    // a rendered target only if focus still belongs to the panel when it hides.
+    const active = deepFocus(this.document);
+    const style = previousFocus && getComputedStyleSafe(previousFocus);
+    let expectedNativeFocus =
+      layer.nativeRestoresFocus &&
+      composedContains(layer.options.element, active) &&
+      previousFocus &&
+      inDocument(previousFocus, this.document) &&
+      previousFocus.getClientRects().length > 0 &&
+      !matchesSelector(previousFocus, ':disabled') &&
+      !hasHiddenAncestor(previousFocus, true) &&
+      !isInertElement(previousFocus) &&
+      style?.visibility !== 'hidden' &&
+      style?.visibility !== 'collapse'
+        ? previousFocus
+        : null;
+    let externalFocus = false;
+    const onFocus = (): void => {
+      const target = deepFocus(this.document);
+      if (
+        !target ||
+        target === documentBodyOf(this.document) ||
+        composedContains(layer.options.element, target)
+      ) {
+        return;
+      }
+      // During beforetoggle the panel is still open. Native restoration can
+      // only happen after the browser hides it.
+      if (target === expectedNativeFocus && !isNativeOpen(layer)) {
+        expectedNativeFocus = null;
+      } else {
+        externalFocus = true;
+      }
+    };
+    addListener(this.document, 'focusin', onFocus, true);
+    if (
+      active &&
+      expectedNativeFocus &&
+      matchesSelector(expectedNativeFocus, '[aria-disabled="true" i]')
+    ) {
+      // Release focus before native hide so the browser skips its saved disabled source.
+      blurElement(active);
+    }
+    return () => {
+      removeListener(this.document, 'focusin', onFocus, true);
+      return externalFocus;
+    };
   }
 
   private reportDismiss(
@@ -1007,11 +1142,16 @@ class OverlayRuntime implements OverlayRuntimeProtocol {
   ): void {
     layer.dismissed = true;
     layer.dismissPending = true;
+    const stopFocusWatch = hadFocus ? this.watchClosingFocus(layer, previousFocus) : undefined;
+    if (layer.options.kind === 'auto') {
+      layer.options.onDismissStart?.(reason, this.pointerTarget);
+    }
     this.pendingReports++;
     queueMicrotask(() => {
       try {
+        const externalFocus = stopFocusWatch?.();
         if (!layer.disposed) {
-          if (hadFocus && layer.phase === 'closed') {
+          if (hadFocus && !externalFocus && layer.phase === 'closed') {
             try {
               this.returnFocus(layer, previousFocus);
             } catch (error) {
@@ -1139,8 +1279,10 @@ class OverlayRuntime implements OverlayRuntimeProtocol {
       this.pointerTimeout = undefined;
     }
     const raw = event.target;
+    // Keep the path of the gesture while React can remove its clicked element.
+    this.pointerPath = event.composedPath();
     this.pointerTarget =
-      isElement(raw) && !hasShadowRoot(raw) ? raw : elementFromTarget(event.composedPath()[0]);
+      isElement(raw) && !hasShadowRoot(raw) ? raw : elementFromTarget(this.pointerPath[0]);
   };
 
   private clearPointer = (): void => {
@@ -1150,6 +1292,7 @@ class OverlayRuntime implements OverlayRuntimeProtocol {
       this.pointerTimeout = undefined;
     }
     this.pointerTarget = null;
+    this.pointerPath = [];
   };
 
   private endPointer = (): void => {
@@ -1158,7 +1301,7 @@ class OverlayRuntime implements OverlayRuntimeProtocol {
     }
     const view = this.liveView();
     if (!view) {
-      this.pointerTarget = null;
+      this.clearPointer();
       return;
     }
     if (this.pointerTimeout !== undefined) {
@@ -1166,7 +1309,7 @@ class OverlayRuntime implements OverlayRuntimeProtocol {
     }
     this.pointerTimeout = view.setTimeout(() => {
       this.pointerTimeout = undefined;
-      this.pointerTarget = null;
+      this.clearPointer();
     }, 0);
   };
 
@@ -1261,7 +1404,12 @@ class OverlayRuntime implements OverlayRuntimeProtocol {
       return;
     }
     if (layer.options.kind === 'auto') {
-      if (barrier?.active) {
+      const insideNativeModal =
+        layer.options.activation === 'component' &&
+        Array.from(composedAncestors(layer.options.element)).some((element) =>
+          matchesSelector(element, 'dialog:modal'),
+        );
+      if (barrier?.active || insideNativeModal) {
         event.preventDefault();
         this.finalDismiss(layer, 'escape');
       }
@@ -1292,7 +1440,7 @@ class OverlayRuntime implements OverlayRuntimeProtocol {
         // Ignore cross-origin frame teardown.
       }
     }
-    this.pointerTarget = null;
+    this.clearPointer();
     removeListener(this.document, 'keydown', this.onEscapeCapture, true);
     removeListener(this.document, 'keydown', this.onEscape);
     removeListener(this.document, 'focusin', this.onFocus, true);
@@ -1303,10 +1451,6 @@ class OverlayRuntime implements OverlayRuntimeProtocol {
     removeListener(this.document, 'fullscreenchange', this.reconcile);
     const view = this.liveView();
     if (view) {
-      if (this.pointerTimeout !== undefined) {
-        view.clearTimeout(this.pointerTimeout);
-        this.pointerTimeout = undefined;
-      }
       removeListener(view, 'blur', this.clearPointer);
     }
     const isCurrent = resolveOverlayRuntime(this.document) === this;
