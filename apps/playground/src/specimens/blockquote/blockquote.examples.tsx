@@ -1,6 +1,6 @@
 import { QuotesIcon } from '@phosphor-icons/react';
 import type { IconProps as PhosphorIconProps } from '@phosphor-icons/react';
-import { Blockquote, Card, Code, Link, Stack, Text, Title } from '@docouno/unica';
+import { Blockquote, Card, Code, Link, Text, Title } from '@docouno/unica';
 import { ExampleSurface } from '../shared/example-surface.js';
 import type { PreviewProps } from '../../workbench/types.js';
 import './blockquote.examples.css';
