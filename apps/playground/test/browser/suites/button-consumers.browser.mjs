@@ -87,12 +87,17 @@ export default {
         destination.click({ modifiers: ['Control'] }),
       ]);
       await popup.waitForURL((url) => url.pathname + url.search === href);
+      await popup
+        .getByRole('heading', { name: 'Platform Engineering', exact: true })
+        .first()
+        .waitFor({ timeout: 20_000 });
       await popup.close();
     }
     assert.match(page.url(), /item=empty/u);
     const code = await page.locator('[data-wb-block="routes"] pre > code').textContent();
     assert.equal((code.match(/<Button asChild/gu) ?? []).length, 2);
-    assert.equal((code.match(/href="\/\?item=02-workspace-overview"/gu) ?? []).length, 2);
+    assert.equal((code.match(/href=\{workspaceHref\}/gu) ?? []).length, 2);
+    assert.ok(!code.includes(href), 'The catalog destination belongs to the live example');
     await board.getByRole('button', { name: 'Reload page' }).focus();
     await page.keyboard.press('Enter');
     await assertFocused(board.getByRole('heading', { name: 'Workspace updates', level: 1 }));
