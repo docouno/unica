@@ -1,5 +1,5 @@
 import { useEffect, useId, useRef, useState, useSyncExternalStore } from 'react';
-import type { ReactElement, ReactNode } from 'react';
+import type { MouseEventHandler, ReactElement, ReactNode } from 'react';
 import {
   BellIcon,
   BookOpenIcon,
@@ -698,7 +698,7 @@ function SaveBar({
 }: {
   readonly state: SaveState;
   readonly onDiscard?: () => void;
-  readonly onSave?: () => void;
+  readonly onSave?: MouseEventHandler<HTMLButtonElement>;
 }): ReactElement {
   const saving = state === 'saving';
   const clean = state === 'clean';
@@ -795,7 +795,7 @@ export function SaveStates({ ctx }: PreviewProps): ReactElement {
       </div>
       <SaveBar
         state={state}
-        onSave={() => {
+        onSave={({ currentTarget: trigger }) => {
           if (fail) {
             ctx.story?.setControl('fail', false);
           }
@@ -804,9 +804,18 @@ export function SaveStates({ ctx }: PreviewProps): ReactElement {
             if (fail) {
               setState('error');
             } else {
+              const doc = trigger.ownerDocument;
+              const restoreFocus = doc.activeElement === trigger;
               setSaved(draft);
               setState('clean');
-              window.requestAnimationFrame(() => field.current?.focus());
+              if (restoreFocus) {
+                window.requestAnimationFrame(() => {
+                  // Disabling the focused save button can leave focus on the document body.
+                  if (doc.activeElement === doc.body || doc.activeElement === trigger) {
+                    field.current?.focus();
+                  }
+                });
+              }
             }
           }, 700);
         }}

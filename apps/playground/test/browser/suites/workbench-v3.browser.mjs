@@ -79,6 +79,48 @@ export default {
     assert.ok(Math.abs(scrolled.shift) <= 1, 'Save actions should stay visible while scrolling');
   },
 
+  'AppShell save completion preserves typing and focus outside the saving artboard': async ({
+    page,
+    mount,
+  }) => {
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await mount('workbench-v3');
+    await navigate(page, { item: 'app-shell', tab: 'states', block: 'save', freeze: '1' });
+    const frame = page.locator('[data-wb-block="save"]');
+    const boards = frame.locator('.wb-artboard');
+    const fields = boards.getByRole('textbox', { name: 'Workspace name' });
+    const first = boards.first();
+    const second = boards.nth(1);
+    await fields.first().waitFor();
+    const initial = await fields.first().inputValue();
+    await page.clock.install({ time: new Date('2026-01-01T00:00:00Z') });
+    await page.clock.pauseAt(new Date('2026-01-01T00:00:01Z'));
+
+    await first.getByRole('button', { name: 'Save changes' }).click();
+    await fields.nth(1).focus();
+    await page.keyboard.press('End');
+    await page.keyboard.insertText(' X');
+    await page.clock.runFor(750);
+    await first.getByText('All changes saved').waitFor();
+    assert.ok(await fields.nth(1).evaluate((field) => field.matches(':focus')));
+    await page.keyboard.insertText('Y');
+    assert.equal(await fields.nth(1).inputValue(), initial + ' XY');
+    assert.equal(await fields.first().inputValue(), initial);
+
+    await second.getByRole('button', { name: 'Save changes' }).click();
+    const control = frame.getByRole('checkbox', { name: 'Simulate a save failure' });
+    await control.focus();
+    await page.clock.runFor(750);
+    await second.getByText('All changes saved').waitFor();
+    assert.ok(await control.evaluate((element) => element.matches(':focus')));
+
+    const third = boards.nth(2);
+    await third.getByRole('button', { name: 'Save changes' }).click();
+    await page.clock.runFor(750);
+    await third.getByText('All changes saved').waitFor();
+    assert.ok(await fields.nth(2).evaluate((field) => field.matches(':focus')));
+  },
+
   'AppShell validates the edited workspace alias independently in each artboard': async ({
     page,
     mount,
