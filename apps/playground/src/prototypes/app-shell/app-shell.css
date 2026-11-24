@@ -149,6 +149,12 @@
   inline-size: min(340px, 100%);
 }
 
+/* The editor follows its text while field icons follow the surrounding layout. */
+.app-shell-search[dir='auto'],
+.app-shell-property-control > .unica-input[dir='auto'] {
+  direction: inherit;
+}
+
 .app-shell-workspace-status {
   display: flex;
   align-items: center;

@@ -79,6 +79,40 @@ export default {
     assert.ok(Math.abs(scrolled.shift) <= 1, 'Save actions should stay visible while scrolling');
   },
 
+  'AppShell validates the edited workspace alias independently in each artboard': async ({
+    page,
+    mount,
+  }) => {
+    await mount('workbench-v3');
+    await navigate(page, { item: 'app-shell', tab: 'states', block: 'properties', freeze: '1' });
+
+    const boards = page.locator('[data-wb-block="properties"] .wb-artboard');
+    const fields = boards.getByRole('textbox', { name: 'Workspace alias' });
+    const first = fields.first();
+    await first.waitFor();
+    assert.equal(await fields.count(), 6);
+    assert.equal(await first.inputValue(), 'Design team!');
+    assert.equal(await first.getAttribute('aria-invalid'), 'true');
+    for (const value of ['design-team', 'עיצוב-2', 'design team!']) {
+      await first.fill(value);
+      const invalid = value.includes('!');
+      assert.equal(await first.getAttribute('aria-invalid'), invalid ? 'true' : null);
+      assert.equal(
+        await boards.first().getByText('Invalid', { exact: true }).count(),
+        invalid ? 1 : 0,
+      );
+      assert.equal(
+        await first.evaluate(
+          (field) =>
+            field.ownerDocument.getElementById(field.getAttribute('aria-describedby'))?.textContent,
+        ),
+        'An alias can contain letters, digits and hyphens.',
+      );
+      assert.equal(await fields.nth(1).inputValue(), 'Design team!');
+      assert.equal(await fields.nth(1).getAttribute('aria-invalid'), 'true');
+    }
+  },
+
   'Narrow overlay studies keep readable text on the floating surface': async ({ page, mount }) => {
     await page.setViewportSize({ width: 412, height: 950 });
     await mount('workbench-v3');

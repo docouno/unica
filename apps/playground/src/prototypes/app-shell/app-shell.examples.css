@@ -146,7 +146,7 @@
   --dialog-duration: 160ms;
   position: fixed;
   inset: 0;
-  inline-size: min(440px, calc(100% - 32px));
+  inline-size: min(440px, 100cqi, calc(100% - 32px));
   block-size: fit-content;
   max-block-size: calc(100% - 32px);
   margin: auto;

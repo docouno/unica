@@ -38,7 +38,11 @@ export default defineComponent({
       description: 'Global search and identity along the top edge.',
       choices: [
         { value: 'none', label: 'Empty' },
-        { value: 'search', label: 'Search', code: '<TopRail><GlobalSearch /></TopRail>' },
+        {
+          value: 'search',
+          label: 'Search',
+          code: '<TopRail><GlobalSearch dir="auto" /></TopRail>',
+        },
       ],
     },
     leftRail: {
@@ -112,7 +116,7 @@ export default defineComponent({
       topRail={
         values.topRail === 'search' ? (
           <TopRail>
-            <GlobalSearch />
+            <GlobalSearch dir="auto" />
           </TopRail>
         ) : undefined
       }
@@ -169,7 +173,7 @@ export default defineComponent({
       );
     }
     const slots = [
-      topRail === 'search' ? ' topRail={<TopRail><GlobalSearch /></TopRail>}' : '',
+      topRail === 'search' ? ' topRail={<TopRail><GlobalSearch dir="auto" /></TopRail>}' : '',
       leftRail === 'rail'
         ? topRail === 'none'
           ? ' leftRail={<LeftRail showBrand />}'
@@ -259,7 +263,7 @@ export default defineComponent({
       kind: 'content',
       mode: 'live',
       caption:
-        'Compare an editable setting, a managed value and a validation message with the compact inspector rows.',
+        'Compare an editable setting with a managed value. Edit the workspace alias to see its validation state change.',
       render: withOverlaySurface(Properties, 'border-box'),
     },
     {
@@ -324,7 +328,7 @@ function Workspace({ layout = 'l-shaped' }) {
     <AppShell
       canvasAs="section"
       minHeight={320}
-      topRail={layout === 'l-shaped' && <TopRail><GlobalSearch placeholder="Search library…" /></TopRail>}
+      topRail={layout === 'l-shaped' && <TopRail><GlobalSearch dir="auto" placeholder="Search library…" /></TopRail>}
       leftRail={['l-shaped', 'classic', 'rail'].includes(layout) && <LeftRail showBrand={layout !== 'l-shaped'} />}
       leftAside={hasNavigation && <AsidePanel title="Library"><Text size="body-s">Research notes</Text></AsidePanel>}
       rightAside={hasInspector && <AsidePanel side="right" title="Inspector"><Text size="body-s">Shared with the team</Text></AsidePanel>}

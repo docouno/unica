@@ -170,14 +170,16 @@ function Canvas({ title = 'Interview synthesis' }: { readonly title?: string }):
       </Text>
       <Title size="heading-m">{title}</Title>
       <Text size="body-s" color="secondary">
-        Notes and decisions from the first round of fieldwork.
+        <bdi>Notes and decisions from the first round of fieldwork.</bdi>
       </Text>
       <Card size="s">
         <Text size="body-s" weight="semibold">
           Key finding
         </Text>
         <Text size="caption-l" color="muted">
-          People return to the workspace to see what changed and pick up where they left off.
+          <bdi>
+            People return to the workspace to see what changed and pick up where they left off.
+          </bdi>
         </Text>
       </Card>
     </article>
@@ -209,7 +211,7 @@ export function WorkspaceTopology({ ctx }: PreviewProps): ReactElement {
       topRail={
         layout === 'l-shaped' && (
           <TopRail>
-            <GlobalSearch placeholder="Search library…" />
+            <GlobalSearch dir="auto" placeholder="Search library…" />
           </TopRail>
         )
       }
@@ -370,10 +372,13 @@ export function Documents(): ReactElement {
             data-surface="overlay"
           >
             <Title id={labelId} as="h2" size="heading-s">
-              Close without saving?
+              <bdi>Close without saving?</bdi>
             </Title>
             <Text size="body-s" color="secondary">
-              {items.find((item) => item.value === pending)?.label} has unsaved changes.
+              <bdi>
+                <bdi>{items.find((item) => item.value === pending)?.label}</bdi> has unsaved
+                changes.
+              </bdi>
             </Text>
             <div className="app-shell-sticky-actions">
               <Button
@@ -442,7 +447,7 @@ function EmptyDocuments(): ReactElement {
     >
       <div className="shell-study-canvas">
         <Text size="body-s" color="muted">
-          {open ? 'Untitled' : 'Open a document to resume work.'}
+          <bdi>{open ? 'Untitled' : 'Open a document to resume work.'}</bdi>
         </Text>
       </div>
     </AppShell>
@@ -493,7 +498,7 @@ export function ResponsiveShell(): ReactElement {
       viewportHeight={580}
       topRail={
         <TopRail>
-          <GlobalSearch placeholder="Search workspace…" />
+          <GlobalSearch dir="auto" placeholder="Search workspace…" />
         </TopRail>
       }
       leftRail={<LeftRail />}
@@ -580,7 +585,7 @@ function MobilePreview({ side }: { readonly side: 'start' | 'end' }): ReactEleme
         minHeight={380}
         topRail={
           <TopRail>
-            <GlobalSearch placeholder="Search workspace…" />
+            <GlobalSearch dir="auto" placeholder="Search workspace…" />
           </TopRail>
         }
       >
@@ -617,20 +622,22 @@ function MobilePreview({ side }: { readonly side: 'start' | 'end' }): ReactEleme
 
 export function Properties(): ReactElement {
   const id = useId();
+  const [alias, setAlias] = useState('Design team!');
+  const invalidAlias = !/^(?:\p{L}\p{M}*|\p{Nd}|-)*$/u.test(alias);
   return (
     <div className="shell-study-panels">
       <Example title="SettingsRow · standard settings">
         <Card className="app-shell-example-properties" size="s">
           <SettingsRow
             label="Default view"
-            description="Applies when opening a project on this device."
+            description={<bdi>Applies when opening a project on this device.</bdi>}
             controlId={`${id}-view`}
           >
-            <Input id={`${id}-view`} size="s" defaultValue="Library" />
+            <Input id={`${id}-view`} dir="auto" size="s" defaultValue="Library" />
           </SettingsRow>
           <SettingsRow
             label="Permission inheritance"
-            description="Managed by your workspace administrator."
+            description={<bdi>Managed by your workspace administrator.</bdi>}
             status={
               <Badge size="s" status="neutral">
                 Managed
@@ -638,29 +645,37 @@ export function Properties(): ReactElement {
             }
             controlId={`${id}-managed`}
           >
-            <Input id={`${id}-managed`} size="s" defaultValue="Workspace" disabled />
+            <Input id={`${id}-managed`} dir="auto" size="s" defaultValue="Workspace" disabled />
           </SettingsRow>
           <SettingsRow
             label="Workspace alias"
             description={
-              <Text as="span" id={`${id}-error`} size="caption-l" color="danger">
-                An alias can contain letters, digits and hyphens.
+              <Text
+                as="span"
+                id={`${id}-alias-hint`}
+                size="caption-l"
+                color={invalidAlias ? 'danger' : 'secondary'}
+              >
+                <bdi>An alias can contain letters, digits and hyphens.</bdi>
               </Text>
             }
             status={
-              <Badge size="s" status="danger">
-                Invalid
-              </Badge>
+              invalidAlias && (
+                <Badge size="s" status="danger">
+                  Invalid
+                </Badge>
+              )
             }
-            controlId={`${id}-invalid`}
+            controlId={`${id}-alias`}
           >
             <Input
-              id={`${id}-invalid`}
-              aria-describedby={`${id}-error`}
-              aria-invalid="true"
+              id={`${id}-alias`}
+              dir="auto"
+              aria-describedby={`${id}-alias-hint`}
               size="s"
-              status="danger"
-              defaultValue="Design team!"
+              status={invalidAlias ? 'danger' : 'neutral'}
+              value={alias}
+              onChange={(event) => setAlias(event.currentTarget.value)}
             />
           </SettingsRow>
         </Card>
@@ -751,6 +766,7 @@ export function SaveStates({ ctx }: PreviewProps): ReactElement {
           Workspace name
           <Input
             ref={field}
+            dir="auto"
             size="m"
             value={draft}
             onChange={(event) => {
@@ -765,7 +781,7 @@ export function SaveStates({ ctx }: PreviewProps): ReactElement {
             Access and permissions
           </Text>
           <Text size="body-s" color="secondary">
-            Only invited members can open this workspace.
+            <bdi>Only invited members can open this workspace.</bdi>
           </Text>
         </Card>
         <Card size="s">
@@ -773,7 +789,7 @@ export function SaveStates({ ctx }: PreviewProps): ReactElement {
             Review reminders
           </Text>
           <Text size="body-s" color="secondary">
-            Editors receive a weekly digest of documents awaiting review.
+            <bdi>Editors receive a weekly digest of documents awaiting review.</bdi>
           </Text>
         </Card>
       </div>
