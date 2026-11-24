@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { CloudSlashIcon } from '@phosphor-icons/react';
+import { CloudSlashIcon, FileMagnifyingGlassIcon } from '@phosphor-icons/react';
 import { Button, Grid, Stack, Text, Title } from '@docouno/unica';
 import {
   Empty,
@@ -9,7 +9,11 @@ import {
   EmptyTitle,
 } from '../../prototypes/empty/empty.proto.js';
 
-export function EmptyRoutes({ emptyProps = {} } = {}) {
+export function EmptyRoutes({
+  emptyProps = {},
+  workspaceHref = '/workspace',
+  illustrationSrc = '',
+} = {}) {
   const [loaded, setLoaded] = useState(false);
   const moveFocus = useRef(false);
 
@@ -24,8 +28,8 @@ export function EmptyRoutes({ emptyProps = {} } = {}) {
       }}
     >
       <Empty {...emptyProps} size="l">
-        <EmptyMedia>
-          <img src="/assets/empty-landscape.svg" alt="" width="240" height="180" />
+        <EmptyMedia icon={FileMagnifyingGlassIcon}>
+          {illustrationSrc && <img src={illustrationSrc} alt="" width="240" height="180" />}
         </EmptyMedia>
         <EmptyTitle as="h1">Page not found</EmptyTitle>
         <EmptyDescription>
@@ -33,7 +37,7 @@ export function EmptyRoutes({ emptyProps = {} } = {}) {
         </EmptyDescription>
         <EmptyActions>
           <Button asChild>
-            <a href="/?item=02-workspace-overview">Back to workspace</a>
+            <a href={workspaceHref}>Back to workspace</a>
           </Button>
         </EmptyActions>
       </Empty>
@@ -76,7 +80,7 @@ export function EmptyRoutes({ emptyProps = {} } = {}) {
               Reload page
             </Button>
             <Button asChild variant="secondary" tone="neutral">
-              <a href="/?item=02-workspace-overview">Back to workspace</a>
+              <a href={workspaceHref}>Back to workspace</a>
             </Button>
           </EmptyActions>
         </Empty>

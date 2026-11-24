@@ -9,7 +9,6 @@ import {
   EmptyTitle,
 } from '../../prototypes/empty/empty.proto.js';
 import type { PreviewProps } from '../../workbench/types.js';
-import { collectionHref } from './empty-code.js';
 import type { EmptyValues } from './empty.spec.js';
 
 interface PlaygroundProps extends PreviewProps {
@@ -38,7 +37,10 @@ export function EmptyPlayground({
       </EmptyDescription>
       <EmptyActions>
         <Button asChild tone="accent" variant="secondary">
-          <a href={collectionHref} onClick={() => ctx.action('onBrowse')('Browse pages')}>
+          <a
+            href="/?item=03-document-collection"
+            onClick={() => ctx.action('onBrowse')('Browse pages')}
+          >
             Browse pages
           </a>
         </Button>

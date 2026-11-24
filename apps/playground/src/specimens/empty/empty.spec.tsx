@@ -189,7 +189,13 @@ export default defineComponent({
         'Both pages link back to the workspace. Reload page recovers the failed view and moves keyboard focus to its content.',
       code: routesSource.replaceAll('../../prototypes/', './prototypes/'),
       render: withOverlaySurface(
-        ({ ctx }) => <EmptyRoutes emptyProps={ctx.subject} />,
+        ({ ctx }) => (
+          <EmptyRoutes
+            emptyProps={ctx.subject}
+            workspaceHref="/?item=02-workspace-overview"
+            illustrationSrc="/assets/empty-landscape.svg"
+          />
+        ),
         'border-box',
       ),
     },
