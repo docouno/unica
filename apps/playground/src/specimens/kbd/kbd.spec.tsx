@@ -1,416 +1,48 @@
-import { Kbd, KbdGroup } from '@docouno/unica';
-import type { KbdSize } from '@docouno/unica';
-import { useState } from 'react';
-import type { ReactElement, ReactNode } from 'react';
-import { previewProps, previewText } from '../preview-code.js';
+import { Kbd } from '@docouno/unica';
 import { defineComponent } from '../../workbench/types.js';
-import { Button } from '@docouno/unica';
-import type { ButtonTone, ButtonVariant } from '@docouno/unica';
-import { Text, Title, Tooltip } from '@docouno/unica';
-import { GlobalSearch } from '../../prototypes/app-shell/app-shell.proto.js';
-import { MenuPreview } from '../../prototypes/menu/menu.proto.js';
-import './kbd.examples.css';
-
-function ExampleRow({
-  label,
-  children,
-}: {
-  readonly label: string;
-  readonly children: ReactNode;
-}): ReactElement {
-  return (
-    <div className="kbd-example-row">
-      <span className="kbd-example-label">{label}</span>
-      <div className="kbd-example-content">{children}</div>
-    </div>
-  );
-}
-function SearchChord({
-  size = 'inherit',
-  compact = false,
-}: {
-  readonly size?: KbdSize;
-  readonly compact?: boolean;
-}): ReactElement {
-  return (
-    <KbdGroup size={size} separator={compact ? '' : '+'}>
-      <Kbd>⌘</Kbd>
-      <Kbd>K</Kbd>
-    </KbdGroup>
-  );
-}
-function Keycaps(): ReactElement {
-  return (
-    <div className="kbd-example-stack">
-      <ExampleRow label="Letters & marks">
-        <Kbd size="m">K</Kbd>
-        <Kbd size="m">Z</Kbd>
-        <Kbd size="m">/</Kbd>
-        <Kbd size="m">+</Kbd>
-        <Kbd size="m">F12</Kbd>
-      </ExampleRow>
-      <ExampleRow label="Modifiers">
-        <Kbd size="m">⌘</Kbd>
-        <Kbd size="m">⌥</Kbd>
-        <Kbd size="m">⌃</Kbd>
-        <Kbd size="m">⇧</Kbd>
-        <Kbd size="m">Ctrl</Kbd>
-        <Kbd size="m">Alt</Kbd>
-      </ExampleRow>
-      <ExampleRow label="Navigation">
-        <Kbd size="m">←</Kbd>
-        <Kbd size="m">↑</Kbd>
-        <Kbd size="m">↓</Kbd>
-        <Kbd size="m">→</Kbd>
-        <Kbd size="m">⇥</Kbd>
-        <Kbd size="m">↵</Kbd>
-        <Kbd size="m">⌫</Kbd>
-      </ExampleRow>
-      <ExampleRow label="Named keys">
-        <Kbd size="m">Esc</Kbd>
-        <Kbd size="m">Enter</Kbd>
-        <Kbd size="m">Shift</Kbd>
-        <Kbd size="m">Space</Kbd>
-        <Kbd size="m">Page Down</Kbd>
-      </ExampleRow>
-      <Text size="caption-l" color="muted">
-        A key or a short input hint. Neutral, non-interactive, and never a separate Tab stop.
-      </Text>
-    </div>
-  );
-}
-function Sizing(): ReactElement {
-  return (
-    <div className="kbd-example-stack">
-      {(['s', 'm', 'l'] as const).map((size, index) => (
-        <ExampleRow key={size} label={`${size.toUpperCase()} · ${20 + index * 4}px`}>
-          <Kbd size={size}>K</Kbd>
-          <Kbd size={size}>⌘</Kbd>
-          <Kbd size={size}>Enter</Kbd>
-          <SearchChord size={size} />
-        </ExampleRow>
-      ))}
-      <div className="kbd-example-inline">
-        <Text size="caption-l">
-          Press <Kbd>Esc</Kbd> to dismiss.
-        </Text>
-        <Text size="body-s">
-          Press <SearchChord /> to search.
-        </Text>
-        <Text size="body-m">
-          Use <Kbd>Tab</Kbd> to move between fields.
-        </Text>
-        <Text size="body-l">
-          Press <Kbd>Enter</Kbd> to continue.
-        </Text>
-        <Title as="h3" size="heading-m">
-          Find anything with <SearchChord compact />
-        </Title>
-      </div>
-      <Text size="caption-l" color="muted">
-        Inline keys inherit the surrounding type and line height. The standalone sizes grow with the
-        text-scale control.
-      </Text>
-    </div>
-  );
-}
-function Notation(): ReactElement {
-  return (
-    <div className="kbd-example-stack">
-      <ExampleRow label="macOS · compact">
-        <KbdGroup size="s" separator="">
-          <Kbd>⇧</Kbd>
-          <Kbd>⌘</Kbd>
-          <Kbd>P</Kbd>
-        </KbdGroup>
-      </ExampleRow>
-      <ExampleRow label="Windows / Linux">
-        <KbdGroup size="s">
-          <Kbd>Ctrl</Kbd>
-          <Kbd>Shift</Kbd>
-          <Kbd>P</Kbd>
-        </KbdGroup>
-      </ExampleRow>
-      <ExampleRow label="Sequential keys">
-        <KbdGroup size="s" separator="then">
-          <Kbd>G</Kbd>
-          <Kbd>I</Kbd>
-        </KbdGroup>
-      </ExampleRow>
-      <ExampleRow label="Sequential chords">
-        <KbdGroup size="s" separator="then">
-          <KbdGroup>
-            <Kbd>Ctrl</Kbd>
-            <Kbd>K</Kbd>
-          </KbdGroup>
-          <KbdGroup>
-            <Kbd>Ctrl</Kbd>
-            <Kbd>C</Kbd>
-          </KbdGroup>
-        </KbdGroup>
-      </ExampleRow>
-      <ExampleRow label="Alternative keys">
-        <span className="kbd-example-alternatives">
-          <Kbd size="s">Enter</Kbd>
-          <span>or</span>
-          <Kbd size="s">Space</Kbd>
-        </span>
-      </ExampleRow>
-      <ExampleRow label="Compact hint">
-        <Kbd size="s">⌘K</Kbd>
-        <Text as="span" size="caption-l" color="muted">
-          One plate for tight search and menu chrome.
-        </Text>
-      </ExampleRow>
-      <ExampleRow label="Local key names">
-        <KbdGroup size="s">
-          <Kbd label="Control">Strg</Kbd>
-          <Kbd>Umschalt</Kbd>
-          <Kbd>K</Kbd>
-        </KbdGroup>
-      </ExampleRow>
-      <Text size="caption-l" color="muted">
-        The application chooses the platform and wording. “Then” means release the first step before
-        the next.
-      </Text>
-    </div>
-  );
-}
-
-type OwnerState = 'ready' | 'disabled' | 'loading';
-function ActionContext(): ReactElement {
-  const [state, setState] = useState<OwnerState>('ready');
-  const [variant, setVariant] = useState<ButtonVariant>('primary');
-  const [tone, setTone] = useState<ButtonTone>('accent');
-  const [count, setCount] = useState(0);
-  return (
-    <div className="kbd-example-stack">
-      <div className="kbd-example-controls">
-        <label>
-          Action state
-          <select value={state} onChange={(event) => setState(event.target.value as OwnerState)}>
-            {['ready', 'disabled', 'loading'].map((value) => (
-              <option key={value}>{value}</option>
-            ))}
-          </select>
-        </label>
-        <label>
-          Weight
-          <select
-            value={variant}
-            onChange={(event) => setVariant(event.target.value as ButtonVariant)}
-          >
-            {['primary', 'secondary', 'ghost'].map((value) => (
-              <option key={value}>{value}</option>
-            ))}
-          </select>
-        </label>
-        <label>
-          Tone
-          <select value={tone} onChange={(event) => setTone(event.target.value as ButtonTone)}>
-            {['accent', 'neutral', 'danger'].map((value) => (
-              <option key={value}>{value}</option>
-            ))}
-          </select>
-        </label>
-      </div>
-      <div className="kbd-example-action-preview">
-        <Button
-          variant={variant}
-          tone={tone}
-          disabled={state === 'disabled'}
-          loading={state === 'loading'}
-          onClick={() => setCount(count + 1)}
-        >
-          <span className="kbd-example-action-label">
-            {tone === 'danger' ? 'Remove' : 'Run command'}
-            <Kbd aria-hidden="true">↵</Kbd>
-          </span>
-        </Button>
-        <Text size="caption-l" color="muted" aria-live="polite">
-          {state === 'loading'
-            ? 'Command in progress…'
-            : state === 'disabled'
-              ? 'Command unavailable.'
-              : count
-                ? `Activated ${count} ${count === 1 ? 'time' : 'times'}.`
-                : 'Try Tab, Enter, Space, or click.'}
-        </Text>
-      </div>
-      <div className="kbd-example-content">
-        <Button size="s" variant="secondary" tone="neutral">
-          <span className="kbd-example-action-label">
-            Save<Kbd aria-hidden="true">⌘S</Kbd>
-          </span>
-        </Button>
-        <Button size="s" variant="ghost" tone="neutral">
-          <span className="kbd-example-action-label">
-            Find
-            <SearchChord compact />
-          </span>
-        </Button>
-        <Button size="s" variant="secondary" tone="neutral" disabled>
-          <span className="kbd-example-action-label">
-            Save<Kbd aria-hidden="true">⌘S</Kbd>
-          </span>
-        </Button>
-      </div>
-      <Text size="caption-l" color="muted">
-        Hover, hold, or Tab to the action. Loading hides its full content. Shortcut hints do not
-        register hotkeys.
-      </Text>
-    </div>
-  );
-}
-function Surfaces(): ReactElement {
-  return (
-    <div className="kbd-example-stack">
-      <div className="kbd-example-surface" data-plate="canvas">
-        <span>On a canvas</span>
-        <SearchChord size="s" />
-      </div>
-      <div className="kbd-example-surface" data-plate="surface">
-        <span>On a surface</span>
-        <SearchChord size="s" />
-      </div>
-      <div className="kbd-example-surface" data-plate="control">
-        <span>On a field</span>
-        <Kbd size="s">⌘K</Kbd>
-      </div>
-      <div className="kbd-example-search">
-        <GlobalSearch placeholder="Search documents…" />
-      </div>
-      <Text size="caption-l" color="muted">
-        The same neutral plate remains legible across surfaces. The real search input above keeps
-        the shortcut secondary to its value.
-      </Text>
-    </div>
-  );
-}
-function OverlayContext(): ReactElement {
-  return (
-    <div className="kbd-example-overlay">
-      <Tooltip label="Bold" shortcut="⌘B">
-        <Button variant="ghost" tone="neutral" size="s">
-          Bold
-        </Button>
-      </Tooltip>
-      <MenuPreview
-        label="Shortcut appearance samples"
-        className="kbd-example-menu"
-        items={[
-          { id: 'find', label: 'Find a command', shortcut: '⌘K' },
-          { id: 'palette', label: 'Open command palette', shortcut: '⇧⌘P', preview: 'hover' },
-          { id: 'separator', type: 'separator' },
-          { id: 'diff', label: 'Compare revisions', shortcut: '⌘D', disabled: true },
-        ]}
-      />
-      <Text size="caption-l" color="muted">
-        Hover or Tab to Bold to show its shortcut. The highlighted menu row is pinned for
-        comparison, and the disabled command keeps its shortcut visible.
-      </Text>
-    </div>
-  );
-}
-function Reflow(): ReactElement {
-  return (
-    <div className="kbd-example-stack">
-      <div className="kbd-example-reference">
-        <div>
-          <span>Open the command palette</span>
-          <KbdGroup size="s">
-            <Kbd>Ctrl</Kbd>
-            <Kbd>Shift</Kbd>
-            <Kbd>P</Kbd>
-          </KbdGroup>
-        </div>
-        <div>
-          <span>Go to inbox</span>
-          <KbdGroup size="s" separator="then">
-            <Kbd>G</Kbd>
-            <Kbd>I</Kbd>
-          </KbdGroup>
-        </div>
-        <div>
-          <span>Custom command</span>
-          <Text as="span" size="caption-l" color="muted">
-            Not assigned
-          </Text>
-        </div>
-      </div>
-      <Text size="body-s">
-        To open the palette, press{' '}
-        <KbdGroup>
-          <Kbd>Ctrl</Kbd>
-          <Kbd>Shift</Kbd>
-          <Kbd>P</Kbd>
-        </KbdGroup>
-        . The whole chord moves to the next line when needed.
-      </Text>
-      <div className="kbd-example-steps" dir="ltr">
-        <KbdGroup size="s">
-          <Kbd>Control</Kbd>
-          <Kbd>K</Kbd>
-        </KbdGroup>
-        <span>
-          then{' '}
-          <KbdGroup size="s">
-            <Kbd>Control</Kbd>
-            <Kbd>Shift</Kbd>
-            <Kbd>C</Kbd>
-          </KbdGroup>
-        </span>
-      </div>
-      <div
-        className="kbd-example-overflow"
-        dir="ltr"
-        tabIndex={0}
-        role="region"
-        aria-label="Long shortcut example"
-      >
-        <KbdGroup size="s">
-          <Kbd>Control</Kbd>
-          <Kbd>Shift</Kbd>
-          <Kbd>Page Down</Kbd>
-        </KbdGroup>
-      </div>
-      <Text size="caption-l" color="muted">
-        Shortcuts stay left-to-right in RTL. Long sequences break between steps; an unusually wide
-        reference can scroll without shortening a key name. An unassigned command has no empty
-        keycap.
-      </Text>
-    </div>
-  );
-}
+import { previewProps, previewText } from '../preview-code.js';
+import {
+  ActionContext,
+  OverlayContext,
+  OwnerStates,
+  Surfaces,
+  actionsCode,
+} from './kbd.contexts.js';
+import { KbdFrame, Keycaps, Notation, Reflow, Sizing } from './kbd.examples.js';
+import { KeyboardViewport } from './kbd.viewport.js';
 
 export default defineComponent({
   id: 'kbd',
   title: 'Kbd',
   category: 'Typography',
   status: 'UI',
-  summary: 'Keycaps for individual keys and compact keyboard hints.',
+  summary: 'A passive keycap for a key name, symbol or compact shortcut.',
   componentName: 'Kbd',
   props: {
     size: {
       kind: 'enum',
-      group: 'Appearance',
+      group: 'Geometry',
       default: 'inherit',
-      description: 'Scale relative to the surrounding text.',
+      description: 'Use the surrounding line height or an explicit key size.',
       choices: [{ value: 'inherit' }, { value: 's' }, { value: 'm' }, { value: 'l' }],
     },
     children: {
       kind: 'string',
       group: 'Content',
-      default: '⌘',
-      description: 'A key label or a recognized symbol.',
-      examples: ['⌘', 'Enter', 'Esc', '→', ''],
+      publicType: 'ReactNode',
+      default: 'K',
+      description:
+        'A key name, key symbol or short input hint. The editor starts with the letter K. Empty content leaves the keycap out.',
+      examples: ['K', 'Enter', 'Esc', '/', '0', ''],
     },
     label: {
       kind: 'string',
       group: 'Semantics',
+      publicType: 'string',
       default: '',
-      description: 'Spoken label for a custom glyph or localized key.',
-      examples: ['', 'Commande'],
+      description:
+        'Replace the spoken key name, for example with a local pronunciation. Blank labels preserve the default reading.',
+      examples: ['', 'Command key'],
     },
   },
   constraints: [
@@ -422,63 +54,127 @@ export default defineComponent({
     },
   ],
   render: ({ ctx, values: { children, label, size } }) => (
-    <Kbd {...ctx.subject} {...(label ? { label } : {})} size={size}>
-      {children}
-    </Kbd>
+    <KbdFrame ctx={ctx}>
+      <KeyboardViewport label="Key preview">
+        <Kbd {...ctx.subject} label={label || undefined} size={size}>
+          {children}
+        </Kbd>
+      </KeyboardViewport>
+    </KbdFrame>
   ),
   code: ({ children, ...props }) =>
     `<Kbd${previewProps(props, { size: 'inherit', label: '' })}>${previewText(children)}</Kbd>`,
-  matrixViews: [
+  states: [
     {
       id: 'sizing',
       rows: 'size',
       cols: 'children',
-      title: 'Size & inline rhythm',
-      reference: () => <Sizing />,
+      title: 'Key content at each size',
+      caption:
+        'Compare a letter, a named key, punctuation and a digit at the inherited and explicit sizes. The empty value leaves the cell without a keycap.',
+      fixed: { label: '' },
     },
   ],
   cases: [
     {
+      id: 'rhythm',
+      title: 'Keys within a line of type',
+      kind: 'content',
+      mode: 'pinned',
+      caption:
+        'An inherited keycap takes its height from the surrounding line. Compare a caption, body text and a heading with explicitly sized keys.',
+      render: Sizing,
+    },
+    {
       id: 'keys',
-      title: 'Keycaps & vocabulary',
-      kind: 'behavior',
-      render: () => <Keycaps />,
+      title: 'Key names and symbols',
+      kind: 'content',
+      mode: 'pinned',
+      caption:
+        'Read the letter, punctuation, modifier, navigation and named keys. Recognized symbols have spoken text equivalents.',
+      render: Keycaps,
     },
     {
       id: 'notation',
-      title: 'Chords & sequences',
-      kind: 'behavior',
-      render: () => <Notation />,
+      title: 'Chords, sequences and alternatives',
+      kind: 'content',
+      mode: 'pinned',
+      caption:
+        'Read simultaneous keys together and sequential steps in order. Compact symbols and localized names keep a spoken reading.',
+      render: Notation,
     },
     {
       id: 'surfaces',
-      title: 'Surfaces & search',
+      title: 'A key hint beside a search field',
       kind: 'surface',
-      render: () => <Surfaces />,
+      mode: 'live',
+      caption:
+        'Compare a keycap in prose, on a card and beside a field. Type to filter the list, then press Escape in the field to clear it.',
+      render: Surfaces,
+      reset: true,
     },
     {
       id: 'overlay',
-      title: 'Menu & tooltip',
+      title: 'Hints in menus and tooltips',
       surface: 'overlay',
       overlayStage: true,
       kind: 'surface',
-      render: () => <OverlayContext />,
+      mode: 'live',
+      caption:
+        'Focus or hover the formatting button to reveal its tooltip. The static menu shows a highlighted command and an unavailable command with their shortcuts.',
+      render: OverlayContext,
+      reset: true,
     },
     {
       id: 'reflow',
-      title: 'Narrow layouts & long names',
+      title: 'Narrow layouts and long key names',
       kind: 'content',
-      render: () => <Reflow />,
+      mode: 'live',
+      caption:
+        'Chords keep their left-to-right order, and longer sequences can break between steps. Use the arrow keys to scroll the bounded reference.',
+      render: Reflow,
+    },
+    {
+      id: 'owner-states',
+      title: 'Available and unavailable shortcut hints',
+      kind: 'behavior',
+      mode: 'live',
+      caption:
+        'The owning button supplies the foreground, focus treatment and activation. Compare a ready action with its disabled and loading states.',
+      controls: {
+        state: {
+          kind: 'enum',
+          label: 'Action state',
+          default: 'ready',
+          choices: ['ready', 'disabled', 'loading'],
+        },
+        variant: {
+          kind: 'enum',
+          label: 'Button variant',
+          default: 'primary',
+          choices: ['primary', 'secondary', 'ghost'],
+        },
+        tone: {
+          kind: 'enum',
+          label: 'Button tone',
+          default: 'accent',
+          choices: ['accent', 'neutral', 'danger'],
+        },
+      },
+      reset: true,
+      render: OwnerStates,
     },
   ],
-  usage: [
+  compositions: [
     {
       id: 'actions',
-      code: `<Button variant="secondary" tone="accent">
-  Search <KbdGroup><Kbd>⌘</Kbd><Kbd>K</Kbd></KbdGroup>
-</Button>`,
-      title: 'Inside an action',
-      render: () => <ActionContext />,
+      title: 'Save a document label',
+      mode: 'live',
+      reset: true,
+      caption:
+        'Edit the label and press Enter to save. The keycap shares the button’s foreground, and keyboard focus stays with the field and its action.',
+      code: actionsCode,
+      render: ActionContext,
     },
   ],
 });
