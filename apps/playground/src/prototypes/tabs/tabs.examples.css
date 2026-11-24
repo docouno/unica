@@ -1,24 +1,15 @@
-.tabs-examples {
-  display: grid;
-  gap: var(--space-16);
-}
-
-.tabs-example,
-.tabs-example-layout {
-  display: grid;
-  min-inline-size: 0;
-}
-
 .tabs-example {
-  gap: var(--space-4);
+  inline-size: 100%;
   max-inline-size: 34rem;
 }
 
-.tabs-example:has(> .tabs-example-fluid) {
+.tabs-example[data-fluid] {
   max-inline-size: none;
 }
 
 .tabs-example-layout {
+  display: grid;
+  min-inline-size: 0;
   gap: var(--space-8);
 }
 
@@ -76,6 +67,10 @@
   padding: var(--space-8);
 }
 
+[data-stage-content] > .tabs-overlay-stage {
+  inline-size: min(100%, calc(13lh + var(--space-64)));
+}
+
 .tabs-overlay-example {
   position: relative;
   display: grid;
@@ -83,4 +78,17 @@
   max-inline-size: 100%;
   gap: var(--space-8);
   padding: var(--surface-m-padding);
+}
+
+/* Reserve two lines of snapshot detail so changing panels keeps the tab strip in place. */
+.tabs-overlay-example .tabs-example-panels {
+  min-block-size: calc(2lh + 2 * var(--space-4));
+}
+
+td:has([data-tabs-playground]) {
+  min-inline-size: 21rem;
+}
+
+ul:has(> [data-wb-result-row] [data-tabs-playground]) {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 21rem), 1fr));
 }

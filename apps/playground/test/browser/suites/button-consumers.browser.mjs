@@ -14,6 +14,36 @@ async function open(page, route) {
   return page.locator('.wb-artboard');
 }
 
+async function openScaledTabs(page, block, dir) {
+  await page.setViewportSize({ width: 1390, height: 950 });
+  const url = new URL('/', page.url());
+  url.search = new URLSearchParams({
+    item: 'tabs',
+    tab: 'states',
+    block,
+    dir,
+    family: 'all',
+    scheme: 'both',
+    vp: '1440',
+    scale: '120',
+    surface: 'base',
+    raw: '0',
+    freeze: '1',
+  });
+  await page.goto(url.href, { waitUntil: 'domcontentloaded' });
+  const boards = page.locator(`[data-wb-block="${block}"] .wb-artboard[dir="${dir}"]`);
+  await boards.first().waitFor({ timeout: 20_000 });
+  await page.evaluate(() => document.fonts.ready);
+  return boards;
+}
+
+function receivesPointer(node) {
+  const rect = node.getBoundingClientRect();
+  return node.contains(
+    document.elementFromPoint(rect.x + rect.width / 2, rect.y + rect.height / 2),
+  );
+}
+
 async function platePixel(locator) {
   const screenshot = await locator.screenshot({ animations: 'disabled', scale: 'css' });
   return locator.evaluate(async (node, png) => {
@@ -148,14 +178,14 @@ export default {
     assert.equal(await bold.getAttribute('aria-pressed'), 'false');
   },
 
-  'Tabs uses the direction-appropriate scroll glyph without a second reflection': async ({
+  'Tabs mirrors the scroll glyph and keeps the selected edge clickable in both directions': async ({
     page,
     mount,
   }) => {
     await page.setViewportSize({ width: 1440, height: 900 });
-    await mount('button-consumers');
     const glyphs = [];
     for (const dir of ['ltr', 'rtl']) {
+      await mount('button-consumers');
       const board = await open(page, {
         item: 'tabs',
         tab: 'states',
@@ -163,9 +193,18 @@ export default {
         vp: 360,
         dir,
       });
-      const example = board.getByText('Content · Scroll to the last tab').locator('..');
-      const arrow = example.getByRole('button', { name: 'Scroll tabs forward' });
-      const tablist = example.getByRole('tablist');
+      const tablist = board.getByRole('tablist', { name: 'Content · Workspace sections' });
+      const arrow = tablist.locator('..').getByRole('button', { name: 'Scroll tabs forward' });
+      const current = tablist.getByRole('tab', { selected: true });
+      await current.scrollIntoViewIfNeeded();
+      assert.ok(
+        await current.evaluate((tab) => {
+          const { left, right, top, height } = tab.getBoundingClientRect();
+          const x = getComputedStyle(tab).direction === 'rtl' ? right - 4 : left + 4;
+          return tab.contains(tab.ownerDocument.elementFromPoint(x, top + height / 2));
+        }),
+        `Selected tab must receive pointer input at its ${dir} inline start`,
+      );
       glyphs.push(await arrow.locator('svg path').first().getAttribute('d'));
       const reflection = await arrow.locator('svg').evaluate((svg) => {
         const { scale, transform } = getComputedStyle(svg);
@@ -180,6 +219,68 @@ export default {
       );
     }
     assert.notEqual(glyphs[0], glyphs[1]);
+  },
+
+  'Zoomed Tabs keep the keyboard-selected label and its capped count in view': async ({
+    page,
+    mount,
+  }) => {
+    await mount('native', { reducedMotion: 'reduce' });
+    for (const dir of ['ltr', 'rtl']) {
+      const boards = await openScaledTabs(page, 'overflow', dir);
+      const list = boards.first().getByRole('tablist', { name: 'Equal · Selected long label' });
+      await list.scrollIntoViewIfNeeded();
+      assert.ok(
+        await list.evaluate((node) => node.getBoundingClientRect().width < node.clientWidth / 2),
+      );
+      await list.getByRole('tab', { name: 'Overview', exact: true }).press('Home');
+      const next = dir === 'rtl' ? 'ArrowLeft' : 'ArrowRight';
+      await pressKeys(page, next, next, next);
+      const review = list.getByRole('tab', { name: /104 pending reviews/u, selected: true });
+      await assertFocused(review);
+      for (const part of [
+        review.locator('.tab-label-proto'),
+        review.getByText('99+', { exact: true }),
+      ]) {
+        assert.ok(
+          await part.evaluate(receivesPointer),
+          `The focused tab's label and count must be exposed in ${dir}`,
+        );
+      }
+    }
+  },
+
+  'Zoomed Tabs expose the last tab at fractional scroll boundaries': async ({ page, mount }) => {
+    await mount('native', { reducedMotion: 'reduce' });
+    for (const dir of ['ltr', 'rtl']) {
+      const boards = await openScaledTabs(page, 'anatomy', dir);
+      for (const theme of ['frost-dark', 'pixel-dark']) {
+        const board = boards.and(page.locator(`[data-theme="${theme}"]`));
+        const list = board.getByRole('tablist', { name: 'Workspace sections' });
+        const frame = list.locator('..');
+        await list.evaluate((node) => node.scrollIntoView({ block: 'center', inline: 'center' }));
+        const width = await list.evaluate((node) => node.clientWidth);
+        // Four adjacent layout widths span a screen pixel at this comparison scale.
+        for (const trim of [0, 1, 2, 3]) {
+          await frame.evaluate((node, width) => {
+            node.style.inlineSize = width + 'px';
+          }, width - trim);
+          await list.getByRole('tab', { name: 'Overview', exact: true }).press('Home');
+          await page.keyboard.press('End');
+          await page.evaluate(
+            () =>
+              new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))),
+          );
+          const settings = list.getByRole('tab', { name: 'Settings', selected: true });
+          await assertFocused(settings);
+          assert.ok(
+            await settings.evaluate(receivesPointer),
+            `The last ${theme} tab must be exposed at ${width - trim}px in ${dir}`,
+          );
+          assert.equal(await board.getByRole('button', { name: 'Scroll tabs forward' }).count(), 0);
+        }
+      }
+    }
   },
 
   'Table inline picker and row menu share hover and open paint': async ({ page, mount }) => {
