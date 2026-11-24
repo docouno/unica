@@ -1,235 +1,21 @@
-import { size, disabled, readOnly, loading, toggle, eventProp } from '../control-props.js';
-import { useEffect, useId, useState } from 'react';
-import type { ReactElement } from 'react';
-import { BellIcon, WarningCircleIcon } from '@phosphor-icons/react';
+import { BellIcon } from '@phosphor-icons/react';
 import { defineComponent } from '../../workbench/types.js';
-import { Checkbox, Switch, SwitchGroup } from '@docouno/unica';
-import { Sample, SurfacePair } from '../binary-examples.js';
+import { size, disabled, readOnly, loading, toggle, eventProp } from '../control-props.js';
+import { previewProps, previewText } from '../preview-code.js';
+import { withOverlaySurface } from '../shared/with-overlay-surface.js';
+import {
+  Sizes,
+  Interaction,
+  Availability,
+  FeedbackSizes,
+  AsyncSetting,
+  Overflow,
+  Surfaces,
+  MeasuredSwitch,
+} from './switch.examples.js';
+import { NotificationPreferences } from './notification-preferences.js';
+import preferencesSource from './notification-preferences.tsx?raw';
 
-function Sizes(): ReactElement {
-  return (
-    <div className="binary-demo-stack">
-      {(['s', 'm', 'l'] as const).map((size) => (
-        <div className="binary-demo-size" key={size}>
-          <span className="binary-demo-caption">
-            {size.toUpperCase()} ·{' '}
-            {size === 's'
-              ? '40 × 22px / 18px thumb'
-              : size === 'm'
-                ? '44 × 24px / 20px thumb'
-                : '52 × 28px / 24px thumb'}
-          </span>
-          <div className="binary-demo-row">
-            <Switch size={size} label="Email alerts" />
-            <Switch size={size} label="Background sync" defaultChecked />
-            <Switch size={size} label="Activity alerts" thumbIcon={<BellIcon />} defaultChecked />
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-}
-function Interaction(): ReactElement {
-  return (
-    <div className="binary-demo-row">
-      <Switch label="Email alerts" />
-      <Switch label="Background sync" defaultChecked />
-    </div>
-  );
-}
-function Availability(): ReactElement {
-  return (
-    <div className="binary-demo-grid">
-      <Sample title="Read-only">
-        <Switch
-          label="Automatic backups"
-          description="Required by your organization."
-          defaultChecked
-          readOnly
-        />
-        <Switch label="Public links" description="Managed by an administrator." readOnly />
-      </Sample>
-      <Sample title="Disabled">
-        <Switch label="Automatic backups" defaultChecked disabled />
-        <Switch label="Public links" description="Available after verification." disabled />
-      </Sample>
-      <Sample title="Pending keeps the committed value">
-        <Switch label="Email notifications" description="Turning notifications on…" loading />
-        <Switch
-          label="Email notifications"
-          description="Turning notifications off…"
-          loading
-          defaultChecked
-        />
-      </Sample>
-      <Sample title="Availability intersections">
-        <Switch
-          label="Policy sync"
-          description="Synchronizing the read-only setting…"
-          defaultChecked
-          readOnly
-          loading
-        />
-        <Switch
-          label="Unavailable sync"
-          description="Disabled suppresses pending decoration."
-          defaultChecked
-          disabled
-          loading
-          thumbIcon={<BellIcon />}
-        />
-      </Sample>
-    </div>
-  );
-}
-function FeedbackSizes(): ReactElement {
-  return (
-    <div className="binary-demo-stack">
-      {(['s', 'm', 'l'] as const).map((size) => (
-        <div className="binary-demo-row" key={size}>
-          <Switch size={size} label={`${size.toUpperCase()} · turning on…`} loading />
-          <Switch
-            size={size}
-            label={`${size.toUpperCase()} · turning off…`}
-            defaultChecked
-            loading
-          />
-        </div>
-      ))}
-    </div>
-  );
-}
-function AsyncSetting(): ReactElement {
-  const [saved, setSaved] = useState(false);
-  const [failNextSave, setFailNextSave] = useState(false);
-  const [pending, setPending] = useState<{
-    readonly value: boolean;
-    readonly fail: boolean;
-  } | null>(null);
-  const [result, setResult] = useState<'idle' | 'saved' | 'error'>('idle');
-  const id = useId();
-
-  useEffect(() => {
-    if (pending === null) {
-      return;
-    }
-    const response = window.setTimeout(() => {
-      if (!pending.fail) {
-        setSaved(pending.value);
-      }
-      setPending(null);
-      setResult(pending.fail ? 'error' : 'saved');
-    }, 1000);
-    return () => window.clearTimeout(response);
-  }, [pending]);
-
-  return (
-    <div className="binary-demo-narrow binary-demo-stack">
-      <Checkbox
-        label="Fail the next save"
-        checked={failNextSave}
-        onCheckedChange={setFailNextSave}
-      />
-      <div className="binary-demo-field">
-        <Switch
-          label="Email notifications"
-          checked={saved}
-          loading={pending !== null}
-          thumbIcon={<BellIcon />}
-          aria-describedby={id}
-          onCheckedChange={(next: boolean) => {
-            setResult('idle');
-            setPending({ value: next, fail: failNextSave });
-            setFailNextSave(false);
-          }}
-          description="Receive a message when a followed item changes."
-        />
-        <div
-          id={id}
-          role="status"
-          className={result === 'error' ? 'binary-demo-message' : 'binary-demo-caption'}
-        >
-          {result === 'error' && <WarningCircleIcon size={16} aria-hidden="true" />}
-          <span>
-            {pending !== null
-              ? `Turning notifications ${pending.value ? 'on' : 'off'}…`
-              : result === 'error'
-                ? `Could not save. Notifications are still ${saved ? 'on' : 'off'}. Activate the switch to retry.`
-                : result === 'saved'
-                  ? `Saved. Notifications are ${saved ? 'on' : 'off'}.`
-                  : ''}
-          </span>
-        </div>
-      </div>
-    </div>
-  );
-}
-function Groups(): ReactElement {
-  const id = useId();
-  const [enabled, setEnabled] = useState(true);
-  return (
-    <div className="binary-demo-grid">
-      <Sample title="Independent settings">
-        <SwitchGroup aria-label="Notification preferences" defaultValue={['mentions']}>
-          <Switch
-            value="mentions"
-            label="Mentions"
-            description="When someone mentions you directly."
-          />
-          <Switch
-            value="comments"
-            label="Replies"
-            description="When a conversation receives a reply."
-          />
-          <Switch
-            value="updates"
-            label="Followed items"
-            description="When a followed item changes."
-          />
-        </SwitchGroup>
-      </Sample>
-      <Sample title="Trailing control in a setting row">
-        <div className="binary-demo-setting">
-          <div className="binary-demo-field">
-            <label className="binary-demo-legend" id={`${id}-label`} htmlFor={id}>
-              Show reading progress
-            </label>
-            <span className="binary-demo-caption" id={`${id}-help`}>
-              Resume from the last section you read.
-            </span>
-          </div>
-          <Switch
-            className="binary-demo-setting-control"
-            id={id}
-            checked={enabled}
-            onCheckedChange={setEnabled}
-            aria-labelledby={`${id}-label`}
-            aria-describedby={`${id}-help`}
-          />
-        </div>
-      </Sample>
-    </div>
-  );
-}
-function Overflow(): ReactElement {
-  return (
-    <div className="binary-demo-narrow binary-demo-stack">
-      <Switch
-        label="Notify the owner before a recurring review expires"
-        description="The track stays centered on the first line, even when the description needs several lines."
-        defaultChecked
-      />
-      <Switch size="s" label="Automatically include updates from every followed collection" />
-      <Switch
-        size="l"
-        label="Keep a local copy of attachments for offline reading"
-        defaultChecked
-      />
-      <Switch label="Enable_notifications_for_external_collaborators_and_reviewers" />
-      <Switch aria-label="Background sync" defaultChecked />
-    </div>
-  );
-}
 export default defineComponent({
   id: 'switch',
   title: 'Switch',
@@ -243,14 +29,16 @@ export default defineComponent({
     disabled,
     readOnly,
     loading,
-    defaultChecked: {
-      ...toggle('Selection', 'Starts with notifications on.', true),
-      demo: true,
-    },
+    defaultChecked: toggle(
+      'Interaction',
+      'This example starts with notifications on. Omit the prop to start off. Reset restores the initial setting.',
+      true,
+    ),
     thumbIcon: {
       kind: 'slot',
       group: 'Content',
-      description: 'A decorative icon in the thumb.',
+      publicType: 'ReactNode',
+      description: 'Optional decorative content in the thumb. This example offers a bell.',
       choices: [
         { value: '', label: 'None' },
         { value: 'bell', label: 'Bell', code: '<BellIcon />' },
@@ -260,10 +48,15 @@ export default defineComponent({
     description: {
       kind: 'string',
       group: 'Content',
-      description: 'Supporting text for the notifications setting.',
+      publicType: 'ReactNode',
+      description: 'Supporting text associated with the switch.',
       default: '',
     },
-    onCheckedChange: eventProp('Reports whether notifications are on.', 'handleCheckedChange'),
+    onCheckedChange: eventProp(
+      'Reports the proposed on or off value after activation.',
+      '(next) => console.log(next)',
+      '(next: boolean) => void',
+    ),
   },
   constraints: [
     {
@@ -288,97 +81,147 @@ export default defineComponent({
       reason: 'A pending indicator fills the thumb icon slot.',
     },
   ],
-  render: ({ values: { defaultChecked, thumbIcon, ...props }, ctx }) => (
-    <form {...ctx.form}>
-      <div {...ctx.subject} className="binary-demo-subject">
-        <Switch
-          key={String(defaultChecked)}
-          {...props}
+  render: withOverlaySurface(
+    ({ values: { thumbIcon, ...values }, ctx }) => (
+      <form {...ctx.form} className="switch-example-form">
+        <MeasuredSwitch
+          subject={ctx.subject}
+          {...values}
+          key={String(values.defaultChecked)}
           label="Notifications"
-          defaultChecked={defaultChecked}
           name="notifications"
+          description={values.description || undefined}
           thumbIcon={thumbIcon === 'bell' ? <BellIcon /> : undefined}
           onCheckedChange={ctx.action('onCheckedChange')}
         />
-      </div>
-    </form>
+      </form>
+    ),
+    'border-box',
   ),
-  code: ({ defaultChecked }, attributes) =>
-    `<Switch label="Notifications" name="notifications"${defaultChecked ? ' defaultChecked' : ''}${attributes} />`,
-  matrixViews: [
+  code: ({ description, thumbIcon, ...values }) => {
+    const attributes = previewProps(values, {
+      size: 'm',
+      disabled: false,
+      readOnly: false,
+      loading: false,
+      defaultChecked: false,
+    });
+    const help = description ? ` description={<bdi>${previewText(description)}</bdi>}` : '';
+    const bell = thumbIcon === 'bell';
+    return `import { Switch } from '@docouno/unica';
+${bell ? "import { BellIcon } from '@phosphor-icons/react';\n" : ''}import '@docouno/unica/styles.css';
+
+export function Notifications() {
+  return (
+    <form>
+      <Switch label="Notifications" name="notifications"${attributes}${help}${bell ? ' thumbIcon={<BellIcon />}' : ''} onCheckedChange={(next) => console.log(next)} />
+    </form>
+  );
+}`;
+  },
+  states: [
     {
       id: 'sizes',
       rows: 'size',
       cols: 'loading',
-      title: 'Size & anatomy',
-      reference: () => <Sizes />,
+      fixed: { defaultChecked: true, thumbIcon: 'bell' },
+      title: 'Density and pending feedback',
+      caption:
+        'The bell follows the thumb across three densities. During a request, a spinner takes its place while the committed setting stays on.',
     },
-    { id: 'pending', rows: 'defaultChecked', cols: 'loading', title: 'Value during pending' },
+    {
+      id: 'pending',
+      rows: 'defaultChecked',
+      cols: 'loading',
+      title: 'Committed value during a request',
+      caption:
+        'Compare a setting that starts on or off. An available switch responds immediately. A pending switch keeps its value and remains focusable.',
+    },
   ],
   cases: [
     {
-      id: 'interaction',
-      title: 'Interaction states',
+      id: 'thumb-sizes',
+      title: 'Track, thumb and optional icon',
+      kind: 'content',
+      mode: 'live',
+      reset: true,
       caption:
-        'Tab to a switch or hold the pointer button over its label. Space or a single Enter toggles the setting.',
+        'Compare an empty thumb, a selected thumb and an optional bell at each density. Each switch can be changed independently.',
+      render: withOverlaySurface(Sizes, 'border-box'),
+    },
+    {
+      id: 'interaction',
+      title: 'Keyboard and pointer activation',
       kind: 'behavior',
       mode: 'live',
-      render: () => <Interaction />,
+      reset: true,
+      caption:
+        'Tab to a switch and press Space or Enter. Press and hold its label to inspect pointer feedback before release.',
+      render: withOverlaySurface(Interaction, 'border-box'),
     },
     {
       id: 'availability',
-      title: 'Availability & pending',
-      caption:
-        'These examples hold their pending state. Use Save, fail & retry to see the result of a request.',
+      title: 'Restricted settings and pending values',
       kind: 'behavior',
-      render: () => <Availability />,
+      mode: 'pinned',
+      caption:
+        'Read-only and pending switches keep their value in the tab order. Disabled controls skip focus and suppress pending decoration.',
+      render: withOverlaySurface(Availability, 'border-box'),
     },
     {
       id: 'feedback',
       title: 'Pending at every size',
       kind: 'behavior',
       mode: 'pinned',
-      render: () => <FeedbackSizes />,
+      caption:
+        'The six requests stay pending. Compare thumb position and spinner size while a change from off or on is awaiting confirmation.',
+      render: withOverlaySurface(FeedbackSizes, 'border-box'),
     },
     {
       id: 'live',
-      title: 'Save, fail & retry',
-      caption:
-        'Toggle notifications to simulate a save. To see a failure, select Fail the next save first, then toggle notifications and retry.',
+      title: 'Save, fail and retry',
       kind: 'behavior',
       mode: 'live',
-      render: () => <AsyncSetting />,
+      reset: true,
+      controls: { fail: { kind: 'boolean', label: 'Fail the next save', default: false } },
+      caption:
+        'Toggle notifications to start a save. Select Fail the next save to reject one request, then activate that switch again to retry.',
+      render: withOverlaySurface(AsyncSetting, 'border-box'),
     },
     {
       id: 'overflow',
-      title: 'Labels & density',
+      title: 'Long labels and density',
       kind: 'content',
-      render: () => <Overflow />,
+      mode: 'live',
+      reset: true,
+      caption:
+        'Compare the first-line track alignment beside wrapped labels, a long settings key and supporting copy. The standalone switch has an accessible name.',
+      render: withOverlaySurface(Overflow, 'border-box'),
     },
     {
       id: 'surfaces',
-      title: 'Base & overlay',
-      caption: 'Static material plates with live controls.',
+      title: 'Notifications on base and overlay',
       kind: 'surface',
-      render: () => (
-        <SurfacePair>
-          <Switch label="Email notifications" />
-          <Switch label="Background sync" defaultChecked />
-          <Switch label="Activity alerts" thumbIcon={<BellIcon />} defaultChecked />
-        </SurfacePair>
-      ),
+      mode: 'live',
+      reset: true,
+      compareSurfaces: true,
+      caption: 'Toggle the same settings on either material. Each surface keeps its own values.',
+      render: Surfaces,
     },
   ],
-  usage: [
+  compositions: [
     {
       id: 'group',
-      title: 'Settings & alignment',
-      code: `<SwitchGroup aria-label="Notification preferences" defaultValue={['mentions']}>
-  <Switch value="mentions" label="Mentions" />
-  <Switch value="comments" label="Replies" />
-  <Switch value="updates" label="Followed items" />
-</SwitchGroup>`,
-      render: () => <Groups />,
+      title: 'Notification and reading preferences',
+      mode: 'live',
+      reset: true,
+      caption:
+        'Choose any combination of notification channels. The reading preference uses a trailing switch with its own label and help.',
+      render: withOverlaySurface(
+        ({ ctx }) => <NotificationPreferences subjectProps={ctx.subject} />,
+        'border-box',
+      ),
+      code: preferencesSource,
     },
   ],
 });

@@ -1,0 +1,7 @@
+/* Keep the largest track and its label together inside an inset overlay. */
+td:has(.switch-example-form) {
+  min-inline-size: 18rem;
+}
+ul:has(> [data-wb-result-row] .switch-example-form) {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr));
+}

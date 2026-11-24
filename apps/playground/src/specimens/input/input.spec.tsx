@@ -16,13 +16,15 @@ import {
   loading,
   eventProp,
 } from '../control-props.js';
-import { previewProps } from '../preview-code.js';
+import { previewProps, previewText } from '../preview-code.js';
+import { WorkspaceForm } from './workspace-form.js';
+import workspaceSource from './workspace-form.tsx?raw';
+import { withOverlaySurface } from '../shared/with-overlay-surface.js';
 import { defineComponent } from '../../workbench/types.js';
 import {
   InputAnatomy,
   InputAvailability,
   InputFeedback,
-  InputFormExample,
   InputInteraction,
   InputLive,
   InputOverflow,
@@ -66,7 +68,7 @@ export default defineComponent({
     status,
     width,
     type: choice(
-      'Field',
+      'Role',
       'Native text editing type.',
       ['text', 'search', 'email', 'url', 'tel', 'password'],
       'text',
@@ -78,15 +80,23 @@ export default defineComponent({
     loading,
     valueMode: {
       ...choice(
-        'Value',
-        'The form or a React owner retains the text.',
+        'Interaction',
+        'Uncontrolled reset restores the initial text. Controlled reset keeps the latest text committed by this React owner.',
         ['uncontrolled', 'controlled'],
         'uncontrolled',
       ),
       demo: true,
     },
-    defaultValue: stringProp('Value', 'Initial and reset value in uncontrolled mode.', 'Folio'),
-    value: stringProp('Value', 'Value supplied by the React owner in controlled mode.', 'Folio'),
+    defaultValue: stringProp(
+      'Interaction',
+      'Initial and reset value in uncontrolled mode.',
+      'Folio',
+    ),
+    value: stringProp(
+      'Interaction',
+      'Initial text of the controlled example. Editing commits a new value to its React owner.',
+      'Folio',
+    ),
     placeholder: stringProp(
       'Content',
       'Hint displayed while the input is empty.',
@@ -98,6 +108,7 @@ export default defineComponent({
       kind: 'slot',
       group: 'Content',
       default: 'none',
+      publicType: 'GlyphSource',
       description: 'Decorative glyph at the logical start.',
       choices: [
         { value: 'none', label: 'None' },
@@ -108,6 +119,7 @@ export default defineComponent({
       kind: 'slot',
       group: 'Content',
       default: 'none',
+      publicType: 'GlyphSource',
       description: 'Decorative glyph at the logical end.',
       choices: [
         { value: 'none', label: 'None' },
@@ -121,8 +133,16 @@ export default defineComponent({
       ...stringProp('Semantics', 'External description linked to the field.'),
       demo: true,
     },
-    onChange: eventProp('Reports the value of a native edit, including Clear.', 'handleChange'),
-    onClear: eventProp('Runs after the Clear edit is reported.', 'handleClear'),
+    onChange: eventProp(
+      'Receives the native edit event, including Clear. The log displays the resulting text.',
+      '(event) => console.log(event.currentTarget.value)',
+      'ChangeEventHandler<HTMLInputElement>',
+    ),
+    onClear: eventProp(
+      'Runs without arguments after Clear reports the empty value.',
+      "() => console.log('onClear')",
+      '() => void',
+    ),
   },
   constraints: [
     {
@@ -163,7 +183,7 @@ export default defineComponent({
       reason: 'The native form retains the current edit in uncontrolled mode.',
     },
   ],
-  render: function InputSubject({ values, ctx }) {
+  render: withOverlaySurface(function InputSubject({ values, ctx }) {
     const { valueMode, value, defaultValue, description, id, iconLeft, iconRight, ...props } =
       values;
     const controlled = valueMode === 'controlled';
@@ -171,7 +191,9 @@ export default defineComponent({
     const fieldId = id.trim() ? `${ctx.id}-${id.trim().replace(/\s+/g, '-')}` : ctx.id;
     return (
       <div className="input-study-field">
-        <label htmlFor={fieldId}>Workspace name</label>
+        <Text as="label" htmlFor={fieldId} size="body-s" weight="medium" color="primary">
+          Workspace name
+        </Text>
         <div className="input-study-subject" data-width={props.width} {...ctx.subject}>
           <PreviewInput
             {...props}
@@ -188,21 +210,26 @@ export default defineComponent({
         </div>
         {description && (
           <Text id={`${fieldId}-hint`} size="caption-l" color="muted">
-            {description}
+            <bdi>{description}</bdi>
           </Text>
         )}
       </div>
     );
-  },
+  }, 'border-box'),
   code: ({ valueMode, value, defaultValue, description, id, iconLeft, iconRight, ...props }) => {
-    const name = id.trim().replace(/\s+/g, '-') || 'workspace';
-    const inputId = JSON.stringify(name);
-    const hintId = JSON.stringify(`${name}-hint`);
-    const hintAttribute = description ? ` aria-describedby={${hintId}}` : '';
-    const valueAttribute =
-      valueMode === 'controlled'
-        ? ` value={${JSON.stringify(value)}}`
-        : ` defaultValue={${JSON.stringify(defaultValue)}}`;
+    const suffix = id.trim().replace(/\s+/g, '-');
+    const idLine = suffix
+      ? `const uid = useId();\n  const id = uid + ${JSON.stringify('-' + suffix)};`
+      : 'const id = useId();';
+    const hintAttribute = description ? ' aria-describedby={id + "-hint"}' : '';
+    const controlled = valueMode === 'controlled';
+    const valueAttribute = controlled
+      ? ' value={text}'
+      : ` defaultValue=${previewText(defaultValue)}`;
+    const glyphs = [
+      iconLeft === 'email' && 'EnvelopeSimpleIcon',
+      iconRight === 'link' && 'ArrowUpRightIcon',
+    ].filter(Boolean);
     const icons =
       (iconLeft === 'email' ? ' iconLeft={EnvelopeSimpleIcon}' : '') +
       (iconRight === 'link' ? ' iconRight={ArrowUpRightIcon}' : '');
@@ -222,21 +249,42 @@ export default defineComponent({
       suffix: '',
       clearLabel: '',
     });
-    const hint = description ? `\n  <p id={${hintId}}>{${JSON.stringify(description)}}</p>` : '';
-    return `<>
-  <label htmlFor={${inputId}}>Workspace name</label>
-  <Input id={${inputId}}${hintAttribute}${valueAttribute}${icons}${attributes} onChange={handleChange}${props.clearable ? ' onClear={handleClear}' : ''} />${hint}
-</>`;
+    const hint = description
+      ? `\n      <Text as="p" id={id + '-hint'} size="caption-l" color="muted"><bdi>${previewText(description)}</bdi></Text>`
+      : '';
+    const change = controlled
+      ? '(event) => { setText(event.currentTarget.value); console.log(event.currentTarget.value); }'
+      : '(event) => console.log(event.currentTarget.value)';
+    return `import { useId${controlled ? ', useState' : ''} } from 'react';
+import { Input, Stack, Text } from '@docouno/unica';${glyphs.length ? '\nimport { ' + glyphs.join(', ') + " } from '@phosphor-icons/react';" : ''}
+import '@docouno/unica/styles.css';
+
+export function WorkspaceInput() {
+  ${idLine}${controlled ? `\n  const [text, setText] = useState(${JSON.stringify(value)});` : ''}
+  return (
+    <Stack gap={8}>
+      <Text as="label" htmlFor={id} size="body-s" weight="medium" color="primary">Workspace name</Text>
+      <Input id={id}${hintAttribute}${valueAttribute}${icons}${attributes} onChange={${change}}${props.clearable ? " onClear={() => console.log('onClear')}" : ''} />${hint}
+    </Stack>
+  );
+}`;
   },
-  matrixViews: [
-    { id: 'roles', rows: 'size', cols: 'variant', title: 'Roles and sizes', reference: InputRoles },
+  states: [
+    {
+      id: 'roles',
+      rows: 'size',
+      cols: 'variant',
+      title: 'Role and control size',
+      caption: 'Compare the bordered form field and inline editor across all three densities.',
+    },
     {
       id: 'availability',
       rows: 'status',
       cols: 'disabled',
       title: 'Validation and disabled state',
       fixed: { loading: true, clearable: true },
-      reference: InputAvailability,
+      caption:
+        'The enabled field keeps its status, spinner, and unavailable Clear target during a check. Disabled fields suppress feedback and clearing.',
     },
     {
       id: 'editing',
@@ -244,80 +292,120 @@ export default defineComponent({
       cols: 'loading',
       title: 'Editing and pending work',
       fixed: { status: 'warning', clearable: true },
+      caption: 'Compare editing and copying while a warning or pending check is present.',
     },
   ],
   cases: [
-    { id: 'anatomy', title: 'Anatomy and slot priority', kind: 'behavior', render: InputAnatomy },
+    {
+      id: 'hosts',
+      title: 'Form field and inline property',
+      kind: 'content',
+      mode: 'live',
+      reset: true,
+      caption:
+        'Edit a named collection in its form field, then add a reference directly in the property row. The empty inline editor keeps its external label.',
+      render: withOverlaySurface(InputRoles, 'border-box'),
+    },
+    {
+      id: 'anatomy',
+      title: 'Adornment and feedback priority',
+      kind: 'content',
+      mode: 'pinned',
+      caption:
+        'Compare logical icons, visible prefixes and suffixes, and Clear. A status glyph and pending check take priority over a trailing decorative icon.',
+      render: withOverlaySurface(InputAnatomy, 'border-box'),
+    },
     {
       id: 'interaction',
       title: 'Pointer, keyboard and Clear',
-      caption:
-        'Click to edit quietly or press Tab for the focus outline. Tab to Clear and press Enter or Space.',
       kind: 'behavior',
       mode: 'live',
-      render: InputInteraction,
+      reset: true,
+      caption:
+        'Click to edit or Tab for the keyboard outline. Activate Clear with Enter or Space to resume typing in the same field. Compare its target with the trailing icon at each size.',
+      render: withOverlaySurface(InputInteraction, 'border-box'),
     },
     {
       id: 'feedback',
       title: 'Validation and information',
       kind: 'behavior',
-      render: InputFeedback,
+      mode: 'pinned',
+      caption:
+        'Compare four feedback tones under both roles. Each field owns its status icon and points to the matching explanation.',
+      render: withOverlaySurface(InputFeedback, 'border-box'),
     },
     {
       id: 'availability',
-      title: 'Availability and overlapping states',
+      title: 'Editable, read-only, disabled and checking',
       kind: 'behavior',
-      render: InputAvailability,
+      mode: 'live',
+      reset: true,
+      caption:
+        'Try editing, selecting text, and clearing the values. Compare populated and empty fields, including a disabled inline editor and a read-only field with a pending check.',
+      render: withOverlaySurface(InputAvailability, 'border-box'),
     },
     {
       id: 'live',
-      title: 'Live editing and feedback',
-      caption:
-        'Start a simulated check, choose a result, then change the value to clear the old result.',
+      title: 'Check and correct an address',
       kind: 'behavior',
       mode: 'live',
-      render: InputLive,
+      reset: true,
+      actions: [
+        { id: 'check', label: 'Start check' },
+        { id: 'available', label: 'Mark available' },
+        { id: 'taken', label: 'Mark taken' },
+      ],
+      caption:
+        'Enter an address and start a simulated check. Choose a result while checking. A later edit or Clear discards that result.',
+      render: withOverlaySurface(InputLive, 'border-box'),
     },
     {
       id: 'overflow',
       title: 'Long values, affixes and direction',
       kind: 'content',
-      render: InputOverflow,
+      mode: 'live',
+      reset: true,
+      caption:
+        'Move the caret through the full value while the decorative affixes yield space. The URL keeps its writing direction in either layout.',
+      render: withOverlaySurface(InputOverflow, 'border-box'),
     },
     {
       id: 'surfaces',
-      title: 'Base and overlay materials',
+      title: 'Field roles on base and overlay',
       kind: 'surface',
+      mode: 'pinned',
       compareSurfaces: true,
-      overlayStage: true,
-      render: ({ ctx }) => <InputSurfaces overlay={ctx.surface === 'overlay'} />,
+      caption:
+        'Compare filled and empty form fields and inline editors on each material. The last address pins a validation error.',
+      render: InputSurfaces,
     },
   ],
-  usage: [
+  compositions: [
     {
       id: 'native-form',
       title: 'Native label, submit and reset',
-      render: ({ ctx }) => <InputFormExample id={ctx.id} />,
-      code: `<form>
-  <label htmlFor="workspace">Workspace name</label>
-  <Input id="workspace" name="workspace" defaultValue="Folio" aria-describedby="workspace-hint" clearable required />
-  <p id="workspace-hint">Shown to members of your workspace.</p>
-  <button type="submit">Submit</button>
-  <button type="reset">Reset</button>
-</form>`,
+      mode: 'live',
+      reset: true,
+      caption:
+        'Submit the field to inspect the current name. Reset restores Folio; the next submission reads the restored value.',
+      render: withOverlaySurface(
+        ({ ctx }) => <WorkspaceForm subject={ctx.subject} />,
+        'border-box',
+      ),
+      code: workspaceSource,
     },
     {
       id: 'external-form',
       title: 'Input owned by another form',
-      render: ({ ctx }) => <InputFormExample id={ctx.id} external />,
-      code: `<>
-  <label htmlFor="workspace">Workspace name</label>
-  <Input id="workspace" name="workspace" form="settings" defaultValue="Folio" clearable required />
-  <form id="settings">
-    <button type="submit">Submit</button>
-    <button type="reset">Reset</button>
-  </form>
-</>`,
+      mode: 'live',
+      reset: true,
+      caption:
+        'This input sits outside its form. Its explicit form association still submits the edited name and restores Folio on reset.',
+      render: withOverlaySurface(
+        ({ ctx }) => <WorkspaceForm external subject={ctx.subject} />,
+        'border-box',
+      ),
+      code: workspaceSource.replace('external = false', 'external = true'),
     },
   ],
 });

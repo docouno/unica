@@ -3,7 +3,7 @@ Avatar Arabic typography fixture
 File: avatar-arabic-400.ttf (Noto Sans Arabic, weight 400)
 Retrieved: 2026-11-15
 Characters: the name U+0646 U+062F U+0649 U+0020 U+0645 U+0646 U+0635 U+0648 U+0631
-Purpose: deterministic name rendering in the Avatar specimen only.
+Purpose: deterministic name rendering in the Avatar specimen and the file-intake fallback for Arabic waw.
 
 Google Fonts supplied this text subset:
 https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic%3Awght%40400&text=%D9%86%D8%AF%D9%89+%D9%85%D9%86%D8%B5%D9%88%D8%B1

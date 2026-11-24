@@ -159,6 +159,27 @@ export function NumberInput({
       repeat.current = null;
     }
   }, [disabled, readOnly]);
+  useEffect(() => {
+    const input = editor.current;
+    const form = input?.form;
+    if (!input || !form) {
+      return;
+    }
+    let mounted = true;
+    const syncReset = (event: Event): void => {
+      // Native reset restores the editor after its cancelable event finishes.
+      setTimeout(() => {
+        if (mounted && !event.defaultPrevented) {
+          setDraft(input.value);
+        }
+      }, 0);
+    };
+    form.addEventListener('reset', syncReset);
+    return () => {
+      mounted = false;
+      form.removeEventListener('reset', syncReset);
+    };
+  }, [props.form]);
   // Preserve the browser's in-progress notation when the numeric value already agrees.
   useEffect(() => {
     const input = editor.current;

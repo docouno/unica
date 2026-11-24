@@ -66,17 +66,17 @@ Soft and Frost use their normal primary/muted/semantic foregrounds; Frost obtain
 
 ## Inspection and handoff
 
-| Section        | What to inspect                                                                                |
-| -------------- | ---------------------------------------------------------------------------------------------- |
-| `layout`       | S/M/L, vertical/horizontal, optional/required, Ghost in an editing context.                    |
-| `anatomy`      | Label action, persistent rich instructions, textarea, standalone parts.                        |
-| `feedback`     | All five statuses on controls/groups, glyph ownership, fallback labels.                        |
-| `groups`       | Checkbox, Radio, Switch, choice cards, first-row versus top alignment.                         |
-| `availability` | Read-only, disabled, checking, read-only + checking, pinned pointer/keyboard focus.            |
-| `live`         | Submit error, first-invalid focus, correction, success, reset, optional message reservation.   |
-| `overflow`     | Long label action and copy, links, RTL/LTR island, composite field, narrow-container collapse. |
-| `overlay`      | Real static floating material with a validation toggle.                                        |
+| Section                    | What to inspect                                                                                |
+| -------------------------- | ---------------------------------------------------------------------------------------------- |
+| `layout`, `paired-layouts` | S/M/L, vertical/horizontal, optional/required, Ghost in an editing context.                    |
+| `anatomy`                  | Label action, persistent rich instructions, textarea, standalone parts.                        |
+| `feedback`                 | All five statuses on controls/groups, glyph ownership, fallback labels.                        |
+| `groups`                   | Checkbox, Radio, Switch, choice cards, first-row versus top alignment.                         |
+| `availability`             | Read-only, disabled, checking, read-only + checking, actual pointer/keyboard focus.            |
+| `live`                     | Submit error, first-invalid focus, correction, success, reset, optional message reservation.   |
+| `overflow`                 | Long label action and copy, links, RTL/LTR island, composite field, narrow-container collapse. |
+| `overlay`                  | Real static floating material with a validation toggle.                                        |
 
-The native controls and local validation example are live. Focus samples are explicitly pinned and do not move DOM focus. Feedback and group matrices pin validation decisions; changing their values does not run a validator. The overlay is a static surface study, not a popup lifecycle implementation. Existing sign-in, properties drawer, invitation, and preferences scenes provide product context; they continue using their existing wrappers until a separate integration change.
+The native controls and local validation example are live. The availability study shows actual pointer and keyboard focus. The feedback case pins its five tones for comparison. In the groups composition, selecting a delivery method clears its group error. In the time-range study either boundary may be empty; with both set, the end must be later than the current start. The overlay is a static surface study, not a popup lifecycle implementation. Existing sign-in, properties drawer, invitation, and preferences scenes provide product context; they continue using their existing wrappers until a separate integration change.
 
 Inspect all six presets, Base/Overlay, 360/768/1280/1440px, 120% text, and RTL. Verify readability together with hierarchy, not by strengthening every border. Full controlled/uncontrolled authority, generated scope helpers, reset association, announcement timing, disabled-fieldset behavior, and cross-browser semantics are library-stage obligations under [Overlays and Forms](../../../../../docs/concepts/overlays-and-forms.md). Preserve the design, replace local imports, remove temporary component CSS, and document the real API in `docs/components/form-field.md` at that stage.

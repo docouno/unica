@@ -74,9 +74,9 @@ it('emits valid Textarea JSX for uncontrolled and controlled log examples', asyn
     { ...defaults, useValue: true, useDefaultValue: false, wrap: 'off', status: 'danger' },
   ]) {
     const code = componentCode(component, values);
-    await expect(format(code, { parser: 'babel', plugins: [babel, estree] })).resolves.toContain(
-      '<>',
-    );
+    const source = await format(code, { parser: 'babel', plugins: [babel, estree] });
+    expect(source).toContain('<form>');
+    expect(source).toContain(values.useValue ? 'value={value}' : 'defaultValue=');
   }
 });
 
@@ -224,7 +224,7 @@ it('restores the material and case caption of a directly addressed RadioCard pre
   expect(artboards.every((artboard) => artboard.querySelector('[data-surface="overlay"]'))).toBe(
     true,
   );
-  const caption = screen.getByText(/Static floating plate with live inputs/);
+  const caption = screen.getByText(/Choose who can open a page on the floating plate/);
   expect(caption.closest('.wb-artboard')).toBeNull();
 
   const chosen = (): number[] =>

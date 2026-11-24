@@ -1,4 +1,6 @@
 import type { ReactElement, ReactNode } from 'react';
+import type { Surface } from '../workbench/types.js';
+import { Text } from '@docouno/unica';
 import './binary-examples.css';
 
 export function Sample({
@@ -10,29 +12,30 @@ export function Sample({
 }): ReactElement {
   return (
     <div className="binary-demo-sample">
-      <span className="binary-demo-caption">{title}</span>
+      <Text as="span" size="caption-l" color="muted">
+        <bdi>{title}</bdi>
+      </Text>
       {children}
     </div>
   );
 }
 
-export function SurfacePair({ children }: { readonly children: ReactNode }): ReactElement {
+export function BinaryPlate({
+  children,
+  surface,
+}: {
+  readonly children: ReactNode;
+  readonly surface: Surface;
+}): ReactElement {
   return (
-    <div className="binary-demo-grid">
-      {(['base', 'overlay'] as const).map((surface) => (
-        <div
-          className="binary-demo-stage"
-          key={surface}
-          data-underlay={surface === 'overlay' || undefined}
-        >
-          <div className="binary-demo-plate" data-surface={surface} data-plate={surface}>
-            <span className="binary-demo-caption">
-              {surface === 'base' ? 'Base surface' : 'Overlay surface'}
-            </span>
-            {children}
-          </div>
-        </div>
-      ))}
+    <div
+      data-plate={surface}
+      data-surface={surface}
+      className={
+        surface === 'overlay' ? 'binary-demo-plate unica-overlay-surface' : 'binary-demo-plate'
+      }
+    >
+      {children}
     </div>
   );
 }

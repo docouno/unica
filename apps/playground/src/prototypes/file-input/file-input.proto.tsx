@@ -1,5 +1,5 @@
 import { CloseGlyph, FileGlyph, fieldStatusGlyphs } from '../control-glyphs.js';
-import { useId, useRef, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import type {
   ComponentPropsWithRef,
   DragEvent,
@@ -44,7 +44,7 @@ export interface FileInputProps extends Omit<
   readonly previewState?: 'dragging';
 }
 
-// Local selection only. Native form projection and reusable state authority belong to the library.
+// An application may own the displayed selection, or use a named native file field.
 export function FileInput({
   size = 'm',
   variant = 'default',
@@ -77,13 +77,23 @@ export function FileInput({
   const [localName, setLocalName] = useState(initialFileName);
   const [localDetail, setLocalDetail] = useState('');
   const [dragging, setDragging] = useState(false);
+  const [rejectedDrops, setRejectedDrops] = useState(0);
   const generatedId = useId();
   const focusScope = useControlFocus();
   const trigger = useRef<HTMLButtonElement>(null);
   const inputId = id ?? generatedId;
   const triggerId = readOnly ? inputId : `${inputId}-picker`;
   const currentName = fileName ?? localName;
-  const effectiveStatus = disabled ? 'neutral' : status;
+  const reportDrop =
+    rejectedDrops > 0 && !multiple && !disabled && !readOnly && fileName === undefined;
+  const effectiveStatus = disabled ? 'neutral' : reportDrop ? 'danger' : status;
+  const feedback = reportDrop ? (
+    <span role="status">
+      <bdi key={rejectedDrops}>Drop one file at a time. Your selection is unchanged.</bdi>
+    </span>
+  ) : (
+    message
+  );
   const isRequired = required && !readOnly && !disabled;
   const busy = loading && !disabled && !readOnly;
   const blocked = disabled || readOnly || busy;
@@ -103,15 +113,47 @@ export function FileInput({
       busy && `${inputId}-checking`,
       readOnly && `${inputId}-readonly`,
       description && `${triggerId}-description`,
-      message && `${triggerId}-message`,
+      feedback && `${triggerId}-message`,
     ]
       .filter(Boolean)
       .join(' ') || undefined;
+  useEffect(() => {
+    const input = focusScope.current?.querySelector('input');
+    if (!input || !props.name || fileName !== undefined) {
+      return;
+    }
+    let mounted = true;
+    function reset(event: Event): void {
+      if (event.target !== input?.form) {
+        return;
+      }
+      setTimeout(() => {
+        if (mounted && !event.defaultPrevented && !input?.files?.length) {
+          setLocalName(initialFileName);
+          setLocalDetail('');
+          setRejectedDrops(0);
+          setDragging(false);
+        }
+      }, 0);
+    }
+    const doc = input.ownerDocument;
+    doc.addEventListener('reset', reset, true);
+    return () => {
+      doc.removeEventListener('reset', reset, true);
+      mounted = false;
+    };
+  }, [focusScope, props.name, fileName, initialFileName]);
+
   function receive(files: readonly File[]): void {
     if (blocked || !files.length) {
       return;
     }
-    setLocalName(multiple ? `${files.length} files selected` : files[0]!.name);
+    setRejectedDrops(0);
+    setLocalName(
+      multiple
+        ? `${files.length} ${files.length === 1 ? 'file' : 'files'} selected`
+        : files[0]!.name,
+    );
     setLocalDetail(formatFileSize(files.reduce((sum, file) => sum + file.size, 0)));
     onFilesChange?.(files);
   }
@@ -119,12 +161,12 @@ export function FileInput({
     <FormField
       label={label && <span id={labelId}>{label}</span>}
       description={description}
-      message={message ?? ''}
+      message={feedback ?? ''}
       status={effectiveStatus}
       required={isRequired}
       htmlFor={triggerId}
       descriptionId={description ? `${triggerId}-description` : undefined}
-      messageId={message ? `${triggerId}-message` : undefined}
+      messageId={feedback ? `${triggerId}-message` : undefined}
       hidden={hidden}
     >
       <span
@@ -161,7 +203,19 @@ export function FileInput({
           if (isFileDrag(event)) {
             event.preventDefault();
             setDragging(false);
-            receive(Array.from(event.dataTransfer.files));
+            const files = event.dataTransfer.files;
+            if (blocked || !files.length) {
+              return;
+            }
+            const input = event.currentTarget.querySelector('input');
+            if (fileName === undefined && input?.name) {
+              if (!multiple && files.length > 1) {
+                setRejectedDrops((count) => count + 1);
+                return;
+              }
+              input.files = files;
+            }
+            receive(Array.from(files));
           }
         }}
       >
@@ -214,12 +268,13 @@ export function FileInput({
                 onClick={() => {
                   setLocalName('');
                   setLocalDetail('');
-                  onClear?.();
-                  onFilesChange?.([]);
+                  setRejectedDrops(0);
                   const native = focusScope.current?.querySelector('input');
                   if (native) {
                     native.value = '';
                   }
+                  onClear?.();
+                  onFilesChange?.([]);
                   trigger.current?.focus();
                 }}
               />
@@ -260,6 +315,10 @@ export function FileInput({
           onChange={(event) => {
             receive(Array.from(event.currentTarget.files ?? []));
             onChange?.(event);
+            // Application-owned intake can accept the same disk file on a later attempt.
+            if (fileName !== undefined && !event.currentTarget.name) {
+              event.currentTarget.value = '';
+            }
           }}
         />
       </span>
@@ -351,7 +410,9 @@ export function Dropzone({
       >
         <div className="dropzone-copy-proto">
           {unavailable ? (
-            <span className="dropzone-unavailable-proto">{unavailableLabel}</span>
+            <span className="dropzone-unavailable-proto">
+              <bdi>{unavailableLabel}</bdi>
+            </span>
           ) : (
             <div className="dropzone-prompt-proto">
               <span className="dropzone-invitation-proto" aria-hidden="true">
@@ -496,7 +557,7 @@ export function FileItem({
       </span>
       <div className="file-item-body-proto">
         {href && !disabled ? (
-          <a className="file-item-name-proto file-item-link-proto" href={href} download>
+          <a className="file-item-name-proto file-item-link-proto" href={href} download={name}>
             <bdi>{name}</bdi>
           </a>
         ) : (
@@ -559,11 +620,18 @@ export function FileItem({
               tone="neutral"
               aria-label={`Retry ${name}`}
               onClick={(event) => {
-                const row = event.currentTarget.closest('li');
+                const retry = event.currentTarget;
+                const row = retry.closest('li');
+                const doc = retry.ownerDocument;
+                const hadFocus = doc.activeElement === retry;
                 onRetry();
-                requestAnimationFrame(() =>
-                  row?.querySelector<HTMLButtonElement>('button[aria-label^="Remove"]')?.focus(),
-                );
+                if (hadFocus) {
+                  requestAnimationFrame(() => {
+                    if (!retry.isConnected && row?.isConnected && doc.activeElement === doc.body) {
+                      row.querySelector<HTMLButtonElement>('button[aria-label^="Remove"]')?.focus();
+                    }
+                  });
+                }
               }}
             >
               Retry

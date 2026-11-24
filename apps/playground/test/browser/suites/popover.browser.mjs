@@ -621,7 +621,7 @@ export default {
     await pressKeys(page, 'Escape');
     await waitOpen(page, 'initial-chain-child', false);
     await waitOpen(page, 'initial-chain-parent');
-    await assertFocused(byId(page, 'initial-chain-child-trigger'));
+    await byId(page, 'initial-chain-child-trigger').and(page.locator(':focus')).waitFor();
   },
 
   'Popover inside a registered modal closes one layer per Escape': (context) =>

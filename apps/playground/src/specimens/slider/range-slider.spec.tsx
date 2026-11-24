@@ -1,111 +1,63 @@
-import { RangeSlider } from '@docouno/unica';
+import { RangeSlider, Stack, Text } from '@docouno/unica';
 import type { RangeSliderValue } from '@docouno/unica';
-import { useId, useRef, useState } from 'react';
-import type { ReactElement } from 'react';
 import { defineComponent } from '../../workbench/types.js';
+import { eventProp } from '../control-props.js';
+import { withOverlaySurface } from '../shared/with-overlay-surface.js';
 import {
   demoPresentation,
   demoScale,
   sliderConstraints,
+  scaleMessage,
+  sliderPresentationCode,
+  rejectedScaleCode,
   sliderControls,
 } from './slider.controls.js';
-import { sliderCases } from './slider.cases.js';
+import {
+  AvailabilityExample,
+  CloseBoundsExample,
+  ContentExample,
+  ControlledRange,
+  OverlayExample,
+  RangeExample,
+  VerticalExample,
+} from './slider.examples.js';
+import { PriceFilter } from './range-price-form.js';
+import formSource from './range-price-form.tsx?raw';
 
 const initial: RangeSliderValue = [25, 75];
 const labels = ['Minimum price', 'Maximum price'] as const;
 
-function ControlledRange(): ReactElement {
-  const id = useId();
-  const [value, setValue] = useState<RangeSliderValue>(initial);
-  const [accept, setAccept] = useState(true);
-  const [proposal, reportProposal] = useState<RangeSliderValue>();
-  const [committed, reportCommit] = useState<RangeSliderValue>();
-  return (
-    <div className="slider-examples">
-      <label>
-        <input
-          type="checkbox"
-          checked={accept}
-          onChange={(event) => setAccept(event.currentTarget.checked)}
-        />
-        Accept edits
-      </label>
-      <div>
-        <span id={id}>Price range</span>
-        <RangeSlider
-          aria-labelledby={id}
-          thumbLabels={labels}
-          value={value}
-          onValueChange={(next) => {
-            reportProposal(next);
-            if (accept) {
-              setValue(next);
-            }
-          }}
-          onValueCommit={reportCommit}
-        />
-        <div>
-          Proposed <bdi>{proposal?.join(' — ') ?? 'None'}</bdi>
-        </div>
-        <div>
-          Last committed <bdi>{committed?.join(' — ') ?? 'None'}</bdi>
-        </div>
-      </div>
-    </div>
-  );
+const gapMessage = 'Use a whole-number gap from zero to the number of reachable steps.';
+const approval = 'This price interval needs review.';
+
+function rangeIssue({
+  min,
+  max,
+  step,
+  minStepsBetweenThumbs: gap,
+}: {
+  readonly min: number;
+  readonly max: number;
+  readonly step: number;
+  readonly minStepsBetweenThumbs: number;
+}): string | undefined {
+  if (!demoScale(min, max, step)) {
+    return scaleMessage;
+  }
+  if (!Number.isSafeInteger(gap) || gap < 0 || gap > Math.floor((max - min) / step)) {
+    return gapMessage;
+  }
+  return undefined;
 }
 
-function NamedForm(): ReactElement {
-  const heading = useId();
-  const info = useId();
-  const form = useId();
-  const minimum = useRef<HTMLInputElement>(null);
-  const [result, setResult] = useState('');
-  return (
-    <div className="slider-examples">
-      <form
-        id={form}
-        onSubmit={(event) => {
-          event.preventDefault();
-          const entries = new FormData(event.currentTarget);
-          const from = entries.get('from');
-          const to = entries.get('to');
-          if (typeof from === 'string' && typeof to === 'string') {
-            setResult(`${from} — ${to}`);
-          }
-        }}
-      >
-        <div className="slider-form-actions">
-          <button type="submit">Read form data</button>
-          <button type="reset" onClick={() => setResult('')}>
-            Reset
-          </button>
-          <button type="button" onClick={() => minimum.current?.focus()}>
-            Focus minimum price
-          </button>
-        </div>
-      </form>
-      <div>
-        <span id={heading}>Price range</span>
-        <RangeSlider
-          aria-labelledby={heading}
-          aria-describedby={info}
-          thumbLabels={labels}
-          names={['from', 'to']}
-          inputRefs={[minimum, null]}
-          form={form}
-          defaultValue={initial}
-          formatValue={(price) => `$${price}`}
-        />
-        <p id={info}>Both prices are inclusive.</p>
-        {result && (
-          <p>
-            Submitted <bdi>{result}</bdi>
-          </p>
-        )}
-      </div>
-    </div>
-  );
+function initialRange(preset: string): RangeSliderValue | undefined {
+  if (preset === 'interval') {
+    return initial;
+  }
+  if (preset === 'point') {
+    return [50, 50];
+  }
+  return undefined;
 }
 
 export default defineComponent({
@@ -119,11 +71,23 @@ export default defineComponent({
   props: {
     ...sliderControls,
     formatValue: { ...sliderControls.formatValue, default: 'number' },
+    onValueChange: eventProp(
+      'Receives each proposed lower and upper bound in a fresh tuple.',
+      '(next) => console.log(next)',
+      '(next: readonly [number, number]) => void',
+    ),
+    onValueCommit: eventProp(
+      'Receives the accepted interval at the end of a changed gesture.',
+      '(next) => console.log(next)',
+      '(next: readonly [number, number]) => void',
+    ),
     defaultValue: {
       kind: 'slot',
-      group: 'Scale',
+      group: 'Content',
       default: 'interval',
-      description: 'Initial and reset values in lower, upper order.',
+      publicType: 'readonly [number, number]',
+      description:
+        'Initial and reset values in lower, upper order. Omit the tuple to span the reachable scale.',
       choices: [
         { value: 'interval', label: '25 — 75', code: '[25, 75]' },
         { value: 'point', label: '50 — 50', code: '[50, 50]' },
@@ -132,8 +96,9 @@ export default defineComponent({
     },
     value: {
       kind: 'slot',
-      group: 'Scale',
+      group: 'Content',
       default: 'uncontrolled',
+      publicType: 'readonly [number, number]',
       description: 'An owner can supply both values and decide whether to accept edits.',
       choices: [
         { value: 'uncontrolled', code: 'undefined' },
@@ -142,15 +107,16 @@ export default defineComponent({
     },
     minStepsBetweenThumbs: {
       kind: 'number',
-      group: 'Scale',
+      group: 'Geometry',
       default: 0,
       examples: [0, 1, 5],
       description: 'Minimum separation in steps. Zero allows a shared point.',
     },
     names: {
       kind: 'slot',
-      group: 'Form',
+      group: 'Host',
       default: 'named',
+      publicType: 'readonly [string, string]',
       description: 'Submission names in lower, upper order.',
       choices: [
         { value: 'named', label: 'from, to', code: "['from', 'to']" },
@@ -161,6 +127,7 @@ export default defineComponent({
       kind: 'slot',
       group: 'Semantics',
       default: 'prices',
+      publicType: 'readonly [string, string]',
       description: 'Distinct accessible names for the lower and upper thumb.',
       choices: [
         {
@@ -186,105 +153,215 @@ export default defineComponent({
         'The owner holds both values. Change reports proposals and a refused change produces no commit.',
     },
   ],
-  render: ({ values, ctx }) => {
-    const { defaultValue, value, form, names, thumbLabels, minStepsBetweenThumbs, ...props } =
-      values;
-    if (
-      !demoScale(props.min, props.max, props.step) ||
-      !Number.isSafeInteger(minStepsBetweenThumbs) ||
-      minStepsBetweenThumbs < 0 ||
-      minStepsBetweenThumbs > Math.floor((props.max - props.min) / props.step)
-    ) {
+  render: withOverlaySurface(({ values, ctx }) => {
+    const issue = rangeIssue(values);
+    if (issue) {
       return (
-        <p>
-          Use whole numbers, ordered bounds, a positive step, and a gap between zero and the number
-          of steps.
-        </p>
+        <form {...ctx.form} className="slider-inspector-form">
+          <Text size="body-s" role="status">
+            <bdi>{issue}</bdi>
+          </Text>
+        </form>
       );
     }
-    const heading = `${ctx.id}-heading`;
-    const formId = form ? `${ctx.id}-${form}` : undefined;
+    const { defaultValue, value, form, names, thumbLabels, ...props } = values;
+    const formId = form ? ctx.id + '-' + form : undefined;
+    const review = props.status === 'danger' && !props.disabled;
+    const title =
+      props.formatValue === 'percent' ? 'Price as a percentage of list price' : 'Price range';
     return (
       <form {...ctx.form} className="slider-inspector-form" id={formId}>
-        <span id={heading}>Price range</span>
-        <RangeSlider
-          {...props}
-          {...demoPresentation(props)}
-          {...ctx.subject}
-          id={ctx.id}
-          aria-labelledby={heading}
-          form={formId}
-          thumbLabels={thumbLabels === 'prices' ? labels : ['Lower bound', 'Upper bound']}
-          names={names === 'named' ? ['from', 'to'] : undefined}
-          key={`${value}:${defaultValue}`}
-          value={value === 'fixed' ? initial : undefined}
-          defaultValue={
-            defaultValue === 'interval' ? initial : defaultValue === 'point' ? [50, 50] : undefined
-          }
-          minStepsBetweenThumbs={minStepsBetweenThumbs}
-          onValueChange={ctx.action('onValueChange')}
-          onValueCommit={ctx.action('onValueCommit')}
-        />
-        <button type="reset">Reset</button>
+        <Stack gap={4}>
+          <Text as="span" size="body-s" id={ctx.id + '-label'}>
+            <bdi>{title}</bdi>
+          </Text>
+          <RangeSlider
+            {...props}
+            {...demoPresentation(props)}
+            {...ctx.subject}
+            aria-labelledby={ctx.id + '-label'}
+            aria-describedby={review ? ctx.id + '-review' : undefined}
+            form={formId}
+            thumbLabels={thumbLabels === 'prices' ? labels : ['Lower bound', 'Upper bound']}
+            names={names === 'named' ? ['from', 'to'] : undefined}
+            key={value + ':' + defaultValue}
+            value={value === 'fixed' ? initial : undefined}
+            defaultValue={value === 'fixed' ? undefined : initialRange(defaultValue)}
+            onValueChange={ctx.action('onValueChange')}
+            onValueCommit={ctx.action('onValueCommit')}
+          />
+          {review && (
+            <Text as="p" size="caption-l" color="danger" id={ctx.id + '-review'}>
+              <bdi>{approval}</bdi>
+            </Text>
+          )}
+        </Stack>
       </form>
     );
-  },
-  code: (values, attributes) => {
+  }, 'border-box'),
+  code: (values) => {
+    const issue = rangeIssue(values);
+    if (issue) {
+      return rejectedScaleCode(issue);
+    }
+    const title =
+      values.formatValue === 'percent' ? 'Price as a percentage of list price' : 'Price range';
+    const review = values.status === 'danger' && !values.disabled;
     const names = values.names === 'named' ? ' names={["from", "to"]}' : '';
-    const labels =
-      values.thumbLabels === 'prices' ? ' thumbLabels={["Minimum price", "Maximum price"]}' : '';
-    const initial = values.defaultValue === 'interval' ? ' defaultValue={[25, 75]}' : '';
-    const jsx = `<span id="price-label">Price range</span>\n<RangeSlider aria-labelledby="price-label"${labels}${names}${initial}${attributes} />`;
-    return jsx.replace(
-      'marks={endpoints}',
-      `marks={${JSON.stringify(demoPresentation(values).marks)}}`,
-    );
+    const thumbLabels = values.thumbLabels === 'prices' ? labels : ['Lower bound', 'Upper bound'];
+    const baseline = initialRange(values.defaultValue);
+    const value =
+      values.value === 'fixed'
+        ? ' value={[25, 75]}'
+        : baseline
+          ? ' defaultValue={' + JSON.stringify(baseline) + '}'
+          : '';
+    const gap = values.minStepsBetweenThumbs
+      ? ' minStepsBetweenThumbs={' + values.minStepsBetweenThumbs + '}'
+      : '';
+    return `import { useId } from 'react';
+import { RangeSlider, Stack, Text } from '@docouno/unica';
+import '@docouno/unica/styles.css';
+
+export function PriceRange() {
+  const id = useId();${values.form ? '\n  const owner = id + ' + JSON.stringify('-' + values.form) + ';' : ''}
+  return (
+    <form${values.form ? ' id={owner}' : ''}>
+      <Stack gap={4}>
+        <Text as="span" size="body-s" id={id + "-label"}><bdi>${title}</bdi></Text>
+        <RangeSlider aria-labelledby={id + "-label"}${review ? ' aria-describedby={id + "-review"}' : ''}${values.form ? ' form={owner}' : ''} thumbLabels={${JSON.stringify(thumbLabels)}}${names}${value}${gap}${sliderPresentationCode(values)} onValueChange={(next) => console.log(next)} onValueCommit={(next) => console.log(next)} />
+        ${review ? '<Text as="p" id={id + "-review"} size="caption-l" color="danger"><bdi>' + approval + '</bdi></Text>' : ''}
+      </Stack>
+    </form>
+  );
+}`;
   },
-  matrixViews: [
-    { id: 'geometry', title: 'Size and direction', rows: 'size', cols: 'orientation' },
+  states: [
+    {
+      id: 'geometry',
+      title: 'Size and direction',
+      rows: 'size',
+      cols: 'orientation',
+      caption:
+        'Compare the two focusable thumbs at every size. A vertical scale increases toward the top.',
+    },
     {
       id: 'surface',
       title: 'Validation on a floating surface',
       rows: 'status',
       cols: 'disabled',
       surface: 'overlay',
+      caption:
+        'The enabled interval can show a review message. A disabled interval keeps its current prices and is omitted from submission.',
     },
   ],
   cases: [
-    ...sliderCases.filter((example) =>
-      ['range', 'availability', 'close-bounds', 'vertical', 'content', 'overlay'].includes(
-        example.id,
+    {
+      id: 'range',
+      title: 'Two bounds on one scale',
+      kind: 'behavior',
+      mode: 'live',
+      reset: true,
+      caption:
+        'Adjust the lower and upper bounds of three intervals. Each thumb stops at the other bound without pushing it.',
+      render: withOverlaySurface(
+        ({ ctx }) => <RangeExample rangeSubject={ctx.subject} />,
+        'border-box',
       ),
-    ),
+    },
+    {
+      id: 'availability',
+      title: 'Availability and validation',
+      kind: 'behavior',
+      mode: 'live',
+      reset: true,
+      caption:
+        'Read-only values remain focusable. Disabled fields stay neutral. Include 50 in the allowed window to clear its error.',
+      render: withOverlaySurface(
+        ({ ctx }) => <AvailabilityExample rangeSubject={ctx.subject} />,
+        'border-box',
+      ),
+    },
+    {
+      id: 'close-bounds',
+      title: 'Close and coincident bounds',
+      kind: 'behavior',
+      mode: 'live',
+      reset: true,
+      caption:
+        'Compare close thumbs with both thumbs at the middle or either endpoint. The final interval keeps a two-step gap.',
+      render: withOverlaySurface(
+        ({ ctx }) => <CloseBoundsExample rangeSubject={ctx.subject} />,
+        'border-box',
+      ),
+    },
+    {
+      id: 'vertical',
+      title: 'Vertical scales',
+      kind: 'behavior',
+      mode: 'live',
+      reset: true,
+      caption:
+        'The minimum stays at the bottom in either reading direction. The percentage readouts share a unit across the numeric ticks. Coincident thumbs remain separate tab stops.',
+      render: withOverlaySurface(
+        ({ ctx }) => <VerticalExample rangeSubject={ctx.subject} />,
+        'border-box',
+      ),
+    },
+    {
+      id: 'content',
+      title: 'Long labels and formatted amounts',
+      kind: 'content',
+      mode: 'live',
+      reset: true,
+      caption:
+        'Compare a width in pixels with the lower and upper amounts of an annual budget. Read the full formatted values as their labels wrap.',
+      render: withOverlaySurface(
+        ({ ctx }) => <ContentExample rangeSubject={ctx.subject} />,
+        'border-box',
+      ),
+    },
+    {
+      id: 'overlay',
+      title: 'Intervals on a floating surface',
+      surface: 'overlay',
+      overlayStage: true,
+      kind: 'surface',
+      mode: 'live',
+      reset: true,
+      caption:
+        'The single scale and the interval share a compact floating panel. Track, selection, and focused thumb remain distinguishable.',
+      render: ({ ctx }) => <OverlayExample rangeSubject={ctx.subject} />,
+    },
     {
       id: 'controlled',
       title: 'Owner accepts or refuses edits',
       kind: 'behavior',
+      mode: 'live',
+      reset: true,
+      controls: { accept: { kind: 'boolean', label: 'Accept edits', default: true } },
       caption:
-        'Move either thumb with acceptance on and off. Compare what the control proposed with what it committed.',
-      render: ControlledRange,
+        'Move either thumb with acceptance on and off. A refused proposal leaves the interval and its last commit in place.',
+      render: withOverlaySurface(ControlledRange, 'border-box'),
     },
   ],
-  usage: [
+  compositions: [
     {
       id: 'form',
       title: 'Two named fields and native reset',
-      caption: 'The range can live outside its form. Form data contains the two original numbers.',
-      code: `const minimum = useRef<HTMLInputElement>(null);
-
-<form id="filters">
-  <button type="reset">Reset</button>
-  <button type="button" onClick={() => minimum.current?.focus()}>Focus minimum price</button>
-</form>
-<RangeSlider
-  aria-label="Price range"
-  thumbLabels={['Minimum price', 'Maximum price']}
-  names={['from', 'to']}
-  form="filters"
-  inputRefs={[minimum, null]}
-  defaultValue={[25, 75]}
-/>`,
-      render: NamedForm,
+      mode: 'live',
+      reset: true,
+      caption:
+        'Both thumbs belong to the form below the interval. Apply a price filter to see the submitted bounds. Edit the applied range to return to its minimum.',
+      render: withOverlaySurface(
+        ({ ctx }) => (
+          <div className="slider-study-width">
+            <PriceFilter rangeProps={ctx.subject} />
+          </div>
+        ),
+        'border-box',
+      ),
+      code: formSource,
     },
   ],
 });

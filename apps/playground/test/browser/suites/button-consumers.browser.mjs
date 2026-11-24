@@ -152,6 +152,42 @@ export default {
       await touch.detach();
     },
 
+  'Retry restores focus only when its own focused action disappears': async ({ page, mount }) => {
+    await mount('button-consumers');
+    const boards = await open(page, {
+      item: 'dropzone',
+      tab: 'states',
+      block: 'live',
+      family: 'frost',
+      scheme: 'both',
+    });
+    const frame = page.locator('[data-wb-block="live"]');
+    await frame.getByRole('button', { name: 'Add sample files' }).click();
+    await frame.getByRole('button', { name: 'Fail transfer' }).click();
+    const settle = () =>
+      page.evaluate(
+        () => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))),
+      );
+    const peer = boards.nth(1).getByRole('button', { name: 'Remove assets.zip' });
+    const retry = (board) => board.getByRole('button', { name: 'Retry research-notes.md' });
+    await peer.focus();
+    await retry(boards.first()).evaluate((button) => button.click());
+    await retry(boards.first()).waitFor({ state: 'detached' });
+    await settle();
+    await assertFocused(peer);
+
+    await retry(boards.nth(1)).press('Enter');
+    await retry(boards.nth(1)).waitFor({ state: 'detached' });
+    await settle();
+    await assertFocused(boards.nth(1).getByRole('button', { name: 'Remove research-notes.md' }));
+
+    const pinned = await open(page, { item: 'dropzone', tab: 'states', block: 'lifecycle' });
+    const sample = pinned.getByRole('button', { name: 'Retry supporting-research.zip' });
+    await sample.press('Enter');
+    await settle();
+    await assertFocused(sample);
+  },
+
   'Sign in submits once and the editor keeps its controlled Bold toggle': async ({
     page,
     mount,

@@ -4,6 +4,22 @@ import { assertFocused, getBox } from '../helpers.mjs';
 const center = (box) => box.x + box.width / 2;
 const actions = async (row, name) => getBox(row.getByRole('button', { name }));
 
+async function cancelKeyboardReset(form, reset) {
+  await form.evaluate((owner) => {
+    owner.ownerDocument.addEventListener(
+      'reset',
+      (event) => {
+        if (event.target === owner && event.isTrusted) {
+          event.preventDefault();
+        }
+      },
+      { once: true },
+    );
+  });
+  await reset.press('Enter');
+  await form.evaluate(() => new Promise((resolve) => setTimeout(resolve, 0)));
+}
+
 function open(page, params) {
   return page.evaluate(
     (params) => {
@@ -186,6 +202,13 @@ export default {
       ['workspace', 'Folio'],
     ]);
 
+    await editor.fill('Latest committed name');
+    await editor.evaluate((node) => node.form.reset());
+    assert.equal(await editor.inputValue(), 'Latest committed name');
+    assert.deepEqual(await editor.evaluate((node) => [...new FormData(node.form)]), [
+      ['workspace', 'Latest committed name'],
+    ]);
+
     await open(page, { item: 'form-field', tab: 'states', block: 'overflow' });
     const group = page.getByRole('group', { name: 'Review window' });
     const start = group.getByLabel('Start', { exact: true });
@@ -198,6 +221,17 @@ export default {
     await start.fill('07:45');
     assert.equal(await start.inputValue(), '07:45');
     assert.equal(await end.inputValue(), '08:30');
+    assert.equal(await end.getAttribute('aria-invalid'), null);
+    await start.fill('11:45');
+    assert.equal(await end.getAttribute('aria-invalid'), 'true');
+    assert.equal(
+      await end.evaluate(
+        (node) => document.getElementById(node.getAttribute('aria-describedby')).textContent,
+      ),
+      'Choose an end time later than 11:45.',
+    );
+    await end.fill('');
+    assert.equal(await end.getAttribute('aria-invalid'), null);
 
     await open(page, { item: 'context-menu', tab: 'compositions', block: 'native' });
     const note = page.getByLabel('Revision note');
@@ -217,6 +251,166 @@ export default {
     await card.click({ button: 'right', position: { x: 4, y: 4 } });
     await menu.waitFor();
   },
+  'FormField preserves canceled resets and validates the restored delivery preferences': async ({
+    page,
+    mount,
+  }) => {
+    await mount('input-workbench');
+    await open(page, { item: 'form-field', tab: 'states', block: 'live' });
+    const form = page.locator('[data-wb-block="live"] form').filter({
+      has: page.getByRole('button', { name: 'Save preferences' }),
+    });
+    const email = form.getByRole('textbox');
+    const digest = form.getByRole('checkbox', { name: 'Email digest' });
+    const saved = form.getByText('Preferences saved for this preview.', { exact: true });
+    const reset = form.getByRole('button', { name: 'Reset', exact: true });
+    await email.fill('release@example.org');
+    await digest.check();
+    await form.getByRole('button', { name: 'Save preferences' }).press('Enter');
+    await saved.waitFor();
+
+    await cancelKeyboardReset(form, reset);
+    assert.equal(await email.inputValue(), 'release@example.org');
+    assert.equal(await digest.isChecked(), true);
+    assert.equal(await saved.isVisible(), true);
+
+    await reset.press('Enter');
+    await saved.waitFor({ state: 'hidden' });
+    assert.equal(await email.inputValue(), '');
+    assert.equal(await digest.isChecked(), false);
+
+    for (const afterMicrotask of [false, true]) {
+      await email.fill('updated@example.org');
+      await digest.check();
+      await form.getByRole('button', { name: 'Save preferences' }).press('Enter');
+      await saved.waitFor();
+      const payload = await form.evaluate(async (owner, afterMicrotask) => {
+        let entries;
+        owner.addEventListener(
+          'submit',
+          () => {
+            entries = [...new FormData(owner)];
+          },
+          { once: true },
+        );
+        owner.reset();
+        if (afterMicrotask) {
+          await Promise.resolve();
+        }
+        owner.requestSubmit();
+        await new Promise((resolve) => setTimeout(resolve, 0));
+        return entries;
+      }, afterMicrotask);
+      assert.deepEqual(payload, [['email', '']]);
+      assert.equal(await email.getAttribute('aria-invalid'), 'true');
+      assert.equal(await form.getByText('Enter your delivery email.').isVisible(), true);
+      assert.equal(await form.getByText('Select at least one delivery method.').isVisible(), true);
+      assert.equal(await saved.isVisible(), false);
+      await assertFocused(email);
+    }
+  },
+  'RangeSlider keeps its latest applied price after canceled and resubmitted resets': async ({
+    page,
+    mount,
+  }) => {
+    await mount('input-workbench');
+    await open(page, { item: 'range-slider', tab: 'compositions', block: 'form' });
+    const board = page.locator('[data-wb-block="form"] .wb-artboard');
+    const form = board.locator('form');
+    const maximum = board.getByRole('slider', { name: 'Maximum price', exact: true });
+    const reset = form.getByRole('button', { name: 'Reset', exact: true });
+    const edit = board.getByRole('button', { name: 'Edit price range' });
+    await maximum.press('End');
+    await form.getByRole('button', { name: 'Apply price filter' }).press('Enter');
+    await edit.waitFor();
+    await cancelKeyboardReset(form, reset);
+    assert.deepEqual(await form.evaluate((el) => Object.fromEntries(new FormData(el))), {
+      from: '25',
+      to: '100',
+    });
+    assert.equal(await board.getByRole('status').innerText(), 'Applied price range: $25 — $100.');
+    await edit.press('Enter');
+    await assertFocused(board.getByRole('slider', { name: 'Minimum price', exact: true }));
+
+    await reset.press('Enter');
+    await edit.waitFor({ state: 'hidden' });
+    assert.equal(await maximum.inputValue(), '75');
+    assert.equal(await board.getByRole('status').innerText(), '');
+
+    await maximum.press('End');
+    await form.getByRole('button', { name: 'Apply price filter' }).press('Enter');
+    await edit.waitFor();
+    await form.evaluate(async (owner) => {
+      owner.reset();
+      await Promise.resolve();
+      owner.requestSubmit(owner.querySelector('button[type="submit"]'));
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+    assert.equal(await board.getByRole('status').innerText(), 'Applied price range: $25 — $75.');
+  },
+  'FormField address guidelines preserve edits across themes and open independently': async ({
+    page,
+    mount,
+  }) => {
+    await mount('input-workbench');
+    await open(page, {
+      item: 'form-field',
+      tab: 'states',
+      family: 'all',
+      scheme: 'both',
+      theme: 'soft-dark',
+    });
+    const study = page.locator('[data-wb-block="overflow"]');
+    await study.scrollIntoViewIfNeeded();
+    const board = study.locator('.wb-artboard[data-theme="frost-light"]');
+    const label = { name: /A longer descriptive label/ };
+    const address = board.getByRole('textbox', label);
+    const other = study.locator('.wb-artboard[data-theme="soft-dark"]').getByRole('textbox', label);
+    const help = board.getByRole('button', { name: /Where can I find/ });
+    const link = board.getByRole('link', { name: 'Address guidelines' });
+    const initial = await address.inputValue();
+    await address.fill('edited-address');
+    await other.fill('another-address');
+    await help.press('Enter');
+
+    const href = new URL(await link.getAttribute('href'), page.url());
+    assert.equal(href.searchParams.get('block'), 'overflow');
+    assert.equal(href.searchParams.get('solo'), 'frost-light');
+    const separate = await page.context().newPage();
+    await separate.goto(href.href);
+    await separate.locator(href.hash + ':focus').waitFor();
+    assert.equal(await separate.getByRole('textbox', label).inputValue(), initial);
+    await separate.close();
+
+    await link.press('Enter');
+    await page.waitForURL(
+      (url) => url.hash === href.hash && url.searchParams.get('block') === 'overflow',
+    );
+    assert.equal(await address.inputValue(), 'edited-address');
+    assert.equal(await other.inputValue(), 'another-address');
+    assert.equal(await help.getAttribute('aria-expanded'), 'true');
+    assert.equal(await study.locator('.wb-artboard').count(), 6);
+    await page.locator(href.hash + ':focus').waitFor();
+    await page.waitForFunction(
+      (hash) =>
+        new Promise((resolve) => {
+          const observer = new IntersectionObserver(
+            ([{ boundingClientRect, intersectionRect }]) => {
+              observer.disconnect();
+              // Fractional artboard scaling may clip a subpixel at the scrollport edge.
+              resolve(
+                intersectionRect.height >= boundingClientRect.height - 1 &&
+                  intersectionRect.width >= boundingClientRect.width - 1,
+              );
+            },
+          );
+          requestAnimationFrame(() => observer.observe(document.querySelector(hash)));
+        }),
+      href.hash,
+    );
+    await page.reload();
+    await page.locator(href.hash + ':focus').waitFor();
+  },
   'Input Workbench uses the available overlay width for narrow RTL overflow examples': async ({
     page,
     mount,
@@ -234,16 +428,59 @@ export default {
       raw: '1',
     });
     const grid = page.locator('.input-study-grid');
-    const available = await grid.evaluate((node) => ({
-      grid: node.offsetWidth,
-      stage: node.parentElement.clientWidth,
-    }));
+    const available = await grid.evaluate((node) => {
+      const parent = node.parentElement;
+      const style = getComputedStyle(parent);
+      return {
+        grid: node.offsetWidth,
+        stage:
+          parent.clientWidth -
+          parseFloat(style.paddingInlineStart) -
+          parseFloat(style.paddingInlineEnd),
+      };
+    });
     assert.equal(available.grid, available.stage);
     for (const name of ['Long affixes', 'Reference URL · LTR value']) {
       const field = grid.getByLabel(name, { exact: true }).locator('..');
       const shell = await getBox(field);
       const clear = await actions(field, 'Clear value');
       assert.ok(clear.x >= shell.x && clear.x + clear.width <= shell.x + shell.width);
+    }
+  },
+  'NumberInput Workbench fits the field and restores step availability on native reset': async ({
+    page,
+    mount,
+  }) => {
+    await mount('input-workbench');
+    for (const surface of ['base', 'overlay']) {
+      await open(page, {
+        item: 'number-input',
+        tab: 'playground',
+        surface,
+        vp: '360',
+        scale: '120',
+        dir: 'rtl',
+      });
+      const art = page.locator('.wb-artboard').first();
+      const field = art.getByRole('spinbutton', { name: 'Seat quota' });
+      await field.waitFor();
+      assert.ok(await field.evaluate((input) => input.closest('.ff-proto').clientWidth > 140));
+      const increase = art.getByRole('button', { name: 'Increase value' });
+      await field.fill('100');
+      assert.equal(await increase.isDisabled(), true);
+      await field.evaluate((input) => {
+        input.form.addEventListener('reset', (event) => event.preventDefault(), { once: true });
+        input.form.reset();
+      });
+      assert.equal(await field.inputValue(), '100');
+      assert.equal(await increase.isDisabled(), true);
+      await field.evaluate((input) => input.form.reset());
+      await art.locator('[data-action="increment"]:enabled').waitFor();
+      assert.equal(await field.inputValue(), '25');
+      await field.press('ArrowUp');
+      assert.deepEqual(await field.evaluate((input) => [...new FormData(input.form)]), [
+        ['quota', '26'],
+      ]);
     }
   },
 };
