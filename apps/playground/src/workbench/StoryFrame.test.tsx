@@ -1,5 +1,5 @@
 import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
-import { useState } from 'react';
+import { useLayoutEffect, useState } from 'react';
 import type { ReactElement } from 'react';
 import { afterEach, expect, it, vi } from 'vitest';
 import { StoryFrame } from './StoryFrame.js';
@@ -250,6 +250,37 @@ it('keeps a stable setter for inline schemas and validates against the latest ch
   expect(mode.value).toBe('paused');
   act(() => initial.setControl('mode', 'running'));
   expect(mode.value).toBe('paused');
+});
+
+it('accepts a newly declared choice from a child layout effect in the same commit', () => {
+  function Preview({
+    choice,
+    setControl,
+  }: {
+    choice: string;
+    setControl: StoryContext['setControl'];
+  }) {
+    useLayoutEffect(() => {
+      setControl('mode', choice);
+    }, [choice, setControl]);
+    return null;
+  }
+
+  const frame = (choice: string) => (
+    <StoryFrame
+      title="Job"
+      controls={{
+        mode: { kind: 'enum', label: 'Mode', default: 'idle', choices: ['idle', choice] },
+      }}
+    >
+      {({ setControl }) => <Preview choice={choice} setControl={setControl} />}
+    </StoryFrame>
+  );
+  const { rerender } = render(frame('queued'));
+  const mode = screen.getByRole<HTMLSelectElement>('combobox', { name: 'Mode' });
+  expect(mode.value).toBe('queued');
+  rerender(frame('running'));
+  expect(mode.value).toBe('running');
 });
 
 it('supports the declarative component shortcut with auto-rendered subjects and idiomatic JSX', () => {

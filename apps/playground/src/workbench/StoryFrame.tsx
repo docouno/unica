@@ -1,4 +1,4 @@
-import { Fragment, useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { Fragment, useCallback, useInsertionEffect, useMemo, useRef, useState } from 'react';
 import type { ReactElement, ReactNode } from 'react';
 import { defaultStoryControls } from './storyFrameState.js';
 import type {
@@ -59,7 +59,8 @@ function controlsSignature(controls: StoryControlSchema | undefined): string {
 
 function useControlLookup(controls: StoryControlSchema | undefined) {
   const controlsRef = useRef(controls);
-  useLayoutEffect(() => {
+  // Publish the committed schema before a descendant layout effect writes a control.
+  useInsertionEffect(() => {
     controlsRef.current = controls;
   }, [controls]);
   return useCallback((key: string): StoryControlDefinition | undefined => {
