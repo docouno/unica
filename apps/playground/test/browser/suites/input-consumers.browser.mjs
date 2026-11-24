@@ -4,6 +4,22 @@ import { assertFocused, getBox } from '../helpers.mjs';
 const center = (box) => box.x + box.width / 2;
 const actions = async (row, name) => getBox(row.getByRole('button', { name }));
 
+async function cancelKeyboardReset(form, reset) {
+  await form.evaluate((owner) => {
+    owner.ownerDocument.addEventListener(
+      'reset',
+      (event) => {
+        if (event.target === owner && event.isTrusted) {
+          event.preventDefault();
+        }
+      },
+      { once: true },
+    );
+  });
+  await reset.press('Enter');
+  await form.evaluate(() => new Promise((resolve) => setTimeout(resolve, 0)));
+}
+
 function open(page, params) {
   return page.evaluate(
     (params) => {
@@ -253,13 +269,7 @@ export default {
     await form.getByRole('button', { name: 'Save preferences' }).press('Enter');
     await saved.waitFor();
 
-    await form.evaluate((owner) => {
-      owner.ownerDocument.addEventListener('reset', (event) => event.preventDefault(), {
-        once: true,
-      });
-    });
-    await reset.press('Enter');
-    await page.evaluate(() => new Promise((resolve) => setTimeout(resolve, 0)));
+    await cancelKeyboardReset(form, reset);
     assert.equal(await email.inputValue(), 'release@example.org');
     assert.equal(await digest.isChecked(), true);
     assert.equal(await saved.isVisible(), true);
@@ -268,6 +278,45 @@ export default {
     await saved.waitFor({ state: 'hidden' });
     assert.equal(await email.inputValue(), '');
     assert.equal(await digest.isChecked(), false);
+  },
+  'RangeSlider keeps its latest applied price after canceled and resubmitted resets': async ({
+    page,
+    mount,
+  }) => {
+    await mount('input-workbench');
+    await open(page, { item: 'range-slider', tab: 'compositions', block: 'form' });
+    const board = page.locator('[data-wb-block="form"] .wb-artboard');
+    const form = board.locator('form');
+    const maximum = board.getByRole('slider', { name: 'Maximum price', exact: true });
+    const reset = form.getByRole('button', { name: 'Reset', exact: true });
+    const edit = board.getByRole('button', { name: 'Edit price range' });
+    await maximum.press('End');
+    await form.getByRole('button', { name: 'Apply price filter' }).press('Enter');
+    await edit.waitFor();
+    await cancelKeyboardReset(form, reset);
+    assert.deepEqual(await form.evaluate((el) => Object.fromEntries(new FormData(el))), {
+      from: '25',
+      to: '100',
+    });
+    assert.equal(await board.getByRole('status').innerText(), 'Applied price range: $25 — $100.');
+    await edit.press('Enter');
+    await assertFocused(board.getByRole('slider', { name: 'Minimum price', exact: true }));
+
+    await reset.press('Enter');
+    await edit.waitFor({ state: 'hidden' });
+    assert.equal(await maximum.inputValue(), '75');
+    assert.equal(await board.getByRole('status').innerText(), '');
+
+    await maximum.press('End');
+    await form.getByRole('button', { name: 'Apply price filter' }).press('Enter');
+    await edit.waitFor();
+    await form.evaluate(async (owner) => {
+      owner.reset();
+      await Promise.resolve();
+      owner.requestSubmit(owner.querySelector('button[type="submit"]'));
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+    assert.equal(await board.getByRole('status').innerText(), 'Applied price range: $25 — $75.');
   },
   'FormField address guidelines preserve edits across themes and open independently': async ({
     page,

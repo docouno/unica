@@ -7,6 +7,7 @@ export function PriceFilter({ rangeProps = {} } = {}) {
   const focusMinimum = useRef(() => {
     // The lower thumb supplies its focus action when mounted.
   });
+  const submissionCount = useRef(0);
   const [submitted, setSubmitted] = useState('');
   return (
     <Stack gap={12}>
@@ -40,16 +41,19 @@ export function PriceFilter({ rangeProps = {} } = {}) {
           const from = data.get('from');
           const to = data.get('to');
           if (typeof from === 'string' && typeof to === 'string') {
+            submissionCount.current += 1;
             setSubmitted('$' + from + ' — $' + to);
           }
         }}
         onReset={(event) => {
           const reset = event.nativeEvent;
-          queueMicrotask(() => {
-            if (!reset.defaultPrevented) {
+          const countAtReset = submissionCount.current;
+          // A keyboard reset can reach document listeners after the microtask checkpoint.
+          setTimeout(() => {
+            if (!reset.defaultPrevented && submissionCount.current === countAtReset) {
               setSubmitted('');
             }
-          });
+          }, 0);
         }}
       >
         <Flex gap={8} wrap="wrap">
