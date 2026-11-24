@@ -2,7 +2,7 @@ File input Arabic typography fixture
 
 File: file-input-arabic-400.ttf (Noto Sans Arabic, weight 400)
 Retrieved: 2026-11-16
-Purpose: deterministic filename, label, and status rendering in the FileInput and Toast specimens.
+Purpose: deterministic Arabic filenames, labels, status messages, and mixed-direction editor content in the FileInput, Toast, and Textarea specimens.
 Text subset: ملف مرجعي تقرير البحث تم التحقق من الملف 2026.pdf
 
 Google Fonts supplied this text subset:

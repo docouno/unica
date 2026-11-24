@@ -1,15 +1,13 @@
 import { useId, useState } from 'react';
 import type { ReactElement, ReactNode } from 'react';
-import { Textarea, VisuallyHidden } from '@docouno/unica';
+import { Flex, Icon, Stack, Text, Textarea } from '@docouno/unica';
 import type { TextareaProps } from '@docouno/unica';
-import { Button } from '@docouno/unica';
-import type { PreviewContext } from '../../workbench/types.js';
+import { useStoryAction } from '../../workbench/storyFrameState.js';
+import type { PreviewProps } from '../../workbench/types.js';
 import { textareaFeedback } from './textarea.feedback.js';
+import { ExportLog } from './export-log.js';
+import { ReviewNote } from './review-note.js';
 import './textarea.examples.css';
-
-interface ExampleProps {
-  readonly subject: PreviewContext['subject'];
-}
 
 type LabeledTextareaProps = TextareaProps & {
   readonly label?: string;
@@ -34,7 +32,7 @@ export function LabeledTextarea({
     props.wrap?.toLowerCase() === 'off' && status !== 'neutral' && !props.disabled
       ? textareaFeedback[status]
       : undefined;
-  const Icon = statusFeedback?.Icon;
+  const color = props.disabled || status === 'neutral' ? 'secondary' : status;
   const feedback = message ?? statusFeedback?.label;
   const descriptionId = description ? `${inputId}-description` : undefined;
   const messageId = feedback ? `${inputId}-message` : undefined;
@@ -48,43 +46,52 @@ export function LabeledTextarea({
   ].join(' ');
 
   return (
-    <div className="textarea-demo-field" data-width={props.width}>
+    <Stack gap={8} className="textarea-demo-field" data-width={props.width}>
       {label && (
-        <label className="textarea-demo-label" htmlFor={inputId}>
-          {label}
-          {props.required && <span aria-hidden="true"> *</span>}
-        </label>
+        <Text as="label" size="body-s" weight="medium" htmlFor={inputId}>
+          <bdi>{label}</bdi>
+          {props.required && !props.disabled && (
+            <Text as="span" color="danger" aria-hidden="true">
+              {' '}
+              *
+            </Text>
+          )}
+        </Text>
       )}
-      <Textarea {...props} id={inputId} aria-describedby={descriptionIds || undefined} />
+      <Textarea dir="auto" {...props} id={inputId} aria-describedby={descriptionIds || undefined} />
       {(description || feedback || counter) && (
-        <div className="textarea-demo-support">
+        <Stack gap={4}>
           {description && (
-            <p className="textarea-demo-copy" id={descriptionId}>
-              {description}
-            </p>
+            <Text as="p" size="caption-l" color="secondary" id={descriptionId}>
+              <bdi>{description}</bdi>
+            </Text>
           )}
           {(feedback || counter) && (
-            <div className="textarea-demo-footer">
+            <Flex wrap="wrap" align="baseline" gap={8}>
               {feedback && (
-                <p
-                  className="textarea-demo-feedback"
-                  id={messageId}
-                  data-status={props.disabled ? 'neutral' : status}
-                >
-                  {Icon && <Icon aria-hidden="true" size="1em" />}
-                  <span>{feedback}</span>
-                </p>
+                <Flex gap={8} align="start" id={messageId} style={{ flex: '1 1 14rem' }}>
+                  {statusFeedback && <Icon icon={statusFeedback.Icon} size="s" color={color} />}
+                  <Text size="caption-l" color={color}>
+                    <bdi>{feedback}</bdi>
+                  </Text>
+                </Flex>
               )}
               {counter && (
-                <span className="textarea-demo-counter" id={counterId}>
+                <Text
+                  as="span"
+                  size="caption-l"
+                  color={color}
+                  className="textarea-demo-counter"
+                  id={counterId}
+                >
                   {counter}
-                </span>
+                </Text>
               )}
-            </div>
+            </Flex>
           )}
-        </div>
+        </Stack>
       )}
-    </div>
+    </Stack>
   );
 }
 
@@ -95,7 +102,7 @@ const paragraph =
 const longText =
   'Start with the reader’s goal.\n\nExplain what changed, why it matters, and what to do next. Keep each paragraph focused on a single idea.\n\nInclude enough context for someone arriving here for the first time. Avoid repeating details that already live in the linked reference.\n\nBefore publishing, check the examples on a narrow screen and ask a colleague to read the summary aloud.';
 
-function TextareaRoles({ subject }: ExampleProps): ReactElement {
+export function TextareaRoles({ ctx: { subject } }: PreviewProps): ReactElement {
   return (
     <div className="textarea-demo-stack">
       {sizes.map((size) => (
@@ -103,7 +110,7 @@ function TextareaRoles({ subject }: ExampleProps): ReactElement {
           {variants.map((variant) => (
             <LabeledTextarea
               key={variant}
-              {...(size === 'm' && variant === 'default' ? subject : undefined)}
+              {...subject}
               size={size}
               variant={variant}
               label={`${size.toUpperCase()} · ${variant === 'default' ? 'Default' : 'Ghost'}`}
@@ -118,13 +125,13 @@ function TextareaRoles({ subject }: ExampleProps): ReactElement {
   );
 }
 
-function TextareaInteraction({ subject }: ExampleProps): ReactElement {
+export function TextareaInteraction({ ctx: { subject } }: PreviewProps): ReactElement {
   return (
     <div className="textarea-demo-grid">
       {variants.map((variant) => (
         <LabeledTextarea
           key={variant}
-          {...(variant === 'default' ? subject : undefined)}
+          {...subject}
           variant={variant}
           rows={2}
           label={variant === 'default' ? 'Default' : 'Ghost'}
@@ -138,45 +145,52 @@ function TextareaInteraction({ subject }: ExampleProps): ReactElement {
 
 const feedback: readonly {
   status: NonNullable<TextareaProps['status']>;
+  sample: string;
   label: string;
   message: string;
 }[] = [
   {
     status: 'info',
     label: 'Shared note',
+    sample: 'The maintenance window starts Friday at 09:00.',
     message: 'Everyone with access to this page can read your note.',
   },
   {
     status: 'success',
     label: 'Summary checked',
+    sample: 'Open the updated guide and send the review link to the support team.',
     message: 'The summary includes the context readers need.',
   },
   {
     status: 'warning',
     label: 'Sensitive detail',
+    sample: 'Contact the reviewer through their personal address before publication.',
     message: 'Remove personal details before sharing publicly.',
   },
   {
     status: 'danger',
     label: 'Missing next step',
+    sample: 'The data export is complete.',
     message: 'Describe what the reader should do next.',
   },
 ];
 
-function TextareaFeedback(): ReactElement {
+export function TextareaFeedback({ ctx: { subject } }: PreviewProps): ReactElement {
   return (
     <div className="textarea-demo-grid">
-      {feedback.map(({ status, label, message }) => (
+      {feedback.map(({ status, label, message, sample }) => (
         <LabeledTextarea
+          {...subject}
           key={status}
           status={status}
           label={label}
           message={message}
-          defaultValue="Keep the release focused. Give readers one clear next step."
+          defaultValue={sample}
           rows={3}
         />
       ))}
       <LabeledTextarea
+        {...subject}
         label="Default · error"
         status="danger"
         message="Add a concrete next step."
@@ -184,6 +198,7 @@ function TextareaFeedback(): ReactElement {
         rows={2}
       />
       <LabeledTextarea
+        {...subject}
         label="Ghost · warning"
         variant="ghost"
         status="warning"
@@ -192,6 +207,7 @@ function TextareaFeedback(): ReactElement {
         rows={2}
       />
       <LabeledTextarea
+        {...subject}
         label="Ghost · error"
         variant="ghost"
         status="danger"
@@ -200,6 +216,7 @@ function TextareaFeedback(): ReactElement {
         rows={2}
       />
       <LabeledTextarea
+        {...subject}
         label="Error · concise feedback"
         status="danger"
         message="Keep the next step specific."
@@ -210,23 +227,26 @@ function TextareaFeedback(): ReactElement {
   );
 }
 
-function TextareaAvailability(): ReactElement {
+export function TextareaAvailability({ ctx: { subject } }: PreviewProps): ReactElement {
   return (
     <div className="textarea-demo-grid">
       <LabeledTextarea
+        {...subject}
         label="Read-only reference"
         readOnly
         defaultValue={longText}
         rows={3}
-        description="Managed by the document owner. Select, copy, scroll, or enlarge to read."
+        description="Managed by the document owner."
       />
       <LabeledTextarea
+        {...subject}
         label="Read-only · short reference"
         readOnly
         defaultValue={paragraph}
         rows={3}
       />
       <LabeledTextarea
+        {...subject}
         label="Read-only · warning"
         readOnly
         status="warning"
@@ -235,14 +255,16 @@ function TextareaAvailability(): ReactElement {
         rows={3}
       />
       <LabeledTextarea
+        {...subject}
         label="Ghost · read-only"
         variant="ghost"
         readOnly
         defaultValue={paragraph}
         rows={3}
-        description="The published description stays available for copying."
+        description="Published with the latest release."
       />
       <LabeledTextarea
+        {...subject}
         label="Disabled · filled"
         disabled
         defaultValue={paragraph}
@@ -250,6 +272,7 @@ function TextareaAvailability(): ReactElement {
         message="Editing becomes available after you join the project."
       />
       <LabeledTextarea
+        {...subject}
         label="Ghost · disabled"
         variant="ghost"
         disabled
@@ -258,6 +281,7 @@ function TextareaAvailability(): ReactElement {
         description="Notes are unavailable for this item."
       />
       <LabeledTextarea
+        {...subject}
         label="Disabled · status suppressed"
         disabled
         status="danger"
@@ -266,59 +290,56 @@ function TextareaAvailability(): ReactElement {
         rows={2}
       />
       <LabeledTextarea
+        {...subject}
         label="Read-only · autosize"
         readOnly
         autosize
         minRows={2}
         maxRows={4}
         defaultValue={longText}
-        description="Content growth remains active; editing does not."
+        description="Latest revision from the release archive."
       />
     </div>
   );
 }
 
-function TextareaHeights(): ReactElement {
+export function TextareaHeights({ ctx: { subject } }: PreviewProps): ReactElement {
   return (
     <div className="textarea-demo-grid">
+      <LabeledTextarea {...subject} label="Manual height" rows={3} defaultValue={longText} />
       <LabeledTextarea
-        label="Manual height"
-        rows={3}
-        defaultValue={longText}
-        description="Drag the native corner to make room. Typing keeps your chosen height."
-      />
-      <LabeledTextarea
+        {...subject}
         label="Fixed height"
         resize="none"
         rows={3}
         defaultValue={longText}
-        description="Three rows, then scroll. No resize grip."
       />
       <LabeledTextarea
+        {...subject}
         label="Autosize · empty"
         autosize
         minRows={2}
         maxRows={5}
         placeholder="Start a note…"
-        description="Type or paste: grows from two to five rows, then scrolls."
       />
       <LabeledTextarea
+        {...subject}
         label="Autosize · between limits"
         autosize
         minRows={2}
         maxRows={5}
         defaultValue={'First point.\nSecond point.\nA final thought.'}
-        description="Delete text to see the field shrink without animation."
       />
       <LabeledTextarea
+        {...subject}
         label="Autosize · at the limit"
         autosize
         minRows={2}
         maxRows={5}
         defaultValue={'One\nTwo\nThree\nFour\nFive'}
-        description="Five lines fit without scrolling."
       />
       <LabeledTextarea
+        {...subject}
         label="Autosize · overflow & status"
         autosize
         minRows={2}
@@ -328,49 +349,67 @@ function TextareaHeights(): ReactElement {
         message="Review the final paragraph before publishing."
       />
       <LabeledTextarea
+        {...subject}
         label="Ghost · growing note"
         variant="ghost"
         autosize
         minRows={2}
         maxRows={5}
         defaultValue={paragraph}
-        description="The baseline follows the content height."
       />
       <LabeledTextarea
+        {...subject}
         label="Autosize · open-ended"
         autosize
         minRows={2}
         defaultValue={'A short opening.\n\nRoom for a second thought.'}
-        description="No height cap. Use in a page with room to grow, not a compact dialog."
       />
-      <p className="textarea-demo-note textarea-demo-wide">
-        Autosize uses native content sizing. Where unavailable, the field stays at its minimum row
-        count and scrolls.
-      </p>
     </div>
   );
 }
 
-function TextareaFooter(): ReactElement {
+const wordCount = (text: string): number => text.trim().split(/\s+/u).filter(Boolean).length;
+
+export function TextareaFooter({ ctx: { subject } }: PreviewProps): ReactElement {
+  const [summary, setSummary] = useState('Share the change with the support team.');
+  const [short, setShort] = useState('A concise summary.');
+  const hasGuide = /https?:\/\/\S+/iu.test(summary);
   return (
     <div className="textarea-demo-grid">
       <LabeledTextarea
+        {...subject}
         label="Description and feedback"
         required
-        defaultValue="Share the change with the support team."
+        value={summary}
+        onChange={(event) => setSummary(event.currentTarget.value)}
         description="Visible in the activity feed."
-        status="warning"
-        message="Add a link to the updated guide so readers can find it."
-        counter={<bdi>8 / 40 words</bdi>}
+        status={hasGuide ? 'success' : 'warning'}
+        message={
+          hasGuide
+            ? 'A guide link is included.'
+            : 'Add a link to the updated guide so readers can find it.'
+        }
+        counter={<bdi>{wordCount(summary)} / 40 words</bdi>}
         rows={2}
       />
       <LabeledTextarea
+        {...subject}
         label="Counter without a message"
-        defaultValue="A concise summary."
+        value={short}
         rows={2}
-        counter={<bdi>18 / 240 characters</bdi>}
+        onChange={(event) => setShort(event.currentTarget.value)}
+        counter={
+          <bdi>
+            {
+              Array.from(new Intl.Segmenter(undefined, { granularity: 'grapheme' }).segment(short))
+                .length
+            }{' '}
+            / 240 characters
+          </bdi>
+        }
       />
       <LabeledTextarea
+        {...subject}
         label="Helpful context, no counter"
         defaultValue={paragraph}
         rows={3}
@@ -380,256 +419,123 @@ function TextareaFooter(): ReactElement {
   );
 }
 
-function TextareaLive({ subject }: ExampleProps): ReactElement {
-  const initial = 'A little context helps the next person pick up where you left off.';
-  const [value, setValue] = useState(initial);
-  const [checked, setChecked] = useState(false);
-  const [announcement, setAnnouncement] = useState('');
-  const [busy, setBusy] = useState(false);
-  const [submitted, setSubmitted] = useState('');
+export function TextareaLive({ ctx }: PreviewProps): ReactElement {
+  const [load, setLoad] = useState(0);
   const [hardValue, setHardValue] = useState('');
-  const length = Array.from(
-    new Intl.Segmenter('en', { granularity: 'grapheme' }).segment(value),
-  ).length;
-  const over = length > 160;
-  const warning = !over && length >= 144;
-  const status: NonNullable<TextareaProps['status']> = over
-    ? 'danger'
-    : warning
-      ? 'warning'
-      : checked
-        ? value.trim()
-          ? 'success'
-          : 'danger'
-        : 'neutral';
-  const message = over
-    ? `Remove ${length - 160} characters before saving. Your full draft is kept.`
-    : warning
-      ? length === 160
-        ? 'At the suggested length. The full note is retained.'
-        : 'Almost at the suggested length. Keep the key idea.'
-      : checked
-        ? value.trim()
-          ? 'The note is ready to share.'
-          : 'Write a note before saving.'
-        : 'Enter adds a new line. Escape keeps your draft.';
+  useStoryAction(ctx, (action) => {
+    if (action === 'load-long') {
+      setLoad((previous) => previous + 1);
+    }
+  });
   return (
     <div className="textarea-demo-grid">
-      <form
-        className="textarea-demo-stack"
-        aria-busy={busy || undefined}
-        onSubmit={(event) => {
-          event.preventDefault();
-          const draft = new FormData(event.currentTarget).get('note');
-          setSubmitted(typeof draft === 'string' ? draft : '');
-        }}
-        onReset={() => {
-          setValue(initial);
-          setChecked(false);
-          setSubmitted('');
-          setAnnouncement('');
-        }}
-      >
-        <LabeledTextarea
-          {...subject}
-          label="Soft limit · live draft"
-          autosize
-          minRows={3}
-          maxRows={6}
-          name="note"
-          value={value}
-          onChange={(event) => {
-            setValue(event.currentTarget.value);
-            setChecked(false);
-          }}
-          status={status}
-          description="Aim for 160 characters. Pasting a longer draft is allowed."
-          message={message}
-          counter={
-            <bdi className={over ? 'textarea-demo-over-limit' : undefined}>
-              {length} / 160 characters
-            </bdi>
-          }
-        />
-        <div className="textarea-demo-actions">
-          <Button
-            size="s"
-            variant="secondary"
-            tone="neutral"
-            onClick={() => {
-              setChecked(true);
-              setAnnouncement(
-                over
-                  ? message
-                  : value.trim()
-                    ? 'The note is ready to share.'
-                    : 'Write a note before saving.',
-              );
-            }}
-          >
-            Check note
-          </Button>
-          <Button
-            size="s"
-            variant="ghost"
-            tone="neutral"
-            onClick={() => {
-              setValue(longText);
-              setChecked(false);
-            }}
-          >
-            Load long draft
-          </Button>
-          <Button size="s" type="submit" loading={busy}>
-            Submit draft
-          </Button>
-          <Button size="s" variant="secondary" tone="neutral" type="reset">
-            Reset draft
-          </Button>
-          <label>
-            <input
-              type="checkbox"
-              checked={busy}
-              onChange={(event) => setBusy(event.currentTarget.checked)}
-            />{' '}
-            Show saving state
-          </label>
-        </div>
-        <VisuallyHidden role="status">{announcement}</VisuallyHidden>
-        {submitted && <p className="textarea-demo-note">Submitted draft: {submitted}</p>}
-      </form>
-      <div className="textarea-demo-stack">
-        <LabeledTextarea
-          label="Native limit · short note"
-          value={hardValue}
-          maxLength={80}
-          rows={3}
-          onChange={(event) => setHardValue(event.currentTarget.value)}
-          description="Native maximum: 80 UTF-16 units. Try a family emoji 👨‍👩‍👧 in both fields and compare the counters."
-          counter={<bdi>{hardValue.length} / 80 units</bdi>}
-        />
-      </div>
+      <ReviewNote
+        loadedDraft={load ? { sequence: load, text: longText } : undefined}
+        label="Soft limit · live draft"
+        busy={ctx.story?.controls.busy === true}
+        fieldProps={ctx.subject}
+      />
+      <LabeledTextarea
+        label="Native limit · short note"
+        value={hardValue}
+        maxLength={80}
+        rows={3}
+        onChange={(event) => setHardValue(event.currentTarget.value)}
+        description="The native limit is 80 UTF-16 units. A family emoji can use several units."
+        counter={<bdi>{hardValue.length} / 80 units</bdi>}
+      />
     </div>
   );
 }
 
-function TextareaOverflow({ subject }: ExampleProps): ReactElement {
+export function TextareaOverflow({ ctx: { subject } }: PreviewProps): ReactElement {
+  const [summary, setSummary] = useState(longText);
+  const [rtl, setRtl] = useState('تقرير البحث 42\nتم التحقق من الملف');
+  const words = wordCount(summary);
+  const lines = rtl.split('\n').length;
   return (
     <div className="textarea-demo-grid">
       <LabeledTextarea
         label="A longer label that explains what readers should understand before they continue"
-        defaultValue={longText}
-        status="danger"
+        value={summary}
+        onChange={(event) => setSummary(event.currentTarget.value)}
+        status={words > 60 ? 'danger' : 'neutral'}
         rows={3}
-        description="Keep supporting details readable even when the available space is narrow."
-        message="Explain the final step and include the full reference: docs.example.org/guides/reviewing-a-long-running-project-with-multiple-contributors"
-        counter={<bdi>72 / 60 words</bdi>}
+        description="Published alongside the review request."
+        message={
+          words > 60
+            ? 'Shorten the note to 60 words. See docs.example.org/guides/reviewing-a-long-running-project-with-multiple-contributors'
+            : 'The note fits the 60-word limit.'
+        }
+        counter={<bdi>{words} / 60 words</bdi>}
       />
       <LabeledTextarea
         label="Long uninterrupted reference"
         rows={3}
         defaultValue="https://docs.example.org/reference/averylongunbrokenidentifierthatmustremainreadablewithoutstretchingthelayoutorcoveringthestatusicon"
         status="info"
-        message="Long tokens wrap inside the text viewport."
+        message="Source document for this release."
       />
-      <LabeledTextarea
-        {...subject}
-        label="Preserved log lines"
-        wrap="off"
-        dir="ltr"
-        status="info"
-        rows={3}
-        defaultValue={
-          '09:41:02  Export completed with all source links preserved and every attachment checked successfully.\n09:41:03  Archive checksum verified.\n09:41:04  Ready for download.'
-        }
-        message="Log lines keep their full width. Feedback stays below the scrolling viewport."
-      />
+      <ExportLog fieldProps={subject} />
       <LabeledTextarea
         label="Explicit RTL field"
+        className="textarea-demo-arabic"
+        lang="ar"
         dir="rtl"
         rows={3}
         status="info"
-        defaultValue={'Review note 42\nPlease add the next step.'}
-        message="The status, native rail, and resize corner follow the field direction."
-        counter={<bdi>2 lines</bdi>}
+        value={rtl}
+        onChange={(event) => setRtl(event.currentTarget.value)}
+        message="Included in the right-to-left edition."
+        counter={
+          <bdi>
+            {lines} {lines === 1 ? 'line' : 'lines'}
+          </bdi>
+        }
       />
       <LabeledTextarea
         label="Auto width · bounded field"
         width="auto"
         defaultValue={paragraph}
-        description="A 28rem reference width, capped by its container."
+        description="Appears in the review sidebar."
         rows={3}
       />
       <LabeledTextarea
         aria-label="Additional note"
         placeholder="Add a note…"
         rows={3}
-        description="No visible label in this isolated naming example; the control has an explicit accessible name."
+        description="Add any context your reviewer should see."
       />
     </div>
   );
 }
 
-export type TextareaExampleName =
-  | 'roles'
-  | 'interaction'
-  | 'feedback'
-  | 'availability'
-  | 'height'
-  | 'footer'
-  | 'live'
-  | 'overflow'
-  | 'surfaces';
-
-const examples: Record<TextareaExampleName, (props: ExampleProps) => ReactElement> = {
-  roles: TextareaRoles,
-  interaction: TextareaInteraction,
-  feedback: TextareaFeedback,
-  availability: TextareaAvailability,
-  height: TextareaHeights,
-  footer: TextareaFooter,
-  live: TextareaLive,
-  overflow: TextareaOverflow,
-  surfaces: TextareaSurfaces,
-};
-
-export function TextareaExamples({
-  section,
-  subject,
-}: ExampleProps & { readonly section: TextareaExampleName }): ReactElement {
-  const Example = examples[section];
-  return <Example subject={subject} />;
-}
-
-function TextareaSurfaces(): ReactElement {
+export function TextareaSurfaces({ ctx }: PreviewProps): ReactElement {
   return (
-    <div className="textarea-demo-grid">
-      {(['base', 'overlay'] as const).map((surface) => (
-        <div
-          className="textarea-demo-stage"
-          data-surface="base"
-          data-underlay={surface === 'overlay' || undefined}
-          key={surface}
-        >
-          <div className="textarea-demo-plate" data-surface={surface} data-plate={surface}>
-            <p className="textarea-demo-eyebrow">
-              {surface === 'base' ? 'Page surface' : 'Floating surface'}
-            </p>
-            <LabeledTextarea
-              label="Summary"
-              defaultValue="Give every reader a clear next step."
-              rows={3}
-              description="A quiet field with room for thought."
-            />
-            <LabeledTextarea
-              label="Inline note"
-              variant="ghost"
-              defaultValue="Keep the context close."
-              rows={2}
-            />
-          </div>
-        </div>
-      ))}
-    </div>
+    <Stack
+      gap={16}
+      data-surface={ctx.surface}
+      data-plate={ctx.surface}
+      className={
+        ctx.surface === 'overlay'
+          ? 'textarea-demo-plate unica-overlay-surface'
+          : 'textarea-demo-plate'
+      }
+    >
+      <LabeledTextarea
+        {...ctx.subject}
+        label="Summary"
+        defaultValue="Give every reader a clear next step."
+        rows={3}
+        description="Shown in the release overview."
+      />
+      <LabeledTextarea
+        {...ctx.subject}
+        label="Inline note"
+        variant="ghost"
+        defaultValue="Keep the context close."
+        rows={2}
+      />
+    </Stack>
   );
 }

@@ -74,9 +74,9 @@ it('emits valid Textarea JSX for uncontrolled and controlled log examples', asyn
     { ...defaults, useValue: true, useDefaultValue: false, wrap: 'off', status: 'danger' },
   ]) {
     const code = componentCode(component, values);
-    await expect(format(code, { parser: 'babel', plugins: [babel, estree] })).resolves.toContain(
-      '<>',
-    );
+    const source = await format(code, { parser: 'babel', plugins: [babel, estree] });
+    expect(source).toContain('<form>');
+    expect(source).toContain(values.useValue ? 'value={value}' : 'defaultValue=');
   }
 });
 

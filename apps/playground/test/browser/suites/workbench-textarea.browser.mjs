@@ -108,7 +108,10 @@ export default {
       const describedBy = await log.getAttribute('aria-describedby');
       const feedback = block.locator('[id=' + JSON.stringify(describedBy) + ']');
       assert.equal(await feedback.locator('svg[aria-hidden="true"]').count(), 1);
-      assert.match(await feedback.textContent(), /feedback stays below/i);
+      assert.match(await feedback.textContent(), /timestamps use UTC/iu);
+      const editorBox = await getBox(log);
+      const feedbackBox = await getBox(feedback);
+      assert.ok(feedbackBox.y >= editorBox.y + editorBox.height - 1);
       const bounds = block.locator('[data-wb-bounds-label]').first();
       await bounds.waitFor();
       const { width, height } = await getBox(log);
@@ -181,8 +184,62 @@ export default {
       ]),
       [2, 8, false, false, 'A complete release note'],
     );
+    await block.getByRole('checkbox', { name: 'Show saving state' }).uncheck();
+    await button(block, 'Submit draft').click();
+    const receipt = block.locator('p').filter({ hasText: /^Submitted draft:/u });
+    assert.equal(await receipt.textContent(), 'Submitted draft: A complete release note');
+    await button(block, 'Load long draft').click();
+    assert.ok((await draft.inputValue()).length > 160);
+    assert.equal(await receipt.textContent(), 'Submitted draft: A complete release note');
     await button(block, 'Reset draft').click();
+    await receipt.waitFor({ state: 'detached' });
     assert.match(await draft.inputValue(), /^A little context/u);
+    assert.equal(await receipt.count(), 0);
+  },
+
+  'Textarea review form rejects invalid notes and honors canceled resets': async ({
+    page,
+    mount,
+  }) => {
+    await mount('textarea');
+    await openWorkbench(page, { item: 'textarea', tab: 'compositions', block: 'form' });
+    const board = page.locator('[data-wb-block="form"] .wb-artboard');
+    const note = board.getByRole('textbox', { name: 'Review note' });
+    const submit = button(board, 'Submit draft');
+    const reset = button(board, 'Reset draft');
+    const receipt = board.locator('p').filter({ hasText: /^Submitted draft:/u });
+    const opening = await note.inputValue();
+    const valid = 'e\u0301'.repeat(160);
+    await note.fill(valid);
+    await submit.click();
+    assert.equal(await receipt.textContent(), 'Submitted draft: ' + valid);
+    for (const invalid of [valid + '👨‍👩‍👧', '   ']) {
+      await note.fill(invalid);
+      await submit.click();
+      assert.equal(await note.getAttribute('aria-invalid'), 'true');
+      assert.equal(await note.evaluate((field) => field.validity.valid), false);
+      assert.equal(await note.inputValue(), invalid);
+      assert.equal(await receipt.textContent(), 'Submitted draft: ' + valid);
+      await assertFocused(note);
+    }
+
+    await note.evaluate((field) => {
+      field.ownerDocument.addEventListener('reset', (event) => event.preventDefault(), {
+        once: true,
+      });
+    });
+    await reset.press('Enter');
+    await page.evaluate(
+      () => new Promise((done) => setTimeout(() => requestAnimationFrame(done), 0)),
+    );
+    assert.equal(await note.inputValue(), '   ');
+    assert.equal(await receipt.textContent(), 'Submitted draft: ' + valid);
+    assert.equal(await board.getByRole('status').textContent(), 'Write a note before saving.');
+    await reset.press('Enter');
+    await receipt.waitFor({ state: 'detached' });
+    assert.equal(await note.inputValue(), opening);
+    assert.equal(await receipt.count(), 0);
+    assert.equal(await board.getByRole('status').textContent(), '');
   },
 
   'Textarea consumers retain native editing and saved text in Folio overlays': async ({

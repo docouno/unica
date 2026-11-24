@@ -12,19 +12,27 @@ import {
   eventProp,
 } from '../control-props.js';
 import { defineComponent } from '../../workbench/types.js';
-import type { PreviewContext } from '../../workbench/types.js';
+import { withOverlaySurface } from '../shared/with-overlay-surface.js';
+import { previewProps } from '../preview-code.js';
 import type { ReactElement } from 'react';
 import type { TextareaProps } from '@docouno/unica';
-import { LabeledTextarea, TextareaExamples } from './textarea.examples.js';
+import {
+  LabeledTextarea,
+  TextareaAvailability,
+  TextareaFeedback,
+  TextareaFooter,
+  TextareaHeights,
+  TextareaInteraction,
+  TextareaLive,
+  TextareaOverflow,
+  TextareaRoles,
+  TextareaSurfaces,
+} from './textarea.examples.js';
+import { ReviewNote } from './review-note.js';
+import reviewSource from './review-note.tsx?raw';
+import { ExportLog } from './export-log.js';
+import logSource from './export-log.tsx?raw';
 import { textareaFeedback } from './textarea.feedback.js';
-import type { TextareaExampleName } from './textarea.examples.js';
-
-function preview(section: TextareaExampleName) {
-  return function Example({ ctx }: { readonly ctx: PreviewContext }): ReactElement {
-    return <TextareaExamples section={section} subject={ctx.subject} />;
-  };
-}
-
 function ControlledPreview({
   initial,
   onEdit,
@@ -54,6 +62,11 @@ function ControlledPreview({
 
 const initialDraft = 'Search now includes archived pages.';
 const exampleLabel = 'Release summary';
+
+function nativeColumns(input: number): number {
+  const columns = Math.floor(input);
+  return Number.isSafeInteger(columns) && columns > 0 ? columns : 20;
+}
 export default defineComponent({
   id: 'textarea',
   title: 'Textarea',
@@ -61,7 +74,7 @@ export default defineComponent({
   status: 'UI',
   summary: 'Native multiline editing with manual, fixed, and content-sized height.',
   componentName: 'Textarea',
-  form: 'wrap',
+  form: 'owned',
   props: {
     size,
     variant,
@@ -100,41 +113,48 @@ export default defineComponent({
       examples: [0, 4, 6],
       description: 'Maximum rows with autosize. Zero leaves the height uncapped.',
     },
-    wrap: choice(
-      'Field',
-      'Whether long lines wrap visually and in submitted text.',
-      ['soft', 'hard', 'off'],
-      'soft',
-    ),
+    wrap: {
+      ...choice(
+        'Content',
+        'Native wrapping mode. The inspector offers three common HTML values.',
+        ['soft', 'hard', 'off'],
+        'soft',
+      ),
+      publicType: 'string',
+    },
     cols: {
       kind: 'number',
-      group: 'Field',
+      group: 'Geometry',
       default: 20,
       examples: [12, 20, 40],
-      description: 'Native column hint for wrapping on submission with wrap="hard".',
+      description:
+        'Native column hint for hard wrapping. This example uses whole columns and falls back to 20 for an invalid count.',
     },
     name: {
       kind: 'string',
-      group: 'Form',
-      demo: true,
+      group: 'Host',
       default: 'summary',
       description: 'Name used for the native form entry.',
     },
-    useValue: { ...toggle('Form', 'The example updates a controlled value.'), demo: true },
+    useValue: { ...toggle('Interaction', 'The example updates a controlled value.'), demo: true },
     useDefaultValue: {
-      ...toggle('Form', 'Pass an initial value to the native control.', true),
+      ...toggle('Interaction', 'Pass an initial value to the native control.', true),
       demo: true,
     },
     draft: {
       kind: 'string',
-      group: 'Form',
+      group: 'Interaction',
       demo: true,
       default: initialDraft,
       examples: ['', initialDraft],
       description:
         'Updates value in controlled mode. An uncontrolled default applies when the field mounts.',
     },
-    onChange: eventProp('Reports the text after a native edit.', 'handleChange'),
+    onChange: eventProp(
+      'Receives the native textarea’s React change event. The log displays its text.',
+      '(event) => console.log(event.currentTarget.value)',
+      'ChangeEventHandler<HTMLTextAreaElement>',
+    ),
   },
   constraints: [
     {
@@ -156,156 +176,227 @@ export default defineComponent({
       reason: 'The disabled state suppresses feedback color and resizing.',
     },
   ],
-  render({ values: { useValue, useDefaultValue, draft, rowCap, ...values }, ctx }) {
-    const props = {
-      ...values,
-      ...ctx.subject,
-      id: ctx.id,
-      label: exampleLabel,
-      placeholder: 'What shipped?',
-      maxRows: rowCap > 0 ? rowCap : undefined,
-    };
-    const onEdit = ctx.action('onChange');
-    return useValue ? (
-      <ControlledPreview initial={draft} onEdit={onEdit} {...props} />
-    ) : (
-      <LabeledTextarea
-        key={useDefaultValue ? 'default' : 'native'}
-        {...props}
-        defaultValue={useDefaultValue ? draft : undefined}
-        onChange={(event) => onEdit(event.currentTarget.value)}
-      />
+  render: withOverlaySurface(
+    ({ values: { useValue, useDefaultValue, draft, rowCap, ...values }, ctx }) => {
+      const props = {
+        ...values,
+        cols: nativeColumns(values.cols),
+        ...ctx.subject,
+        id: ctx.id,
+        label: exampleLabel,
+        placeholder: 'What shipped?',
+        maxRows: rowCap > 0 ? rowCap : undefined,
+      };
+      const onEdit = ctx.action('onChange');
+      return (
+        <form {...ctx.form} className="textarea-demo-form">
+          {useValue ? (
+            <ControlledPreview initial={draft} onEdit={onEdit} {...props} />
+          ) : (
+            <LabeledTextarea
+              key={useDefaultValue ? 'default' : 'native'}
+              {...props}
+              defaultValue={useDefaultValue ? draft : undefined}
+              onChange={(event) => onEdit(event.currentTarget.value)}
+            />
+          )}
+        </form>
+      );
+    },
+    'border-box',
+  ),
+  code: ({ useValue, useDefaultValue, draft, rowCap, ...values }) => {
+    const attributes = previewProps(
+      { ...values, cols: nativeColumns(values.cols) },
+      {
+        size: 'm',
+        variant: 'default',
+        status: 'neutral',
+        width: 'full',
+        disabled: false,
+        readOnly: false,
+        required: false,
+        resize: 'vertical',
+        autosize: false,
+        rows: 3,
+        minRows: 3,
+        wrap: 'soft',
+        ...(values.wrap === 'hard' ? {} : { cols: 20 }),
+      },
     );
-  },
-  code(values, attributes) {
-    const { useValue, useDefaultValue, draft, rowCap, name, wrap, status, disabled, required } =
-      values;
-    const value = useValue
-      ? ' value={value}'
-      : useDefaultValue
-        ? ` defaultValue={${JSON.stringify(draft)}}`
-        : '';
-    const cap = rowCap > 0 ? ` maxRows={${rowCap}}` : '';
+    const initial = JSON.stringify(draft);
+    const value = useValue ? ' value={value}' : useDefaultValue ? ` defaultValue={${initial}}` : '';
     const feedback =
-      wrap === 'off' && status !== 'neutral' && !disabled ? textareaFeedback[status] : undefined;
-    const label = required ? `${exampleLabel} <span aria-hidden="true">*</span>` : exampleLabel;
-    const handler = useValue
-      ? 'onChange={(event) => setValue(event.currentTarget.value)}'
-      : 'onChange={handleChange}';
-    const example = `<>
-  <label htmlFor="summary">${label}</label>
-  <Textarea
-    id="summary"
-    name={${JSON.stringify(name)}}
-    placeholder="What shipped?"${value}${cap}${attributes.replace('onChange={handleChange}', handler)}${feedback ? '\n    aria-describedby="summary-feedback"' : ''}
-  />${feedback ? `\n  <p id="summary-feedback"><${feedback.name} aria-hidden="true" /> ${feedback.label}</p>` : ''}
-</>`;
-    return useValue
-      ? `function ReleaseSummary() {
-  const [value, setValue] = useState(${JSON.stringify(draft)});
-  return (${example});
-}`
-      : example;
+      values.wrap === 'off' && values.status !== 'neutral' && !values.disabled
+        ? textareaFeedback[values.status]
+        : undefined;
+    const mark =
+      values.required && !values.disabled
+        ? ' <Text as="span" color="danger" aria-hidden="true">*</Text>'
+        : '';
+    const note = feedback
+      ? `
+        <Flex id={id + '-message'} gap={8} align="start">
+          <Icon icon={${feedback.name}} size="s" color="${values.status}" />
+          <Text size="caption-l" color="${values.status}"><bdi>${feedback.label}</bdi></Text>
+        </Flex>`
+      : '';
+    return `import { useId${useValue ? ', useState' : ''} } from 'react';
+import { ${feedback ? 'Flex, Icon, ' : ''}Stack, Text, Textarea } from '@docouno/unica';
+${feedback ? 'import { ' + feedback.name + " } from '@phosphor-icons/react';\n" : ''}import '@docouno/unica/styles.css';
+
+export function ReleaseSummary() {
+  const id = useId();${useValue ? `\n  const [value, setValue] = useState(${initial});` : ''}
+  return (
+    <form>
+      <Stack gap={8}${values.width === 'auto' ? " style={{ inlineSize: 'min(100%, 28rem)' }}" : ''}>
+        <Text as="label" htmlFor={id} size="body-s" weight="medium">${exampleLabel}${mark}</Text>
+        <Textarea id={id} dir="auto" placeholder="What shipped?"${attributes}${rowCap > 0 ? ` maxRows={${rowCap}}` : ''}${feedback ? ' aria-describedby={id + "-message"}' : ''}${value} onChange={(event) => ${useValue ? '{ setValue(event.currentTarget.value); console.log(event.currentTarget.value); }' : 'console.log(event.currentTarget.value)'}} />${note}
+      </Stack>
+    </form>
+  );
+}`;
   },
-  matrixViews: [
+  states: [
     {
       id: 'roles',
       rows: 'size',
       cols: 'variant',
-      title: 'Roles & sizes',
+      fixed: { rows: 2 },
+      title: 'Density and field role',
       caption:
-        'Default defines a form slot. Ghost keeps inline prose light, with a quiet baseline. S, M, and L share Input geometry.',
-      reference: preview('roles'),
+        'Compare the framed form field and inline ghost field at three sizes. Each editor starts with the same two-row draft.',
     },
     {
       id: 'height-status',
       rows: 'status',
       cols: 'autosize',
-      title: 'Status & height',
       fixed: {
         draft: 'First point.\nSecond point.\nA final thought.\nOne more detail.',
         rowCap: 5,
       },
+      title: 'Status and height',
+      caption:
+        'Four lines of text reveal the difference between a fixed initial viewport and an editor that grows up to five rows. Status keeps a gutter beside the first line.',
     },
   ],
   cases: [
     {
-      id: 'interaction',
-      title: 'Hover & focus',
+      id: 'size-pairs',
+      title: 'Empty and filled editors at each density',
+      kind: 'content',
+      mode: 'live',
+      reset: true,
       caption:
-        'Click either field, then use Tab to compare the quiet pointer edge and the full keyboard contour.',
+        'Compact and spacious fields start empty. Both medium fields contain a short note. Compare their placeholder and baseline on each two-row surface.',
+      render: withOverlaySurface(TextareaRoles, 'border-box'),
+    },
+    {
+      id: 'interaction',
+      title: 'Pointer and keyboard focus',
       kind: 'behavior',
-      render: preview('interaction'),
+      mode: 'live',
+      reset: true,
+      caption:
+        'Click either field, then use Tab to compare pointer and keyboard outlines while editing.',
+      render: withOverlaySurface(TextareaInteraction, 'border-box'),
     },
     {
       id: 'feedback',
-      title: 'Status & protected gutter',
-      caption:
-        'One glyph at the first line, before the native scrollbar. Its space stays reserved even without a status.',
+      title: 'Status and protected gutter',
       kind: 'behavior',
-      render: preview('feedback'),
+      mode: 'pinned',
+      reset: true,
+      caption:
+        'Status and messages are pinned for comparison. Each editor reserves the first-line gutter for one glyph beside the native scrollbar.',
+      render: withOverlaySurface(TextareaFeedback, 'border-box'),
     },
     {
       id: 'availability',
-      title: 'Reading & availability',
-      caption:
-        'Read-only keeps full contrast, selection, and scrolling. Disabled suppresses editing cues, status, and resizing.',
+      title: 'Reading and availability',
       kind: 'behavior',
-      render: preview('availability'),
+      mode: 'live',
+      caption:
+        'Read-only notes allow selection, scrolling and resizing. Disabled notes skip focus, suppress the status glyph and keep their size.',
+      render: withOverlaySurface(TextareaAvailability, 'border-box'),
     },
     {
       id: 'height',
-      title: 'Manual, fixed & growing height',
-      caption:
-        'One height owner: manual resizing or content growth. At the cap, the native text viewport scrolls.',
+      title: 'Manual, fixed and growing height',
       kind: 'behavior',
-      render: preview('height'),
+      mode: 'live',
+      reset: true,
+      caption:
+        'Drag the manual editor or paste into the growing fields. Capped examples grow from two to five rows and then scroll locally. Without content sizing they keep their minimum height.',
+      render: withOverlaySurface(TextareaHeights, 'border-box'),
     },
     {
       id: 'footer',
-      title: 'Labels, guidance & counters',
-      caption:
-        'Guidance spans the width. Feedback and counter share the footer, wrapping cleanly in narrow spaces.',
+      title: 'Guidance and counters',
       kind: 'behavior',
-      render: preview('footer'),
+      mode: 'live',
+      reset: true,
+      caption:
+        'Edit a word-counted note and a character-counted summary. Guidance spans the width while the count shares the feedback row when there is room.',
+      render: withOverlaySurface(TextareaFooter, 'border-box'),
     },
     {
       id: 'live',
-      title: 'Live length & feedback transitions',
-      caption:
-        'Type, paste, check, and correct. This local demonstration preserves the draft and keeps the status gutter stable.',
+      title: 'Length and feedback transitions',
       kind: 'behavior',
-      render: preview('live'),
+      mode: 'live',
+      reset: true,
+      controls: { busy: { kind: 'boolean', label: 'Show saving state', default: false } },
+      actions: [{ id: 'load-long', label: 'Load long draft' }],
+      caption:
+        'Compare 160 user-perceived characters with a native maximum of 80 UTF-16 units. Load a long draft to edit it down. While saving is pinned, the note stays editable.',
+      render: withOverlaySurface(TextareaLive, 'border-box'),
     },
     {
       id: 'overflow',
-      title: 'Long content & direction',
-      caption:
-        'Try 360px, 120% text, and RTL. Long prose wraps; explicit log lines keep their horizontal viewport.',
+      title: 'Long content and writing direction',
       kind: 'content',
-      render: preview('overflow'),
+      mode: 'live',
+      reset: true,
+      caption:
+        'Compare wrapped prose, technical logs, a long token and a right-to-left note. Edit the text to update its word or line count.',
+      render: withOverlaySurface(TextareaOverflow, 'border-box'),
     },
     {
       id: 'surfaces',
-      title: 'Base & overlay materials',
-      caption:
-        'The same fields on real material plates. Compare the framed and inline roles on both surface materials.',
+      title: 'Fields on base and overlay',
       kind: 'surface',
-      render: preview('surfaces'),
+      mode: 'live',
+      reset: true,
+      compareSurfaces: true,
+      caption:
+        'Edit the summary or its inline note on either material. Each surface keeps its own text.',
+      render: TextareaSurfaces,
     },
   ],
-  usage: [
+  compositions: [
     {
       id: 'form',
-      title: 'Draft in a native form',
-      caption: 'Check and correct feedback, submit the edited draft, and reset it.',
-      render: preview('live'),
+      title: 'Review note in a native form',
+      mode: 'live',
+      reset: true,
+      caption:
+        'Check a draft, correct an empty or overlong note, then submit its actual text. Reset restores the opening note.',
+      render: withOverlaySurface(
+        ({ ctx }) => <ReviewNote fieldProps={ctx.subject} />,
+        'border-box',
+      ),
+      code: reviewSource,
     },
     {
       id: 'logs',
-      title: 'Unwrapped logs',
-      caption: 'Keep long lines intact and associate the external feedback with the editor.',
-      render: preview('overflow'),
+      title: 'Unwrapped export log',
+      mode: 'live',
+      reset: true,
+      caption:
+        'Read or annotate a long export line. The text viewport scrolls horizontally while the associated status stays below it.',
+      render: withOverlaySurface(({ ctx }) => <ExportLog fieldProps={ctx.subject} />, 'border-box'),
+      code: logSource,
     },
   ],
 });
