@@ -79,6 +79,38 @@ export default {
     }
   },
 
+  'SegmentedControl keeps the submitted frequency when a native reset is canceled': async ({
+    page,
+    origin,
+  }) => {
+    await page.goto(
+      new URL('/?item=segmented-control&tab=states&block=field&family=soft&scheme=light', origin)
+        .href,
+      { waitUntil: 'domcontentloaded' },
+    );
+    const form = page.locator('[data-wb-block="field"] .wb-artboard form');
+    const weekly = form.getByRole('radio', { name: 'Weekly', exact: true });
+    await weekly.waitFor({ timeout: 20_000 });
+    await weekly.press('Space');
+    await form.locator('button[type="submit"]').press('Enter');
+    const receipt = form.getByRole('status').filter({ hasText: /weekly/i });
+    await receipt.waitFor();
+    await page.evaluate(() =>
+      document.addEventListener('reset', (event) => event.preventDefault(), { once: true }),
+    );
+    const reset = form.locator('button[type="reset"]');
+    await reset.press('Enter');
+    await page.evaluate(
+      () => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))),
+    );
+    assert.equal(await weekly.isChecked(), true);
+    assert.equal(await receipt.count(), 1, 'A canceled reset preserves the submitted frequency');
+
+    await reset.press('Enter');
+    await receipt.waitFor({ state: 'hidden' });
+    assert.equal(await weekly.isChecked(), false);
+  },
+
   'FileInput submits dropped bytes and follows the actual form owner on reset': async ({
     page,
     mount,
