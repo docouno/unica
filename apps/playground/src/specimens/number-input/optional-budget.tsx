@@ -18,7 +18,7 @@ export function OptionalBudget({ fieldProps = {} } = {}) {
         );
       }}
     >
-      <Stack gap={12}>
+      <Stack gap={12} style={{ inlineSize: 'min(100%, 32rem)' }}>
         <NumberInput
           {...fieldProps}
           name="budget"

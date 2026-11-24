@@ -8,7 +8,7 @@ export function PortionEstimate({ fieldProps = {} } = {}) {
   const amount = Number(portions);
   const valid = amount >= 0.5 && amount <= 12 && Number.isInteger(amount * 2);
   return (
-    <Stack gap={12}>
+    <Stack gap={12} style={{ inlineSize: 'min(100%, 32rem)' }}>
       <NumberInput
         {...fieldProps}
         label="Portions"
