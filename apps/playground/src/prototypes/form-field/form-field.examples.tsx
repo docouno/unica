@@ -380,9 +380,8 @@ export function LiveValidation({ ctx }: PreviewProps): ReactElement {
   const id = useId();
   const emailRef = useRef<HTMLInputElement>(null);
   const groupRef = useRef<HTMLDivElement>(null);
-  const [email, setEmail] = useState('');
-  const [channels, setChannels] = useState<string[]>([]);
-  const [errors, setErrors] = useState({ email: false, channels: false });
+  const lastValidation = useRef(0);
+  const [errors, setErrors] = useState({ email: '', channels: false });
   const [saved, setSaved] = useState(false);
   const reserve = ctx.story?.controls.reserve === true;
   return (
@@ -392,9 +391,15 @@ export function LiveValidation({ ctx }: PreviewProps): ReactElement {
         noValidate
         onSubmit={(event) => {
           event.preventDefault();
+          lastValidation.current += 1;
+          const validity = emailRef.current?.validity;
           const next = {
-            email: !emailRef.current?.validity.valid,
-            channels: channels.length === 0,
+            email: validity?.valid
+              ? ''
+              : validity?.typeMismatch
+                ? 'Enter an email address, such as name@example.com.'
+                : 'Enter your delivery email.',
+            channels: !new FormData(event.currentTarget).has(`${id}-channels`),
           };
           setErrors(next);
           setSaved(!next.email && !next.channels);
@@ -406,12 +411,15 @@ export function LiveValidation({ ctx }: PreviewProps): ReactElement {
         }}
         onReset={(event) => {
           const reset = event.nativeEvent;
+          const validation = lastValidation.current;
           // A document-level listener can still cancel the native reset.
           setTimeout(() => {
-            if (!reset.defaultPrevented) {
-              setEmail('');
-              setChannels([]);
-              setErrors({ email: false, channels: false });
+            if (
+              reset.isTrusted &&
+              !reset.defaultPrevented &&
+              lastValidation.current === validation
+            ) {
+              setErrors({ email: '', channels: false });
               setSaved(false);
             }
           }, 0);
@@ -424,15 +432,7 @@ export function LiveValidation({ ctx }: PreviewProps): ReactElement {
           required
           description={<bdi>Use an address you can receive messages at.</bdi>}
           descriptionId={`${id}-email-description`}
-          message={
-            errors.email ? (
-              <bdi>
-                {email.trim()
-                  ? 'Enter an email address, such as name@example.com.'
-                  : 'Enter your delivery email.'}
-              </bdi>
-            ) : undefined
-          }
+          message={errors.email ? <bdi>{errors.email}</bdi> : undefined}
           messageId={errors.email ? `${id}-email-message` : undefined}
           status={errors.email ? 'danger' : 'neutral'}
           feedbackIcon={false}
@@ -445,13 +445,11 @@ export function LiveValidation({ ctx }: PreviewProps): ReactElement {
             type="email"
             dir="ltr"
             required
-            value={email}
             placeholder="name@example.com"
             status={errors.email ? 'danger' : 'neutral'}
             aria-describedby={`${id}-email-description${errors.email ? ` ${id}-email-message` : ''}`}
-            onChange={(event) => {
-              setEmail(event.target.value);
-              setErrors((current) => ({ ...current, email: false }));
+            onChange={() => {
+              setErrors((current) => ({ ...current, email: '' }));
               setSaved(false);
             }}
           />
@@ -473,9 +471,7 @@ export function LiveValidation({ ctx }: PreviewProps): ReactElement {
             <CheckboxGroup
               size="m"
               name={`${id}-channels`}
-              value={channels}
-              onValueChange={(value) => {
-                setChannels(value);
+              onValueChange={() => {
                 setErrors((current) => ({ ...current, channels: false }));
                 setSaved(false);
               }}

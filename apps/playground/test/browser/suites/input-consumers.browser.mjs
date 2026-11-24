@@ -251,7 +251,7 @@ export default {
     await card.click({ button: 'right', position: { x: 4, y: 4 } });
     await menu.waitFor();
   },
-  'FormField keeps saved preferences when the application cancels a keyboard reset': async ({
+  'FormField preserves canceled resets and validates the restored delivery preferences': async ({
     page,
     mount,
   }) => {
@@ -278,6 +278,36 @@ export default {
     await saved.waitFor({ state: 'hidden' });
     assert.equal(await email.inputValue(), '');
     assert.equal(await digest.isChecked(), false);
+
+    for (const afterMicrotask of [false, true]) {
+      await email.fill('updated@example.org');
+      await digest.check();
+      await form.getByRole('button', { name: 'Save preferences' }).press('Enter');
+      await saved.waitFor();
+      const payload = await form.evaluate(async (owner, afterMicrotask) => {
+        let entries;
+        owner.addEventListener(
+          'submit',
+          () => {
+            entries = [...new FormData(owner)];
+          },
+          { once: true },
+        );
+        owner.reset();
+        if (afterMicrotask) {
+          await Promise.resolve();
+        }
+        owner.requestSubmit();
+        await new Promise((resolve) => setTimeout(resolve, 0));
+        return entries;
+      }, afterMicrotask);
+      assert.deepEqual(payload, [['email', '']]);
+      assert.equal(await email.getAttribute('aria-invalid'), 'true');
+      assert.equal(await form.getByText('Enter your delivery email.').isVisible(), true);
+      assert.equal(await form.getByText('Select at least one delivery method.').isVisible(), true);
+      assert.equal(await saved.isVisible(), false);
+      await assertFocused(email);
+    }
   },
   'RangeSlider keeps its latest applied price after canceled and resubmitted resets': async ({
     page,
