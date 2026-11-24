@@ -1,3 +1,12 @@
+.accordion-study-host {
+  inline-size: min(100%, 28rem);
+}
+
+.accordion-study-host[data-matrix] {
+  inline-size: 13rem;
+  max-inline-size: 100%;
+}
+
 .disclosure-study {
   display: grid;
   gap: var(--space-16);
@@ -23,29 +32,6 @@
 
 .disclosure-study-card {
   inline-size: min(100%, 34rem);
-}
-
-.disclosure-study-actions {
-  display: grid;
-  gap: var(--space-16);
-  inline-size: min(100%, 27rem);
-}
-
-.disclosure-study-copy {
-  min-inline-size: 8.25em;
-}
-
-.disclosure-study-link {
-  display: grid;
-  gap: var(--space-4);
-}
-
-.disclosure-study-summary {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: var(--space-4) var(--space-12);
 }
 
 .disclosure-study-overlay {

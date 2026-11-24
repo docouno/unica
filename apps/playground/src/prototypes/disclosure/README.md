@@ -68,13 +68,15 @@ The moving panel takes neighboring content with it. Height eases with `cubic-bez
 
 ## Review routes and remaining implementation
 
-| Workbench location                                                                  | What to inspect                                                                                                                  |
-| ----------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
-| Collapsible · Row sizes, Trigger feedback, Unavailable triggers                     | Leading indicator, body alignment, live pointer and focus feedback, and a live checkbox in a disabled open section.              |
-| Collapsible · Long label, Full-width content, Existing button                       | Wrap and first-line alignment, an unclipped table focus contour, and a draft that survives the second trigger closing the panel. |
-| Accordion · Group sizes, Opening modes, Without dividers                            | Heading rhythm, first and last boundaries, multiple open sections, exclusive replacement and all-closed state.                   |
-| Accordion · Focus and availability, Independent header actions                      | Shared Ghost feedback, separate focus, copying while closed, folding a reviewed diff, and favoriting a query.                    |
-| Both · On a floating surface                                                        | Live disclosure inside a static material host. There is no floating-surface dismissal in these samples.                          |
-| Document Reader (`04-document-reader`) and User Preferences (`09-user-preferences`) | Compact reader inspector and grouped settings in the actual compositions.                                                        |
+| Workbench location                                                                                 | What to inspect                                                                                                                  |
+| -------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| Collapsible · Row sizes, Trigger feedback, Unavailable triggers                                    | Leading indicator, body alignment, live pointer and focus feedback, and a live checkbox in a disabled open section.              |
+| Collapsible · Long label, Full-width content, Existing button                                      | Wrap and first-line alignment, an unclipped table focus contour, and a draft that survives the second trigger closing the panel. |
+| Accordion · Group sizes, Opening modes, Section dividers                                           | Heading rhythm, first and last boundaries, multiple open sections, exclusive replacement and all-closed state.                   |
+| Accordion · Independent and exclusive sections, Focus and availability, Independent header actions | Shared Ghost feedback, separate focus, copying while closed, folding a reviewed diff, and favoriting a query.                    |
+| Both · On a floating surface                                                                       | Live disclosure inside a static material host. There is no floating-surface dismissal in these samples.                          |
+| Document Reader (`04-document-reader`) and User Preferences (`09-user-preferences`)                | Compact reader inspector and grouped settings in the actual compositions.                                                        |
 
 Inspect the six presets, Base and on Overlay, at 360/768/1280/1440px, 120% text, and RTL. Hover, hold, or Tab to the example rows to inspect feedback. The live examples use local state, ordinary native buttons and headings, an in-flow motion preview, and focus restoration for the illustrated closing path. The exact package signatures, generalized focus and controlled state lifecycle, exclusive scroll anchoring, mount policy and native form integration are implementation work. Keep the shared anatomy and use these samples when switching the scenes and specimens to the shipped exports.
+
+The Accordion prototype requires a heading level from 2 through 6. The examples use level 3 for sections beneath their containing heading. The Quick Start and Independent header actions examples import the local prototype relative to `apps/playground/src/`. The latter includes the complete link, file and query examples so their actions can be tried after copying.
