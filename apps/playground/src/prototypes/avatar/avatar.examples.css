@@ -9,80 +9,41 @@
 .avatar-proto.avatar-example-cjk {
   font-family: 'Avatar CJK fixture', var(--font-family-base);
 }
+
+/* Keep the trigger under the pointer when its list expands on a floating surface. */
+[data-stage-content]:has([data-avatar-disclosure-preview]) {
+  align-self: flex-start;
+}
+
 .avatar-example-stack {
   display: flex;
   flex-direction: column;
   gap: var(--space-24);
   min-inline-size: 0;
 }
-.avatar-example-row,
-.avatar-example-controls {
+.avatar-example-row {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: var(--space-16);
-}
-.avatar-example-row {
-  column-gap: var(--space-32);
-  row-gap: var(--space-24);
-}
-.avatar-example-scale {
-  display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  align-items: end;
-  gap: var(--space-16);
-}
-.avatar-example-scale .avatar-example-content {
-  flex-direction: column;
-  min-block-size: 220px;
-  justify-content: end;
+  gap: var(--space-24) var(--space-32);
 }
 .avatar-example-sample {
   display: flex;
   flex-direction: column;
   align-items: start;
   gap: var(--space-12);
+  min-inline-size: 0;
 }
-.avatar-example-content {
-  display: flex;
-  align-items: center;
-  gap: var(--space-12);
-  min-block-size: 48px;
-}
-.avatar-example-label,
-.avatar-example-note,
-.avatar-example-range {
-  font-family: var(--font-family-base);
-  font-size: var(--text-size-caption-l);
-  line-height: 1.5;
-  color: var(--fg-muted);
-}
-.avatar-example-note {
-  max-inline-size: 70ch;
-  margin: 0;
-  overflow-wrap: anywhere;
-}
-.avatar-example-rule {
-  border-block-start: 1px solid var(--border-subtle);
-}
-.avatar-example-live {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-16);
-  padding-block: var(--space-16);
-  border-block: 1px solid var(--border-subtle);
-}
+.avatar-example-content,
 .avatar-example-person {
   display: flex;
   align-items: center;
   gap: var(--space-12);
   min-inline-size: 0;
-  font-size: var(--text-size-body-s);
-  color: var(--fg-primary);
 }
-.avatar-example-person > :last-child {
-  min-inline-size: 0;
-  overflow-wrap: anywhere;
+.avatar-example-content {
+  min-block-size: 48px;
+  max-inline-size: 100%;
 }
 .avatar-example-source {
   inline-size: auto;
@@ -99,99 +60,27 @@
 .avatar-example-group-row > :first-child {
   inline-size: 24px;
 }
-.avatar-example-empty {
-  border: 1px dashed var(--border-default);
-  padding: var(--space-8);
-  color: var(--fg-muted);
-  font-size: var(--text-size-caption-l);
-}
 .avatar-example-surfaces {
   display: grid;
-  inline-size: min(100%, 720px);
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+  inline-size: min(100%, 45rem);
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr));
   gap: var(--space-16);
 }
 .avatar-example-surface {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: start;
-  gap: var(--space-24);
+  gap: var(--surface-m-gap);
   min-inline-size: 0;
-  padding: var(--space-24);
-  border: 1px solid var(--border-default);
+  padding: var(--surface-m-padding);
   border-radius: var(--surface-m-radius);
 }
-.avatar-example-surface[data-example-surface='shell'] {
+.avatar-example-surface[data-example-surface='Shell'] {
   background: var(--bg-shell);
 }
-.avatar-example-surface[data-example-surface='canvas'] {
+.avatar-example-surface[data-example-surface='Canvas'] {
   background: var(--bg-canvas);
-}
-.avatar-example-surface[data-example-surface='surface'] {
-  background: var(--bg-surface);
-}
-.avatar-example-surface[data-example-surface='overlay'] {
-  background: var(--bg-overlay);
-  backdrop-filter: var(--_overlay-backdrop);
-  border-color: var(--_overlay-border);
-  box-shadow: var(--_overlay-shadow);
-}
-.avatar-example-range {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: var(--space-12);
-}
-.avatar-example-range input {
-  inline-size: 100px;
-  accent-color: var(--accent-solid);
-}
-.avatar-example-range input:focus-visible {
-  outline: 2px solid var(--focus-ring-color);
-  outline-offset: 3px;
-}
-.avatar-example-directory {
-  display: grid;
-  gap: var(--space-16);
-  padding-block-start: var(--space-8);
-}
-
-.avatar-example-action {
-  --avatar-action-size: 24px;
-  --avatar-action-height: var(--size-m-height);
-  --avatar-action-gap: var(--size-m-gap);
-  --avatar-action-inset: calc((var(--avatar-action-height) - var(--avatar-action-size)) / 2);
-
-  padding-block: var(--avatar-action-inset);
-  padding-inline-start: var(--avatar-action-inset);
-}
-.avatar-example-action[data-avatar-action-size='s'] {
-  --avatar-action-size: 20px;
-  --avatar-action-height: var(--size-s-height);
-  --avatar-action-gap: var(--size-s-gap);
-}
-.avatar-example-action[data-avatar-action-size='l'] {
-  --avatar-action-size: 32px;
-  --avatar-action-height: var(--size-l-height);
-  --avatar-action-gap: var(--size-l-gap);
-}
-.avatar-example-action-row {
-  display: flex;
-  align-items: center;
-  gap: var(--avatar-action-gap);
-  min-inline-size: 0;
-}
-.avatar-example-action-label {
-  min-inline-size: 0;
-  text-align: start;
-  overflow-wrap: anywhere;
-}
-.avatar-example-action:disabled .avatar-proto {
-  opacity: 0.45;
-}
-.avatar-example-action-narrow {
-  inline-size: 176px;
-  max-inline-size: 100%;
 }
 
 @font-face {
@@ -210,7 +99,9 @@
   src: url('/assets/avatar-arabic-600.ttf') format('truetype');
   unicode-range: U+062F, U+0631, U+0635, U+0645-0646, U+0648-0649;
 }
-.avatar-example-names .avatar-name-hint-panel bdi,
-.avatar-example-names .avatar-group-proto-member:last-child .avatar-proto {
-  font-family: 'Avatar Arabic fixture', var(--font-family-base);
+.avatar-example-names {
+  --avatar-example-theme-font: var(--font-family-base);
+}
+.avatar-example-names > .avatar-example-row {
+  --font-family-base: 'Avatar Arabic fixture', var(--avatar-example-theme-font);
 }

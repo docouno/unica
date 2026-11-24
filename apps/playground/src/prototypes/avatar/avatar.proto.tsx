@@ -127,7 +127,7 @@ export function AvatarGroup({
   size = 'm',
   max = 4,
   showNames = false,
-  getOverflowLabel = (count) => `${String(count)} more members`,
+  getOverflowLabel = (count) => `${String(count)} more ${count === 1 ? 'member' : 'members'}`,
   className = '',
   style,
   ...props
