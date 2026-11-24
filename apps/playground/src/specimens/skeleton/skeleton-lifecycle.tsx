@@ -1,7 +1,7 @@
 import { useId, useLayoutEffect, useState } from 'react';
 import type { ReactElement } from 'react';
 import { FileTextIcon, WarningCircleIcon } from '@phosphor-icons/react';
-import { Button, Card, Icon, Text, Title } from '@docouno/unica';
+import { Button, Card, CardFooter, Icon, Text, Title } from '@docouno/unica';
 import { useStoryAction } from '../../workbench/storyFrameState.js';
 import type { PreviewProps, StoryContext } from '../../workbench/types.js';
 import { skeletonPhases } from './skeleton.controls.js';
@@ -195,7 +195,7 @@ export function SkeletonLifecycleExample({ ctx }: PreviewProps): ReactElement {
           <bdi>{messages[state]}</bdi>
         </Text>
       </div>
-      <div className="skeleton-demo-footer">
+      <CardFooter withBorder justify="start">
         <Button
           size="s"
           variant="secondary"
@@ -206,7 +206,7 @@ export function SkeletonLifecycleExample({ ctx }: PreviewProps): ReactElement {
         >
           {retry ? 'Try again' : 'Refresh'}
         </Button>
-      </div>
+      </CardFooter>
     </Card>
   );
 }

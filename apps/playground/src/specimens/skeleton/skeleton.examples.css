@@ -121,12 +121,6 @@
   min-block-size: calc(3 * var(--text-size-caption-l-lh));
 }
 
-.skeleton-demo-footer {
-  display: flex;
-  border-block-start: 1px solid var(--border-subtle);
-  padding-block-start: var(--space-12);
-}
-
 .skeleton-demo-canvas {
   padding: var(--space-16);
   border-radius: var(--surface-m-radius);
