@@ -63,6 +63,10 @@ export default {
     const code = await page.locator('[data-wb-block="routes"] pre > code').textContent();
     assert.equal((code.match(/<Button asChild/gu) ?? []).length, 2);
     assert.equal((code.match(/href="\/\?item=02-workspace-overview"/gu) ?? []).length, 2);
+    await board.getByRole('button', { name: 'Reload page' }).focus();
+    await page.keyboard.press('Enter');
+    await assertFocused(board.getByRole('heading', { name: 'Workspace updates', level: 1 }));
+    assert.equal(await board.getByRole('heading', { name: 'Page not found', level: 1 }).count(), 1);
   },
 
   'FileItem keeps compact fine-pointer actions and separates coarse targets in narrow rows':
