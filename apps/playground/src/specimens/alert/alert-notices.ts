@@ -1,0 +1,42 @@
+export const notices = {
+  neutral: Object.freeze({
+    status: 'neutral',
+    title: 'Changes apply to this workspace',
+    reference: 'workspace_id',
+    description: 'Check which workspace you are editing.',
+    detail: 'Current workspace: Design team.',
+    guidance: 'Open workspace settings to confirm the name before making changes.',
+  }),
+  info: Object.freeze({
+    status: 'info',
+    title: 'Search maintenance starts tonight',
+    reference: 'search_index',
+    description: 'Documents remain available during maintenance.',
+    detail: 'Maintenance window: 22:00–23:00 UTC.',
+    guidance: 'Use the document list to open a file while the search index is updated.',
+  }),
+  success: Object.freeze({
+    status: 'success',
+    title: 'Your revision is published',
+    reference: 'revision_id',
+    description: 'Everyone with access can read the new revision.',
+    detail: 'Published revision: 24.',
+    guidance: 'Use the revision history to compare this version with the previous one.',
+  }),
+  warning: Object.freeze({
+    status: 'warning',
+    title: 'Review the replication settings',
+    reference: 'replication_lag',
+    description: 'Check the standby before starting the procedure.',
+    detail: 'Current lag: 8 seconds.',
+    guidance: 'Wait for the standby to catch up before promoting it.',
+  }),
+  danger: Object.freeze({
+    status: 'danger',
+    title: 'We couldn’t publish your draft',
+    reference: 'connection_timeout',
+    description: 'Your unpublished changes are safe.',
+    detail: 'The last publish request timed out after 30 seconds.',
+    guidance: 'Check the connection, then publish the saved draft again.',
+  }),
+};

@@ -1,40 +1,40 @@
-import { Alert, AlertActions, AlertClose, AlertDescription, AlertTitle } from '@docouno/unica';
-import { useLayoutEffect, useRef, useState } from 'react';
-import type { ReactElement } from 'react';
-import { Button } from '@docouno/unica';
 import { defineComponent } from '../../workbench/types.js';
-import type { ComponentValues, PreviewContext, PropSchema } from '../../workbench/types.js';
-import { previewProps, previewText } from '../preview-code.js';
-
+import type { ComponentValues, PropSchema } from '../../workbench/types.js';
+import { withOverlaySurface } from '../shared/with-overlay-surface.js';
+import { alertCode } from './alert-code.js';
+import noticeSource from './alert-notices.ts?raw';
+import { AlertPlayground } from './alert-playground.js';
 import {
   ActionStateExamples,
   AnatomyExamples,
   CloseStates,
-  ContextExamples,
-  ContextStateExamples,
-  ContextBoundaryExamples,
-  ContextOverlayExamples,
-  EditorialGlyph,
   OverflowExamples,
   OverlayExample,
   RecoveryExample,
-  SizeExamples,
   StatusExamples,
 } from './alert.examples.js';
+import {
+  ContextStateExamples,
+  ContextBoundaryExamples,
+  ContextOverlayExamples,
+} from './alert.context.examples.js';
+import { ContextExamples } from './alert-context-composition.examples.js';
+import contextSource from './alert-context-composition.examples.tsx?raw';
 
 const props = {
   size: {
     kind: 'enum',
-    group: 'Layout',
+    group: 'Geometry',
     default: 'm',
-    description: 'Alert density.',
+    description: 'Alert.size controls the spacing and typography of the message.',
     choices: [{ value: 's' }, { value: 'm' }, { value: 'l' }],
   },
   status: {
     kind: 'enum',
-    group: 'Status',
+    group: 'Role',
     default: 'neutral',
-    description: 'Meaning of the status glyph and signal.',
+    description:
+      'Alert.status supplies the message color, built-in glyph and default announcement urgency.',
     choices: [
       { value: 'neutral' },
       { value: 'info' },
@@ -45,7 +45,8 @@ const props = {
   },
   icon: {
     kind: 'slot',
-    group: 'Status',
+    group: 'Content',
+    publicType: 'GlyphSource | null | false',
     default: 'default',
     description:
       'Pass a GlyphSource. Chromatic statuses keep their built-in sign when the slot is empty.',
@@ -57,11 +58,12 @@ const props = {
   },
   role: {
     kind: 'enum',
-    group: 'Announcement',
+    group: 'Semantics',
     default: 'auto',
-    description: 'Select automatic urgency, an explicit live role, or quiet document semantics.',
+    description:
+      'The initial preview is quiet. Show feedback publishes a message with automatic or explicit urgency. Static content and named regions stay in document order.',
     choices: [
-      { value: 'auto', label: 'Automatic' },
+      { value: 'auto', label: 'Automatic', omit: true },
       { value: 'none', label: 'Static' },
       { value: 'region', label: 'Named region' },
       { value: 'status', label: 'Polite status' },
@@ -70,23 +72,23 @@ const props = {
   },
   'aria-label': {
     kind: 'string',
-    group: 'Announcement',
+    group: 'Semantics',
     default: 'Review announcement',
     description: 'Accessible landmark name for the named region in this example.',
   },
   title: {
     kind: 'string',
-    group: 'AlertTitle',
-    default: 'Review requested',
-    description: 'Text in the title slot.',
+    group: 'Content',
+    default: 'Draft review',
+    description: 'Text supplied to AlertTitle.',
     demo: true,
   },
-  titleAs: {
+  as: {
     kind: 'enum',
-    group: 'AlertTitle',
-    label: 'AlertTitle as',
+    group: 'Semantics',
+    label: 'AlertTitle.as',
     default: 'div',
-    description: 'Use a native heading at the right level for the page.',
+    description: 'AlertTitle.as sets the native heading level for the surrounding page.',
     choices: [
       { value: 'div' },
       { value: 'h2' },
@@ -98,145 +100,56 @@ const props = {
   },
   description: {
     kind: 'string',
-    group: 'AlertDescription',
-    default: 'You can leave feedback before publishing.',
-    description: 'Text in the description slot.',
+    group: 'Content',
+    default: 'Add notes before you publish.',
+    description: 'Text supplied to AlertDescription.',
     demo: true,
   },
   actionLabel: {
     kind: 'string',
-    group: 'AlertActions',
+    group: 'Interaction',
     default: '',
-    description: 'Add a sample action below the message.',
+    description:
+      'Label for an optional acknowledgment button in AlertActions that dismisses the notice.',
     demo: true,
   },
   close: {
     kind: 'boolean',
-    group: 'AlertClose',
+    group: 'Interaction',
     default: true,
-    description: 'Connect a dismiss action.',
+    description: 'Place an AlertClose in the close slot.',
     demo: true,
   },
   closeLabel: {
     kind: 'string',
-    group: 'AlertClose',
+    group: 'Interaction',
     default: 'Dismiss review notice',
-    description: 'Localized accessible name for the close button.',
+    description: 'Supplies the accessible name of AlertClose.',
     demo: true,
   },
   onClose: {
     kind: 'action',
-    group: 'AlertClose',
-    description: 'Reports the native button activation. The example then hides the message.',
+    group: 'Interaction',
+    publicType: 'MouseEventHandler<HTMLButtonElement>',
+    description:
+      'AlertClose requires a handler. It receives the button event and this example uses it to dismiss the notice.',
     code: 'handleClose',
   },
 } as const satisfies PropSchema;
 
-type AlertValues = ComponentValues<typeof props>;
+export type AlertValues = ComponentValues<typeof props>;
 
-function AlertSubject({
-  values,
-  ctx,
-}: {
-  readonly values: AlertValues;
-  readonly ctx: PreviewContext;
-}): ReactElement {
-  const [shown, setShown] = useState(true);
-  const [publication, setPublication] = useState(0);
-  const surface = useRef<HTMLDivElement>(null);
-  const restore = useRef<HTMLButtonElement>(null);
-  const hadFocus = useRef(false);
-  useLayoutEffect(() => {
-    const button = restore.current;
-    if (
-      !shown &&
-      hadFocus.current &&
-      button &&
-      button.ownerDocument.activeElement === button.ownerDocument.body
-    ) {
-      button.focus();
-    }
-  }, [shown]);
-
-  const dynamic = values.role !== 'none' && values.role !== 'region';
-  const chosenRole = values.role === 'auto' ? undefined : values.role;
-  return (
-    <div className="alert-demo-case">
-      {shown ? (
-        <Alert
-          {...ctx.subject}
-          key={publication}
-          ref={surface}
-          size={values.size}
-          status={values.status}
-          role={dynamic && publication === 0 ? 'none' : chosenRole}
-          aria-label={chosenRole === 'region' ? values['aria-label'] : undefined}
-          icon={
-            values.icon === 'editorial'
-              ? EditorialGlyph
-              : values.icon === 'none'
-                ? false
-                : undefined
-          }
-          close={
-            values.close && (
-              <AlertClose
-                aria-label={values.closeLabel}
-                onClose={() => {
-                  hadFocus.current =
-                    surface.current?.contains(surface.current.ownerDocument.activeElement) ?? false;
-                  ctx.action('onClose')();
-                  setShown(false);
-                }}
-              />
-            )
-          }
-        >
-          <AlertTitle as={values.titleAs}>{values.title}</AlertTitle>
-          <AlertDescription>{values.description}</AlertDescription>
-          {values.actionLabel.trim() && (
-            <AlertActions>
-              <Button variant="secondary" tone="neutral" size="s">
-                {values.actionLabel}
-              </Button>
-            </AlertActions>
-          )}
-        </Alert>
-      ) : (
-        <Button
-          ref={restore}
-          variant="secondary"
-          tone="accent"
-          onClick={() => {
-            setPublication(0);
-            setShown(true);
-          }}
-        >
-          Restore alert
-        </Button>
-      )}
-      {shown && dynamic && (
-        <div className="alert-demo-actions">
-          <Button
-            size="s"
-            variant="ghost"
-            tone="neutral"
-            onClick={() => setPublication((revision) => revision + 1)}
-          >
-            Show feedback
-          </Button>
-          <span className="alert-demo-note">
-            This publishes the message with the selected urgency.
-          </span>
-        </div>
-      )}
-    </div>
-  );
-}
+const messageType = {
+  kind: 'enum',
+  label: 'Message type',
+  default: 'danger',
+  choices: ['neutral', 'info', 'success', 'warning', 'danger'],
+} as const;
 
 export default defineComponent({
   id: 'alert',
   title: 'Alert',
+  componentName: 'Alert',
   category: 'Feedback & Status',
   status: 'UI',
   summary: 'Persistent in-flow feedback for a section, page, or form.',
@@ -253,7 +166,7 @@ export default defineComponent({
       kind: 'ignored',
       when: { close: false },
       affects: ['closeLabel'],
-      reason: 'Dismissal belongs to an AlertClose in the close slot.',
+      reason: 'The close label and callback belong to the AlertClose in the close slot.',
     },
     {
       kind: 'forbidden',
@@ -274,65 +187,62 @@ export default defineComponent({
       reason: 'An explicit role controls announcement behavior independently of the status color.',
     })),
   ],
-  code: (values) => {
-    const attributes = previewProps(
-      {
-        status: values.status,
-        size: values.size,
-        role: values.role,
-        ...(values.role === 'region' ? { 'aria-label': values['aria-label'] } : {}),
-      },
-      { status: 'neutral', size: 'm', role: 'auto' },
-    );
-    const icon =
-      values.icon === 'editorial'
-        ? ' icon={EditorialGlyph}'
-        : values.icon === 'none'
-          ? ' icon={false}'
-          : '';
-    const close = values.close
-      ? ` close={<AlertClose aria-label=${previewText(values.closeLabel)} onClose={handleClose} />}`
-      : '';
-    const title = values.title.trim()
-      ? `\n  <AlertTitle${previewProps({ as: values.titleAs }, { as: 'div' })}>${previewText(values.title)}</AlertTitle>`
-      : '';
-    const description = values.description.trim()
-      ? `\n  <AlertDescription>${previewText(values.description)}</AlertDescription>`
-      : '';
-    const action = values.actionLabel.trim()
-      ? `\n  <AlertActions><button type="button">${previewText(values.actionLabel)}</button></AlertActions>`
-      : '';
-    return `<Alert${attributes}${icon}${close}>${title}${description}${action}\n</Alert>`;
-  },
-  render: ({ values, ctx }) => (
-    <AlertSubject key={JSON.stringify(values)} values={values} ctx={ctx} />
-  ),
-  matrixViews: [
+  code: alertCode,
+  render: withOverlaySurface(AlertPlayground, 'border-box'),
+  states: [
     {
       id: 'status',
       title: 'Status & material',
       rows: 'status',
-      reference: () => <StatusExamples />,
+      cols: 'icon',
+      caption:
+        'Compare each status with its default glyph, an editorial glyph and an empty custom slot.',
     },
     {
       id: 'sizes',
       title: 'Five statuses × S / M / L',
       rows: 'size',
-      reference: () => <SizeExamples />,
+      cols: 'status',
+      fixed: { close: false, role: 'none', title: 'Notice', description: '' },
+      caption: 'The same message shows how density changes across all five statuses.',
     },
   ],
   cases: [
     {
+      id: 'status-messages',
+      title: 'Writing for each status',
+      kind: 'content',
+      mode: 'pinned',
+      caption:
+        'Each message names the event and its consequence. Neutral has no built-in status glyph.',
+      render: withOverlaySurface(StatusExamples, 'border-box'),
+    },
+    {
       id: 'context-states',
       title: 'Contextual action states',
       kind: 'behavior',
-      render: () => <ContextStateExamples />,
+      mode: 'pinned',
+      caption:
+        'Choose the message type and link underline, then compare resting, pending, disabled, expanded and selected controls.',
+      controls: {
+        status: messageType,
+        underline: {
+          kind: 'enum',
+          label: 'Link underline',
+          default: 'always',
+          choices: ['always', 'hover', 'none'],
+        },
+      },
+      render: withOverlaySurface(ContextStateExamples, 'border-box'),
     },
     {
       id: 'context-boundaries',
       title: 'Color boundaries & explicit tones',
       kind: 'content',
-      render: () => <ContextBoundaryExamples />,
+      mode: 'pinned',
+      caption:
+        'Follow the color of code and actions through transparent text, a Card and a floating panel. Explicit tones keep their own colors.',
+      render: withOverlaySurface(ContextBoundaryExamples, 'border-box'),
     },
     {
       id: 'context-overlay',
@@ -340,37 +250,63 @@ export default defineComponent({
       surface: 'overlay',
       overlayStage: true,
       kind: 'surface',
-      render: () => <ContextOverlayExamples />,
+      mode: 'live',
+      caption:
+        'The panel supplies the surface. Change the message type and inspect the actions and reference inside the notice.',
+      controls: { status: messageType },
+      render: ContextOverlayExamples,
     },
     {
       id: 'anatomy',
       title: 'Anatomy & content',
-      kind: 'behavior',
-      render: () => <AnatomyExamples />,
+      kind: 'content',
+      mode: 'live',
+      reset: true,
+      caption:
+        'Compare bare text, title and description slots with a rich notice and a dismissible tip.',
+      render: withOverlaySurface(AnatomyExamples, 'border-box'),
     },
     {
       id: 'close',
       title: 'Close states & focus',
       kind: 'behavior',
-      render: () => <CloseStates />,
+      mode: 'live',
+      reset: true,
+      caption:
+        'Dismiss a tip with its close button or Got it. Keyboard dismissal returns focus to Source page and preserves its draft.',
+      render: withOverlaySurface(CloseStates, 'border-box'),
     },
     {
       id: 'actions',
       title: 'Action availability & emphasis',
       kind: 'behavior',
-      render: () => <ActionStateExamples />,
+      mode: 'pinned',
+      caption:
+        'Compare a disabled publish action with the emphasis of reconnecting and discarding a draft. These examples keep their action states fixed.',
+      render: withOverlaySurface(ActionStateExamples, 'border-box'),
     },
     {
       id: 'recovery',
       title: 'Recovery & action states',
       kind: 'behavior',
-      render: () => <RecoveryExample />,
+      mode: 'live',
+      actions: [
+        { id: 'failure', label: 'Simulate failure' },
+        { id: 'success', label: 'Simulate success' },
+      ],
+      reset: true,
+      caption:
+        'Start a retry in one or more previews, then choose an outcome. Only pending requests receive it.',
+      render: withOverlaySurface(RecoveryExample, 'border-box'),
     },
     {
       id: 'overflow',
       title: 'Narrow, rich & long content',
       kind: 'content',
-      render: () => <OverflowExamples />,
+      mode: 'pinned',
+      caption:
+        'Compare wrapped actions, a long report link and identifier, and an Arabic message with a left-to-right release number.',
+      render: withOverlaySurface(OverflowExamples, 'border-box'),
     },
     {
       id: 'overlay',
@@ -378,19 +314,27 @@ export default defineComponent({
       surface: 'overlay',
       overlayStage: true,
       kind: 'surface',
-      render: () => <OverlayExample />,
+      mode: 'live',
+      caption:
+        'Choose owner focuses the required field. Enter a name to clear the error or remove it to see the requirement again.',
+      render: OverlayExample,
     },
   ],
-  usage: [
+  compositions: [
     {
       id: 'context',
       title: 'Contextual content & actions',
-      code: `<Alert status={status} role="none" close={<AlertClose aria-label="Dismiss notice" onClose={dismiss} />}>
-  <AlertTitle>{message.title}</AlertTitle>
-  <AlertDescription>Reference <Code>{message.reference}</Code></AlertDescription>
-  <AlertActions><Button variant="ghost" tone="neutral" onClick={acknowledge}>Acknowledge</Button></AlertActions>
-</Alert>`,
-      render: () => <ContextExamples />,
+      mode: 'live',
+      caption:
+        'Open guidance or details, acknowledge a notice or dismiss it. Neutral controls and inline code follow the message color.',
+      code: contextSource.replace(
+        "import { notices } from './alert-notices.js';",
+        noticeSource.trimEnd(),
+      ),
+      render: withOverlaySurface(
+        ({ ctx }) => <ContextExamples alertProps={ctx.subject} />,
+        'border-box',
+      ),
     },
   ],
 });
