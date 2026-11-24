@@ -15,7 +15,7 @@ import { Select } from '../../../src/prototypes/select/select.proto.js';
 
 const roles = [
   { value: 'viewer', label: 'Viewer' },
-  { value: 'editor', label: 'Editor' },
+  { value: 'editor', label: 'Editor', description: 'Edit pages and publish changes' },
 ];
 
 export default function OverlayMaterialConsumersFixture(): JSX.Element {

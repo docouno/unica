@@ -1,333 +1,185 @@
-import { size, disabled, readOnly, toggle, eventProp } from '../control-props.js';
-import { useState } from 'react';
-import type { ReactElement } from 'react';
+import { disabled, eventProp, readOnly, size, toggle } from '../control-props.js';
 import { defineComponent } from '../../workbench/types.js';
-import { Card } from '@docouno/unica';
-import { Listbox, SelectPanel } from '../../prototypes/select/select.proto.js';
-import { regionOptions, roleOptions, simpleOptions } from '../../prototypes/select/select.data.js';
-import { Study, StudyNote } from '../../prototypes/select/select.examples.js';
-
-function LiveList(): ReactElement {
-  const [values, setValues] = useState<readonly string[]>(['amsterdam', 'london']);
-  return (
-    <div className="select-study-stack-proto">
-      <StudyNote>
-        Tab into the list. Arrows browse; Space or Enter toggles. Typing jumps by name. Browse to
-        the last region to inspect scrolling.
-      </StudyNote>
-      <Listbox
-        className="select-study-frame-proto select-study-scroll-proto"
-        title="Available regions"
-        options={regionOptions}
-        multiple
-        values={values}
-        onValuesChange={setValues}
-      />
-      <div className="select-study-result-proto" aria-live="polite">
-        Selected:{' '}
-        {values.length
-          ? values
-              .map((value) => regionOptions.find((option) => option.value === value)?.label)
-              .join(', ')
-          : 'None'}
-      </div>
-    </div>
-  );
-}
+import { Listbox } from '../../prototypes/select/select.proto.js';
+import { roleOptions } from '../../prototypes/select/select.data.js';
+import { previewProps } from '../preview-code.js';
+import { withOverlaySurface } from '../shared/with-overlay-surface.js';
+import {
+  Anatomy,
+  Availability,
+  Density,
+  Overflow,
+  StatePins,
+  Surfaces,
+} from './listbox.examples.js';
+import { RolePermissions } from './role-permissions.js';
+import permissionsSource from './role-permissions.tsx?raw';
+import { ExportColumns } from './export-columns.js';
+import columnsSource from './export-columns.tsx?raw';
 
 export default defineComponent({
   id: 'listbox',
   title: 'Listbox',
   category: 'Selection & Pickers',
   status: 'Proto',
-  summary: 'A quiet, always-visible choice list. Selection, navigation and focus remain distinct.',
   componentName: 'Listbox',
+  summary:
+    'Browse a visible list with the arrow keys. Activate a row to select one value or toggle it in a set.',
   props: {
     size,
+    multiple: toggle(
+      'Interaction',
+      'Allow several checked rows. Activate a row to toggle its value.',
+    ),
     disabled,
-    readOnly,
-    multiple: toggle('Selection', 'Allow selection of several results.'),
+    readOnly: {
+      ...readOnly,
+      description: 'Browse available rows while keeping the selected values.',
+    },
     onValueChange: eventProp(
-      'Reports the selected value in single selection.',
-      'handleValueChange',
+      'In single selection, receives the selected value or null after removal of an unavailable saved answer.',
+      '(value) => console.log(value)',
+      '(value: string | null) => void',
     ),
     onValuesChange: eventProp(
-      'Reports selected values in multiple selection.',
-      'handleValuesChange',
+      'In multiple selection, receives the current values, including an empty array when the last answer is removed.',
+      '(values) => console.log(values)',
+      '(values: readonly string[]) => void',
     ),
   },
-  render: ({ values, ctx }) => (
-    <Listbox
-      {...values}
-      {...ctx.subject}
-      aria-label="Available roles"
-      options={roleOptions}
-      defaultValue="editor"
-      defaultValues={['editor']}
-      onValueChange={ctx.action('onValueChange')}
-      onValuesChange={ctx.action('onValuesChange')}
-    />
+  render: withOverlaySurface(
+    ({ values, ctx }) => (
+      <Listbox
+        {...values}
+        {...ctx.subject}
+        aria-label="Available roles"
+        options={roleOptions}
+        defaultValue="editor"
+        defaultValues={['editor']}
+        {...(values.multiple
+          ? { onValuesChange: ctx.action('onValuesChange') }
+          : { onValueChange: ctx.action('onValueChange') })}
+      />
+    ),
+    'border-box',
   ),
-  code: ({ multiple }, attributes) => {
-    const selection = multiple ? "defaultValues={['editor']}" : 'defaultValue="editor"';
-    return `<Listbox aria-label="Available roles" options={roleOptions} ${selection}${attributes} />`;
+  code: (values) => {
+    const attrs = previewProps(values, {
+      size: 'm',
+      multiple: false,
+      disabled: false,
+      readOnly: false,
+    });
+    const selection = values.multiple
+      ? "defaultValues={['editor']} onValuesChange={(values) => console.log(values)}"
+      : 'defaultValue="editor" onValueChange={(value) => console.log(value)}';
+    return `import { Listbox } from './prototypes/select/select.proto.js';
+import { roleOptions } from './prototypes/select/select.data.js';
+import '@docouno/unica/styles.css';
+
+export function AvailableRoles() {
+  return <Listbox aria-label="Available roles" options={roleOptions}${attrs} ${selection} />;
+}`;
   },
-  matrixViews: [
+  states: [
     {
       id: 'sizes',
+      title: 'Density and selection mode',
       rows: 'size',
       cols: 'multiple',
-      title: 'Density · S / M / L',
-      reference: () => (
-        <div className="select-study-grid-proto">
-          {(['s', 'm', 'l'] as const).map((size) => (
-            <Study key={size} title={`${size.toUpperCase()} · single selection`}>
-              <Listbox
-                size={size}
-                options={simpleOptions}
-                defaultValue="editor"
-                aria-label={`Role ${size}`}
-              />
-              <Listbox
-                size={size}
-                options={[
-                  { value: 'plain', label: 'Without a description' },
-                  { value: 'icon', label: 'With an icon', icon: roleOptions[0]?.icon },
-                  {
-                    value: 'description',
-                    label: 'With a description',
-                    description: 'A second line of context.',
-                  },
-                  {
-                    value: 'wrapped',
-                    label: 'A longer option label that continues on another line',
-                  },
-                  {
-                    value: 'rich',
-                    label: 'Publishing permissions',
-                    icon: roleOptions[1]?.icon,
-                    description: 'Review and publish changes across all shared workspaces.',
-                  },
-                ]}
-                defaultValue="icon"
-                aria-label={`Mixed row anatomy ${size}`}
-              />
-            </Study>
-          ))}
-        </div>
-      ),
+      caption:
+        'Editor starts selected at every size. Choose Viewer to replace Editor in a single list, or to keep both checks in a multiple list.',
     },
   ],
   cases: [
     {
+      id: 'density',
+      title: 'Plain and mixed rows by size',
+      kind: 'content',
+      mode: 'live',
+      reset: true,
+      caption:
+        'At each density compare three plain choices with five mixed rows. Checkmarks reserve a trailing column. Mixed rows align their labels even when an icon or description is absent.',
+      render: withOverlaySurface(Density, 'border-box'),
+    },
+    {
       id: 'anatomy',
-      title: 'Descriptions, icons & groups',
-      kind: 'behavior',
-      render: () => (
-        <div className="select-study-grid-proto">
-          <Study
-            title="Single · rich options"
-            note="The check column is always reserved. Icons share a leading column, even when a row has none."
-          >
-            <Listbox
-              options={[
-                ...roleOptions,
-                {
-                  value: 'custom',
-                  label: 'Custom policy',
-                  description: 'Use the policy defined by your organization',
-                  group: 'Administration',
-                },
-              ]}
-              defaultValue="editor"
-              aria-label="Role with descriptions"
-            />
-          </Study>
-          <Study
-            title="Multiple · immediate toggles"
-            note="No nested checkboxes and no modifier keys. The selected row stays neutral."
-          >
-            <Listbox
-              options={simpleOptions}
-              multiple
-              defaultValues={['viewer', 'editor']}
-              aria-label="Multiple roles"
-            />
-          </Study>
-        </div>
-      ),
+      title: 'Descriptions, icons and groups',
+      kind: 'content',
+      mode: 'live',
+      reset: true,
+      caption:
+        'Compare a rich single choice grouped by membership with an ungrouped multiple choice. Arrow keys browse without changing the answer. Enter or Space activates the current row.',
+      render: withOverlaySurface(Anatomy, 'border-box'),
     },
     {
       id: 'states',
-      title: 'Selection × pointer × keyboard',
+      title: 'Selection, pointer and focus',
       kind: 'behavior',
-      render: () => (
-        <div className="select-study-grid-proto">
-          {(
-            [
-              ['Available', false, undefined],
-              ['Selected', true, undefined],
-              ['Hover', false, 'hover'],
-              ['Selected + hover', true, 'hover'],
-              ['Pressed', true, 'pressed'],
-              ['Keyboard focus', false, 'focus'],
-              ['Selected + focus', true, 'focus'],
-            ] as const
-          ).map(([title, selected, preview]) => (
-            <Study key={title} title={title}>
-              <Listbox
-                options={[{ value: 'editor', label: 'Editor' }]}
-                value={selected ? 'editor' : null}
-                previewOption="editor"
-                previewState={preview}
-                aria-label={title}
-              />
-            </Study>
-          ))}
-          <StudyNote>
-            These labeled state pins compare appearance; they do not move DOM focus. Live navigation
-            is in Long content & bounded scrolling.
-          </StudyNote>
-        </div>
-      ),
+      mode: 'pinned',
+      caption:
+        'Compare available and selected rows at rest, on hover, on press and with keyboard focus. These samples pin their appearance. Try the scrolling list for live focus and selection.',
+      render: withOverlaySurface(StatePins, 'border-box'),
     },
     {
       id: 'availability',
-      title: 'Read only, disabled & unavailable',
+      title: 'Read only, disabled and unavailable',
       kind: 'behavior',
-      render: () => (
-        <div className="select-study-grid-proto">
-          <Study title="Read only · browse safely">
-            <Listbox title="Workspace role" options={roleOptions} value="editor" readOnly />
-          </Study>
-          <Study title="Disabled · selection retained">
-            <Listbox options={simpleOptions} value="editor" disabled aria-label="Disabled roles" />
-          </Study>
-          <Study title="Selected option disabled">
-            <Listbox options={roleOptions} value="admin" aria-label="Administrative role" />
-          </Study>
-          <Study
-            title="Removed from catalog"
-            note="Select the retained row to remove only that answer. It cannot be added again."
-          >
-            <Listbox
-              options={simpleOptions}
-              multiple
-              defaultValues={['editor', 'maintainer']}
-              orphanLabels={{ maintainer: 'Maintainer' }}
-              aria-label="Saved roles"
-            />
-          </Study>
-          <Study
-            title="Only saved answer remains"
-            note="Explicit removal also works when there is no replacement available."
-          >
-            <Listbox
-              options={[]}
-              defaultValue="maintainer"
-              orphanLabels={{ maintainer: 'Maintainer' }}
-              aria-label="Unavailable saved role"
-            />
-          </Study>
-          <Study title="Empty catalog">
-            <Listbox
-              options={[]}
-              aria-label="No roles available"
-              emptyState="No roles available in this workspace."
-            />
-          </Study>
-          <Study
-            title="Unavailable · locked"
-            note="Read-only and disabled retained answers explain their status without inviting removal."
-          >
-            <Listbox
-              options={[]}
-              value="maintainer"
-              orphanLabels={{ maintainer: 'Maintainer' }}
-              readOnly
-              title="Saved role"
-            />
-            <Listbox
-              options={[]}
-              value="maintainer"
-              orphanLabels={{ maintainer: 'Maintainer' }}
-              disabled
-              aria-label="Disabled saved role"
-            />
-          </Study>
-          <Study
-            title="All options disabled"
-            note="Keyboard focus falls back to the list when no row can receive it."
-          >
-            <Listbox
-              options={simpleOptions.map((option) => ({ ...option, disabled: true }))}
-              value="editor"
-              aria-label="Locked roles"
-            />
-          </Study>
-        </div>
-      ),
+      mode: 'live',
+      reset: true,
+      caption:
+        'Browse a read-only list, inspect retained disabled choices, or activate Maintainer to remove a saved answer absent from the catalog. A read-only or disabled saved answer stays in place. Empty and fully disabled lists have no active row.',
+      render: withOverlaySurface(Availability, 'border-box'),
     },
     {
       id: 'overflow',
-      title: 'Long content & bounded scrolling',
+      title: 'Long content and bounded scrolling',
       kind: 'content',
-      render: () => (
-        <div className="select-study-grid-proto">
-          <Study title="Long label & description">
-            <Listbox
-              options={[
-                {
-                  value: 'long',
-                  label: 'Organization-wide editorial and publishing permissions',
-                  description:
-                    'Review changes across every workspace, including archived projects and externally shared pages.',
-                },
-                {
-                  value: 'url',
-                  label: 'https://example.com/workspaces/engineering/permission-policies',
-                  description: 'A long, unbroken value wraps without horizontal scrolling.',
-                },
-              ]}
-              defaultValue="long"
-              aria-label="Long permission labels"
-            />
-          </Study>
-          <LiveList />
-        </div>
-      ),
+      mode: 'live',
+      reset: true,
+      caption:
+        'Long labels and descriptions wrap. Focus Available regions, use End or type S repeatedly to scroll through matching rows. The selected regions change when you activate a row with Enter or Space.',
+      render: withOverlaySurface(Overflow, 'border-box'),
     },
     {
       id: 'surfaces',
-      title: 'One row anatomy · base & floating surface',
+      title: 'One list on two surfaces',
       surface: 'overlay',
       overlayStage: true,
       kind: 'surface',
-      render: () => (
-        <div className="select-study-grid-proto">
-          <Study
-            title="Transparent list inside Card"
-            note="The shared Card supplies the quiet parent surface. The list owns no background, border or shadow."
-          >
-            <Card data-surface="base" variant="subtle" size="s">
-              <Listbox options={simpleOptions} defaultValue="editor" aria-label="Inline role" />
-            </Card>
-          </Study>
-          <Study
-            title="Inside SelectPanel"
-            note="The surrounding panel owns the material; rows keep the same anatomy."
-          >
-            <SelectPanel>
-              <Listbox
-                size="m"
-                options={simpleOptions}
-                defaultValue="editor"
-                aria-label="Floating role"
-              />
-            </SelectPanel>
-          </Study>
-        </div>
+      mode: 'live',
+      reset: true,
+      caption:
+        'The base card and the floating SelectPanel supply their own materials. Each contains the same single-choice rows. Change either selection independently.',
+      render: Surfaces,
+    },
+  ],
+  compositions: [
+    {
+      id: 'permissions',
+      title: 'Preview role permissions',
+      mode: 'live',
+      reset: true,
+      caption:
+        'Browse three access levels, then select a role to see its permissions. Moving the active row keeps the previously selected role and its summary.',
+      render: withOverlaySurface(
+        ({ ctx }) => <RolePermissions listProps={ctx.subject} />,
+        'border-box',
       ),
+      code: permissionsSource.replace('../../prototypes/', './prototypes/'),
+    },
+    {
+      id: 'columns',
+      title: 'Choose export columns',
+      mode: 'live',
+      reset: true,
+      caption:
+        'Toggle the columns to preview a CSV header in catalog order. Remove all columns to observe an empty export selection.',
+      render: withOverlaySurface(
+        ({ ctx }) => <ExportColumns listProps={ctx.subject} />,
+        'border-box',
+      ),
+      code: columnsSource.replace('../../prototypes/', './prototypes/'),
     },
   ],
 });

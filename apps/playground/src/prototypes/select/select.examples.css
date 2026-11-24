@@ -26,12 +26,6 @@
   gap: var(--space-16);
   min-inline-size: 0;
 }
-.select-study-frame-proto {
-  padding: var(--space-8);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--surface-s-radius);
-  min-inline-size: 0;
-}
 .select-study-overlay-proto {
   padding: var(--space-16);
   border: 1px solid var(--_overlay-border);

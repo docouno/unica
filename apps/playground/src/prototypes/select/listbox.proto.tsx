@@ -33,6 +33,8 @@ export function ListboxOption({
 }: ListboxOptionProps): ReactElement {
   return (
     <div
+      aria-label={option.label}
+      aria-description={option.description}
       {...props}
       role="option"
       aria-selected={selected === true}
@@ -342,7 +344,11 @@ export function Listbox({
             </div>
           ),
         )}
-        {entries.length === 0 && <div className="choice-panel-empty-proto">{emptyState}</div>}
+        {entries.length === 0 && (
+          <div className="choice-panel-empty-proto">
+            {typeof emptyState === 'string' ? <bdi>{emptyState}</bdi> : emptyState}
+          </div>
+        )}
         {missing.length > 0 && (
           <ListboxGroup label="Unavailable selection">
             {retained.map((option, index) => renderOption(option, options.length + index))}
