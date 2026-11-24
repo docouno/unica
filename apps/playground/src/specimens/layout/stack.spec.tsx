@@ -24,23 +24,24 @@ export default defineComponent({
   status: 'UI',
   summary: 'Space a sequence of children with optional dividers. ' + viewportNote,
   props: {
-    direction: {
-      ...choiceProp(directionOptions, 'column', 'Main axis and visual order.', 'Geometry'),
-      publicType: "Responsive<'row' | 'row-reverse' | 'column' | 'column-reverse'>",
-    },
-    align: {
-      ...choiceProp(alignOptions, 'stretch', 'Alignment across the main axis.', 'Geometry'),
-      publicType: "Responsive<'start' | 'center' | 'end' | 'stretch' | 'baseline'>",
-    },
-    gap: {
-      ...choiceProp(
-        spacingValues,
-        '0',
-        'Space between consecutive children and dividers.',
-        'Geometry',
-      ),
-      publicType: 'Responsive<Spacing>',
-    },
+    direction: choiceProp(
+      directionOptions,
+      'column',
+      'Main axis and visual order.',
+      "Responsive<'row' | 'row-reverse' | 'column' | 'column-reverse'>",
+    ),
+    align: choiceProp(
+      alignOptions,
+      'stretch',
+      'Alignment across the main axis.',
+      "Responsive<'start' | 'center' | 'end' | 'stretch' | 'baseline'>",
+    ),
+    gap: choiceProp(
+      spacingValues,
+      '0',
+      'Space between consecutive children and dividers.',
+      'Responsive<Spacing>',
+    ),
     divider: {
       kind: 'slot',
       group: 'Content',

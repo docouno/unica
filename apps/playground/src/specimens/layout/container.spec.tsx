@@ -17,24 +17,18 @@ export default defineComponent({
   status: 'UI',
   summary: 'A fluid content column with a maximum width and logical gutters. ' + viewportNote,
   props: {
-    size: {
-      ...choiceProp(
-        sizeOptions,
-        'm',
-        'Maximum widths are 720, 960 and 1280px for s, m and l.',
-        'Geometry',
-      ),
-      publicType: "Responsive<'s' | 'm' | 'l'>",
-    },
-    gutter: {
-      ...choiceProp(
-        spacingValues,
-        '16',
-        'Space inside both inline edges of the column.',
-        'Geometry',
-      ),
-      publicType: 'Responsive<Spacing>',
-    },
+    size: choiceProp(
+      sizeOptions,
+      'm',
+      'Maximum widths are 720, 960 and 1280px for s, m and l.',
+      "Responsive<'s' | 'm' | 'l'>",
+    ),
+    gutter: choiceProp(
+      spacingValues,
+      '16',
+      'Space inside both inline edges of the column.',
+      'Responsive<Spacing>',
+    ),
     centered: {
       kind: 'boolean',
       group: 'Geometry',

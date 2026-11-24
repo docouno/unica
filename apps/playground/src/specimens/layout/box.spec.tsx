@@ -25,10 +25,8 @@ const displayOptions = {
   'Tablet block': { tablet: 'block' },
 } as const;
 
-const spacing = (description: string) => ({
-  ...choiceProp(spacingOptions, 'Default', description, 'Geometry'),
-  publicType: 'Responsive<Spacing>',
-});
+const spacing = (description: string) =>
+  choiceProp(spacingOptions, 'Default', description, 'Responsive<Spacing>');
 
 export default defineComponent({
   id: 'box',
@@ -50,15 +48,12 @@ export default defineComponent({
       default: false,
       description: 'Native boolean hidden attribute.',
     },
-    display: {
-      ...choiceProp(
-        displayOptions,
-        'Native',
-        'Display mode. Omit it to follow the native tag.',
-        'Geometry',
-      ),
-      publicType: "Responsive<'block' | 'inline' | 'inline-block' | 'flow-root' | 'none'>",
-    },
+    display: choiceProp(
+      displayOptions,
+      'Native',
+      'Display mode. Omit it to follow the native tag.',
+      "Responsive<'block' | 'inline' | 'inline-block' | 'flow-root' | 'none'>",
+    ),
     padding: spacing('Inside spacing on all sides.'),
     paddingInline: spacing('Inside spacing on the inline axis.'),
     paddingBlock: spacing('Inside spacing on the block axis.'),

@@ -98,19 +98,13 @@ export default defineComponent({
   status: 'UI',
   summary: 'Equal-width columns with optional named areas. ' + viewportNote,
   props: {
-    columns: {
-      ...choiceProp(
-        columnOptions,
-        'Default',
-        'One to twelve explicit columns. Omit the count to use the area map width, or one column without a map.',
-        'Geometry',
-      ),
-      publicType: responsiveTracksType,
-    },
-    gap: {
-      ...choiceProp(spacingValues, '0', 'Space between rows and columns.', 'Geometry'),
-      publicType: 'Responsive<Spacing>',
-    },
+    columns: choiceProp(
+      columnOptions,
+      'Default',
+      'One to twelve explicit columns. Omit the count to use the area map width, or one column without a map.',
+      responsiveTracksType,
+    ),
+    gap: choiceProp(spacingValues, '0', 'Space between rows and columns.', 'Responsive<Spacing>'),
     flow: {
       kind: 'enum',
       group: 'Geometry',
@@ -118,15 +112,12 @@ export default defineComponent({
       default: 'row',
       description: 'Place unassigned items by row or by column.',
     },
-    areas: {
-      ...choiceProp(
-        areaOptions,
-        'None',
-        'Use one string per row. Named cells form rectangles and dots leave cells open for automatic placement.',
-        'Geometry',
-      ),
-      publicType: 'readonly string[]',
-    },
+    areas: choiceProp(
+      areaOptions,
+      'None',
+      'Use one string per row. Named cells form rectangles and dots leave cells open for automatic placement.',
+      'readonly string[]',
+    ),
   },
   constraints: [
     {

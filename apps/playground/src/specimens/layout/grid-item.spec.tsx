@@ -31,15 +31,12 @@ export default defineComponent({
       choices: [{ value: 'None', omit: true }, { value: 'start' }, { value: 'end' }],
       description: 'A name from the parent area map. This grid defines start and end.',
     },
-    span: {
-      ...choiceProp(
-        spanOptions,
-        'Auto',
-        'Occupy 1–12 tracks within the parent grid. Automatic placement uses one track.',
-        'Geometry',
-      ),
-      publicType: responsiveTracksType,
-    },
+    span: choiceProp(
+      spanOptions,
+      'Auto',
+      'Occupy 1–12 tracks within the parent grid. Automatic placement uses one track.',
+      responsiveTracksType,
+    ),
   },
   constraints: namedAreas.map((area) => ({
     kind: 'forbidden',

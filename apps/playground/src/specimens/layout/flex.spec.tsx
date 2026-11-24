@@ -52,27 +52,31 @@ export default defineComponent({
   status: 'UI',
   summary: 'Arrange children along one axis with wrapping and alignment. ' + viewportNote,
   props: {
-    direction: {
-      ...choiceProp(directionOptions, 'row', 'Main axis and visual direction.', 'Geometry'),
-      publicType: "Responsive<'row' | 'row-reverse' | 'column' | 'column-reverse'>",
-    },
-    wrap: {
-      ...choiceProp(wrapOptions, 'nowrap', 'Allow items to start a new flex line.', 'Geometry'),
-      publicType: "Responsive<'nowrap' | 'wrap' | 'wrap-reverse'>",
-    },
-    justify: {
-      ...choiceProp(justifyOptions, 'start', 'Distribute space along the main axis.', 'Geometry'),
-      publicType:
-        "Responsive<'start' | 'center' | 'end' | 'space-between' | 'space-around' | 'space-evenly'>",
-    },
-    align: {
-      ...choiceProp(alignOptions, 'stretch', 'Align items along the cross axis.', 'Geometry'),
-      publicType: "Responsive<'start' | 'center' | 'end' | 'stretch' | 'baseline'>",
-    },
-    gap: {
-      ...choiceProp(spacingValues, '0', 'Space between items and lines.', 'Geometry'),
-      publicType: 'Responsive<Spacing>',
-    },
+    direction: choiceProp(
+      directionOptions,
+      'row',
+      'Main axis and visual direction.',
+      "Responsive<'row' | 'row-reverse' | 'column' | 'column-reverse'>",
+    ),
+    wrap: choiceProp(
+      wrapOptions,
+      'nowrap',
+      'Allow items to start a new flex line.',
+      "Responsive<'nowrap' | 'wrap' | 'wrap-reverse'>",
+    ),
+    justify: choiceProp(
+      justifyOptions,
+      'start',
+      'Distribute space along the main axis.',
+      "Responsive<'start' | 'center' | 'end' | 'space-between' | 'space-around' | 'space-evenly'>",
+    ),
+    align: choiceProp(
+      alignOptions,
+      'stretch',
+      'Align items along the cross axis.',
+      "Responsive<'start' | 'center' | 'end' | 'stretch' | 'baseline'>",
+    ),
+    gap: choiceProp(spacingValues, '0', 'Space between items and lines.', 'Responsive<Spacing>'),
   },
   render: ({ ctx, values }) => (
     <LayoutExample>

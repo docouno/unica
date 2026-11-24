@@ -7,12 +7,13 @@ export function choiceProp<const Options extends Readonly<Record<string, unknown
   options: Options,
   initial: keyof Options & string,
   description: string,
-  group = 'Layout',
+  publicType: string,
 ) {
   const keys = Object.keys(options) as (keyof Options & string)[];
   return {
     kind: 'slot' as const,
-    group,
+    group: 'Geometry',
+    publicType,
     default: initial,
     description,
     choices: keys.map((value) => ({ value, code: JSON.stringify(options[value]) ?? 'undefined' })),
