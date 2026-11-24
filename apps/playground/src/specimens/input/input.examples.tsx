@@ -7,10 +7,22 @@ import {
   MagnifyingGlassIcon,
 } from '@phosphor-icons/react';
 import { Input, Text } from '@docouno/unica';
-import type { FieldStatus } from '@docouno/unica';
+import type { FieldStatus, InputProps } from '@docouno/unica';
 import { FormField } from '../../prototypes/form-field/form-field.proto.js';
+import type { PreviewProps, PreviewContext } from '../../workbench/types.js';
+import { useStoryAction } from '../../workbench/storyFrameState.js';
 import './input.examples.css';
 
+export function MeasuredInput({
+  subject,
+  ...props
+}: InputProps & { readonly subject: PreviewContext['subject'] }): ReactElement {
+  return (
+    <div {...subject} className="input-study-subject" data-width={props.width}>
+      <Input {...props} />
+    </div>
+  );
+}
 function Sample({
   title,
   children,
@@ -21,27 +33,32 @@ function Sample({
   return (
     <div className="input-study-stack">
       <Text size="caption-l" color="secondary" weight="medium">
-        {title}
+        <bdi>{title}</bdi>
       </Text>
       {children}
     </div>
   );
 }
 
-export function InputRoles(): ReactElement {
+export function InputRoles({ ctx }: PreviewProps): ReactElement {
   const id = useId();
   return (
     <div className="input-study-stack">
       <div className="input-study-grid">
         <Sample title="Default form field">
           <FormField htmlFor={`${id}-name`} label="Collection name">
-            <Input id={`${id}-name`} defaultValue="Research notes" />
+            <MeasuredInput subject={ctx.subject} id={`${id}-name`} defaultValue="Research notes" />
           </FormField>
         </Sample>
         <Sample title="Ghost inline editor">
           <div className="input-study-property">
             <label htmlFor={`${id}-reference`}>Reference</label>
-            <Input id={`${id}-reference`} variant="ghost" placeholder="Add a reference…" />
+            <MeasuredInput
+              subject={ctx.subject}
+              id={`${id}-reference`}
+              variant="ghost"
+              placeholder="Add a reference"
+            />
           </div>
         </Sample>
       </div>
@@ -49,31 +66,40 @@ export function InputRoles(): ReactElement {
   );
 }
 
-export function InputAnatomy(): ReactElement {
+export function InputAnatomy({ ctx }: PreviewProps): ReactElement {
   const id = useId();
   return (
     <div className="input-study-grid">
       <FormField htmlFor={`${id}-mail`} label="Work email">
-        <Input
+        <MeasuredInput
+          subject={ctx.subject}
           id={`${id}-mail`}
           type="email"
+          dir="ltr"
           iconLeft={EnvelopeSimpleIcon}
           defaultValue="team@example.com"
         />
       </FormField>
       <FormField htmlFor={`${id}-ref`} label="Reference">
-        <Input id={`${id}-ref`} iconRight={ArrowUpRightIcon} defaultValue="Release notes" />
+        <MeasuredInput
+          subject={ctx.subject}
+          id={`${id}-ref`}
+          iconRight={ArrowUpRightIcon}
+          defaultValue="Release notes"
+        />
       </FormField>
       <FormField
         htmlFor={`${id}-addr`}
         label="Public address"
         descriptionId={`${id}-host`}
-        description="The address starts with https:// and ends in .example."
+        description={<bdi>The address starts with https:// and ends in .example.</bdi>}
       >
-        <Input
+        <MeasuredInput
+          subject={ctx.subject}
           id={`${id}-addr`}
           aria-describedby={`${id}-host`}
           iconLeft={LinkSimpleIcon}
+          dir="ltr"
           prefix="https://"
           suffix=".example"
           defaultValue="field-notes"
@@ -83,14 +109,18 @@ export function InputAnatomy(): ReactElement {
       <FormField
         htmlFor={`${id}-draft`}
         label="Reference file"
+        descriptionId={`${id}-extension`}
+        description={<bdi>The filename ends in .md.</bdi>}
         status="warning"
         messageId={`${id}-warning`}
-        message="The last check found a moved file."
+        message={<bdi>The last check found a moved file.</bdi>}
         feedbackIcon={false}
       >
-        <Input
+        <MeasuredInput
+          subject={ctx.subject}
           id={`${id}-draft`}
-          aria-describedby={`${id}-warning`}
+          dir="ltr"
+          aria-describedby={`${id}-extension ${id}-warning`}
           iconRight={ArrowUpRightIcon}
           suffix=".md"
           defaultValue="release-notes"
@@ -103,16 +133,14 @@ export function InputAnatomy(): ReactElement {
   );
 }
 
-export function InputInteraction(): ReactElement {
+export function InputInteraction({ ctx }: PreviewProps): ReactElement {
   const id = useId();
   return (
     <div className="input-study-stack">
-      <button type="button" className="input-study-button">
-        Start here, then press Tab
-      </button>
       <div className="input-study-grid">
         <FormField htmlFor={`${id}-default`} label="Search collections">
-          <Input
+          <MeasuredInput
+            subject={ctx.subject}
             id={`${id}-default`}
             type="search"
             defaultValue="Research"
@@ -121,7 +149,8 @@ export function InputInteraction(): ReactElement {
           />
         </FormField>
         <FormField htmlFor={`${id}-ghost`} label="Collection name">
-          <Input
+          <MeasuredInput
+            subject={ctx.subject}
             id={`${id}-ghost`}
             variant="ghost"
             defaultValue="Field notes"
@@ -133,13 +162,15 @@ export function InputInteraction(): ReactElement {
       <div className="input-study-grid">
         {(['s', 'm', 'l'] as const).map((size) => (
           <Sample key={size} title={`${size.toUpperCase()} · End slot alignment`}>
-            <Input
+            <MeasuredInput
+              subject={ctx.subject}
               size={size}
               aria-label={`Trailing icon ${size}`}
               defaultValue="Field notes"
               iconRight={ArrowUpRightIcon}
             />
-            <Input
+            <MeasuredInput
+              subject={ctx.subject}
               size={size}
               aria-label={`Clear target ${size}`}
               defaultValue="Field notes"
@@ -159,7 +190,7 @@ const messages = {
   danger: 'Choose a different address.',
 } as const;
 
-export function InputFeedback(): ReactElement {
+export function InputFeedback({ ctx }: PreviewProps): ReactElement {
   const id = useId();
   return (
     <div className="input-study-grid">
@@ -173,11 +204,12 @@ export function InputFeedback(): ReactElement {
                 htmlFor={fieldId}
                 label={variant === 'default' ? 'Workspace address' : 'Inline address'}
                 status={status}
-                message={messages[status]}
+                message={<bdi>{messages[status]}</bdi>}
                 messageId={`${fieldId}-message`}
                 feedbackIcon={false}
               >
-                <Input
+                <MeasuredInput
+                  subject={ctx.subject}
                   id={fieldId}
                   aria-describedby={`${fieldId}-message`}
                   variant={variant}
@@ -195,22 +227,34 @@ export function InputFeedback(): ReactElement {
   );
 }
 
-export function InputAvailability(): ReactElement {
+export function InputAvailability({ ctx }: PreviewProps): ReactElement {
   return (
     <div className="input-study-grid">
       <Sample title="Editable">
-        <Input aria-label="Editable address" defaultValue="north-studio" clearable />
-        <Input aria-label="Empty address" placeholder="Add an address…" clearable />
+        <MeasuredInput
+          subject={ctx.subject}
+          aria-label="Editable address"
+          defaultValue="north-studio"
+          clearable
+        />
+        <MeasuredInput
+          subject={ctx.subject}
+          aria-label="Empty address"
+          placeholder="Add an address"
+          clearable
+        />
       </Sample>
       <Sample title="Read only">
-        <Input
+        <MeasuredInput
+          subject={ctx.subject}
           aria-label="Archived address"
           defaultValue="north-studio"
           readOnly
           status="warning"
           clearable
         />
-        <Input
+        <MeasuredInput
+          subject={ctx.subject}
           aria-label="Busy, read-only address"
           defaultValue="north-studio"
           readOnly
@@ -220,7 +264,8 @@ export function InputAvailability(): ReactElement {
         />
       </Sample>
       <Sample title="Disabled">
-        <Input
+        <MeasuredInput
+          subject={ctx.subject}
           aria-label="Managed address"
           defaultValue="north-studio"
           status="danger"
@@ -228,7 +273,8 @@ export function InputAvailability(): ReactElement {
           loading
           clearable
         />
-        <Input
+        <MeasuredInput
+          subject={ctx.subject}
           aria-label="Managed code"
           variant="ghost"
           defaultValue="COL-014"
@@ -237,17 +283,19 @@ export function InputAvailability(): ReactElement {
         />
       </Sample>
       <Sample title="Checking">
-        <Input
+        <MeasuredInput
+          subject={ctx.subject}
           aria-label="Checking address"
           defaultValue="north-studio"
           loading
           status="warning"
           clearable
         />
-        <Input
+        <MeasuredInput
+          subject={ctx.subject}
           aria-label="Checking empty address"
           variant="ghost"
-          placeholder="Add an address…"
+          placeholder="Add an address"
           loading
           clearable
         />
@@ -256,22 +304,45 @@ export function InputAvailability(): ReactElement {
   );
 }
 
-export function InputLive(): ReactElement {
+export function InputLive({ ctx }: PreviewProps): ReactElement {
   const id = useId();
   const [value, setValue] = useState('north-studio');
-  const [phase, setPhase] = useState<'idle' | 'checking' | 'available' | 'taken'>('idle');
+  const [phase, setPhase] = useState<'idle' | 'checking' | 'available' | 'taken' | 'invalid'>(
+    'idle',
+  );
   const busy = phase === 'checking';
   const status: FieldStatus =
-    phase === 'available' ? 'success' : phase === 'taken' ? 'danger' : 'neutral';
+    phase === 'available'
+      ? 'success'
+      : phase === 'taken' || phase === 'invalid'
+        ? 'danger'
+        : 'neutral';
   const result =
-    phase === 'available' ? messages.success : phase === 'taken' ? messages.danger : '';
+    phase === 'available'
+      ? messages.success
+      : phase === 'taken'
+        ? messages.danger
+        : phase === 'checking'
+          ? 'Checking this address…'
+          : phase === 'invalid'
+            ? 'Enter an address using letters, numbers, or hyphens.'
+            : '';
+  useStoryAction(ctx, (action) => {
+    if (action === 'check') {
+      setPhase(/^[a-z0-9-]+$/i.test(value) ? 'checking' : 'invalid');
+    } else if (busy && (action === 'available' || action === 'taken')) {
+      setPhase(action);
+    }
+  });
   return (
     <div className="input-study-stack input-study-form">
       <div className="input-study-field">
         <label htmlFor={id}>Workspace address</label>
-        <Input
+        <MeasuredInput
+          subject={ctx.subject}
           id={id}
           aria-describedby={`${id}-hint ${id}-result`}
+          dir="ltr"
           prefix="@"
           value={value}
           placeholder="Choose an address"
@@ -286,7 +357,7 @@ export function InputLive(): ReactElement {
         />
         <div className="input-study-support">
           <Text id={`${id}-hint`} size="caption-l" color="muted">
-            Use letters, numbers and hyphens.
+            <bdi>Enter the part after @ using letters, numbers, and hyphens.</bdi>
           </Text>
           <Text
             id={`${id}-result`}
@@ -295,53 +366,15 @@ export function InputLive(): ReactElement {
             role="status"
             aria-atomic="true"
           >
-            {result}
+            <bdi>{result}</bdi>
           </Text>
         </div>
-      </div>
-      <div className="input-study-actions">
-        <button
-          type="button"
-          className="input-study-button"
-          aria-disabled={!value || busy}
-          onClick={() => {
-            if (value && !busy) {
-              setPhase('checking');
-            }
-          }}
-        >
-          Start check
-        </button>
-        <button
-          type="button"
-          className="input-study-button"
-          aria-disabled={!busy}
-          onClick={() => {
-            if (busy) {
-              setPhase('available');
-            }
-          }}
-        >
-          Available
-        </button>
-        <button
-          type="button"
-          className="input-study-button"
-          aria-disabled={!busy}
-          onClick={() => {
-            if (busy) {
-              setPhase('taken');
-            }
-          }}
-        >
-          Taken
-        </button>
       </div>
     </div>
   );
 }
 
-export function InputOverflow(): ReactElement {
+export function InputOverflow({ ctx }: PreviewProps): ReactElement {
   const id = useId();
   return (
     <div className="input-study-grid">
@@ -349,11 +382,18 @@ export function InputOverflow(): ReactElement {
         htmlFor={`${id}-affixes`}
         label="Long affixes"
         descriptionId={`${id}-hint`}
-        description="The affixes truncate first. Use the arrow keys to reach the ends of the value."
+        description={
+          <bdi>
+            The archive adds https://archive.example/ before the name and /published/overview after
+            it.
+          </bdi>
+        }
       >
-        <Input
+        <MeasuredInput
+          subject={ctx.subject}
           id={`${id}-affixes`}
           aria-describedby={`${id}-hint`}
+          dir="ltr"
           prefix="https://archive.example/"
           suffix="/published/overview"
           defaultValue="collection-with-a-long-title"
@@ -364,9 +404,10 @@ export function InputOverflow(): ReactElement {
         htmlFor={`${id}-url`}
         label="Reference URL · LTR value"
         descriptionId={`${id}-directions`}
-        description="The address reads left to right. The label and help follow the surrounding direction."
+        description={<bdi>Paste the full address of the reference.</bdi>}
       >
-        <Input
+        <MeasuredInput
+          subject={ctx.subject}
           id={`${id}-url`}
           aria-describedby={`${id}-directions`}
           type="url"
@@ -376,10 +417,16 @@ export function InputOverflow(): ReactElement {
         />
       </FormField>
       <Sample title="Auto width">
-        <Input width="auto" aria-label="Short reference code" defaultValue="COL-014" />
+        <MeasuredInput
+          subject={ctx.subject}
+          width="auto"
+          aria-label="Short reference code"
+          defaultValue="COL-014"
+        />
       </Sample>
       <Sample title="Full width">
-        <Input
+        <MeasuredInput
+          subject={ctx.subject}
           aria-label="Long collection name"
           defaultValue="Working papers and research on public design systems"
         />
@@ -388,22 +435,38 @@ export function InputOverflow(): ReactElement {
   );
 }
 
-export function InputSurfaces({ overlay }: { readonly overlay: boolean }): ReactElement {
+export function InputSurfaces({ ctx }: PreviewProps): ReactElement {
   const id = useId();
   const fields = (
     <div className="input-study-stack">
-      <Input aria-label="Collection name" defaultValue="Research notes" clearable />
-      <Input aria-label="New collection name" placeholder="Add a name" />
-      <Input
+      <MeasuredInput
+        subject={ctx.subject}
+        aria-label="Collection name"
+        defaultValue="Research notes"
+        clearable
+      />
+      <MeasuredInput
+        subject={ctx.subject}
+        aria-label="New collection name"
+        placeholder="Add a name"
+      />
+      <MeasuredInput
+        subject={ctx.subject}
         aria-label="Inline name"
         variant="ghost"
         defaultValue="Research notes"
         placeholder="Name this collection"
       />
       <FormField htmlFor={id} label="Empty inline name">
-        <Input id={id} variant="ghost" placeholder="Name this collection" />
+        <MeasuredInput
+          subject={ctx.subject}
+          id={id}
+          variant="ghost"
+          placeholder="Name this collection"
+        />
       </FormField>
-      <Input
+      <MeasuredInput
+        subject={ctx.subject}
         aria-label="Work email"
         type="email"
         dir="ltr"
@@ -413,64 +476,11 @@ export function InputSurfaces({ overlay }: { readonly overlay: boolean }): React
       />
     </div>
   );
-  return overlay ? (
+  return ctx.surface === 'overlay' ? (
     <div className="unica-overlay-surface input-study-overlay" data-surface="overlay">
       {fields}
     </div>
   ) : (
     fields
-  );
-}
-
-export function InputFormExample({
-  id,
-  external,
-}: {
-  readonly id: string;
-  readonly external?: boolean | undefined;
-}): ReactElement {
-  const [submission, setSubmission] = useState('');
-  const formId = `${id}-form`;
-  const field = (
-    <div className="input-study-field">
-      <label htmlFor={id}>Workspace name</label>
-      <Input
-        id={id}
-        name="workspace"
-        defaultValue="Folio"
-        clearable
-        required
-        aria-describedby={`${id}-hint`}
-        form={external ? formId : undefined}
-      />
-      <Text id={`${id}-hint`} size="caption-l" color="muted">
-        Shown to members of your workspace.
-      </Text>
-    </div>
-  );
-  return (
-    <div className="input-study-stack input-study-form">
-      {external && field}
-      <form
-        id={formId}
-        className="input-study-stack"
-        onSubmit={(event) => {
-          event.preventDefault();
-          const submitted = new FormData(event.currentTarget).get('workspace');
-          setSubmission(typeof submitted === 'string' ? submitted : '');
-        }}
-      >
-        {!external && field}
-        <div className="input-study-actions">
-          <button type="submit" className="input-study-button">
-            Submit
-          </button>
-          <button type="reset" className="input-study-button">
-            Reset
-          </button>
-        </div>
-      </form>
-      <output aria-live="polite">{submission && `Submitted: ${submission}`}</output>
-    </div>
   );
 }

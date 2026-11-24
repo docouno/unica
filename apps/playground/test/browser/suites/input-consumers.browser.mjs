@@ -186,6 +186,13 @@ export default {
       ['workspace', 'Folio'],
     ]);
 
+    await editor.fill('Latest committed name');
+    await editor.evaluate((node) => node.form.reset());
+    assert.equal(await editor.inputValue(), 'Latest committed name');
+    assert.deepEqual(await editor.evaluate((node) => [...new FormData(node.form)]), [
+      ['workspace', 'Latest committed name'],
+    ]);
+
     await open(page, { item: 'form-field', tab: 'states', block: 'overflow' });
     const group = page.getByRole('group', { name: 'Review window' });
     const start = group.getByLabel('Start', { exact: true });
@@ -245,10 +252,17 @@ export default {
       raw: '1',
     });
     const grid = page.locator('.input-study-grid');
-    const available = await grid.evaluate((node) => ({
-      grid: node.offsetWidth,
-      stage: node.parentElement.clientWidth,
-    }));
+    const available = await grid.evaluate((node) => {
+      const parent = node.parentElement;
+      const style = getComputedStyle(parent);
+      return {
+        grid: node.offsetWidth,
+        stage:
+          parent.clientWidth -
+          parseFloat(style.paddingInlineStart) -
+          parseFloat(style.paddingInlineEnd),
+      };
+    });
     assert.equal(available.grid, available.stage);
     for (const name of ['Long affixes', 'Reference URL · LTR value']) {
       const field = grid.getByLabel(name, { exact: true }).locator('..');

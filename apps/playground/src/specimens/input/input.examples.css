@@ -1,3 +1,9 @@
+td:has(.input-study-subject) {
+  min-inline-size: 17rem;
+}
+ul:has(> [data-wb-result-row] .input-study-subject) {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 17rem), 1fr));
+}
 .input-study-stack,
 .input-study-field,
 .input-study-support {
@@ -7,6 +13,10 @@
   align-content: start;
 }
 
+.input-study-stack,
+.input-study-field {
+  inline-size: 100%;
+}
 .input-study-grid {
   display: grid;
   inline-size: 100%;
@@ -36,34 +46,6 @@
   grid-template-columns: minmax(0, 6rem) minmax(0, 1fr);
   align-items: center;
   gap: var(--space-12);
-}
-
-.input-study-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-8);
-}
-
-.input-study-button {
-  justify-self: start;
-  min-block-size: var(--size-s-height);
-  padding-inline: var(--size-s-padding-x);
-  border: 1px solid var(--control-border);
-  border-radius: var(--size-s-radius);
-  background: var(--control-bg);
-  color: var(--fg-primary);
-  font: inherit;
-  cursor: pointer;
-}
-
-.input-study-button[aria-disabled='true'] {
-  color: var(--fg-disabled);
-  cursor: default;
-}
-
-.input-study-button:focus-visible {
-  outline: 2px solid var(--focus-ring-color);
-  outline-offset: 2px;
 }
 
 .input-study-form {
