@@ -1,6 +1,7 @@
 import { Flex, Stack, Text } from '@docouno/unica';
 import type { ReactElement } from 'react';
 import { previewText } from '../preview-code.js';
+import './activity-name.css';
 
 export const labelledByText = {
   kind: 'string',

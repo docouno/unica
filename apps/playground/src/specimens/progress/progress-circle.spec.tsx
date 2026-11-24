@@ -12,7 +12,6 @@ import {
 } from './progress-circle.examples.js';
 import { TransferMeasurements } from './progress-circle-transfers.examples.js';
 import transferSource from './progress-circle-transfers.examples.tsx?raw';
-import './progress-circle.examples.css';
 
 const props = {
   size: {
