@@ -14,6 +14,58 @@ async function navigate(page, params) {
 }
 
 export default {
+  'Bounds follows the accordion when its header opens inside a composition': async ({
+    page,
+    mount,
+  }) => {
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await mount('workbench-v3');
+    await navigate(page, {
+      item: 'accordion',
+      tab: 'compositions',
+      block: 'actions',
+      family: 'frost',
+      scheme: 'light',
+      surface: 'overlay',
+      vp: '360',
+      scale: '120',
+      dir: 'rtl',
+      bounds: '1',
+      freeze: '1',
+    });
+    const board = page.locator('[data-wb-block="actions"] .wb-artboard');
+    const roots = board.locator('.accordion-proto[data-wb-subject]');
+    await roots.first().waitFor();
+    assert.equal(await roots.count(), 3);
+    const before = await roots.first().evaluate((el) => [el.offsetWidth, el.offsetHeight]);
+    await page
+      .getByText(before.join(' × ') + ' px', { exact: true })
+      .first()
+      .waitFor();
+    await board.getByRole('button', { name: 'Preview link', exact: true }).press('Enter');
+    const url = board.getByText('https://preview.example.com/releases/2.4', { exact: true });
+    await url.waitFor();
+    const gapBelowUrl = await url.evaluate((element) => {
+      const range = document.createRange();
+      range.selectNodeContents(element);
+      return (
+        element.nextElementSibling.getBoundingClientRect().top -
+        range.getBoundingClientRect().bottom
+      );
+    });
+    assert.ok(gapBelowUrl >= 0, 'The complete URL fits above the expiration note');
+    await page.waitForFunction(([width, height]) => {
+      const accordion = document.querySelector('[data-wb-block="actions"] .accordion-proto');
+      if (!accordion || accordion.offsetWidth !== width || accordion.offsetHeight <= height) {
+        return false;
+      }
+      const dimensions = `${width} × ${accordion.offsetHeight} px`;
+      return [...document.querySelectorAll('[data-wb-bounds-label]')].some(
+        (label) => label.textContent === dimensions,
+      );
+    }, before);
+  },
+
   'Overlay disclosures stay under the pointer when their content opens': async ({
     page,
     mount,

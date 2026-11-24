@@ -182,7 +182,10 @@ export default defineComponent({
       caption:
         'Copy a link from a closed section, fold a reviewed file, or favorite a query while leaving its disclosure state intact.',
       code: actionsSource.replaceAll('../../prototypes/', './prototypes/'),
-      render: withOverlaySurface(HeaderActions, 'border-box'),
+      render: withOverlaySurface(
+        ({ ctx }) => <HeaderActions accordionProps={ctx.subject} />,
+        'border-box',
+      ),
     },
   ],
 });

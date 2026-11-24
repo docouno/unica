@@ -8,9 +8,12 @@ import {
 } from '../../prototypes/disclosure/disclosure.proto.js';
 import type { PreviewProps } from '../../workbench/types.js';
 
-function AccessGroup({ exclusive = false }: { readonly exclusive?: boolean }): ReactElement {
+function AccessGroup({
+  ctx,
+  exclusive = false,
+}: PreviewProps & { readonly exclusive?: boolean }): ReactElement {
   return (
-    <Accordion headingLevel={3} defaultValue={['review']} exclusive={exclusive}>
+    <Accordion {...ctx.subject} headingLevel={3} defaultValue={['review']} exclusive={exclusive}>
       <AccordionItem value="review">
         <AccordionTrigger>Review permissions</AccordionTrigger>
         <AccordionContent>
@@ -27,33 +30,33 @@ function AccessGroup({ exclusive = false }: { readonly exclusive?: boolean }): R
   );
 }
 
-export function OpeningModes(): ReactElement {
+export function OpeningModes({ ctx }: PreviewProps): ReactElement {
   return (
     <div className="disclosure-study disclosure-study-grid" data-example-disclosure="">
       <div className="disclosure-study-sample">
         <Text className="disclosure-study-label" size="caption-l" color="muted">
           Several sections
         </Text>
-        <AccessGroup />
+        <AccessGroup ctx={ctx} />
       </div>
       <div className="disclosure-study-sample">
         <Text className="disclosure-study-label" size="caption-l" color="muted">
           One section at a time
         </Text>
-        <AccessGroup exclusive />
+        <AccessGroup ctx={ctx} exclusive />
       </div>
     </div>
   );
 }
 
-export function TriggerStudy(): ReactElement {
+export function TriggerStudy({ ctx }: PreviewProps): ReactElement {
   return (
     <div className="disclosure-study disclosure-study-grid" data-example-disclosure="">
       <div className="disclosure-study-sample">
         <Text className="disclosure-study-label" size="caption-l" color="muted">
           Available and unavailable triggers
         </Text>
-        <Accordion headingLevel={3}>
+        <Accordion {...ctx.subject} headingLevel={3}>
           <AccordionItem value="scope">
             <AccordionTrigger>Access scope</AccordionTrigger>
             <AccordionContent>
@@ -72,7 +75,7 @@ export function TriggerStudy(): ReactElement {
         <Text className="disclosure-study-label" size="caption-l" color="muted">
           Initially open, unavailable trigger
         </Text>
-        <Accordion headingLevel={3} exclusive defaultValue={['scope']}>
+        <Accordion {...ctx.subject} headingLevel={3} exclusive defaultValue={['scope']}>
           <AccordionItem value="scope" disabled>
             <AccordionTrigger>Access scope</AccordionTrigger>
             <AccordionContent>
@@ -105,7 +108,7 @@ export function OverlayAccess({ ctx }: PreviewProps): ReactElement {
       <Title as="h2" size="heading-s">
         Workspace access
       </Title>
-      <AccessGroup />
+      <AccessGroup ctx={ctx} />
     </div>
   );
 }

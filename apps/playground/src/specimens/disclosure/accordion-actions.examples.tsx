@@ -22,7 +22,7 @@ import {
 
 const previewUrl = 'https://preview.example.com/releases/2.4';
 
-function ReleasePreview() {
+function ReleasePreview({ accordionProps = {} } = {}) {
   const [copyLabel, setCopyLabel] = useState('Copy link');
 
   useEffect(() => {
@@ -48,7 +48,7 @@ function ReleasePreview() {
       <Title as="h2" size="heading-s">
         Release preview
       </Title>
-      <Accordion headingLevel={3} size="s" defaultValue={['access']}>
+      <Accordion {...accordionProps} headingLevel={3} size="s" defaultValue={['access']}>
         <AccordionItem value="link">
           <AccordionTrigger
             action={
@@ -67,7 +67,9 @@ function ReleasePreview() {
           </AccordionTrigger>
           <AccordionContent>
             <Stack gap={4}>
-              <Code plate={false}>{previewUrl}</Code>
+              <Code size="s" plate={false}>
+                {previewUrl}
+              </Code>
               <bdi>Available until Friday at 18:00 UTC.</bdi>
             </Stack>
           </AccordionContent>
@@ -88,7 +90,7 @@ const changedFiles = [
   { name: 'pricing.test.ts', diff: '- expect(total).toBe(218.9);\n+ expect(total).toBe(219);' },
 ];
 
-function FileReview() {
+function FileReview({ accordionProps = {} } = {}) {
   const [expanded, setExpanded] = useState(['pricing.ts']);
   const [reviewed, setReviewed] = useState(['pricing.test.ts']);
 
@@ -111,6 +113,7 @@ function FileReview() {
         </Text>
       </Flex>
       <Accordion
+        {...accordionProps}
         headingLevel={3}
         size="s"
         value={expanded}
@@ -154,7 +157,7 @@ const queries = [
 ];
 const filledStar = defineGlyph((props) => <StarIcon {...props} weight="fill" />);
 
-function QueryLibrary() {
+function QueryLibrary({ accordionProps = {} } = {}) {
   const [favorites, setFavorites] = useState(['Slow requests']);
 
   return (
@@ -162,7 +165,7 @@ function QueryLibrary() {
       <Title as="h2" size="heading-s">
         Query library
       </Title>
-      <Accordion headingLevel={3} size="s" defaultValue={['Slow requests']}>
+      <Accordion {...accordionProps} headingLevel={3} size="s" defaultValue={['Slow requests']}>
         {queries.map(({ name, description }) => {
           const favorite = favorites.includes(name);
           return (
@@ -198,12 +201,12 @@ function QueryLibrary() {
   );
 }
 
-export function HeaderActions() {
+export function HeaderActions({ accordionProps = {} } = {}) {
   return (
     <Stack gap={16} style={{ inlineSize: 'min(100%, 27rem)' }}>
-      <ReleasePreview />
-      <FileReview />
-      <QueryLibrary />
+      <ReleasePreview accordionProps={accordionProps} />
+      <FileReview accordionProps={accordionProps} />
+      <QueryLibrary accordionProps={accordionProps} />
     </Stack>
   );
 }
