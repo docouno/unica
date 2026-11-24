@@ -1,400 +1,118 @@
-import { previewProps, previewText } from '../preview-code.js';
-import { useId, useState } from 'react';
-import type { ReactElement } from 'react';
-import { Badge, Text, Title } from '@docouno/unica';
-import type { BadgeProps, BadgeStatus, GlyphSource } from '@docouno/unica';
-import {
-  CheckCircleIcon,
-  ClockIcon,
-  FileTextIcon,
-  InfoIcon,
-  LockSimpleIcon,
-  SealCheckIcon,
-  SparkleIcon,
-  WarningCircleIcon,
-  WarningIcon,
-} from '@phosphor-icons/react';
 import { defineComponent } from '../../workbench/types.js';
-import './badge.examples.css';
+import type { ComponentValues, PropSchema } from '../../workbench/types.js';
+import { withOverlaySurface } from '../shared/with-overlay-surface.js';
+import { badgeCode } from './badge-code.js';
+import { InlineExample } from './badge-inline.examples.js';
+import inlineSource from './badge-inline.examples.tsx?raw';
+import { BadgePlayground } from './badge-playground.js';
+import {
+  ChangesExample,
+  CountsExample,
+  InteractionExample,
+  OverflowExample,
+  PaletteExample,
+  PinnedInteractionExample,
+} from './badge.examples.js';
 
-const statuses: readonly {
-  status: BadgeStatus;
-  label: string;
-  icon: GlyphSource;
-}[] = [
-  { status: 'neutral', label: 'Draft', icon: FileTextIcon },
-  { status: 'accent', label: 'Beta', icon: SparkleIcon },
-  { status: 'info', label: 'In review', icon: InfoIcon },
-  { status: 'success', label: 'Verified', icon: CheckCircleIcon },
-  { status: 'warning', label: 'Needs review', icon: WarningIcon },
-  { status: 'danger', label: 'Blocked', icon: WarningCircleIcon },
-];
-const sizes = ['s', 'm', 'l'] as const;
-const bounded = (width: string): BadgeProps['style'] => ({ '--badge-max-width': width });
-const glyphs = { none: undefined, InfoIcon, CheckCircleIcon } as const;
+const props = {
+  status: {
+    kind: 'enum',
+    group: 'Role',
+    default: 'neutral',
+    description: 'Meaning of the label and its leading cue.',
+    choices: [
+      { value: 'neutral' },
+      { value: 'accent' },
+      { value: 'info' },
+      { value: 'success' },
+      { value: 'warning' },
+      { value: 'danger' },
+    ],
+  },
+  size: {
+    kind: 'enum',
+    group: 'Geometry',
+    default: 'm',
+    description: 'Minimum badge height, label size and leading cue size.',
+    choices: [{ value: 's' }, { value: 'm' }, { value: 'l' }],
+  },
+  dot: {
+    kind: 'boolean',
+    group: 'Content',
+    default: false,
+    description: 'Add a leading status indicator.',
+  },
+  iconLeft: {
+    kind: 'slot',
+    group: 'Content',
+    default: 'none',
+    publicType: 'GlyphSource',
+    description: 'A decorative GlyphSource in the leading slot.',
+    choices: [
+      { value: 'none', label: 'None' },
+      { value: 'InfoIcon', label: 'Info', code: 'InfoIcon' },
+      { value: 'CheckCircleIcon', label: 'Check', code: 'CheckCircleIcon' },
+    ],
+  },
+  children: {
+    kind: 'string',
+    group: 'Content',
+    default: 'Review',
+    examples: ['Review', '0', '99+', ''],
+    publicType: 'ReactNode',
+    description:
+      'Required. This example starts with “Review”. With asChild, put the label inside one native link or button.',
+  },
+  element: {
+    kind: 'enum',
+    group: 'Host',
+    demo: true,
+    default: 'span',
+    description: 'Choose a passive span or supply a native link or button through Badge.asChild.',
+    choices: [
+      { value: 'span', label: 'Passive' },
+      { value: 'a', label: 'Link' },
+      { value: 'button', label: 'Button' },
+    ],
+  },
+  href: {
+    kind: 'enum',
+    group: 'Host',
+    demo: true,
+    default: 'none',
+    description: 'Add a fragment destination to the anchor.',
+    choices: [
+      { value: 'none', label: 'No destination' },
+      { value: 'details', label: 'Details' },
+    ],
+  },
+  disabled: {
+    kind: 'boolean',
+    group: 'Host',
+    demo: true,
+    default: false,
+    description: 'Disable the native button.',
+  },
+  onClick: {
+    kind: 'action',
+    group: 'Host',
+    demo: true,
+    code: 'handleClick',
+    description:
+      'The sample records activation of a link with a destination or an enabled details button.',
+  },
+} as const satisfies PropSchema;
 
-function Palette(): ReactElement {
-  return (
-    <div className="badge-example-stack">
-      {statuses.map(({ status, label, icon }) => (
-        <div className="badge-example-matrix-row" key={status}>
-          <span className="badge-example-caption">{status}</span>
-          <div className="badge-example-row">
-            <Badge status={status}>{label}</Badge>
-            <Badge status={status} dot>
-              {label}
-            </Badge>
-            <Badge status={status} iconLeft={icon}>
-              {label}
-            </Badge>
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-function Scale(): ReactElement {
-  return (
-    <div className="badge-example-stack">
-      {sizes.map((size, index) => (
-        <div className="badge-example-matrix-row" key={size}>
-          <span className="badge-example-caption">
-            {size.toUpperCase()} · {20 + index * 4}px
-          </span>
-          <div className="badge-example-row">
-            <Badge size={size}>Private</Badge>
-            <Badge size={size} status="success" dot>
-              Verified
-            </Badge>
-            <Badge size={size} status="neutral" iconLeft={LockSimpleIcon}>
-              Private
-            </Badge>
-            <span className="badge-example-row">
-              <Badge size={size}>4</Badge>
-              <Text as="span" size="caption-l" color="secondary">
-                comments
-              </Text>
-            </span>
-          </div>
-        </div>
-      ))}
-      <div className="badge-example-rule" />
-      <div className="badge-example-row" role="group" aria-label="Inline counts">
-        {[0, 4, 11, 99, '99+', '1204'].map((count) => (
-          <Badge key={count}>{count}</Badge>
-        ))}
-      </div>
-      <Text size="caption-l" color="secondary">
-        Zero is a value. The application chooses when to hide it or cap a count.
-      </Text>
-    </div>
-  );
-}
-
-function Inline(): ReactElement {
-  return (
-    <div className="badge-example-stack">
-      <Text className="badge-example-prose">
-        The document is{' '}
-        <Badge size="s" status="success">
-          Verified
-        </Badge>{' '}
-        and ready to share.
-      </Text>
-      <Text className="badge-example-prose">
-        The service is{' '}
-        <Badge size="s" status="success" dot>
-          Online
-        </Badge>{' '}
-        in every region.
-      </Text>
-      <Text className="badge-example-prose">
-        This record is{' '}
-        <Badge size="s" iconLeft={LockSimpleIcon}>
-          Private
-        </Badge>{' '}
-        to your workspace.
-      </Text>
-      <Title as="h3" size="heading-m" className="badge-example-prose">
-        Release notes <Badge status="accent">Beta</Badge>
-      </Title>
-      <div className="badge-example-rule" />
-      <div className="badge-example-record">
-        <Text size="body-s" weight="medium">
-          API reference
-        </Text>
-        <div className="badge-example-row">
-          <Badge size="s">v2.8</Badge>
-          <Badge size="s" status="success">
-            Published
-          </Badge>
-        </div>
-      </div>
-      <div className="badge-example-record">
-        <Text size="body-s" weight="medium">
-          Migration guide
-        </Text>
-        <Badge size="s" status="warning">
-          Needs review
-        </Badge>
-      </div>
-      <Text size="caption-l" color="secondary">
-        S fits running text and dense rows. M is the default; L is for prominent metadata.
-      </Text>
-    </div>
-  );
-}
-
-function Overflow(): ReactElement {
-  return (
-    <div className="badge-example-stack">
-      <div className="badge-example-record">
-        <Text size="body-s">Category</Text>
-        <Badge style={bounded('180px')}>Infrastructure and reliability engineering</Badge>
-      </div>
-      <Text size="caption-l" color="secondary">
-        Infrastructure and reliability engineering
-      </Text>
-      <div className="badge-example-row">
-        <Badge status="warning" dot style={bounded('148px')}>
-          Review required before release
-        </Badge>
-        <Badge status="neutral" iconLeft={LockSimpleIcon} style={bounded('148px')}>
-          Restricted to workspace members
-        </Badge>
-      </div>
-      <Text size="caption-l" color="secondary">
-        Review required before release · Restricted to workspace members
-      </Text>
-      <div className="badge-example-row">
-        <Badge status="warning" dot style={bounded('72px')}>
-          Needs review
-        </Badge>
-        <Badge iconLeft={LockSimpleIcon} style={bounded('72px')}>
-          Restricted
-        </Badge>
-      </div>
-      <div className="badge-example-wrap">
-        <Badge size="s">Documentation</Badge>
-        <Badge size="s">Infrastructure</Badge>
-        <Badge size="s" status="accent">
-          v2.8.0-rc.1
-        </Badge>
-        <Badge size="s" status="info">
-          Awaiting approval
-        </Badge>
-      </div>
-      <Text size="caption-l" color="secondary">
-        Labels stay on one line; groups wrap between badges. Keep essential statuses short. A
-        shortened label needs its full meaning nearby.
-      </Text>
-    </div>
-  );
-}
-
-function Interaction(): ReactElement {
-  const id = useId();
-  const [details, setDetails] = useState(false);
-  return (
-    <div className="badge-example-stack">
-      <div className="badge-example-state-grid">
-        {(['rest', 'hover', 'active', 'focus', 'disabled'] as const).map((state) => (
-          <div className="badge-example-state" key={state}>
-            <span className="badge-example-caption">{state}</span>
-            <Badge asChild status="info" data-badge-example-state={state}>
-              <button type="button" disabled={state === 'disabled'}>
-                In review
-              </button>
-            </Badge>
-          </div>
-        ))}
-      </div>
-      <Text size="caption-l" color="secondary">
-        Pinned button states above. Underlined labels can be inspected; passive badges have no hover
-        or focus treatment.
-      </Text>
-      <div className="badge-example-row">
-        <Badge status="success" dot>
-          Verified
-        </Badge>
-        <Badge asChild>
-          <a>No destination</a>
-        </Badge>
-        <Badge asChild>
-          <a href={`#${id}`}>v2.8</a>
-        </Badge>
-        <Badge asChild status="info" iconLeft={InfoIcon}>
-          <button
-            type="button"
-            aria-expanded={details}
-            aria-controls={`${id}-details`}
-            onClick={() => setDetails(!details)}
-          >
-            In review
-          </button>
-        </Badge>
-      </div>
-      <div id={`${id}-details`} hidden={!details} className="badge-example-detail">
-        <Text size="body-s">Two reviewers are checking the latest changes.</Text>
-        <Text size="caption-l" color="secondary">
-          The trigger keeps focus. Activate it again to close these details.
-        </Text>
-      </div>
-      <Text id={id} tabIndex={-1} size="body-s" className="badge-example-destination">
-        Version 2.8 adds workspace sharing and improves search.
-      </Text>
-      <Text size="caption-l" color="secondary">
-        Try Tab, Enter and Space. The version is a real in-page link; the review marker opens
-        details. For a standalone touch action, use a larger surrounding control.
-      </Text>
-    </div>
-  );
-}
-
-const lifecycle: readonly { label: string; status: BadgeStatus; icon: GlyphSource }[] = [
-  { label: 'Not checked', status: 'neutral', icon: FileTextIcon },
-  { label: 'Checking', status: 'info', icon: ClockIcon },
-  { label: 'Verified', status: 'success', icon: SealCheckIcon },
-  { label: 'Needs review', status: 'warning', icon: WarningIcon },
-  { label: 'Blocked', status: 'danger', icon: WarningCircleIcon },
-];
-function Changes(): ReactElement {
-  const [step, setStep] = useState(0);
-  const current = lifecycle[step]!;
-  return (
-    <div className="badge-example-stack">
-      <div className="badge-example-record">
-        <Text size="body-s" weight="medium">
-          Document check
-        </Text>
-        <span
-          className="badge-example-status-slot"
-          role="status"
-          aria-live="polite"
-          aria-atomic="true"
-        >
-          <Badge status={current.status} iconLeft={current.icon}>
-            {current.label}
-          </Badge>
-        </span>
-      </div>
-      <div className="badge-example-row">
-        <button
-          type="button"
-          className="badge-example-control"
-          onClick={() => setStep((step + 1) % lifecycle.length)}
-        >
-          Next status
-        </button>
-        <button
-          type="button"
-          className="badge-example-control"
-          onClick={() => setStep(0)}
-          disabled={step === 0}
-        >
-          Reset
-        </button>
-      </div>
-      <Text size="caption-l" color="secondary">
-        Manual state preview. Updates are immediate, with no pulse, spin or crossfade. Only this
-        result region announces changes; ordinary badges stay silent.
-      </Text>
-    </div>
-  );
-}
+export type BadgeValues = ComponentValues<typeof props>;
 
 export default defineComponent({
   id: 'badge',
   title: 'Badge',
   category: 'Feedback & Status',
   status: 'UI',
-  summary: 'Quiet metadata, clear status. One marker, six semantic tones, three compact sizes.',
+  summary: 'Compact inline labels for an object’s status, category, version or count.',
   componentName: 'Badge',
-  props: {
-    status: {
-      kind: 'enum',
-      group: 'Appearance',
-      default: 'neutral',
-      description: 'The meaning signaled by the badge.',
-      choices: [
-        { value: 'neutral' },
-        { value: 'accent' },
-        { value: 'info' },
-        { value: 'success' },
-        { value: 'warning' },
-        { value: 'danger' },
-      ],
-    },
-    size: {
-      kind: 'enum',
-      group: 'Appearance',
-      default: 'm',
-      description: 'The badge density.',
-      choices: [{ value: 's' }, { value: 'm' }, { value: 'l' }],
-    },
-    dot: {
-      kind: 'boolean',
-      group: 'Appearance',
-      default: false,
-      description: 'Add a leading status indicator.',
-    },
-    iconLeft: {
-      kind: 'slot',
-      group: 'Content',
-      default: 'none',
-      description: 'A decorative GlyphSource in the leading slot.',
-      choices: [
-        { value: 'none', label: 'None' },
-        { value: 'InfoIcon', label: 'Info', code: 'InfoIcon' },
-        { value: 'CheckCircleIcon', label: 'Check', code: 'CheckCircleIcon' },
-      ],
-    },
-    children: {
-      kind: 'string',
-      group: 'Content',
-      default: 'Reviewed',
-      examples: ['Reviewed', '0', '99+', ''],
-      description: 'The visible badge label or count.',
-    },
-    element: {
-      kind: 'enum',
-      group: 'Native element',
-      demo: true,
-      default: 'span',
-      description: 'Compose Badge with a native link or button using asChild.',
-      choices: [
-        { value: 'span', label: 'Passive' },
-        { value: 'a', label: 'Link' },
-        { value: 'button', label: 'Button' },
-      ],
-    },
-    href: {
-      kind: 'enum',
-      group: 'Native element',
-      demo: true,
-      default: 'none',
-      description: 'Add a fragment destination to the anchor.',
-      choices: [
-        { value: 'none', label: 'No destination' },
-        { value: 'details', label: 'Details' },
-      ],
-    },
-    disabled: {
-      kind: 'boolean',
-      group: 'Native element',
-      demo: true,
-      default: false,
-      description: 'Disable the native button.',
-    },
-    onClick: {
-      kind: 'action',
-      group: 'Native element',
-      demo: true,
-      code: 'handleClick',
-      description: 'Record activation of the native link or button.',
-    },
-  },
+  props,
   constraints: [
     ...(['InfoIcon', 'CheckCircleIcon'] as const).map((iconLeft) => ({
       kind: 'precedence' as const,
@@ -421,111 +139,109 @@ export default defineComponent({
       reason: 'An empty label renders no badge.',
     },
   ],
-  render: ({ ctx, values: { element, href, disabled, children, iconLeft, ...props } }) => {
-    const frame = { ...ctx.subject, ...props, iconLeft: glyphs[iconLeft] };
-    const onClick = (): void => ctx.action('onClick')(children);
-    if (element === 'button') {
-      return (
-        <Badge {...frame} asChild>
-          <button type="button" disabled={disabled} onClick={onClick}>
-            {children}
-          </button>
-        </Badge>
-      );
-    }
-    if (element === 'a') {
-      const hasDestination = href === 'details';
-      const id = `${ctx.id}-destination`;
-      return (
-        <div className="badge-example-row">
-          <Badge {...frame} asChild>
-            <a
-              href={hasDestination ? `#${id}` : undefined}
-              onClick={hasDestination ? onClick : undefined}
-            >
-              {children}
-            </a>
-          </Badge>
-          {hasDestination && children.trim() && (
-            <Text
-              as="span"
-              size="caption-l"
-              id={id}
-              tabIndex={-1}
-              className="badge-example-destination"
-            >
-              Metadata details
-            </Text>
-          )}
-        </div>
-      );
-    }
-    return <Badge {...frame}>{children}</Badge>;
-  },
-  code: ({ element, href, disabled, children, iconLeft, ...props }) => {
-    const attributes = previewProps(props, { status: 'neutral', size: 'm', dot: false });
-    const glyph = iconLeft === 'none' ? '' : ` iconLeft={${iconLeft}}`;
-    const label = previewText(children);
-    if (element === 'span') {
-      return `<Badge${attributes}${glyph}>${label}</Badge>`;
-    }
-    const native =
-      element === 'button'
-        ? `<button type="button"${disabled ? ' disabled' : ''} onClick={handleClick}>${label}</button>`
-        : `<a${href === 'details' ? ' href="#badge-destination" onClick={handleClick}' : ''}>${label}</a>`;
-    return `<Badge asChild${attributes}${glyph}>\n  ${native}\n</Badge>`;
-  },
-  matrixViews: [
+  render: withOverlaySurface(BadgePlayground, 'border-box'),
+  code: badgeCode,
+  states: [
     {
       id: 'palette',
       rows: 'status',
       cols: 'dot',
-      title: 'Meaning & anatomy',
-      caption: 'Text, signal or glyph. Color supports the words; it never replaces them.',
-      reference: () => <Palette />,
+      title: 'Status and leading dot',
+      caption: 'Compare the same label in six statuses, with and without its decorative dot.',
     },
     {
       id: 'scale',
       rows: 'size',
       cols: 'dot',
-      title: 'Sizes & inline counts',
-      reference: () => <Scale />,
+      title: 'Label and cue sizes',
+      fixed: { status: 'info', children: 'Review' },
+      caption: 'Compare the minimum height, text and leading dot at each of the three sizes.',
     },
   ],
   cases: [
     {
-      id: 'overflow',
-      title: 'Long labels & narrow spaces',
+      id: 'counts',
+      title: 'Counts in context',
       kind: 'content',
-      render: () => <Overflow />,
+      mode: 'pinned',
+      caption:
+        'A count shares the surrounding baseline. Zero is a value, and the application chooses whether to cap large quantities.',
+      render: withOverlaySurface(CountsExample, 'border-box'),
+    },
+    {
+      id: 'overflow',
+      title: 'Long labels and narrow spaces',
+      kind: 'content',
+      mode: 'pinned',
+      caption:
+        'The leading cue keeps its size while a long label shortens. Read the full labels next to each example and compare where a group wraps.',
+      render: withOverlaySurface(OverflowExample, 'border-box'),
+    },
+    {
+      id: 'button-states',
+      title: 'Native button states',
+      kind: 'behavior',
+      mode: 'pinned',
+      caption:
+        'Compare the resting, hovered, pressed, focused and disabled appearances of the same native button.',
+      render: withOverlaySurface(PinnedInteractionExample, 'border-box'),
     },
     {
       id: 'interaction',
       title: 'Inspectable metadata',
       kind: 'behavior',
-      render: () => <Interaction />,
+      mode: 'live',
+      reset: true,
+      caption:
+        'Tab reaches the version link and the review button. Follow the version to its notes, or open and close review details with Enter or Space.',
+      render: withOverlaySurface(InteractionExample, 'border-box'),
     },
     {
       id: 'changes',
-      mode: 'live',
       title: 'Changing status',
       kind: 'behavior',
-      render: () => <Changes />,
+      mode: 'live',
+      controls: {
+        outcome: {
+          kind: 'enum',
+          label: 'Check result',
+          default: 'verified',
+          choices: [
+            { value: 'verified', label: 'Verified' },
+            { value: 'review', label: 'Needs review' },
+            { value: 'blocked', label: 'Blocked' },
+          ],
+        },
+      },
+      actions: [{ id: 'complete', label: 'Complete pending checks' }],
+      reset: true,
+      caption:
+        'Check a document, choose the result, then complete the pending checks. Each document announces its own progress and result.',
+      render: withOverlaySurface(ChangesExample, 'border-box'),
     },
     {
       id: 'surfaces',
-      title: 'Base and overlay',
+      title: 'Status cues on Base and Overlay',
       kind: 'surface',
+      mode: 'pinned',
       compareSurfaces: true,
-      render: Palette,
+      caption:
+        'Compare each status as text, with a dot and with a glyph. The fill, rim and dot follow the active material.',
+      render: withOverlaySurface(PaletteExample, 'border-box'),
     },
   ],
-  usage: [
+  compositions: [
     {
       id: 'inline',
-      code: `<p>Document status <Badge status="success">Reviewed</Badge></p>`,
       title: 'In the reading flow',
-      render: () => <Inline />,
+      mode: 'pinned',
+      caption:
+        'Small badges align with body text and dense rows. A medium badge marks the heading while keeping its own type size.',
+      code: inlineSource,
+      render: withOverlaySurface(
+        ({ ctx }) => <InlineExample badgeProps={ctx.subject} />,
+        'border-box',
+      ),
     },
   ],
 });
