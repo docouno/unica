@@ -15,6 +15,58 @@ async function navigate(page, params) {
 }
 
 export default {
+  'DatePicker selects the touched day at the edge of its in-flow calendar on a phone': async ({
+    page,
+    mount,
+  }) => {
+    await mount('native');
+    const touch = await page
+      .context()
+      .browser()
+      .newContext({
+        hasTouch: true,
+        isMobile: true,
+        viewport: { width: 360, height: 780 },
+      });
+    try {
+      const mobile = await touch.newPage();
+      const route = new URL('/', page.url());
+      route.search = new URLSearchParams({
+        item: 'date-picker',
+        tab: 'states',
+        family: 'frost',
+        scheme: 'light',
+        dir: 'rtl',
+        scale: '120',
+      }).toString();
+      for (const block of ['panels', 'anatomy']) {
+        route.searchParams.set('block', block);
+        await mobile.goto(route.href, { waitUntil: 'domcontentloaded' });
+        const field = mobile
+          .locator(`[data-wb-block="${block}"] .wb-artboard .date-picker-proto`)
+          .first();
+        const seventh = field.locator('button[data-date="2026-09-07"]');
+        const eighth = field.locator('button[data-date="2026-09-08"]');
+        await seventh.waitFor({ timeout: 20_000 });
+        await mobile.evaluate(() => document.fonts.ready);
+        await seventh.scrollIntoViewIfNeeded();
+        const day = await seventh.boundingBox();
+        const neighbor = await eighth.boundingBox();
+        assert.ok(day && neighbor);
+        await mobile.touchscreen.tap(day.x + 1.5, day.y + day.height / 2);
+        await seventh.waitFor({ state: 'detached' });
+        assert.equal(await field.getByRole('textbox').inputValue(), '07/09/2026', block);
+        assert.ok(day.width >= 44 && day.height >= 44);
+        assert.ok(
+          neighbor.x + neighbor.width <= day.x + 0.01,
+          'The adjacent day has its own touch target',
+        );
+      }
+    } finally {
+      await touch.close();
+    }
+  },
+
   'FileInput submits dropped bytes and follows the actual form owner on reset': async ({
     page,
     mount,

@@ -10,6 +10,8 @@ Use a date field for an exact date, a range field for one complete interval, and
 
 In the Calendar specimen, States compares the three cell sizes for single and range selection. Consecutive months and the Year overview composition both keep the accepted dates visible until a second date completes the replacement period.
 
+In the DatePicker specimen, Schedule a review pairs an optional field with its accepted schedule. A valid entry or calendar choice updates the date. An invalid replacement keeps the accepted schedule, and clearing the field removes the date.
+
 ## Anatomy and geometry
 
 Calendar contains a previous/next navigation header, separate text buttons for month and year, weekday labels and exactly six week rows. Adjacent-month positions are empty noninteractive placeholders; dates never appear twice in a multi-month view. The root has no border, fill or shadow. Digits use tabular figures. Day buttons have a transparent resting background and a theme-derived control radius. All geometry uses logical inline directions.
@@ -92,4 +94,4 @@ The three specimens separate sizes/roles, pinned visual states, material panels 
 
 The preview uses a deterministic today (September 16, 2026). This is not the runtime default. The parser demonstrates en-GB, en-US and de-DE; it is not a complete international parser. Full IME coordination, arbitrary year bounds, controlled/external updates, native form serialization/reset/validation, complete assistive-technology announcements, month/year roving focus and viewport lifecycle are library implementation work. Their intended user outcomes above are fixed by this design; their technical mechanisms remain open. Any incomplete preview behavior must not be interpreted as an alternate product decision.
 
-Useful review routes: Calendar → State hierarchy / Range geometry / Choose a month or year / Year overview; DatePicker → Date & calendar / Field states / Live; DateRangePicker → Period & calendar / Range panel / Live. Existing scenes 03 and 06 show the same family as application consumers. Check all six themes, Base/Overlay, 360–1440px, 120% text and RTL.
+Useful review routes: Calendar → State hierarchy / Range geometry / Choose a month or year / Year overview; DatePicker → Date and calendar / Field states and feedback / Anchored calendar; DateRangePicker → Period & calendar / Range panel / Live. Existing scenes 03 and 06 show the same family as application consumers. Check all six themes, Base/Overlay, 360–1440px, 120% text and RTL.

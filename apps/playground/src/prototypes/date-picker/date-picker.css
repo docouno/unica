@@ -618,6 +618,31 @@
   border-radius: var(--size-m-radius);
   background: var(--bg-canvas);
 }
+.date-inline-study {
+  display: contents;
+}
+.date-narrow-study {
+  max-inline-size: 14rem;
+}
+@media (pointer: coarse) {
+  .date-narrow-study {
+    max-inline-size: 17rem;
+  }
+  /* Let the source and its calendar share the preview gutter on narrow touch screens. */
+  .date-inline-study {
+    display: flex;
+    justify-content: center;
+    inline-size: 100%;
+  }
+  .date-inline-study > :is(.date-picker-proto, .date-study-stack-proto) {
+    flex: none;
+    inline-size: min(21rem, calc(100% + var(--space-32)));
+  }
+  .date-inline-study .date-picker-panel-proto {
+    /* Reserve seven 44px targets plus the two panel borders before adding padding. */
+    padding-inline: clamp(0px, calc((100% - 310px) / 2), var(--space-12));
+  }
+}
 @media (forced-colors: active) {
   .calendar-day-proto[data-edge]:not(:disabled) {
     --date-state-rest: Highlight;

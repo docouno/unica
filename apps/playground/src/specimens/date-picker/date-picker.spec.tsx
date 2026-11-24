@@ -1,94 +1,68 @@
+import {
+  size,
+  variant,
+  status,
+  required,
+  disabled,
+  readOnly,
+  clearable,
+  loading,
+  eventProp,
+} from '../control-props.js';
 import { defineComponent } from '../../workbench/types.js';
 import { DatePicker } from '../../prototypes/date-picker/date-picker.proto.js';
+import { withOverlaySurface } from '../shared/with-overlay-surface.js';
+import { previewProps, previewText } from '../preview-code.js';
+import { Anatomy, FieldStates, Panels, Locales, LivePickers } from './date-picker.examples.js';
+import { ReviewSchedule } from './review-schedule.js';
+import scheduleSource from './review-schedule.tsx?raw';
 
 const reviewDate = '2026-09-16';
+const messages = {
+  neutral: '',
+  info: 'Review dates use the local calendar.',
+  success: 'The review date is confirmed.',
+  warning: 'Check this date with the review owner.',
+  danger: 'Choose a different review date.',
+};
 
 export default defineComponent({
   id: 'date-picker',
   title: 'DatePicker',
   category: 'Selection & Pickers',
   status: 'Proto',
+  componentName: 'DatePicker',
   summary:
-    'Type a date or pick a day. One ordinary text field, a calm calendar, and explicit recovery from invalid input.',
+    'Type a local date, paste an ISO date or choose a day from the calendar. Keep an invalid draft available for correction.',
   props: {
-    variant: {
-      kind: 'enum',
-      group: 'Field',
-      description: 'Default for a standalone field, ghost for inline editing.',
-      default: 'default',
-      choices: [{ value: 'default' }, { value: 'ghost' }],
-    },
-    size: {
-      kind: 'enum',
-      group: 'Field',
-      description: 'The nominal control height at standard text size.',
-      default: 'm',
-      choices: [
-        { value: 's', label: 'S · 30px' },
-        { value: 'm', label: 'M · 40px' },
-        { value: 'l', label: 'L · 48px' },
-      ],
-    },
+    variant,
+    size,
     locale: {
       kind: 'enum',
-      group: 'Field',
-      description: 'The numeric date format and calendar locale.',
+      group: 'Content',
+      description: 'Locale used for numeric input and calendar labels.',
       default: 'en-GB',
+      publicType: 'string',
       choices: [
         { value: 'en-GB', label: 'English (UK)' },
         { value: 'en-US', label: 'English (US)' },
         { value: 'de-DE', label: 'German' },
       ],
     },
-    clearable: {
-      kind: 'boolean',
-      group: 'Availability',
-      description: 'Show a clear action when the field has a value.',
-      default: false,
-    },
-    required: {
-      kind: 'boolean',
-      group: 'Availability',
-      description: 'Require a valid date when editing.',
-      default: false,
-    },
-    readOnly: {
-      kind: 'boolean',
-      group: 'Availability',
-      description: 'Allow calendar inspection while keeping the date fixed.',
-      default: false,
-    },
-    disabled: {
-      kind: 'boolean',
-      group: 'Availability',
-      description: 'Disable date entry and prevent opening the calendar.',
-      default: false,
-    },
+    clearable,
+    required,
+    readOnly: { ...readOnly, description: 'Inspect the calendar while keeping the accepted date.' },
+    disabled,
     status: {
-      kind: 'enum',
-      group: 'Feedback',
-      description: 'Set semantic feedback before any local validation error.',
-      default: 'neutral',
-      choices: [
-        { value: 'neutral' },
-        { value: 'info' },
-        { value: 'success' },
-        { value: 'warning' },
-        { value: 'danger' },
-      ],
+      ...status,
+      description: 'Set a fixed feedback message. Local date validation takes precedence.',
     },
-    loading: {
-      kind: 'boolean',
-      group: 'Feedback',
-      description: 'Show that a date check is pending.',
-      default: false,
-    },
-    onValueChange: {
-      kind: 'action',
-      group: 'Interaction',
-      description: 'Record the selected ISO date or a cleared value.',
-      code: 'handleDateChange',
-    },
+    loading,
+    onValueChange: eventProp(
+      'Receives the accepted ISO date, or an empty string when cleared.',
+      '(date) => console.log(date)',
+      '(value: string) => void',
+    ),
   },
   constraints: [
     {
@@ -104,39 +78,46 @@ export default defineComponent({
       reason: 'A read-only field keeps its current value and hides the clear action.',
     },
   ],
-  render: ({ ctx, values }) => (
-    <DatePicker
-      {...values}
-      style={{ inlineSize: 'min(100%, 22rem)' }}
-      subjectAttributes={ctx.subject}
-      label={values.variant === 'ghost' ? 'Inline review date' : 'Review date'}
-      defaultValue={reviewDate}
-      onValueChange={ctx.action('onValueChange')}
-    />
-  ),
-  code: ({ variant, size, locale, clearable, required, readOnly, disabled, status, loading }) => {
-    const attributes = [
-      `label="${variant === 'ghost' ? 'Inline review date' : 'Review date'}"`,
-      `defaultValue="${reviewDate}"`,
-      variant !== 'default' ? `variant="${variant}"` : '',
-      size !== 'm' ? `size="${size}"` : '',
-      locale !== 'en-GB' ? `locale="${locale}"` : '',
-      clearable ? 'clearable' : '',
-      required ? 'required' : '',
-      readOnly ? 'readOnly' : '',
-      disabled ? 'disabled' : '',
-      status !== 'neutral' ? `status="${status}"` : '',
-      loading ? 'loading' : '',
-      'onValueChange={handleDateChange}',
-    ].filter(Boolean);
-    return `<DatePicker\n  ${attributes.join('\n  ')}\n/>`;
+  render: withOverlaySurface(({ ctx, values }) => {
+    const message = !values.disabled && messages[values.status];
+    return (
+      <DatePicker
+        {...values}
+        style={{ inlineSize: 'min(100%, 22rem)' }}
+        subjectAttributes={ctx.subject}
+        label={values.variant === 'ghost' ? 'Inline review date' : 'Review date'}
+        defaultValue={reviewDate}
+        message={message ? <bdi>{message}</bdi> : undefined}
+        onValueChange={ctx.action('onValueChange')}
+      />
+    );
+  }, 'border-box'),
+  code: (values) => {
+    const attrs = previewProps(values, {
+      size: 'm',
+      variant: 'default',
+      status: 'neutral',
+      locale: 'en-GB',
+      clearable: false,
+      required: false,
+      readOnly: false,
+      disabled: false,
+      loading: false,
+    });
+    const message = !values.disabled && messages[values.status];
+    return `import { DatePicker } from './prototypes/date-picker/date-picker.proto.js';
+import '@docouno/unica/styles.css';
+
+export function ReviewDate() {
+  return <DatePicker label="${values.variant === 'ghost' ? 'Inline review date' : 'Review date'}" defaultValue="${reviewDate}"${attrs}${message ? ` message={<bdi>${previewText(message)}</bdi>}` : ''} onValueChange={(date) => console.log(date)} />;
+}`;
   },
-  matrixViews: [
+  states: [
     {
       id: 'fields',
-      title: 'Field roles & sizes',
+      title: 'Field roles and sizes',
       caption:
-        'Default for forms; ghost for inline editing. All fields accept local numeric dates or an ISO date pasted directly.',
+        'Compare form and inline fields at each density. Type a local date or paste an ISO date, then leave the field to format it.',
       rows: 'size',
       cols: 'variant',
       fixed: { clearable: true },
@@ -145,199 +126,73 @@ export default defineComponent({
   cases: [
     {
       id: 'anatomy',
-      title: 'Date & calendar',
+      title: 'Date and calendar',
+      surface: 'base',
       overlayStage: true,
-      caption:
-        'The panel is kept in flow for material review. Live anchored behavior is available in the Live section.',
       kind: 'surface',
-      mode: 'pinned',
-      render: ({ ctx }) => (
-        <DatePicker
-          subjectAttributes={ctx.subject}
-          label="Review date"
-          defaultValue="2026-09-16"
-          defaultOpen
-          previewInline
-          clearable
-        />
-      ),
+      mode: 'live',
+      reset: true,
+      caption:
+        'The base field starts on September 16 with its calendar in document flow. Select a day to update the date and close the panel. The calendar button reopens it.',
+      render: Anatomy,
     },
     {
       id: 'states',
-      title: 'Field states & feedback',
-      caption:
-        'Hover or tab into each field. Semantic feedback is pinned for comparison; use Live for validation recovery. Read only permits calendar inspection; disabled suppresses status and actions.',
+      title: 'Field states and feedback',
       kind: 'behavior',
-      mode: 'pinned',
-      render: () => (
-        <div className="date-study-grid-proto">
-          <DatePicker label="Required review date" required description="Choose one date." />
-          <DatePicker
-            label="Not scheduled"
-            description="DD/MM/YYYY · you can also paste an ISO date"
-            clearable
-          />
-          <DatePicker label="Pointer editing" defaultValue="2026-09-16" clearable />
-          <DatePicker label="Keyboard editing" defaultValue="2026-09-16" clearable />
-          <DatePicker
-            label="Invalid date · keyboard editing"
-            previewText="31/02/2026"
-            status="danger"
-            message="February has no 31st day. Enter a real date."
-            clearable
-          />
-          <DatePicker
-            label="Incomplete draft"
-            previewText="14/09/"
-            status="danger"
-            message="Complete the date with a four-digit year."
-            clearable
-          />
-          <DatePicker
-            label="Unavailable date"
-            defaultValue="2026-09-20"
-            status="danger"
-            message="This date is unavailable. Choose another day."
-            unavailable={['2026-09-20']}
-            clearable
-          />
-          <DatePicker
-            label="Review recommended"
-            defaultValue="2026-09-16"
-            status="warning"
-            message="This is earlier than the usual review cycle."
-            clearable
-          />
-          <DatePicker
-            label="Date verified"
-            defaultValue="2026-09-16"
-            status="success"
-            message="The review date is confirmed."
-          />
-          <DatePicker
-            label="Policy information"
-            defaultValue="2026-09-16"
-            status="info"
-            message="Dates are recorded without a time zone."
-          />
-          <DatePicker label="Checking availability" clearable defaultValue="2026-09-16" loading />
-          <DatePicker label="Read only" defaultValue="2026-09-16" readOnly clearable />
-          <DatePicker label="Disabled" defaultValue="2026-09-16" disabled status="danger" />
-        </div>
-      ),
+      mode: 'live',
+      reset: true,
+      caption:
+        'Try pointer and keyboard editing in the first fields. The invalid, incomplete, unavailable, warning, success and information examples pin their values and messages. A read-only date opens for inspection.',
+      render: withOverlaySurface(FieldStates, 'border-box'),
     },
     {
       id: 'panels',
-      title: 'Calendar panel · Base → Overlay',
+      title: 'Base fields and floating calendar panels',
       surface: 'base',
       overlayStage: true,
-      caption:
-        'Panels are kept in document flow for simultaneous material review. The same panel is used by the live anchored fields below. Choosing a day closes it.',
       kind: 'surface',
-      mode: 'pinned',
-      render: ({ ctx }) => (
-        <div className="date-study-stack-proto" data-surface="base">
-          <DatePicker
-            subjectAttributes={ctx.subject}
-            label="Set a date"
-            description="An empty field opens on today."
-            defaultOpen
-            previewInline
-            clearable
-          />
-          <DatePicker
-            subjectAttributes={ctx.subject}
-            label="Six-week month"
-            defaultValue="2026-03-30"
-            defaultOpen
-            previewInline
-            clearable
-          />
-          <DatePicker
-            subjectAttributes={ctx.subject}
-            label="Restricted review window"
-            defaultValue="2026-09-14"
-            min="2026-09-07"
-            max="2026-09-25"
-            unavailable={['2026-09-18', '2026-09-19', '2026-09-20']}
-            defaultOpen
-            previewInline
-          />
-          <DatePicker
-            subjectAttributes={ctx.subject}
-            label="View a fixed date"
-            defaultValue="2026-09-16"
-            readOnly
-            defaultOpen
-            previewInline
-          />
-        </div>
-      ),
+      mode: 'live',
+      reset: true,
+      caption:
+        'Each base field starts with an open panel in document flow. Compare an empty date, a six-week month, a restricted window and a read-only selection. Choose a day in an editable panel to confirm it.',
+      render: Panels,
     },
     {
       id: 'locales',
-      title: 'Formatting & constrained space',
-      caption:
-        'DD/MM/YYYY, MM/DD/YYYY and DD.MM.YYYY share one text input. Invalid or unfinished text remains available for correction.',
+      title: 'Local dates and constrained space',
       kind: 'content',
-      render: () => (
-        <div className="date-study-grid-proto">
-          <DatePicker label="US date" locale="en-US" defaultValue="2026-09-16" clearable />
-          <DatePicker label="German date" locale="de-DE" defaultValue="2026-09-16" clearable />
-          <DatePicker
-            label="Next scheduled verification for this document"
-            description="A long label and a narrow field keep their natural line breaks."
-            defaultValue="2026-09-16"
-            style={{ maxWidth: '14rem' }}
-            clearable
-            status="warning"
-            message="Review this date with the document owner before confirming."
-          />
-        </div>
-      ),
+      mode: 'live',
+      reset: true,
+      caption:
+        'Enter a US date as MM/DD/YYYY or a German date as DD.MM.YYYY. In the narrow field, the label and feedback wrap while the numeric date stays on one line.',
+      render: withOverlaySurface(Locales, 'border-box'),
     },
     {
       id: 'live',
-      title: 'Live · anchored picker',
-      caption:
-        'Tab keeps the calendar closed. Open with the icon or Alt+↓; arrows move through days. Escape or a click outside dismisses the panel. Try typing 31/02/2026, then choose a valid day to recover.',
+      title: 'Anchored calendar',
       surface: 'overlay',
-      overlayStage: true,
       kind: 'behavior',
       mode: 'live',
-      render: ({ ctx }) => (
-        <div className="date-live-stage-proto">
-          <DatePicker
-            subjectAttributes={ctx.subject}
-            label="Next verification date"
-            defaultValue="2026-09-16"
-            clearable
-            description="DD/MM/YYYY"
-          />
-          <DatePicker
-            subjectAttributes={ctx.subject}
-            label="Inline date"
-            variant="ghost"
-            defaultValue="2026-09-14"
-            clearable
-            style={{ marginBlockStart: '24px' }}
-          />
-        </div>
-      ),
+      reset: true,
+      caption:
+        'Type 31/02/2026 and leave the field. Open the calendar with the button or Alt+Down and choose a valid date. Escape returns to the trigger. Clicking outside dismisses the panel.',
+      render: LivePickers,
     },
   ],
-  usage: [
+  compositions: [
     {
       id: 'schedule',
       title: 'Schedule a review',
-      code: '<DatePicker\n  label="Review date"\n  description="Optional. Enter a date or choose one from the calendar."\n  clearable\n/>',
-      render: () => (
-        <DatePicker
-          label="Review date"
-          description="Optional. Enter a date or choose one from the calendar."
-          clearable
-        />
+      mode: 'live',
+      reset: true,
+      caption:
+        'Schedule an optional review by typing a valid date or choosing a day. The schedule keeps the last accepted date while you correct an invalid draft. Clear the date to remove the review.',
+      render: withOverlaySurface(
+        ({ ctx }) => <ReviewSchedule pickerProps={{ subjectAttributes: ctx.subject }} />,
+        'border-box',
       ),
+      code: scheduleSource.replace('../../prototypes/', './prototypes/'),
     },
   ],
 });
