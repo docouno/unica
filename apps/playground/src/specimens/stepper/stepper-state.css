@@ -1,0 +1,21 @@
+.stepper-state-study {
+  --stepper-study-width: 28rem;
+
+  inline-size: min(100%, var(--stepper-study-width));
+  min-inline-size: 0;
+}
+
+.stepper-state-study[data-study='long-labels'] {
+  --stepper-study-width: 18rem;
+}
+
+.stepper-state-study[data-study='compact'] {
+  --stepper-study-width: 320px;
+}
+
+.stepper-state-study[data-surface='overlay'] {
+  position: relative;
+  box-sizing: border-box;
+  inline-size: min(100%, calc(var(--stepper-study-width) + 2 * var(--surface-s-padding) + 2px));
+  padding: var(--surface-s-padding);
+}

@@ -1,408 +1,126 @@
-import type { PreviewContext } from '../../workbench/types.js';
-import { useLayoutEffect, useRef, useState } from 'react';
-import type { ReactElement, ReactNode } from 'react';
 import { defineComponent } from '../../workbench/types.js';
-import { Button } from '@docouno/unica';
-import { Card, Text, Title } from '@docouno/unica';
-import { Stepper, StepperStep } from '../../prototypes/stepper/stepper.proto.js';
-import type { StepperProps, StepperStepProps } from '../../prototypes/stepper/stepper.proto.js';
-import '../../prototypes/stepper/stepper.examples.css';
+import type { ComponentValues, PropSchema } from '../../workbench/types.js';
+import { ExampleSurface } from '../shared/example-surface.js';
+import { withOverlaySurface } from '../shared/with-overlay-surface.js';
+import { stepperCode } from './stepper-code.js';
+import { RepositoryImport, ReturnToStep } from './stepper-interaction.examples.js';
+import { WorkspaceSetupExample } from './stepper-journey.example.js';
+import journeySource from './stepper-journey.example.tsx?raw';
+import { StepperPlayground } from './stepper-playground.js';
+import { CompactSummaries, LongLabels, ProgressStates } from './stepper-state.examples.js';
 
-const setup: readonly StepperStepProps[] = [
-  { value: 'details', label: 'Workspace details', description: 'Name and region' },
-  { value: 'access', label: 'Access rules', description: 'Roles and invitations' },
-  { value: 'review', label: 'Review setup', description: 'Confirm and create' },
-];
-
-const firstDone = setup.map((step, index) => ({ ...step, completed: index === 0 }));
-const allDone = setup.map((step) => ({ ...step, completed: true }));
-const issues = setup.map((step, index) => {
-  const issue = ['Choose an available workspace name.', 'Assign a workspace owner.'][index];
-  return { ...step, completed: index === 0, invalid: Boolean(issue), issue };
-});
-
-function Map({
-  steps,
-  ...props
-}: Omit<StepperProps, 'children'> & { readonly steps: readonly StepperStepProps[] }): ReactElement {
-  return (
-    <Stepper {...props}>
-      {steps.map((step) => (
-        <StepperStep key={step.value} {...step} />
-      ))}
-    </Stepper>
-  );
-}
-
-function Example({
-  label,
-  children,
-}: {
-  readonly label: string;
-  readonly children: ReactNode;
-}): ReactElement {
-  return (
-    <div className="stepper-example">
-      <Text size="caption-l" color="muted" weight="medium">
-        {label}
-      </Text>
-      {children}
-    </div>
-  );
-}
-
-function Sizes({ layout }: { readonly layout: 'horizontal' | 'vertical' }): ReactElement {
-  const vertical = layout === 'vertical';
-  const verticalSteps = firstDone.map((step) =>
-    step.value === 'access'
-      ? { ...step, description: 'Roles, invitations, and permissions for shared spaces.' }
-      : step,
-  );
-
-  return (
-    <div className={vertical ? 'stepper-example-vertical-sizes' : 'stepper-example-stack'}>
-      {(['s', 'm', 'l'] as const).map((size) => (
-        <Example key={size} label={size === 's' ? 'Small' : size === 'm' ? 'Medium' : 'Large'}>
-          <Map
-            label={`Workspace setup, ${size.toUpperCase()}`}
-            size={size}
-            layout={layout}
-            steps={
-              vertical
-                ? verticalSteps
-                : size === 's'
-                  ? firstDone.map((step) => ({ ...step, description: undefined }))
-                  : firstDone
-            }
-            value="access"
-          />
-        </Example>
-      ))}
-    </div>
-  );
-}
-
-function States(): ReactElement {
-  return (
-    <div className="stepper-example-stack">
-      <Example label="Before starting">
-        <Map label="Workspace setup" steps={setup} value={null} />
-      </Example>
-      <Example label="Current and earlier steps need attention">
-        <Map label="Workspace setup" steps={issues} value="access" />
-      </Example>
-      <Example label="Revisiting a completed step">
-        <Map label="Workspace setup" steps={allDone} value="details" />
-      </Example>
-      <Example label="Five stages · a saved draft">
-        <Map
-          label="Workspace configuration"
-          value="defaults"
-          steps={[
-            { value: 'details', label: 'Workspace', completed: true },
-            { value: 'groups', label: 'Map groups', completed: true },
-            {
-              value: 'defaults',
-              label: 'Default policies',
-              description: 'Region and retention period',
-            },
-            { value: 'integrations', label: 'Connect services' },
-            { value: 'review', label: 'Review and launch' },
-          ]}
-        />
-      </Example>
-      <Example label="Complete">
-        <Map label="Workspace setup" steps={allDone} value={null} />
-      </Example>
-    </div>
-  );
-}
-
-function Layouts(): ReactElement {
-  const longSteps: readonly StepperStepProps[] = [
-    { value: 'source', label: 'Source workspace', completed: true },
-    {
-      value: 'groups',
-      label: 'Map external groups and access policies',
-      description: 'Preserve inherited permissions for shared spaces.',
-      completed: true,
-    },
-    {
-      value: 'defaults',
-      label: 'Configure workspace defaults',
-      description: 'Set the retention window and the default region.',
-    },
-    { value: 'review', label: 'Review', description: 'Confirm the configuration' },
-  ];
-
-  return (
-    <div className="stepper-example-layouts">
-      <Example label="Vertical · a narrow column">
-        <Map label="Workspace configuration" layout="vertical" steps={longSteps} value="defaults" />
-      </Example>
-      <div className="stepper-example-stack stepper-example-compact">
-        <Example label="Compact · steps with issues">
-          <Map label="Workspace setup" layout="compact" steps={issues} value="access" />
-        </Example>
-        <Example label="Compact · saved for later">
-          <Map label="Workspace setup" layout="compact" steps={firstDone} value={null} />
-        </Example>
-        <Example label="Compact · complete">
-          <Map label="Workspace setup" layout="compact" steps={allDone} value={null} />
-        </Example>
-      </div>
-    </div>
-  );
-}
-
-const previewSteps: readonly StepperStepProps[] = [
-  { value: 'plan', label: 'Plan', completed: true },
-  { value: 'details', label: 'Details', completed: true, preview: 'hover' },
-  {
-    value: 'access',
-    label: 'Access rules',
-    invalid: true,
-    issue: 'Assign an owner.',
-    preview: 'pressed',
+const props = {
+  size: {
+    kind: 'enum',
+    group: 'Geometry',
+    default: 'm',
+    description: 'Set marker size, label typography and space between stages.',
+    choices: [{ value: 's' }, { value: 'm' }, { value: 'l' }],
   },
-  { value: 'defaults', label: 'Defaults', completed: true, preview: 'focus' },
-  { value: 'review', label: 'Review' },
-  { value: 'launch', label: 'Launch' },
-];
+  layout: {
+    kind: 'enum',
+    group: 'Geometry',
+    default: 'responsive',
+    description:
+      'Choose a map or a compact summary. The responsive layout follows the width of its own container.',
+    choices: [
+      { value: 'responsive' },
+      { value: 'horizontal' },
+      { value: 'vertical' },
+      { value: 'compact' },
+    ],
+  },
+  label: {
+    kind: 'string',
+    group: 'Semantics',
+    default: '',
+    description:
+      'Name the process that the map describes. A blank field uses the selected process name.',
+    examples: ['', 'Workspace setup', 'Publish a release'],
+  },
+  value: {
+    kind: 'string',
+    group: 'Interaction',
+    publicType: 'string | null',
+    default: 'review',
+    description:
+      'Set the initial current stage of the example owner. A blank value passes null. An unmatched stage has no current marker.',
+    examples: ['', 'details', 'access', 'review', 'publish'],
+  },
+  onValueChange: {
+    kind: 'action',
+    group: 'Interaction',
+    publicType: '(value: string) => void',
+    description:
+      'Request a completed stage or a stage with an issue. The owner decides whether to make it current.',
+    code: 'handleValueChange',
+  },
+  example: {
+    kind: 'enum',
+    group: 'Content',
+    demo: true,
+    default: 'release',
+    label: 'Process',
+    description: 'Choose the release or workspace stages and their descriptions.',
+    choices: [
+      { value: 'release', label: 'Release' },
+      { value: 'workspace', label: 'Workspace setup' },
+    ],
+  },
+  allowReturn: {
+    kind: 'boolean',
+    group: 'Interaction',
+    demo: true,
+    default: true,
+    label: 'Allow return',
+    description:
+      'Choose an interactive or read-only map. Switching starts the map at its configured value.',
+  },
+} as const satisfies PropSchema;
 
-function Interaction(): ReactElement {
-  const [current, setCurrent] = useState('review');
-  return (
-    <Example label="Pinned states · Details hovered, Access rules pressed, Defaults focused">
-      <Map
-        label="Workspace setup with pinned interaction states"
-        layout="vertical"
-        steps={previewSteps}
-        value={current}
-        onValueChange={setCurrent}
-      />
-    </Example>
-  );
-}
+export type StepperValues = ComponentValues<typeof props>;
 
-function Journey(): ReactElement {
-  const [current, setCurrent] = useState<string | null>('access');
-  const [completed, setCompleted] = useState<readonly string[]>(['details']);
-  const [owner, setOwner] = useState<'unchecked' | 'missing' | 'assigned'>('unchecked');
-  const ownerAction = useRef<HTMLButtonElement>(null);
-  const continueAction = useRef<HTMLButtonElement>(null);
-  const needsOwner = owner === 'missing';
-  const index = setup.findIndex((step) => step.value === current);
-  const active = setup[index];
-
-  useLayoutEffect(() => {
-    if (owner === 'assigned') {
-      continueAction.current?.focus();
-    }
-  }, [owner]);
-
-  function advance(): void {
-    if (!active) {
-      setCompleted([]);
-      setOwner('unchecked');
-      setCurrent('details');
-      return;
-    }
-    if (active.value === 'access' && owner !== 'assigned') {
-      setOwner('missing');
-      ownerAction.current?.focus();
-      return;
-    }
-    setCompleted((previous) =>
-      previous.includes(active.value) ? previous : [...previous, active.value],
-    );
-    setCurrent(setup[index + 1]?.value ?? null);
-  }
-
-  return (
-    <div className="stepper-example-journey">
-      <Map
-        label="Workspace setup"
-        value={current}
-        onValueChange={setCurrent}
-        steps={setup.map((step) => ({
-          value: step.value,
-          label: step.label,
-          completed: completed.includes(step.value),
-          invalid: step.value === 'access' && needsOwner,
-          issue: step.value === 'access' && needsOwner ? 'Assign a workspace owner.' : undefined,
-        }))}
-      />
-      <Card>
-        <div className="stepper-example-panel-copy">
-          <Title as="h3" size="body-m">
-            {active?.value === 'access'
-              ? 'Workspace owner'
-              : (active?.label ?? 'Workspace created')}
-          </Title>
-          <Text size="body-s" color="secondary">
-            <bdi>
-              {active?.value === 'access'
-                ? owner === 'assigned'
-                  ? 'An owner has been assigned.'
-                  : 'Owners can manage members and workspace settings.'
-                : (active?.description ?? 'Your workspace is ready to use.')}
-            </bdi>
-          </Text>
-        </div>
-        <div className="stepper-example-actions">
-          {active?.value === 'access' && owner !== 'assigned' && (
-            <Button
-              ref={ownerAction}
-              variant="secondary"
-              tone="neutral"
-              size="s"
-              onClick={() => setOwner('assigned')}
-            >
-              Assign an owner
-            </Button>
-          )}
-          <Button
-            ref={continueAction}
-            size="s"
-            disabled={active?.value === 'access' && needsOwner}
-            onClick={advance}
-          >
-            {active ? (active.value === 'review' ? 'Create workspace' : 'Continue') : 'Start over'}
-          </Button>
-        </div>
-      </Card>
-    </div>
-  );
-}
-
-function FloatingExample(): ReactElement {
-  const steps: readonly StepperStepProps[] = [
-    {
-      value: 'source',
-      label: 'Source repository',
-      invalid: true,
-      issue: 'Reconnect the repository.',
-    },
-    { value: 'destination', label: 'Destination', description: 'Choose a workspace' },
-    { value: 'review', label: 'Review' },
-  ];
-
-  return (
-    <div className="stepper-example-overlay">
-      <Map label="Repository import" layout="vertical" steps={steps} value="destination" />
-    </div>
-  );
-}
-
-function InspectSteps({
-  size,
-  layout,
-  startAt,
-  ctx,
-}: Required<Pick<StepperProps, 'size' | 'layout'>> & {
-  readonly startAt: string;
-  readonly ctx: PreviewContext;
-}): ReactElement {
-  const [step, setStep] = useState(startAt);
-  return (
-    <Stepper
-      {...ctx.subject}
-      label="Publish a release"
-      value={step}
-      size={size}
-      layout={layout}
-      onValueChange={(next) => {
-        setStep(next);
-        ctx.action('onValueChange')(next);
-      }}
-    >
-      <StepperStep value="details" label="Details" completed />
-      <StepperStep value="review" label="Review" completed={startAt === 'publish'} />
-      <StepperStep value="publish" label="Publish" />
-    </Stepper>
-  );
-}
+const workspace = {
+  example: 'workspace',
+  label: 'Workspace setup',
+  value: 'access',
+  allowReturn: false,
+} as const;
 
 export default defineComponent({
   id: 'stepper',
   title: 'Stepper',
   category: 'Navigation',
   status: 'Proto',
+  componentName: 'Stepper',
   summary: 'An ordered map for setup, review, and other staged tasks.',
-  props: {
-    size: {
-      kind: 'enum',
-      group: 'Layout',
-      default: 'm',
-      description: 'Step and connector density.',
-      choices: [{ value: 's' }, { value: 'm' }, { value: 'l' }],
-    },
-    layout: {
-      kind: 'enum',
-      group: 'Layout',
-      default: 'responsive',
-      description: 'Arrangement of the full step list or compact summary.',
-      choices: [
-        { value: 'responsive' },
-        { value: 'horizontal' },
-        { value: 'vertical' },
-        { value: 'compact' },
-      ],
-    },
-    startAt: {
-      kind: 'enum',
-      group: 'Example',
-      default: 'review',
-      description: 'Selected step when the example mounts.',
-      demo: true,
-      choices: [{ value: 'details' }, { value: 'review' }, { value: 'publish' }],
-    },
-    onValueChange: {
-      kind: 'action',
-      group: 'Events',
-      description: 'Reports which completed or invalid step was selected.',
-      code: 'handleValueChange',
-    },
-  },
-  code: (
-    values,
-  ) => `<Stepper label="Publish a release" value={step}${values.size === 'm' ? '' : ` size="${values.size}"`}${values.layout === 'responsive' ? '' : ` layout="${values.layout}"`} onValueChange={handleValueChange}>
-  <StepperStep value="details" label="Details" completed />
-  <StepperStep value="review" label="Review"${values.startAt === 'publish' ? ' completed' : ''} />
-  <StepperStep value="publish" label="Publish" />
-</Stepper>`,
-  render: ({ values, ctx }) => (
-    <div style={{ inlineSize: '100%' }}>
-      <InspectSteps
-        key={values.startAt}
-        size={values.size}
-        layout={values.layout}
-        startAt={values.startAt}
-        ctx={ctx}
-      />
-    </div>
-  ),
-  matrixViews: [
+  props,
+  code: stepperCode,
+  render: withOverlaySurface(StepperPlayground, 'border-box'),
+  states: [
     {
       id: 'sizes',
       title: 'Horizontal sizes',
       rows: 'size',
-      fixed: { layout: 'horizontal' },
-      reference: () => <Sizes layout="horizontal" />,
+      fixed: { ...workspace, layout: 'horizontal' },
+      caption:
+        'Compare the 24, 32 and 40 pixel markers along the same route. The dense row uses titles alone, and larger rows include a description.',
     },
     {
       id: 'vertical-sizes',
       title: 'Vertical sizes',
       rows: 'size',
-      fixed: { layout: 'vertical' },
-      reference: () => <Sizes layout="vertical" />,
+      fixed: { ...workspace, layout: 'vertical' },
+      caption:
+        'The current stage has a longer description. Compare the first label line and the rails as the marker size changes.',
     },
     {
       id: 'layouts',
-      title: 'Vertical and compact layouts',
+      title: 'Step layouts',
       rows: 'layout',
-      reference: () => <Layouts />,
+      fixed: { ...workspace, size: 'm' },
+      caption:
+        'Compare the two full maps with a compact summary. The responsive map changes with available width.',
     },
   ],
   cases: [
@@ -410,36 +128,107 @@ export default defineComponent({
       id: 'states',
       title: 'Progress and validation',
       kind: 'behavior',
-      render: () => <States />,
+      mode: 'pinned',
+      controls: {
+        progress: {
+          kind: 'enum',
+          label: 'Progress',
+          default: 'issues',
+          choices: [
+            { value: 'unstarted', label: 'Before starting' },
+            { value: 'issues', label: 'Two stages with issues' },
+            { value: 'revisited', label: 'Revisited stage' },
+            { value: 'draft', label: 'Saved draft' },
+            { value: 'complete', label: 'Complete' },
+          ],
+        },
+      },
+      caption:
+        'Compare the current marker, completed checkmarks and connecting rails before starting, after validation, and when all stages are complete.',
+      render: ProgressStates,
+    },
+    {
+      id: 'long-labels',
+      title: 'Long stages in a narrow column',
+      kind: 'content',
+      mode: 'pinned',
+      caption:
+        'Long stage names and descriptions wrap beside the markers. The vertical rails stay aligned as the rows grow.',
+      render: LongLabels,
+    },
+    {
+      id: 'compact',
+      title: 'Compact summaries',
+      kind: 'content',
+      mode: 'pinned',
+      controls: {
+        progress: {
+          kind: 'enum',
+          label: 'Progress',
+          default: 'issues',
+          choices: [
+            { value: 'issues', label: 'Two stages with issues' },
+            { value: 'saved', label: 'Saved for later' },
+            { value: 'complete', label: 'Complete' },
+          ],
+        },
+      },
+      caption:
+        'In a column up to 320px wide, the summary names the current issue and an earlier stage to check. Saved and finished processes show how much is complete.',
+      render: CompactSummaries,
     },
     {
       id: 'interaction',
       title: 'Return to a step',
       kind: 'behavior',
-      render: () => <Interaction />,
+      mode: 'live',
+      controls: {
+        request: {
+          kind: 'enum',
+          label: 'Return request',
+          default: 'accept',
+          choices: [
+            { value: 'accept', label: 'Accept' },
+            { value: 'decline', label: 'Decline' },
+          ],
+        },
+      },
+      reset: true,
+      caption:
+        'Details starts hovered, Access rules pressed and Defaults focused. Move into the map or tab to a stage to compare focus when its owner accepts or declines a return.',
+      render: ReturnToStep,
     },
     {
       id: 'overlay',
       title: 'In a floating surface',
+      kind: 'surface',
+      mode: 'pinned',
       overlayStage: true,
       surface: 'overlay',
-      kind: 'surface',
-      render: () => <FloatingExample />,
+      caption:
+        'A repository import stays on its destination stage. The earlier source stage explains how to reconnect the repository.',
+      render: RepositoryImport,
     },
   ],
-  usage: [
+  compositions: [
     {
       id: 'journey',
       title: 'Workspace setup',
-      code: `<Stepper label="Workspace setup" value={current} onValueChange={setCurrent}>
-  {setup.map((step) => (
-    <StepperStep key={step.value} value={step.value} label={step.label}
-      completed={completed.includes(step.value)}
-      invalid={step.value === 'access' && needsOwner}
-      issue={step.value === 'access' && needsOwner ? 'Assign a workspace owner.' : undefined} />
-  ))}
-</Stepper>`,
-      render: () => <Journey />,
+      mode: 'live',
+      reset: true,
+      caption:
+        'Continue without an owner to show the correction. Revisit a completed stage, assign an owner, then review and create the workspace.',
+      render: ({ ctx }) => (
+        <div
+          data-example-disclosure=""
+          style={{ inlineSize: 'min(100%, 48rem)', minInlineSize: 0 }}
+        >
+          <ExampleSurface surface={ctx.surface} sizing="border-box">
+            <WorkspaceSetupExample subject={ctx.subject} />
+          </ExampleSurface>
+        </div>
+      ),
+      code: journeySource.replaceAll('../../prototypes/', './prototypes/'),
     },
   ],
 });
