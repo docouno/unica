@@ -333,6 +333,7 @@ it('configures the 4-tab Workbench architecture and resolves Markdown docs for e
       expect(snippet).toContain("import { Stack } from '@docouno/unica'");
       expect(snippet).not.toMatch(/import\s+\{[^}]*Fragment[^}]*\}\s+from\s+'@docouno\/unica'/);
     } else if (component.id === 'scrollbar') {
+      expect(snippet).toContain("import '@docouno/unica/styles.css'");
       expect(snippet).not.toContain("from '@docouno/unica'");
     }
     unmount();
