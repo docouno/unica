@@ -485,7 +485,10 @@
 }
 
 @keyframes toast-pin-start {
-  from,
+  /* At the exact starting edge, the complete first card still sits above the parked cards. */
+  from {
+    z-index: var(--toast-reading-order);
+  }
   to {
     z-index: var(--toast-start-order);
   }

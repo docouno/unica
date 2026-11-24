@@ -1,0 +1,35 @@
+/* Leave room for the message between its status glyph and dismiss control. */
+tr:has(> td + td) > td:has([data-toast-comparison]) {
+  min-inline-size: 18rem;
+}
+
+ul:has(> [data-wb-result-row] [data-toast-comparison]) {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 20rem), 1fr));
+}
+
+.toast-card-studies {
+  inline-size: min(100%, 384px);
+  min-inline-size: 0;
+  margin-inline: auto;
+}
+
+.toast-study-label {
+  align-self: flex-start;
+  max-inline-size: 100%;
+  padding: var(--space-4) var(--space-8);
+  border-radius: var(--radius-xs);
+  background: var(--bg-canvas);
+  color: var(--fg-primary);
+}
+
+@font-face {
+  font-family: 'Toast report Arabic';
+  src: url('/assets/file-input-arabic-400.ttf') format('truetype');
+  font-weight: 400;
+  font-display: block;
+  unicode-range: U+0600-06FF;
+}
+
+.toast-study-arabic {
+  font-family: 'Toast report Arabic', var(--font-family-base);
+}

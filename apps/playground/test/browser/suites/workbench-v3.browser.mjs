@@ -85,6 +85,122 @@ export default {
     assert.equal(await first.evaluate((button) => button.matches(':focus')), true);
   },
 
+  'Toast exports retain independent identities after an earlier notification is dismissed': async ({
+    page,
+    mount,
+  }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await mount('workbench-v3');
+    await navigate(page, {
+      item: 'toast',
+      tab: 'compositions',
+      block: 'modal',
+      family: 'frost',
+      scheme: 'light',
+      surface: 'overlay',
+      vp: '360',
+      scale: '120',
+      dir: 'rtl',
+    });
+    const open = page.getByRole('button', { name: 'Open export options' });
+    await open.press('Enter');
+    const dialog = page.locator('dialog:modal');
+    const queue = dialog.locator('[popover]:popover-open');
+    const name = dialog.getByRole('textbox', { name: 'File name' });
+    const prepare = dialog.getByRole('button', { name: 'Prepare export' });
+    async function holdEnter(target) {
+      await target.focus();
+      await page.keyboard.down('Enter');
+      await page.evaluate(
+        () => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))),
+      );
+      await page.keyboard.down('Enter');
+      await page.keyboard.up('Enter');
+    }
+    await name.fill('First report');
+    await holdEnter(name);
+    await dialog
+      .getByRole('status')
+      .filter({ hasText: 'First report.txt' })
+      .waitFor({ state: 'attached' });
+    await name.fill('Second report');
+    await holdEnter(prepare);
+    await queue.getByRole('button', { name: /^Expand 3 notifications/ }).press('Enter');
+    const cards = queue.locator('.toast-card');
+    assert.equal(await cards.count(), 3);
+    await holdEnter(
+      cards.filter({ hasText: 'First report.txt' }).getByRole('button', { name: /^Dismiss:/ }),
+    );
+    await name.fill('Third report');
+    await prepare.press('Enter');
+    assert.equal(await cards.count(), 3);
+    await cards
+      .filter({ hasText: 'Third report.txt' })
+      .getByRole('button', { name: /^Dismiss:/ })
+      .press('Enter');
+    assert.equal(await cards.count(), 2);
+    await cards.filter({ hasText: 'Second report.txt' }).waitFor();
+    await page.keyboard.press('Escape');
+    assert.equal(await open.evaluate((button) => button.matches(':focus')), true);
+    await open.press('Enter');
+    const expand = queue.getByRole('button', { name: /^Expand 2 notifications/ });
+    if (await expand.count()) {
+      await expand.press('Enter');
+    }
+    await queue.locator('.toast-card').filter({ hasText: 'Second report.txt' }).waitFor();
+    assert.equal(
+      await queue.locator('.toast-card').filter({ hasText: 'Third report.txt' }).count(),
+      0,
+    );
+    assert.equal(await dialog.getByRole('status').textContent(), '');
+    await page.keyboard.press('Escape');
+    const reset = page.getByRole('button', { name: 'Reset', exact: true });
+    await reset.focus();
+    await page.locator('.toast-dismiss-all').evaluate((button) => button.click());
+    assert.equal(await reset.evaluate((button) => button.matches(':focus')), true);
+  },
+
+  'Dismissing a toast preserves focus owned by another message or artboard': async ({
+    page,
+    mount,
+  }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await mount('workbench-v3');
+    await navigate(page, {
+      item: 'toast',
+      tab: 'states',
+      block: 'reading',
+      family: 'frost',
+      scheme: 'both',
+    });
+    const boards = page.locator('[data-wb-block="reading"] .wb-artboard');
+    const first = boards.first();
+    const close = first
+      .locator('.toast-card')
+      .first()
+      .getByRole('button', { name: /^Dismiss:/ });
+    const undo = first.getByRole('button', { name: 'Undo', exact: true });
+    const next = boards.nth(1).getByRole('button', { name: 'Undo', exact: true });
+    await undo.focus();
+    await close.evaluate((button) => button.click());
+    await page.evaluate(
+      () => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))),
+    );
+    assert.equal(await undo.evaluate((button) => button.matches(':focus')), true);
+    await close.evaluate(
+      (button, destination) => {
+        button.focus();
+        button.click();
+        destination.focus();
+      },
+      await next.elementHandle(),
+    );
+    await page.evaluate(
+      () => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))),
+    );
+    assert.equal(await next.evaluate((button) => button.matches(':focus')), true);
+  },
+
   'Bounds follows the accordion when its header opens inside a composition': async ({
     page,
     mount,

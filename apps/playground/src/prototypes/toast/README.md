@@ -14,7 +14,7 @@ The reusable visual parts are `ToastCard`, `ToastPlate`, `ToastViewport`, and `T
 
 The default card is 384 px wide or the available container width, with a 1 px theme border, 12 px padding, `surface-m` radius, a 20 px leading glyph, and 8 px column gaps. Its brief, single-line form is 56 px tall at 100% text with a fine pointer; height grows with content. A semibold `body-m` title establishes the message, followed by optional regular `body-s` detail with a 4 px gap. Pixel uses the theme's calibrated type sizes and mono face; geometry does not force identical text wrapping across materials.
 
-The title is required. Describe the outcome in the title and useful context or recovery in the detail; do not repeat the same sentence. Do not use a timestamp, decorative heading, or redundant status label. Text wraps fully, including long identifiers, without a line clamp, ellipsis, or tooltip dependency. Isolate bidirectional values with `bdi`. Toast is for concise messages; longer reports belong at a reachable destination.
+The title is required. Describe the outcome in the title and useful context or recovery in the detail; do not repeat the same sentence. Do not use a timestamp, decorative heading, or redundant status label. Text wraps fully, including long identifiers, without a line clamp, ellipsis, or tooltip dependency. Isolate bidirectional values with `bdi`. The overflow example uses the existing [Arabic filename subset](../../../public/assets/licenses/file-input-arabic-400.txt) so the mixed-script name can be inspected in each material. Toast is for concise messages; longer reports belong at a reachable destination.
 
 A brief title and short action share a row when their natural widths fit. A description, a title/action combination that would wrap, or an explicit below layout puts the action below the text, aligned with the text's starting edge. The copy keeps its full measure beside the close control. The action never narrows the text to a few characters. Long action labels wrap on their own row. This is an adaptive structural layout, not another material variant.
 
@@ -88,23 +88,24 @@ Expansion and collapse keep focus on the same persistent chevron. In a bottom pl
 
 Coarse-pointer action, close, and dock targets are at least 44 px tall; × is at least 44 × 44 px. Targets occupy their own layout space and never overlap text or another control. Content may increase card height. Message text remains selectable in both compact and reading modes, and ordinary page clicks leave notifications intact.
 
-The production host uses `popover="manual"`, portaled into the topmost active Unica dialog, or the body when none is open. An overlay painted above a scrim but outside the modal's DOM subtree is inert and does not satisfy the design. The native-modal specimen uses a real dialog and a manual popover inside it, preserving queue state above the portal. Opening/closing the dialog does not discard notifications; close, action, and the persistent toggle remain usable. Touch and keyboard scrolling must not trap the page outside the active modal's normal rules.
+The production host uses `popover="manual"`, portaled into the topmost active Unica dialog, or the body when none is open. An overlay painted above a scrim but outside the modal's DOM subtree is inert and does not satisfy the design. The native-modal specimen places its manual popover inside the open dialog. A shared owner retains the exported files and their notifications when the dialog closes. Each explicit export keeps its own identity, including files prepared with the same name. A polite message confirms each new file while focus stays on the initiating control. Reopening the dialog does not announce earlier exports. Opening/closing the dialog does not discard notifications; close, action, and the persistent toggle remain usable. Touch and keyboard scrolling must not trap the page outside the active modal's normal rules.
 
 ## Live reference and implementation handoff
 
 | Section     | Inspect                                                                                           |
 | ----------- | ------------------------------------------------------------------------------------------------- |
-| `roles`     | Five statuses, loading, neutral material in all six presets; pinned cards.                        |
+| `roles`     | Five generated status glyphs on the same notification in all six presets.                         |
+| `meaning`   | Five contextual messages and a loading operation with their expected detail and actions.          |
 | `anatomy`   | Single line, adaptive action, detailed recovery, brief confirmation without ×; live Undo.         |
-| `states`    | Live pointer and focus feedback, unavailable action, pending recovery.                            |
+| `states`    | Live pointer and focus feedback, unavailable action, and a retry that completes in place.         |
 | `stack`     | Shared action group, persistent right-hand toggle, empty/single/group transitions, six positions. |
-| `reading`   | Stacks at both scroll edges, four-card depth, automatic arrivals, and collapse.                   |
+| `reading`   | Stacks at both scroll edges, four-card depth, arrivals from the toolbar, and collapse.            |
 | `operation` | Controlled loading/success/failure/retry; Resolve/Reject are preview controls.                    |
 | `overflow`  | Long titles, identifiers, mixed direction, long actions, narrow/text-scale stress.                |
-| `lifetime`  | Live six-second confirmation, persistent Undo, additive pointer/focus/window/manual pauses.       |
-| `modal`     | Scrim appearance and actual dialog/manual-popover interaction, preserved queue.                   |
+| `lifetime`  | Save a version, archive a document, and compare the six-second confirmation with persistent Undo. |
+| `modal`     | Native dialog, editable file name, prepared-file preview, and a queue that survives closing.      |
 
-Static matrix and state cards deliberately do not dismiss or run requests. Scene notifications pin lifetime for visual inspection. Existing Folio consumers import this same card; Overview uses a dedicated View action instead of a link hidden in the detail, and Workspace Admin composes the shared viewport and reserves its measured height below the import workflow, including reading mode, so notifications do not cover the primary footer action. These remain visual compositions, not a claim of a working backend or a production notification service.
+Quick Start and Playground supply the prototype import and an owner for Undo, Dismiss, and restoration. In the generated status slice, the title and action stay fixed across rows. The meaning and overflow studies pin the controls so the full copy and action placement remain available for inspection. The stack, reading, and Folio scene examples keep notifications available until the user dismisses them. Existing Folio consumers import this same card; Overview uses a dedicated View action instead of a link hidden in the detail, and Workspace Admin composes the shared viewport and reserves its measured height below the import workflow, including reading mode, so notifications do not cover the primary footer action. These remain visual compositions, not a claim of a working backend or a production notification service.
 
 Library implementation must define the exact React 19 API and provider authority, localization, identity/deduplication, full timer visibility accounting, live-channel scheduling, maximum queue resource policy, safe-area/visual-viewport geometry, robust focus preservation across portals, and the complete modal-host registry. Preserve the decisions above; the temporary props, DOM helpers, preview controls, and focus approximation are disposable.
 

@@ -8,6 +8,7 @@ import accordionSpec from '../../../src/specimens/disclosure/accordion.spec.js';
 import containerSpec from '../../../src/specimens/layout/container.spec.js';
 import progressSpec from '../../../src/specimens/progress/progress.spec.js';
 import tagSpec from '../../../src/specimens/tag/tag.spec.js';
+import toastSpec from '../../../src/specimens/toast/toast.spec.js';
 import { unicaWorkbenchBase } from '../../../src/unica.workbench.shared.js';
 import { WorkbenchApp } from '../../../src/workbench/WorkbenchApp.js';
 import type { WorkbenchConfig } from '../../../src/workbench/types.js';
@@ -33,6 +34,7 @@ const config: WorkbenchConfig = {
     accordionSpec,
     containerSpec,
     tagSpec,
+    toastSpec,
   ],
   scenes: [],
   docs: {
