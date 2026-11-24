@@ -19,8 +19,7 @@ export function choiceProp<const Options extends Readonly<Record<string, unknown
   };
 }
 
-export const spacingOptions = {
-  Default: undefined,
+export const spacingValues = {
   '0': 0,
   '2': 2,
   '4': 4,
@@ -33,6 +32,8 @@ export const spacingOptions = {
   '64': 64,
   'Tablet 16 · Wide 24': { tablet: 16, wide: 24 },
 } as const satisfies { [Step in Spacing]: Step } & Record<string, unknown>;
+
+export const spacingOptions = { Default: undefined, ...spacingValues } as const;
 
 export const directionOptions = {
   row: 'row',

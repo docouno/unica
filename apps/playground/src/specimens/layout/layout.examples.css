@@ -78,10 +78,6 @@
   padding: 0;
 }
 
-.layout-container-frame section > * + * {
-  margin-block-start: var(--space-4);
-}
-
 .layout-container-frame .layout-demo-tile {
   display: block;
 }
