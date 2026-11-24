@@ -201,6 +201,20 @@ export default {
         false,
       );
 
+      const form = email.locator('xpath=ancestor::form');
+      assert.equal(await group.getAttribute('aria-invalid'), null);
+      assert.equal(await form.evaluate((owner) => owner.checkValidity()), false);
+      for (const other of (
+        await page.getByRole('group', { name: 'Send updates', exact: true }).all()
+      ).slice(1)) {
+        await other.getByRole('checkbox', { name: 'Email digest' }).press('Space');
+      }
+      assert.equal(await form.evaluate((owner) => owner.checkValidity()), true);
+      await form.evaluate((owner) => owner.reset());
+      await group.and(page.locator('[aria-invalid="true"]')).waitFor();
+      assert.equal(await email.isChecked(), false);
+      assert.equal(await form.evaluate((owner) => owner.checkValidity()), false);
+
       await showExample(page, 'List actions');
       const notify = page.getByRole('switch', { name: 'Notify the operations team about exports' });
       assert.equal(await notify.isChecked(), true);

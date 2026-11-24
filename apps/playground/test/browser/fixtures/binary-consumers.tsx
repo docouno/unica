@@ -57,7 +57,7 @@ const examples = {
   })),
   'Context menu': ContextMenuExample,
   'Form field groups': lazy(async () => ({
-    default: (await import('../../../src/prototypes/form-field/form-field.examples.js')).Groups,
+    default: (await import('../../../src/specimens/form-field/field-groups.js')).Groups,
   })),
   'List actions': lazy(async () => ({
     default: (await import('../../../src/prototypes/list/list.examples.js')).LiveRows,
@@ -79,7 +79,13 @@ export default function BinaryConsumersFixture() {
       <Suspense fallback={null}>
         {Example && (
           <div data-testid={example}>
-            <Example />
+            {example === 'Form field groups' ? (
+              <form>
+                <Example />
+              </form>
+            ) : (
+              <Example />
+            )}
           </div>
         )}
       </Suspense>

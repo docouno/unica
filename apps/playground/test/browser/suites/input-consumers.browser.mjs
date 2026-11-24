@@ -198,6 +198,17 @@ export default {
     await start.fill('07:45');
     assert.equal(await start.inputValue(), '07:45');
     assert.equal(await end.inputValue(), '08:30');
+    assert.equal(await end.getAttribute('aria-invalid'), null);
+    await start.fill('11:45');
+    assert.equal(await end.getAttribute('aria-invalid'), 'true');
+    assert.equal(
+      await end.evaluate(
+        (node) => document.getElementById(node.getAttribute('aria-describedby')).textContent,
+      ),
+      'Choose an end time later than 11:45.',
+    );
+    await end.fill('');
+    assert.equal(await end.getAttribute('aria-invalid'), null);
 
     await open(page, { item: 'context-menu', tab: 'compositions', block: 'native' });
     const note = page.getByLabel('Revision note');

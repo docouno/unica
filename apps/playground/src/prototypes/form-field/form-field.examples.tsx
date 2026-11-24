@@ -1,32 +1,23 @@
-import {
-  Checkbox,
-  CheckboxGroup,
-  Input,
-  Link,
-  Radio,
-  RadioGroup,
-  Switch,
-  SwitchGroup,
-  Textarea,
-} from '@docouno/unica';
+import { Checkbox, CheckboxGroup, Input, Link, Textarea } from '@docouno/unica';
 import type { ControlSize, FieldStatus, FieldVariant } from '@docouno/unica';
 import { useId, useRef, useState } from 'react';
 import type { ReactElement, ReactNode } from 'react';
-import { Button } from '@docouno/unica';
-import { CheckboxCard } from '../choice-card/choice-card.proto.js';
+import { Button, Text } from '@docouno/unica';
+import type { PreviewProps, PreviewContext } from '../../workbench/types.js';
 import {
   FormField,
   FormFieldDescription,
   FormFieldFeedback,
   FormFieldLabel,
 } from './form-field.proto.js';
+import {
+  specimenBlockPage,
+  focusLinkedFragment,
+} from '../../specimens/shared/specimen-fragment.js';
 import './form-field.examples.css';
 
-export function Note({ children }: { readonly children: ReactNode }): ReactElement {
-  return <p className="ff-example-note">{children}</p>;
-}
-
 interface TextFieldProps {
+  readonly subject: PreviewContext['subject'];
   readonly size?: ControlSize;
   readonly orientation?: 'vertical' | 'horizontal';
   readonly status?: FieldStatus;
@@ -42,9 +33,11 @@ interface TextFieldProps {
   readonly loading?: boolean;
   readonly placeholder?: string;
   readonly dir?: 'ltr' | 'rtl';
+  readonly type?: 'email';
 }
 
 function TextField({
+  subject,
   size = 'm',
   orientation = 'vertical',
   status = 'neutral',
@@ -61,12 +54,13 @@ function TextField({
     !disabled && ((message !== undefined && message !== null) || status !== 'neutral');
   return (
     <FormField
+      {...subject}
       size={size}
       orientation={orientation}
       htmlFor={id}
       label={label}
       description={description}
-      message={message}
+      message={typeof message === 'string' ? <bdi>{message}</bdi> : message}
       descriptionId={description ? `${id}-description` : undefined}
       messageId={feedback ? `${id}-message` : undefined}
       status={status}
@@ -92,13 +86,9 @@ function TextField({
   );
 }
 
-export function Layouts(): ReactElement {
+export function Layouts({ ctx }: PreviewProps): ReactElement {
   return (
     <div className="ff-example-stack">
-      <Note>
-        One reading order, two layouts. Horizontal fields share their label column and stack when
-        the container becomes narrow.
-      </Note>
       {(['s', 'm', 'l'] as const).map((size) => (
         <div className="ff-example-study" key={size}>
           <p className="ff-example-kicker">
@@ -111,83 +101,89 @@ export function Layouts(): ReactElement {
           </p>
           <div className="ff-example-vertical">
             <TextField
+              subject={ctx.subject}
               size={size}
               required
               defaultValue="Design library"
-              description="The name people see in shared spaces."
+              description={<bdi>The name people see in shared spaces.</bdi>}
             />
           </div>
           <TextField
+            subject={ctx.subject}
             size={size}
             orientation="horizontal"
             required
             defaultValue="Design library"
-            description="The name people see in shared spaces."
+            description={<bdi>The name people see in shared spaces.</bdi>}
           />
           <TextField
+            subject={ctx.subject}
             size={size}
             orientation="horizontal"
             label="Reference code"
             optional="(optional)"
             placeholder="e.g. DS-024"
-            description="A short internal reference for your team."
+            description={<bdi>A short internal reference for your team.</bdi>}
           />
         </div>
       ))}
       <TextField
+        subject={ctx.subject}
         orientation="horizontal"
         label="Inline reference"
         variant="ghost"
         defaultValue="DS-024"
         placeholder="e.g. DS-024"
-        description="Ghost belongs in an established editing context, such as a details inspector."
+        description={<bdi>Use the short code from the project directory.</bdi>}
       />
     </div>
   );
 }
 
-export function Anatomy(): ReactElement {
+export function Anatomy({ ctx }: PreviewProps): ReactElement {
   const password = useId();
   const about = useId();
   const custom = useId();
   const [help, setHelp] = useState(false);
   return (
     <div className="ff-example-stack">
-      <Note>
-        Labels stay visible. Required markers sit beside the label; an optional action has its own
-        focus target. Instructions remain below the control when feedback appears.
-      </Note>
       <FormField
+        {...ctx.subject}
         label="Access code"
         htmlFor={password}
         required
         labelAction={
-          <Link
-            href="#code-help"
-            onClick={(event) => {
-              event.preventDefault();
-              setHelp(!help);
-            }}
+          <Button
+            size="s"
+            variant="ghost"
+            tone="neutral"
+            onClick={() => setHelp(!help)}
             aria-expanded={help}
             aria-controls={`${password}-help`}
           >
-            Where to find it
-          </Link>
+            <bdi>Where to find it</bdi>
+          </Button>
         }
         description={
           <>
-            <p>Use the code from your invitation.</p>
+            <p>
+              <bdi>Use the code from your invitation.</bdi>
+            </p>
             <ul>
-              <li>Eight letters and numbers.</li>
-              <li>Codes expire after seven days.</li>
+              <li>
+                <bdi>Eight letters and numbers.</bdi>
+              </li>
+              <li>
+                <bdi>Codes expire after seven days.</bdi>
+              </li>
             </ul>
             <p id={`${password}-help`} hidden={!help}>
-              Look for “Your access code” in the invitation email.
+              <bdi>Look for “Your access code” in the invitation email.</bdi>
             </p>
           </>
         }
         descriptionId={`${password}-description`}
-        message="This code has expired. Ask the sender for a new invitation."
+        message={<bdi>This code has expired. Ask the sender for a new invitation.</bdi>}
         messageId={`${password}-message`}
         status="danger"
         feedbackIcon={false}
@@ -201,12 +197,13 @@ export function Anatomy(): ReactElement {
         />
       </FormField>
       <FormField
+        {...ctx.subject}
         label="Short introduction"
         orientation="horizontal"
         labelAlign="text"
         htmlFor={about}
         optional="(optional)"
-        description="A sentence or two helps collaborators recognize you."
+        description={<bdi>A sentence or two helps collaborators recognize you.</bdi>}
         descriptionId={`${about}-description`}
       >
         <Textarea
@@ -217,7 +214,7 @@ export function Anatomy(): ReactElement {
         />
       </FormField>
       <div className="ff-example-parts">
-        <FormFieldLabel htmlFor={custom}>
+        <FormFieldLabel {...ctx.subject} htmlFor={custom}>
           Public reference <span className="ff-optional">(optional)</span>
         </FormFieldLabel>
         <Input
@@ -227,10 +224,10 @@ export function Anatomy(): ReactElement {
         />
         <div className="ff-support">
           <FormFieldDescription id={`${custom}-description`}>
-            The same text parts can accompany a custom layout.
+            <bdi>Use the short code assigned to the project.</bdi>
           </FormFieldDescription>
           <FormFieldFeedback id={`${custom}-message`} status="neutral">
-            Visible to collaborators with access.
+            <bdi>Visible to collaborators with access.</bdi>
           </FormFieldFeedback>
         </div>
       </div>
@@ -238,7 +235,7 @@ export function Anatomy(): ReactElement {
   );
 }
 
-export function Feedback(): ReactElement {
+export function Feedback({ ctx }: PreviewProps): ReactElement {
   const id = useId();
   const messages: Record<FieldStatus, string> = {
     neutral: 'You can change this later.',
@@ -249,37 +246,38 @@ export function Feedback(): ReactElement {
   };
   return (
     <div className="ff-example-stack">
-      <Note>
-        Keep the label neutral and the instructions persistent. Text fields own their status glyph;
-        groups place it beside the message. Statuses are pinned for comparison; editing these
-        examples does not run validation. Try the live validation section for correction.
-      </Note>
       {(['neutral', 'info', 'success', 'warning', 'danger'] as const).map((status) => (
         <div className="ff-example-study" key={status}>
           <p className="ff-example-kicker">{status}</p>
           <TextField
+            subject={ctx.subject}
             status={status}
             label="Space address"
             defaultValue={status === 'danger' ? 'Design Library!' : 'design-library'}
-            description="This becomes part of the shared URL."
+            description={<bdi>This becomes part of the shared URL.</bdi>}
             message={messages[status]}
           />
           <FormField
+            {...ctx.subject}
             label="Publishing checks"
             target="group"
             labelId={`${id}-${status}-label`}
-            description="Checks run before each publication."
+            description={<bdi>Checks run before each publication.</bdi>}
             descriptionId={`${id}-${status}-description`}
             status={status}
             messageId={`${id}-${status}-message`}
             message={
-              {
-                neutral: 'You can change this later.',
-                info: 'These checks apply to every document.',
-                success: 'All required checks are enabled.',
-                warning: 'Some documents may need a manual review.',
-                danger: 'Select at least one publishing check.',
-              }[status]
+              <bdi>
+                {
+                  {
+                    neutral: 'You can change this later.',
+                    info: 'These checks apply to every document.',
+                    success: 'All required checks are enabled.',
+                    warning: 'Some documents may need a manual review.',
+                    danger: 'Select at least one publishing check.',
+                  }[status]
+                }
+              </bdi>
             }
           >
             <CheckboxGroup
@@ -296,167 +294,66 @@ export function Feedback(): ReactElement {
       <div className="ff-example-fallbacks">
         <p className="ff-example-kicker">Fallback labels · no custom message</p>
         {(['info', 'success', 'warning', 'danger'] as const).map((status) => (
-          <FormFieldFeedback key={status} status={status} />
+          <FormFieldFeedback {...ctx.subject} key={status} status={status} />
         ))}
       </div>
     </div>
   );
 }
 
-export function Groups(): ReactElement {
-  const id = useId();
+export function Availability({ ctx }: PreviewProps): ReactElement {
   return (
     <div className="ff-example-stack">
-      <Note>
-        A group heading names the set and never toggles its first option. Each option keeps its own
-        label; a group rule has one message. Validation is pinned here; use the live validation
-        section to try correction.
-      </Note>
-      {(['s', 'm', 'l'] as const).map((size) => (
-        <div className="ff-example-study" key={size}>
-          <p className="ff-example-kicker">{size.toUpperCase()} · first-row alignment</p>
-          <FormField
-            size={size}
-            orientation="horizontal"
-            target="group"
-            label="Send updates"
-            labelId={`${id}-${size}-label`}
-            description="Choose at least one way to receive updates."
-            descriptionId={`${id}-${size}-description`}
-            message="Select a delivery method."
-            messageId={`${id}-${size}-message`}
-            status="danger"
-            required
-          >
-            <CheckboxGroup
-              size={size}
-              status="danger"
-              aria-labelledby={`${id}-${size}-label`}
-              aria-describedby={`${id}-${size}-description ${id}-${size}-message`}
-              aria-invalid="true"
-            >
-              <Checkbox label="Email digest" />
-              <Checkbox
-                label="In-app notifications"
-                description="Quiet updates inside your workspace."
-              />
-            </CheckboxGroup>
-          </FormField>
-        </div>
-      ))}
-      <FormField
-        orientation="horizontal"
-        target="group"
-        label="Default access"
-        labelId={`${id}-radio-label`}
-        description="Applies to newly shared documents."
-        descriptionId={`${id}-radio-description`}
-      >
-        <RadioGroup
-          name={`${id}-access`}
-          defaultValue="read"
-          aria-labelledby={`${id}-radio-label`}
-          aria-describedby={`${id}-radio-description`}
-        >
-          <Radio value="read" label="Can view" />
-          <Radio value="edit" label="Can edit" description="Includes publishing changes." />
-        </RadioGroup>
-      </FormField>
-      <FormField
-        orientation="horizontal"
-        target="group"
-        label="Notifications"
-        labelId={`${id}-switch-label`}
-        description="Each setting takes effect independently."
-        descriptionId={`${id}-switch-description`}
-      >
-        <SwitchGroup
-          aria-labelledby={`${id}-switch-label`}
-          aria-describedby={`${id}-switch-description`}
-        >
-          <Switch label="Mentions" defaultChecked />
-          <Switch label="Weekly summary" />
-        </SwitchGroup>
-      </FormField>
-      <FormField
-        orientation="horizontal"
-        target="group"
-        label="Include in search"
-        labelAlign="start"
-        labelId={`${id}-cards-label`}
-        description="Select the sources people can discover."
-        descriptionId={`${id}-cards-description`}
-      >
-        <div
-          className="ff-example-card-stack"
-          role="group"
-          aria-labelledby={`${id}-cards-label`}
-          aria-describedby={`${id}-cards-description`}
-        >
-          <CheckboxCard
-            label="Published documents"
-            description="Reviewed and ready to share."
-            defaultChecked
-          />
-          <CheckboxCard label="Working drafts" description="Still open for feedback." />
-        </div>
-      </FormField>
-    </div>
-  );
-}
-
-export function Availability(): ReactElement {
-  return (
-    <div className="ff-example-stack">
-      <Note>
-        Read-only values stay selectable. Disabled fields keep a readable reason. Checking does not
-        lock editing or change the label hierarchy.
-      </Note>
       <TextField
+        subject={ctx.subject}
         label="Directory name"
         readOnly
         defaultValue="Design library"
-        description="Managed by your organization. Contact an administrator to change it."
+        description={
+          <bdi>Managed by your organization. Contact an administrator to change it.</bdi>
+        }
       />
       <TextField
+        subject={ctx.subject}
         label="Verified domain"
         readOnly
         defaultValue="example.com"
         status="success"
-        message="Domain ownership verified."
+        message={<bdi>Domain ownership verified.</bdi>}
       />
       <TextField
+        subject={ctx.subject}
         label="Custom domain"
         disabled
         placeholder="Available on a team plan"
-        description="Upgrade your plan to connect a custom domain."
+        description={<bdi>Upgrade your plan to connect a custom domain.</bdi>}
         status="danger"
-        message="This stale validation is intentionally suppressed."
+        message={<bdi>This stale validation is intentionally suppressed.</bdi>}
       />
       <TextField
+        subject={ctx.subject}
         label="Space address"
         loading
         defaultValue="design-library"
-        description="Use lowercase letters, numbers, and hyphens."
-        message="Checking availability…"
+        description={<bdi>Use lowercase letters, numbers, and hyphens.</bdi>}
+        message={<bdi>Checking availability…</bdi>}
       />
       <TextField
+        subject={ctx.subject}
         label="Reserved address"
         loading
         readOnly
         defaultValue="design-library"
-        description="The address stays readable while the reservation completes."
-        message="Reserving address…"
+        description={<bdi>The address stays readable while the reservation completes.</bdi>}
+        message={<bdi>Reserving address…</bdi>}
       />
       <div className="ff-example-study">
-        <p className="ff-example-kicker">
-          Click to edit or use Tab to compare the keyboard outline
-        </p>
-        <TextField label="Pointer editing" defaultValue="design-library" />
+        <TextField subject={ctx.subject} label="Pointer editing" defaultValue="design-library" />
         <TextField
+          subject={ctx.subject}
           label="Keyboard editing"
           status="danger"
-          message="Use an address without spaces."
+          message={<bdi>Use an address without spaces.</bdi>}
           defaultValue="design library"
         />
       </div>
@@ -464,7 +361,7 @@ export function Availability(): ReactElement {
   );
 }
 
-export function LiveValidation(): ReactElement {
+export function LiveValidation({ ctx }: PreviewProps): ReactElement {
   const id = useId();
   const emailRef = useRef<HTMLInputElement>(null);
   const groupRef = useRef<HTMLDivElement>(null);
@@ -472,19 +369,9 @@ export function LiveValidation(): ReactElement {
   const [channels, setChannels] = useState<string[]>([]);
   const [errors, setErrors] = useState({ email: false, channels: false });
   const [saved, setSaved] = useState(false);
-  const [reserve, setReserve] = useState(false);
+  const reserve = ctx.story?.controls.reserve === true;
   return (
     <div className="ff-example-stack">
-      <Note>
-        Try an empty submission, then correct each field. Instructions stay in place. The first
-        invalid target receives focus; editing clears its stale result.
-      </Note>
-      <Checkbox
-        size="s"
-        checked={reserve}
-        onCheckedChange={setReserve}
-        label="Reserve one line for each message"
-      />
       <form
         className="ff-example-stack"
         noValidate
@@ -510,17 +397,20 @@ export function LiveValidation(): ReactElement {
         }}
       >
         <FormField
+          {...ctx.subject}
           label="Delivery email"
           htmlFor={`${id}-email`}
           required
-          description="Use an address you can receive messages at."
+          description={<bdi>Use an address you can receive messages at.</bdi>}
           descriptionId={`${id}-email-description`}
           message={
-            errors.email
-              ? email.trim()
-                ? 'Enter an email address, such as name@example.com.'
-                : 'Enter your delivery email.'
-              : undefined
+            errors.email ? (
+              <bdi>
+                {email.trim()
+                  ? 'Enter an email address, such as name@example.com.'
+                  : 'Enter your delivery email.'}
+              </bdi>
+            ) : undefined
           }
           messageId={errors.email ? `${id}-email-message` : undefined}
           status={errors.email ? 'danger' : 'neutral'}
@@ -532,6 +422,7 @@ export function LiveValidation(): ReactElement {
             id={`${id}-email`}
             name="email"
             type="email"
+            dir="ltr"
             required
             value={email}
             placeholder="name@example.com"
@@ -545,14 +436,15 @@ export function LiveValidation(): ReactElement {
           />
         </FormField>
         <FormField
+          {...ctx.subject}
           target="group"
           label="Delivery methods"
           labelId={`${id}-channels-label`}
           required
-          description="Choose at least one. You can use both."
+          description={<bdi>Choose at least one. You can use both.</bdi>}
           descriptionId={`${id}-channels-description`}
           status={errors.channels ? 'danger' : 'neutral'}
-          message={errors.channels ? 'Select at least one delivery method.' : undefined}
+          message={errors.channels ? <bdi>Select at least one delivery method.</bdi> : undefined}
           messageId={errors.channels ? `${id}-channels-message` : undefined}
           reserveMessage={reserve}
         >
@@ -583,43 +475,46 @@ export function LiveValidation(): ReactElement {
           </Button>
         </div>
         <p className="ff-example-result" role="status">
-          {saved ? 'Preferences saved for this preview.' : ''}
+          <bdi>{saved ? 'Preferences saved for this preview.' : ''}</bdi>
         </p>
       </form>
     </div>
   );
 }
 
-export function Overflow(): ReactElement {
+export function Overflow({ ctx }: PreviewProps): ReactElement {
   const id = useId();
+  const addressHelp = `form-field-${ctx.theme.id}-address-guidelines`;
+  const addressPage = specimenBlockPage('form-field', 'states', 'overflow', ctx.theme.id);
+  const [start, setStart] = useState('09:00');
+  const [end, setEnd] = useState('08:30');
+  const invalidEnd = Boolean(start && end && end <= start);
   const [help, setHelp] = useState(false);
   return (
     <div className="ff-example-stack">
-      <Note>
-        Long labels and supporting text wrap without ellipsis. Structured addresses keep their own
-        left-to-right direction inside a right-to-left interface.
-      </Note>
       <FormField
+        {...ctx.subject}
         label="Invitation access code"
         htmlFor={`${id}-code`}
         labelAction={
-          <Link
-            href="#invitation-code-help"
-            onClick={(event) => {
-              event.preventDefault();
-              setHelp(!help);
-            }}
+          <Button
+            size="s"
+            variant="ghost"
+            tone="neutral"
+            onClick={() => setHelp(!help)}
             aria-expanded={help}
             aria-controls={`${id}-code-help`}
           >
-            Where can I find my invitation access code?
-          </Link>
+            <bdi>Where can I find my invitation access code?</bdi>
+          </Button>
         }
         description={
           <>
-            <p>Enter the code from your invitation email.</p>
+            <p>
+              <bdi>Enter the code from your invitation email.</bdi>
+            </p>
             <p id={`${id}-code-help`} hidden={!help}>
-              Look below the invitation link, or ask the sender for a new code.
+              <bdi>Look below the invitation link, or ask the sender for a new code.</bdi>
             </p>
           </>
         }
@@ -632,42 +527,65 @@ export function Overflow(): ReactElement {
         />
       </FormField>
       <TextField
+        subject={ctx.subject}
         orientation="horizontal"
         label="A longer descriptive label for the public documentation address"
         required
         defaultValue="documentation-and-reference-library"
         description={
           <>
-            Use an address that describes the collection.{' '}
-            <Link href="https://example.com/help/addresses" target="_blank">
-              Address guidelines
-            </Link>
+            <bdi>Use an address that describes the collection.</bdi>{' '}
+            <Link href={`${addressPage}#${addressHelp}`}>Address guidelines</Link>
           </>
         }
         status="danger"
-        message="This address is already used. Add a short team or project name to make it unique."
+        message={
+          <bdi>
+            This address is already used. Add a short team or project name to make it unique.
+          </bdi>
+        }
       />
+      <Text
+        as="p"
+        size="body-s"
+        color="secondary"
+        id={addressHelp}
+        tabIndex={-1}
+        ref={focusLinkedFragment}
+      >
+        <bdi>
+          Use lowercase letters, numbers, and hyphens. Add a short team name if the address is
+          already in use.
+        </bdi>
+      </Text>
       <div dir="rtl">
         <TextField
+          subject={ctx.subject}
           orientation="horizontal"
-          label="Workspace address · RTL"
+          label="Workspace address"
           required
           dir="ltr"
           defaultValue="https://example.com/design-library"
-          description="The address reads left to right within this right-to-left layout."
+          description={<bdi>Share this address with workspace members.</bdi>}
         />
       </div>
       <FormField
+        {...ctx.subject}
         orientation="horizontal"
         target="group"
         label="Review window"
         labelAlign="start"
         labelId={`${id}-label`}
-        description="Use local time. The end must be later than the start."
+        description={
+          <bdi>
+            Use local time. Either boundary is optional. When both are set, the end must be later
+            than the start.
+          </bdi>
+        }
         descriptionId={`${id}-description`}
-        status="danger"
-        message="Choose an end time later than 09:00."
-        messageId={`${id}-message`}
+        status={invalidEnd ? 'danger' : 'neutral'}
+        message={invalidEnd ? <bdi>Choose an end time later than {start}.</bdi> : undefined}
+        messageId={invalidEnd ? `${id}-message` : undefined}
         feedbackIcon={false}
       >
         <div
@@ -676,38 +594,46 @@ export function Overflow(): ReactElement {
           aria-labelledby={`${id}-label`}
           aria-describedby={`${id}-description`}
         >
-          <FormField label="Start" htmlFor={`${id}-start`}>
+          <FormField {...ctx.subject} label="Start" htmlFor={`${id}-start`}>
             <input
               className="ff-example-time"
               id={`${id}-start`}
               type="time"
-              defaultValue="09:00"
+              value={start}
+              onChange={(e) => setStart(e.currentTarget.value)}
             />
           </FormField>
-          <FormField label="End" htmlFor={`${id}-end`}>
+          <FormField {...ctx.subject} label="End" htmlFor={`${id}-end`}>
             <input
               className="ff-example-time"
               id={`${id}-end`}
               type="time"
-              defaultValue="08:30"
-              aria-invalid="true"
-              aria-describedby={`${id}-message`}
+              value={end}
+              onChange={(e) => setEnd(e.currentTarget.value)}
+              aria-invalid={invalidEnd || undefined}
+              aria-describedby={invalidEnd ? `${id}-message` : undefined}
             />
           </FormField>
         </div>
       </FormField>
       <div className="ff-example-narrow">
         <TextField
+          subject={ctx.subject}
           orientation="horizontal"
-          label="Address inside a narrow container"
+          label="Collection address"
           defaultValue="design-library"
-          description="A narrow card stacks its label even on a wide screen."
+          description={<bdi>Used in public links to this collection.</bdi>}
         />
       </div>
       <FormField
+        {...ctx.subject}
         label="Source identifier"
         htmlFor={`${id}-long`}
-        description="references/design-system/component-specifications/field-layout-and-validation-guidelines-without-any-short-name"
+        description={
+          <bdi>
+            references/design-system/component-specifications/field-layout-and-validation-guidelines-without-any-short-name
+          </bdi>
+        }
         descriptionId={`${id}-long-description`}
       >
         <Input
@@ -720,35 +646,35 @@ export function Overflow(): ReactElement {
   );
 }
 
-export function Overlay(): ReactElement {
+export function Overlay({ ctx }: PreviewProps): ReactElement {
   const id = useId();
-  const [danger, setDanger] = useState(true);
+  const danger = ctx.story?.controls.feedback !== false;
   return (
     <div
-      className="unica-overlay-surface ff-example-overlay"
-      data-surface="overlay"
+      className={`ff-example-overlay${ctx.surface === 'overlay' ? ' unica-overlay-surface' : ''}`}
+      data-surface={ctx.surface}
       role="group"
       aria-labelledby={`${id}-title`}
     >
       <p className="ff-example-title" id={`${id}-title`}>
         Sharing defaults
       </p>
-      <Note>
-        Labels and messages stay on the floating surface. Only the outer panel owns material and
-        shadow.
-      </Note>
       <TextField
+        subject={ctx.subject}
         label="Reply-to email"
+        type="email"
+        dir="ltr"
         defaultValue="team@"
-        description="Replies to shared updates go to this address."
+        description={<bdi>Replies to shared updates go to this address.</bdi>}
         status={danger ? 'danger' : 'neutral'}
         message={danger ? 'Enter the full address, such as team@example.com.' : undefined}
       />
       <FormField
+        {...ctx.subject}
         target="group"
         label="Available to"
         labelId={`${id}-label`}
-        description="Choose who can discover shared updates."
+        description={<bdi>Choose who can discover shared updates.</bdi>}
         descriptionId={`${id}-description`}
       >
         <CheckboxGroup aria-labelledby={`${id}-label`} aria-describedby={`${id}-description`}>
@@ -756,9 +682,6 @@ export function Overlay(): ReactElement {
           <Checkbox label="Invited guests" />
         </CheckboxGroup>
       </FormField>
-      <Button variant="secondary" tone="neutral" onClick={() => setDanger(!danger)}>
-        {danger ? 'Hide validation feedback' : 'Show validation feedback'}
-      </Button>
     </div>
   );
 }
