@@ -1,7 +1,6 @@
 import { Spinner, Stack, Text } from '@docouno/unica';
 import type { ReactElement } from 'react';
 import type { PreviewProps } from '../../workbench/types.js';
-import { ExampleSurface } from '../shared/example-surface.js';
 import './progress.examples.css';
 
 export function SpinnerTextScale({ ctx }: PreviewProps): ReactElement {
@@ -46,11 +45,11 @@ export function SpinnerMotion({ ctx }: PreviewProps): ReactElement {
 
 export function SpinnerOverlay({ ctx }: PreviewProps): ReactElement {
   return (
-    <ExampleSurface surface={ctx.surface} sizing="border-box">
+    <Stack gap={12} className="unica-overlay-surface activity-example-panel" data-surface="overlay">
       <Text size="body-s">
         <Spinner {...ctx.subject} size="m" tone="muted" />{' '}
         <bdi>Looking for matching documents…</bdi>
       </Text>
-    </ExampleSurface>
+    </Stack>
   );
 }

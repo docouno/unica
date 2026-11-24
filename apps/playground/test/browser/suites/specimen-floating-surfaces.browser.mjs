@@ -4,6 +4,7 @@ const examples = [
   { item: 'pagination', width: 360, padding: '--surface-m-padding' },
   { item: 'indicator', width: 420, padding: '--space-24' },
   { item: 'progress-circle', width: 480, padding: '--surface-m-padding' },
+  { item: 'spinner', width: 480, padding: '--surface-m-padding' },
 ];
 
 async function checkSurface({ page, mount }, { item, width, padding }) {
