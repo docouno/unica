@@ -54,3 +54,10 @@ td:has([data-indicator-preview]) {
 ul:has(> [data-wb-result-row] [data-indicator-preview]) {
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr));
 }
+
+.indicator-example-overlay {
+  position: relative;
+  inline-size: min(100%, 420px);
+  min-inline-size: 0;
+  padding: var(--space-24);
+}

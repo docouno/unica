@@ -4,7 +4,6 @@ import { Badge, Box, Button, Flex, Icon, IconButton, Indicator, Stack, Text } fr
 import type { IndicatorProps } from '@docouno/unica';
 import { Avatar } from '../../prototypes/avatar/avatar.proto.js';
 import type { PreviewProps } from '../../workbench/types.js';
-import { ExampleSurface } from '../shared/example-surface.js';
 import './indicator.examples.css';
 
 // A pinned control keeps its normal shape. Expose the meaning of the whole sample as one image.
@@ -225,7 +224,11 @@ export function IndicatorSurfaces({ ctx }: PreviewProps): ReactElement {
 
 export function IndicatorOverlay({ ctx }: PreviewProps): ReactElement {
   return (
-    <ExampleSurface surface={ctx.surface} sizing="border-box" gap={16}>
+    <Stack
+      gap={16}
+      data-surface="overlay"
+      className="unica-overlay-surface indicator-example-overlay"
+    >
       <Text size="body-s" weight="medium">
         Activity &amp; availability
       </Text>
@@ -256,7 +259,7 @@ export function IndicatorOverlay({ ctx }: PreviewProps): ReactElement {
           <Text size="body-s">{label}</Text>
         </Flex>
       ))}
-    </ExampleSurface>
+    </Stack>
   );
 }
 

@@ -1,6 +1,9 @@
 import assert from 'node:assert/strict';
 
-const examples = [{ item: 'pagination', width: 360, padding: '--surface-m-padding' }];
+const examples = [
+  { item: 'pagination', width: 360, padding: '--surface-m-padding' },
+  { item: 'indicator', width: 420, padding: '--space-24' },
+];
 
 async function checkSurface({ page, mount }, { item, width, padding }) {
   await mount('native');
