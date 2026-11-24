@@ -1,0 +1,8 @@
+/* Give each sample room to wrap the hierarchy between whole labels. */
+tr:has(> td + td) > td:has([data-breadcrumb-comparison]) {
+  min-inline-size: 13rem;
+}
+
+ul:has(> [data-wb-result-row] [data-breadcrumb-comparison]) {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr));
+}
