@@ -1,8 +1,16 @@
-import { Checkbox, CheckboxGroup, Input, Link, Textarea } from '@docouno/unica';
+import {
+  Button,
+  Checkbox,
+  CheckboxGroup,
+  Divider,
+  Input,
+  Link,
+  Text,
+  Textarea,
+} from '@docouno/unica';
 import type { ControlSize, FieldStatus, FieldVariant } from '@docouno/unica';
 import { useId, useRef, useState } from 'react';
 import type { ReactElement, ReactNode } from 'react';
-import { Button, Text } from '@docouno/unica';
 import type { PreviewProps, PreviewContext } from '../../workbench/types.js';
 import {
   FormField,
@@ -13,6 +21,7 @@ import {
 import {
   specimenBlockPage,
   focusLinkedFragment,
+  followStudyFragment,
 } from '../../specimens/shared/specimen-fragment.js';
 import './form-field.examples.css';
 
@@ -91,14 +100,14 @@ export function Layouts({ ctx }: PreviewProps): ReactElement {
     <div className="ff-example-stack">
       {(['s', 'm', 'l'] as const).map((size) => (
         <div className="ff-example-study" key={size}>
-          <p className="ff-example-kicker">
+          <Text size="caption-l" weight="medium" color="secondary">
             {size.toUpperCase()} ·{' '}
             {size === 's'
               ? 'Compact · 30px'
               : size === 'm'
                 ? 'Regular · 40px'
                 : 'Comfortable · 48px'}
-          </p>
+          </Text>
           <div className="ff-example-vertical">
             <TextField
               subject={ctx.subject}
@@ -125,6 +134,7 @@ export function Layouts({ ctx }: PreviewProps): ReactElement {
             placeholder="e.g. DS-024"
             description={<bdi>A short internal reference for your team.</bdi>}
           />
+          <Divider className="ff-example-divider" />
         </div>
       ))}
       <TextField
@@ -248,7 +258,9 @@ export function Feedback({ ctx }: PreviewProps): ReactElement {
     <div className="ff-example-stack">
       {(['neutral', 'info', 'success', 'warning', 'danger'] as const).map((status) => (
         <div className="ff-example-study" key={status}>
-          <p className="ff-example-kicker">{status}</p>
+          <Text size="caption-l" weight="medium" color="secondary">
+            {status}
+          </Text>
           <TextField
             subject={ctx.subject}
             status={status}
@@ -289,10 +301,13 @@ export function Feedback({ ctx }: PreviewProps): ReactElement {
               <Checkbox label="Check shared links" defaultChecked={status === 'success'} />
             </CheckboxGroup>
           </FormField>
+          <Divider className="ff-example-divider" />
         </div>
       ))}
       <div className="ff-example-fallbacks">
-        <p className="ff-example-kicker">Fallback labels · no custom message</p>
+        <Text size="caption-l" weight="medium" color="secondary">
+          Fallback labels · no custom message
+        </Text>
         {(['info', 'success', 'warning', 'danger'] as const).map((status) => (
           <FormFieldFeedback {...ctx.subject} key={status} status={status} />
         ))}
@@ -389,11 +404,17 @@ export function LiveValidation({ ctx }: PreviewProps): ReactElement {
             groupRef.current?.querySelector<HTMLInputElement>('input:not(:disabled)')?.focus();
           }
         }}
-        onReset={() => {
-          setEmail('');
-          setChannels([]);
-          setErrors({ email: false, channels: false });
-          setSaved(false);
+        onReset={(event) => {
+          const reset = event.nativeEvent;
+          // A document-level listener can still cancel the native reset.
+          setTimeout(() => {
+            if (!reset.defaultPrevented) {
+              setEmail('');
+              setChannels([]);
+              setErrors({ email: false, channels: false });
+              setSaved(false);
+            }
+          }, 0);
         }}
       >
         <FormField
@@ -474,9 +495,9 @@ export function LiveValidation({ ctx }: PreviewProps): ReactElement {
             Reset
           </Button>
         </div>
-        <p className="ff-example-result" role="status">
+        <Text size="caption-l" color="secondary" className="ff-example-result" role="status">
           <bdi>{saved ? 'Preferences saved for this preview.' : ''}</bdi>
-        </p>
+        </Text>
       </form>
     </div>
   );
@@ -535,7 +556,9 @@ export function Overflow({ ctx }: PreviewProps): ReactElement {
         description={
           <>
             <bdi>Use an address that describes the collection.</bdi>{' '}
-            <Link href={`${addressPage}#${addressHelp}`}>Address guidelines</Link>
+            <Link href={`${addressPage}#${addressHelp}`} onClick={followStudyFragment}>
+              Address guidelines
+            </Link>
           </>
         }
         status="danger"
@@ -656,9 +679,9 @@ export function Overlay({ ctx }: PreviewProps): ReactElement {
       role="group"
       aria-labelledby={`${id}-title`}
     >
-      <p className="ff-example-title" id={`${id}-title`}>
+      <Text weight="semibold" color="primary" id={`${id}-title`}>
         Sharing defaults
-      </p>
+      </Text>
       <TextField
         subject={ctx.subject}
         label="Reply-to email"

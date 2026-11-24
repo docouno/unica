@@ -235,6 +235,103 @@ export default {
     await card.click({ button: 'right', position: { x: 4, y: 4 } });
     await menu.waitFor();
   },
+  'FormField keeps saved preferences when the application cancels a keyboard reset': async ({
+    page,
+    mount,
+  }) => {
+    await mount('input-workbench');
+    await open(page, { item: 'form-field', tab: 'states', block: 'live' });
+    const form = page.locator('[data-wb-block="live"] form').filter({
+      has: page.getByRole('button', { name: 'Save preferences' }),
+    });
+    const email = form.getByRole('textbox');
+    const digest = form.getByRole('checkbox', { name: 'Email digest' });
+    const saved = form.getByText('Preferences saved for this preview.', { exact: true });
+    const reset = form.getByRole('button', { name: 'Reset', exact: true });
+    await email.fill('release@example.org');
+    await digest.check();
+    await form.getByRole('button', { name: 'Save preferences' }).press('Enter');
+    await saved.waitFor();
+
+    await form.evaluate((owner) => {
+      owner.ownerDocument.addEventListener('reset', (event) => event.preventDefault(), {
+        once: true,
+      });
+    });
+    await reset.press('Enter');
+    await page.evaluate(() => new Promise((resolve) => setTimeout(resolve, 0)));
+    assert.equal(await email.inputValue(), 'release@example.org');
+    assert.equal(await digest.isChecked(), true);
+    assert.equal(await saved.isVisible(), true);
+
+    await reset.press('Enter');
+    await saved.waitFor({ state: 'hidden' });
+    assert.equal(await email.inputValue(), '');
+    assert.equal(await digest.isChecked(), false);
+  },
+  'FormField address guidelines preserve edits across themes and open independently': async ({
+    page,
+    mount,
+  }) => {
+    await mount('input-workbench');
+    await open(page, {
+      item: 'form-field',
+      tab: 'states',
+      family: 'all',
+      scheme: 'both',
+      theme: 'soft-dark',
+    });
+    const study = page.locator('[data-wb-block="overflow"]');
+    await study.scrollIntoViewIfNeeded();
+    const board = study.locator('.wb-artboard[data-theme="frost-light"]');
+    const label = { name: /A longer descriptive label/ };
+    const address = board.getByRole('textbox', label);
+    const other = study.locator('.wb-artboard[data-theme="soft-dark"]').getByRole('textbox', label);
+    const help = board.getByRole('button', { name: /Where can I find/ });
+    const link = board.getByRole('link', { name: 'Address guidelines' });
+    const initial = await address.inputValue();
+    await address.fill('edited-address');
+    await other.fill('another-address');
+    await help.press('Enter');
+
+    const href = new URL(await link.getAttribute('href'), page.url());
+    assert.equal(href.searchParams.get('block'), 'overflow');
+    assert.equal(href.searchParams.get('solo'), 'frost-light');
+    const separate = await page.context().newPage();
+    await separate.goto(href.href);
+    await separate.locator(href.hash + ':focus').waitFor();
+    assert.equal(await separate.getByRole('textbox', label).inputValue(), initial);
+    await separate.close();
+
+    await link.press('Enter');
+    await page.waitForURL(
+      (url) => url.hash === href.hash && url.searchParams.get('block') === 'overflow',
+    );
+    assert.equal(await address.inputValue(), 'edited-address');
+    assert.equal(await other.inputValue(), 'another-address');
+    assert.equal(await help.getAttribute('aria-expanded'), 'true');
+    assert.equal(await study.locator('.wb-artboard').count(), 6);
+    await page.locator(href.hash + ':focus').waitFor();
+    await page.waitForFunction(
+      (hash) =>
+        new Promise((resolve) => {
+          const observer = new IntersectionObserver(
+            ([{ boundingClientRect, intersectionRect }]) => {
+              observer.disconnect();
+              // Fractional artboard scaling may clip a subpixel at the scrollport edge.
+              resolve(
+                intersectionRect.height >= boundingClientRect.height - 1 &&
+                  intersectionRect.width >= boundingClientRect.width - 1,
+              );
+            },
+          );
+          requestAnimationFrame(() => observer.observe(document.querySelector(hash)));
+        }),
+      href.hash,
+    );
+    await page.reload();
+    await page.locator(href.hash + ':focus').waitFor();
+  },
   'Input Workbench uses the available overlay width for narrow RTL overflow examples': async ({
     page,
     mount,

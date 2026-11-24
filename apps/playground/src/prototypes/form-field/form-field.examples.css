@@ -18,13 +18,10 @@ td:has([data-form-field-sample][data-orientation='vertical']) {
   display: grid;
   gap: 20px;
   min-inline-size: 0;
-  padding-block-end: 24px;
-  border-block-end: 1px solid var(--border-subtle);
 }
-.ff-example-kicker {
-  margin: 0;
-  color: var(--fg-secondary);
-  font: 500 var(--text-size-caption-l)/1.5 var(--font-family-base);
+.ff-example-divider {
+  /* The study grid supplies the first 20px of space before the rule. */
+  margin-block-start: var(--space-4);
 }
 .ff-example-vertical {
   inline-size: min(100%, 26rem);
@@ -44,9 +41,6 @@ td:has([data-form-field-sample][data-orientation='vertical']) {
 }
 .ff-example-result {
   min-block-size: 1.5em;
-  margin: 0;
-  color: var(--fg-secondary);
-  font: 400 var(--text-size-caption-l)/1.5 var(--font-family-base);
 }
 .ff-example-pair {
   display: grid;
@@ -55,11 +49,6 @@ td:has([data-form-field-sample][data-orientation='vertical']) {
 }
 .ff-example-narrow {
   max-inline-size: 22rem;
-}
-.ff-example-title {
-  margin: 0;
-  color: var(--fg-primary);
-  font: 600 var(--text-size-body-m)/1.4 var(--font-family-base);
 }
 .ff-example-overlay {
   position: relative;
