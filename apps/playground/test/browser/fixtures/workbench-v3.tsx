@@ -1,5 +1,6 @@
 import type { JSX } from 'react';
 import appShellSpec from '../../../src/specimens/app-shell/app-shell.spec.js';
+import blockquoteSpec from '../../../src/specimens/blockquote/blockquote.spec.js';
 import buttonSpec from '../../../src/specimens/button/button.spec.js';
 import progressSpec from '../../../src/specimens/progress/progress.spec.js';
 import { unicaWorkbenchBase } from '../../../src/unica.workbench.shared.js';
@@ -17,7 +18,7 @@ const docsById: Readonly<
 
 const config: WorkbenchConfig = {
   ...unicaWorkbenchBase,
-  components: [buttonSpec, progressSpec, appShellSpec],
+  components: [buttonSpec, progressSpec, appShellSpec, blockquoteSpec],
   scenes: [],
   docs: {
     defaultImportFrom: '@docouno/unica',

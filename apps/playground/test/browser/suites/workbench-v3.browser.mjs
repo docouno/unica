@@ -79,6 +79,46 @@ export default {
     assert.ok(Math.abs(scrolled.shift) <= 1, 'Save actions should stay visible while scrolling');
   },
 
+  'Narrow overlay studies keep reading width for headings and quotations': async ({
+    page,
+    mount,
+  }) => {
+    await page.setViewportSize({ width: 412, height: 950 });
+    await mount('workbench-v3');
+
+    for (const [item, block, selector] of [
+      ['app-shell', 'layout', '.shell-study-layout h3'],
+      ['blockquote', 'overflow', 'blockquote p'],
+    ]) {
+      await navigate(page, {
+        item,
+        block,
+        tab: 'states',
+        family: 'pixel',
+        scheme: 'light',
+        surface: 'overlay',
+        vp: '360',
+        scale: '120',
+        dir: 'rtl',
+        raw: '1',
+      });
+      const frame = page.locator(`[data-wb-block="${block}"] .wb-artboard`);
+      const reading = frame.locator(selector).first();
+      await reading.waitFor({ state: 'attached' });
+      const { stageWidth, textWidth, contained } = await reading.evaluate((element) => {
+        const stage = element.closest('[data-stage-content]').getBoundingClientRect();
+        const text = element.getBoundingClientRect();
+        return {
+          stageWidth: stage.width,
+          textWidth: text.width,
+          contained: text.left >= stage.left - 1 && text.right <= stage.right + 1,
+        };
+      });
+      assert.ok(textWidth >= stageWidth / 2, `${item} text collapsed to ${textWidth}px`);
+      assert.ok(contained, `${item} text extends past its overlay stage`);
+    }
+  },
+
   'Workbench v3 StoryFrame controls, actions, and reset synchronize across all 6 themes without header jump':
     async ({ page, mount }) => {
       await page.setViewportSize({ width: 1280, height: 900 });
