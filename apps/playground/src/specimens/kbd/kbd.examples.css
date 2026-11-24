@@ -21,7 +21,6 @@
   inline-size: min(100%, 10rem);
 }
 
-.kbd-group-preview,
 .kbd-preview-scroll {
   min-inline-size: 0;
   max-inline-size: 100%;
@@ -34,7 +33,7 @@
   margin-inline: auto;
 }
 
-:is(.kbd-group-preview, .kbd-preview-scroll):focus-visible {
+.kbd-preview-scroll:focus-visible {
   outline: 2px solid var(--focus-ring-color);
   outline-offset: 2px;
 }
