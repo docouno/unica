@@ -7,10 +7,12 @@ ul:has(> [data-wb-result-row] [data-choice-card-sample]) {
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr));
 }
 
-.choice-study-stack {
-  display: grid;
-  gap: var(--space-24);
-  min-inline-size: 0;
+/* A large switch occupies 52px beside the card's title and description. */
+td:has([data-choice-card-sample='switch']) {
+  min-inline-size: 20rem;
+}
+ul:has(> [data-wb-result-row] [data-choice-card-sample='switch']) {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 20rem), 1fr));
 }
 
 .choice-study-surface {
@@ -56,11 +58,6 @@ ul:has(> [data-wb-result-row] [data-choice-card-sample]) {
 .choice-study-error > svg {
   flex: 0 0 auto;
   margin-block-start: 2px;
-}
-.choice-study-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-8);
 }
 .choice-study-note[hidden] {
   display: none;
