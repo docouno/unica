@@ -243,7 +243,7 @@ export function FreeTitle({ ctx }: PreviewProps): ReactElement {
   const [saved, setSaved] = useState('');
   return (
     <form
-      className={`suggestion-save-pair-proto autocomplete-title-form${ctx.surface === 'overlay' ? ' unica-overlay-surface' : ''}`}
+      className={`suggestion-save-pair-proto${ctx.surface === 'overlay' ? ' unica-overlay-surface' : ''}`}
       data-surface={ctx.surface}
       onSubmit={(event) => {
         event.preventDefault();

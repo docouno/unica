@@ -351,7 +351,7 @@ function SuggestionField({
   previewActive,
   size = 'm',
   width = 'full',
-  placeholder = 'Search options…',
+  placeholder = 'Search options',
   clearable = true,
   iconLeft,
   disabled,
@@ -632,7 +632,11 @@ function SuggestionField({
       <div className="choice-list-frame-proto suggestion-frame-proto" data-size={size}>
         {(browsingCopy || replacement) && (
           <div className="suggestion-panel-recovery-proto">
-            {browsingCopy && <span id={recoveryId}>Choose a result.</span>}
+            {browsingCopy && (
+              <span id={recoveryId}>
+                <bdi>Choose a result.</bdi>
+              </span>
+            )}
             {!browsingCopy && replacement && <span>Selection pending</span>}
             {replacement && <RestoreButton inPanel onClick={restore} />}
           </div>
@@ -709,7 +713,7 @@ function SuggestionField({
             iconLeft={iconLeft ?? undefined}
             value={catalog ? text : undefined}
             defaultValue={catalog ? undefined : initialText}
-            dir={catalog ? undefined : 'auto'}
+            dir="auto"
             role="combobox"
             autoComplete="off"
             aria-autocomplete="list"
@@ -812,7 +816,11 @@ function SuggestionField({
       </FormField>
       {unconfirmed && !unavailable && !shown && (recoveryCopy || replacement) && (
         <div className="suggestion-recovery-proto">
-          {recoveryCopy && <span id={recoveryId}>{recoveryCopy}</span>}
+          {recoveryCopy && (
+            <span id={recoveryId}>
+              <bdi>{recoveryCopy}</bdi>
+            </span>
+          )}
           {replacement && <RestoreButton onClick={restore} />}
         </div>
       )}

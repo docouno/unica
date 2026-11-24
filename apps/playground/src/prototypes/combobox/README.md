@@ -2,7 +2,7 @@
 
 ## Combobox
 
-Open `?item=combobox` in the workbench. The role matrix and the Team assignment example in Usage are interactive. Examples marked **Pinned** keep states side by side for inspection. Folio's Page Properties drawer provides the placement reference for a compact reviewer picker inside an inspector. The live field has also been checked inside the shared Drawer preview.
+Open `?item=combobox` in the workbench. The role matrix and the Team assignment example in Compositions are interactive. Examples marked **Pinned** keep states side by side for inspection. Folio's Page Properties drawer provides the placement reference for a compact reviewer picker inside an inspector. The live field has also been checked inside the shared Drawer preview.
 
 ### Purpose
 
@@ -39,6 +39,8 @@ Keep the text editable during loading. Clear or restore can abandon a pending qu
 The editable input maintains DOM focus while the popup is open. Keep the input's system focus treatment and draw the neutral active plate and its leading edge on a result. ARIA identifies the input as a list-autocomplete combobox, describes whether it is expanded, and references only a visible enabled active descendant. The pointer chevron is excluded from Tab order. Ordinary focus alone does not open results. Typing, arrow keys and the chevron open the panel. Typing and disclosure open with no active row. The first arrow starts at the confirmed row if enabled, otherwise at the first or last enabled row in the arrow's direction. Further arrows skip unavailable rows, stop at the edges, and scroll the active row into view without scrolling the page. Browsing preserves input text. Enter applies an active result and consumes that Enter. Enter with no active result closes the panel and follows the form's normal validation or submission path, leaving any validation message in view. Space, Home, End and horizontal arrows keep their ordinary text-editing behavior. IME composition uses native editing and must finish without choosing a result or submitting the form. Escape dismisses suggestions first, including within a Drawer. Tab and outside dismissal never accept a suggestion. Restore and Clear have local focus contours when reached by keyboard.
 
 The live form demonstrates assignment validation and recovery without a network. Save stays beside the field and available while suggestions are open. Pinned comparisons render in flow. The live prototype exercises manual top-layer placement, focus, and local keyboard and pointer behavior. Production implementation supplies the stable-ID form carrier, reset, controlled state, validation, live announcements, cross-browser focus and IME, and scroll behavior within nested overlays. Reset should return to the initial ID and label and clear any open query and recovery history. Read-only keeps its answer for submission and disabled omits it.
+
+The assignment form submits the confirmed team's stable value in a local hidden field named `team`. Editing suppresses that value until a team is restored or selected. Saving a draft returns focus to the editor. A successful save shows the confirmed team name. The standalone Playground reports selection and query changes through callbacks.
 
 ## Autocomplete
 
