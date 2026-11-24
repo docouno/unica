@@ -19,8 +19,12 @@
   inline-size: min(100%, 26rem);
 }
 
-[data-surface='overlay'] > .suggestion-study-grid-proto .suggestion-study-proto,
-[data-surface='overlay'] > .suggestion-live-stage-proto .suggestion-usage-proto {
+[data-surface='overlay']:not(.example-surface)
+  > .suggestion-study-grid-proto
+  .suggestion-study-proto,
+[data-surface='overlay']:not(.example-surface)
+  > .suggestion-live-stage-proto
+  .suggestion-usage-proto {
   box-sizing: border-box;
   padding: var(--space-16);
   border: 1px solid var(--border-subtle);
@@ -34,10 +38,6 @@
   justify-items: center;
   inline-size: 100%;
   min-block-size: 27rem;
-}
-
-.suggestion-editor-fragment-proto {
-  inline-size: min(100%, 34rem);
 }
 
 .suggestion-save-pair-proto {
@@ -80,4 +80,28 @@
   grid-row: 4;
   min-inline-size: 0;
   overflow-wrap: anywhere;
+}
+
+.autocomplete-title-form {
+  display: grid;
+  box-sizing: border-box;
+}
+
+.autocomplete-title-form[data-surface='overlay'] {
+  position: relative;
+  padding: var(--surface-s-padding);
+}
+
+.autocomplete-title-form :is(.ff-layout, .ff-body, .ff-control) {
+  display: contents;
+}
+
+.autocomplete-title-form .ff-heading {
+  grid-column: 1 / -1;
+  grid-row: 1;
+}
+
+.autocomplete-title-form .suggestion-editor-row-proto {
+  grid-column: 1;
+  grid-row: 2;
 }

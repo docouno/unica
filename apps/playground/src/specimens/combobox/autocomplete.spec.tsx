@@ -1,3 +1,5 @@
+import { defineComponent } from '../../workbench/types.js';
+import { Autocomplete } from '../../prototypes/combobox/combobox.proto.js';
 import {
   size,
   variant,
@@ -9,491 +11,190 @@ import {
   toggle,
   eventProp,
 } from '../control-props.js';
-import { useState } from 'react';
-import type { ReactElement } from 'react';
+import { withOverlaySurface } from '../shared/with-overlay-surface.js';
+import { previewProps, previewText } from '../preview-code.js';
 import {
-  ChatCenteredTextIcon,
-  CodeBlockIcon,
-  ImageSquareIcon,
-  LinkSimpleIcon,
-  MagnifyingGlassIcon,
-  TableIcon,
-} from '@phosphor-icons/react';
-import { Button } from '@docouno/unica';
-import { Text } from '@docouno/unica';
-import { defineComponent } from '../../workbench/types.js';
-import { Autocomplete } from '../../prototypes/combobox/combobox.proto.js';
-import type { Suggestion } from '../../prototypes/combobox/combobox.proto.js';
-import { Study } from '../../prototypes/combobox/combobox.study.js';
+  AutocompleteRoles,
+  AutocompleteRows,
+  AutocompleteAvailability,
+  AutocompleteResponses,
+  AutocompleteOverflow,
+  FreeTitle,
+} from './autocomplete.examples.js';
+import { titles } from './document-titles.js';
+import { InsertBlock } from './insert-block.js';
+import commandsSource from './block-commands.ts?raw';
+import insertSource from './insert-block.tsx?raw';
 
-const titles = [
-  { value: 'release', label: 'Release notes' },
-  { value: 'review', label: 'Release readiness review' },
-  { value: 'incident', label: 'Incident follow-up' },
-  { value: 'planning', label: 'Weekly planning' },
-  { value: 'retro', label: 'Project retrospective' },
-] as const satisfies readonly Suggestion[];
-
-const blocks = [
-  {
-    value: 'callout',
-    label: 'Callout',
-    description: 'Highlight a note, decision, or warning.',
-    insertText: '/callout',
-    shortcut: '/callout',
-    group: 'Text',
-    icon: ChatCenteredTextIcon,
-  },
-  {
-    value: 'code',
-    label: 'Code block',
-    description: 'Keep spacing and syntax in a code example.',
-    insertText: '/code',
-    shortcut: '/code',
-    group: 'Text',
-    icon: CodeBlockIcon,
-  },
-  {
-    value: 'table',
-    label: 'Table',
-    description: 'Organize structured information in rows and columns.',
-    insertText: '/table',
-    shortcut: '/table',
-    group: 'Data and media',
-    icon: TableIcon,
-  },
-  {
-    value: 'link',
-    label: 'Link preview',
-    description: 'Reference a page without leaving the draft.',
-    insertText: '/link',
-    shortcut: '/link',
-    group: 'Data and media',
-    icon: LinkSimpleIcon,
-  },
-  {
-    value: 'gallery',
-    label: 'Image gallery',
-    description: 'Available in shared workspaces.',
-    insertText: '/gallery',
-    shortcut: '/gallery',
-    group: 'Data and media',
-    icon: ImageSquareIcon,
-    disabled: true,
-  },
-] as const satisfies readonly Suggestion[];
-
-function matchesCommand(option: Suggestion, query: string): boolean {
-  const text = query.trim().replace(/^\//u, '').toLocaleLowerCase();
-  return [option.label, option.description, option.insertText].some((value) =>
-    value?.toLocaleLowerCase().includes(text),
-  );
-}
-
-function Roles(): ReactElement {
-  return (
-    <div className="suggestion-study-grid-proto">
-      {(['default', 'ghost'] as const).map((variant) => (
-        <div className="suggestion-study-proto" key={variant}>
-          <Text size="caption-l" color="secondary">
-            {variant === 'default' ? 'Form field' : 'Inline field'}
-          </Text>
-          {(['s', 'm', 'l'] as const).map((size) => (
-            <Autocomplete
-              key={size}
-              variant={variant}
-              size={size}
-              width={size === 'l' ? 'auto' : 'full'}
-              label={`Document title · ${size.toUpperCase()}`}
-              options={titles}
-              defaultValue={variant === 'ghost' ? 'Release notes' : undefined}
-              browsable={size === 's'}
-            />
-          ))}
-        </div>
-      ))}
-    </div>
-  );
-}
-
-function Rows(): ReactElement {
-  return (
-    <div className="suggestion-study-grid-proto">
-      <Study title="Plain suggestions · Tab to edit">
-        <Autocomplete
-          label="Document title"
-          options={titles}
-          defaultValue="Release"
-          previewOpen
-          previewActive="review"
-        />
-      </Study>
-      <Study title="Grouped commands · Click to edit">
-        <Autocomplete
-          label="Insert a block"
-          options={[blocks[0], blocks[2], blocks[4]]}
-          filter={matchesCommand}
-          size="s"
-          variant="ghost"
-          iconLeft={MagnifyingGlassIcon}
-          defaultValue="/"
-          previewOpen
-          previewActive="callout"
-        />
-      </Study>
-    </div>
-  );
-}
-
-function Availability(): ReactElement {
-  return (
-    <div className="suggestion-study-grid-proto">
-      <Study title="Read-only">
-        <Autocomplete
-          label="Document title"
-          options={titles}
-          defaultValue="Incident notes"
-          readOnly
-          description="Managed by the document owner."
-        />
-      </Study>
-      <Study title="Disabled">
-        <Autocomplete
-          label="Document title"
-          options={titles}
-          defaultValue="Weekly planning"
-          disabled
-          description="This draft was archived."
-        />
-      </Study>
-      <Study title="Information">
-        <Autocomplete
-          label="Document title"
-          options={titles}
-          defaultValue="Weekly planning"
-          status="info"
-          message="Suggestions come from your recent drafts."
-        />
-      </Study>
-      <Study title="Confirmed">
-        <Autocomplete
-          label="Document title"
-          options={titles}
-          defaultValue="Incident follow-up"
-          status="success"
-          message="Title saved."
-        />
-      </Study>
-      <Study title="Warning">
-        <Autocomplete
-          label="Document title"
-          options={titles}
-          defaultValue="Untitled notes"
-          variant="ghost"
-          status="warning"
-          message="This title is already in use."
-        />
-      </Study>
-      <Study title="Required">
-        <Autocomplete
-          label="Document title"
-          options={titles}
-          required
-          status="danger"
-          message="Enter a title to continue."
-        />
-      </Study>
-    </div>
-  );
-}
-
-function Responses(): ReactElement {
-  return (
-    <div className="suggestion-study-grid-proto">
-      <Study title="Waiting for a query">
-        <Autocomplete
-          label="Document title"
-          options={titles}
-          defaultValue="R"
-          minimumQueryLength={2}
-          previewOpen
-        />
-      </Study>
-      <Study title="Searching">
-        <Autocomplete
-          label="Document title"
-          options={titles}
-          defaultValue="Release "
-          searchState="loading"
-          previewOpen
-        />
-      </Study>
-      <Study title="No matching suggestions">
-        <Autocomplete
-          label="Document title"
-          options={titles}
-          defaultValue="Rollout report"
-          previewOpen
-        />
-      </Study>
-      <Study title="Suggestions unavailable">
-        <Autocomplete
-          label="Document title"
-          options={titles}
-          defaultValue="Release"
-          searchState="error"
-          previewOpen
-        />
-      </Study>
-      <Study title="No recent suggestions">
-        <Autocomplete
-          label="Document title"
-          options={[]}
-          listMessage="Type a title to start your draft."
-          browsable
-          previewOpen
-        />
-      </Study>
-      <Study title="Suggestion unavailable">
-        <Autocomplete
-          label="Insert a block"
-          options={[blocks[4]]}
-          defaultValue="/gallery"
-          previewOpen
-        />
-      </Study>
-    </div>
-  );
-}
-
-function Overflow(): ReactElement {
-  const longTitle = 'International release readiness and deployment verification notes';
-  const longBlock = {
-    ...blocks[2],
-    value: 'release',
-    label: 'International release checklist',
-    description: 'Track deployment readiness, rollback owners, and follow-up checks.',
-    insertText: '/release',
-    shortcut: '/release',
-  };
-  return (
-    <div className="suggestion-study-grid-proto">
-      <Study title="Long plain text">
-        <Autocomplete
-          label="Document title"
-          size="l"
-          options={[{ value: 'long', label: longTitle }]}
-          defaultValue={longTitle}
-          previewOpen
-          previewActive="long"
-        />
-      </Study>
-      <Study title="Wrapped command and shortcut">
-        <Autocomplete
-          label="Insert a block"
-          size="m"
-          variant="ghost"
-          options={[longBlock, ...blocks]}
-          defaultValue="/"
-          filter={matchesCommand}
-          previewOpen
-          previewActive="release"
-        />
-      </Study>
-    </div>
-  );
-}
-
-function FreeText(): ReactElement {
-  const [saved, setSaved] = useState('');
-  return (
-    <form
-      className="suggestion-usage-proto suggestion-save-pair-proto"
-      onSubmit={(event) => {
-        event.preventDefault();
-        const title = new FormData(event.currentTarget).get('title');
-        setSaved(typeof title === 'string' ? title : '');
-      }}
-    >
-      <Autocomplete
-        name="title"
-        label="Document title"
-        options={titles}
-        required
-        placeholder="Enter a title"
-        description="Choose a recent title or write your own."
-        onTextChange={() => setSaved('')}
-      />
-      <Button type="submit" className="suggestion-save-proto">
-        Save title
-      </Button>
-      {saved && (
-        <Text size="caption-l" color="secondary" role="status" className="suggestion-saved-proto">
-          Saved “{saved}”
-        </Text>
-      )}
-    </form>
-  );
-}
-
-function InsertBlock(): ReactElement {
-  const [inserted, setInserted] = useState('');
-  const [notice, setNotice] = useState(false);
-  return (
-    <form
-      className="suggestion-usage-proto suggestion-editor-fragment-proto"
-      onSubmit={(event) => {
-        event.preventDefault();
-        const command = new FormData(event.currentTarget).get('command');
-        const next = blocks.find((block) => block.insertText === command);
-        if (next && !('disabled' in next && next.disabled)) {
-          setInserted(next.label);
-          setNotice(false);
-        } else {
-          setNotice(true);
-        }
-      }}
-    >
-      <Autocomplete
-        name="command"
-        label="Insert a block"
-        variant="ghost"
-        size="s"
-        placeholder="Type / to browse"
-        options={blocks}
-        filter={matchesCommand}
-        onTextChange={() => {
-          setInserted('');
-          setNotice(false);
-        }}
-        onSuggestion={(option) => setInserted(option.label)}
-      />
-      {inserted && (
-        <Text size="body-s" color="secondary" role="status">
-          {inserted} inserted.
-        </Text>
-      )}
-      {notice && (
-        <Text size="body-s" color="secondary" role="status">
-          Choose an available block or enter its command.
-        </Text>
-      )}
-    </form>
-  );
-}
+const messages = {
+  neutral: '',
+  info: 'Suggestions come from your recent drafts.',
+  success: 'The title check passed.',
+  warning: 'A draft already uses this title.',
+  danger: 'Choose a different title before sharing.',
+};
 
 export default defineComponent({
   id: 'autocomplete',
   title: 'Autocomplete',
   category: 'Selection & Pickers',
   status: 'Proto',
+  summary:
+    'Edit free text and optionally complete it with a plain suggestion or a grouped command.',
   componentName: 'Autocomplete',
   form: 'owned',
   props: {
     size,
     variant,
-    status,
+    status: {
+      ...status,
+      description: 'Field feedback. Each non-neutral status has a pinned example message.',
+    },
     width,
     disabled,
     readOnly,
     required,
-    browsable: toggle('Results', 'Show a control to browse the available suggestions.'),
-    onTextChange: eventProp('Reports free text and inserted suggestions.', 'handleTextChange'),
-    onSuggestion: eventProp('Reports the suggestion chosen from the list.', 'handleSuggestion'),
+    browsable: toggle('Interaction', 'Show a control to browse the available suggestions.'),
+    onTextChange: eventProp(
+      'Receives the edited or inserted text.',
+      '(text) => console.log(text)',
+      '(text: string) => void',
+    ),
+    onSuggestion: eventProp(
+      'Receives the chosen suggestion. The event log displays its value.',
+      '(suggestion) => console.log(suggestion.value)',
+      '(suggestion: Suggestion) => void',
+    ),
   },
-  render: function AutocompletePreview({ values, ctx }) {
-    const [revision, setRevision] = useState(0);
+  render: withOverlaySurface(({ values, ctx }) => {
+    const message = !values.disabled && messages[values.status];
     return (
-      <form {...ctx.form} onReset={() => setRevision((current) => current + 1)}>
+      <form {...ctx.form}>
         <Autocomplete
           {...values}
           {...ctx.subject}
-          key={revision}
           name="title"
           label="Document title"
           options={titles}
           defaultValue="Release notes"
+          message={message ? <bdi>{message}</bdi> : undefined}
           onTextChange={ctx.action('onTextChange')}
           onSuggestion={(suggestion) => ctx.action('onSuggestion')(suggestion.value)}
         />
       </form>
     );
+  }, 'border-box'),
+  code: (values) => {
+    const attrs = previewProps(values, {
+      size: 'm',
+      variant: 'default',
+      status: 'neutral',
+      width: 'full',
+      disabled: false,
+      readOnly: false,
+      required: false,
+      browsable: false,
+    });
+    const message = !values.disabled && messages[values.status];
+    return `import { Autocomplete } from './prototypes/combobox/combobox.proto.js';
+import '@docouno/unica/styles.css';
+
+const titles = ${JSON.stringify(titles)};
+
+export function DocumentTitle() {
+  return <Autocomplete label="Document title" name="title" options={titles} defaultValue="Release notes"${attrs}${message ? ` message={<bdi>${previewText(message)}</bdi>}` : ''} onTextChange={(text) => console.log(text)} onSuggestion={(suggestion) => console.log(suggestion.value)} />;
+}`;
   },
-  code: (_values, attributes) =>
-    `<Autocomplete label="Document title" name="title" options={titles} defaultValue="Release notes"${attributes} />`,
-  matrixViews: [
+  states: [
     {
       id: 'roles',
       rows: 'size',
       cols: 'variant',
       title: 'Roles and sizes',
-      reference: () => <Roles />,
+      caption: 'Compare the bordered form field and inline editing role at each density.',
     },
   ],
   cases: [
     {
+      id: 'recent-titles',
+      title: 'Browsing, recent titles and intrinsic width',
+      kind: 'behavior',
+      mode: 'live',
+      reset: true,
+      caption:
+        'The small fields offer a browse action. The inline fields start with a recent title, and the large fields cap their width at 20rem.',
+      render: withOverlaySurface(AutocompleteRoles, 'border-box'),
+    },
+    {
       id: 'rows',
-      title: 'Plain and rich suggestions · pinned',
+      title: 'Plain and grouped suggestions',
       overlayStage: true,
       kind: 'behavior',
       mode: 'pinned',
-      render: () => <Rows />,
+      caption:
+        'The active plain title and grouped command are held open. Compare the text, description, glyph and shortcut columns.',
+      render: withOverlaySurface(AutocompleteRows, 'border-box'),
     },
     {
       id: 'availability',
-      title: 'Availability and validation · pinned',
+      title: 'Availability and validation',
       kind: 'behavior',
       mode: 'pinned',
-      render: () => <Availability />,
+      caption:
+        'Compare locked and disabled fields with four feedback tones. Each message describes the document title shown above it.',
+      render: withOverlaySurface(AutocompleteAvailability, 'border-box'),
     },
     {
       id: 'responses',
-      title: 'Suggestion feedback · pinned',
+      title: 'Suggestion feedback',
       overlayStage: true,
       kind: 'behavior',
       mode: 'pinned',
-      render: () => <Responses />,
+      caption:
+        'Compare search progress, minimum query length, empty results, failed lookup and unavailable commands while the current text remains visible.',
+      render: withOverlaySurface(AutocompleteResponses, 'border-box'),
     },
     {
       id: 'overflow',
-      title: 'Long labels and shortcuts · pinned',
+      title: 'Long labels and shortcuts',
       overlayStage: true,
       kind: 'content',
       mode: 'pinned',
-      render: () => <Overflow />,
+      caption:
+        'The entered title stays on one line. Rich results wrap their descriptions and move the shortcut below the label in a narrow panel.',
+      render: withOverlaySurface(AutocompleteOverflow, 'border-box'),
     },
     {
       id: 'free-text',
-      title: 'Free text and recent titles · live',
-      overlayStage: true,
+      title: 'Free text and recent titles',
+      surface: 'overlay',
       kind: 'behavior',
-      render: () => (
+      mode: 'live',
+      reset: true,
+      caption:
+        'Save your own title or complete it from recent drafts. Escape dismisses suggestions and keeps your text.',
+      render: (props) => (
         <div className="suggestion-live-stage-proto">
-          <FreeText />
+          <FreeTitle {...props} />
         </div>
       ),
     },
   ],
-  usage: [
+  compositions: [
     {
       id: 'editor',
-      title: 'Insert a block · live',
-      overlayStage: true,
-      code: `<form onSubmit={insertCommand}>
-  <Autocomplete
-    name="command"
-    label="Insert a block"
-    variant="ghost"
-    size="s"
-    options={blocks}
-    filter={matchesCommand}
-    onSuggestion={insertBlock}
-  />
-  <Button type="submit">Insert block</Button>
-</form>`,
-      render: () => (
+      title: 'Insert a block',
+      surface: 'overlay',
+      mode: 'live',
+      reset: true,
+      caption:
+        'Type / to browse block commands. Choose a suggestion or press Enter on a complete command to confirm the insertion. The image gallery is unavailable.',
+      code: insertSource
+        .replace('../../prototypes/', './prototypes/')
+        .replace("import { blocks } from './block-commands.js';", commandsSource.trim()),
+      render: ({ ctx }) => (
         <div className="suggestion-live-stage-proto">
-          <InsertBlock />
+          <InsertBlock fieldProps={ctx.subject} surface={ctx.surface} />
         </div>
       ),
     },

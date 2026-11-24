@@ -1,0 +1,56 @@
+import {
+  ChatCenteredTextIcon,
+  CodeBlockIcon,
+  ImageSquareIcon,
+  LinkSimpleIcon,
+  TableIcon,
+} from '@phosphor-icons/react';
+
+export const blocks = [
+  {
+    value: 'callout',
+    label: 'Callout',
+    description: 'Highlight a note, decision, or warning.',
+    insertText: '/callout',
+    shortcut: '/callout',
+    group: 'Text',
+    icon: ChatCenteredTextIcon,
+  },
+  {
+    value: 'code',
+    label: 'Code block',
+    description: 'Keep spacing and syntax in a code example.',
+    insertText: '/code',
+    shortcut: '/code',
+    group: 'Text',
+    icon: CodeBlockIcon,
+  },
+  {
+    value: 'table',
+    label: 'Table',
+    description: 'Organize structured information in rows and columns.',
+    insertText: '/table',
+    shortcut: '/table',
+    group: 'Data and media',
+    icon: TableIcon,
+  },
+  {
+    value: 'link',
+    label: 'Link preview',
+    description: 'Reference a page without leaving the draft.',
+    insertText: '/link',
+    shortcut: '/link',
+    group: 'Data and media',
+    icon: LinkSimpleIcon,
+  },
+  {
+    value: 'gallery',
+    label: 'Image gallery',
+    description: 'Available in shared workspaces.',
+    insertText: '/gallery',
+    shortcut: '/gallery',
+    group: 'Data and media',
+    icon: ImageSquareIcon,
+    disabled: true,
+  },
+];

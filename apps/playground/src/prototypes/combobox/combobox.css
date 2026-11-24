@@ -9,6 +9,11 @@
   inline-size: min(100%, 20rem);
 }
 
+/* The editable text detects its direction. Keep control slots in the host's order. */
+.suggestion-input-proto[dir='auto'] {
+  direction: inherit;
+}
+
 .suggestion-editor-row-proto {
   --suggestion-padding: var(--size-m-padding-x);
   --suggestion-gap: var(--size-m-gap);

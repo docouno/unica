@@ -33,6 +33,34 @@ function open(page, params) {
 }
 
 export default {
+  'Autocomplete submits the current text and respects the native reset decision': async ({
+    page,
+    mount,
+  }) => {
+    await mount('input-consumers');
+    const form = page.getByTestId('picker-form');
+    const input = form.getByRole('combobox', { name: 'Entry title' });
+    const reset = form.getByRole('button', { name: 'Reset picker form' });
+    await input.fill('Unlisted title');
+    await cancelKeyboardReset(form, reset);
+    assert.equal(await input.inputValue(), 'Unlisted title');
+    assert.equal(
+      await form.evaluate((owner) => new FormData(owner).get('title')),
+      'Unlisted title',
+    );
+
+    await input.fill('Another edit');
+    assert.equal(await input.getAttribute('aria-expanded'), 'true');
+    assert.equal(
+      await form.evaluate((owner) => {
+        owner.reset();
+        return new FormData(owner).get('title');
+      }),
+      'Draft title',
+    );
+    await form.locator('input[name="title"][aria-expanded="false"]').waitFor();
+    assert.equal(await input.inputValue(), 'Draft title');
+  },
   'Input consumers retain picker slot order in both directions and Clear updates every form axis once':
     async ({ page, mount }) => {
       await page.setViewportSize({ width: 360, height: 760 });
