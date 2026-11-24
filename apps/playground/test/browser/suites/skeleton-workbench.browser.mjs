@@ -104,6 +104,44 @@ export default {
     assert.equal(await matrix.getAttribute('data-wb-matrix-mode'), 'pairwise');
   },
 
+  'SkeletonText Workbench keeps the first size visible and the twenty-line sample reachable':
+    async ({ page, mount }) => {
+      await page.setViewportSize({ width: 1440, height: 720 });
+      await mount('native');
+      await openWorkbench(page, {
+        item: 'skeleton-text',
+        tab: 'states',
+        mode: 'slice',
+        slice: 'typography',
+        surface: 'overlay',
+        vp: '360',
+        scale: '120',
+        dir: 'rtl',
+        freeze: '1',
+      });
+      const table = page.getByRole('table');
+      const subjects = table.locator('[data-wb-subject]');
+      const firstBar = subjects.first().locator(':scope > span > span').first();
+      const bar = await getBox(firstBar);
+      const start = await getBox(table);
+      assert.ok(bar.width > 0 && bar.height > 0);
+      assert.ok(bar.y - start.y < page.viewportSize().height / 2, 'First size below the fold');
+      assert.deepEqual(
+        await subjects.evaluateAll((samples) => samples.map((sample) => sample.childElementCount)),
+        Array(13).fill(3),
+      );
+
+      await page.getByRole('combobox', { name: 'Slice', exact: true }).selectOption('lines');
+      assert.deepEqual(
+        await subjects.evaluateAll((samples) => samples.map((sample) => sample.childElementCount)),
+        [1, 3, 20],
+      );
+      const lastBar = subjects.last().locator(':scope > span:last-child > span');
+      await lastBar.scrollIntoViewIfNeeded();
+      const end = await getBox(lastBar);
+      assert.ok(end.y >= 0 && end.y + end.height <= page.viewportSize().height);
+    },
+
   'Skeleton Workbench restricts image-only busy state and preserves media layout and focus on reveal':
     async ({ page, mount }) => {
       await page.setViewportSize({ width: 1440, height: 960 });

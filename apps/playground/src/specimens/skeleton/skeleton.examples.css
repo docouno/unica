@@ -17,32 +17,6 @@
   gap: var(--space-24);
 }
 
-.skeleton-demo-control {
-  display: grid;
-  gap: var(--space-4);
-  min-inline-size: 0;
-  max-inline-size: 100%;
-  color: var(--fg-muted);
-  font-size: var(--text-size-caption-l);
-  line-height: var(--text-size-caption-l-lh);
-}
-
-.skeleton-demo-control select {
-  min-inline-size: 0;
-  max-inline-size: 100%;
-  padding: 6px 8px;
-  border: 1px solid var(--control-border);
-  border-radius: var(--size-s-radius);
-  background: var(--control-bg);
-  color: var(--fg-primary);
-  font: inherit;
-}
-
-.skeleton-demo-control select:focus-visible {
-  outline: 2px solid var(--focus-ring-color);
-  outline-offset: 3px;
-}
-
 .skeleton-demo-metrics {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
@@ -170,13 +144,5 @@
 @container artboard (max-width: 600px) {
   .skeleton-demo-pair {
     grid-template-columns: minmax(0, 1fr);
-  }
-}
-
-@media (forced-colors: active) {
-  .skeleton-demo-control select {
-    border-color: ButtonText;
-    background: Canvas;
-    color: CanvasText;
   }
 }

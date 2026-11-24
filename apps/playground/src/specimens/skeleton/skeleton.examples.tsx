@@ -1,57 +1,13 @@
 import { useState } from 'react';
 import type { ReactElement, ReactNode } from 'react';
-import { ArrowClockwiseIcon } from '@phosphor-icons/react';
 import { Avatar } from '../../prototypes/avatar/avatar.proto.js';
-import { Button, Flex, Icon, Skeleton, SkeletonText, Stack, Text, Title } from '@docouno/unica';
+import { Flex, Skeleton, SkeletonText, Stack, Text, Title } from '@docouno/unica';
 import type { TextSize, TitleSize } from '@docouno/unica';
 import { useStoryAction } from '../../workbench/storyFrameState.js';
 import type { PreviewContext, PreviewProps } from '../../workbench/types.js';
 import { textSizes } from './skeleton.controls.js';
 import type { TextStep } from './skeleton.controls.js';
 import './skeleton.examples.css';
-
-export const loadingSummaryCode = `<>
-  <article aria-busy={loading} style={{ minBlockSize: 'calc(3 * var(--text-size-body-m-lh))' }}>
-    {loading ? (
-      <SkeletonText size="body-m" lines={3} />
-    ) : (
-      <p style={{ margin: 0, fontSize: 'var(--text-size-body-m)', lineHeight: 'var(--text-size-body-m-lh)' }}>
-        {summary}
-      </p>
-    )}
-  </article>
-  <p role="status">{loading ? 'Loading the summary…' : 'Summary loaded.'}</p>
-</>`;
-
-export function SummaryExample(): ReactElement {
-  const [loading, setLoading] = useState(true);
-
-  return (
-    <div className="skeleton-demo-stack">
-      <div>
-        <Button size="s" variant="secondary" tone="neutral" onClick={() => setLoading(!loading)}>
-          {loading ? 'Reveal summary' : 'Show placeholder'}
-        </Button>
-      </div>
-      <article aria-busy={loading} style={{ minBlockSize: 'calc(3 * var(--text-size-body-m-lh))' }}>
-        {loading ? (
-          <SkeletonText size="body-m" lines={3} />
-        ) : (
-          <p
-            style={{
-              margin: 0,
-              fontSize: 'var(--text-size-body-m)',
-              lineHeight: 'var(--text-size-body-m-lh)',
-            }}
-          >
-            Observations on quieter, more thoughtful interfaces.
-          </p>
-        )}
-      </article>
-      <p role="status">{loading ? 'Loading the summary…' : 'Summary loaded.'}</p>
-    </div>
-  );
-}
 
 export function SkeletonCase({
   title,
@@ -132,18 +88,10 @@ export function MetricText({
   );
 }
 
-export function TypographyExample(): ReactElement {
-  const [size, setSize] = useState<TextStep>('body-m');
+export function TypographyExample({ ctx }: PreviewProps): ReactElement {
+  const size = textSizes.find((step) => step === ctx.story?.controls.size) ?? 'body-m';
   return (
-    <div className="skeleton-demo-stack">
-      <label className="skeleton-demo-control">
-        <span>Text size</span>
-        <select value={size} onChange={(event) => setSize(event.target.value as TextStep)}>
-          {textSizes.map((value) => (
-            <option key={value}>{value}</option>
-          ))}
-        </select>
-      </label>
+    <div className="skeleton-demo-stack" data-skeleton-demo-static>
       {[1, 3].map((lines) => (
         <SkeletonCase
           key={lines}
@@ -151,7 +99,7 @@ export function TypographyExample(): ReactElement {
         >
           <div className="skeleton-demo-metrics" data-metric-lines={lines} data-metric-size={size}>
             <div className="skeleton-demo-metric-cell">
-              <SkeletonText size={size} lines={lines} />
+              <SkeletonText {...ctx.subject} size={size} lines={lines} />
             </div>
             <div className="skeleton-demo-metric-cell">
               <MetricText size={size} lines={lines} />
@@ -159,10 +107,6 @@ export function TypographyExample(): ReactElement {
           </div>
         </SkeletonCase>
       ))}
-      <Text size="caption-l" color="muted">
-        All 13 sizes use the same line boxes as Text and Title. The rules mark block edges; explicit
-        line breaks keep this comparison independent of wrapping.
-      </Text>
     </div>
   );
 }
@@ -213,24 +157,32 @@ export function DocumentRows({
 }
 
 function MotionSamples({
-  run,
+  ctx,
   subject,
-}: {
-  readonly run: number;
-  readonly subject?: PreviewContext['subject'];
-}): ReactElement {
+}: PreviewProps & { readonly subject: 'shape' | 'text' }): ReactElement {
+  const [run, setRun] = useState(0);
+  useStoryAction(ctx, (action) => {
+    if (action === 'replay') {
+      setRun((value) => value + 1);
+    }
+  });
+
+  const samples = (
+    <>
+      <Skeleton {...(subject === 'shape' && ctx.subject)} height={56} />
+      <SkeletonText {...(subject === 'text' && ctx.subject)} size="body-s" lines={2} />
+    </>
+  );
   return (
     <div className="skeleton-demo-pair">
       <SkeletonCase title="Two quiet passes, then rest">
         <div key={run} className="skeleton-demo-stack skeleton-demo-motion-sample">
-          <Skeleton {...subject} height={56} />
-          <SkeletonText size="body-s" lines={2} />
+          {samples}
         </div>
       </SkeletonCase>
       <SkeletonCase title="Static · reduced-motion reference">
         <div data-skeleton-demo-static className="skeleton-demo-stack skeleton-demo-motion-sample">
-          <Skeleton {...subject} height={56} />
-          <SkeletonText size="body-s" lines={2} />
+          {samples}
         </div>
       </SkeletonCase>
     </div>
@@ -238,29 +190,9 @@ function MotionSamples({
 }
 
 export function SkeletonMotionExample({ ctx }: PreviewProps): ReactElement {
-  const [run, setRun] = useState(0);
-  useStoryAction(ctx, (action) => {
-    if (action === 'replay') {
-      setRun((value) => value + 1);
-    }
-  });
-  return <MotionSamples run={run} subject={ctx.subject} />;
+  return <MotionSamples ctx={ctx} subject="shape" />;
 }
 
-export function MotionExample(): ReactElement {
-  const [run, setRun] = useState(0);
-  return (
-    <div className="skeleton-demo-stack">
-      <MotionSamples run={run} />
-      <div>
-        <Button size="s" variant="secondary" tone="neutral" onClick={() => setRun(run + 1)}>
-          <Icon usage="slot" icon={ArrowClockwiseIcon} size="s" /> Replay motion
-        </Button>
-      </div>
-      <Text size="caption-l" color="muted">
-        A soft diagonal band crosses wide and short silhouettes twice, then the fill rests. Reduced
-        motion and frozen captures show the static fill. RTL mirrors the sweep.
-      </Text>
-    </div>
-  );
+export function SkeletonTextMotionExample({ ctx }: PreviewProps): ReactElement {
+  return <MotionSamples ctx={ctx} subject="text" />;
 }
