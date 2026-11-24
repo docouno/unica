@@ -193,10 +193,16 @@
 }
 
 .shell-study-layout {
+  inline-size: 100%;
   container: layout-study / inline-size;
   color: var(--fg-primary);
   font-family: var(--font-family-base);
   font-size: var(--text-size-body-s);
+}
+
+.shell-study-layout.unica-overlay-surface {
+  position: relative;
+  padding: var(--surface-s-padding);
 }
 
 .shell-study-layout-guide {

@@ -832,11 +832,14 @@ function layoutWidthStep(): number {
   return layoutMedia.filter((query) => window.matchMedia(query).matches).length;
 }
 
-export function LayoutExamples(): ReactElement {
+export function LayoutExamples({ ctx }: PreviewProps): ReactElement {
   // Refresh the pinned study when Chromium retains old media styles inside the inspection panes.
   const step = useSyncExternalStore(observeLayoutWidth, layoutWidthStep, () => 0);
   return (
-    <div className="shell-study-stack shell-study-layout" key={step}>
+    <div
+      className={`shell-study-stack shell-study-layout${ctx.surface === 'overlay' ? ' unica-overlay-surface' : ''}`}
+      key={step}
+    >
       <Example title="Box, Stack and Flex · spacing, baseline and wrapping">
         <Box
           className="shell-study-layout-guide shell-study-layout-box"
