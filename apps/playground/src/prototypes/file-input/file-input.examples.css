@@ -6,8 +6,7 @@ ul:has(> [data-wb-result-row] [data-file-intake-sample]) {
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr));
 }
 .file-demo-stack,
-.file-demo-sample,
-.file-demo-surface {
+.file-demo-sample {
   display: grid;
   gap: var(--space-16);
   min-inline-size: 0;
@@ -30,63 +29,14 @@ ul:has(> [data-wb-result-row] [data-file-intake-sample]) {
   box-shadow: var(--_overlay-rim), var(--_overlay-shadow-popover);
   backdrop-filter: var(--_overlay-backdrop);
 }
+.file-demo-field {
+  inline-size: min(100%, 28rem);
+  min-inline-size: 0;
+}
 .file-demo-sample {
   gap: var(--space-12);
   container-type: inline-size;
 }
-.file-demo-label {
-  color: var(--fg-muted);
-  font: 500 var(--text-size-caption-l)/1.5 var(--font-family-base);
-  text-transform: capitalize;
-}
-.file-demo-note {
-  color: var(--fg-muted);
-  font: var(--text-size-caption-l)/1.5 var(--font-family-base);
-  margin: 0;
-  overflow-wrap: anywhere;
-}
-.file-demo-actions {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: var(--space-8);
-}
-.file-demo-controls {
-  display: grid;
-  gap: var(--space-8);
-  padding-block-start: var(--space-16);
-  border-block-start: 1px solid var(--border-subtle);
-}
-.file-demo-surface-stage {
-  min-inline-size: 0;
-  padding: var(--space-16);
-  border-radius: var(--surface-l-radius);
-  background: var(--bg-canvas);
-}
-.file-demo-surface-stage[data-underlay] {
-  background:
-    radial-gradient(ellipse at 12% 10%, var(--accent-soft-bg), transparent 70%), var(--bg-canvas);
-}
-.file-demo-surface {
-  position: relative;
-  padding: var(--space-24);
-  border: 1px solid var(--card-border);
-  border-radius: var(--surface-m-radius);
-  background: var(--bg-surface);
-  container-type: inline-size;
-}
-.file-demo-surface[data-plate='overlay'] {
-  border-color: var(--_overlay-border);
-  background: var(--bg-overlay);
-  box-shadow: var(--_overlay-rim), var(--_overlay-shadow-popover);
-  backdrop-filter: var(--_overlay-backdrop);
-}
-@media (forced-colors: active) {
-  .file-demo-surface {
-    border-color: CanvasText;
-  }
-}
-
 /* The local subsets cover the Arabic sample names while Latin extensions keep the theme font. */
 @font-face {
   font-family: 'File Demo Arabic';
@@ -115,6 +65,7 @@ ul:has(> [data-wb-result-row] [data-file-intake-sample]) {
     .ff-label,
     .file-item-name-proto,
     .file-item-detail-proto,
+    p[dir='auto'],
     [role='status']
   ),
 [data-file-intake-sample] .dropzone-unavailable-proto {

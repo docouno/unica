@@ -1,6 +1,6 @@
 import { useLayoutEffect, useRef, useState } from 'react';
 import type { ReactElement, ReactNode } from 'react';
-import { Button, Stack, Text } from '@docouno/unica';
+import { Stack, Text } from '@docouno/unica';
 import type { PreviewProps } from '../../workbench/types.js';
 import { useStoryAction } from '../../workbench/storyFrameState.js';
 import { ExampleSurface } from '../../specimens/shared/example-surface.js';
@@ -28,15 +28,16 @@ function Sample({
     </div>
   );
 }
-export function FileRoles(): ReactElement {
+export function FileRoles({ ctx }: PreviewProps): ReactElement {
   return (
     <div className="file-demo-grid">
       {(['default', 'ghost'] as const).map((variant: FieldVariant) => (
         <div className="file-demo-stack" key={variant}>
           {sizes.map((size) => (
             <Sample key={size} title={`${variant} · ${size.toUpperCase()}`}>
-              <FileInput size={size} variant={variant} label="Reference file" />
+              <FileInput {...ctx.subject} size={size} variant={variant} label="Reference file" />
               <FileInput
+                {...ctx.subject}
                 size={size}
                 variant={variant}
                 label="Selected reference"
@@ -49,20 +50,27 @@ export function FileRoles(): ReactElement {
     </div>
   );
 }
-export function FileInteraction(): ReactElement {
+export function FileInteraction({ ctx }: PreviewProps): ReactElement {
   return (
     <div className="file-demo-grid">
       <Sample title="Hover, hold, or Tab to compare roles">
-        <FileInput label="Reference file" initialFileName="research-notes.pdf" />
-        <FileInput variant="ghost" label="Inline reference" initialFileName="research-notes.pdf" />
+        <FileInput {...ctx.subject} label="Reference file" initialFileName="research-notes.pdf" />
+        <FileInput
+          {...ctx.subject}
+          variant="ghost"
+          label="Inline reference"
+          initialFileName="research-notes.pdf"
+        />
       </Sample>
       <Sample title="Dragging">
         <FileInput
+          {...ctx.subject}
           label="Reference file"
           initialFileName="research-notes.pdf"
           previewState="dragging"
         />
         <FileInput
+          {...ctx.subject}
           variant="ghost"
           label="Inline reference"
           initialFileName="research-notes.pdf"
@@ -71,16 +79,17 @@ export function FileInteraction(): ReactElement {
       </Sample>
       <Sample title="Try the picker and Remove">
         <FileInput
+          {...ctx.subject}
           variant="ghost"
           label="Inline reference"
           initialFileName="clear-this-file.pdf"
-          description="Use Choose file again to replace the current file."
+          description={<bdi>Use Choose file again to replace the current file.</bdi>}
         />
       </Sample>
     </div>
   );
 }
-export function FileFeedback(): ReactElement {
+export function FileFeedback({ ctx }: PreviewProps): ReactElement {
   const cases: readonly { status: FieldStatus; message: string; loading?: boolean }[] = [
     { status: 'neutral', message: 'Selected locally. Nothing has been uploaded.' },
     { status: 'info', message: 'This file will be included with your submission.' },
@@ -94,19 +103,21 @@ export function FileFeedback(): ReactElement {
       {cases.map((entry, index) => (
         <Sample title={entry.loading ? 'Checking' : entry.status} key={index}>
           <FileInput
+            {...ctx.subject}
             label="Reference file"
             initialFileName="research-notes.pdf"
             status={entry.status}
-            message={entry.message}
+            message={entry.message && <bdi>{entry.message}</bdi>}
             loading={entry.loading}
           />
           <FileInput
+            {...ctx.subject}
             variant="ghost"
             size="s"
             label="Inline reference"
             initialFileName="reference.pdf"
             status={entry.status}
-            message={entry.status !== 'neutral' ? entry.message : undefined}
+            message={entry.status !== 'neutral' ? <bdi>{entry.message}</bdi> : undefined}
             loading={entry.loading}
           />
         </Sample>
@@ -114,127 +125,136 @@ export function FileFeedback(): ReactElement {
     </div>
   );
 }
-export function FileAvailability(): ReactElement {
+export function FileAvailability({ ctx }: PreviewProps): ReactElement {
   return (
     <div className="file-demo-grid">
       <FileInput
+        {...ctx.subject}
         label="Reference file"
         initialFileName="research-notes.pdf"
         readOnly
-        description="Read only. Attachments are locked after submission."
+        description={<bdi>Read only. Attachments are locked after submission.</bdi>}
       />
       <FileInput
+        {...ctx.subject}
         label="Reference file"
         readOnly
-        description="Read only. No attachment was provided."
+        description={<bdi>Read only. No attachment was provided.</bdi>}
       />
       <FileInput
+        {...ctx.subject}
         label="Reference file"
         initialFileName="research-notes.pdf"
         disabled
-        description="Select a workspace to enable attachments."
+        description={<bdi>Select a workspace to enable attachments.</bdi>}
       />
-      <FileInput label="Reference file" disabled />
+      <FileInput {...ctx.subject} label="Reference file" disabled />
       <FileInput
+        {...ctx.subject}
         label="Verified reference"
         initialFileName="research-notes.pdf"
         readOnly
         loading
         status="success"
-        message="Verified. You can read and copy the filename."
+        message={<bdi>Verified. You can read and copy the filename.</bdi>}
       />
       <FileInput
+        {...ctx.subject}
         label="Unavailable reference"
         initialFileName="research-notes.pdf"
         disabled
         status="danger"
-        message="Changes are unavailable while this workspace is archived."
+        message={<bdi>Changes are unavailable while this workspace is archived.</bdi>}
       />
     </div>
   );
 }
-export function FileOverflow(): ReactElement {
+export function FileOverflow({ ctx }: PreviewProps): ReactElement {
   return (
     <div className="file-demo-stack">
       <FileInput
+        {...ctx.subject}
         label="Supporting research, including the original source and the final approved revision"
         initialFileName="customer-research_findings_and_recommendations_for_the_next_release_v12_final.pdf"
         fileDetail="12.4 MB"
-        description="When space is tight, the filename and removal action move below the picker."
+        description={
+          <bdi>When space is tight, the filename and removal action move below the picker.</bdi>
+        }
       />
       <FileInput
+        {...ctx.subject}
         size="s"
         variant="ghost"
         label="Inline attachment"
         initialFileName="release-notes-without-any-breaks-abcdefghijklmnopqrstuvwxyz0123456789.md"
       />
       <div dir="rtl" className="file-demo-arabic">
-        <FileInput label="ملف مرجعي" initialFileName="تقرير-البحث-2026.pdf" fileDetail="214 KB" />
+        <FileInput
+          {...ctx.subject}
+          label="ملف مرجعي"
+          initialFileName="تقرير-البحث-2026.pdf"
+          fileDetail="214 KB"
+        />
       </div>
       <Sample title="Externally named picker">
-        <FileInput aria-label="Optional supporting reference" />
+        <FileInput {...ctx.subject} aria-label="Optional supporting reference" />
       </Sample>
     </div>
   );
 }
-export function FileLive(): ReactElement {
-  const [file, setFile] = useState<readonly File[]>([]);
-  const [message, setMessage] = useState('');
-  const [status, setStatus] = useState<FieldStatus>('neutral');
-  function receive(files: readonly File[]): void {
-    if (!files.length) {
-      setFile([]);
-      setStatus('neutral');
-      setMessage('Reference removed. Choose another file.');
-      return;
-    }
-    const next = files[0]!;
-    if (!/\.(pdf|md)$/i.test(next.name) || next.size > 2000000 || files.length > 1) {
-      setStatus('danger');
-      setMessage('Choose one PDF or Markdown file up to 2 MB. Your previous file is kept.');
-      return;
-    }
-    setFile([next]);
-    setStatus('neutral');
-    setMessage('Selected locally. Ready to submit with your form.');
+export function FileLive({ ctx }: PreviewProps): ReactElement {
+  const [selected, setSelected] = useState<File | null>(null);
+  const [feedback, setFeedback] = useState({
+    text: 'No reference selected.',
+    rejected: false,
+    revision: 0,
+  });
+  function announce(text: string, rejected = false): void {
+    setFeedback((previous) => ({ text, rejected, revision: previous.revision + 1 }));
   }
+  function receive(files: readonly File[]): void {
+    const next = files[0];
+    if (!next) {
+      setSelected(null);
+      announce('Reference removed. Choose another file.');
+    } else if (files.length !== 1 || !/\.(pdf|md)$/i.test(next.name) || next.size > 2000000) {
+      announce(
+        'Choose one PDF or Markdown file up to 2 MB.' +
+          (selected ? ` Current reference: ${selected.name}.` : ' No reference selected.'),
+        true,
+      );
+    } else {
+      setSelected(next);
+      announce(`Selected ${next.name} locally.`);
+    }
+  }
+  useStoryAction(ctx, (action) => {
+    if (action === 'sample') {
+      receive([new File(['Notes'], 'research-notes.md')]);
+    } else if (action === 'reject') {
+      receive([new File([''], 'application.exe')]);
+    }
+  });
   return (
-    <div className="file-demo-stack">
+    <div className="file-demo-field file-demo-arabic">
       <FileInput
+        {...ctx.subject}
         label="Supporting reference"
         required
         accept=".pdf,.md"
-        description="PDF or Markdown · Up to 2 MB. Files stay in this browser."
-        fileName={file[0]?.name ?? ''}
-        fileDetail={file[0] ? formatFileSize(file[0].size) : ''}
+        description={<bdi>PDF or Markdown · Up to 2 MB. Files stay in this browser.</bdi>}
+        fileName={selected?.name ?? ''}
+        fileDetail={selected ? formatFileSize(selected.size) : ''}
         onFilesChange={receive}
-        status={status}
-        message={message}
+        status={feedback.rejected ? 'danger' : 'neutral'}
+        message={
+          <span role="status">
+            <bdi dir="ltr" key={feedback.revision}>
+              {feedback.text}
+            </bdi>
+          </span>
+        }
       />
-      <div className="file-demo-controls">
-        <span className="file-demo-label">Local selection controls</span>
-        <div className="file-demo-actions">
-          <Button
-            size="s"
-            variant="secondary"
-            tone="neutral"
-            onClick={() => receive([new File(['Notes'], 'research-notes.md')])}
-          >
-            Choose sample
-          </Button>
-          <Button
-            size="s"
-            variant="secondary"
-            tone="neutral"
-            onClick={() => receive([new File([''], 'application.exe')])}
-          >
-            Try rejected file
-          </Button>
-        </div>
-      </div>
-      <p className="file-demo-note" role="status">
-        {file.length ? `Current reference: ${file[0]!.name}` : 'No reference selected.'}
-      </p>
     </div>
   );
 }
@@ -736,38 +756,79 @@ export function LiveQueue({ ctx }: PreviewProps): ReactElement {
     </div>
   );
 }
-export function MultipleField(): ReactElement {
-  const [files, setFiles] = useState<readonly File[]>([]);
+export function MultipleField({ ctx }: PreviewProps): ReactElement {
+  const [files, setFiles] = useState<readonly { id: number; file: File }[]>([]);
+  const [notice, setNotice] = useState('');
+  const sequence = useRef(0);
+  const list = useRef<HTMLDivElement>(null);
+  const nextFocus = useRef<number | 'picker' | null>(null);
+  useLayoutEffect(() => {
+    const id = nextFocus.current;
+    nextFocus.current = null;
+    if (id !== null && document.activeElement === document.body) {
+      list.current
+        ?.querySelector<HTMLElement>(
+          id === 'picker' ? '.file-input-picker-proto' : `[data-reference-id="${id}"] button`,
+        )
+        ?.focus();
+    }
+  }, [files]);
   return (
-    <div className="file-demo-stack">
+    <div ref={list} className="file-demo-stack file-demo-arabic">
       <FileInput
+        {...ctx.subject}
         multiple
         label="Supporting files"
-        fileName={files.length ? `${files.length} files selected` : ''}
+        fileName={files.length ? `${fileCount(files.length)} selected` : ''}
         fileDetail={
-          files.length ? formatFileSize(files.reduce((sum, file) => sum + file.size, 0)) : ''
+          files.length ? formatFileSize(files.reduce((sum, entry) => sum + entry.file.size, 0)) : ''
         }
-        onFilesChange={(incoming) => setFiles([...files, ...incoming])}
-        description="Add another selection at any time. Each file has its own removal action below."
+        onFilesChange={(incoming) => {
+          if (!incoming.length) {
+            return;
+          }
+          const entries = incoming.map((file) => ({ id: sequence.current++, file }));
+          setFiles((current) => [...current, ...entries]);
+          setNotice(
+            `${fileCount(entries.length)} added. ${fileCount(files.length + entries.length)} selected.`,
+          );
+        }}
+        message={
+          <span role="status">
+            <bdi dir="ltr">{notice}</bdi>
+          </span>
+        }
+        description={<bdi>Add another selection at any time. Remove files individually below.</bdi>}
       />
-      <FileList>
-        {files.map((file, index) => (
+      <FileList aria-label="Supporting files">
+        {files.map(({ file, id }, index) => (
           <FileItem
-            key={`${file.name}-${index}`}
+            key={id}
+            data-reference-id={id}
             name={file.name}
             fileSize={formatFileSize(file.size)}
             detail="Selected locally"
-            onRemove={() => setFiles(files.filter((_, itemIndex) => itemIndex !== index))}
+            onRemove={() => {
+              if (
+                list.current
+                  ?.querySelector(`[data-reference-id="${id}"]`)
+                  ?.contains(document.activeElement)
+              ) {
+                nextFocus.current = (files[index + 1] ?? files[index - 1])?.id ?? 'picker';
+              }
+              setFiles((current) => current.filter((entry) => entry.id !== id));
+              setNotice(`Removed ${file.name}. ${fileCount(files.length - 1)} selected.`);
+            }}
           />
         ))}
       </FileList>
     </div>
   );
 }
-function DropSurfaceRows({ ctx }: { readonly ctx?: PreviewProps['ctx'] }): ReactElement {
+export function DropSurface({ ctx }: PreviewProps): ReactElement {
   return (
-    <>
-      <Dropzone {...ctx?.subject} size="s" />
+    <ExampleSurface surface={ctx.surface} sizing="border-box">
+      <Dropzone {...ctx.subject} size="s" />
       <FileList aria-label="Transfer examples">
         <FileItem
           name="research-assets.zip"
@@ -778,48 +839,25 @@ function DropSurfaceRows({ ctx }: { readonly ctx?: PreviewProps['ctx'] }): React
         />
         <FileItem name="project-brief.pdf" fileSize="214 KB" status="success" onRemove={noop} />
       </FileList>
-    </>
-  );
-}
-export function DropSurface({ ctx }: PreviewProps): ReactElement {
-  return (
-    <ExampleSurface surface={ctx.surface} sizing="border-box">
-      <DropSurfaceRows ctx={ctx} />
     </ExampleSurface>
   );
 }
-export function FileSurfaces({ compact = false }: { readonly compact?: boolean }): ReactElement {
+export function FileSurfaces({ ctx }: PreviewProps): ReactElement {
   return (
-    <div className="file-demo-grid">
-      {(['base', 'overlay'] as const).map((surface) => (
-        <div
-          className="file-demo-surface-stage"
-          data-surface="base"
-          data-underlay={surface === 'overlay' || undefined}
-          key={surface}
-        >
-          <div className="file-demo-surface" data-surface={surface} data-plate={surface}>
-            <span className="file-demo-label">{surface} surface</span>
-            {compact ? (
-              <>
-                <FileInput
-                  label="Supporting reference"
-                  initialFileName="research-notes.pdf"
-                  fileDetail="214 KB"
-                />
-                <FileInput
-                  variant="ghost"
-                  size="s"
-                  label="Inline reference"
-                  initialFileName="project-brief.md"
-                />
-              </>
-            ) : (
-              <DropSurfaceRows />
-            )}
-          </div>
-        </div>
-      ))}
-    </div>
+    <ExampleSurface surface={ctx.surface} sizing="border-box">
+      <FileInput
+        {...ctx.subject}
+        label="Supporting reference"
+        initialFileName="research-notes.pdf"
+        fileDetail="214 KB"
+      />
+      <FileInput
+        {...ctx.subject}
+        variant="ghost"
+        size="s"
+        label="Inline reference"
+        initialFileName="project-brief.md"
+      />
+    </ExampleSurface>
   );
 }
