@@ -132,6 +132,7 @@ export interface StoryActionEvent {
 
 export interface StoryContext {
   readonly controls: StoryControlValues;
+  readonly setControl: (key: string, value: StoryControlValue) => void;
   readonly revision: number;
   readonly lastAction: StoryActionEvent | null;
   readonly onAction: (listener: (actionId: string) => void) => () => void;

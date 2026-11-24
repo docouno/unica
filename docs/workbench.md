@@ -159,6 +159,7 @@ export default defineComponent({
   - `{ kind: 'boolean', label, default }`
   - `{ kind: 'enum', label, choices: (string | { value, label? })[], default }`
   - `{ kind: 'number', label, default, min?, max?, step? }` (numeric inputs clamp to `min`/`max` and commit on valid input or blur)
+  - Read `ctx.story?.controls` to render the current settings. When an interaction changes a shared setting, call `ctx.story?.setControl(key, value)` from the handler. For example, a save that consumes a simulated failure can call `ctx.story?.setControl('failNext', false)` to clear the checkbox for every theme. The frame accepts declared boolean values, enum choices and finite numbers. It clamps numeric writes to the configured bounds and clears any pending draft for that control. Repeating the same value preserves the shared controls object.
 - **`actions` (imperative one-shot triggers broadcast to mounted artboards):**
   - `{ id, label }` — always subscribe with `useStoryAction(ctx, (actionId) => ...)` rather than reading `ctx.story.lastAction` in an effect.
 - **`reset: true`:**
