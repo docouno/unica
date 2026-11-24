@@ -113,7 +113,7 @@ async function runScenario(t, browser, origin, renderFixture, scenario) {
   }
 
   try {
-    await scenario({ page, mount, renderFixture });
+    await scenario({ page, mount, renderFixture, origin });
   } catch (error) {
     if (!errors.length) {
       throw error;

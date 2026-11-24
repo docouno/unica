@@ -15,11 +15,10 @@ async function navigate(page, params) {
 }
 
 export default {
-  'DatePicker selects the touched day at the edge of its in-flow calendar on a phone': async ({
+  'Date pickers select the touched day at the edge of an in-flow calendar on a phone': async ({
     page,
-    mount,
+    origin,
   }) => {
-    await mount('native');
     const touch = await page
       .context()
       .browser()
@@ -30,18 +29,26 @@ export default {
       });
     try {
       const mobile = await touch.newPage();
-      const route = new URL('/', page.url());
-      route.search = new URLSearchParams({
-        item: 'date-picker',
+      const view = {
         tab: 'states',
         family: 'frost',
         scheme: 'light',
         dir: 'rtl',
         scale: '120',
-      }).toString();
-      for (const block of ['panels', 'anatomy']) {
-        route.searchParams.set('block', block);
-        await mobile.goto(route.href, { waitUntil: 'domcontentloaded' });
+      };
+      for (const [item, block, expected] of [
+        ['date-picker', 'panels', '07/09/2026'],
+        ['date-picker', 'anatomy', '07/09/2026'],
+        ['date-range-picker', 'panels', '07/09/2026 – 13/09/2026'],
+      ]) {
+        const params = { ...view, item, block };
+        if (mobile.url() === 'about:blank') {
+          const route = new URL('/', origin);
+          route.search = new URLSearchParams(params).toString();
+          await mobile.goto(route.href, { waitUntil: 'domcontentloaded' });
+        } else {
+          await navigate(mobile, params);
+        }
         const field = mobile
           .locator(`[data-wb-block="${block}"] .wb-artboard .date-picker-proto`)
           .first();
@@ -54,8 +61,13 @@ export default {
         const neighbor = await eighth.boundingBox();
         assert.ok(day && neighbor);
         await mobile.touchscreen.tap(day.x + 1.5, day.y + day.height / 2);
+        const editor = field.getByRole('textbox');
+        if (item === 'date-range-picker') {
+          assert.equal(await editor.inputValue(), '');
+          await field.locator('button[data-date="2026-09-13"]').tap();
+        }
         await seventh.waitFor({ state: 'detached' });
-        assert.equal(await field.getByRole('textbox').inputValue(), '07/09/2026', block);
+        assert.equal(await editor.inputValue(), expected, item + '/' + block);
         assert.ok(day.width >= 44 && day.height >= 44);
         assert.ok(
           neighbor.x + neighbor.width <= day.x + 0.01,

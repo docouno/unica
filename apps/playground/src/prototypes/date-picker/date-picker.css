@@ -501,33 +501,6 @@
   outline: 2px solid var(--focus-ring-color);
   outline-offset: 1px;
 }
-.date-study-grid-proto {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
-  gap: var(--space-24);
-  align-items: start;
-}
-.date-study-proto {
-  min-inline-size: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: start;
-  gap: var(--space-12);
-}
-.date-study-proto > .date-picker-proto {
-  inline-size: 100%;
-}
-.date-study-label-proto {
-  margin: 0;
-  color: var(--fg-secondary);
-  font: 500 var(--text-size-caption-l) / 1.5 var(--font-family-base);
-}
-.date-study-note-proto {
-  margin: 0;
-  color: var(--fg-muted);
-  font: 400 var(--text-size-caption-l) / 1.5 var(--font-family-base);
-  overflow-wrap: anywhere;
-}
 .date-study-stack-proto {
   display: grid;
   gap: var(--space-24);
