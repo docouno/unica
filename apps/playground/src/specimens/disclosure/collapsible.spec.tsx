@@ -1,294 +1,164 @@
-import { FormField } from '../../prototypes/form-field/form-field.proto.js';
-import { useId } from 'react';
-import type { ReactElement } from 'react';
-import { defineComponent } from '../../workbench/types.js';
-import { Button, Card, Checkbox, Input, Text, Title } from '@docouno/unica';
-import { Table, TableScroll } from '../../prototypes/table/table.proto.js';
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from '../../prototypes/disclosure/disclosure.proto.js';
 import '../../prototypes/disclosure/disclosure.examples.css';
-
-function SizeStudy(): ReactElement {
-  return (
-    <div className="disclosure-study disclosure-study-grid" data-study="sizes">
-      {(['s', 'm', 'l'] as const).map((size) => (
-        <div className="disclosure-study-sample" key={size}>
-          <Text className="disclosure-study-label" size="caption-l" color="muted">
-            {size.toUpperCase()}
-          </Text>
-          <Collapsible size={size} defaultOpen>
-            <CollapsibleTrigger>Delivery window</CollapsibleTrigger>
-            <CollapsibleContent>09:00–17:00 UTC</CollapsibleContent>
-          </Collapsible>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-function TriggerStates(): ReactElement {
-  return (
-    <div className="disclosure-study disclosure-study-grid">
-      {(
-        [
-          { label: 'Closed', open: false },
-          { label: 'Open', open: true },
-        ] as const
-      ).map(({ label, open }) => (
-        <div className="disclosure-study-sample" key={label}>
-          <Text className="disclosure-study-label" size="caption-l" color="muted">
-            {label}
-          </Text>
-          <Collapsible defaultOpen={open}>
-            <CollapsibleTrigger>Delivery window</CollapsibleTrigger>
-            <CollapsibleContent>Weekdays, 09:00–17:00 UTC.</CollapsibleContent>
-          </Collapsible>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-function Availability(): ReactElement {
-  const reasonId = useId();
-  return (
-    <div className="disclosure-study disclosure-study-grid">
-      <div className="disclosure-study-sample">
-        <Text className="disclosure-study-label" size="caption-l" color="muted">
-          Unavailable · closed
-        </Text>
-        <Collapsible disabled>
-          <CollapsibleTrigger aria-describedby={reasonId}>Provider diagnostics</CollapsibleTrigger>
-          <Text
-            id={reasonId}
-            className="disclosure-study-reason"
-            size="caption-l"
-            color="secondary"
-          >
-            Connect a provider to see diagnostics.
-          </Text>
-          <CollapsibleContent>Recent request failures and retry history.</CollapsibleContent>
-        </Collapsible>
-      </div>
-      <div className="disclosure-study-sample">
-        <Text className="disclosure-study-label" size="caption-l" color="muted">
-          Unavailable · open
-        </Text>
-        <Collapsible defaultOpen disabled>
-          <CollapsibleTrigger>Local diagnostics</CollapsibleTrigger>
-          <CollapsibleContent>
-            <Checkbox size="s" label="Include timestamps" defaultChecked />
-          </CollapsibleContent>
-        </Collapsible>
-      </div>
-    </div>
-  );
-}
-
-function FlushContent(): ReactElement {
-  return (
-    <Card className="disclosure-study-card">
-      <Collapsible defaultOpen>
-        <CollapsibleTrigger>Recent deliveries</CollapsibleTrigger>
-        <CollapsibleContent padded={false}>
-          <TableScroll aria-label="Recent deliveries">
-            <Table aria-label="Recent deliveries">
-              <thead>
-                <tr>
-                  <th scope="col">Destination</th>
-                  <th scope="col">Result</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td>Review queue</td>
-                  <td>Delivered</td>
-                </tr>
-                <tr>
-                  <td>Audit archive</td>
-                  <td>Queued</td>
-                </tr>
-              </tbody>
-            </Table>
-          </TableScroll>
-        </CollapsibleContent>
-      </Collapsible>
-    </Card>
-  );
-}
-
-function DeliveryDetails(): ReactElement {
-  const id = useId();
-  return (
-    <Card className="disclosure-study-card">
-      <Text size="body-s" color="secondary">
-        Send the digest to workspace owners every Monday.
-      </Text>
-      <Collapsible defaultOpen>
-        <CollapsibleTrigger asChild>
-          <Button variant="secondary" tone="neutral" size="s">
-            Delivery details
-          </Button>
-        </CollapsibleTrigger>
-        <CollapsibleContent padded={false}>
-          <div className="disclosure-study-body">
-            <FormField htmlFor={id} label="Reply-to address" size="s">
-              <Input id={id} size="s" type="email" defaultValue="reviews@example.com" />
-            </FormField>
-            <CollapsibleTrigger asChild>
-              <Button className="disclosure-study-dismiss" variant="ghost" tone="neutral" size="s">
-                Close details
-              </Button>
-            </CollapsibleTrigger>
-          </div>
-        </CollapsibleContent>
-      </Collapsible>
-    </Card>
-  );
-}
-
-function OnOverlay(): ReactElement {
-  return (
-    <div className="unica-overlay-surface disclosure-study-overlay" data-surface="overlay">
-      <Title as="h3" size="heading-s">
-        Delivery report
-      </Title>
-      <Collapsible size="s" defaultOpen>
-        <CollapsibleTrigger>Retry attempts</CollapsibleTrigger>
-        <CollapsibleContent>Delivered on the second attempt at 09:04 UTC.</CollapsibleContent>
-      </Collapsible>
-    </div>
-  );
-}
+import { defineComponent } from '../../workbench/types.js';
+import { withOverlaySurface } from '../shared/with-overlay-surface.js';
+import { DeliveryDetails } from './collapsible-delivery.examples.js';
+import deliverySource from './collapsible-delivery.examples.tsx?raw';
+import {
+  Availability,
+  FlushContent,
+  OnOverlay,
+  TriggerStates,
+  Wrapping,
+} from './collapsible.examples.js';
 
 export default defineComponent({
   id: 'collapsible',
   title: 'Collapsible',
+  componentName: 'Collapsible',
   category: 'Surfaces & Structure',
   status: 'Proto',
   summary: 'Reveal one section inline with a disclosure row or an existing button.',
   props: {
     size: {
       kind: 'enum',
-      group: 'Layout',
+      group: 'Geometry',
       default: 'm',
-      description: 'Trigger and panel density.',
+      description: 'Sets the density of the trigger and panel.',
       choices: [{ value: 's' }, { value: 'm' }, { value: 'l' }],
     },
     disabled: {
       kind: 'boolean',
-      group: 'Behavior',
+      group: 'Availability',
       default: false,
-      description: 'Disable the disclosure trigger.',
+      description: 'Disables the trigger. Controls inside an open panel remain available.',
     },
     defaultOpen: {
       kind: 'boolean',
-      group: 'Behavior',
+      group: 'Interaction',
       default: false,
-      description: 'Expand the panel when the example mounts.',
+      description:
+        'Opens the panel on mount. Changing this example setting starts a fresh disclosure.',
     },
     onOpenChange: {
       kind: 'action',
-      group: 'Events',
-      description: 'Reports whether the panel expands or collapses.',
-      code: 'handleOpenChange',
+      group: 'Interaction',
+      publicType: '(open: boolean) => void',
+      description: 'Optional callback for the next expanded state. The example logs each change.',
+      code: '(open) => console.log(open)',
     },
   },
   code: (
-    values,
-  ) => `<Collapsible${values.size === 'm' ? '' : ` size="${values.size}"`}${values.disabled ? ' disabled' : ''}${values.defaultOpen ? ' defaultOpen' : ''} onOpenChange={handleOpenChange}>
-  <CollapsibleTrigger>Delivery details</CollapsibleTrigger>
-  <CollapsibleContent>Shipping updates appear after dispatch.</CollapsibleContent>
+    _values,
+    attributes,
+  ) => `import { Collapsible, CollapsibleContent, CollapsibleTrigger } from './prototypes/disclosure/disclosure.proto.js';
+
+<Collapsible${attributes}>
+  <CollapsibleTrigger>Tax</CollapsibleTrigger>
+  <CollapsibleContent><bdi>5%</bdi></CollapsibleContent>
 </Collapsible>`,
-  render: ({ values, ctx }) => (
-    <Collapsible
-      {...ctx.subject}
-      key={String(values.defaultOpen)}
-      size={values.size}
-      disabled={values.disabled}
-      defaultOpen={values.defaultOpen}
-      onOpenChange={ctx.action('onOpenChange')}
+  render: withOverlaySurface(({ values, ctx }) => (
+    <div
+      data-example-disclosure=""
+      style={
+        ctx.tab === 'states'
+          ? { inlineSize: '13rem', maxInlineSize: '100%' }
+          : { inlineSize: 'min(100%, 28rem)', minBlockSize: '5rem' }
+      }
     >
-      <CollapsibleTrigger>Delivery details</CollapsibleTrigger>
-      <CollapsibleContent>Shipping updates appear after dispatch.</CollapsibleContent>
-    </Collapsible>
-  ),
-  matrixViews: [
+      <Collapsible
+        {...ctx.subject}
+        key={String(values.defaultOpen)}
+        size={values.size}
+        disabled={values.disabled}
+        defaultOpen={values.defaultOpen}
+        onOpenChange={ctx.action('onOpenChange')}
+      >
+        <CollapsibleTrigger>Tax</CollapsibleTrigger>
+        <CollapsibleContent>
+          <bdi>5%</bdi>
+        </CollapsibleContent>
+      </Collapsible>
+    </div>
+  )),
+  states: [
     {
       id: 'sizes',
       title: 'Row sizes',
       rows: 'size',
       cols: 'defaultOpen',
-      reference: () => <SizeStudy />,
+      caption: 'Compare the trigger height and the alignment of its label with the expanded body.',
     },
   ],
   cases: [
     {
       id: 'states',
       title: 'Trigger feedback',
-      caption: 'Hover, hold, or Tab to compare the closed and open rows.',
       kind: 'behavior',
-      render: () => <TriggerStates />,
+      mode: 'live',
+      caption:
+        'Hover, hold or focus either trigger, then activate it to compare the open and closed feedback.',
+      render: withOverlaySurface(TriggerStates, 'border-box'),
     },
     {
       id: 'availability',
       title: 'Unavailable triggers',
-      caption: 'The checkbox stays available when the open section’s trigger is disabled.',
       kind: 'behavior',
-      render: () => <Availability />,
+      mode: 'live',
+      caption:
+        'The reason stays visible beside the closed section. In the open section, the checkbox remains available.',
+      render: withOverlaySurface(Availability, 'border-box'),
     },
     {
       id: 'wrapping',
       title: 'Long label in a narrow column',
       kind: 'content',
-      render: () => (
-        <div className="disclosure-study-narrow">
-          <Collapsible size="s" defaultOpen>
-            <CollapsibleTrigger>
-              Delivery checks for regionalIncidentNotificationDeliveryService
-            </CollapsibleTrigger>
-            <CollapsibleContent>Retries stop after the third attempt.</CollapsibleContent>
-          </Collapsible>
-        </div>
-      ),
+      mode: 'live',
+      caption:
+        'The service name can wrap across lines. The chevron stays aligned with the first line.',
+      render: withOverlaySurface(Wrapping, 'border-box'),
     },
     {
       id: 'flush',
       title: 'Full-width content',
-      kind: 'behavior',
-      render: () => <FlushContent />,
+      kind: 'content',
+      mode: 'live',
+      caption:
+        'The table fills the unpadded panel. In a narrow column, focus the table scroll area and use the arrow keys to see every column.',
+      render: withOverlaySurface(FlushContent, 'border-box'),
     },
     {
       id: 'overlay',
       title: 'On a floating surface',
       surface: 'overlay',
       overlayStage: true,
-      caption: 'The host panel is a static material preview. The disclosure inside it is live.',
       kind: 'surface',
-      render: () => <OnOverlay />,
+      mode: 'live',
+      caption:
+        'The host supplies the surface. Toggle Retry attempts to inspect the delivery report against it.',
+      render: OnOverlay,
     },
   ],
-  usage: [
+  compositions: [
     {
       id: 'custom',
       title: 'Existing button and a second trigger',
-      caption: 'Edit the address, close from inside, then reopen to see the draft preserved.',
-      code: `<Collapsible defaultOpen>
-  <CollapsibleTrigger asChild>
-    <Button variant="secondary" tone="neutral" size="s">Delivery details</Button>
-  </CollapsibleTrigger>
-  <CollapsibleContent padded={false}>
-    <label htmlFor={replyId}>Reply-to address</label>
-    <Input id={replyId} type="email" defaultValue="reviews@example.com" />
-    <CollapsibleTrigger asChild>
-      <Button variant="ghost" tone="neutral" size="s">Close details</Button>
-    </CollapsibleTrigger>
-  </CollapsibleContent>
-</Collapsible>`,
-      render: () => <DeliveryDetails />,
+      mode: 'live',
+      caption:
+        'Edit the reply-to address and use Close details. Focus returns to Delivery details, and reopening restores the draft.',
+      code: deliverySource.replaceAll('../../prototypes/', './prototypes/'),
+      render: withOverlaySurface(
+        () => (
+          <div data-example-disclosure="" style={{ inlineSize: 'min(100%, 34rem)' }}>
+            <DeliveryDetails />
+          </div>
+        ),
+        'border-box',
+      ),
     },
   ],
 });

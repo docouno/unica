@@ -224,9 +224,14 @@ export default {
   }) => {
     await page.setViewportSize({ width: 1440, height: 900 });
     await mount('button-consumers');
-    const board = await open(page, { item: 'collapsible', tab: 'states' });
-    const available = board.getByRole('button', { name: 'Delivery window', exact: true }).first();
-    const unavailable = board.getByRole('button', { name: 'Provider diagnostics', exact: true });
+    await open(page, { item: 'collapsible', tab: 'states' });
+    const available = page
+      .locator('[data-wb-block="states"] .wb-artboard')
+      .getByRole('button', { name: 'Delivery window', exact: true, expanded: false });
+    const unavailable = page
+      .locator('[data-wb-block="availability"] .wb-artboard')
+      .getByRole('button', { name: 'Provider diagnostics', exact: true });
+    assert.ok(await unavailable.isDisabled());
     const before = await getBox(available);
     const disabledBefore = await getBox(unavailable);
     await page.emulateMedia({ forcedColors: 'active' });
