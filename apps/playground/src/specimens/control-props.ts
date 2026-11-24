@@ -28,21 +28,28 @@ export function toggle(
 export function eventProp(
   description: string,
   handler: string,
+  publicType?: string,
 ): PropDefinition & {
   readonly kind: 'action';
 } {
-  return { kind: 'action', group: 'Events', description, code: handler };
+  return {
+    kind: 'action',
+    group: 'Interaction',
+    description,
+    code: handler,
+    ...(publicType ? { publicType } : {}),
+  };
 }
 
 export const size = choice('Geometry', 'Density of the control.', ['s', 'm', 'l'], 'm');
 export const variant = choice(
-  'Field',
+  'Role',
   'Form field or inline editing role.',
   ['default', 'ghost'],
   'default',
 );
 export const status = choice(
-  'Field',
+  'Semantics',
   'Feedback tone of the field.',
   ['neutral', 'info', 'success', 'warning', 'danger'],
   'neutral',
@@ -51,5 +58,5 @@ export const width = choice('Geometry', 'Available inline width.', ['auto', 'ful
 export const disabled = toggle('Availability', 'Disable the control.');
 export const readOnly = toggle('Availability', 'Keep the current value available for reading.');
 export const required = toggle('Availability', 'Mark the value as required.');
-export const clearable = toggle('Field', 'Show the control for clearing the current value.');
+export const clearable = toggle('Interaction', 'Show the control for clearing the current value.');
 export const loading = toggle('Availability', 'Show pending work.');

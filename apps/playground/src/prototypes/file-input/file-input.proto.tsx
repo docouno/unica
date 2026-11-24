@@ -351,7 +351,9 @@ export function Dropzone({
       >
         <div className="dropzone-copy-proto">
           {unavailable ? (
-            <span className="dropzone-unavailable-proto">{unavailableLabel}</span>
+            <span className="dropzone-unavailable-proto">
+              <bdi>{unavailableLabel}</bdi>
+            </span>
           ) : (
             <div className="dropzone-prompt-proto">
               <span className="dropzone-invitation-proto" aria-hidden="true">
@@ -496,7 +498,7 @@ export function FileItem({
       </span>
       <div className="file-item-body-proto">
         {href && !disabled ? (
-          <a className="file-item-name-proto file-item-link-proto" href={href} download>
+          <a className="file-item-name-proto file-item-link-proto" href={href} download={name}>
             <bdi>{name}</bdi>
           </a>
         ) : (
@@ -559,11 +561,18 @@ export function FileItem({
               tone="neutral"
               aria-label={`Retry ${name}`}
               onClick={(event) => {
-                const row = event.currentTarget.closest('li');
+                const retry = event.currentTarget;
+                const row = retry.closest('li');
+                const doc = retry.ownerDocument;
+                const hadFocus = doc.activeElement === retry;
                 onRetry();
-                requestAnimationFrame(() =>
-                  row?.querySelector<HTMLButtonElement>('button[aria-label^="Remove"]')?.focus(),
-                );
+                if (hadFocus) {
+                  requestAnimationFrame(() => {
+                    if (!retry.isConnected && row?.isConnected && doc.activeElement === doc.body) {
+                      row.querySelector<HTMLButtonElement>('button[aria-label^="Remove"]')?.focus();
+                    }
+                  });
+                }
               }}
             >
               Retry

@@ -1,3 +1,10 @@
+/* Keep the picker invitation and file guidance readable in generated comparisons. */
+td:has([data-file-intake-sample]) {
+  min-inline-size: 18rem;
+}
+ul:has(> [data-wb-result-row] [data-file-intake-sample]) {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr));
+}
 .file-demo-stack,
 .file-demo-sample,
 .file-demo-surface {
@@ -15,7 +22,7 @@
 .file-demo-stack {
   inline-size: 100%;
 }
-[data-surface='overlay'] > :is(.file-demo-grid, .file-demo-stack) {
+[data-surface='overlay']:not(.example-surface) > :is(.file-demo-grid, .file-demo-stack) {
   padding: var(--space-16);
   border: 1px solid var(--_overlay-border);
   border-radius: var(--surface-m-radius);
@@ -80,13 +87,36 @@
   }
 }
 
+/* The local subsets cover the Arabic sample names while Latin extensions keep the theme font. */
 @font-face {
   font-family: 'File Demo Arabic';
   src: url('/assets/file-input-arabic-400.ttf') format('truetype');
   font-weight: 400 500;
   font-display: block;
+  unicode-range: U+0600-06FF;
+}
+@font-face {
+  font-family: 'File Demo Arabic Supplement';
+  src: url('/assets/alert-arabic-400.ttf') format('truetype');
+  font-weight: 400 500;
+  font-display: block;
+  unicode-range: U+0600-06FF;
+}
+@font-face {
+  font-family: 'File Demo Arabic Supplement';
+  src: url('/assets/avatar-arabic-400.ttf') format('truetype');
+  font-weight: 400 500;
+  font-display: block;
+  unicode-range: U+0648;
 }
 .file-demo-arabic
-  :is(.file-input-name-proto, .ff-label, .file-item-name-proto, .file-item-detail-proto) {
-  font-family: 'File Demo Arabic', var(--font-family-base);
+  :is(
+    .file-input-name-proto,
+    .ff-label,
+    .file-item-name-proto,
+    .file-item-detail-proto,
+    [role='status']
+  ),
+[data-file-intake-sample] .dropzone-unavailable-proto {
+  font-family: 'File Demo Arabic', 'File Demo Arabic Supplement', var(--font-family-base);
 }

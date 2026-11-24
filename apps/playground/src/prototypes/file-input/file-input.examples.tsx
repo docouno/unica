@@ -1,6 +1,9 @@
-import { useRef, useState } from 'react';
+import { useLayoutEffect, useRef, useState } from 'react';
 import type { ReactElement, ReactNode } from 'react';
-import { Button } from '@docouno/unica';
+import { Button, Stack, Text } from '@docouno/unica';
+import type { PreviewProps } from '../../workbench/types.js';
+import { useStoryAction } from '../../workbench/storyFrameState.js';
+import { ExampleSurface } from '../../specimens/shared/example-surface.js';
 import { Dropzone, FileInput, FileItem, FileList } from './file-input.proto.js';
 import type { FileItemStatus } from './file-input.proto.js';
 import type { ControlSize, FieldStatus, FieldVariant } from '@docouno/unica';
@@ -18,7 +21,9 @@ function Sample({
 }): ReactElement {
   return (
     <div className="file-demo-sample">
-      <span className="file-demo-label">{title}</span>
+      <Text as="span" size="caption-l" weight="medium" color="muted">
+        <bdi>{title}</bdi>
+      </Text>
       {children}
     </div>
   );
@@ -234,30 +239,50 @@ export function FileLive(): ReactElement {
   );
 }
 
-export function DropSizes(): ReactElement {
+export function SingleImageIntake({ ctx }: PreviewProps): ReactElement {
+  const [feedback, setFeedback] = useState({
+    text: 'No image selected.',
+    rejected: false,
+    revision: 0,
+  });
   return (
-    <div className="file-demo-stack">
-      {sizes.map((size) => (
-        <Sample
-          key={size}
-          title={`${size.toUpperCase()} · ${size === 's' ? 'Compact attachment slot' : size === 'm' ? 'Standard intake' : 'Primary intake'}`}
-        >
-          <Dropzone size={size} />
-        </Sample>
-      ))}
-      <Sample title="Single image intake">
-        <Dropzone
-          size="s"
-          description="PNG or JPEG · Up to 10 MB"
-          browseLabel="choose an image"
-          accept="image/png,image/jpeg"
-          multiple={false}
-        />
-      </Sample>
-    </div>
+    <Dropzone
+      {...ctx.subject}
+      className="file-demo-arabic"
+      size="s"
+      browseLabel="choose an image"
+      accept="image/png,image/jpeg"
+      multiple={false}
+      description={<bdi>PNG or JPEG · Up to 10 MB</bdi>}
+      status={feedback.rejected ? 'danger' : 'neutral'}
+      message={
+        <span role="status">
+          <bdi dir="ltr" key={feedback.revision}>
+            {feedback.text}
+          </bdi>
+        </span>
+      }
+      onFilesChange={(files) => {
+        if (!files.length) {
+          return;
+        }
+        const file = files[0];
+        const allowed =
+          files.length === 1 &&
+          file &&
+          ['image/png', 'image/jpeg'].includes(file.type) &&
+          file.size <= 10000000;
+        setFeedback((previous) => ({
+          text: allowed ? `Selected ${file.name}.` : 'Choose one PNG or JPEG up to 10 MB.',
+          rejected: !allowed,
+          revision: previous.revision + 1,
+        }));
+      }}
+    />
   );
 }
-export function DropInteraction(): ReactElement {
+
+export function DropInteraction({ ctx }: PreviewProps): ReactElement {
   return (
     <div className="file-demo-grid">
       {(['rest', 'hover', 'active', 'focus', 'dragging'] as const).map((previewState) => (
@@ -265,76 +290,97 @@ export function DropInteraction(): ReactElement {
           key={previewState}
           title={previewState === 'focus' ? 'Keyboard focus' : previewState}
         >
-          <Dropzone previewState={previewState} />
+          <Dropzone {...ctx.subject} previewState={previewState} />
         </Sample>
       ))}
       <Sample title="Drag over a previous rejection">
         <Dropzone
+          {...ctx.subject}
           previewState="dragging"
           status="danger"
-          message="previous-attempt.exe was not added. Choose Markdown or ZIP."
+          message={<bdi>previous-attempt.exe was not added. Choose Markdown or ZIP.</bdi>}
         />
       </Sample>
     </div>
   );
 }
-export function DropFeedback(): ReactElement {
+
+export function DropFeedback({ ctx }: PreviewProps): ReactElement {
   return (
-    <div className="file-demo-stack">
+    <Stack gap={16}>
       <Dropzone
+        {...ctx.subject}
         status="danger"
-        message="recording.mov is 84 MB. Choose files up to 50 MB each. Your selected files are kept."
+        message={<bdi>recording.mov is 84 MB. Choose files up to 50 MB each.</bdi>}
       />
       <Dropzone
+        {...ctx.subject}
         size="s"
         status="danger"
-        message="Choose up to 3 files. This batch was not added; your 2 selected files are kept."
+        description={<bdi>Markdown or ZIP · 3 files maximum</bdi>}
+        message={<bdi>This batch would exceed the 3-file limit. Your selected files are kept.</bdi>}
       />
       <Dropzone
+        {...ctx.subject}
         size="s"
         status="danger"
-        message="1 file added. report.exe was not added: choose Markdown or ZIP."
+        message={<bdi>1 file added. report.exe was not added. Choose Markdown or ZIP.</bdi>}
       />
-      <FileList aria-label="Previously selected files">
-        <FileItem
-          name="release-notes.md"
-          fileSize="24 KB"
-          detail="Selected locally"
-          onRemove={noop}
-        />
+      <FileList aria-label="Selected file">
+        <FileItem name="release-notes.md" fileSize="24 KB" detail="Selected locally" readOnly />
       </FileList>
-      <p className="file-demo-note">
-        Duplicates: “release-notes.md is already selected.” Folders: “Choose files, not folders.”
-        Neither creates a failed upload row.
-      </p>
-    </div>
+      <Dropzone
+        {...ctx.subject}
+        size="s"
+        status="danger"
+        message={<bdi>release-notes.md is already selected.</bdi>}
+      />
+      <Dropzone
+        {...ctx.subject}
+        size="s"
+        status="danger"
+        message={<bdi>Choose individual files from the folder.</bdi>}
+      />
+    </Stack>
   );
 }
-export function DropAvailability(): ReactElement {
+
+const referenceText = '# Saved reference\n\nThe archive contains the approved project brief.\n';
+const savedReference = {
+  name: 'saved-reference.md',
+  href: `data:text/markdown;charset=utf-8,${encodeURIComponent(referenceText)}`,
+  fileSize: formatFileSize(new TextEncoder().encode(referenceText).length),
+};
+
+export function DropAvailability({ ctx }: PreviewProps): ReactElement {
   return (
     <div className="file-demo-grid">
-      <Dropzone
-        readOnly
-        title="Attachments are locked"
-        description="You can still review the selected files."
-      />
-      <Dropzone
-        disabled
-        title="Attachments unavailable"
-        description={null}
-        message="Select a workspace to add files."
-      />
-      <Dropzone size="s" readOnly description="Selected files can still be reviewed." />
-      <Dropzone
-        size="s"
-        disabled
-        title="Attachments unavailable"
-        description={null}
-        message="Select a workspace to add files."
-      />
+      {(['m', 's'] as const).map((size) => (
+        <Sample title={size === 'm' ? 'Standard' : 'Compact'} key={size}>
+          <Dropzone
+            {...ctx.subject}
+            size={size}
+            readOnly
+            title="Attachments are locked"
+            description={<bdi>You can still review the saved attachment.</bdi>}
+          />
+          <FileList aria-label="Saved attachment">
+            <FileItem {...savedReference} readOnly />
+          </FileList>
+          <Dropzone
+            {...ctx.subject}
+            size={size}
+            disabled
+            title="Attachments unavailable"
+            description={null}
+            message={<bdi>Select a workspace to add files.</bdi>}
+          />
+        </Sample>
+      ))}
     </div>
   );
 }
+
 const rowCases: readonly {
   status: FileItemStatus;
   detail: string;
@@ -383,12 +429,13 @@ const rowCases: readonly {
     detail: 'Could not remove the file. It is still attached; try removing again.',
   },
 ];
-export function FileRows(): ReactElement {
+export function FileRows({ ctx }: PreviewProps): ReactElement {
   return (
     <div className="file-demo-stack">
       <FileList aria-label="Pinned file lifecycle states">
         {rowCases.map((entry, index) => (
           <FileItem
+            {...ctx.subject}
             key={index}
             name={entry.name}
             fileSize="2.4 MB"
@@ -403,14 +450,21 @@ export function FileRows(): ReactElement {
     </div>
   );
 }
-export function RowSizes(): ReactElement {
+export function RowSizes({ ctx }: PreviewProps): ReactElement {
   return (
     <div className="file-demo-stack">
       {sizes.map((size) => (
         <Sample title={size.toUpperCase()} key={size}>
           <FileList>
-            <FileItem size={size} name="project-brief.pdf" fileSize="214 KB" onRemove={noop} />
             <FileItem
+              {...ctx.subject}
+              size={size}
+              name="project-brief.pdf"
+              fileSize="214 KB"
+              onRemove={noop}
+            />
+            <FileItem
+              {...ctx.subject}
               size={size}
               name="cover-image.png"
               fileSize="1.2 MB"
@@ -426,11 +480,12 @@ export function RowSizes(): ReactElement {
     </div>
   );
 }
-export function RowOverflow(): ReactElement {
+export function RowOverflow({ ctx }: PreviewProps): ReactElement {
   return (
     <div className="file-demo-stack">
       <FileList aria-label="Long names and availability">
         <FileItem
+          {...ctx.subject}
           name="customer-research_findings_and_recommendations_for_the_next_release_v12_final.pdf"
           fileSize="12.4 MB"
           detail="Connection lost while uploading. Your selected file is kept; try again when your connection is restored."
@@ -440,14 +495,16 @@ export function RowOverflow(): ReactElement {
           onRemove={noop}
         />
         <FileItem
+          {...ctx.subject}
           name="migration-report.zip"
           fileSize="1.2 MB"
           status="success"
           detail="Uploaded and verified. All cross-references passed validation."
           onRemove={noop}
         />
-        <FileItem name="project-brief.pdf" fileSize="214 KB" readOnly />
+        <FileItem {...ctx.subject} name="project-brief.pdf" fileSize="214 KB" readOnly />
         <FileItem
+          {...ctx.subject}
           name="archived-brief.pdf"
           fileSize="214 KB"
           disabled
@@ -455,13 +512,9 @@ export function RowOverflow(): ReactElement {
           detail="Attachments unavailable"
           onRemove={noop}
         />
+        <FileItem {...ctx.subject} {...savedReference} detail="Download attachment" />
         <FileItem
-          name="saved-reference.md"
-          fileSize="24 KB"
-          detail="Download attachment"
-          href="data:text/markdown,Reference%20document"
-        />
-        <FileItem
+          {...ctx.subject}
           name="تقرير-البحث-2026.pdf"
           className="file-demo-arabic"
           dir="rtl"
@@ -475,27 +528,48 @@ export function RowOverflow(): ReactElement {
   );
 }
 
+function fileCount(count: number): string {
+  return `${count} ${count === 1 ? 'file' : 'files'}`;
+}
 interface LocalFile {
   readonly id: number;
   readonly file: File;
   readonly status: FileItemStatus;
   readonly progress?: number | null | undefined;
 }
-export function LiveQueue(): ReactElement {
+export function LiveQueue({ ctx }: PreviewProps): ReactElement {
   const [files, setFiles] = useState<readonly LocalFile[]>([]);
-  const [message, setMessage] = useState('');
-  const [rejected, setRejected] = useState(false);
-  const [announcement, setAnnouncement] = useState('No files selected.');
+  const [feedback, setFeedback] = useState({
+    text: 'No files selected.',
+    rejected: false,
+    revision: 0,
+  });
+  function announce(text: string, rejected = false): void {
+    setFeedback((previous) => ({ text, rejected, revision: previous.revision + 1 }));
+  }
   const nextId = useRef(0);
   const region = useRef<HTMLDivElement>(null);
+  const focusAfterRemoval = useRef<number | 'picker' | null>(null);
+  useLayoutEffect(() => {
+    const id = focusAfterRemoval.current;
+    focusAfterRemoval.current = null;
+    if (id === null || document.activeElement !== document.body) {
+      return;
+    }
+    const selector =
+      id === 'picker'
+        ? 'input[type="file"]'
+        : `[data-file-id="${id}"] button[aria-label^="Remove"]`;
+    region.current?.querySelector<HTMLElement>(selector)?.focus();
+  }, [files]);
   function receive(incoming: readonly File[]): void {
     if (!incoming.length) {
       return;
     }
     if (files.length + incoming.length > 3) {
-      setRejected(true);
-      setMessage(
-        `Choose up to 3 files. This batch was not added; your ${files.length} selected files are kept.`,
+      announce(
+        `Choose up to 3 files. This batch was not added. Selection kept: ${fileCount(files.length)}.`,
+        true,
       );
       return;
     }
@@ -516,51 +590,111 @@ export function LiveQueue(): ReactElement {
       }
     }
     setFiles([...files, ...accepted]);
-    setRejected(errors.length > 0);
-    setMessage(
-      `${accepted.length} ${accepted.length === 1 ? 'file' : 'files'} added.${errors.length ? ` ${errors.join(' ')}` : ' Selected locally; nothing has been uploaded.'}`,
-    );
-    setAnnouncement(
-      `${accepted.length} files added. ${files.length + accepted.length} files selected.`,
-    );
+    const result = `${fileCount(accepted.length)} added. ${fileCount(files.length + accepted.length)} selected.`;
+    announce([result, ...errors].join(' '), errors.length > 0);
   }
   function phase(status: FileItemStatus, progress?: number | null): void {
+    if (
+      !files.some(
+        (entry) =>
+          entry.status !== 'removing' && (entry.status !== status || entry.progress !== progress),
+      )
+    ) {
+      return;
+    }
     setFiles(
       files.map((entry) => (entry.status === 'removing' ? entry : { ...entry, status, progress })),
     );
-    setAnnouncement(
+    announce(
       status === 'success'
         ? 'Files uploaded and verified.'
         : status === 'danger'
           ? 'Upload failed. Retry is available beside each file.'
-          : `Preview phase: ${status}.`,
+          : status === 'processing'
+            ? 'Verifying files.'
+            : progress === 100
+              ? 'Transfer complete. Awaiting verification.'
+              : 'Transfer in progress.',
     );
   }
   function finishRemoval(): void {
-    const removedIndex = files.findIndex((entry) => entry.status === 'removing');
-    setFiles(files.filter((entry) => entry.status !== 'removing'));
-    setAnnouncement('Removed files.');
-    requestAnimationFrame(() => {
-      const actions = region.current?.querySelectorAll<HTMLButtonElement>(
-        '.file-item-actions-proto button[aria-label^="Remove"]',
-      );
-      const target = actions?.[Math.min(removedIndex, actions.length - 1)];
-      (target ?? region.current?.querySelector<HTMLInputElement>('input[type="file"]'))?.focus();
-    });
+    const remaining = files.filter((entry) => entry.status !== 'removing');
+    if (remaining.length === files.length) {
+      return;
+    }
+    const active = document.activeElement?.closest<HTMLElement>('[data-file-id]');
+    const index =
+      active && region.current?.contains(active)
+        ? files.findIndex(
+            (entry) => entry.status === 'removing' && String(entry.id) === active.dataset.fileId,
+          )
+        : -1;
+    if (index >= 0) {
+      const next =
+        files.slice(index + 1).find((entry) => entry.status !== 'removing') ?? remaining.at(-1);
+      focusAfterRemoval.current = next?.id ?? 'picker';
+    }
+    setFiles(remaining);
+    announce(`Removed ${fileCount(files.length - remaining.length)}.`);
   }
+
+  useStoryAction(ctx, (action) => {
+    switch (action) {
+      case 'samples':
+        receive([new File(['# Notes'], 'research-notes.md'), new File(['ZIP'], 'assets.zip')]);
+        break;
+      case 'mixed':
+        receive([new File(['Notes'], 'project-brief.md'), new File([''], 'application.exe')]);
+        break;
+      case 'limit':
+        receive(['one.md', 'two.md', 'three.md', 'four.md'].map((name) => new File([name], name)));
+        break;
+      case 'start':
+        phase('uploading', 0);
+        break;
+      case 'progress':
+        phase('uploading', 65);
+        break;
+      case 'finish':
+        phase('uploading', 100);
+        break;
+      case 'verify':
+        phase('processing');
+        break;
+      case 'success':
+        phase('success');
+        break;
+      case 'fail':
+        phase('danger', 65);
+        break;
+      case 'remove':
+        finishRemoval();
+        break;
+    }
+  });
   return (
-    <div ref={region} className="file-demo-stack">
+    <div ref={region} className="file-demo-stack file-demo-arabic">
       <Dropzone
+        {...ctx.subject}
         size="s"
-        description="Markdown or ZIP · Up to 2 MB each · 3 files maximum"
-        status={rejected ? 'danger' : 'neutral'}
-        message={message}
+        accept=".md,.zip"
+        description={<bdi>Markdown or ZIP · Up to 2 MB each · 3 files maximum</bdi>}
+        status={feedback.rejected ? 'danger' : 'neutral'}
+        message={
+          <span role="status">
+            <bdi dir="ltr" key={feedback.revision}>
+              {feedback.text}
+            </bdi>
+          </span>
+        }
         onFilesChange={receive}
       />
       <FileList aria-label="Selected files">
         {files.map((entry) => (
           <FileItem
             key={entry.id}
+            data-file-id={entry.id}
+            tabIndex={-1}
             name={entry.file.name}
             fileSize={formatFileSize(entry.file.size)}
             status={entry.status}
@@ -571,14 +705,18 @@ export function LiveQueue(): ReactElement {
                 : undefined
             }
             onRemove={() => {
+              const row = region.current?.querySelector<HTMLElement>(
+                `[data-file-id="${entry.id}"]`,
+              );
+              if (row?.contains(document.activeElement)) {
+                row.focus();
+              }
               setFiles(
                 files.map((item) =>
                   item.id === entry.id ? { ...item, status: 'removing' } : item,
                 ),
               );
-              setAnnouncement(
-                `Removing ${entry.file.name}. Confirm removal with the preview control.`,
-              );
+              announce(`Removing ${entry.file.name}.`);
             }}
             onRetry={
               entry.status === 'danger'
@@ -588,88 +726,13 @@ export function LiveQueue(): ReactElement {
                         item.id === entry.id ? { ...item, status: 'uploading', progress: 0 } : item,
                       ),
                     );
-                    setAnnouncement(`Retrying ${entry.file.name}.`);
+                    announce(`Retrying ${entry.file.name}.`);
                   }
                 : undefined
             }
           />
         ))}
       </FileList>
-      <div className="file-demo-controls">
-        <span className="file-demo-label">Preview controls · No network transfer</span>
-        <div className="file-demo-actions">
-          <Button
-            size="s"
-            variant="secondary"
-            tone="neutral"
-            onClick={() =>
-              receive([new File(['# Notes'], 'research-notes.md'), new File(['ZIP'], 'assets.zip')])
-            }
-          >
-            Add sample files
-          </Button>
-          <Button
-            size="s"
-            variant="secondary"
-            tone="neutral"
-            onClick={() =>
-              receive([new File(['Notes'], 'project-brief.md'), new File([''], 'application.exe')])
-            }
-          >
-            Try mixed batch
-          </Button>
-          <Button
-            size="s"
-            variant="secondary"
-            tone="neutral"
-            onClick={() =>
-              receive([
-                new File(['a'], 'one.md'),
-                new File(['b'], 'two.md'),
-                new File(['c'], 'three.md'),
-                new File(['d'], 'four.md'),
-              ])
-            }
-          >
-            Try count limit
-          </Button>
-        </div>
-        <div className="file-demo-actions">
-          {(
-            [
-              ['Start transfer', 'uploading', 0],
-              ['Set 65%', 'uploading', 65],
-              ['Finish transfer', 'uploading', 100],
-              ['Verify', 'processing', undefined],
-              ['Confirm success', 'success', undefined],
-              ['Fail transfer', 'danger', 65],
-            ] as const
-          ).map(([title, status, progress]) => (
-            <Button
-              size="s"
-              variant="ghost"
-              tone="neutral"
-              key={title}
-              disabled={!files.some((entry) => entry.status !== 'removing')}
-              onClick={() => phase(status, progress)}
-            >
-              {title}
-            </Button>
-          ))}
-          <Button
-            size="s"
-            variant="ghost"
-            tone="neutral"
-            disabled={!files.some((entry) => entry.status === 'removing')}
-            onClick={finishRemoval}
-          >
-            Confirm removal
-          </Button>
-        </div>
-      </div>
-      <p className="file-demo-note" role="status">
-        {announcement}
-      </p>
     </div>
   );
 }
@@ -701,6 +764,30 @@ export function MultipleField(): ReactElement {
     </div>
   );
 }
+function DropSurfaceRows({ ctx }: { readonly ctx?: PreviewProps['ctx'] }): ReactElement {
+  return (
+    <>
+      <Dropzone {...ctx?.subject} size="s" />
+      <FileList aria-label="Transfer examples">
+        <FileItem
+          name="research-assets.zip"
+          fileSize="2.4 MB"
+          status="uploading"
+          progress={65}
+          onRemove={noop}
+        />
+        <FileItem name="project-brief.pdf" fileSize="214 KB" status="success" onRemove={noop} />
+      </FileList>
+    </>
+  );
+}
+export function DropSurface({ ctx }: PreviewProps): ReactElement {
+  return (
+    <ExampleSurface surface={ctx.surface} sizing="border-box">
+      <DropSurfaceRows ctx={ctx} />
+    </ExampleSurface>
+  );
+}
 export function FileSurfaces({ compact = false }: { readonly compact?: boolean }): ReactElement {
   return (
     <div className="file-demo-grid">
@@ -728,24 +815,7 @@ export function FileSurfaces({ compact = false }: { readonly compact?: boolean }
                 />
               </>
             ) : (
-              <>
-                <Dropzone size="s" />
-                <FileList>
-                  <FileItem
-                    name="research-assets.zip"
-                    fileSize="2.4 MB"
-                    status="uploading"
-                    progress={65}
-                    onRemove={noop}
-                  />
-                  <FileItem
-                    name="project-brief.pdf"
-                    fileSize="214 KB"
-                    status="success"
-                    onRemove={noop}
-                  />
-                </FileList>
-              </>
+              <DropSurfaceRows />
             )}
           </div>
         </div>

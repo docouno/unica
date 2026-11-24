@@ -53,7 +53,9 @@ Single selection replaces the old reference only after acceptance. Canceling the
 
 Mixed type/size/duplicate results retain accepted neighbors and say how many were added, naming the rejected files and correction. Errors belong below intake, not in a fake failed-upload row. If the incoming batch would exceed the count limit, reject the whole incoming batch before per-file admission; preserve the previous collection. Full rejection also preserves it. Do not silently keep an arbitrary subset to fill the limit. On correction clear stale errors; reset clears local selection and attempt feedback.
 
-The live intake limits files to Markdown/ZIP, 2 MB each, three total. Sample controls let reviewers exercise partial acceptance and atomic count rejection without their own files. Its intentionally small identity check uses name + size; production must use the full identity above. The FileInput local study accepts one PDF/Markdown up to 2 MB. Generic visual samples do not implement these admission rules.
+The live intake accepts `.md` and `.zip` from the chooser or a drop, up to 2 MB each and three files total. Its polite status reports the accepted count and explains every rejection in the same update. Sample controls let reviewers exercise partial acceptance and atomic count rejection without their own files. Its intentionally small identity check uses name + size; production must use the full identity above. The FileInput local study accepts one PDF/Markdown up to 2 MB. The image replacement composition accepts one PNG or JPEG up to 10 MB and keeps its original bytes available for download until removal or an accepted replacement. Generic visual samples do not implement these admission rules.
+
+The stand uses local Noto Sans Arabic text subsets for its mixed-script filenames and feedback. Latin extensions retain the preset font. Consumer applications provide fonts for their supported scripts. See the [file](../../../public/assets/licenses/file-input-arabic-400.txt), [alert](../../../public/assets/licenses/alert-arabic.txt), and [avatar](../../../public/assets/licenses/avatar-arabic-400.txt) fixture records.
 
 ## File lifecycle
 
