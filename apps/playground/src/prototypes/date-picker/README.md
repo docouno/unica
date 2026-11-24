@@ -8,6 +8,8 @@ Calendar is a frameless Gregorian date grid for one day or an inclusive continuo
 
 Use a date field for an exact date, a range field for one complete interval, and separate DatePickers for independently meaningful dates in separate form rows. Time, time zones, recurring schedules, non-Gregorian calendars, disconnected selections, booking-specific checkout rules and application shortcut presets are outside this family. The app can compose shortcut actions beside the picker. There is no Apply / Cancel row, decorative panel variant, weekend color, week-number gutter or nested month-selector popover.
 
+In the Calendar specimen, States compares the three cell sizes for single and range selection. Consecutive months and the Year overview composition both keep the accepted dates visible until a second date completes the replacement period.
+
 ## Anatomy and geometry
 
 Calendar contains a previous/next navigation header, separate text buttons for month and year, weekday labels and exactly six week rows. Adjacent-month positions are empty noninteractive placeholders; dates never appear twice in a multi-month view. The root has no border, fill or shadow. Digits use tabular figures. Day buttons have a transparent resting background and a theme-derived control radius. All geometry uses logical inline directions.
