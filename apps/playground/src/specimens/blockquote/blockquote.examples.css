@@ -1,15 +1,19 @@
-.quote-example-stack {
-  display: grid;
-  gap: var(--space-24);
+.quote-example-frame {
+  inline-size: 100%;
   min-inline-size: 0;
 }
-.quote-example-compact {
-  gap: var(--space-8);
+
+.quote-example-frame[data-surface='overlay'] {
+  position: relative;
+  padding: var(--surface-s-padding);
 }
+
 .quote-example-overlay {
+  display: grid;
   inline-size: 100%;
   justify-items: center;
 }
+
 .quote-example-panel {
   position: relative;
   display: grid;
