@@ -42,35 +42,6 @@ export function SignInCopy(): ReactElement {
   );
 }
 
-export function ReaderCopy(): ReactElement {
-  return (
-    <article className="type-study type-context type-prose">
-      <Text size="caption-l" color="secondary">
-        ENGINEERING / RELEASE PLAYBOOK
-      </Text>
-      <Title textWrap="balance">Ship with confidence</Title>
-      <Text size="body-l" color="secondary">
-        A small, repeatable checklist for changes that deserve a careful launch.
-      </Text>
-      <div className="type-context-divider" />
-      <Title as="h2" size="heading-m">
-        Before the release
-      </Title>
-      <Text>
-        Start with the outcome. Explain who benefits, what changes, and how the team can verify the
-        result. Keep the supporting decisions beside the work.
-      </Text>
-      <Text>
-        Assign <Text as="strong">one release owner</Text> and give reviewers enough context to make
-        a decision. A useful note is <Text as="em">clear before it is comprehensive</Text>.
-      </Text>
-      <Text size="caption-l" color="muted">
-        Updated today · 4 minute read · Engineering handbook
-      </Text>
-    </article>
-  );
-}
-
 export function EditorCopy(): ReactElement {
   return (
     <article className="type-study type-context type-prose">
@@ -91,39 +62,6 @@ export function EditorCopy(): ReactElement {
         answers, then let the body carry the detail.
       </Text>
     </article>
-  );
-}
-
-export function SettingsCopy({ fieldId }: { readonly fieldId: string }): ReactElement {
-  return (
-    <div className="type-study type-context">
-      <Title as="h1" size="heading-xl">
-        Workspace preferences
-      </Title>
-      <Text color="secondary">Choose how your team reads and shares information.</Text>
-      <div className="type-field">
-        <Text as="label" htmlFor={fieldId} weight="medium">
-          Display name
-        </Text>
-        <input className="type-input" id={fieldId} />
-      </div>
-      <div className="type-context-divider" />
-      <Title as="h2" size="heading-s">
-        Reading experience
-      </Title>
-      <Text size="body-s">Use a comfortable text size for long documents.</Text>
-      <Text size="caption-l" color="muted">
-        Your preference applies across this workspace.
-      </Text>
-      <div className="type-context-divider" />
-      <Title as="h2" size="heading-s">
-        Review reminders
-      </Title>
-      <Text size="body-s">Keep important guidance current with a monthly check-in.</Text>
-      <Text size="caption-l" color="subtle">
-        Last changed today at 09:40
-      </Text>
-    </div>
   );
 }
 
