@@ -6,8 +6,8 @@ import {
   ReadingComposition,
   ScrollbarPlayground,
   readingCompositionCode,
-  scrollbarPlaygroundCode,
 } from './scrollbar.examples.js';
+import { scrollbarPlaygroundCode } from './scrollbar.preview.js';
 
 export default defineComponent({
   id: 'scrollbar',
