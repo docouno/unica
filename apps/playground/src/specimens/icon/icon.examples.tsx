@@ -1,108 +1,121 @@
-import { useState } from 'react';
-import type { CSSProperties, ReactElement } from 'react';
+import type { CSSProperties, ReactElement, ReactNode } from 'react';
 import {
   ArrowRightIcon,
-  ArrowsLeftRightIcon,
   BellIcon,
   CaretRightIcon,
-  CheckIcon,
   CheckCircleIcon,
-  CodeIcon,
+  CheckIcon,
+  FileTextIcon,
   FolderIcon,
   GearIcon,
-  GithubLogoIcon,
   InfoIcon,
-  LinkIcon,
-  ListBulletsIcon,
-  MagnifyingGlassIcon,
   PlusIcon,
   StarIcon,
-  TextBIcon,
-  TextItalicIcon,
   WarningCircleIcon,
   XCircleIcon,
   XIcon,
 } from '@phosphor-icons/react';
-import { Icon, Text, Title } from '@docouno/unica';
-import type { GlyphComponent, IconColor, IconSize } from '@docouno/unica';
+import {
+  Card,
+  Flex,
+  Grid,
+  Icon,
+  IconButton,
+  Stack,
+  Text,
+  Title,
+  UnicaProvider,
+} from '@docouno/unica';
+import type { GlyphComponent, IconColor } from '@docouno/unica';
+import type { PreviewProps } from '../../workbench/types.js';
 import { WideGlyph } from './icon.glyph.js';
 import './icon.examples.css';
 
-const tiers: readonly Exclude<IconSize, 'inherit'>[] = ['s', 'm', 'l'];
-const roles: readonly { color: IconColor; glyph: GlyphComponent }[] = [
-  { color: 'inherit', glyph: ArrowRightIcon },
-  { color: 'primary', glyph: GearIcon },
-  { color: 'secondary', glyph: FolderIcon },
-  { color: 'muted', glyph: BellIcon },
-  { color: 'subtle', glyph: StarIcon },
-  { color: 'disabled', glyph: XIcon },
-  { color: 'accent', glyph: PlusIcon },
-  { color: 'info', glyph: InfoIcon },
-  { color: 'success', glyph: CheckCircleIcon },
-  { color: 'warning', glyph: WarningCircleIcon },
-  { color: 'danger', glyph: XCircleIcon },
-];
-
-export function SizeExamples(): ReactElement {
+export function IconFrame({
+  ctx,
+  children,
+}: PreviewProps & { readonly children: ReactNode }): ReactElement {
   return (
-    <div className="icon-study">
-      <div className="icon-tiers">
-        {tiers.map((size) => (
-          <div className="icon-stack" key={size}>
-            <Text size="caption-l" color="secondary">
-              {size.toUpperCase()} / {size === 's' ? 14 : size === 'm' ? 16 : 20} px
-            </Text>
-            <div className="icon-row">
-              <span
-                className="icon-control-guide"
-                style={{
-                  width: `var(--size-${size}-height)`,
-                  height: `var(--size-${size}-height)`,
-                }}
-              >
-                <Icon icon={GearIcon} size={size} />
-              </span>
-              <Icon icon={MagnifyingGlassIcon} size={size} />
-              <Icon icon={ArrowRightIcon} size={size} directional />
-              <Icon icon={CheckCircleIcon} size={size} />
-            </div>
-            <Text size="caption-l" color="muted">
-              {size === 's' ? 30 : size === 'm' ? 40 : 48} px control
-            </Text>
-          </div>
-        ))}
-      </div>
-      <div className="icon-stack icon-inline-samples">
-        <Text size="body-s" color="muted">
-          <Icon usage="slot" icon={CheckIcon} /> Updated just now
-        </Text>
-        <Text size="body-m">
-          <Icon usage="slot" icon={ArrowRightIcon} directional /> Open workspace
-        </Text>
-        <Title as="h3" size="heading-l">
-          <Icon usage="slot" icon={FolderIcon} /> Project notes
-        </Title>
-      </div>
-      <Text size="caption-l" color="secondary">
-        Inline icons inherit 1em and the surrounding text color. Control frames are guides.
-      </Text>
-    </div>
+    <Stack
+      gap={12}
+      data-surface={ctx.surface}
+      className={
+        ctx.surface === 'overlay' ? 'icon-study-frame unica-overlay-surface' : 'icon-study-frame'
+      }
+    >
+      {children}
+    </Stack>
   );
 }
 
-export function ShapeExamples(): ReactElement {
+export function SizeExamples({ ctx }: PreviewProps): ReactElement {
   return (
-    <div className="icon-study">
-      <div className="icon-row">
+    <IconFrame ctx={ctx}>
+      <Flex gap={24} wrap="wrap" align="end">
+        {(['s', 'm', 'l'] as const).map((size) => (
+          <Stack align="center" gap={4} key={size}>
+            <IconButton
+              asChild
+              aria-label="Read the icon reference"
+              icon={InfoIcon}
+              size={size}
+              tone="neutral"
+              variant="secondary"
+            >
+              <a href="https://github.com/docouno/unica/blob/main/docs/components/icon.md" />
+            </IconButton>
+            <Text size="caption-l" color="secondary">
+              {size.toUpperCase()}
+            </Text>
+          </Stack>
+        ))}
+      </Flex>
+      <Stack gap={8}>
+        <Title as="h3" size="heading-l">
+          <Icon usage="slot" icon={FolderIcon} /> <bdi>Project notes</bdi>
+        </Title>
+        <Text size="body-m">
+          <Icon usage="slot" icon={FileTextIcon} /> <bdi>Release checklist</bdi>
+        </Text>
+        <Text size="body-s" color="muted">
+          <Icon usage="slot" icon={CheckIcon} /> <bdi>Updated just now</bdi>
+        </Text>
+      </Stack>
+      <UnicaProvider overrides={{ Icon: { size: 'l' } }}>
+        <Stack gap={8}>
+          <Title as="h4" size="heading-s">
+            Large provider default
+          </Title>
+          <Text size="body-s">
+            <Icon {...ctx.subject} icon={FileTextIcon} /> <bdi>Omitted size</bdi>
+          </Text>
+          <Text size="body-s">
+            <Icon size="inherit" icon={FileTextIcon} /> <bdi>Explicit inherit</bdi>
+          </Text>
+          <Text size="body-s">
+            <Icon usage="slot" icon={FileTextIcon} /> <bdi>Slot inside body text</bdi>
+          </Text>
+        </Stack>
+      </UnicaProvider>
+    </IconFrame>
+  );
+}
+
+export function ShapeExamples({ ctx }: PreviewProps): ReactElement {
+  return (
+    <IconFrame ctx={ctx}>
+      <Flex gap={12} wrap="wrap" align="center">
         {(['m', 'l'] as const).map((size) => (
-          <span className="icon-frame" key={size}>
-            <Icon icon={WideGlyph} size={size} />
+          <span className="icon-frame-guide" key={size}>
+            <Icon {...(size === 'm' ? ctx.subject : {})} icon={WideGlyph} size={size} />
           </span>
         ))}
-        <Text size="body-s">32 × 16 source, square frame</Text>
-      </div>
+        <Text size="body-s">
+          <bdi>32 × 16 source</bdi>
+        </Text>
+      </Flex>
       {(['ltr', 'rtl'] as const).map((dir) => (
-        <div className="icon-row" key={dir} dir={dir}>
+        <Flex gap={12} wrap="wrap" align="center" key={dir} dir={dir}>
           <Text size="caption-l" color="secondary">
             {dir.toUpperCase()}
           </Text>
@@ -110,197 +123,148 @@ export function ShapeExamples(): ReactElement {
           <Icon icon={CaretRightIcon} size="l" directional />
           <Icon icon={CheckIcon} size="l" />
           <Icon icon={WarningCircleIcon} size="l" />
-        </div>
+        </Flex>
       ))}
-      <Text size="caption-l" color="secondary">
-        Only directional arrows mirror. Check and warning retain their meaning.
-      </Text>
-      <div className="icon-row icon-no-wrap">
-        <Icon icon={FolderIcon} size="m" />
+      <Flex align="start" gap={8} className="icon-file-row">
+        <Icon icon={FileTextIcon} size="m" />
         <Text size="body-s">
-          A long release-readiness-checklist name wraps while its icon keeps a square frame.
+          <bdi>quarterly-release-readiness-checklist.md</bdi>
         </Text>
-      </div>
-    </div>
+      </Flex>
+    </IconFrame>
   );
 }
 
-function ColorList(): ReactElement {
-  return (
-    <div className="icon-color-list">
-      {roles.map(({ color, glyph }) => (
-        <div className="icon-row" key={color} data-icon-color={color}>
-          <Icon icon={glyph} size="m" color={color} />
-          <Text size="body-s" color="secondary">
-            {color}
-          </Text>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-export function ColorExamples(): ReactElement {
-  return (
-    <div className="icon-study">
-      <div className="icon-surfaces">
-        {(['canvas', 'surface'] as const).map((surface) => (
-          <div className="icon-color-surface icon-stack" key={surface} data-icon-surface={surface}>
-            <Text size="caption-l" weight="semibold">
-              {surface}
-            </Text>
-            <ColorList />
-          </div>
-        ))}
-      </div>
-      <Text size="caption-l" color="secondary">
-        Subtle is decorative; disabled marks an unavailable action. Status always has a text label.
-      </Text>
-    </div>
-  );
-}
-
-export function OverlayExamples(): ReactElement {
-  return (
-    <div className="icon-overlay icon-stack">
-      <Title as="h3" size="heading-s">
-        Signals on a floating surface
-      </Title>
-      <ColorList />
-    </div>
-  );
-}
-
-const tools: readonly { name: string; glyph: GlyphComponent }[] = [
-  { name: 'Bold', glyph: TextBIcon },
-  { name: 'Italic', glyph: TextItalicIcon },
-  { name: 'Bulleted list', glyph: ListBulletsIcon },
-  { name: 'Inline code', glyph: CodeIcon },
+const colors: readonly { color: IconColor; glyph: GlyphComponent; label: string }[] = [
+  { color: 'inherit', glyph: FileTextIcon, label: 'Release notes' },
+  { color: 'primary', glyph: GearIcon, label: 'Settings' },
+  { color: 'secondary', glyph: FolderIcon, label: 'Documents' },
+  { color: 'muted', glyph: BellIcon, label: 'Last activity' },
+  { color: 'subtle', glyph: StarIcon, label: 'Decoration' },
+  { color: 'disabled', glyph: XIcon, label: 'Unavailable' },
+  { color: 'accent', glyph: PlusIcon, label: 'Add a file' },
+  { color: 'info', glyph: InfoIcon, label: 'Details available' },
+  { color: 'success', glyph: CheckCircleIcon, label: 'Saved' },
+  { color: 'warning', glyph: WarningCircleIcon, label: 'Review needed' },
+  { color: 'danger', glyph: XCircleIcon, label: 'Upload failed' },
 ];
 
-export function EditorExample(): ReactElement {
-  const [active, setActive] = useState<string[]>([]);
+function ColorList({
+  subject,
+}: {
+  readonly subject?: PreviewProps['ctx']['subject'];
+}): ReactElement {
   return (
-    <article className="icon-product icon-study">
-      <div className="icon-row icon-between">
-        <Text size="caption-l" color="secondary">
-          FOLIO / RELEASE PLAYBOOK
-        </Text>
-        <Text size="caption-l" color="muted">
-          <Icon usage="slot" icon={CheckCircleIcon} color="success" /> Saved
-        </Text>
-      </div>
-      <div className="icon-toolbar" role="group" aria-label="Formatting preview">
-        {tools.map(({ name, glyph }) => (
-          <button
-            className="icon-tool"
-            key={name}
-            type="button"
-            aria-label={name}
-            aria-pressed={active.includes(name)}
-            onClick={() =>
-              setActive((current) =>
-                current.includes(name)
-                  ? current.filter((item) => item !== name)
-                  : [...current, name],
-              )
-            }
-          >
-            <Icon usage="slot" icon={glyph} size="s" />
-          </button>
-        ))}
-        <button
-          className="icon-tool"
-          type="button"
-          aria-label="Insert link (unavailable in preview)"
-          disabled
-        >
-          <Icon usage="slot" icon={LinkIcon} size="s" />
-        </button>
-      </div>
-      <Title as="h3" size="heading-l">
-        Ship with shared context
-      </Title>
-      <Text color="secondary">
-        Keep decisions close to the work. Give each release a clear owner and a small, repeatable
-        checklist.
-      </Text>
-      <Text size="caption-l" color="muted">
-        Native button stand-ins; selection previews icon states without editing this document.
-      </Text>
-    </article>
+    <Stack gap={8}>
+      {colors.map(({ color, glyph, label }) => (
+        <Flex gap={8} align="center" key={color} data-icon-color={color}>
+          <Icon {...(color === 'inherit' ? subject : {})} icon={glyph} size="m" color={color} />
+          <Text size="body-s">
+            <bdi>{label}</bdi>
+          </Text>
+          <Text size="caption-m" color="secondary">
+            <bdi>{color}</bdi>
+          </Text>
+        </Flex>
+      ))}
+    </Stack>
   );
 }
 
-export function ConnectorExample(): ReactElement {
-  const [connected, setConnected] = useState(true);
+export function ColorExamples({ ctx }: PreviewProps): ReactElement {
   return (
-    <article className="icon-product icon-study">
-      <div className="icon-row icon-between">
-        <div className="icon-row">
-          <Icon usage="slot" icon={GithubLogoIcon} size="l" />
-          <Icon usage="slot" icon={ArrowsLeftRightIcon} size="s" color="muted" />
-          <Text size="caption-l" color="secondary">
-            FOLIO
-          </Text>
-        </div>
-        <Text size="caption-l" color="secondary">
-          {connected ? 'Connected' : 'Paused'}
-        </Text>
-      </div>
-      <Title as="h3" size="heading-m">
-        GitHub Enterprise
-      </Title>
-      <Text size="body-s" color="secondary">
-        Sync architecture decisions and runbooks from your default branch.
-      </Text>
-      <div className="icon-row icon-between icon-connector-footer">
-        <div className="icon-row icon-no-wrap">
-          <Icon
-            usage="slot"
-            icon={connected ? CheckCircleIcon : WarningCircleIcon}
-            size="s"
-            color={connected ? 'success' : 'warning'}
-          />
-          <Text size="body-s" color="secondary">
-            {connected ? 'Synced 2 minutes ago' : 'Sync paused'}
-          </Text>
-        </div>
-        <button className="icon-action" type="button" onClick={() => setConnected(!connected)}>
-          {connected ? 'Pause sync' : 'Resume sync'}
-        </button>
-      </div>
-      <Text size="caption-l" color="muted">
-        Native action stand-in. This preview changes only the local status.
-      </Text>
-    </article>
+    <IconFrame ctx={ctx}>
+      <Grid columns={{ mobile: 1, tablet: 2 }} gap={16}>
+        <Stack gap={12} data-icon-surface={ctx.surface}>
+          <Title as="h3" size="heading-s">
+            {ctx.surface === 'overlay' ? 'Overlay' : 'Canvas'}
+          </Title>
+          <ColorList subject={ctx.subject} />
+        </Stack>
+        <Card size="s" data-icon-surface="card">
+          <Stack gap={12}>
+            <Title as="h3" size="heading-s">
+              Card
+            </Title>
+            <ColorList />
+          </Stack>
+        </Card>
+      </Grid>
+    </IconFrame>
   );
 }
 
-export function TokenExample(): ReactElement {
-  const [expanded, setExpanded] = useState(false);
+export function OverlayExamples({ ctx }: PreviewProps): ReactElement {
   return (
-    <div className="icon-study">
-      <label className="icon-row">
-        <input
-          type="checkbox"
-          checked={expanded}
-          onChange={(event) => setExpanded(event.currentTarget.checked)}
-        />
-        <Text as="span" size="body-s">
-          Override the local M icon token to 24px
-        </Text>
-      </label>
-      <div
-        className="icon-row"
-        style={expanded ? ({ '--size-m-icon': '24px' } as CSSProperties) : undefined}
+    <Stack
+      className="icon-overlay-panel unica-overlay-surface"
+      data-surface="overlay"
+      gap={12}
+      role="group"
+      aria-labelledby={ctx.id}
+    >
+      <Title as="h3" size="heading-s" id={ctx.id}>
+        Signals on a floating surface
+      </Title>
+      <ColorList subject={ctx.subject} />
+    </Stack>
+  );
+}
+
+export function TokenExample({ ctx }: PreviewProps): ReactElement {
+  const enlarged = ctx.story?.controls.enlarged === true;
+  return (
+    <IconFrame ctx={ctx}>
+      <Flex
+        align="center"
+        gap={8}
+        wrap="wrap"
+        style={enlarged ? ({ '--size-m-icon': '24px' } as CSSProperties) : undefined}
       >
-        <Icon icon={GearIcon} size="m" />
+        <Icon {...ctx.subject} icon={GearIcon} size="m" />
         <Icon icon={CheckCircleIcon} size="m" />
-        <Text size="body-s" color="secondary">
-          {expanded ? '24px local token' : '16px theme token'}
+        <Text size="body-s">
+          <bdi>{enlarged ? '24px local override' : '16px theme default'}</bdi>
         </Text>
-      </div>
-    </div>
+      </Flex>
+      <Flex align="center" gap={8} wrap="wrap">
+        <Icon icon={GearIcon} size="m" />
+        <Text size="body-s" color="secondary">
+          <bdi>Theme default outside the override</bdi>
+        </Text>
+      </Flex>
+    </IconFrame>
+  );
+}
+
+export function NameExample({ ctx }: PreviewProps): ReactElement {
+  const source = ctx.story?.controls.nameSource ?? 'linked';
+  const labelId = `${ctx.id}-name`;
+  const linked = source === 'linked';
+  const fallback = source === 'fallback';
+  const titled = source === 'title';
+  return (
+    <IconFrame ctx={ctx}>
+      <Flex gap={12} align="center">
+        <Icon
+          {...ctx.subject}
+          icon={WideGlyph}
+          size="l"
+          aria-labelledby={linked ? labelId : fallback ? ' ' : undefined}
+          aria-label={linked || fallback ? 'Publication mark' : undefined}
+        >
+          {titled || linked || fallback ? <title>Project mark</title> : null}
+        </Icon>
+        {linked ? (
+          <Text id={labelId} size="body-m">
+            Release ready
+          </Text>
+        ) : (
+          <Text size="body-m">
+            {fallback ? 'Publication mark' : titled ? 'Project mark' : 'Decorative mark'}
+          </Text>
+        )}
+      </Flex>
+    </IconFrame>
   );
 }

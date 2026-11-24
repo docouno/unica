@@ -1,33 +1,36 @@
-import { useState } from 'react';
 import { ArrowRightIcon, FileTextIcon, MagnifyingGlassIcon } from '@phosphor-icons/react';
-import { Icon, UnicaProvider } from '@docouno/unica';
-import type { IconAdapter, IconProps } from '@docouno/unica';
+import { Flex, Icon, Text, UnicaProvider } from '@docouno/unica';
+import type { IconAdapter } from '@docouno/unica';
 import { previewProps } from '../preview-code.js';
 import { defineComponent } from '../../workbench/types.js';
 import {
   ColorExamples,
-  ConnectorExample,
-  EditorExample,
+  IconFrame,
+  NameExample,
   OverlayExamples,
   ShapeExamples,
   SizeExamples,
   TokenExample,
 } from './icon.examples.js';
 import { WideGlyph } from './icon.glyph.js';
+import { ConnectorExample, EditorExample, connectorCode, editorCode } from './icon.compositions.js';
 
-const sources = {
-  document: FileTextIcon,
-  search: MagnifyingGlassIcon,
-  arrow: ArrowRightIcon,
-  wide: WideGlyph,
-};
+const glyphs = {
+  document: { source: FileTextIcon, code: 'FileTextIcon', label: 'Release notes' },
+  search: { source: MagnifyingGlassIcon, code: 'MagnifyingGlassIcon', label: 'Search notes' },
+  arrow: { source: ArrowRightIcon, code: 'ArrowRightIcon', label: 'Next page' },
+  wide: { source: WideGlyph, code: 'WideGlyph', label: 'Project mark' },
+} as const;
 
-const sourceNames = {
-  document: 'FileTextIcon',
-  search: 'MagnifyingGlassIcon',
-  arrow: 'ArrowRightIcon',
-  wide: 'WideGlyph',
-};
+const weights = ['thin', 'light', 'regular', 'bold', 'fill', 'duotone'] as const;
+const phosphorOptions = [
+  ...weights.map((value) => ({ key: 'weight', value })),
+  { key: 'mirrored', value: true },
+];
+
+function glyphLabel(icon: keyof typeof glyphs, adapter: 'custom' | 'phosphor'): string {
+  return adapter === 'custom' && icon !== 'wide' ? 'Outline circle' : glyphs[icon].label;
+}
 
 const outlineAdapter: IconAdapter = (_source, { svgProps }) => (
   <svg viewBox="0 0 24 24" {...svgProps}>
@@ -36,44 +39,19 @@ const outlineAdapter: IconAdapter = (_source, { svgProps }) => (
   </svg>
 );
 
-function IconExample({
-  source,
-  frame,
-  weight,
-  mirrored,
-  usage,
-  nameMode,
-  nameId,
-}: {
-  source: keyof typeof sources;
-  frame: Pick<IconProps, 'size' | 'color' | 'directional'> & { 'data-wb-subject': '' };
-  weight: 'default' | 'thin' | 'light' | 'regular' | 'bold' | 'fill' | 'duotone';
-  mirrored: boolean;
-  usage: 'standalone' | 'slot';
-  nameMode: 'decorative' | 'label' | 'labelledby' | 'title';
-  nameId: string;
-}) {
-  const name =
-    nameMode === 'label'
-      ? { 'aria-label': 'Release ready' }
-      : nameMode === 'labelledby'
-        ? { 'aria-labelledby': nameId, 'aria-label': 'Fallback label' }
-        : nameMode === 'title'
-          ? { children: <title>Release ready</title> }
-          : {};
-  const semantics = usage === 'slot' ? ({ usage } as const) : { ...name, usage };
-  return source === 'wide' ? (
-    <Icon {...frame} {...semantics} icon={WideGlyph} />
-  ) : (
-    <Icon
-      {...frame}
-      {...semantics}
-      icon={sources[source]}
-      weight={weight === 'default' ? undefined : weight}
-      mirrored={mirrored}
-    />
-  );
-}
+const wideGlyphCode = `const WideGlyph = defineGlyph(({ children, ...props }) => (
+  <svg {...props} viewBox="0 0 32 16">
+    {children}
+    <path fill="none" stroke="currentColor" strokeWidth={2} d="M1 1h30v14H1zM7 8h18" />
+  </svg>
+));`;
+
+const outlineAdapterCode = `(_source, { svgProps }) => (
+  <svg viewBox="0 0 24 24" {...svgProps}>
+    {svgProps.children}
+    <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" strokeWidth="2" />
+  </svg>
+)`;
 
 export default defineComponent({
   id: 'icon',
@@ -85,26 +63,35 @@ export default defineComponent({
   props: {
     icon: {
       kind: 'slot',
-      group: 'Glyph',
+      group: 'Content',
       default: 'document',
-      description: 'The vector drawn by the icon.',
+      publicType: 'GlyphSource',
+      description:
+        'Required SVG source. The editor starts with a Phosphor document icon and also offers a registered project glyph.',
       choices: [
-        { value: 'document', label: 'Document' },
-        { value: 'search', label: 'Search' },
-        { value: 'arrow', label: 'Arrow' },
-        { value: 'wide', label: 'Project SVG' },
+        { value: 'document', label: 'Document', code: glyphs.document.code },
+        { value: 'search', label: 'Search', code: glyphs.search.code },
+        { value: 'arrow', label: 'Arrow', code: glyphs.arrow.code },
+        { value: 'wide', label: 'Project SVG', code: glyphs.wide.code },
       ],
     },
     size: {
       kind: 'enum',
-      group: 'Appearance',
-      default: 'inherit',
-      description: 'Scale the icon relative to text or to a fixed control size.',
-      choices: [{ value: 'inherit' }, { value: 's' }, { value: 'm' }, { value: 'l' }],
+      group: 'Geometry',
+      default: 'omitted',
+      description:
+        'Without an explicit size, standalone icons use the provider or theme default, and slots inherit. Explicit inherit always follows the surrounding type.',
+      choices: [
+        { value: 'omitted', label: 'Use default', omit: true },
+        { value: 'inherit' },
+        { value: 's' },
+        { value: 'm' },
+        { value: 'l' },
+      ],
     },
     color: {
       kind: 'enum',
-      group: 'Appearance',
+      group: 'Role',
       default: 'inherit',
       description: 'Use the surrounding foreground or a semantic color.',
       choices: [
@@ -129,7 +116,7 @@ export default defineComponent({
     },
     adapter: {
       kind: 'enum',
-      group: 'Glyph',
+      group: 'Host',
       default: 'phosphor',
       demo: true,
       description: 'Adapter used by the surrounding UnicaProvider.',
@@ -137,22 +124,18 @@ export default defineComponent({
     },
     weight: {
       kind: 'enum',
-      group: 'Glyph',
+      group: 'Content',
       default: 'default',
-      description: 'The Phosphor weight. Default leaves the vendor prop unset.',
+      description:
+        'Phosphor source option. Omitted weight resolves to regular for standalone icons and can inherit the Phosphor weight in slots.',
       choices: [
-        { value: 'default' },
-        { value: 'thin' },
-        { value: 'light' },
-        { value: 'regular' },
-        { value: 'bold' },
-        { value: 'fill' },
-        { value: 'duotone' },
+        { value: 'default', label: 'Use default', omit: true },
+        ...weights.map((value) => ({ value })),
       ],
     },
     mirrored: {
       kind: 'boolean',
-      group: 'Glyph',
+      group: 'Content',
       default: false,
       description: 'Reflect the Phosphor glyph in both directions.',
     },
@@ -160,7 +143,8 @@ export default defineComponent({
       kind: 'enum',
       group: 'Semantics',
       default: 'standalone',
-      description: 'A slot glyph is decorative and takes its size from the owner.',
+      description:
+        'Standalone icons can have an accessible name. A slot is decorative and inherits its owner’s size when size is omitted.',
       choices: [{ value: 'standalone' }, { value: 'slot' }],
     },
     nameMode: {
@@ -181,25 +165,19 @@ export default defineComponent({
     {
       kind: 'forbidden',
       when: { icon: 'wide' },
-      affects: [
-        ...['thin', 'light', 'regular', 'bold', 'fill', 'duotone'].map((value) => ({
-          key: 'weight',
-          value,
-        })),
-        { key: 'mirrored', value: true },
-      ],
+      affects: phosphorOptions,
       reason: 'The project SVG has no Phosphor weight or mirrored prop.',
     },
     {
       kind: 'ignored',
       when: { icon: 'wide' },
       affects: [{ key: 'adapter', value: 'custom' }],
-      reason: 'WideGlyph has its own native adapter.',
+      reason: 'The registered project glyph uses its own native adapter.',
     },
     {
       kind: 'ignored',
       when: { adapter: 'custom' },
-      affects: ['weight', 'mirrored'],
+      affects: phosphorOptions,
       reason: 'The example adapter draws its own circle.',
     },
     {
@@ -215,139 +193,208 @@ export default defineComponent({
       reason: 'The owner provides the accessible name for a slot.',
     },
   ],
-  render: ({ ctx, values: { icon, size, color, directional, adapter, ...example } }) => {
+  render: ({
+    ctx,
+    values: { icon, size, color, directional, adapter, nameMode, weight, usage, mirrored },
+  }) => {
+    const label = glyphLabel(icon, adapter);
     const nameId = `${ctx.id}-name`;
-    const glyph = (
-      <IconExample
-        {...example}
-        source={icon}
-        frame={{ ...ctx.subject, size, color, directional }}
-        nameId={nameId}
-      />
-    );
+    const name =
+      nameMode === 'label'
+        ? { 'aria-label': label }
+        : nameMode === 'labelledby'
+          ? { 'aria-labelledby': nameId, 'aria-label': label }
+          : nameMode === 'title'
+            ? { children: <title>{label}</title> }
+            : {};
+    const semantics = usage === 'slot' ? ({ usage } as const) : { ...name, usage };
+    const frame = {
+      ...ctx.subject,
+      size: size === 'omitted' ? undefined : size,
+      color,
+      directional,
+      ...semantics,
+    };
     return (
-      <UnicaProvider iconAdapter={adapter === 'custom' ? outlineAdapter : 'phosphor'}>
-        {example.nameMode === 'labelledby' ? (
-          <>
-            <span id={nameId}>Release ready</span>{' '}
-          </>
-        ) : null}
-        {glyph}
-      </UnicaProvider>
+      <IconFrame ctx={ctx}>
+        <UnicaProvider iconAdapter={adapter === 'custom' ? outlineAdapter : 'phosphor'}>
+          <Flex align="center" justify={ctx.tab === 'playground' ? 'center' : 'start'} gap={8}>
+            {nameMode === 'labelledby' && (
+              <Text as="span" id={nameId}>
+                {label}
+              </Text>
+            )}
+            {icon === 'wide' ? (
+              <Icon {...frame} icon={WideGlyph} />
+            ) : (
+              <Icon
+                {...frame}
+                icon={glyphs[icon].source}
+                weight={weight === 'default' ? undefined : weight}
+                mirrored={mirrored}
+              />
+            )}
+          </Flex>
+        </UnicaProvider>
+      </IconFrame>
     );
   },
   code: ({ icon, adapter, nameMode, ...props }) => {
+    const label = glyphLabel(icon, adapter);
     const options = previewProps(props, {
-      size: 'inherit',
+      size: 'omitted',
       color: 'inherit',
       directional: false,
       weight: 'default',
       mirrored: false,
       usage: 'standalone',
     });
-    const name =
-      nameMode === 'labelledby'
-        ? ' aria-labelledby="release-name" aria-label="Fallback label"'
-        : nameMode === 'label'
-          ? ' aria-label="Release ready"'
-          : '';
-    const open = `<Icon icon={${sourceNames[icon]}}${options}${name}`;
-    const iconCode =
-      nameMode === 'title' ? `${open}><title>Release ready</title></Icon>` : `${open} />`;
-    const subject =
-      nameMode === 'labelledby'
-        ? `<>
-  <span id="release-name">Release ready</span>
-  ${iconCode}
-</>`
-        : iconCode;
-    return adapter === 'custom'
-      ? `<UnicaProvider iconAdapter={outlineAdapter}>
-  ${subject}
-</UnicaProvider>`
-      : subject;
+    const linked = nameMode === 'labelledby';
+    const name = linked
+      ? ` aria-labelledby={nameId} aria-label="${label}"`
+      : nameMode === 'label'
+        ? ` aria-label="${label}"`
+        : '';
+    const open = `<Icon icon={${glyphs[icon].code}}${options}${name}`;
+    let subject = nameMode === 'title' ? `${open}><title>${label}</title></Icon>` : `${open} />`;
+    const imports = ['Icon'];
+    if (linked) {
+      imports.push('Flex', 'Text');
+      subject = `<Flex align="center" gap={8}><Text as="span" id={nameId}>${label}</Text>${subject}</Flex>`;
+    }
+    if (adapter === 'custom') {
+      imports.push('UnicaProvider');
+      subject = `<UnicaProvider iconAdapter={${outlineAdapterCode}}>${subject}</UnicaProvider>`;
+    }
+    if (linked) {
+      subject = `export function NamedIcon() {
+  const nameId = useId();
+  return (
+${subject}
+  );
+}`;
+    }
+    if (icon === 'wide') {
+      imports.push('defineGlyph');
+    }
+    const source = icon === 'wide' ? wideGlyphCode + '\n\n' : '';
+    const vendor =
+      icon === 'wide' ? '' : `import { ${glyphs[icon].code} } from '@phosphor-icons/react';\n`;
+    const react = linked ? "import { useId } from 'react';\n" : '';
+    return `${react}${vendor}import { ${imports.join(', ')} } from '@docouno/unica';\n\n${source}${subject}`;
   },
-  matrixViews: [
+  states: [
     {
       id: 'sizes',
       rows: 'size',
       cols: 'icon',
-      title: 'Size follows context',
+      title: 'Sources and square frames',
+      caption:
+        'Compare the frame of each source at the inherited and fixed sizes. With no provider override, the default standalone size is 1em.',
       fixed: {
         weight: 'default',
         mirrored: false,
+        directional: false,
+        color: 'inherit',
         nameMode: 'decorative',
         usage: 'standalone',
         adapter: 'phosphor',
       },
-      reference: () => <SizeExamples />,
     },
   ],
   cases: [
     {
+      id: 'owners',
+      title: 'Icons in controls and type',
+      kind: 'content',
+      mode: 'pinned',
+      caption:
+        'Compare the glyph and target sizes of icon buttons, then follow a one-em glyph through body text and a heading.',
+      render: SizeExamples,
+    },
+    {
       id: 'shapes',
-      title: 'Proportions & selective RTL',
+      title: 'Shape and reading direction',
       kind: 'behavior',
-      render: () => <ShapeExamples />,
+      mode: 'pinned',
+      caption:
+        'A wide SVG keeps its proportions within a square frame. Logical arrows follow reading direction while checks and warnings keep their orientation.',
+      render: ShapeExamples,
     },
     {
       id: 'colors',
-      title: 'Semantic colors on base surfaces',
-      kind: 'behavior',
-      render: () => <ColorExamples />,
+      title: 'Foreground roles on reading surfaces',
+      kind: 'surface',
+      mode: 'pinned',
+      caption:
+        'Compare inherited, semantic and disabled ink on the reading surface and on a card. Each status has a text label.',
+      render: ColorExamples,
     },
     {
       id: 'tokens',
-      mode: 'live',
-      title: 'Live token inheritance',
+      title: 'A local icon size override',
       kind: 'behavior',
-      render: () => <TokenExample />,
+      mode: 'live',
+      caption:
+        'Change the medium icon token for a pair of glyphs. The reference outside that scope keeps its theme size.',
+      controls: { enlarged: { kind: 'boolean', label: 'Use 24px icons', default: false } },
+      reset: true,
+      render: TokenExample,
     },
     {
       id: 'names',
-      title: 'Naming a standalone glyph',
+      title: 'Accessible naming',
       kind: 'behavior',
       mode: 'live',
-      render: function NamedGlyph({ ctx }) {
-        const [name, setName] = useState('Release ready');
-        const nameId = `${ctx.id}-status`;
-        return (
-          <div className="icon-study">
-            <label>
-              Accessible label{' '}
-              <input value={name} onChange={(event) => setName(event.target.value)} />
-            </label>
-            <span id={nameId}>{name}</span>
-            <Icon icon={WideGlyph} size="l" aria-labelledby={nameId} aria-label="Fallback label">
-              <title>Project mark</title>
-            </Icon>
-          </div>
-        );
+      caption:
+        'Inspect the accessible name supplied by referenced text, a fallback label, or an SVG title. The decorative glyph stays out of the accessibility tree.',
+      controls: {
+        nameSource: {
+          kind: 'enum',
+          label: 'Name source',
+          default: 'linked',
+          choices: [
+            { value: 'linked', label: 'Referenced text' },
+            { value: 'fallback', label: 'Fallback label' },
+            { value: 'title', label: 'SVG title' },
+            { value: 'decorative', label: 'Decorative' },
+          ],
+        },
       },
+      reset: true,
+      render: NameExample,
     },
     {
       id: 'overlay',
-      title: 'Semantic colors on an overlay',
+      title: 'Foreground roles on a floating surface',
       surface: 'overlay',
       overlayStage: true,
       kind: 'surface',
-      render: () => <OverlayExamples />,
+      mode: 'pinned',
+      caption: 'Judge the same foreground roles against the material of a static floating panel.',
+      render: OverlayExamples,
     },
   ],
-  usage: [
+  compositions: [
     {
       id: 'editor',
-      code: `<button type="button" aria-label="Bold" aria-pressed={active} onClick={toggleBold}>
-  <Icon usage="slot" icon={TextBIcon} size="s" />
-</button>`,
-      title: 'Folio · Rich editor',
-      render: () => <EditorExample />,
+      title: 'Format a document label',
+      mode: 'live',
+      reset: true,
+      caption:
+        'Bold and Italic change the document label. Clear formatting restores both settings. Each icon button owns its accessible name.',
+      render: EditorExample,
+      code: editorCode,
     },
     {
       id: 'connector',
-      code: `<span><Icon usage="slot" icon={CheckCircleIcon} size="s" color="success" /> Synced 2 minutes ago</span>`,
-      title: 'Folio · Connector spotlight',
-      render: () => <ConnectorExample />,
+      title: 'Pause and resume a mirror',
+      mode: 'live',
+      reset: true,
+      caption:
+        'Pause the mirror, edit the source title, then resume to apply the changes. The status glyph and its text change together.',
+      render: ConnectorExample,
+      code: connectorCode,
     },
   ],
 });
