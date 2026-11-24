@@ -151,7 +151,7 @@
 
 /* The editor follows its text while field icons follow the surrounding layout. */
 .app-shell-search[dir='auto'],
-.app-shell-property-control > .unica-input[dir='auto'] {
+.app-shell-property-input[dir='auto'] {
   direction: inherit;
 }
 

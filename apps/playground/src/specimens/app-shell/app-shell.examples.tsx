@@ -633,7 +633,13 @@ export function Properties(): ReactElement {
             description={<bdi>Applies when opening a project on this device.</bdi>}
             controlId={`${id}-view`}
           >
-            <Input id={`${id}-view`} dir="auto" size="s" defaultValue="Library" />
+            <Input
+              className="app-shell-property-input"
+              id={`${id}-view`}
+              dir="auto"
+              size="s"
+              defaultValue="Library"
+            />
           </SettingsRow>
           <SettingsRow
             label="Permission inheritance"
@@ -645,7 +651,14 @@ export function Properties(): ReactElement {
             }
             controlId={`${id}-managed`}
           >
-            <Input id={`${id}-managed`} dir="auto" size="s" defaultValue="Workspace" disabled />
+            <Input
+              className="app-shell-property-input"
+              id={`${id}-managed`}
+              dir="auto"
+              size="s"
+              defaultValue="Workspace"
+              disabled
+            />
           </SettingsRow>
           <SettingsRow
             label="Workspace alias"
@@ -669,6 +682,7 @@ export function Properties(): ReactElement {
             controlId={`${id}-alias`}
           >
             <Input
+              className="app-shell-property-input"
               id={`${id}-alias`}
               dir="auto"
               aria-describedby={`${id}-alias-hint`}
