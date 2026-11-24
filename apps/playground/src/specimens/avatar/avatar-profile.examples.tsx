@@ -3,6 +3,7 @@ import { Button, Stack, Text } from '@docouno/unica';
 import { Avatar } from '../../prototypes/avatar/avatar.proto.js';
 
 export function AccountProfile({
+  avatarProps = {},
   size = 'm',
   name = 'Content editor',
   src = '/assets/avatar-person-light.png',
@@ -40,6 +41,7 @@ export function AccountProfile({
           }}
         >
           <Avatar
+            {...avatarProps}
             size={avatarSize}
             name={name}
             src={src || undefined}

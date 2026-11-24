@@ -225,7 +225,10 @@ export default defineComponent({
       render: withOverlaySurface(
         ({ ctx }) => (
           <div data-example-disclosure="">
-            <ContributorDirectory max={Number(ctx.story?.controls.max ?? 3)} />
+            <ContributorDirectory
+              identityProps={ctx.subject}
+              max={Number(ctx.story?.controls.max ?? 3)}
+            />
           </div>
         ),
         'border-box',
@@ -239,9 +242,9 @@ export default defineComponent({
         'Open the account profile with the named button. The decorative portrait shares the button’s target and stays out of the keyboard order.',
       code: profileSource.replaceAll('../../prototypes/', './prototypes/'),
       render: withOverlaySurface(
-        () => (
+        ({ ctx }) => (
           <div data-example-disclosure="">
-            <AccountProfile />
+            <AccountProfile avatarProps={ctx.subject} />
           </div>
         ),
         'border-box',

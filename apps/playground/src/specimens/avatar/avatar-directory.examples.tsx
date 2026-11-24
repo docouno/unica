@@ -12,14 +12,21 @@ const contributors = [
   { id: 'maintainer', name: 'Library maintainer' },
 ];
 
-export function ContributorDirectory({ max = 3 } = {}) {
+export function ContributorDirectory({ max = 3, identityProps = {} } = {}) {
   const listId = useId();
   const [open, setOpen] = useState(false);
 
   return (
     <Stack gap={12} style={{ inlineSize: 'min(100%, 22rem)' }}>
       <Flex align="center" wrap="wrap" gap={12}>
-        <AvatarGroup label="Contributors" members={contributors} size="s" max={max} showNames />
+        <AvatarGroup
+          {...identityProps}
+          label="Contributors"
+          members={contributors}
+          size="s"
+          max={max}
+          showNames
+        />
         <Button
           size="s"
           variant="ghost"
@@ -42,7 +49,7 @@ export function ContributorDirectory({ max = 3 } = {}) {
         {contributors.map(({ id, name, src }) => (
           <li key={id} style={{ paddingBlock: 'var(--space-4)' }}>
             <Flex align="center" gap={12}>
-              <Avatar alt="" name={name} src={src} size="s" />
+              <Avatar {...identityProps} alt="" name={name} src={src} size="s" />
               <Text as="span" size="body-s">
                 <bdi>{name}</bdi>
               </Text>

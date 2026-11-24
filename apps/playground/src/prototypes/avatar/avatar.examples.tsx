@@ -39,12 +39,13 @@ function Sample({
   );
 }
 
-export function IdentityFallbacks(): ReactElement {
+export function IdentityFallbacks({ ctx }: PreviewProps): ReactElement {
   return (
     <div className="avatar-example-stack">
       <div className="avatar-example-row">
         <Sample label="Loaded photo">
           <Avatar
+            {...ctx.subject}
             name="Content editor"
             src={lightPortrait}
             fallback={<Icon usage="slot" icon={UsersIcon} />}
@@ -54,6 +55,7 @@ export function IdentityFallbacks(): ReactElement {
         </Sample>
         <Sample label="Custom mark">
           <Avatar
+            {...ctx.subject}
             name="Editorial team"
             fallback={<Icon usage="slot" icon={UsersIcon} />}
             alt="Editorial team"
@@ -61,17 +63,17 @@ export function IdentityFallbacks(): ReactElement {
           />
         </Sample>
         <Sample label="Initials">
-          <Avatar name="Workspace writer" alt="Workspace writer" size="l" />
+          <Avatar {...ctx.subject} name="Workspace writer" alt="Workspace writer" size="l" />
         </Sample>
         <Sample label="Unknown">
-          <Avatar alt="Unassigned person" size="l" />
+          <Avatar {...ctx.subject} alt="Unassigned person" size="l" />
         </Sample>
       </div>
       <div className="avatar-example-row">
         {(['2xs', 'xs'] as const).map((size) => (
           <Sample key={size} label={size === '2xs' ? '20px · one initial' : '24px · two initials'}>
-            <Avatar size={size} name="Wide Workspace" alt="Wide Workspace" />
-            <Avatar size={size} alt="Unassigned person" />
+            <Avatar {...ctx.subject} size={size} name="Wide Workspace" alt="Wide Workspace" />
+            <Avatar {...ctx.subject} size={size} alt="Unassigned person" />
           </Sample>
         ))}
       </div>
@@ -90,6 +92,7 @@ export function IdentityFallbacks(): ReactElement {
         ).map(([name, label]) => (
           <Sample key={label} label={label}>
             <Avatar
+              {...ctx.subject}
               name={name}
               alt={name.trim() || 'Unassigned person'}
               className={name === '李 雷' ? 'avatar-example-cjk' : undefined}
@@ -125,6 +128,7 @@ export function ImageLifecycle({ ctx }: PreviewProps): ReactElement {
       <div className="avatar-example-row">
         <Sample label="Waiting · held preview">
           <Avatar
+            {...ctx.subject}
             name="Content editor"
             src={lightPortrait}
             alt="Content editor"
@@ -132,21 +136,27 @@ export function ImageLifecycle({ ctx }: PreviewProps): ReactElement {
           />
         </Sample>
         <Sample label="Loaded">
-          <Avatar name="Content editor" src={lightPortrait} alt="Content editor" />
+          <Avatar {...ctx.subject} name="Content editor" src={lightPortrait} alt="Content editor" />
         </Sample>
         <Sample label="Failed · real image error">
-          <Avatar name="Content editor" src={brokenPortrait} alt="Content editor" />
+          <Avatar
+            {...ctx.subject}
+            name="Content editor"
+            src={brokenPortrait}
+            alt="Content editor"
+          />
         </Sample>
         <Sample label="Missing source">
-          <Avatar name="Content editor" alt="Content editor" />
+          <Avatar {...ctx.subject} name="Content editor" alt="Content editor" />
         </Sample>
         <Sample label="Failed · no name">
-          <Avatar src={brokenPortrait} alt="Unknown member" />
+          <Avatar {...ctx.subject} src={brokenPortrait} alt="Unknown member" />
         </Sample>
       </div>
       <Divider />
       <div className="avatar-example-person">
         <Avatar
+          {...ctx.subject}
           key={request}
           name={name}
           alt=""
@@ -162,15 +172,15 @@ export function ImageLifecycle({ ctx }: PreviewProps): ReactElement {
   );
 }
 
-export function PortraitCrop(): ReactElement {
+export function PortraitCrop({ ctx }: PreviewProps): ReactElement {
   return (
     <div className="avatar-example-stack">
       <div className="avatar-example-row">
         <Sample label="Light portrait">
-          <Avatar src={lightPortrait} alt="Light-background portrait" size="l" />
+          <Avatar {...ctx.subject} src={lightPortrait} alt="Light-background portrait" size="l" />
         </Sample>
         <Sample label="Dark portrait">
-          <Avatar src={darkPortrait} alt="Dark-background portrait" size="l" />
+          <Avatar {...ctx.subject} src={darkPortrait} alt="Dark-background portrait" size="l" />
         </Sample>
         <Sample label="Wide source · cover">
           <img
@@ -179,6 +189,7 @@ export function PortraitCrop(): ReactElement {
             alt="Wide crop fixture"
           />
           <Avatar
+            {...ctx.subject}
             src="/assets/avatar-portrait-wide.png"
             alt="Wide image cropped to square"
             size="l"
@@ -191,6 +202,7 @@ export function PortraitCrop(): ReactElement {
             alt="Tall crop fixture"
           />
           <Avatar
+            {...ctx.subject}
             src="/assets/avatar-portrait-tall.png"
             alt="Tall image cropped to square"
             size="l"
@@ -198,6 +210,7 @@ export function PortraitCrop(): ReactElement {
         </Sample>
         <Sample label="Adjusted focal point">
           <Avatar
+            {...ctx.subject}
             src="/assets/avatar-portrait-tall.png"
             imagePosition="50% 32%"
             alt="Tall image with adjusted focal point"
@@ -209,7 +222,7 @@ export function PortraitCrop(): ReactElement {
   );
 }
 
-export function GroupScale(): ReactElement {
+export function GroupScale({ ctx }: PreviewProps): ReactElement {
   return (
     <div className="avatar-example-stack">
       {groupSizes.map((size) => (
@@ -217,31 +230,52 @@ export function GroupScale(): ReactElement {
           <Text as="span" size="caption-l" color="muted">
             {size}
           </Text>
-          <AvatarGroup label={`${size} contributor group`} members={members} size={size} />
+          <AvatarGroup
+            {...ctx.subject}
+            label={`${size} contributor group`}
+            members={members}
+            size={size}
+          />
         </div>
       ))}
       <Divider />
       <div className="avatar-example-row">
         <Sample label="Empty · no footprint">
-          <AvatarGroup label="Empty group" members={[]} size="s" />
+          <AvatarGroup {...ctx.subject} label="Empty group" members={[]} size="s" />
           <Text size="caption-l" color="muted">
             No members
           </Text>
         </Sample>
         <Sample label="One">
-          <AvatarGroup label="Single contributor" members={members.slice(0, 1)} size="s" />
+          <AvatarGroup
+            {...ctx.subject}
+            label="Single contributor"
+            members={members.slice(0, 1)}
+            size="s"
+          />
         </Sample>
         <Sample label="At the limit">
-          <AvatarGroup label="Four contributors" members={members.slice(0, 4)} size="s" />
+          <AvatarGroup
+            {...ctx.subject}
+            label="Four contributors"
+            members={members.slice(0, 4)}
+            size="s"
+          />
         </Sample>
         <Sample label="One beyond">
-          <AvatarGroup label="Five contributors" members={members.slice(0, 5)} size="s" />
+          <AvatarGroup
+            {...ctx.subject}
+            label="Five contributors"
+            members={members.slice(0, 5)}
+            size="s"
+          />
         </Sample>
       </div>
       <div className="avatar-example-row">
         {[12, 128, 1200].map((count) => (
           <Sample key={count} label={`${count} more · exact count`}>
             <AvatarGroup
+              {...ctx.subject}
               label="Large contributor group"
               size="xs"
               max={2}
@@ -257,15 +291,15 @@ export function GroupScale(): ReactElement {
   );
 }
 
-function SeamSample({ label }: { readonly label: string }): ReactElement {
+function SeamSample({ ctx, label }: PreviewProps & { readonly label: string }): ReactElement {
   return (
     <>
       <Text size="caption-l" color="muted">
         {label}
       </Text>
-      <AvatarGroup label={`${label} contributors`} size="s" members={members} />
+      <AvatarGroup {...ctx.subject} label={`${label} contributors`} size="s" members={members} />
       <div className="avatar-example-person">
-        <Avatar name="Workspace writer" alt="" size="xs" />
+        <Avatar {...ctx.subject} name="Workspace writer" alt="" size="xs" />
         <Text size="body-s">Workspace writer</Text>
       </div>
     </>
@@ -282,37 +316,50 @@ export function SurfaceSeams({ ctx }: PreviewProps): ReactElement {
           data-surface="base"
           key={label}
         >
-          <SeamSample label={label} />
+          <SeamSample ctx={ctx} label={label} />
         </div>
       ))}
       <Card data-surface="base">
-        <SeamSample label="Card" />
+        <SeamSample ctx={ctx} label="Card" />
       </Card>
       {ctx.surface === 'overlay' && (
         <div className="avatar-example-surface unica-overlay-surface" data-surface="overlay">
-          <SeamSample label="Overlay" />
+          <SeamSample ctx={ctx} label="Overlay" />
         </div>
       )}
     </div>
   );
 }
 
-export function GroupDirection(): ReactElement {
+export function GroupDirection({ ctx }: PreviewProps): ReactElement {
   return (
     <div className="avatar-example-stack">
       <div className="avatar-example-row">
         <Sample label="LTR · source order">
           <div dir="ltr">
-            <AvatarGroup label="Left to right members" members={members} size="s" max={3} />
+            <AvatarGroup
+              {...ctx.subject}
+              label="Left to right members"
+              members={members}
+              size="s"
+              max={3}
+            />
           </div>
         </Sample>
         <Sample label="RTL · same source order">
           <div dir="rtl">
-            <AvatarGroup label="Right to left members" members={members} size="s" max={3} />
+            <AvatarGroup
+              {...ctx.subject}
+              label="Right to left members"
+              members={members}
+              size="s"
+              max={3}
+            />
           </div>
         </Sample>
         <Sample label="Mixed loading states">
           <AvatarGroup
+            {...ctx.subject}
             label="Mixed image states"
             size="s"
             members={[
@@ -332,7 +379,7 @@ export function GroupDirection(): ReactElement {
   );
 }
 
-export function NameHints(): ReactElement {
+export function NameHints({ ctx }: PreviewProps): ReactElement {
   const namedMembers: readonly AvatarGroupMember[] = [
     members[0]!,
     members[2]!,
@@ -345,6 +392,7 @@ export function NameHints(): ReactElement {
         {groupSizes.map((size) => (
           <Sample key={size} label={size}>
             <AvatarGroup
+              {...ctx.subject}
               label={`${size} named contributors`}
               members={namedMembers}
               size={size}
@@ -355,10 +403,22 @@ export function NameHints(): ReactElement {
       </div>
       <div className="avatar-example-row">
         <Sample label="Passive group">
-          <AvatarGroup label="Passive contributors" members={members} size="s" max={3} />
+          <AvatarGroup
+            {...ctx.subject}
+            label="Passive contributors"
+            members={members}
+            size="s"
+            max={3}
+          />
         </Sample>
         <Sample label="Long name">
-          <AvatarGroup label="Long member name" members={[namedMembers[2]!]} size="s" showNames />
+          <AvatarGroup
+            {...ctx.subject}
+            label="Long member name"
+            members={[namedMembers[2]!]}
+            size="s"
+            showNames
+          />
         </Sample>
       </div>
     </div>

@@ -1,7 +1,8 @@
 import { Stack, Text } from '@docouno/unica';
+import type { PreviewProps } from '../../workbench/types.js';
 import { AccountProfile } from './avatar-profile.examples.js';
 
-export function ActionGeometry() {
+export function ActionGeometry({ ctx }: PreviewProps) {
   const samples = [
     { caption: 'Small · portrait', size: 's' },
     { caption: 'Medium · initials', src: '' },
@@ -28,7 +29,7 @@ export function ActionGeometry() {
           <Text as="span" size="caption-l" color="muted">
             <bdi>{caption}</bdi>
           </Text>
-          <AccountProfile {...profile} />
+          <AccountProfile {...profile} avatarProps={profile.loading ? undefined : ctx.subject} />
         </Stack>
       ))}
     </div>
