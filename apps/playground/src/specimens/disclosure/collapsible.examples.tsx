@@ -11,7 +11,7 @@ import type { PreviewProps } from '../../workbench/types.js';
 import { ExampleSurface } from '../shared/example-surface.js';
 import '../../prototypes/disclosure/disclosure.examples.css';
 
-export function TriggerStates(): ReactElement {
+export function TriggerStates({ ctx }: PreviewProps): ReactElement {
   return (
     <div className="disclosure-study disclosure-study-grid" data-example-disclosure="">
       {[false, true].map((defaultOpen) => (
@@ -19,7 +19,7 @@ export function TriggerStates(): ReactElement {
           <Text size="caption-l" color="muted">
             {defaultOpen ? 'Initially open' : 'Initially closed'}
           </Text>
-          <Collapsible defaultOpen={defaultOpen}>
+          <Collapsible {...ctx.subject} defaultOpen={defaultOpen}>
             <CollapsibleTrigger>Delivery window</CollapsibleTrigger>
             <CollapsibleContent>
               <bdi>Weekdays, 09:00–17:00 UTC.</bdi>
@@ -31,7 +31,7 @@ export function TriggerStates(): ReactElement {
   );
 }
 
-export function Availability(): ReactElement {
+export function Availability({ ctx }: PreviewProps): ReactElement {
   const reasonId = useId();
   return (
     <div className="disclosure-study disclosure-study-grid">
@@ -39,7 +39,7 @@ export function Availability(): ReactElement {
         <Text size="caption-l" color="muted">
           <bdi>Unavailable · closed</bdi>
         </Text>
-        <Collapsible disabled>
+        <Collapsible {...ctx.subject} disabled>
           <CollapsibleTrigger aria-describedby={reasonId}>Provider diagnostics</CollapsibleTrigger>
           <Text
             id={reasonId}
@@ -58,7 +58,7 @@ export function Availability(): ReactElement {
         <Text size="caption-l" color="muted">
           <bdi>Unavailable · open</bdi>
         </Text>
-        <Collapsible defaultOpen disabled>
+        <Collapsible {...ctx.subject} defaultOpen disabled>
           <CollapsibleTrigger>Local diagnostics</CollapsibleTrigger>
           <CollapsibleContent>
             <Checkbox size="s" label="Include timestamps" defaultChecked />
@@ -69,10 +69,10 @@ export function Availability(): ReactElement {
   );
 }
 
-export function Wrapping(): ReactElement {
+export function Wrapping({ ctx }: PreviewProps): ReactElement {
   return (
     <div className="disclosure-study-narrow" data-example-disclosure="">
-      <Collapsible size="s" defaultOpen>
+      <Collapsible {...ctx.subject} size="s" defaultOpen>
         <CollapsibleTrigger>
           Delivery checks for regionalIncidentNotificationDeliveryService
         </CollapsibleTrigger>
@@ -84,10 +84,10 @@ export function Wrapping(): ReactElement {
   );
 }
 
-export function FlushContent(): ReactElement {
+export function FlushContent({ ctx }: PreviewProps): ReactElement {
   return (
     <Card className="disclosure-study-card" data-example-disclosure="">
-      <Collapsible defaultOpen>
+      <Collapsible {...ctx.subject} defaultOpen>
         <CollapsibleTrigger>Recent deliveries</CollapsibleTrigger>
         <CollapsibleContent padded={false}>
           <TableScroll aria-label="Scroll recent deliveries">
@@ -132,7 +132,7 @@ export function OnOverlay({ ctx }: PreviewProps): ReactElement {
         <Title as="h2" size="heading-s">
           Delivery report
         </Title>
-        <Collapsible size="s" defaultOpen>
+        <Collapsible {...ctx.subject} size="s" defaultOpen>
           <CollapsibleTrigger>Retry attempts</CollapsibleTrigger>
           <CollapsibleContent>
             <bdi>Delivered on the second attempt at 09:04 UTC.</bdi>

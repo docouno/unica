@@ -152,9 +152,9 @@ export default defineComponent({
         'Edit the reply-to address and use Close details. Focus returns to Delivery details, and reopening restores the draft.',
       code: deliverySource.replaceAll('../../prototypes/', './prototypes/'),
       render: withOverlaySurface(
-        () => (
+        ({ ctx }) => (
           <div data-example-disclosure="" style={{ inlineSize: 'min(100%, 34rem)' }}>
-            <DeliveryDetails />
+            <DeliveryDetails collapsibleProps={ctx.subject} />
           </div>
         ),
         'border-box',

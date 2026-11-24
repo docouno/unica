@@ -7,14 +7,14 @@ import {
 } from '../../prototypes/disclosure/disclosure.proto.js';
 import { FormField } from '../../prototypes/form-field/form-field.proto.js';
 
-export function DeliveryDetails() {
+export function DeliveryDetails({ collapsibleProps = {} } = {}) {
   const replyId = useId();
   return (
     <Card style={{ inlineSize: 'min(100%, 34rem)' }}>
       <Text size="body-s" color="secondary">
         <bdi>Send the digest to workspace owners every Monday.</bdi>
       </Text>
-      <Collapsible defaultOpen>
+      <Collapsible {...collapsibleProps} defaultOpen>
         <CollapsibleTrigger asChild>
           <Button variant="secondary" tone="neutral" size="s">
             Delivery details
