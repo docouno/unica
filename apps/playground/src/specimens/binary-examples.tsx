@@ -1,4 +1,5 @@
 import type { ReactElement, ReactNode } from 'react';
+import { Text } from '@docouno/unica';
 import './binary-examples.css';
 
 export function Sample({
@@ -10,7 +11,9 @@ export function Sample({
 }): ReactElement {
   return (
     <div className="binary-demo-sample">
-      <span className="binary-demo-caption">{title}</span>
+      <Text as="span" size="caption-l" color="muted">
+        <bdi>{title}</bdi>
+      </Text>
       {children}
     </div>
   );

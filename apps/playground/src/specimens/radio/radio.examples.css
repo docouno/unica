@@ -1,0 +1,27 @@
+.radio-example-grid {
+  inline-size: 100%;
+}
+
+.radio-example-form {
+  inline-size: fit-content;
+  max-inline-size: 100%;
+  min-inline-size: 0;
+}
+
+td:has(.radio-example-form) {
+  min-inline-size: 17rem;
+}
+
+/* Keep all three small choices on one line and a visible pair at larger sizes. */
+td:has(.radio-example-form[data-orientation='horizontal']) {
+  min-inline-size: 22rem;
+}
+
+ul:has(> [data-wb-result-row] .radio-example-form) {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 17rem), 1fr));
+}
+
+.radio-example-plate {
+  inline-size: fit-content;
+  max-inline-size: 100%;
+}

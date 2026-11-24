@@ -1,236 +1,18 @@
-import { size, disabled, readOnly, required, choice, eventProp } from '../control-props.js';
-import { useId, useState } from 'react';
-import type { ReactElement } from 'react';
-import { WarningCircleIcon } from '@phosphor-icons/react';
+import { Radio, RadioGroup, Stack, Text } from '@docouno/unica';
 import { defineComponent } from '../../workbench/types.js';
-import { Button } from '@docouno/unica';
-import { Radio, RadioGroup } from '@docouno/unica';
-import { Sample, SurfacePair } from '../binary-examples.js';
+import { size, disabled, readOnly, required, choice, eventProp } from '../control-props.js';
+import { withOverlaySurface } from '../shared/with-overlay-surface.js';
+import { previewProps } from '../preview-code.js';
+import {
+  Availability,
+  Interaction,
+  Overflow,
+  SurfaceChoices,
+  Validation,
+} from './radio.examples.js';
+import { DeliveryPreferences } from './delivery-preferences.js';
+import deliverySource from './delivery-preferences.tsx?raw';
 
-function Sizes(): ReactElement {
-  return (
-    <div className="binary-demo-stack">
-      {(['s', 'm', 'l'] as const).map((size) => (
-        <div className="binary-demo-size" key={size}>
-          <span className="binary-demo-caption">
-            {size.toUpperCase()} ·{' '}
-            {size === 's'
-              ? '16px / 30px row'
-              : size === 'm'
-                ? '20px / 40px row'
-                : '24px / 48px row'}
-          </span>
-          <RadioGroup
-            aria-label={`${size} delivery`}
-            orientation="horizontal"
-            size={size}
-            defaultValue="weekly"
-          >
-            <Radio value="daily" label="Daily" />
-            <Radio value="weekly" label="Weekly" />
-            <Radio value="monthly" label="Monthly" />
-          </RadioGroup>
-        </div>
-      ))}
-    </div>
-  );
-}
-function Interaction(): ReactElement {
-  return (
-    <RadioGroup aria-label="Delivery frequency" orientation="horizontal" defaultValue="weekly">
-      <Radio value="daily" label="Daily" />
-      <Radio value="weekly" label="Weekly" />
-      <Radio value="monthly" label="Monthly" />
-    </RadioGroup>
-  );
-}
-function Availability(): ReactElement {
-  return (
-    <div className="binary-demo-grid">
-      <Sample title="Read-only is a group decision">
-        <RadioGroup aria-label="Managed retention" readOnly defaultValue="90">
-          <Radio value="30" label="30 days" />
-          <Radio
-            value="90"
-            label="90 days"
-            description="Retention is managed by your organization."
-          />
-        </RadioGroup>
-      </Sample>
-      <Sample title="Disabled group">
-        <RadioGroup aria-label="Unavailable retention" disabled defaultValue="90">
-          <Radio value="30" label="30 days" />
-          <Radio
-            value="90"
-            label="90 days"
-            description="Available after the workspace is verified."
-          />
-        </RadioGroup>
-      </Sample>
-      <Sample title="Unavailable option, available alternatives">
-        <RadioGroup aria-label="Delivery channel" defaultValue="email">
-          <Radio value="email" label="Email" />
-          <Radio
-            value="chat"
-            label="Team chat"
-            description="Connect a channel to use this option."
-            disabled
-          />
-          <Radio value="inbox" label="Inbox" />
-        </RadioGroup>
-      </Sample>
-      <Sample title="Selected option becomes unavailable">
-        <RadioGroup aria-label="Existing delivery channel" defaultValue="chat">
-          <Radio
-            value="chat"
-            label="Team chat"
-            description="This connection is no longer available. Choose a replacement."
-            disabled
-          />
-          <Radio value="email" label="Email" />
-          <Radio value="inbox" label="Inbox" />
-        </RadioGroup>
-      </Sample>
-    </div>
-  );
-}
-function Choices(): ReactElement {
-  const id = useId();
-  const [selected, setSelected] = useState<string | null>(null);
-  return (
-    <div className="binary-demo-grid">
-      <div className="binary-demo-field">
-        <span className="binary-demo-legend" id={id}>
-          Delivery schedule
-        </span>
-        <RadioGroup aria-labelledby={id} value={selected} onValueChange={setSelected}>
-          <Radio
-            value="immediate"
-            label="As events happen"
-            description="Receive each update immediately."
-          />
-          <Radio
-            value="daily"
-            label="Daily summary"
-            description="Combine updates into one message each morning."
-          />
-          <Radio
-            value="none"
-            label="No email"
-            description="Updates remain available in your inbox."
-          />
-        </RadioGroup>
-        <span className="binary-demo-caption" role="status">
-          {selected === null ? 'No choice made yet.' : `Selected: ${selected}.`}
-        </span>
-        <div className="binary-demo-action-row">
-          <Button variant="ghost" tone="neutral" size="s" onClick={() => setSelected(null)}>
-            Reset example
-          </Button>
-        </div>
-      </div>
-      <Sample title="Horizontal flow wraps without shrinking choices">
-        <RadioGroup aria-label="Date display" orientation="horizontal" defaultValue="relative">
-          <Radio value="relative" label="Relative dates" />
-          <Radio value="absolute" label="Absolute dates" />
-          <Radio value="system" label="System preference" />
-        </RadioGroup>
-      </Sample>
-    </div>
-  );
-}
-function Validation(): ReactElement {
-  const [selected, setSelected] = useState<string | null>(null);
-  const [attempted, setAttempted] = useState(false);
-  const id = useId();
-  const invalid = attempted && selected === null;
-  return (
-    <div className="binary-demo-grid">
-      <form
-        className="binary-demo-field"
-        onInvalid={() => setAttempted(true)}
-        onSubmit={(event) => event.preventDefault()}
-      >
-        <span className="binary-demo-legend" id={id}>
-          Default visibility
-        </span>
-        <RadioGroup
-          aria-labelledby={id}
-          aria-describedby={invalid ? `${id}-error` : undefined}
-          name="visibility"
-          required
-          value={selected}
-          onValueChange={setSelected}
-          status={invalid ? 'danger' : 'neutral'}
-        >
-          <Radio value="private" label="Private" />
-          <Radio value="team" label="Team" />
-        </RadioGroup>
-        {invalid && (
-          <span className="binary-demo-message" id={`${id}-error`} role="alert">
-            <WarningCircleIcon size={16} aria-hidden="true" />
-            Choose a visibility setting.
-          </span>
-        )}
-        <div className="binary-demo-action-row">
-          <Button variant="secondary" tone="accent" size="s" type="submit">
-            Check selection
-          </Button>
-        </div>
-      </form>
-      <Sample title="Invalid selected value">
-        <RadioGroup aria-label="Invalid visibility" status="danger" defaultValue="public">
-          <Radio
-            value="public"
-            label="Public"
-            description="Public access conflicts with the current policy."
-          />
-          <Radio value="team" label="Team only" />
-        </RadioGroup>
-      </Sample>
-    </div>
-  );
-}
-function Overflow(): ReactElement {
-  return (
-    <div className="binary-demo-narrow">
-      <RadioGroup aria-label="Notification detail" defaultValue="all">
-        <Radio
-          value="all"
-          label="Include every update from collections this team can access"
-          description="The dot stays centered on the first label line. Supporting text stays beneath the label."
-        />
-        <Radio
-          value="summary"
-          label="Send one summary with mentions, comments, and changes that need attention"
-        />
-        <Radio value="custom" label="Use_workspace_notification_preferences_without_overrides" />
-      </RadioGroup>
-      <RadioGroup
-        size="s"
-        aria-label="Compact display"
-        orientation="horizontal"
-        defaultValue="comfortable"
-      >
-        <Radio value="compact" label="Compact" />
-        <Radio value="comfortable" label="Comfortable" />
-      </RadioGroup>
-      <RadioGroup size="l" aria-label="Touch display" defaultValue="all">
-        <Radio value="all" label="Show descriptions beneath each option" />
-        <Radio value="labels" label="Show labels only" />
-      </RadioGroup>
-    </div>
-  );
-}
-function SurfaceChoices(): ReactElement {
-  return (
-    <RadioGroup aria-label="Visibility" defaultValue="team">
-      <Radio value="private" label="Private" />
-      <Radio value="team" label="Team" />
-      <Radio value="public" label="Public" />
-    </RadioGroup>
-  );
-}
 export default defineComponent({
   id: 'radio',
   title: 'Radio',
@@ -246,25 +28,36 @@ export default defineComponent({
     required,
     selection: {
       kind: 'enum',
-      group: 'Selection',
+      group: 'Interaction',
       label: 'Initial selection',
-      description: 'Sets the starting choice restored by a form reset.',
+      description:
+        'Sets the initial key on RadioGroup. No choice passes null. A native reset restores this example’s initial selection.',
       choices: [
         { value: '', label: 'No choice yet' },
         { value: 'daily', label: 'Daily' },
         { value: 'weekly', label: 'Weekly' },
+        { value: 'monthly', label: 'Monthly' },
       ],
       default: 'daily',
       demo: true,
     },
-    status: choice('Field', 'Validation state of the group.', ['neutral', 'danger'], 'neutral'),
+    status: choice(
+      'Semantics',
+      'Validation feedback for RadioGroup. This example pins a review message for danger.',
+      ['neutral', 'danger'],
+      'neutral',
+    ),
     orientation: choice(
       'Geometry',
       'Stack choices or place them side by side.',
       ['vertical', 'horizontal'],
       'vertical',
     ),
-    onValueChange: eventProp('Reports the selected delivery option.', 'handleValueChange'),
+    onValueChange: eventProp(
+      'RadioGroup reports the proposed option key after selection.',
+      '(next) => console.log(next)',
+      '(next: string) => void',
+    ),
   },
   constraints: [
     {
@@ -283,93 +76,161 @@ export default defineComponent({
       reason: 'Disabled groups are excluded from focus, validation, and submission.',
     },
   ],
-  render: ({ values: { selection, ...props }, ctx }) => (
-    <form {...ctx.form}>
-      <RadioGroup
-        key={selection}
-        {...props}
-        {...ctx.subject}
-        name="delivery"
-        defaultValue={selection || null}
-        aria-label="Delivery frequency"
-        onValueChange={ctx.action('onValueChange')}
-      >
-        <Radio value="daily" label="Daily" />
-        <Radio value="weekly" label="Weekly" />
-      </RadioGroup>
+  render: withOverlaySurface(({ values: { selection, ...props }, ctx }) => {
+    const review = props.status === 'danger' && !props.disabled;
+    return (
+      <form {...ctx.form} className="radio-example-form" data-orientation={props.orientation}>
+        <Stack gap={8}>
+          <Text id={ctx.id} size="body-s" weight="medium">
+            Delivery frequency
+            {props.required && !props.disabled && (
+              <Text as="span" aria-hidden="true" color="danger">
+                {' '}
+                *
+              </Text>
+            )}
+          </Text>
+          <RadioGroup
+            key={selection}
+            {...props}
+            {...ctx.subject}
+            name="delivery"
+            defaultValue={selection || null}
+            aria-labelledby={ctx.id}
+            aria-describedby={review ? ctx.id + '-review' : undefined}
+            onValueChange={ctx.action('onValueChange')}
+          >
+            <Radio value="daily" label="Daily" />
+            <Radio value="weekly" label="Weekly" />
+            <Radio value="monthly" label="Monthly" />
+          </RadioGroup>
+          {review && (
+            <Text size="caption-l" color="danger" id={ctx.id + '-review'}>
+              <bdi>The delivery schedule needs review.</bdi>
+            </Text>
+          )}
+        </Stack>
+      </form>
+    );
+  }, 'border-box'),
+  code: ({ selection, ...values }) => {
+    const attrs = previewProps(values, {
+      size: 'm',
+      disabled: false,
+      readOnly: false,
+      required: false,
+      status: 'neutral',
+      orientation: 'vertical',
+    });
+    const review = values.status === 'danger' && !values.disabled;
+    const mark =
+      values.required && !values.disabled
+        ? ' <Text as="span" aria-hidden="true" color="danger">*</Text>'
+        : '';
+    return `import { useId } from 'react';
+import { Radio, RadioGroup, Stack, Text } from '@docouno/unica';
+import '@docouno/unica/styles.css';
+
+export function DeliveryFrequency() {
+  const id = useId();
+  return (
+    <form>
+      <Stack gap={8}>
+        <Text id={id} size="body-s" weight="medium">Delivery frequency${mark}</Text>
+        <RadioGroup name="delivery" aria-labelledby={id}${review ? ' aria-describedby={id + "-review"}' : ''} defaultValue={${JSON.stringify(selection || null)}}${attrs} onValueChange={(next) => console.log(next)}>
+          <Radio value="daily" label="Daily" />
+          <Radio value="weekly" label="Weekly" />
+          <Radio value="monthly" label="Monthly" />
+        </RadioGroup>${review ? '\n        <Text id={id + "-review"} size="caption-l" color="danger"><bdi>The delivery schedule needs review.</bdi></Text>' : ''}
+      </Stack>
     </form>
-  ),
-  code: ({ selection }, attributes) =>
-    `<RadioGroup aria-label="Delivery frequency" name="delivery" defaultValue={${JSON.stringify(selection || null)}}${attributes}>
-  <Radio value="daily" label="Daily" />
-  <Radio value="weekly" label="Weekly" />
-</RadioGroup>`,
-  matrixViews: [
+  );
+}`;
+  },
+  states: [
     {
       id: 'sizes',
       rows: 'size',
       cols: 'orientation',
-      title: 'Size & selection',
-      reference: () => <Sizes />,
+      fixed: { selection: 'weekly' },
+      title: 'Size and orientation',
+      caption:
+        'Compare 16, 20, and 24px circles in rows at least 30, 40, and 48px high. Each group starts on Weekly with a choice on either side.',
     },
-    { id: 'selection', rows: 'selection', cols: 'required', title: 'Selection & required' },
+    {
+      id: 'selection',
+      rows: 'selection',
+      cols: 'required',
+      title: 'Initial selection and requirement',
+      caption:
+        'Compare required and optional groups with and without an initial answer. Only the checked available option contributes a form entry.',
+    },
   ],
   cases: [
     {
       id: 'interaction',
-      title: 'Interaction states',
-      caption:
-        'Tab enters the group. Use the arrow keys to move the choice, or point at a label and hold the pointer button to inspect press.',
+      title: 'Keyboard and pointer selection',
       kind: 'behavior',
       mode: 'live',
-      render: () => <Interaction />,
+      reset: true,
+      caption:
+        'Tab enters on the selected option. Arrow keys move the selection. Home and End choose the first and last available options. Hold a label to inspect its pressed state.',
+      render: withOverlaySurface(Interaction, 'border-box'),
     },
     {
       id: 'availability',
-      title: 'Availability',
+      title: 'Read-only and unavailable choices',
       kind: 'behavior',
-      render: () => <Availability />,
+      mode: 'live',
+      reset: true,
+      caption:
+        'Read-only keeps a focusable answer. A disabled group stays out of the tab order. Replace the disconnected, still-selected channel with an available one.',
+      render: withOverlaySurface(Availability, 'border-box'),
     },
     {
       id: 'validation',
-      title: 'Validation',
-      caption:
-        'Submit without a choice to see the required-group error. A selection clears it. Tab to the invalid selected value to inspect its focus ring.',
+      title: 'Missing and disallowed answers',
       kind: 'behavior',
       mode: 'live',
-      render: () => <Validation />,
+      reset: true,
+      caption:
+        'Submit an empty group, choose a visibility, then submit again. In the policy example, switching from Public to Team only resolves a different error.',
+      render: withOverlaySurface(Validation, 'border-box'),
     },
     {
       id: 'overflow',
-      title: 'Labels & density',
+      title: 'Long options and control density',
       kind: 'content',
-      render: () => <Overflow />,
+      mode: 'live',
+      reset: true,
+      caption:
+        'Compare a wrapped label, supporting text and an unbroken settings key. Compact and touch-sized groups keep a circular indicator beside the first line.',
+      render: withOverlaySurface(Overflow, 'border-box'),
     },
     {
       id: 'surfaces',
-      title: 'Base & overlay',
-      caption: 'Static material plates with independent live groups.',
+      title: 'Visibility on base and overlay',
       kind: 'surface',
-      render: () => (
-        <SurfacePair>
-          <SurfaceChoices />
-        </SurfacePair>
-      ),
+      mode: 'live',
+      reset: true,
+      compareSurfaces: true,
+      caption: 'Change the visibility on either material. The other group keeps its own selection.',
+      render: SurfaceChoices,
     },
   ],
-  usage: [
+  compositions: [
     {
       id: 'group',
-      title: 'Groups & empty selection',
-      caption:
-        'Tab enters the group; arrows move selection. Space selects; Home/End choose the first/last available option. Selecting the chosen option never clears it.',
+      title: 'Delivery and date preferences',
       mode: 'live',
-      code: `<RadioGroup aria-label="Delivery schedule" value={selected} onValueChange={setSelected}>
-  <Radio value="immediate" label="As events happen" />
-  <Radio value="daily" label="Daily summary" />
-  <Radio value="none" label="No email" />
-</RadioGroup>`,
-      render: () => <Choices />,
+      reset: true,
+      caption:
+        'The delivery schedule starts unanswered. Select a schedule to update its summary. Date display keeps an independent selection, including when its options wrap.',
+      render: withOverlaySurface(
+        ({ ctx }) => <DeliveryPreferences groupProps={ctx.subject} />,
+        'border-box',
+      ),
+      code: deliverySource,
     },
   ],
 });
