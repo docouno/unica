@@ -15,6 +15,54 @@ async function navigate(page, params) {
 }
 
 export default {
+  'Select shows the remaining choices in a scaled narrow field': async ({ page, origin }) => {
+    await page.setViewportSize({ width: 1500, height: 900 });
+    const route = new URL(
+      '/?item=select&tab=states&block=summary&vp=1440&dir=rtl&scale=120',
+      origin,
+    );
+    await page.goto(route.href, { waitUntil: 'domcontentloaded' });
+    const field = page.getByRole('button', { name: /^Filter regions: Amsterdam/ }).first();
+    await field.waitFor({ timeout: 20_000 });
+    await page.evaluate(() => document.fonts.ready);
+    assert.match(await field.getAttribute('aria-label'), /Frankfurt.*London.*Stockholm/);
+    assert.equal(
+      await field.getByText('Amsterdam', { exact: true }).filter({ visible: true }).count(),
+      1,
+    );
+    assert.equal(await field.getByText('+4', { exact: true }).filter({ visible: true }).count(), 1);
+  },
+
+  'Select retry restores the shared catalog and keeps the saved choices': async ({
+    page,
+    origin,
+  }) => {
+    const route = new URL(
+      '/?item=select&tab=states&block=loading&family=frost&scheme=both',
+      origin,
+    );
+    await page.goto(route.href, { waitUntil: 'domcontentloaded' });
+    const frame = page.locator('section[data-wb-block="loading"]');
+    const boards = frame.locator('.wb-artboard');
+    const retry = boards.getByRole('button', { name: 'Try again' });
+    await retry.first().waitFor({ timeout: 20_000 });
+    assert.equal(await retry.count(), 2);
+    const fields = boards.getByRole('button', { name: 'Available regions: London' });
+    assert.equal(await fields.count(), 2);
+    await retry.first().press('Enter');
+    assert.equal(await retry.count(), 0, 'Retry recovers the catalog in both themes');
+    assert.equal(await frame.getByRole('combobox').inputValue(), 'ready');
+    assert.equal(await fields.count(), 2);
+    const list = boards.first().locator('[role="listbox"]:focus');
+    const selected = list.getByRole('option', { name: 'London', exact: true, selected: true });
+    const selectedId = await selected.getAttribute('id');
+    assert.ok(selectedId);
+    assert.equal(await list.getAttribute('aria-activedescendant'), selectedId);
+    await list.press('ArrowDown');
+    assert.notEqual(await list.getAttribute('aria-activedescendant'), selectedId);
+    assert.equal(await selected.count(), 1, 'Browsing another row keeps London selected');
+  },
+
   'Date pickers select the touched day at the edge of an in-flow calendar on a phone': async ({
     page,
     origin,
