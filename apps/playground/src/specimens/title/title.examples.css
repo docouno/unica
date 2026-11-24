@@ -1,0 +1,9 @@
+.title-example-measure {
+  inline-size: min(100%, calc(16rem * var(--font-scale)));
+  min-inline-size: 0;
+}
+
+.title-example-line-box {
+  background-image: linear-gradient(to top, var(--border-default) 1px, transparent 1px);
+  background-size: 100% 1lh;
+}

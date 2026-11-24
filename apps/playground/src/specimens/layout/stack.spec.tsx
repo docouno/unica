@@ -1,58 +1,22 @@
-import { Fragment, useState } from 'react';
-import { Stack } from '@docouno/unica';
-import type { StackProps } from '@docouno/unica';
+import { Fragment } from 'react';
+import { Divider, Stack, Text } from '@docouno/unica';
 import { defineComponent } from '../../workbench/types.js';
-import type { PreviewContext } from '../../workbench/types.js';
+import { withOverlaySurface } from '../shared/with-overlay-surface.js';
 import { LayoutExample } from './layout.examples.js';
 import {
   alignOptions,
   choiceProp,
   directionOptions,
-  spacingOptions,
+  spacingValues,
   viewportNote,
 } from './layout.options.js';
+import { DividerToggle, HelpTopics, NormalizedChildren, helpTopicsCode } from './stack.examples.js';
 
 const dividers = {
   none: undefined,
-  rule: <hr />,
+  rule: <Divider style={{ flex: '1 1 0' }} />,
   '0': 0,
 } as const;
-
-function StackExample(props: StackProps) {
-  return (
-    <Stack {...props} className="layout-flow">
-      <span>Draft</span>
-      {null}
-      {0}
-      <Fragment key="checks">
-        <span>In review</span>
-        <span>Ready</span>
-      </Fragment>
-    </Stack>
-  );
-}
-
-function DividerToggle({ ctx }: { ctx: PreviewContext }) {
-  const [show, setShow] = useState(true);
-  return (
-    <LayoutExample>
-      <label>
-        <input type="checkbox" checked={show} onChange={(event) => setShow(event.target.checked)} />{' '}
-        Show dividers
-      </label>
-      <Stack {...ctx.subject} gap={8} divider={show ? <hr /> : undefined}>
-        <span>Checklist</span>
-        {null}
-        <Fragment key="details">
-          <label>
-            Project name <input defaultValue="Release notes" />
-          </label>
-          <span>Ready for review</span>
-        </Fragment>
-      </Stack>
-    </LayoutExample>
-  );
-}
 
 export default defineComponent({
   id: 'stack',
@@ -61,49 +25,92 @@ export default defineComponent({
   status: 'UI',
   summary: 'Space a sequence of children with optional dividers. ' + viewportNote,
   props: {
-    direction: choiceProp(directionOptions, 'column', 'Main axis. Defaults to column.'),
-    align: choiceProp(alignOptions, 'stretch', 'Align the items along the cross axis.'),
-    gap: choiceProp(spacingOptions, 'Default', 'Space between children. Defaults to 0.'),
+    direction: choiceProp(
+      directionOptions,
+      'column',
+      'Main axis and visual order.',
+      "Responsive<'row' | 'row-reverse' | 'column' | 'column-reverse'>",
+    ),
+    align: choiceProp(
+      alignOptions,
+      'stretch',
+      'Alignment across the main axis.',
+      "Responsive<'start' | 'center' | 'end' | 'stretch' | 'baseline'>",
+    ),
+    gap: choiceProp(
+      spacingValues,
+      '0',
+      'Space between consecutive children and dividers.',
+      'Responsive<Spacing>',
+    ),
     divider: {
       kind: 'slot',
-      group: 'Children',
+      group: 'Content',
       default: 'none',
-      description: 'A React node inserted between non-empty children.',
+      publicType: 'ReactNode',
+      description: 'A node inserted between consecutive non-empty children.',
       choices: [
         { value: 'none', label: 'None' },
-        { value: 'rule', label: 'Rule', code: '<hr />' },
+        { value: 'rule', label: 'Rule', code: "<Divider style={{ flex: '1 1 0' }} />" },
         { value: '0', label: 'Numeric zero', code: '0' },
       ],
     },
   },
-  render: ({ ctx, values }) => (
+  render: withOverlaySurface(({ ctx, values }) => (
     <LayoutExample>
-      <StackExample
+      <Stack
         {...ctx.subject}
+        className="layout-flow"
         direction={values.direction === 'column' ? undefined : directionOptions[values.direction]}
         align={values.align === 'stretch' ? undefined : alignOptions[values.align]}
-        gap={spacingOptions[values.gap]}
+        gap={values.gap === '0' ? undefined : spacingValues[values.gap]}
         divider={dividers[values.divider]}
-      />
+      >
+        <Text as="span" size="body-s">
+          Draft
+        </Text>
+        <Fragment key="checks">
+          <Text as="span" size="caption-l">
+            In review
+          </Text>
+          <Text as="span" size="body-s">
+            Ready
+          </Text>
+        </Fragment>
+      </Stack>
     </LayoutExample>
-  ),
+  )),
   code: (_, attributes) => `import { Fragment } from 'react';
 
 <Stack${attributes}>
-  <span>Draft</span>
-  {null}
-  {0}
+  <Text as="span" size="body-s">Draft</Text>
   <Fragment key="checks">
-    <span>In review</span>
-    <span>Ready</span>
+    <Text as="span" size="caption-l">In review</Text>
+    <Text as="span" size="body-s">Ready</Text>
   </Fragment>
 </Stack>`,
-  matrixViews: [
+  states: [
     {
       id: 'divider-gap',
-      title: 'Dividers and spacing',
+      title: 'Inserting a divider',
       rows: 'divider',
-      cols: 'gap',
+      fixed: { gap: '8' },
+      caption:
+        'A rule or the number zero occupies one position between adjacent items. The 8px gap applies on both sides.',
+    },
+    {
+      id: 'spacing',
+      title: 'Space between children',
+      rows: 'gap',
+      fixed: { divider: 'none' },
+    },
+    {
+      id: 'direction',
+      title: 'Dividers along the main axis',
+      rows: 'direction',
+      fixed: { divider: 'rule', gap: '4' },
+      caption:
+        'The rule separates rows in a column. In a row it fills the remaining space between labels.',
     },
   ],
   cases: [
@@ -111,43 +118,31 @@ export default defineComponent({
       id: 'normalized-children',
       title: 'Empty children, zero, and fragments',
       kind: 'content',
-      caption: 'Zero remains a child. Dividers also appear between children of the fragment.',
-      render: ({ ctx }) => (
-        <LayoutExample>
-          <StackExample {...ctx.subject} gap={8} divider={<hr />} />
-        </LayoutExample>
-      ),
+      mode: 'pinned',
+      caption:
+        'The empty child takes no space. Zero counts as one child and the fragment contributes two, giving four items and three separators.',
+      render: withOverlaySurface(NormalizedChildren),
     },
     {
       id: 'divider-toggle',
-      title: 'Toggling dividers',
+      title: 'Toggling dividers while editing',
       kind: 'behavior',
       mode: 'live',
       caption: 'Edit the project name, then toggle dividers. The input keeps its value.',
-      render: DividerToggle,
+      controls: { showDividers: { kind: 'boolean', label: 'Show dividers', default: true } },
+      reset: true,
+      render: withOverlaySurface(DividerToggle),
     },
   ],
-  usage: [
+  compositions: [
     {
       id: 'support',
       title: 'Separated help topics',
-      render: ({ ctx }) => (
-        <LayoutExample>
-          <Stack {...ctx.subject} gap={8} divider={<hr />}>
-            <a href="#account">Manage your account</a>
-            <a href="#billing">Find an invoice</a>
-            <a href="#support">Contact support</a>
-          </Stack>
-        </LayoutExample>
-      ),
-      code: `import '@docouno/unica/styles.css';
-import { Stack } from '@docouno/unica';
-
-<Stack gap={8} divider={<hr />}>
-  <a href="#account">Manage your account</a>
-  <a href="#billing">Find an invoice</a>
-  <a href="#support">Contact support</a>
-</Stack>`,
+      mode: 'live',
+      caption:
+        'The links lead to three sections of the layout guide. Each divider separates two topics.',
+      render: withOverlaySurface(HelpTopics),
+      code: helpTopicsCode,
     },
   ],
 });

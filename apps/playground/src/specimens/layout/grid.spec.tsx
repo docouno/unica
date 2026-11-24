@@ -1,7 +1,15 @@
-import { Container, Grid, GridItem } from '@docouno/unica';
+import { Box, Card, Container, Grid, GridItem, Text } from '@docouno/unica';
+import type { PreviewProps } from '../../workbench/types.js';
 import { defineComponent } from '../../workbench/types.js';
+import { withOverlaySurface } from '../shared/with-overlay-surface.js';
 import { LayoutExample } from './layout.examples.js';
-import { choiceProp, spacingOptions, trackOptions, viewportNote } from './layout.options.js';
+import {
+  choiceProp,
+  responsiveTracksType,
+  spacingValues,
+  trackOptions,
+  viewportNote,
+} from './layout.options.js';
 
 const columnOptions = {
   ...trackOptions,
@@ -14,12 +22,75 @@ const areaOptions = {
   'Workspace map': ['nav body body', 'nav footer .'],
 } as const;
 
-const flowOptions = { row: 'row', column: 'column' } as const;
-const labels = [
-  { area: 'nav', text: 'Topics' },
-  { area: 'body', text: 'Release notes' },
-  { area: 'footer', text: 'History' },
+const markers = [
+  { area: 'nav', label: 'A' },
+  { area: 'body', label: 'B' },
+  { area: 'footer', label: 'C' },
 ] as const;
+
+function LabeledCell({ children, area }: { children: string; area?: string }) {
+  return (
+    <GridItem area={area} className="layout-cell">
+      <Text as="span" size="body-s">
+        {children}
+      </Text>
+    </GridItem>
+  );
+}
+
+function NestedGrid({ ctx }: PreviewProps) {
+  return (
+    <LayoutExample>
+      <Grid {...ctx.subject} columns={{ tablet: 2, wide: 4 }} gap={8}>
+        <LabeledCell>Topics</LabeledCell>
+        <Grid gap={4} className="layout-outline">
+          <LabeledCell>Notes</LabeledCell>
+          <LabeledCell>History</LabeledCell>
+        </Grid>
+        <LabeledCell>People</LabeledCell>
+        <LabeledCell>Settings</LabeledCell>
+      </Grid>
+    </LayoutExample>
+  );
+}
+
+function WorkspaceMap({ ctx }: PreviewProps) {
+  return (
+    <LayoutExample>
+      <Grid {...ctx.subject} gap={8} areas={areaOptions['Workspace map']}>
+        <LabeledCell area="nav">Topics</LabeledCell>
+        <LabeledCell area="body">Notes</LabeledCell>
+        <LabeledCell area="footer">History</LabeledCell>
+        <LabeledCell>Index</LabeledCell>
+      </Grid>
+    </LayoutExample>
+  );
+}
+
+const queues = [
+  { label: 'Drafts', count: 12 },
+  { label: 'In review', count: 4 },
+  { label: 'Ready', count: 8 },
+];
+
+function ResponsiveOverview({ ctx }: PreviewProps) {
+  return (
+    <Container size="l">
+      <Grid {...ctx.subject} columns={{ mobile: 1, tablet: 2, desktop: 3 }} gap={8}>
+        {queues.map(({ label, count }) => (
+          <GridItem key={label}>
+            <Card size="s">
+              <Text size="body-s" color="secondary">
+                {label}
+              </Text>
+              <Text weight="semibold">{count}</Text>
+            </Card>
+          </GridItem>
+        ))}
+      </Grid>
+    </Container>
+  );
+}
 
 export default defineComponent({
   id: 'grid',
@@ -31,14 +102,22 @@ export default defineComponent({
     columns: choiceProp(
       columnOptions,
       'Default',
-      '1–12 tracks. Use one or the map width by default.',
+      'One to twelve explicit columns. Omit the count to use the area map width, or one column without a map.',
+      responsiveTracksType,
     ),
-    gap: choiceProp(spacingOptions, 'Default', 'Space between tracks. Defaults to 0.'),
-    flow: choiceProp(flowOptions, 'row', 'Fill by row by default or switch to column.'),
+    gap: choiceProp(spacingValues, '0', 'Space between rows and columns.', 'Responsive<Spacing>'),
+    flow: {
+      kind: 'enum',
+      group: 'Geometry',
+      choices: [{ value: 'row' }, { value: 'column' }],
+      default: 'row',
+      description: 'Place unassigned items by row or by column.',
+    },
     areas: choiceProp(
       areaOptions,
       'None',
-      'A fixed map with one string per row and dots for empty cells.',
+      'Use one string per row. Named cells form rectangles and dots leave cells open for automatic placement.',
+      'readonly string[]',
     ),
   },
   constraints: [
@@ -51,50 +130,59 @@ export default defineComponent({
       reason: 'The workspace map has three tracks. Omit columns to infer the count, or use 3.',
     },
   ],
-  render: ({ ctx, values }) => (
-    <LayoutExample>
+  render: withOverlaySurface(({ ctx, values }) => (
+    <Box className="layout-example" style={{ overflowX: 'auto' }}>
       <Grid
         {...ctx.subject}
         columns={columnOptions[values.columns]}
-        gap={spacingOptions[values.gap]}
-        flow={values.flow === 'row' ? undefined : flowOptions[values.flow]}
+        gap={values.gap === '0' ? undefined : spacingValues[values.gap]}
+        flow={values.flow === 'row' ? undefined : values.flow}
         areas={areaOptions[values.areas]}
       >
-        {labels.map(({ area, text }) => (
+        {markers.map(({ area, label }) => (
           <GridItem
             key={area}
             area={values.areas === 'None' ? undefined : area}
-            className="layout-cell"
+            className="layout-outline"
           >
-            <span>{text}</span>
+            <Text size="body-s" align="center">
+              {label}
+            </Text>
           </GridItem>
         ))}
       </Grid>
-    </LayoutExample>
-  ),
+    </Box>
+  )),
   code: ({ areas }, attributes) => {
-    const items = labels
-      .map(({ area, text }) => {
-        const placement = areas === 'None' ? '' : ` area="${area}"`;
-        return `  <GridItem${placement}><span>${text}</span></GridItem>`;
-      })
-      .join('\n');
-    return `<Grid${attributes}>\n${items}\n</Grid>`;
+    const items = markers.map(({ area, label }) => {
+      const placement = areas === 'None' ? '' : ` area="${area}"`;
+      return `  <GridItem${placement}><Text size="body-s" align="center">${label}</Text></GridItem>`;
+    });
+    return `<Grid${attributes}>\n${items.join('\n')}\n</Grid>`;
   },
-  matrixViews: [
+  states: [
     {
       id: 'columns-gap',
-      title: 'Tracks and spacing',
+      title: 'Equal-width tracks',
+      caption:
+        'Compare the width of A, B, and C as the number of explicit columns grows. Unoccupied columns still take up space.',
       rows: 'columns',
-      cols: 'gap',
-      fixed: { areas: 'None' },
+      fixed: { gap: '0' },
+    },
+    {
+      id: 'gap',
+      title: 'Row and column gaps',
+      caption: 'The same gap separates A from B horizontally and A from C vertically.',
+      rows: 'gap',
+      fixed: { columns: '2' },
     },
     {
       id: 'areas-flow',
-      title: 'Named areas and placement',
-      rows: 'areas',
-      cols: 'flow',
-      fixed: { columns: 'Default', gap: '8' },
+      title: 'Automatic placement',
+      caption:
+        'With two explicit columns, row flow places C on a second row. Column flow creates an implicit third column for C.',
+      rows: 'flow',
+      fixed: { columns: '2', gap: '8' },
     },
   ],
   cases: [
@@ -104,79 +192,42 @@ export default defineComponent({
       kind: 'behavior',
       mode: 'live',
       caption:
-        'The outer grid moves from one to two to four columns at 768 and 1440 px. The inner grid keeps one column.',
-      render: ({ ctx }) => (
-        <LayoutExample>
-          <Grid {...ctx.subject} columns={{ tablet: 2, wide: 4 }} gap={8}>
-            <GridItem className="layout-cell">
-              <span>Topics</span>
-            </GridItem>
-            <div>
-              <Grid gap={4} className="layout-outline">
-                <GridItem className="layout-cell">
-                  <span>Notes</span>
-                </GridItem>
-                <GridItem className="layout-cell">
-                  <span>History</span>
-                </GridItem>
-              </Grid>
-            </div>
-            <GridItem className="layout-cell">
-              <span>People</span>
-            </GridItem>
-            <GridItem className="layout-cell">
-              <span>Settings</span>
-            </GridItem>
-          </Grid>
-        </LayoutExample>
-      ),
+        'The outer grid moves from one to two to four columns at viewport widths of 768 and 1440px. The inner grid keeps Notes and History in one column.',
+      render: withOverlaySurface(NestedGrid),
     },
     {
       id: 'workspace-map',
-      title: 'Named areas across rows and columns',
+      title: 'Named areas and an open cell',
       kind: 'behavior',
-      render: ({ ctx }) => (
-        <LayoutExample>
-          <Grid {...ctx.subject} gap={8} areas={areaOptions['Workspace map']}>
-            {labels.map(({ area, text }) => (
-              <GridItem key={area} area={area} className="layout-cell">
-                <span>{text}</span>
-              </GridItem>
-            ))}
-          </Grid>
-        </LayoutExample>
-      ),
+      mode: 'pinned',
+      caption:
+        'Topics spans two rows, and Notes spans two columns. The unassigned Index fills the open cell beside History.',
+      render: withOverlaySurface(WorkspaceMap),
     },
   ],
-  usage: [
+  compositions: [
     {
       id: 'overview',
-      title: 'Responsive overview',
-      render: ({ ctx }) => (
-        <LayoutExample>
-          <Container size="l">
-            <Grid {...ctx.subject} columns={{ mobile: 1, tablet: 2, desktop: 3 }} gap={8}>
-              <GridItem className="layout-cell">
-                <span>Overview</span>
-              </GridItem>
-              <GridItem className="layout-cell">
-                <span>Queue</span>
-              </GridItem>
-              <GridItem className="layout-cell">
-                <span>Exceptions</span>
-              </GridItem>
-            </Grid>
-          </Container>
-        </LayoutExample>
-      ),
+      title: 'Responsive queue overview',
+      mode: 'live',
+      caption:
+        'Queue totals stay in reading order as the overview switches from one column to two at 768px and three at 1024px.',
+      render: withOverlaySurface(ResponsiveOverview),
       code: `import '@docouno/unica/styles.css';
-import { Container, Grid, GridItem } from '@docouno/unica';
+import { Card, Container, Grid, GridItem, Text } from '@docouno/unica';
 
 <Container size="l">
   <Grid columns={{ mobile: 1, tablet: 2, desktop: 3 }} gap={8}>
-    <GridItem><span>Overview</span></GridItem>
-    <GridItem><span>Queue</span></GridItem>
-    <GridItem><span>Exceptions</span></GridItem>
+${queues
+  .map(
+    ({ label, count }) => `    <GridItem>
+      <Card size="s">
+        <Text size="body-s" color="secondary">${label}</Text>
+        <Text weight="semibold">${count}</Text>
+      </Card>
+    </GridItem>`,
+  )
+  .join('\n')}
   </Grid>
 </Container>`,
     },

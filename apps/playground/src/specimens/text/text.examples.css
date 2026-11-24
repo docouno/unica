@@ -1,0 +1,26 @@
+.text-example-palette {
+  flex: 1 1 16rem;
+  min-inline-size: 0;
+}
+
+.text-example-colors,
+.text-example-colors dd {
+  margin: 0;
+}
+
+.text-example-colors {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.text-example-colors > div {
+  display: grid;
+  grid-template-columns: minmax(0, 6em) minmax(0, 1fr);
+  align-items: baseline;
+  gap: var(--space-8);
+}
+
+.text-example-measure {
+  inline-size: min(100%, 24rem);
+  min-inline-size: 0;
+}

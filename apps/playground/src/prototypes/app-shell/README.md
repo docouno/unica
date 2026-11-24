@@ -1,6 +1,8 @@
 # AppShell and workspace navigation design reference
 
-Open the [Workbench](../../../../../docs/workbench.md#inspect-components-and-scenes) at `/?item=app-shell`. Matrix shows rail combinations and compact panel entry points. Cases cover live document navigation, responsive panels, settings and save behavior. Open `/?item=app-shell&tab=cases&block=responsive&family=all&scheme=both&vp=1280` to try all four combinations of dock visibility across the six presets. Set the frame to 360px to try the native touch targets and sheets. Usage shows five shell topologies. The [Folio scenes](../../../../../docs/compositions/folio.md#explore-the-live-compositions) exercise the same shell across a document workspace, editor, settings and administration.
+Open the [Workbench](../../../../../docs/workbench.md#inspect-components-and-scenes) at `/?item=app-shell`. States compares rail combinations and compact panel entry points. The live cases cover document navigation, responsive panels, settings and saves. Open `/?item=app-shell&tab=states&block=responsive&family=all&scheme=both&vp=1280` to try dock visibility across all six presets. At 360px, open each sheet from its labeled button. Compositions shows five workspace topologies with the same canvas content. The [Folio scenes](../../../../../docs/compositions/folio.md#explore-the-live-compositions) use the shell in a document workspace, editor, settings and administration.
+
+The Playground and composition snippets use module paths relative to `apps/playground/src/`. The Documents and Properties choices also import the sample navigation and inspector used in the live example.
 
 ## Workspace frame
 

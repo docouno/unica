@@ -330,9 +330,12 @@ it('configures the 4-tab Workbench architecture and resolves Markdown docs for e
       expect(snippet).toContain("import { Tooltip } from '@docouno/unica'");
       expect(snippet).not.toMatch(/import\s+\{[^}]*CopyIcon[^}]*\}/);
     } else if (component.id === 'stack') {
-      expect(snippet).toContain("import { Stack } from '@docouno/unica'");
+      expect(snippet).toMatch(/import\s+\{[^}]*\bStack\b[^}]*\}\s+from\s+'@docouno\/unica'/);
+      expect(snippet).toMatch(/import\s+\{[^}]*\bText\b[^}]*\}\s+from\s+'@docouno\/unica'/);
+      expect(snippet).toContain("import { Fragment } from 'react'");
       expect(snippet).not.toMatch(/import\s+\{[^}]*Fragment[^}]*\}\s+from\s+'@docouno\/unica'/);
     } else if (component.id === 'scrollbar') {
+      expect(snippet).toContain("import '@docouno/unica/styles.css'");
       expect(snippet).not.toContain("from '@docouno/unica'");
     }
     unmount();

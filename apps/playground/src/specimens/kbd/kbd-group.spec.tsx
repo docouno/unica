@@ -1,10 +1,17 @@
 import { Kbd, KbdGroup } from '@docouno/unica';
-import { useEffect, useRef, useState } from 'react';
 import type { ReactElement } from 'react';
+import { ExampleSurface } from '../shared/example-surface.js';
 import { defineComponent } from '../../workbench/types.js';
 import type { Values } from '../../workbench/types.js';
 import { previewProps, previewText } from '../preview-code.js';
-import './kbd.examples.css';
+import {
+  GroupSizeExample,
+  SequenceExample,
+  VisibleStepsExample,
+  sequenceCode,
+} from './kbd-group.examples.js';
+
+import { KeyboardViewport } from './kbd.viewport.js';
 
 type Step = string | readonly string[];
 
@@ -33,40 +40,7 @@ function stepCode(step: Step): string {
 
 function groupCode(steps: readonly Step[], props: Values): string {
   const attrs = previewProps(props, { size: 'inherit', separator: '+' });
-  return `<KbdGroup${attrs}>\n${steps.map((step) => `  ${stepCode(step)}`).join('\n')}\n</KbdGroup>`;
-}
-
-function GroupPreview({ children }: { readonly children: ReactElement }): ReactElement {
-  const ref = useRef<HTMLDivElement>(null);
-  const [overflowing, setOverflowing] = useState(false);
-
-  useEffect(() => {
-    const scroll = ref.current;
-    const group = scroll?.firstElementChild;
-    if (!scroll || !group) {
-      return;
-    }
-
-    const observer = new ResizeObserver(() => {
-      setOverflowing(scroll.scrollWidth > scroll.clientWidth);
-    });
-    observer.observe(scroll);
-    observer.observe(group);
-    return () => observer.disconnect();
-  }, []);
-
-  return (
-    <div
-      ref={ref}
-      className="kbd-group-preview unica-scrollbar"
-      dir="ltr"
-      role={overflowing ? 'region' : undefined}
-      aria-label={overflowing ? 'Shortcut preview' : undefined}
-      tabIndex={overflowing ? 0 : undefined}
-    >
-      {children}
-    </div>
-  );
+  return `import { Kbd, KbdGroup } from '@docouno/unica';\n\n<KbdGroup${attrs}>\n${steps.map((step) => `  ${stepCode(step)}`).join('\n')}\n</KbdGroup>`;
 }
 
 export default defineComponent({
@@ -79,16 +53,19 @@ export default defineComponent({
   props: {
     size: {
       kind: 'enum',
-      group: 'Appearance',
+      group: 'Geometry',
       default: 'inherit',
-      description: 'Default size for keys and nested groups.',
+      description:
+        'Set the default size of keys and nested groups. An explicit child size overrides it.',
       choices: [{ value: 'inherit' }, { value: 's' }, { value: 'm' }, { value: 'l' }],
     },
     children: {
       kind: 'slot',
       group: 'Content',
       default: 'chord',
-      description: 'Keys or nested chords to group.',
+      publicType: 'ReactNode',
+      description:
+        'Keys or nested chords in source order. The editor starts with a two-key example. The component supplies no keys.',
       choices: [
         { value: 'single', label: 'Single key' },
         { value: 'chord', label: 'Two keys' },
@@ -99,7 +76,9 @@ export default defineComponent({
       kind: 'string',
       group: 'Content',
       default: '+',
-      description: 'Text placed between steps. Leave empty for a compact chord.',
+      publicType: 'string',
+      description:
+        'Visible and spoken text between steps. An empty separator leaves a visual gap and supplies a spoken “plus”.',
       examples: ['+', '', 'then'],
     },
   },
@@ -112,40 +91,59 @@ export default defineComponent({
     },
   ],
   render: ({ ctx, values: { children, ...props } }) => (
-    <GroupPreview>
-      <KbdGroup {...ctx.subject} {...props}>
-        {examples[children].map(renderStep)}
-      </KbdGroup>
-    </GroupPreview>
+    <ExampleSurface surface={ctx.surface}>
+      <KeyboardViewport label="Shortcut preview">
+        <KbdGroup {...ctx.subject} {...props}>
+          {examples[children].map(renderStep)}
+        </KbdGroup>
+      </KeyboardViewport>
+    </ExampleSurface>
   ),
   code: ({ children, ...props }) => groupCode(examples[children], props),
-  matrixViews: [
+  states: [
     {
       id: 'notation',
-      title: 'Composition & separators',
+      title: 'Steps and separators',
       rows: 'children',
       cols: 'separator',
+      fixed: { size: 's' },
+      caption:
+        'An empty separator keeps a gap and reads “plus”. For a sequence, “then” joins the two chords and each inner chord keeps its plus sign.',
     },
   ],
   cases: [
     {
       id: 'size-override',
-      title: 'An explicit child size overrides the group',
+      title: 'An explicit child size',
       kind: 'behavior',
-      render: () => (
-        <KbdGroup size="m">
-          <Kbd>Ctrl</Kbd>
-          <Kbd size="s">K</Kbd>
-        </KbdGroup>
-      ),
+      mode: 'pinned',
+      caption:
+        'Both groups use medium keys. Setting a small size on the final key changes only that key.',
+      render: GroupSizeExample,
+    },
+    {
+      id: 'visible-steps',
+      title: 'Optional keys',
+      kind: 'behavior',
+      mode: 'live',
+      caption:
+        'Hide the modifier or leave out the final key. Separators appear only between visible steps.',
+      controls: {
+        showShift: { kind: 'boolean', default: true, label: 'Show Shift' },
+        showEnter: { kind: 'boolean', default: true, label: 'Show Enter' },
+      },
+      reset: true,
+      render: VisibleStepsExample,
     },
   ],
-  usage: [
+  compositions: [
     {
       id: 'sequence',
-      title: 'A sequence of two chords',
-      code: groupCode(examples.sequence, { separator: 'then' }),
-      render: () => <KbdGroup separator="then">{examples.sequence.map(renderStep)}</KbdGroup>,
+      title: 'A command in a shortcut reference',
+      mode: 'pinned',
+      caption: 'Read each chord as a unit. Release the first chord before pressing the second.',
+      code: sequenceCode,
+      render: SequenceExample,
     },
   ],
 });

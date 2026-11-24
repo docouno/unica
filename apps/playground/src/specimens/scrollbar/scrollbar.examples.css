@@ -1,42 +1,12 @@
 .scrollbar-demo-stack {
   display: grid;
-  justify-items: center;
-  inline-size: 100%;
+  inline-size: min(100%, 28rem);
   min-inline-size: 0;
   gap: var(--space-16);
-  padding: var(--space-8);
-}
-
-.scrollbar-demo-card {
-  inline-size: min(100%, 28rem);
 }
 
 .scrollbar-demo-overlay {
   max-block-size: min(352px, var(--overlay-available-height, 352px));
-}
-
-.scrollbar-demo-note {
-  inline-size: min(100%, 28rem);
-  padding: var(--space-8) var(--space-12);
-  background: var(--bg-canvas);
-  border-radius: var(--radius-xs);
-}
-
-.scrollbar-demo-switch {
-  display: flex;
-  align-items: center;
-  gap: var(--space-8);
-  font-family: var(--font-family-base);
-  font-size: var(--text-size-body-s);
-  color: var(--fg-primary);
-}
-
-.scrollbar-demo-switch input {
-  accent-color: var(--accent-solid);
-}
-
-.scrollbar-demo-stack > .code-block-frame-proto {
-  inline-size: 100%;
 }
 
 .scrollbar-demo-code {
@@ -44,7 +14,6 @@
 }
 
 .scrollbar-demo-body:focus-visible,
-.scrollbar-demo-switch input:focus-visible,
 .scrollbar-demo-stack .code-block-proto:focus-visible {
   outline: 2px solid var(--focus-ring-color);
   outline-offset: -2px;

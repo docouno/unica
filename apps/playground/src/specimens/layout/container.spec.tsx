@@ -1,6 +1,7 @@
-import { Container } from '@docouno/unica';
+import { Container, Stack, Text, Title } from '@docouno/unica';
 import { defineComponent } from '../../workbench/types.js';
-import { choiceProp, spacingOptions, viewportNote } from './layout.options.js';
+import { withOverlaySurface } from '../shared/with-overlay-surface.js';
+import { choiceProp, spacingValues, viewportNote } from './layout.options.js';
 import './layout.examples.css';
 
 const sizeOptions = {
@@ -10,15 +11,6 @@ const sizeOptions = {
   'Mobile s · Desktop m · Wide l': { mobile: 's', desktop: 'm', wide: 'l' },
 } as const;
 
-function DocumentSummary() {
-  return (
-    <section>
-      <h2>Release notes</h2>
-      <p>Review changes to the publishing workflow.</p>
-    </section>
-  );
-}
-
 export default defineComponent({
   id: 'container',
   title: 'Container',
@@ -26,31 +18,43 @@ export default defineComponent({
   status: 'UI',
   summary: 'A fluid content column with a maximum width and logical gutters. ' + viewportNote,
   props: {
-    size: choiceProp(sizeOptions, 'm', 'Widths for s, m, and l are 720, 960, and 1280 px.'),
-    gutter: choiceProp(spacingOptions, 'Default', 'Inline padding. Defaults to 16.'),
+    size: choiceProp(
+      sizeOptions,
+      'm',
+      'Maximum widths are 720, 960 and 1280px for s, m and l.',
+      "Responsive<'s' | 'm' | 'l'>",
+    ),
+    gutter: choiceProp(
+      spacingValues,
+      '16',
+      'Space inside both inline edges of the column.',
+      'Responsive<Spacing>',
+    ),
     centered: {
       kind: 'boolean',
-      group: 'Layout',
+      group: 'Geometry',
       default: true,
       description: 'Center the column when space is available. False aligns it to inline start.',
     },
   },
-  render: ({ ctx, values }) => (
+  render: withOverlaySurface(({ ctx, values }) => (
     <div className="layout-example layout-container-frame">
       <Container
         {...ctx.subject}
         size={values.size === 'm' ? undefined : sizeOptions[values.size]}
-        gutter={spacingOptions[values.gutter]}
+        gutter={values.gutter === '16' ? undefined : spacingValues[values.gutter]}
         centered={values.centered}
       >
-        <span className="layout-demo-tile">Document content</span>
+        <Text as="span" size="body-s" className="layout-demo-tile">
+          Document content
+        </Text>
       </Container>
     </div>
-  ),
+  )),
   code: (_, attributes) => `<Container${attributes}>
-  <span>Document content</span>
+  <Text as="span" size="body-s">Document content</Text>
 </Container>`,
-  matrixViews: [
+  states: [
     {
       id: 'size-alignment',
       title: 'Centered widths',
@@ -71,56 +75,73 @@ export default defineComponent({
       id: 'rtl-alignment',
       title: 'Inline start in RTL',
       kind: 'behavior',
+      mode: 'pinned',
       caption:
-        'At widths above 720 px, the first container sits on the right and the second stays centered.',
-      render: ({ ctx }) => (
+        'Both columns fill a narrow frame. When more than 720px is available, the first stays against the right edge and the second has equal margins.',
+      render: withOverlaySurface(({ ctx }) => (
         <div className="layout-cases" dir="rtl">
           <div className="layout-example layout-container-frame">
             <Container {...ctx.subject} size="s" centered={false}>
-              <span className="layout-demo-tile">Inline start</span>
+              <Text as="span" size="body-s" className="layout-demo-tile">
+                Inline start
+              </Text>
             </Container>
           </div>
           <div className="layout-example layout-container-frame">
             <Container size="s" className="layout-outline">
-              <span className="layout-demo-tile">Centered</span>
+              <Text as="span" size="body-s" className="layout-demo-tile">
+                Centered
+              </Text>
             </Container>
           </div>
         </div>
-      ),
+      )),
     },
     {
       id: 'narrow-gutter',
       title: 'Fluid width with a fixed gutter',
       kind: 'content',
+      mode: 'pinned',
+      caption:
+        'The two 16px gutters fit inside the column, even when its frame narrows below 360px.',
       width: 360,
-      render: ({ ctx }) => (
+      render: withOverlaySurface(({ ctx }) => (
         <div className="layout-example layout-container-frame">
           <Container {...ctx.subject} size="l" gutter={16}>
-            <span className="layout-demo-tile">The gutter sits inside the column.</span>
+            <Text as="span" size="body-s" className="layout-demo-tile">
+              Document content
+            </Text>
           </Container>
         </div>
-      ),
+      )),
     },
   ],
-  usage: [
+  compositions: [
     {
       id: 'document',
       title: 'A bounded document column',
-      render: ({ ctx }) => (
+      mode: 'pinned',
+      caption:
+        'The reading column stops at 720px. Its inline gutter grows from 8px to 24px at the tablet viewport breakpoint.',
+      render: withOverlaySurface(({ ctx }) => (
         <div className="layout-example layout-container-frame">
           <Container {...ctx.subject} size="s" gutter={{ mobile: 8, tablet: 24 }}>
-            <DocumentSummary />
+            <Stack gap={8}>
+              <Title as="h3" size="heading-s">
+                Release notes
+              </Title>
+              <Text size="body-s">
+                <bdi>Review changes to the publishing workflow.</bdi>
+              </Text>
+            </Stack>
           </Container>
         </div>
-      ),
-      code: `import '@docouno/unica/styles.css';
-import { Container } from '@docouno/unica';
-
-<Container size="s" gutter={{ mobile: 8, tablet: 24 }}>
-  <section>
-    <h2>Release notes</h2>
-    <p>Review changes to the publishing workflow.</p>
-  </section>
+      )),
+      code: `<Container size="s" gutter={{ mobile: 8, tablet: 24 }}>
+  <Stack gap={8}>
+    <Title as="h3" size="heading-s">Release notes</Title>
+    <Text size="body-s"><bdi>Review changes to the publishing workflow.</bdi></Text>
+  </Stack>
 </Container>`,
     },
   ],

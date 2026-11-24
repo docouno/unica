@@ -29,26 +29,16 @@
   background: var(--bg-surface-raised);
 }
 
+.layout-demo-tile {
+  display: inline-block;
+}
+
 .layout-flow > span:nth-child(2) {
   font-size: var(--text-size-caption-l);
 }
 
 .layout-example p {
   margin: 0;
-}
-
-.layout-example hr {
-  align-self: stretch;
-  flex: none;
-  min-inline-size: 1px;
-  min-block-size: 1px;
-  margin: 0;
-  border: 0;
-  background: var(--border-default);
-}
-
-.layout-example input {
-  max-inline-size: 100%;
 }
 
 .layout-cell {
@@ -60,22 +50,15 @@
   block-size: 100%;
 }
 
-.layout-track-markers {
-  align-items: end;
-}
-
-.layout-track-markers > div {
-  min-block-size: 2rem;
-  background: var(--bg-surface-raised);
+.layout-track-markers > * {
+  block-size: var(--space-8);
+  border: 1px solid var(--border-default);
+  border-block-start: 0;
 }
 
 .layout-container-frame {
   display: block;
   padding: 0;
-}
-
-.layout-container-frame section > * + * {
-  margin-block-start: var(--space-4);
 }
 
 .layout-container-frame .layout-demo-tile {

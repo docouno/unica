@@ -1,5 +1,5 @@
-import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
-import { useState } from 'react';
+import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
+import { useLayoutEffect, useState } from 'react';
 import type { ReactElement } from 'react';
 import { afterEach, expect, it, vi } from 'vitest';
 import { StoryFrame } from './StoryFrame.js';
@@ -166,6 +166,121 @@ it('resets frame controls when externalRevision advances, preserves state across
   expect(screen.getByRole('heading', { name: 'External sync' })).toBeTruthy();
   expect(screen.getByText('Still visible in raw capture.')).toBeTruthy();
   expect(screen.queryByRole('group', { name: 'External sync controls' })).toBeNull();
+});
+
+it('applies artboard writes to the toolbar and preserves state identity on repeated or invalid writes', () => {
+  const preview = vi.fn<(story: StoryContext) => null>().mockReturnValue(null);
+  render(
+    <StoryFrame
+      title="Import"
+      controls={{
+        busy: { kind: 'boolean', label: 'Busy', default: false },
+        mode: {
+          kind: 'enum',
+          label: 'Mode',
+          default: 'idle',
+          choices: ['idle', { value: 'done' }],
+        },
+        count: { kind: 'number', label: 'Count', default: 2, min: 0, max: 5 },
+      }}
+    >
+      {preview}
+    </StoryFrame>,
+  );
+
+  const currentStory = () => preview.mock.lastCall![0];
+  const { setControl } = currentStory();
+  act(() => {
+    setControl('busy', true);
+    setControl('mode', 'done');
+    setControl('count', -3);
+  });
+  expect(screen.getByRole<HTMLInputElement>('checkbox', { name: 'Busy' }).checked).toBe(true);
+  expect(screen.getByRole<HTMLSelectElement>('combobox', { name: 'Mode' }).value).toBe('done');
+  const count = screen.getByRole<HTMLInputElement>('spinbutton', { name: 'Count' });
+  expect(count.value).toBe('0');
+
+  const snapshot = currentStory();
+  act(() => {
+    for (let board = 0; board < 6; board++) {
+      setControl('mode', 'done');
+    }
+    setControl('busy', 'true');
+    setControl('mode', false);
+    setControl('mode', 'unknown');
+    setControl('count', '4');
+    setControl('count', Number.NaN);
+    setControl('count', Infinity);
+    setControl('missing', true);
+    setControl('constructor', 'inherited');
+  });
+  expect(currentStory()).toBe(snapshot);
+
+  fireEvent.change(count, { target: { value: '99' } });
+  expect(count.value).toBe('99');
+  expect(count.getAttribute('aria-invalid')).toBe('true');
+  const clamped = currentStory();
+  expect(clamped.controls.count).toBe(5);
+  act(() => setControl('count', 7));
+  expect(currentStory()).toBe(clamped);
+  expect(count.value).toBe('5');
+  expect(count.hasAttribute('aria-invalid')).toBe(false);
+});
+
+it('keeps a stable setter for inline schemas and validates against the latest choices', () => {
+  const preview = vi.fn<(story: StoryContext) => null>().mockReturnValue(null);
+  const frame = (choice: string) => (
+    <StoryFrame
+      title="Job"
+      controls={{
+        mode: { kind: 'enum', label: 'Mode', default: 'idle', choices: ['idle', choice] },
+      }}
+    >
+      {preview}
+    </StoryFrame>
+  );
+  const { rerender } = render(frame('running'));
+  const initial = preview.mock.lastCall![0];
+  rerender(frame('running'));
+  expect(preview.mock.lastCall![0]).toBe(initial);
+  rerender(frame('paused'));
+  expect(preview.mock.lastCall![0].setControl).toBe(initial.setControl);
+  const mode = screen.getByRole<HTMLSelectElement>('combobox', { name: 'Mode' });
+  act(() => initial.setControl('mode', 'paused'));
+  expect(mode.value).toBe('paused');
+  act(() => initial.setControl('mode', 'running'));
+  expect(mode.value).toBe('paused');
+});
+
+it('accepts a newly declared choice from a child layout effect in the same commit', () => {
+  function Preview({
+    choice,
+    setControl,
+  }: {
+    choice: string;
+    setControl: StoryContext['setControl'];
+  }) {
+    useLayoutEffect(() => {
+      setControl('mode', choice);
+    }, [choice, setControl]);
+    return null;
+  }
+
+  const frame = (choice: string) => (
+    <StoryFrame
+      title="Job"
+      controls={{
+        mode: { kind: 'enum', label: 'Mode', default: 'idle', choices: ['idle', choice] },
+      }}
+    >
+      {({ setControl }) => <Preview choice={choice} setControl={setControl} />}
+    </StoryFrame>
+  );
+  const { rerender } = render(frame('queued'));
+  const mode = screen.getByRole<HTMLSelectElement>('combobox', { name: 'Mode' });
+  expect(mode.value).toBe('queued');
+  rerender(frame('running'));
+  expect(mode.value).toBe('running');
 });
 
 it('supports the declarative component shortcut with auto-rendered subjects and idiomatic JSX', () => {

@@ -1,4 +1,4 @@
-import { Fragment, useCallback, useMemo, useState } from 'react';
+import { Fragment, useCallback, useInsertionEffect, useMemo, useRef, useState } from 'react';
 import type { ReactElement, ReactNode } from 'react';
 import { defaultStoryControls } from './storyFrameState.js';
 import type {
@@ -7,6 +7,7 @@ import type {
   StoryContext,
   StoryControlDefinition,
   StoryControlSchema,
+  StoryControlValue,
   StoryControlValues,
 } from './types.js';
 import './story-frame.css';
@@ -56,6 +57,18 @@ function controlsSignature(controls: StoryControlSchema | undefined): string {
   );
 }
 
+function useControlLookup(controls: StoryControlSchema | undefined) {
+  const controlsRef = useRef(controls);
+  // Publish the committed schema before a descendant layout effect writes a control.
+  useInsertionEffect(() => {
+    controlsRef.current = controls;
+  }, [controls]);
+  return useCallback((key: string): StoryControlDefinition | undefined => {
+    const schema = controlsRef.current;
+    return schema && Object.hasOwn(schema, key) ? schema[key] : undefined;
+  }, []);
+}
+
 export interface StoryFrameProps {
   readonly id?: string | undefined;
   readonly title: string;
@@ -100,6 +113,7 @@ export function StoryFrame({
     defaultStoryControls(controls),
   );
   const [numberDrafts, setNumberDrafts] = useState<Readonly<Record<string, string>>>({});
+  const getControl = useControlLookup(controls);
   const [localRevision, setLocalRevision] = useState(0);
   const [lastAction, setLastAction] = useState<StoryActionEvent | null>(null);
   const [seenExternalRevision, setSeenExternalRevision] = useState(externalRevision);
@@ -118,6 +132,53 @@ export function StoryFrame({
   }
 
   const effectiveRevision = localRevision + externalRevision;
+
+  const clearNumberDraft = useCallback((key: string): void => {
+    setNumberDrafts((previous) => {
+      if (!Object.hasOwn(previous, key)) {
+        return previous;
+      }
+      const next = { ...previous };
+      delete next[key];
+      return next;
+    });
+  }, []);
+
+  const setControl = useCallback(
+    (key: string, value: StoryControlValue): void => {
+      const control = getControl(key);
+      if (!control) {
+        return;
+      }
+      let next = value;
+      switch (control.kind) {
+        case 'boolean':
+          if (typeof value !== 'boolean') {
+            return;
+          }
+          break;
+        case 'enum':
+          if (
+            typeof value !== 'string' ||
+            !control.choices.some((choice) => normalizeChoice(choice).value === value)
+          ) {
+            return;
+          }
+          break;
+        case 'number':
+          if (typeof value !== 'number' || !Number.isFinite(value)) {
+            return;
+          }
+          next = clampNumber(value, control);
+          clearNumberDraft(key);
+          break;
+      }
+      setControlValues((previous) =>
+        previous[key] === next ? previous : { ...previous, [key]: next },
+      );
+    },
+    [clearNumberDraft, getControl],
+  );
 
   const onAction = useCallback(
     (listener: (actionId: string) => void): (() => void) => {
@@ -149,12 +210,13 @@ export function StoryFrame({
   const story = useMemo<StoryContext>(
     () => ({
       controls: controlValues,
+      setControl,
       revision: effectiveRevision,
       lastAction,
       onAction,
       reset: handleReset,
     }),
-    [controlValues, effectiveRevision, handleReset, lastAction, onAction],
+    [controlValues, effectiveRevision, handleReset, lastAction, onAction, setControl],
   );
 
   const controlEntries = controls ? Object.entries(controls) : [];
@@ -196,10 +258,7 @@ export function StoryFrame({
                         <input
                           type="checkbox"
                           checked={current === true}
-                          onChange={(event) => {
-                            const checked = event.currentTarget.checked;
-                            setControlValues((previous) => ({ ...previous, [key]: checked }));
-                          }}
+                          onChange={(event) => setControl(key, event.currentTarget.checked)}
                         />
                         <span className="wb-check-mark" aria-hidden="true" />
                       </span>
@@ -215,10 +274,7 @@ export function StoryFrame({
                       <select
                         className="wb-field wb-story-select"
                         value={String(current)}
-                        onChange={(event) => {
-                          const value = event.currentTarget.value;
-                          setControlValues((previous) => ({ ...previous, [key]: value }));
-                        }}
+                        onChange={(event) => setControl(key, event.currentTarget.value)}
                       >
                         {choices.map((choice) => (
                           <option key={choice.value} value={choice.value}>
@@ -259,16 +315,7 @@ export function StoryFrame({
                           setControlValues((previous) => ({ ...previous, [key]: parsed }));
                         }
                       }}
-                      onBlur={() => {
-                        setNumberDrafts((previous) => {
-                          if (!Object.hasOwn(previous, key)) {
-                            return previous;
-                          }
-                          const next = { ...previous };
-                          delete next[key];
-                          return next;
-                        });
-                      }}
+                      onBlur={() => clearNumberDraft(key)}
                     />
                   </label>
                 );

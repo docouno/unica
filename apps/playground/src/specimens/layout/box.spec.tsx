@@ -1,5 +1,6 @@
-import { Box } from '@docouno/unica';
+import { Box, Stack, Text, Title } from '@docouno/unica';
 import { defineComponent } from '../../workbench/types.js';
+import { withOverlaySurface } from '../shared/with-overlay-surface.js';
 import { LayoutExample } from './layout.examples.js';
 import { choiceProp, spacingOptions, viewportNote } from './layout.options.js';
 
@@ -25,17 +26,8 @@ const displayOptions = {
   'Tablet block': { tablet: 'block' },
 } as const;
 
-const spacing = (group: 'Padding' | 'Margin', description: string) =>
-  choiceProp(spacingOptions, 'Default', description, group);
-
-function ChecklistContents() {
-  return (
-    <>
-      <h1>Release checklist</h1>
-      <p>Review the checklist before publishing.</p>
-    </>
-  );
-}
+const spacing = (description: string) =>
+  choiceProp(spacingOptions, 'Default', description, 'Responsive<Spacing>');
 
 export default defineComponent({
   id: 'box',
@@ -46,39 +38,44 @@ export default defineComponent({
   props: {
     as: {
       kind: 'enum',
-      group: 'Element',
+      group: 'Host',
       default: 'div',
       choices: elements.map((value) => ({ value })),
       description: 'Native root element. The default is div.',
     },
-    display: choiceProp(displayOptions, 'Native', 'Display mode. Default follows the native tag.'),
     hidden: {
       kind: 'boolean',
-      group: 'Element',
+      group: 'Availability',
       default: false,
       description: 'Native boolean hidden attribute.',
     },
-    padding: spacing('Padding', 'Inside spacing on all sides.'),
-    paddingInline: spacing('Padding', 'Inside spacing on the inline axis.'),
-    paddingBlock: spacing('Padding', 'Inside spacing on the block axis.'),
-    paddingInlineStart: spacing('Padding', 'Inside spacing at inline start.'),
-    paddingInlineEnd: spacing('Padding', 'Inside spacing at inline end.'),
-    paddingBlockStart: spacing('Padding', 'Inside spacing at block start.'),
-    paddingBlockEnd: spacing('Padding', 'Inside spacing at block end.'),
-    margin: spacing('Margin', 'Outside spacing on all sides.'),
-    marginInline: spacing('Margin', 'Outside spacing on the inline axis.'),
-    marginBlock: spacing('Margin', 'Outside spacing on the block axis.'),
-    marginInlineStart: spacing('Margin', 'Outside spacing at inline start.'),
-    marginInlineEnd: spacing('Margin', 'Outside spacing at inline end.'),
-    marginBlockStart: spacing('Margin', 'Outside spacing at block start.'),
-    marginBlockEnd: spacing('Margin', 'Outside spacing at block end.'),
+    display: choiceProp(
+      displayOptions,
+      'Native',
+      'Display mode. Omit it to follow the native tag.',
+      "Responsive<'block' | 'inline' | 'inline-block' | 'flow-root' | 'none'>",
+    ),
+    padding: spacing('Inside spacing on all sides.'),
+    paddingInline: spacing('Inside spacing on the inline axis.'),
+    paddingBlock: spacing('Inside spacing on the block axis.'),
+    paddingInlineStart: spacing('Inside spacing at inline start.'),
+    paddingInlineEnd: spacing('Inside spacing at inline end.'),
+    paddingBlockStart: spacing('Inside spacing at block start.'),
+    paddingBlockEnd: spacing('Inside spacing at block end.'),
+    margin: spacing('Outside spacing on all sides.'),
+    marginInline: spacing('Outside spacing on the inline axis.'),
+    marginBlock: spacing('Outside spacing on the block axis.'),
+    marginInlineStart: spacing('Outside spacing at inline start.'),
+    marginInlineEnd: spacing('Outside spacing at inline end.'),
+    marginBlockStart: spacing('Outside spacing at block start.'),
+    marginBlockEnd: spacing('Outside spacing at block end.'),
   },
   constraints: [
     {
       kind: 'forbidden',
       when: { as: 'main' },
       affects: ['as'],
-      reason: 'The Workbench already has a main landmark. See Usage for a standalone page.',
+      reason: 'The Workbench already has a main landmark. See the standalone page in Compositions.',
     },
     {
       kind: 'ignored',
@@ -93,7 +90,7 @@ export default defineComponent({
       reason: 'Inline-start padding takes priority over the inline axis at that edge.',
     },
   ],
-  render: ({ ctx, values }) => (
+  render: withOverlaySurface(({ ctx, values }) => (
     <LayoutExample>
       <div>
         Start{' '}
@@ -117,72 +114,110 @@ export default defineComponent({
           marginBlockStart={spacingOptions[values.marginBlockStart]}
           marginBlockEnd={spacingOptions[values.marginBlockEnd]}
         >
-          <span className="layout-demo-tile">Box content</span>
+          <Text as="span" size="body-s" className="layout-demo-tile">
+            Content
+          </Text>
         </Box>{' '}
         End
       </div>
     </LayoutExample>
-  ),
+  )),
   code: (_, attributes) => `<div>
   Start{' '}
-  <Box${attributes}><span>Box content</span></Box>{' '}
+  <Box${attributes}><Text as="span" size="body-s">Content</Text></Box>{' '}
   End
 </div>`,
-  matrixViews: [
+  states: [
     {
       id: 'display',
-      title: 'Inline flow and logical padding',
+      title: 'Display in text flow',
+      caption:
+        'An inline span shares a line with Start and End. Tablet block moves it onto its own line at a viewport width of 768px.',
       rows: 'display',
-      cols: 'paddingInline',
+      fixed: { as: 'span', paddingInline: '8' },
+    },
+    {
+      id: 'inline-padding',
+      title: 'Inline padding',
+      caption:
+        'The border of the content tile stays the same size as the space inside the box grows.',
+      rows: 'paddingInline',
+      fixed: { display: 'inline-block' },
     },
   ],
   cases: [
     {
       id: 'logical-spacing',
       title: 'Side, axis, and general spacing',
-      kind: 'behavior',
+      kind: 'content',
+      mode: 'pinned',
       caption: 'Block padding stays at 16. Inline padding uses 8 except for 0 at inline start.',
-      render: ({ ctx }) => (
+      render: withOverlaySurface(({ ctx }) => (
         <LayoutExample>
           <Box {...ctx.subject} padding={16} paddingInline={8} paddingInlineStart={0}>
             <Box className="layout-outline">Nested Box</Box>
           </Box>
         </LayoutExample>
-      ),
+      )),
     },
   ],
-  usage: [
+  compositions: [
     {
       id: 'checklist',
       title: 'Checklist section',
-      render: ({ ctx }) => (
-        <Box {...ctx.subject} as="section" padding={24}>
-          <ChecklistContents />
+      mode: 'pinned',
+      caption: 'One padding value gives the heading and its instructions the same inset.',
+      render: withOverlaySurface(({ ctx }) => (
+        <Box {...ctx.subject} as="section" padding={24} aria-labelledby={ctx.id}>
+          <Stack gap={8}>
+            <Title id={ctx.id} as="h3" size="heading-s">
+              Release checklist
+            </Title>
+            <Text size="body-s">
+              <bdi>Review the changes and confirm a release date.</bdi>
+            </Text>
+          </Stack>
         </Box>
-      ),
-      code: `import '@docouno/unica/styles.css';
-import { Box } from '@docouno/unica';
-
-<Box as="section" padding={24}>
-  <h1>Release checklist</h1>
-  <p>Review the checklist before publishing.</p>
+      )),
+      code: `<Box as="section" padding={24} aria-labelledby="release-checklist">
+  <Stack gap={8}>
+    <Title id="release-checklist" as="h3" size="heading-s">Release checklist</Title>
+    <Text size="body-s"><bdi>Review the changes and confirm a release date.</bdi></Text>
+  </Stack>
 </Box>`,
     },
     {
       id: 'standalone-page',
       title: 'Standalone page landmark',
-      caption: 'This example uses a section in Workbench. Use main at the page root.',
-      render: ({ ctx }) => (
-        <Box {...ctx.subject} as="section" padding={24}>
-          <ChecklistContents />
+      mode: 'pinned',
+      caption:
+        'Use main for the page root. The preview uses a named section inside the existing main landmark.',
+      render: withOverlaySurface(({ ctx }) => (
+        <Box
+          {...ctx.subject}
+          as="section"
+          padding={{ mobile: 16, desktop: 32 }}
+          aria-labelledby={ctx.id}
+        >
+          <Stack gap={8}>
+            <Text size="caption-l" color="muted">
+              Release notes
+            </Text>
+            <Title id={ctx.id} as="h2" size="heading-m">
+              What changed
+            </Title>
+            <Text size="body-s">
+              <bdi>A record of changes in each release.</bdi>
+            </Text>
+          </Stack>
         </Box>
-      ),
-      code: `import '@docouno/unica/styles.css';
-import { Box } from '@docouno/unica';
-
-<Box as="main" padding={24}>
-  <h1>Release checklist</h1>
-  <p>Review the checklist before publishing.</p>
+      )),
+      code: `<Box as="main" padding={{ mobile: 16, desktop: 32 }} aria-labelledby="release-title">
+  <Stack gap={8}>
+    <Text size="caption-l" color="muted">Release notes</Text>
+    <Title id="release-title" as="h1" size="heading-m">What changed</Title>
+    <Text size="body-s"><bdi>A record of changes in each release.</bdi></Text>
+  </Stack>
 </Box>`,
     },
   ],

@@ -27,6 +27,8 @@ interface PropMetadata {
   readonly group: string;
   readonly description: string;
   readonly label?: string;
+  /** Type shown in Usage when the control's choices represent a richer public value. */
+  readonly publicType?: string;
   /** A setting of the demonstration, omitted from the default component JSX. */
   readonly demo?: true;
 }
@@ -132,6 +134,7 @@ export interface StoryActionEvent {
 
 export interface StoryContext {
   readonly controls: StoryControlValues;
+  readonly setControl: (key: string, value: StoryControlValue) => void;
   readonly revision: number;
   readonly lastAction: StoryActionEvent | null;
   readonly onAction: (listener: (actionId: string) => void) => () => void;

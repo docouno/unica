@@ -1,31 +1,16 @@
-.code-example-stack {
-  display: grid;
-  gap: var(--space-24);
-  min-inline-size: 0;
-}
-.code-example-compact {
-  gap: var(--space-12);
-}
-.code-example-measure {
+.code-example-prose {
   max-inline-size: 34rem;
 }
+
+.code-example-overlay {
+  display: grid;
+  inline-size: 100%;
+  justify-items: center;
+}
+
 .code-example-panel {
   position: relative;
-  display: grid;
-  gap: var(--surface-l-gap);
   inline-size: min(100%, 28rem);
   min-inline-size: 0;
   padding: var(--surface-l-padding);
-}
-.code-example-row {
-  display: grid;
-  grid-template-columns: 2rem minmax(0, 1fr);
-  align-items: baseline;
-  gap: var(--space-16);
-}
-.code-example-actions {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--space-12);
 }

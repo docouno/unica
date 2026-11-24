@@ -1,22 +1,30 @@
-import { Flex } from '@docouno/unica';
+import { Flex, Text } from '@docouno/unica';
 import { defineComponent } from '../../workbench/types.js';
+import { withOverlaySurface } from '../shared/with-overlay-surface.js';
+import { RecordActions, ReversedFocusOrder, recordActionsCode } from './flex.examples.js';
 import { LayoutExample } from './layout.examples.js';
 import {
   alignOptions,
   choiceProp,
   directionOptions,
-  spacingOptions,
+  spacingValues,
   viewportNote,
 } from './layout.options.js';
 
-const flowItemsCode = `<span>Draft</span>\n  <span>In review</span>\n  <span>Ready</span>`;
+const flowItemsCode = `<Text as="span" size="body-s">Draft</Text>\n  <Text as="span" size="caption-l">In review</Text>\n  <Text as="span" size="body-s">Ready</Text>`;
 
 function FlowItems() {
   return (
     <>
-      <span>Draft</span>
-      <span>In review</span>
-      <span>Ready</span>
+      <Text as="span" size="body-s">
+        Draft
+      </Text>
+      <Text as="span" size="caption-l">
+        In review
+      </Text>
+      <Text as="span" size="body-s">
+        Ready
+      </Text>
     </>
   );
 }
@@ -45,13 +53,33 @@ export default defineComponent({
   status: 'UI',
   summary: 'Arrange children along one axis with wrapping and alignment. ' + viewportNote,
   props: {
-    direction: choiceProp(directionOptions, 'row', 'Main axis and visual direction.'),
-    wrap: choiceProp(wrapOptions, 'nowrap', 'Allow items to start a new flex line.'),
-    justify: choiceProp(justifyOptions, 'start', 'Distribute space along the main axis.'),
-    align: choiceProp(alignOptions, 'stretch', 'Align the items along the cross axis.'),
-    gap: choiceProp(spacingOptions, 'Default', 'Space between items and lines. Defaults to 0.'),
+    direction: choiceProp(
+      directionOptions,
+      'row',
+      'Main axis and visual direction.',
+      "Responsive<'row' | 'row-reverse' | 'column' | 'column-reverse'>",
+    ),
+    wrap: choiceProp(
+      wrapOptions,
+      'nowrap',
+      'Allow items to start a new flex line.',
+      "Responsive<'nowrap' | 'wrap' | 'wrap-reverse'>",
+    ),
+    justify: choiceProp(
+      justifyOptions,
+      'start',
+      'Distribute space along the main axis.',
+      "Responsive<'start' | 'center' | 'end' | 'space-between' | 'space-around' | 'space-evenly'>",
+    ),
+    align: choiceProp(
+      alignOptions,
+      'stretch',
+      'Align items along the cross axis.',
+      "Responsive<'start' | 'center' | 'end' | 'stretch' | 'baseline'>",
+    ),
+    gap: choiceProp(spacingValues, '0', 'Space between items and lines.', 'Responsive<Spacing>'),
   },
-  render: ({ ctx, values }) => (
+  render: withOverlaySurface(({ ctx, values }) => (
     <LayoutExample>
       <Flex
         {...ctx.subject}
@@ -61,43 +89,55 @@ export default defineComponent({
         wrap={values.wrap === 'nowrap' ? undefined : wrapOptions[values.wrap]}
         justify={values.justify === 'start' ? undefined : justifyOptions[values.justify]}
         align={values.align === 'stretch' ? undefined : alignOptions[values.align]}
-        gap={spacingOptions[values.gap]}
+        gap={values.gap === '0' ? undefined : spacingValues[values.gap]}
       >
         <FlowItems />
       </Flex>
     </LayoutExample>
-  ),
+  )),
   code: (_, attributes) => `<Flex${attributes} style={{ minBlockSize: '6rem' }}>
   ${flowItemsCode}
 </Flex>`,
-  matrixViews: [
+  states: [
     {
       id: 'direction-gap',
-      title: 'Main axis and spacing',
+      title: 'Main axis and reading direction',
+      caption:
+        'Reversing the axis changes visual order. The three labels keep their order in the document.',
       rows: 'direction',
-      cols: 'gap',
+      fixed: { gap: '8' },
     },
     {
       id: 'alignment',
-      title: 'Main-axis and cross-axis alignment',
+      title: 'Distribution along the main axis',
       rows: 'justify',
-      cols: 'align',
-      fixed: { gap: '8' },
+      fixed: { align: 'center', gap: '8' },
+    },
+    {
+      id: 'cross-axis',
+      title: 'Alignment across the row',
+      caption:
+        'Different text sizes make baseline alignment visible. The outlines show how much height each item occupies.',
+      rows: 'align',
+      fixed: { justify: 'center', gap: '8' },
     },
   ],
   cases: [
     {
       id: 'wrap',
       title: 'A narrow row wraps',
-      kind: 'behavior',
+      kind: 'content',
+      mode: 'pinned',
+      caption:
+        'Items move to the next line as soon as their widths and the 16px gap exceed the row.',
       width: 168,
-      render: ({ ctx }) => (
+      render: withOverlaySurface(({ ctx }) => (
         <LayoutExample>
           <Flex {...ctx.subject} gap={16} wrap="wrap" className="layout-flow">
             <FlowItems />
           </Flex>
         </LayoutExample>
-      ),
+      )),
     },
     {
       id: 'source-order',
@@ -105,34 +145,19 @@ export default defineComponent({
       kind: 'behavior',
       mode: 'live',
       caption: 'Tab reaches Draft, In review, and Ready in that order.',
-      render: ({ ctx }) => (
-        <LayoutExample>
-          <Flex {...ctx.subject} direction="row-reverse" gap={8} wrap="wrap">
-            <button type="button">Draft</button>
-            <button type="button">In review</button>
-            <button type="button">Ready</button>
-          </Flex>
-        </LayoutExample>
-      ),
+      reset: true,
+      render: withOverlaySurface(ReversedFocusOrder),
     },
   ],
-  usage: [
+  compositions: [
     {
       id: 'record-controls',
       title: 'Wrapping record actions',
-      render: ({ ctx }) => (
-        <Flex {...ctx.subject} align="center" gap={8} wrap="wrap">
-          <button type="button">Open record</button>
-          <button type="button">Download</button>
-        </Flex>
-      ),
-      code: `import '@docouno/unica/styles.css';
-import { Flex } from '@docouno/unica';
-
-<Flex align="center" gap={8} wrap="wrap">
-  <button type="button">Open record</button>
-  <button type="button">Download</button>
-</Flex>`,
+      mode: 'live',
+      caption:
+        'Open the record or download the same text. When the actions wrap, Download follows Open record.',
+      render: withOverlaySurface(RecordActions),
+      code: recordActionsCode,
     },
   ],
 });

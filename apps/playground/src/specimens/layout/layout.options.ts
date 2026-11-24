@@ -7,20 +7,20 @@ export function choiceProp<const Options extends Readonly<Record<string, unknown
   options: Options,
   initial: keyof Options & string,
   description: string,
-  group = 'Layout',
+  publicType: string,
 ) {
   const keys = Object.keys(options) as (keyof Options & string)[];
   return {
     kind: 'slot' as const,
-    group,
+    group: 'Geometry',
+    publicType,
     default: initial,
     description,
-    choices: keys.map((value) => ({ value, code: JSON.stringify(options[value]) })),
+    choices: keys.map((value) => ({ value, code: JSON.stringify(options[value]) ?? 'undefined' })),
   };
 }
 
-export const spacingOptions = {
-  Default: undefined,
+export const spacingValues = {
   '0': 0,
   '2': 2,
   '4': 4,
@@ -33,6 +33,8 @@ export const spacingOptions = {
   '64': 64,
   'Tablet 16 · Wide 24': { tablet: 16, wide: 24 },
 } as const satisfies { [Step in Spacing]: Step } & Record<string, unknown>;
+
+export const spacingOptions = { Default: undefined, ...spacingValues } as const;
 
 export const directionOptions = {
   row: 'row',
@@ -65,3 +67,5 @@ export const trackOptions = {
   '11': 11,
   '12': 12,
 } as const;
+
+export const responsiveTracksType = 'Responsive<1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12>';

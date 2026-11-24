@@ -1,0 +1,15 @@
+.example-surface {
+  inline-size: 100%;
+  min-inline-size: 0;
+}
+
+.example-surface[data-surface='overlay'] {
+  position: relative;
+  padding: var(--surface-s-padding);
+}
+
+/* Keep the demonstrated layout's full width; the stage gutter holds its panel inset. */
+.example-surface[data-sizing='content-box'] {
+  box-sizing: content-box;
+  flex: none;
+}

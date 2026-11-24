@@ -44,6 +44,7 @@ export default {
       const parent = node.parentElement.getBoundingClientRect();
       const style = getComputedStyle(node);
       return {
+        tag: node.localName,
         left: box.left - parent.left,
         right: parent.right - box.right,
         clips: node.scrollWidth > node.clientWidth,
@@ -53,6 +54,7 @@ export default {
         size: parseFloat(style.fontSize),
       };
     });
+    assert.equal(long.tag, 'span');
     assert.ok(long.left >= -1 && long.right >= -1, JSON.stringify(long));
     assert.equal(long.clips, true);
     assert.equal(long.direction, 'rtl');
@@ -65,10 +67,17 @@ export default {
     await tag.selectOption('label');
     await forField.selectOption('field');
     await subject.click();
-    await assertFocused(page.locator('.wb-artboard').getByRole('textbox', { name: 'Name' }));
-    const code = await page.getByRole('region', { name: 'JSX' }).textContent();
-    assert.match(code, /<Text[^>]*as=\{['"]label['"]\}[^>]*htmlFor="text-field"/);
-    assert.match(code, /<input id="text-field"/);
+    const field = page.locator('.wb-artboard').getByRole('textbox', { name: 'Name', exact: true });
+    await assertFocused(field);
+    assert.ok(await subject.evaluate((node) => node.control === document.activeElement));
+    const code = await page
+      .getByRole('region', { name: 'JSX' })
+      .locator('pre:not([data-wb-pending])')
+      .innerText();
+    assert.match(code, /\bconst fieldId = useId\(\)/);
+    assert.match(code, /<Text\b[^>]*\bas=(?:\{['"]label['"]\}|['"]label['"])/);
+    assert.match(code, /<Text\b[^>]*\bhtmlFor=\{fieldId\}/);
+    assert.match(code, /<Input\b[^>]*\bid=\{fieldId\}/);
   },
 
   'Text settings usage links each artboard label to its own field': async ({ page, mount }) => {
@@ -86,9 +95,16 @@ export default {
     assert.equal(await labels.count(), 2);
     const ids = await labels.evaluateAll((items) => items.map((label) => label.htmlFor));
     assert.equal(new Set(ids).size, 2);
-    for (const board of await boards.all()) {
+    for (const [index, board] of (await boards.all()).entries()) {
+      const field = board.getByRole('textbox', { name: 'Display name', exact: true });
       await board.locator('label').filter({ hasText: 'Display name' }).click();
-      await assertFocused(board.getByRole('textbox', { name: 'Display name' }));
+      await assertFocused(field);
+      await field.fill('');
+      await board.getByText('Unnamed author', { exact: true }).waitFor();
+      const author = `Editor ${index + 1}`;
+      await page.keyboard.insertText(author);
+      await board.getByText(author, { exact: true }).waitFor();
+      assert.equal(await field.inputValue(), author);
     }
   },
 

@@ -149,6 +149,12 @@
   inline-size: min(340px, 100%);
 }
 
+/* The editor follows its text while field icons follow the surrounding layout. */
+.app-shell-search[dir='auto'],
+.app-shell-property-input[dir='auto'] {
+  direction: inherit;
+}
+
 .app-shell-workspace-status {
   display: flex;
   align-items: center;
@@ -798,10 +804,6 @@
 
 .app-shell-property-control > * {
   max-inline-size: 100%;
-}
-
-.app-shell-property-status {
-  color: var(--status-danger-soft-fg);
 }
 
 .app-shell-sticky-bar {

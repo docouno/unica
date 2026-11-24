@@ -229,7 +229,9 @@ function PropsTable({
                 </div>
               </td>
               <td>
-                <code className="wb-prop-type">{formatPropType(prop)}</code>
+                <code className="wb-prop-type">
+                  {prop.publicType?.trim() || formatPropType(prop)}
+                </code>
               </td>
               <td>
                 <code className="wb-md-inline-code">{formatPropDefault(prop)}</code>
