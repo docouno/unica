@@ -18,6 +18,7 @@ import {
 } from '@docouno/unica';
 import type { PreviewProps } from '../../workbench/types.js';
 import { ExampleSurface } from '../shared/example-surface.js';
+import { specimenBlockPage } from '../shared/specimen-fragment.js';
 import { ContextNotice } from './alert-context-composition.examples.js';
 import { notices } from './alert-notices.js';
 
@@ -61,20 +62,27 @@ function selectedNotice(ctx: PreviewProps['ctx']) {
   );
 }
 
+function guidanceHref(themeId: string, status: string): string {
+  const page = specimenBlockPage('alert', 'compositions', 'context', themeId);
+  return `${page}#alert-guidance-${themeId}-${status}`;
+}
+
 export function ContextStateExamples({ ctx }: PreviewProps): ReactElement {
   const notice = selectedNotice(ctx);
   const setting = ctx.story?.controls.underline;
   const underline = setting === 'hover' || setting === 'none' ? setting : 'always';
-  const id = useId();
-  const guidanceId = id + '-guidance';
-  const detailsId = id + '-details';
+  const detailsId = useId();
   return (
     <Alert {...ctx.subject} role="none" status={notice.status}>
       <AlertTitle>{notice.title}</AlertTitle>
       <AlertDescription>
         <bdi>
           {notice.description} Reference: <Code>{notice.reference}</Code>.{' '}
-          <Link href={'#' + guidanceId} tone="inherit" underline={underline}>
+          <Link
+            href={guidanceHref(ctx.theme.id, notice.status)}
+            tone="inherit"
+            underline={underline}
+          >
             Guidance
           </Link>
           .
@@ -124,11 +132,6 @@ export function ContextStateExamples({ ctx }: PreviewProps): ReactElement {
             )}
           </Stack>
         ))}
-        <div id={guidanceId} tabIndex={-1}>
-          <Text size="body-s">
-            <bdi>{notice.guidance}</bdi>
-          </Text>
-        </div>
       </Stack>
     </Alert>
   );
@@ -262,6 +265,7 @@ export function ContextOverlayExamples({ ctx }: PreviewProps): ReactElement {
           status={notice.status}
           compact
           alertProps={ctx.subject}
+          guidanceHref={guidanceHref(ctx.theme.id, notice.status)}
         />
       </ExampleSurface>
     </div>

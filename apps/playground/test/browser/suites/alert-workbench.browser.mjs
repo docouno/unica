@@ -23,6 +23,51 @@ async function openWorkbench(page, route) {
 }
 
 export default {
+  'Alert guidance opens the selected message in a new tab and survives dismissal': async ({
+    page,
+    mount,
+  }) => {
+    await mount('workbench-v3');
+    const route = new URL(page.url());
+    for (const [key, value] of Object.entries({
+      item: 'alert',
+      tab: 'states',
+      block: 'context-overlay',
+      solo: 'frost-dark',
+      vp: '360',
+    })) {
+      route.searchParams.set(key, value);
+    }
+    await page.evaluate((href) => {
+      history.pushState(null, '', href);
+      window.dispatchEvent(new PopStateEvent('popstate'));
+    }, route.href);
+    const frame = page.locator('[data-wb-block="context-overlay"]');
+    const type = frame.getByRole('combobox', { name: 'Message type' });
+    await type.selectOption('success');
+    const link = frame.getByRole('link', { name: 'Read guidance' });
+    const id = await link.evaluate((node) => node.hash.slice(1));
+    const [guide] = await Promise.all([
+      page.context().waitForEvent('page'),
+      link.click({ modifiers: ['Control'] }),
+    ]);
+    try {
+      const target = guide.locator(`[id="${id}"]`);
+      await target.waitFor();
+      await assertFocused(target);
+      assert.match(await target.innerText(), /Use the revision history/);
+      assert.equal(await type.inputValue(), 'success');
+      await guide.getByRole('button', { name: 'Dismiss success notice' }).press('Space');
+      assert.equal(await target.isVisible(), true);
+      await assertFocused(guide.getByRole('button', { name: 'Restore success notice' }));
+      await guide.reload({ waitUntil: 'domcontentloaded' });
+      await target.waitFor();
+      await assertFocused(target);
+    } finally {
+      await guide.close();
+    }
+  },
+
   'Alert Workbench publishes only the selected All/Both sample and resets it on inspector changes':
     async ({ page, mount }) => {
       await page.setViewportSize({ width: 1440, height: 960 });

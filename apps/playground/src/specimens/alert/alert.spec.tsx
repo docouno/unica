@@ -326,13 +326,18 @@ export default defineComponent({
       title: 'Contextual content & actions',
       mode: 'live',
       caption:
-        'Open guidance or details, acknowledge a notice or dismiss it. Neutral controls and inline code follow the message color.',
+        'Follow a guidance link, inspect details, acknowledge a notice or dismiss it. Neutral controls and inline code follow the message color.',
       code: contextSource.replace(
         "import { notices } from './alert-notices.js';",
         noticeSource.trimEnd(),
       ),
       render: withOverlaySurface(
-        ({ ctx }) => <ContextExamples alertProps={ctx.subject} />,
+        ({ ctx }) => (
+          <ContextExamples
+            alertProps={ctx.subject}
+            guidancePrefix={`alert-guidance-${ctx.theme.id}`}
+          />
+        ),
         'border-box',
       ),
     },

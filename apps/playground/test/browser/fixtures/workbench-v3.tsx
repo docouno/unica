@@ -1,4 +1,5 @@
 import type { JSX } from 'react';
+import alertSpec from '../../../src/specimens/alert/alert.spec.js';
 import appShellSpec from '../../../src/specimens/app-shell/app-shell.spec.js';
 import avatarSpec from '../../../src/specimens/avatar/avatar.spec.js';
 import blockquoteSpec from '../../../src/specimens/blockquote/blockquote.spec.js';
@@ -25,6 +26,7 @@ const config: WorkbenchConfig = {
     buttonSpec,
     progressSpec,
     appShellSpec,
+    alertSpec,
     avatarSpec,
     blockquoteSpec,
     accordionSpec,

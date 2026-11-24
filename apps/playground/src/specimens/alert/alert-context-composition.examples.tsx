@@ -10,20 +10,24 @@ import {
   Link,
   Stack,
   Text,
+  Title,
 } from '@docouno/unica';
 import { notices } from './alert-notices.js';
 
-export function ContextNotice({ status = 'neutral', compact = false, alertProps = {} } = {}) {
+export function ContextNotice({
+  status = 'neutral',
+  compact = false,
+  alertProps = {},
+  guidanceHref = '',
+} = {}) {
   const notice = Object.values(notices).find((entry) => entry.status === status) ?? notices.neutral;
   const id = useId();
   const [shown, setShown] = useState(true);
   const [details, setDetails] = useState(false);
-  const [guidance, setGuidance] = useState(false);
   const [acknowledged, setAcknowledged] = useState(false);
   const focusTarget = useRef('');
   const toggleId = id + '-toggle';
   const detailId = id + '-details';
-  const guideId = id + '-guidance';
   const receiptId = id + '-receipt';
 
   useLayoutEffect(() => {
@@ -81,18 +85,20 @@ export function ContextNotice({ status = 'neutral', compact = false, alertProps 
         />
       }
     >
-      <AlertTitle>{notice.title}</AlertTitle>
+      <AlertTitle id={id + '-title'}>{notice.title}</AlertTitle>
       <AlertDescription>
         <bdi>
-          {notice.description} Reference: <Code>{notice.reference}</Code>.{' '}
-          <Link href={'#' + guideId} tone="inherit" onClick={() => setGuidance(true)}>
-            Read guidance
-          </Link>
-          .
+          {notice.description} Reference: <Code>{notice.reference}</Code>.
+          {guidanceHref && (
+            <>
+              {' '}
+              <Link href={guidanceHref} tone="inherit" aria-describedby={id + '-title'}>
+                Read guidance
+              </Link>
+              .
+            </>
+          )}
         </bdi>
-        <p id={guideId} hidden={!guidance} tabIndex={-1}>
-          <bdi>{notice.guidance}</bdi>
-        </p>
       </AlertDescription>
       <AlertActions>
         <Button
@@ -137,12 +143,58 @@ export function ContextNotice({ status = 'neutral', compact = false, alertProps 
   );
 }
 
-export function ContextExamples({ alertProps = {} } = {}) {
+export function ContextExamples({ alertProps = {}, guidancePrefix = '' } = {}) {
+  const id = useId();
+  const prefix = guidancePrefix.trim().replace(/\s+/gu, '-') || id + '-guidance';
+
+  // A linked guide can mount after the browser's initial fragment navigation.
+  useLayoutEffect(() => {
+    if (document.activeElement === document.body) {
+      const targetId = Object.values(notices)
+        .map((notice) => `${prefix}-${notice.status}`)
+        .find((guideId) => window.location.hash === '#' + encodeURIComponent(guideId));
+      if (targetId) {
+        document.getElementById(targetId)?.focus();
+      }
+    }
+  }, [prefix]);
+
   return (
     <Stack gap={24}>
       {Object.values(notices).map((notice) => (
-        <ContextNotice key={notice.status} status={notice.status} alertProps={alertProps} />
+        <ContextNotice
+          key={notice.status}
+          status={notice.status}
+          alertProps={alertProps}
+          guidanceHref={'#' + encodeURIComponent(`${prefix}-${notice.status}`)}
+        />
       ))}
+      <section aria-labelledby={`${prefix}-heading`}>
+        <Stack gap={16}>
+          <Title as="h2" size="heading-s" id={`${prefix}-heading`}>
+            Notice guidance
+          </Title>
+          {Object.values(notices).map((notice) => {
+            const guideId = `${prefix}-${notice.status}`;
+            return (
+              <article
+                key={notice.status}
+                id={guideId}
+                aria-labelledby={guideId + '-heading'}
+                tabIndex={-1}
+                style={{ outlineOffset: 2 }}
+              >
+                <Title as="h3" size="body-m" id={guideId + '-heading'}>
+                  <bdi>{notice.title}</bdi>
+                </Title>
+                <Text size="body-s" color="secondary">
+                  <bdi>{notice.guidance}</bdi>
+                </Text>
+              </article>
+            );
+          })}
+        </Stack>
+      </section>
     </Stack>
   );
 }

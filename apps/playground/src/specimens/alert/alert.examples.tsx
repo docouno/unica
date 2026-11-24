@@ -19,6 +19,7 @@ import type { ReactElement, ReactNode } from 'react';
 import { useStoryAction } from '../../workbench/storyFrameState.js';
 import type { PreviewProps } from '../../workbench/types.js';
 import { ExampleSurface } from '../shared/example-surface.js';
+import { focusLinkedFragment, specimenBlockPage } from '../shared/specimen-fragment.js';
 import './alert.examples.css';
 
 export function EditorialGlyph(props: GlyphSvgProps): ReactElement {
@@ -319,7 +320,8 @@ export function RecoveryExample({ ctx }: PreviewProps): ReactElement {
 }
 
 export function OverflowExamples({ ctx }: PreviewProps): ReactElement {
-  const referenceId = useId();
+  const referenceId = `alert-overflow-${ctx.theme.id}-report`;
+  const page = specimenBlockPage('alert', 'states', 'overflow', ctx.theme.id);
   return (
     <Stack gap={24} className="alert-demo-narrow">
       <Alert {...ctx.subject} role="none" status="warning" size="s">
@@ -355,7 +357,7 @@ export function OverflowExamples({ ctx }: PreviewProps): ReactElement {
           </ul>
           <bdi>
             Check the source at{' '}
-            <Link tone="inherit" href={`#${referenceId}`}>
+            <Link tone="inherit" href={`${page}#${referenceId}`}>
               imports/workspace-configuration-validation-report
             </Link>
             .
@@ -364,7 +366,7 @@ export function OverflowExamples({ ctx }: PreviewProps): ReactElement {
       </Alert>
       <Alert {...ctx.subject} role="none" status="neutral" size="s">
         <AlertDescription>
-          <p id={referenceId} tabIndex={-1}>
+          <p ref={focusLinkedFragment} id={referenceId} tabIndex={-1}>
             <bdi>
               Reference:{' '}
               <Code>workspace_configuration_validation_2026_11_16_unresolved_reference</Code>

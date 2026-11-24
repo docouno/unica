@@ -32,6 +32,7 @@ import {
 } from '@docouno/unica';
 import { useStoryAction } from '../../workbench/storyFrameState.js';
 import type { PreviewProps } from '../../workbench/types.js';
+import { focusLinkedFragment, specimenBlockPage } from '../shared/specimen-fragment.js';
 import './card.examples.css';
 
 function Label({ children }: { readonly children: ReactNode }): ReactElement {
@@ -452,16 +453,6 @@ const guides = [
   ['sources', 'Handoff source notes', 'Check the original brief and the review comments.'],
 ] as const;
 
-// A guide can mount after the browser's initial fragment navigation.
-function focusLinkedGuide(node: HTMLElement | null): void {
-  if (node) {
-    const { activeElement, body, location } = node.ownerDocument;
-    if (activeElement === body && location.hash === `#${node.id}`) {
-      node.focus();
-    }
-  }
-}
-
 export function Navigation({
   ctx,
   showGuides = true,
@@ -470,16 +461,7 @@ export function Navigation({
   const variant = ctx.story?.controls.variant === 'subtle' ? 'subtle' : 'default';
   const titleId = useId();
   const guideId = `card-guide-${ctx.theme.id}`;
-  const params = new URLSearchParams(typeof window === 'undefined' ? '' : window.location.search);
-  let guidePage = '';
-  if (params.get('block') !== 'navigation') {
-    // The overview mounts cases on scroll, and the overlay's chosen study resets on reload.
-    params.set('item', 'card');
-    params.set('tab', 'states');
-    params.set('block', 'navigation');
-    params.set('solo', ctx.theme.id);
-    guidePage = `?${params}`;
-  }
+  const guidePage = specimenBlockPage('card', 'states', 'navigation', ctx.theme.id);
   const [selected, setSelected] = useState(false);
   return (
     <div className="card-example-stack">
@@ -538,7 +520,7 @@ export function Navigation({
         guides.map(([slug, name, summary]) => (
           <article
             key={slug}
-            ref={focusLinkedGuide}
+            ref={focusLinkedFragment}
             className="card-example-destination"
             id={`${guideId}-${slug}`}
             aria-labelledby={`${guideId}-${slug}-heading`}
