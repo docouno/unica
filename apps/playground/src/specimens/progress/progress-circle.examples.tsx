@@ -2,7 +2,7 @@ import { Fragment } from 'react';
 import type { ReactElement } from 'react';
 import { Flex, Grid, ProgressCircle, Spinner, Stack, Text } from '@docouno/unica';
 import type { PreviewProps } from '../../workbench/types.js';
-import { ExampleSurface } from '../shared/example-surface.js';
+import './progress.examples.css';
 
 const sizes = [
   { size: 's', label: 'S · 14px' },
@@ -92,7 +92,7 @@ const firstLine = {
 
 export function ProgressCircleOverlay({ ctx }: PreviewProps): ReactElement {
   return (
-    <ExampleSurface surface={ctx.surface} sizing="border-box" gap={16}>
+    <Stack gap={16} className="unica-overlay-surface activity-example-panel" data-surface="overlay">
       <Flex align="start" gap={8}>
         <ProgressCircle
           {...ctx.subject}
@@ -104,10 +104,10 @@ export function ProgressCircleOverlay({ ctx }: PreviewProps): ReactElement {
           aria-label="Uploading archive"
           aria-valuetext="42 of 80 MB"
         />
-        <Text as="span" size="body-s" dir="auto">
-          <span aria-hidden="true">Uploading archive · </span>
-          <bdi dir="ltr" style={{ display: 'inline-block' }}>
-            42 of 80 MB
+        <Text as="span" size="body-s">
+          <bdi dir="ltr">
+            <span aria-hidden="true">Uploading archive · </span>
+            <span style={{ display: 'inline-block' }}>42 of 80 MB</span>
           </bdi>
         </Text>
       </Flex>
@@ -123,6 +123,6 @@ export function ProgressCircleOverlay({ ctx }: PreviewProps): ReactElement {
           Preparing documents…
         </Text>
       </Flex>
-    </ExampleSurface>
+    </Stack>
   );
 }

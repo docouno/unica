@@ -23,10 +23,19 @@
   min-inline-size: 0;
 }
 
-.activity-overlay {
+.activity-overlay,
+.activity-example-panel {
   inline-size: 100%;
   max-inline-size: 480px;
   padding: var(--surface-m-padding);
+}
+
+.activity-example-panel {
+  position: relative;
+  min-inline-size: 0;
+}
+
+.activity-overlay {
   border: 1px solid var(--_overlay-border);
   border-radius: var(--surface-m-radius);
   background: var(--bg-overlay);
