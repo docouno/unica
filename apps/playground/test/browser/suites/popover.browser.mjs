@@ -581,7 +581,7 @@ export default {
     await pressKeys(page, 'Escape');
     await waitOpen(page, 'page-chain-child', false);
     await waitOpen(page, 'page-chain-parent');
-    await assertFocused(child);
+    await child.and(page.locator(':focus')).waitFor();
 
     await byId(page, 'page-chain-open-manual').click();
     await waitOpen(page, 'page-chain-manual');
@@ -600,7 +600,7 @@ export default {
       'child:false',
       'parent:false',
     ]);
-    await assertFocused(parent);
+    await parent.and(page.locator(':focus')).waitFor();
   },
 
   'Popover inside a native modal closes one layer per Escape': (context) =>
