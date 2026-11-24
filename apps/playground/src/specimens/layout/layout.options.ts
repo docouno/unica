@@ -15,7 +15,7 @@ export function choiceProp<const Options extends Readonly<Record<string, unknown
     group,
     default: initial,
     description,
-    choices: keys.map((value) => ({ value, code: JSON.stringify(options[value]) })),
+    choices: keys.map((value) => ({ value, code: JSON.stringify(options[value]) ?? 'undefined' })),
   };
 }
 

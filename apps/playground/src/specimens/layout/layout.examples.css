@@ -29,6 +29,10 @@
   background: var(--bg-surface-raised);
 }
 
+.layout-demo-tile {
+  display: inline-block;
+}
+
 .layout-flow > span:nth-child(2) {
   font-size: var(--text-size-caption-l);
 }

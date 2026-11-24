@@ -554,6 +554,17 @@ it('formats slot props cleanly, filters Quick Start imports by exportedNames, an
         default: 'none',
         choices: [{ value: 'none' }, { value: 'star', label: 'Star', code: '<StarIcon />' }],
       },
+      padding: {
+        kind: 'slot',
+        group: 'Geometry',
+        description: 'Padding at each breakpoint.',
+        publicType: 'Responsive<Spacing>',
+        default: 'compact',
+        choices: [
+          { value: 'compact', code: '8' },
+          { value: 'responsive', code: '{ tablet: 16 }' },
+        ],
+      },
     },
     code: () =>
       'import React, { BadgeExtra as LocalExtra } from \'other\';\n<BadgeDemo icon={<HelperIcon />} label="<FakeTag />"><LocalExtra />New</BadgeDemo>',
@@ -572,6 +583,9 @@ it('formats slot props cleanly, filters Quick Start imports by exportedNames, an
   // Slot prop displays ReactNode and code snippet rather than Playground choice keys.
   const publicTable = screen.getByRole('table', { name: 'Public props' });
   expect(publicTable.textContent).toContain('ReactNode (e.g. <StarIcon />)');
+  const padding = within(publicTable).getByRole('row', { name: /^padding/i });
+  expect(within(padding).getByRole('cell', { name: 'Responsive<Spacing>' })).toBeTruthy();
+  expect(within(padding).getByRole('cell', { name: '8' })).toBeTruthy();
   expect(publicTable.textContent).not.toContain('"none"');
   expect(publicTable.textContent).toContain('undefined');
 
