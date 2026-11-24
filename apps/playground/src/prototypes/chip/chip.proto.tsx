@@ -1,5 +1,5 @@
 import { CheckGlyph } from '../control-glyphs.js';
-import { useEffect, useId, useRef, useState } from 'react';
+import { useEffect, useId, useImperativeHandle, useRef, useState } from 'react';
 import type { ComponentPropsWithRef, ReactElement, ReactNode } from 'react';
 import { Icon, Tooltip } from '@docouno/unica';
 import type { GlyphSource } from '@docouno/unica';
@@ -22,6 +22,26 @@ export interface ChipProps extends Omit<
   readonly previewState?: ChipPreviewState | undefined;
 }
 
+function onAcceptedReset(form: HTMLFormElement | null | undefined, restore: () => void) {
+  if (!form) {
+    return;
+  }
+  let subscribed = true;
+  const reset = (event: Event) => {
+    // A trusted reset can still be canceled by a later listener during dispatch.
+    setTimeout(() => {
+      if (subscribed && event.isTrusted && !event.defaultPrevented) {
+        restore();
+      }
+    }, 0);
+  };
+  form.addEventListener('reset', reset);
+  return () => {
+    subscribed = false;
+    form.removeEventListener('reset', reset);
+  };
+}
+
 export function Chip({
   size = 'm',
   iconLeft,
@@ -32,6 +52,7 @@ export function Chip({
   style,
   hidden,
   id,
+  ref,
   'data-wb-subject': subject,
   ...props
 }: ChipProps): ReactElement {
@@ -40,6 +61,16 @@ export function Chip({
   const text = typeof children === 'string' ? children : undefined;
   const [label, clipped] = useClippedLabel<HTMLSpanElement>(text);
 
+  const input = useRef<HTMLInputElement>(null);
+  useImperativeHandle(ref, () => input.current!, []);
+  useEffect(() => {
+    const control = input.current!;
+    return onAcceptedReset(control.form, () => {
+      // Native reset bypasses React's checked setter. Re-arm the next change event.
+      const checked = control.checked;
+      control.checked = checked;
+    });
+  }, [props.form]);
   return (
     <span
       data-wb-subject={subject}
@@ -51,7 +82,7 @@ export function Chip({
       hidden={hidden}
     >
       <Tooltip label={text ?? ''} disabled={!clipped} align="start">
-        <input {...props} id={inputId} type={type} className="chip-native-proto" />
+        <input {...props} ref={input} id={inputId} type={type} className="chip-native-proto" />
       </Tooltip>
       <label htmlFor={inputId} className="chip-face-proto">
         <span className="chip-leading-proto" aria-hidden="true">
@@ -60,7 +91,7 @@ export function Chip({
           )}
           <Icon usage="slot" icon={CheckGlyph} size={size} className="chip-check-proto" />
         </span>
-        <span className="chip-label-proto" ref={label}>
+        <span className="chip-label-proto" ref={label} dir={text ? 'auto' : undefined}>
           {children}
         </span>
       </label>
@@ -125,12 +156,11 @@ export function ChipGroup(props: ChipGroupProps): ReactElement {
     defaultValue ?? (multiple ? [] : null),
   );
   const selected = value === undefined ? local : value;
-  useEffect(() => {
-    const form = root.current?.form;
-    const reset = (): void => setLocal(defaultValue ?? (multiple ? [] : null));
-    form?.addEventListener('reset', reset);
-    return () => form?.removeEventListener('reset', reset);
-  }, [defaultValue, multiple]);
+  useEffect(
+    () =>
+      onAcceptedReset(root.current?.form, () => setLocal(defaultValue ?? (multiple ? [] : null))),
+    [defaultValue, multiple],
+  );
   return (
     <fieldset
       {...fieldsetProps}
@@ -144,10 +174,12 @@ export function ChipGroup(props: ChipGroupProps): ReactElement {
       }
       aria-invalid={error ? true : undefined}
     >
-      <legend className="chip-group-label-proto">{label}</legend>
+      <legend className="chip-group-label-proto">
+        <bdi>{label}</bdi>
+      </legend>
       {description && (
         <p id={`${id}-description`} className="chip-group-description-proto">
-          {description}
+          <bdi>{description}</bdi>
         </p>
       )}
       <div
@@ -222,7 +254,7 @@ export function ChipGroup(props: ChipGroupProps): ReactElement {
       </div>
       {error && (
         <p id={`${id}-error`} className="chip-group-error-proto">
-          {error}
+          <bdi>{error}</bdi>
         </p>
       )}
     </fieldset>
