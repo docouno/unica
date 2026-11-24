@@ -1,179 +1,128 @@
-import { useId, useState } from 'react';
+import { Fragment } from 'react';
 import type { ReactElement } from 'react';
-import { Button } from '@docouno/unica';
-import { ProgressCircle, Spinner } from '@docouno/unica';
+import { Flex, Grid, ProgressCircle, Spinner, Stack, Text } from '@docouno/unica';
+import type { PreviewProps } from '../../workbench/types.js';
 import './progress.examples.css';
 
-function HandoffStudy(): ReactElement {
-  const id = useId();
-  const [known, setKnown] = useState(false);
-  const [value, setValue] = useState(42);
+const sizes = [
+  { size: 's', label: 'S · 14px' },
+  { size: 'm', label: 'M · 16px' },
+  { size: 'l', label: 'L · 20px' },
+  { size: 'inherit', label: 'Inherit · 1em' },
+] as const;
+
+export function ProgressCircleScale({ ctx }: PreviewProps): ReactElement {
   return (
-    <div className="activity-study">
-      <div className="activity-label">
-        <ProgressCircle
-          size="m"
-          tone="accent"
-          value={known ? value : null}
-          aria-label="Archive transfer"
-        />
-        <span dir="auto">
-          {known ? (value === 100 ? 'Archive sent' : 'Sending archive…') : 'Preparing archive…'}
-          {known && <span className="activity-muted"> · {value}%</span>}
-        </span>
-      </div>
-      <div className="activity-preview-controls">
-        <Button size="s" variant="secondary" tone="neutral" onClick={() => setKnown(!known)}>
-          {known ? 'Return to preparing' : 'Measurement available'}
-        </Button>
-        <label htmlFor={id}>Measured amount · {value}%</label>
-        <input
-          id={id}
-          type="range"
-          min="0"
-          max="100"
-          value={value}
-          disabled={!known}
-          onChange={(event) => setValue(Number(event.target.value))}
-        />
-      </div>
-      <span className="activity-caption">
-        The same icon slot, stroke and tone. Waiting moves; a known amount fills from twelve and
-        stays still. Local controls supply the value; this is not a simulated upload.
-      </span>
-    </div>
+    <Grid
+      gap={12}
+      style={{
+        gridTemplateColumns: 'repeat(3, max-content)',
+        justifyContent: 'start',
+        alignItems: 'center',
+        fontSize: 'var(--text-size-body-l)',
+      }}
+    >
+      {sizes.map(({ size, label }) => (
+        <Fragment key={size}>
+          <Text as="span" size={size === 'inherit' ? 'body-l' : 'body-s'}>
+            <bdi>{label}</bdi>
+          </Text>
+          <Spinner size={size} tone="accent" aria-label="Waiting for transfer" />
+          <ProgressCircle
+            {...ctx.subject}
+            size={size}
+            tone="accent"
+            value={64}
+            aria-label="Archive transfer"
+          />
+        </Fragment>
+      ))}
+    </Grid>
   );
 }
 
-const examples: Record<string, () => ReactElement> = {
-  scale: () => (
-    <div className="activity-study">
-      {(['s', 'm', 'l', 'inherit'] as const).map((size) => (
-        <div className="activity-row" key={size}>
-          <Spinner size={size} tone="accent" />
-          <ProgressCircle size={size} tone="accent" value={64} aria-label="Transfer" />
-          <span className="activity-caption">
-            {size === 'inherit'
-              ? 'Inherit · 1em'
-              : `${size.toUpperCase()} · ${size === 's' ? 14 : size === 'm' ? 16 : 20}px`}
-          </span>
-        </div>
+export function ProgressCircleBoundaries({ ctx }: PreviewProps): ReactElement {
+  return (
+    <Flex align="center" wrap="wrap" gap={16}>
+      {[0, 12.5, 37.5, 64, 100].map((value) => (
+        <Stack key={value} align="center" gap={8}>
+          <ProgressCircle
+            {...ctx.subject}
+            size="l"
+            tone="accent"
+            value={value}
+            aria-label="Archive transfer"
+          />
+          <Text as="span" size="caption-l" tabularNums aria-hidden="true">
+            <bdi dir="ltr">{value}%</bdi>
+          </Text>
+        </Stack>
       ))}
-      <span className="activity-caption">
-        Spinner beside its measured counterpart. Shared geometry in every theme; text and
-        percentages stay in the surrounding interface.
-      </span>
-    </div>
-  ),
-  boundaries: () => (
-    <div className="activity-study">
-      <div className="activity-row">
-        {[0, 12.5, 37.5, 64, 100].map((value) => (
-          <div className="activity-sample" key={value}>
-            <ProgressCircle size="l" tone="accent" value={value} aria-label="Transfer" />
-            <span className="activity-caption">{value}%</span>
-          </div>
-        ))}
-      </div>
-      <span className="activity-caption">
-        Empty at zero, full at 100. Pixel fills the same eight cells clockwise, including a partial
-        leading cell. No looping motion or automatic success color.
-      </span>
-    </div>
-  ),
-  context: () => (
-    <div className="activity-study">
-      <div className="activity-label">
+    </Flex>
+  );
+}
+
+export function ProgressCircleHandoff({ ctx }: PreviewProps): ReactElement {
+  const controls = ctx.story?.controls;
+  const value =
+    controls?.known === true && typeof controls.value === 'number' ? controls.value : null;
+  const phase =
+    value === null ? 'Preparing archive' : value === 100 ? 'Archive sent' : 'Sending archive';
+  return (
+    <Flex align="center" gap={8}>
+      <ProgressCircle {...ctx.subject} size="m" tone="accent" value={value} aria-label={phase} />
+      <Text as="span" size="body-s" dir="auto" aria-hidden="true">
+        {phase}
+        {value === null ? (
+          '…'
+        ) : (
+          <>
+            {' '}
+            · <bdi dir="ltr">{value}%</bdi>
+          </>
+        )}
+      </Text>
+    </Flex>
+  );
+}
+
+const firstLine = {
+  marginBlockStart: 'calc((var(--text-size-body-s-lh) - var(--size-m-icon)) / 2)',
+};
+
+export function ProgressCircleOverlay({ ctx }: PreviewProps): ReactElement {
+  return (
+    <Stack gap={16} className="unica-overlay-surface activity-example-panel" data-surface="overlay">
+      <Flex align="start" gap={8}>
         <ProgressCircle
+          {...ctx.subject}
           size="m"
-          value={42}
-          max={80}
-          tone="accent"
-          aria-label="Sending references.pdf"
-          aria-valuetext="42 of 80 MB"
-        />
-        <span dir="auto">
-          references.pdf{' '}
-          <span className="activity-muted">
-            · <bdi>42 of 80 MB</bdi>
-          </span>
-        </span>
-      </div>
-      <div className="activity-label">
-        <ProgressCircle
-          size="m"
-          value={3}
-          max={8}
-          tone="accent"
-          aria-label="Processing archive"
-          aria-valuetext="3 of 8 stages"
-        />
-        <span dir="auto">
-          Processing archive{' '}
-          <span className="activity-muted">
-            · <bdi>3 of 8 stages</bdi>
-          </span>
-        </span>
-      </div>
-      <div className="activity-label activity-muted">
-        <ProgressCircle
-          size="m"
-          value={42}
-          max={80}
-          aria-label="Transfer paused"
-          aria-valuetext="42 of 80 MB, paused"
-        />
-        <span dir="auto">Transfer paused · waiting for connection</span>
-      </div>
-      <div className="activity-label" data-glyph-size="s">
-        <ProgressCircle
-          size="s"
-          value={1284}
-          max={1528}
-          tone="muted"
-          aria-label="Validating collection"
-          aria-valuetext="1,284 of 1,528 records"
-        />
-        <span dir="auto">
-          Validating records from a long document collection{' '}
-          <span className="activity-muted">
-            · <bdi>1,284 of 1,528 records</bdi>
-          </span>
-        </span>
-      </div>
-      <span className="activity-caption">
-        Small usage fragments, not a new row component. Pause or failure keeps the amount and uses
-        explanatory text; the glyph follows Spinner's inherit, neutral, muted or accent tones.
-      </span>
-    </div>
-  ),
-  handoff: () => <HandoffStudy />,
-  overlay: () => (
-    <div className="activity-overlay activity-study">
-      <div className="activity-label">
-        <ProgressCircle
-          size="m"
+          style={firstLine}
           tone="accent"
           value={42}
           max={80}
           aria-label="Uploading archive"
           aria-valuetext="42 of 80 MB"
         />
-        <span dir="auto">
-          Uploading archive{' '}
-          <span className="activity-muted">
-            · <bdi>42 of 80 MB</bdi>
-          </span>
-        </span>
-      </div>
-      <div className="activity-label activity-muted">
-        <ProgressCircle size="m" value={null} aria-label="Preparing documents" />
-        <span dir="auto">Preparing documents…</span>
-      </div>
-    </div>
-  ),
-};
-
-export default function Study({ section }: { readonly section: string }): ReactElement | null {
-  return examples[section]?.() ?? null;
+        <Text as="span" size="body-s">
+          <bdi dir="ltr">
+            <span aria-hidden="true">Uploading archive · </span>
+            <span style={{ display: 'inline-block' }}>42 of 80 MB</span>
+          </bdi>
+        </Text>
+      </Flex>
+      <Flex align="start" gap={8} style={{ color: 'var(--fg-muted)' }}>
+        <ProgressCircle
+          {...ctx.subject}
+          size="m"
+          style={firstLine}
+          value={null}
+          aria-label="Preparing documents"
+        />
+        <Text as="span" size="body-s" color="muted" dir="auto" aria-hidden="true">
+          Preparing documents…
+        </Text>
+      </Flex>
+    </Stack>
+  );
 }

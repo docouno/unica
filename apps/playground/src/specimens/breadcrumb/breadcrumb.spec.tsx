@@ -1,322 +1,136 @@
-import { previewProps, previewText } from '../preview-code.js';
-import type { ReactElement, ReactNode } from 'react';
-import { CaretRightIcon, HouseIcon } from '@phosphor-icons/react';
 import { defineComponent } from '../../workbench/types.js';
-import { Icon, Title } from '@docouno/unica';
+import type { ComponentValues, PropSchema } from '../../workbench/types.js';
+import { withOverlaySurface } from '../shared/with-overlay-surface.js';
 import {
-  Breadcrumb,
-  BreadcrumbLink,
-  BreadcrumbPage,
-} from '../../prototypes/breadcrumb/breadcrumb.proto.js';
-import '../shared/display.examples.css';
-import '../../prototypes/breadcrumb/breadcrumb.examples.css';
+  BreadcrumbAnatomy,
+  BreadcrumbLinkStates,
+  BreadcrumbWrapping,
+} from './breadcrumb-cases.examples.js';
+import { breadcrumbDestinations } from './breadcrumb-destinations.js';
+import { BreadcrumbOverlayExample } from './breadcrumb-overlay.example.js';
+import overlaySource from './breadcrumb-overlay.example.tsx?raw';
+import { BreadcrumbPlayground } from './breadcrumb-playground.js';
+import { breadcrumbCode } from './breadcrumb-code.js';
 
-const workspace = '?item=02-workspace-overview';
-const runbooks = '?item=03-document-collection';
-const failover = '?item=04-document-reader';
+const props = {
+  size: {
+    kind: 'enum',
+    group: 'Geometry',
+    default: 'm',
+    description: 'Set the type scale, separator gap, and root icon size.',
+    choices: [{ value: 's' }, { value: 'm' }, { value: 'l' }],
+  },
+  underline: {
+    kind: 'enum',
+    group: 'Interaction',
+    default: 'always',
+    description:
+      'Choose when ancestor links show a line. A linked current page keeps its underline.',
+    choices: [{ value: 'always' }, { value: 'hover' }, { value: 'none' }],
+  },
+  separator: {
+    kind: 'slot',
+    group: 'Content',
+    default: 'slash',
+    publicType: 'ReactNode',
+    description:
+      'Separate segments with a decorative node, or pass null to leave space between them.',
+    choices: [
+      { value: 'slash', label: 'Slash', code: '"/"' },
+      {
+        value: 'chevron',
+        label: 'Chevron',
+        code: '<Icon usage="slot" icon={CaretRightIcon} directional />',
+      },
+      { value: 'none', label: 'Spacing only', code: 'null' },
+    ],
+  },
+  page: {
+    kind: 'string',
+    group: 'Content',
+    demo: true,
+    label: 'Current page',
+    default: 'Service recovery',
+    examples: ['Service recovery', 'Guide'],
+    description: 'Text inside BreadcrumbPage. Clear the field to show the ancestors alone.',
+  },
+} as const satisfies PropSchema;
 
-function Example({ label, children }: { label: string; children: ReactNode }): ReactElement {
-  return (
-    <div className="breadcrumb-example">
-      <p className="display-example-label">{label}</p>
-      {children}
-    </div>
-  );
-}
-
-function Sizes(): ReactElement {
-  return (
-    <div className="display-example-stack">
-      {(
-        [
-          ['s', 'Small'],
-          ['m', 'Medium · default'],
-          ['l', 'Large'],
-        ] as const
-      ).map(([size, label]) => (
-        <Example key={size} label={label}>
-          <Breadcrumb size={size} aria-label={`${label} breadcrumb`}>
-            <BreadcrumbLink href={workspace}>Platform Eng</BreadcrumbLink>
-            <BreadcrumbLink href={runbooks}>Runbooks</BreadcrumbLink>
-            <BreadcrumbPage>Failover guide</BreadcrumbPage>
-          </Breadcrumb>
-        </Example>
-      ))}
-    </div>
-  );
-}
-
-function Anatomy(): ReactElement {
-  return (
-    <div className="display-example-stack">
-      <Example label="Icon root and directional separator">
-        <Breadcrumb
-          aria-label="Runbook location"
-          separator={<Icon usage="slot" icon={CaretRightIcon} directional />}
-        >
-          <BreadcrumbLink href={workspace} aria-label="Workspace home" iconOnly>
-            <Icon usage="slot" icon={HouseIcon} />
-          </BreadcrumbLink>
-          <BreadcrumbLink href={runbooks}>Runbooks</BreadcrumbLink>
-          <BreadcrumbPage>Failover guide</BreadcrumbPage>
-        </Breadcrumb>
-      </Example>
-      <Example label="Static intermediate group">
-        <Breadcrumb aria-label="Incident response location">
-          <BreadcrumbLink href={workspace}>Platform Eng</BreadcrumbLink>
-          <span>Incident response</span>
-          <BreadcrumbPage>Failover guide</BreadcrumbPage>
-        </Breadcrumb>
-      </Example>
-      <Example label="Spacing-only separator">
-        <Breadcrumb aria-label="Runbooks, spacing-only" separator={null}>
-          <BreadcrumbLink href={workspace}>Platform Eng</BreadcrumbLink>
-          <BreadcrumbPage>Runbooks</BreadcrumbPage>
-        </Breadcrumb>
-      </Example>
-      <Example label="Current page only">
-        <Breadcrumb aria-label="Workspace location">
-          <BreadcrumbPage>Platform Eng</BreadcrumbPage>
-        </Breadcrumb>
-      </Example>
-    </div>
-  );
-}
-
-function Underlines(): ReactElement {
-  return (
-    <div className="display-example-stack">
-      <Example label="Always · default">
-        <Breadcrumb aria-label="Always underline">
-          <BreadcrumbLink href={workspace}>Platform Eng</BreadcrumbLink>
-          <BreadcrumbLink href={runbooks}>Runbooks</BreadcrumbLink>
-          <BreadcrumbPage>Failover guide</BreadcrumbPage>
-        </Breadcrumb>
-      </Example>
-      <Example label="On hover or keyboard focus">
-        <Breadcrumb aria-label="Underline on interaction" underline="hover">
-          <BreadcrumbLink href={workspace}>Platform Eng</BreadcrumbLink>
-          <BreadcrumbLink href={runbooks}>Runbooks</BreadcrumbLink>
-          <BreadcrumbPage>Failover guide</BreadcrumbPage>
-        </Breadcrumb>
-      </Example>
-      <Example label="No ancestor underline · current permalink">
-        <Breadcrumb aria-label="Current document permalink" underline="none">
-          <BreadcrumbLink href={workspace}>Platform Eng</BreadcrumbLink>
-          <BreadcrumbLink href={runbooks}>Runbooks</BreadcrumbLink>
-          <BreadcrumbLink href={failover} aria-current="page">
-            Failover guide
-          </BreadcrumbLink>
-        </Breadcrumb>
-      </Example>
-    </div>
-  );
-}
-
-function LinkStates(): ReactElement {
-  return (
-    <div className="display-example-stack">
-      <Example label="Live · Tab, hover or press">
-        <Breadcrumb aria-label="Interactive path">
-          <BreadcrumbLink href={workspace} iconOnly aria-label="Workspace home">
-            <Icon usage="slot" icon={HouseIcon} />
-          </BreadcrumbLink>
-          <BreadcrumbLink href={runbooks}>Runbooks</BreadcrumbLink>
-          <BreadcrumbPage>Failover guide</BreadcrumbPage>
-        </Breadcrumb>
-      </Example>
-      {(
-        [
-          { label: 'Rest' },
-          { label: 'Hover', previewState: 'hover' },
-          { label: 'Pressed', previewState: 'active' },
-          { label: 'Keyboard focus', previewFocus: true },
-          { label: 'Unavailable', disabled: true },
-        ] as const
-      ).map(({ label, ...state }) => (
-        <Example key={label} label={label}>
-          <Breadcrumb aria-label={`${label} link appearance`}>
-            <BreadcrumbLink href={runbooks} {...state}>
-              Runbooks
-            </BreadcrumbLink>
-            <BreadcrumbPage>Failover guide</BreadcrumbPage>
-          </Breadcrumb>
-        </Example>
-      ))}
-    </div>
-  );
-}
-
-function Wrapping(): ReactElement {
-  return (
-    <div className="display-example-stack">
-      <Example label="Deep path · up to 320 px">
-        <div className="breadcrumb-example-narrow">
-          <Breadcrumb aria-label="Deep incident response path">
-            <BreadcrumbLink href={workspace}>Platform Eng</BreadcrumbLink>
-            <BreadcrumbLink href={runbooks}>Runbooks</BreadcrumbLink>
-            <span>Incident response</span>
-            <span>Database reliability</span>
-            <BreadcrumbPage>Regional failover and client connection recovery</BreadcrumbPage>
-          </Breadcrumb>
-        </div>
-      </Example>
-      <Example label="Long linked identifier and current title">
-        <div className="breadcrumb-example-narrow">
-          <Breadcrumb aria-label="Runbook identifier path">
-            <BreadcrumbLink href={workspace}>Platform Eng</BreadcrumbLink>
-            <BreadcrumbLink href={runbooks}>
-              DatabaseReliabilityAndDisasterRecoveryRunbooks
-            </BreadcrumbLink>
-            <BreadcrumbLink href={failover} aria-current="page">
-              Zero-downtime PostgreSQL failover
-            </BreadcrumbLink>
-          </Breadcrumb>
-        </div>
-      </Example>
-    </div>
-  );
-}
-
-function OverlayHeader(): ReactElement {
-  return (
-    <section
-      aria-label="Document details"
-      className="unica-overlay-surface breadcrumb-example-overlay"
-      data-surface="overlay"
-    >
-      <Breadcrumb size="s" underline="hover" aria-label="Document ancestors">
-        <BreadcrumbLink href={workspace}>Platform Eng</BreadcrumbLink>
-        <BreadcrumbLink href={runbooks}>Runbooks</BreadcrumbLink>
-      </Breadcrumb>
-      <Title as="h3" size="heading-s">
-        Failover guide
-      </Title>
-    </section>
-  );
-}
+export type BreadcrumbValues = ComponentValues<typeof props>;
 
 export default defineComponent({
   id: 'breadcrumb',
   title: 'Breadcrumb',
   category: 'Navigation',
   status: 'Proto',
-  summary: 'A quiet route trail with a clear current page and room to wrap.',
   componentName: 'Breadcrumb',
-  props: {
-    size: {
-      kind: 'enum',
-      group: 'Appearance',
-      default: 'm',
-      description: 'Typography and spacing of the trail.',
-      choices: [{ value: 's' }, { value: 'm' }, { value: 'l' }],
-    },
-    underline: {
-      kind: 'enum',
-      group: 'Appearance',
-      default: 'always',
-      description: 'When ancestor links are underlined.',
-      choices: [{ value: 'always' }, { value: 'hover' }, { value: 'none' }],
-    },
-    separator: {
-      kind: 'slot',
-      group: 'Content',
-      default: 'slash',
-      description: 'The visual delimiter between path segments.',
-      choices: [
-        { value: 'slash', label: 'Slash' },
-        { value: 'chevron', label: 'Chevron' },
-        { value: 'none', label: 'Spacing only' },
-      ],
-    },
-    page: {
-      kind: 'string',
-      group: 'Content',
-      default: 'Service recovery',
-      description: 'Name of the current page.',
-    },
-  },
-  render: ({ ctx, values: { size, underline, separator, page } }) => (
-    <Breadcrumb
-      {...ctx.subject}
-      size={size}
-      underline={underline}
-      separator={
-        separator === 'none' ? null : separator === 'chevron' ? (
-          <Icon usage="slot" icon={CaretRightIcon} directional />
-        ) : (
-          '/'
-        )
-      }
-    >
-      <BreadcrumbLink href={workspace}>Workspace</BreadcrumbLink>
-      <BreadcrumbLink href={runbooks}>Runbooks</BreadcrumbLink>
-      <BreadcrumbPage>{page}</BreadcrumbPage>
-    </Breadcrumb>
-  ),
-  code: ({ size, underline, separator, page }) => {
-    const separatorCode =
-      separator === 'none'
-        ? ' separator={null}'
-        : separator === 'chevron'
-          ? ' separator={<Icon usage="slot" icon={CaretRightIcon} directional />}'
-          : '';
-    return `<Breadcrumb${previewProps({ size, underline }, { size: 'm', underline: 'always' })}${separatorCode}>\n  <BreadcrumbLink href="/workspace">Workspace</BreadcrumbLink>\n  <BreadcrumbLink href="/runbooks">Runbooks</BreadcrumbLink>\n  <BreadcrumbPage>${previewText(page)}</BreadcrumbPage>\n</Breadcrumb>`;
-  },
-  matrixViews: [
+  summary: 'Show the path from a workspace to the current page, with links to its ancestors.',
+  props,
+  code: breadcrumbCode,
+  render: withOverlaySurface(BreadcrumbPlayground, 'border-box'),
+  states: [
     {
       id: 'sizes',
+      title: 'Sizes and separators',
       rows: 'size',
       cols: 'separator',
-      title: 'Sizes',
-      reference: () => <Sizes />,
+      fixed: { page: 'Guide', underline: 'always' },
+      caption: 'Compare type, spacing, and separators along the same path in each size.',
     },
     {
       id: 'underlines',
-      rows: 'underline',
       title: 'Link underlines',
-      reference: () => <Underlines />,
+      rows: 'underline',
+      fixed: { size: 'm', separator: 'slash', page: 'Guide' },
+      caption: 'Hover or focus an ancestor link to compare the three underline policies.',
     },
   ],
   cases: [
     {
       id: 'anatomy',
       title: 'Path anatomy',
-      kind: 'behavior',
-      render: () => <Anatomy />,
+      kind: 'content',
+      mode: 'live',
+      caption:
+        'Compare an icon root, an unlinked group, spacing between items, a single current page, and a current permalink beside plain ancestor links.',
+      render: withOverlaySurface(BreadcrumbAnatomy, 'border-box'),
     },
     {
       id: 'states',
       title: 'Link states',
       kind: 'behavior',
-      render: () => <LinkStates />,
+      mode: 'live',
+      caption:
+        'Tab through the live trail. Four rows pin the resting, hover, pressed, and keyboard focus appearances. The final ancestor is unavailable.',
+      render: withOverlaySurface(BreadcrumbLinkStates, 'border-box'),
     },
     {
       id: 'wrapping',
       title: 'Narrow and long paths',
       kind: 'content',
-      render: () => <Wrapping />,
+      mode: 'live',
+      caption:
+        'Follow a deep path at up to 320 pixels. The separator stays with its item while a long identifier and current permalink wrap.',
+      render: withOverlaySurface(BreadcrumbWrapping, 'border-box'),
     },
   ],
-  usage: [
+  compositions: [
     {
       id: 'overlay',
-      code: `<section
-  className="unica-overlay-surface"
-  data-surface="overlay"
-  aria-label="Document details"
-  style={{ position: 'relative', padding: 'var(--surface-m-padding)' }}
->
-  <Breadcrumb>
-    <BreadcrumbLink href="/workspace">Workspace</BreadcrumbLink>
-    <BreadcrumbPage>Document settings</BreadcrumbPage>
-  </Breadcrumb>
-  <Title as="h3" size="heading-s">Failover guide</Title>
-</section>`,
       title: 'Ancestor trail above a panel title',
+      mode: 'live',
       surface: 'overlay',
       overlayStage: true,
-      render: () => <OverlayHeader />,
+      caption:
+        'The two ancestors remain links. The heading names the current document once on the floating surface.',
+      render: ({ ctx }) => (
+        <BreadcrumbOverlayExample
+          workspaceHref={breadcrumbDestinations.workspace}
+          runbooksHref={breadcrumbDestinations.runbooks}
+          subject={ctx.subject}
+        />
+      ),
+      code: overlaySource.replaceAll('../../prototypes/', './prototypes/'),
     },
   ],
 });

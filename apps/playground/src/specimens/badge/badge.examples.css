@@ -1,116 +1,30 @@
-.badge-example-stack {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: var(--space-16);
-  min-inline-size: 0;
+/* A generated result needs room for the label, cue and optional count noun. */
+ul:has(> [data-wb-result-row] [data-badge-comparison]) {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr));
 }
-.badge-example-row {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: var(--space-8);
-  min-inline-size: 0;
+
+[data-badge-example-state='hover'] {
+  background: color-mix(in oklab, var(--status-info-soft-bg), currentColor 8%);
 }
-.badge-example-matrix-row {
-  display: grid;
-  grid-template-columns: 72px minmax(0, 1fr);
-  gap: var(--space-12);
-  align-items: baseline;
+
+[data-badge-example-state='active'] {
+  background: color-mix(in oklab, var(--status-info-soft-bg), currentColor 11%);
 }
-.badge-example-caption {
-  color: var(--fg-muted);
-  font-family: var(--font-family-base);
-  font-size: var(--text-size-caption-l);
-  line-height: var(--text-size-caption-l-lh);
-}
-.badge-example-rule {
-  border-block-start: 1px solid var(--border-subtle);
-}
-.badge-example-prose {
-  max-inline-size: 42ch;
-}
-.badge-example-record {
-  display: flex;
-  min-inline-size: 0;
-  align-items: baseline;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: var(--space-8) var(--space-16);
-}
-.badge-example-wrap {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-8);
-  max-inline-size: 280px;
-}
-.badge-example-state-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(104px, 1fr));
-  gap: var(--space-16) var(--space-12);
-}
-.badge-example-state {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: var(--space-8);
-  padding-block: 4px;
-}
-.badge-example-state > [data-badge-example-state='hover'] {
-  background: color-mix(in oklab, var(--_mark-bg), var(--_mark-fg) 8%);
-}
-.badge-example-state > [data-badge-example-state='active'] {
-  background: color-mix(in oklab, var(--_mark-bg), var(--_mark-fg) 11%);
-}
-.badge-example-state > [data-badge-example-state='focus'] {
-  outline: 2px solid var(--focus-ring-color);
-  outline-offset: 2px;
-}
-@media (forced-colors: active) {
-  .badge-example-state > [data-badge-example-state='hover'],
-  .badge-example-state > [data-badge-example-state='active'] {
-    background: Canvas;
-  }
-  .badge-example-state > [data-badge-example-state='focus'] {
-    outline-color: Highlight;
-  }
-}
-.badge-example-detail {
-  display: grid;
-  gap: var(--space-8);
-  border-inline-start: 2px solid var(--border-default);
-  padding-inline-start: var(--space-12);
-}
-.badge-example-detail[hidden] {
-  display: none;
-}
-.badge-example-control {
-  min-block-size: 30px;
-  padding: var(--space-4) var(--space-8);
-  border: 1px solid var(--border-default);
-  border-radius: var(--size-s-radius);
-  background: var(--bg-surface);
-  color: var(--fg-primary);
-  font-family: var(--font-family-base);
-  font-size: var(--text-size-body-s);
-  line-height: var(--text-size-body-s-lh);
-  cursor: pointer;
-}
-.badge-example-control:disabled {
-  color: var(--fg-disabled);
-  cursor: default;
-}
-.badge-example-control:focus-visible,
+
+[data-badge-example-state='focus'],
 .badge-example-destination:focus-visible {
   outline: 2px solid var(--focus-ring-color);
   outline-offset: 2px;
 }
-.badge-example-status-slot {
-  display: inline-flex;
-  justify-content: flex-end;
-  min-inline-size: min(100%, 13em);
-}
-@media (pointer: coarse) {
-  .badge-example-control {
-    min-block-size: 44px;
+
+@media (forced-colors: active) {
+  [data-badge-example-state='hover'],
+  [data-badge-example-state='active'] {
+    background: Canvas;
+  }
+
+  [data-badge-example-state='focus'],
+  .badge-example-destination:focus-visible {
+    outline-color: Highlight;
   }
 }

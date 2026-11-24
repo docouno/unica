@@ -11,35 +11,63 @@ async function openWorkbench(page, route) {
 const decoration = '[aria-hidden="true"][contenteditable="false"]';
 
 export default {
-  'Skeleton Workbench renders the public controls, JSX, bounds and pairwise examples': async ({
+  'Skeleton Workbench resolves public dimensions against the slot and preserves the hidden subject':
+    async ({ page, mount }) => {
+      await page.setViewportSize({ width: 1440, height: 960 });
+      await mount('native');
+      await openWorkbench(page, { item: 'skeleton', tab: 'playground', bounds: '1', vp: '768' });
+      await page.getByRole('heading', { name: 'Skeleton', exact: true }).waitFor();
+      const subject = page.locator('[data-wb-subject]');
+      const code = page.getByRole('region', { name: 'JSX' }).locator('pre');
+      const width = page.getByRole('textbox', { name: /^width\b/iu });
+      const height = page.getByRole('textbox', { name: /^height\b/iu });
+      const shape = page.getByRole('combobox', { name: /^shape\b/iu });
+      await shape.selectOption('circle');
+      await width.fill('32');
+      await height.fill('24');
+      await assertBox(subject, { width: 32, height: 24 });
+      assert.equal(await subject.evaluate((node) => node.tagName), 'SPAN');
+      const pixelCode = await code.innerText();
+      assert.match(
+        pixelCode,
+        /shape=(?:"circle"|\{['"]circle['"]\})\s+width=\{32\}\s+height=\{24\}/u,
+      );
+      assert.doesNotMatch(pixelCode, /<div\b/u);
+      await page.locator('[data-wb-bounds-label]').first().waitFor();
+      await width.fill('60%');
+      assert.equal(await subject.evaluate((node) => node.style.inlineSize), '60%');
+      assert.match(await code.innerText(), /width=(?:"60%"|\{['"]60%['"]\})/u);
+      await shape.selectOption('rect');
+      await height.fill('60%');
+      const slot = await subject.evaluate((node) =>
+        node.parentElement.getBoundingClientRect().toJSON(),
+      );
+      assert.equal(slot.height, 80);
+      await assertBox(subject, { height: 48, width: slot.width * 0.6 }, { tolerance: 0.02 });
+      assert.match(await code.innerText(), /<div\b[^>]*blockSize:\s*80\b[^>]*>\s*<Skeleton\b/u);
+      const placeholder = await subject.elementHandle();
+      const hidden = page.getByRole('checkbox', { name: /^hidden\b/iu });
+      await hidden.check();
+      await subject.waitFor({ state: 'hidden' });
+      assert.equal(
+        await subject.evaluate((node, original) => node === original, placeholder),
+        true,
+      );
+      await hidden.uncheck();
+      assert.equal(
+        await subject.evaluate((node, original) => node === original, placeholder),
+        true,
+      );
+      await assertBox(subject, { height: 48 });
+      await placeholder.dispose();
+    },
+
+  'SkeletonText Workbench renders public line, width and pairwise examples': async ({
     page,
     mount,
   }) => {
     await page.setViewportSize({ width: 1440, height: 960 });
     await mount('native');
-    await openWorkbench(page, { item: 'skeleton', tab: 'playground', bounds: '1', vp: '768' });
-    await page.getByRole('heading', { name: 'Skeleton', exact: true }).waitFor();
-    const subject = page.locator('[data-wb-subject]');
-    const code = page.getByRole('region', { name: 'JSX' }).locator('pre');
-    const width = page.getByRole('textbox', { name: /^width\b/iu });
-    const height = page.getByRole('textbox', { name: /^height\b/iu });
-    await page.getByRole('combobox', { name: /^shape\b/iu }).selectOption('circle');
-    await width.fill('32');
-    await height.fill('24');
-    await assertBox(subject, { width: 32, height: 24 });
-    assert.equal(await subject.evaluate((node) => node.tagName), 'SPAN');
-    assert.match(
-      await code.innerText(),
-      /shape=(?:"circle"|\{['"]circle['"]\})\s+width=\{32\}\s+height=\{24\}/u,
-    );
-    await page.locator('[data-wb-bounds-label]').first().waitFor();
-    await width.fill('60%');
-    assert.equal(await subject.evaluate((node) => node.style.inlineSize), '60%');
-    assert.match(await code.innerText(), /width=(?:"60%"|\{['"]60%['"]\})/u);
-    await page.getByRole('checkbox', { name: /^hidden\b/iu }).check();
-    await subject.waitFor({ state: 'hidden' });
-    assert.equal(await subject.count(), 1);
-
     await openWorkbench(page, {
       item: 'skeleton-text',
       tab: 'playground',
@@ -48,6 +76,9 @@ export default {
       scale: '120',
       dir: 'rtl',
     });
+    const subject = page.locator('[data-wb-subject]');
+    const code = page.getByRole('region', { name: 'JSX' }).locator('pre');
+    const width = page.getByRole('textbox', { name: /^width\b/iu });
     await page.getByRole('combobox', { name: /^size\b/iu }).selectOption('heading-s');
     await page.getByRole('spinbutton', { name: /^lines\b/iu }).fill('1');
     await width.fill('  48  ');
@@ -73,16 +104,55 @@ export default {
     assert.equal(await matrix.getAttribute('data-wb-matrix-mode'), 'pairwise');
   },
 
+  'SkeletonText Workbench keeps the first size visible and the twenty-line sample reachable':
+    async ({ page, mount }) => {
+      await page.setViewportSize({ width: 1440, height: 720 });
+      await mount('native');
+      await openWorkbench(page, {
+        item: 'skeleton-text',
+        tab: 'states',
+        mode: 'slice',
+        slice: 'typography',
+        surface: 'overlay',
+        vp: '360',
+        scale: '120',
+        dir: 'rtl',
+        freeze: '1',
+      });
+      const table = page.getByRole('table');
+      const subjects = table.locator('[data-wb-subject]');
+      const firstBar = subjects.first().locator(':scope > span > span').first();
+      const bar = await getBox(firstBar);
+      const start = await getBox(table);
+      assert.ok(bar.width > 0 && bar.height > 0);
+      assert.ok(bar.y - start.y < page.viewportSize().height / 2, 'First size below the fold');
+      assert.deepEqual(
+        await subjects.evaluateAll((samples) => samples.map((sample) => sample.childElementCount)),
+        Array(13).fill(3),
+      );
+
+      await page.getByRole('combobox', { name: 'Slice', exact: true }).selectOption('lines');
+      assert.deepEqual(
+        await subjects.evaluateAll((samples) => samples.map((sample) => sample.childElementCount)),
+        [1, 3, 20],
+      );
+      const lastBar = subjects.last().locator(':scope > span:last-child > span');
+      await lastBar.scrollIntoViewIfNeeded();
+      const end = await getBox(lastBar);
+      assert.ok(end.y >= 0 && end.y + end.height <= page.viewportSize().height);
+    },
+
   'Skeleton Workbench restricts image-only busy state and preserves media layout and focus on reveal':
     async ({ page, mount }) => {
       await page.setViewportSize({ width: 1440, height: 960 });
       await mount('native');
       await openWorkbench(page, { item: 'skeleton', tab: 'states', block: 'media' });
       const mediaCase = page.locator('[data-wb-block="media"]');
-      const status = mediaCase.getByRole('status');
+      const controls = mediaCase.getByRole('group', { name: /controls$/u });
       const figures = mediaCase.locator('figure');
-      const dynamic = figures.filter({ has: page.getByRole('status') });
-      const ready = figures.filter({ hasText: 'Ready reference' });
+      const dynamic = figures.first();
+      const caption = dynamic.locator('figcaption');
+      const ready = mediaCase.getByRole('figure', { name: 'Ready reference' });
       const slot = dynamic.locator('.skeleton-demo-media');
       const frame = dynamic.locator('.skeleton-demo-report');
       const oldShape = slot.locator(decoration);
@@ -137,16 +207,15 @@ export default {
       assert.ok(sweep.peak > 15 && sweep.coverage >= 0.45, JSON.stringify(sweep));
       const slotBox = await getBox(slot);
       const frameBefore = await getBox(frame);
-      assert.equal(await status.count(), 1);
-      assert.equal(await status.innerText(), 'Waiting for content');
-      assert.equal(await status.evaluate((node) => node.closest('[aria-busy="true"]')), null);
+      assert.equal(await mediaCase.getByRole('status').count(), 0);
+      assert.equal(await caption.innerText(), 'Waiting for content');
+      assert.equal(await caption.evaluate((node) => node.closest('[aria-busy="true"]')), null);
       assert.equal(await frame.getAttribute('aria-busy'), 'true');
       assert.equal(await dynamic.getByRole('heading', { name: 'Field notes' }).count(), 0);
       assert.equal(await ready.getByRole('heading', { name: 'Field notes' }).count(), 1);
-      assert.equal(await ready.getByRole('status').count(), 0);
 
-      await mediaCase.getByLabel('Image only').check();
-      assert.equal(await status.innerText(), 'Waiting for image');
+      await controls.getByRole('checkbox', { name: 'Image only', exact: true }).check();
+      assert.equal(await caption.innerText(), 'Waiting for image');
       assert.equal(await dynamic.locator('[aria-busy="true"]').count(), 1);
       assert.equal(await slot.getAttribute('aria-busy'), 'true');
       for (const name of ['Field notes', 'Design studio']) {
@@ -160,98 +229,158 @@ export default {
       await assertBox(slot, slotBox, { tolerance: 0.1 });
       await assertBox(frame, frameBefore, { tolerance: 0.1 });
 
-      await mediaCase.getByRole('button', { name: 'Reveal content' }).click();
+      const loaded = controls.getByRole('checkbox', { name: 'Show loaded content', exact: true });
+      await loaded.press('Space');
       await oldShape.waitFor({ state: 'detached' });
       assert.equal(await slot.getByRole('img').count(), 1);
       assert.equal(await dynamic.locator('[aria-busy="true"]').count(), 0);
-      assert.equal(await status.innerText(), 'Content arrived');
-      assert.equal(await status.evaluate((node) => node.closest('[aria-busy="true"]')), null);
-      await assertFocused(mediaCase.getByRole('button', { name: 'Show placeholders' }));
+      assert.equal(await caption.innerText(), 'Content arrived');
+      await assertFocused(loaded);
       await assertBox(slot, slotBox, { tolerance: 0.1 });
       await assertBox(frame, frameBefore, { tolerance: 0.1 });
 
       await openWorkbench(page, { item: 'skeleton', tab: 'compositions', block: 'typography' });
       const usage = page.locator('[data-wb-block="typography"]');
-      const code = await usage.locator('pre').innerText();
-      assert.match(code, /<article\s+aria-busy=\{loading\}[\s\S]+<\/article>\s+<p role="status">/u);
-      assert.doesNotMatch(code, /<Text\b/u);
+      const code = await usage.locator('pre:not([data-wb-pending])').innerText();
+      assert.match(code, /<article\b[^>]*aria-busy=[\s\S]+<\/article>\s*<Text\b[^>]*role=/u);
       assert.match(code, /--text-size-body-m-lh/u);
       const waiting = usage.locator('article');
       const message = usage.getByRole('status');
       const space = await getBox(waiting);
       assert.equal(await waiting.getAttribute('aria-busy'), 'true');
-      assert.equal(await waiting.locator(decoration).count(), 1);
+      assert.equal(await waiting.locator(decoration).count(), 2);
       assert.equal(await message.innerText(), 'Loading the summary…');
       assert.equal(await message.evaluate((node) => node.closest('[aria-busy="true"]')), null);
-      await usage.getByRole('button', { name: 'Reveal summary' }).click();
+      const showSummary = usage
+        .getByRole('group', { name: /controls$/u })
+        .getByRole('checkbox', { name: 'Show loaded summary', exact: true });
+      assert.equal(await showSummary.isChecked(), false);
+      await showSummary.press('Space');
+      assert.equal(await showSummary.isChecked(), true);
       assert.equal(await waiting.getAttribute('aria-busy'), 'false');
       assert.equal(await waiting.locator(decoration).count(), 0);
       assert.equal(await message.innerText(), 'Summary loaded.');
       await assertBox(waiting, space, { tolerance: 0.1 });
-      await assertFocused(usage.getByRole('button', { name: 'Show placeholder' }));
+      await assertFocused(showSummary);
+      await showSummary.press('Space');
+      assert.equal(await waiting.getAttribute('aria-busy'), 'true');
+      assert.equal(await message.innerText(), 'Loading the summary…');
+      await assertFocused(showSummary);
+      await assertBox(waiting, space, { tolerance: 0.1 });
     },
 
-  'Skeleton Workbench demonstrates fast, partial, refresh, empty and retry states': async ({
-    page,
-    mount,
-  }) => {
-    await page.setViewportSize({ width: 1440, height: 960 });
-    await mount('native');
-    await openWorkbench(page, { item: 'skeleton', tab: 'states', block: 'lifecycle' });
-    await page.clock.install({ time: new Date('2026-01-01T00:00:00Z') });
-    await page.clock.pauseAt(new Date('2026-01-01T00:00:01Z'));
-    const lifecycle = page.locator('[data-wb-block="lifecycle"]');
-    const region = lifecycle.getByRole('region', { name: 'Recent documents' });
-    const status = lifecycle.locator('[role="status"]');
-    const selector = lifecycle.getByLabel('Preview state');
-    const state = () => region.getAttribute('data-load-state');
-    const countPlaceholders = () => region.locator(decoration).count();
-    const fast = lifecycle.getByRole('button', { name: 'Fast response' });
-    await fast.focus();
-    await fast.press('Enter');
-    assert.equal(await state(), 'delay');
-    assert.equal(await countPlaceholders(), 0);
-    await page.clock.runFor(120);
-    assert.equal(await state(), 'ready');
-    assert.equal(await countPlaceholders(), 0);
-    await assertFocused(fast);
+  'Skeleton Workbench interrupts shared loads and keeps local retries and refreshes independent':
+    async ({ page, mount }) => {
+      await page.setViewportSize({ width: 1440, height: 960 });
+      await mount('native');
+      const route = { item: 'skeleton', tab: 'states', block: 'lifecycle' };
+      await openWorkbench(page, { ...route, family: 'all', scheme: 'both' });
+      await page.clock.install({ time: new Date('2026-01-01T00:00:00Z') });
+      await page.clock.pauseAt(new Date('2026-01-01T00:00:01Z'));
 
-    const content = region.getByText('Design principles');
-    const original = await content.elementHandle();
-    const refresh = lifecycle.getByRole('button', { name: 'Refresh' });
-    await refresh.focus();
-    await refresh.press('Enter');
-    assert.equal(await state(), 'refresh');
-    assert.equal(await countPlaceholders(), 0);
-    assert.equal(await content.evaluate((node, previous) => node === previous, original), true);
-    assert.equal(await status.evaluate((node) => node.closest('[aria-busy="true"]')), null);
-    await page.clock.runFor(1120);
-    assert.equal(await state(), 'ready');
-    assert.equal(await content.evaluate((node, previous) => node === previous, original), true);
-    await original.dispose();
-    await assertFocused(refresh);
+      const lifecycle = page.locator('[data-wb-block="lifecycle"]');
+      const toolbar = lifecycle.getByRole('group', { name: /controls$/u });
+      const selector = toolbar.getByRole('combobox', { name: 'Preview state', exact: true });
+      const replay = toolbar.getByRole('button', { name: 'Replay load', exact: true });
+      const fast = toolbar.getByRole('button', { name: 'Fast response', exact: true });
+      const boards = lifecycle.locator('.wb-artboard');
+      const regions = lifecycle.getByRole('region', { name: 'Recent documents', exact: true });
+      const first = boards.first();
+      const region = regions.first();
+      const announcements = boards.locator('[role="status"][aria-live="polite"]');
+      const refresh = first.getByRole('button', { name: 'Refresh', exact: true });
+      const retry = first.getByRole('button', { name: 'Try again', exact: true });
+      const assertPhases = async (shared, local = shared) => {
+        assert.equal(await selector.inputValue(), shared);
+        assert.deepEqual(
+          await regions.evaluateAll((nodes) => nodes.map((node) => node.dataset.loadState)),
+          [local, ...Array(5).fill(shared)],
+        );
+      };
 
-    await selector.selectOption('empty');
-    assert.equal(await state(), 'empty');
-    assert.equal(await countPlaceholders(), 0);
-    await selector.selectOption('error');
-    assert.equal(await state(), 'error');
-    assert.equal(await countPlaceholders(), 0);
-    const retry = lifecycle.getByRole('button', { name: 'Try again' });
-    await retry.press('Enter');
-    await page.clock.runFor(220);
-    assert.equal(await state(), 'initial');
-    assert.equal(await countPlaceholders(), 9);
-    await page.clock.runFor(930);
-    assert.equal(await state(), 'partial');
-    assert.equal(await countPlaceholders(), 6);
-    assert.equal(await region.getByText('Design principles').count(), 1);
-    await page.clock.runFor(1150);
-    assert.equal(await state(), 'ready');
-    assert.equal(await region.getAttribute('aria-busy'), 'false');
-    assert.equal(await countPlaceholders(), 0);
-    await assertFocused(refresh);
-  },
+      await replay.press('Enter');
+      await assertPhases('delay');
+      await page.clock.runFor(180);
+      await fast.press('Enter');
+      await page.clock.runFor(55);
+      await assertPhases('delay');
+      assert.equal(await regions.locator(decoration).count(), 0);
+      await page.clock.runFor(65);
+      await assertPhases('ready');
+      await page.clock.runFor(1050);
+      await assertPhases('ready');
+      await assertFocused(fast);
+      assert.equal(await announcements.count(), 0);
+
+      const content = region.getByText('Design principles', { exact: true });
+      const original = await content.elementHandle();
+      await refresh.press('Enter');
+      await assertPhases('ready', 'refresh');
+      assert.equal(await announcements.count(), 1);
+      assert.equal(await regions.locator(decoration).count(), 0);
+      assert.equal(await content.evaluate((node, previous) => node === previous, original), true);
+      const status = first.getByRole('status');
+      assert.equal(await status.evaluate((node) => node.closest('[aria-busy="true"]')), null);
+      await page.clock.runFor(1120);
+      await assertPhases('ready');
+      assert.equal(await content.evaluate((node, previous) => node === previous, original), true);
+      await original.dispose();
+      await assertFocused(refresh);
+
+      await selector.selectOption('empty');
+      await assertPhases('empty');
+      assert.equal(await regions.locator(decoration).count(), 0);
+      await selector.selectOption('error');
+      await assertPhases('error');
+      assert.equal(await regions.locator(decoration).count(), 0);
+      await retry.press('Enter');
+      await assertPhases('error', 'delay');
+      await page.clock.runFor(220);
+      await assertPhases('error', 'initial');
+      assert.equal(await regions.locator(decoration).count(), 9);
+      await page.clock.runFor(930);
+      await assertPhases('error', 'partial');
+      assert.equal(await regions.locator(decoration).count(), 6);
+      assert.equal(await regions.getByText('Design principles', { exact: true }).count(), 1);
+      await page.clock.runFor(1150);
+      await assertPhases('error', 'ready');
+      assert.equal(await region.getAttribute('aria-busy'), 'false');
+      assert.equal(await regions.locator(decoration).count(), 0);
+      assert.equal(await status.innerText(), '3 documents loaded.');
+      assert.equal(await announcements.count(), 1);
+      await assertFocused(refresh);
+
+      await replay.press('Enter');
+      await page.clock.runFor(220);
+      await assertPhases('initial');
+      await selector.focus();
+      await selector.selectOption('empty');
+      await page.clock.runFor(2210);
+      await assertPhases('empty');
+      await assertFocused(selector);
+      assert.equal(await announcements.count(), 0);
+
+      await replay.press('Enter');
+      await page.clock.runFor(1120);
+      await assertPhases('partial');
+      await lifecycle
+        .getByRole('button', { name: 'Expand Frost · Light', exact: true })
+        .press('Enter');
+      assert.equal(await boards.count(), 1);
+      assert.equal(await region.getAttribute('data-load-state'), 'partial');
+      await page.clock.runFor(1100);
+      assert.equal(await selector.inputValue(), 'ready');
+      assert.equal(await region.getAttribute('data-load-state'), 'ready');
+      await refresh.press('Enter');
+      assert.equal(await selector.inputValue(), 'refresh');
+      await assertFocused(refresh);
+      await lifecycle
+        .getByRole('button', { name: 'Collapse Frost · Light', exact: true })
+        .press('Enter');
+      await assertPhases('refresh');
+      await page.clock.runFor(1120);
+      await assertPhases('ready');
+    },
 
   'Skeleton Workbench keeps pinned and frozen previews flat with live replay elsewhere': async ({
     page,
@@ -280,6 +409,36 @@ export default {
       duration: '0s',
       outside: true,
     });
+    await live.scrollIntoViewIfNeeded();
+    const waitForLiveSweep = async () => {
+      const shape = await live.elementHandle();
+      await page.waitForFunction(
+        (node) =>
+          parseFloat(getComputedStyle(node, '::after').width) > 0 &&
+          node
+            .getAnimations({ subtree: true })
+            .some((animation) => animation.playState === 'running'),
+        shape,
+      );
+      await shape.dispose();
+    };
+    await waitForLiveSweep();
+    const oldShape = await live.elementHandle();
+    const staticShape = await pinned.elementHandle();
+    await live.evaluate(async (node) => {
+      for (const animation of node.getAnimations({ subtree: true })) {
+        animation.finish();
+        await animation.finished;
+      }
+    });
+    const replay = motion.getByRole('button', { name: 'Replay motion', exact: true });
+    await replay.press('Enter');
+    await waitForLiveSweep();
+    assert.equal(await oldShape.evaluate((node) => node.isConnected), false);
+    assert.equal(await pinned.evaluate((node, previous) => node === previous, staticShape), true);
+    await oldShape.dispose();
+    await staticShape.dispose();
+    await assertFocused(replay);
     await openWorkbench(page, { ...route, freeze: '1' });
     assert.equal((await live.evaluate(readSweep)).duration, '0s');
     assert.equal((await live.evaluate(readSweep)).outside, true);
@@ -307,6 +466,7 @@ export default {
       });
       const example = page.locator('[data-wb-block="availability"]');
       const card = example.locator('.card-example-loading');
+      const loaded = example.getByRole('checkbox', { name: 'Show loaded content', exact: true });
       const placeholder = card.locator('.card-example-skeleton-title');
       const loadingHeight = (await getBox(card)).height;
       await waitForSweep();
@@ -316,10 +476,12 @@ export default {
           await animation.finished;
         }
       });
-      await example.getByRole('button', { name: 'Show content' }).click();
+      await loaded.check();
+      assert.equal(await card.getAttribute('aria-busy'), 'false');
       assert.equal(await placeholder.count(), 0);
       await assertBox(card, { height: loadingHeight });
-      await example.getByRole('button', { name: 'Show loading' }).click();
+      await loaded.uncheck();
+      assert.equal(await card.getAttribute('aria-busy'), 'true');
       await placeholder.waitFor();
       await waitForSweep();
       await assertBox(card, { height: loadingHeight });

@@ -1,192 +1,203 @@
-import { FileTextIcon } from '@phosphor-icons/react';
-import {
-  Empty,
-  EmptyActions,
-  EmptyDescription,
-  EmptyMedia,
-  EmptyTitle,
-} from '../../prototypes/empty/empty.proto.js';
-import { Button } from '@docouno/unica';
-import { previewProps, previewText } from '../preview-code.js';
-import type { ReactElement } from 'react';
 import { defineComponent } from '../../workbench/types.js';
-import type { EmptyExampleSection } from '../../prototypes/empty/empty.examples.js';
+import type { ComponentValues, PropSchema } from '../../workbench/types.js';
+import {
+  EmptyActivity,
+  EmptyCollections,
+  EmptyIllustrations,
+  EmptyOverflow,
+  EmptyOverlay,
+  EmptyPlacement,
+  EmptyUnavailable,
+} from '../../prototypes/empty/empty.examples.js';
+import {
+  EmptySearchExample,
+  EmptyRecoveryExample,
+} from '../../prototypes/empty/empty.behavior.examples.js';
+import { withOverlaySurface } from '../shared/with-overlay-surface.js';
+import { emptyCode } from './empty-code.js';
+import { EmptyPlayground } from './empty-playground.js';
+import { EmptyRoutes } from './empty-routes.examples.js';
+import routesSource from './empty-routes.examples.tsx?raw';
 
-const { default: EmptyExamples, workspaceHref } =
-  await import('../../prototypes/empty/empty.examples.js');
+const props = {
+  size: {
+    kind: 'enum',
+    group: 'Geometry',
+    default: 'm',
+    description: 'Scale the heading, media and spacing between slots.',
+    choices: [{ value: 's' }, { value: 'm' }, { value: 'l' }],
+  },
+  align: {
+    kind: 'enum',
+    group: 'Geometry',
+    default: 'center',
+    description:
+      'Align the text, media and action row along the logical start edge or in the center.',
+    choices: [{ value: 'start' }, { value: 'center' }],
+  },
+  heading: {
+    kind: 'string',
+    group: 'Content',
+    default: 'No saved pages',
+    demo: true,
+    description:
+      'Text supplied to EmptyTitle. An empty heading leaves the surrounding slots in place.',
+  },
+  media: {
+    kind: 'slot',
+    group: 'Content',
+    default: 'icon',
+    demo: true,
+    description: 'Place a decorative document glyph in EmptyMedia or omit the slot.',
+    choices: [
+      { value: 'none', label: 'No media' },
+      { value: 'icon', label: 'Document icon' },
+    ],
+  },
+  onBrowse: {
+    kind: 'action',
+    group: 'Interaction',
+    demo: true,
+    code: 'handleBrowse',
+    description: 'Record activation of the example’s Browse pages link to the document collection.',
+  },
+} as const satisfies PropSchema;
 
-function example(section: EmptyExampleSection, note?: string): ReactElement {
-  return <EmptyExamples section={section} note={note} />;
-}
+export type EmptyValues = ComponentValues<typeof props>;
 
 export default defineComponent({
   id: 'empty',
   title: 'Empty',
   category: 'Feedback & Status',
   status: 'Proto',
-  summary: 'Explain why a resolved view is empty and offer the next step when there is one.',
+  summary: 'Explain why a resolved view is empty and offer a next step when one is available.',
   componentName: 'Empty',
-  props: {
-    size: {
-      kind: 'enum',
-      group: 'Empty',
-      default: 'm',
-      description: 'Scale the heading, media, and spacing.',
-      choices: [{ value: 's' }, { value: 'm' }, { value: 'l' }],
-    },
-    align: {
-      kind: 'enum',
-      group: 'Empty',
-      default: 'center',
-      description: 'Align the empty state in its container.',
-      choices: [{ value: 'start' }, { value: 'center' }],
-    },
-    heading: {
-      kind: 'string',
-      group: 'EmptyTitle',
-      default: 'No saved pages',
-      description: 'Heading that identifies the empty view.',
-    },
-    media: {
-      kind: 'slot',
-      group: 'EmptyMedia',
-      default: 'icon',
-      description: 'Show an icon or omit the media slot.',
-      choices: [
-        { value: 'none', label: 'Empty' },
-        { value: 'icon', label: 'Document icon' },
-      ],
-    },
-    onBrowse: {
-      kind: 'action',
-      group: 'EmptyActions',
-      code: 'handleBrowse',
-      description: 'Records activation of the browse action.',
-    },
-  },
-  render: ({ ctx, values: { size, align, heading, media } }) => (
-    <Empty {...ctx.subject} size={size} align={align}>
-      {media === 'icon' && <EmptyMedia icon={FileTextIcon} />}
-      <EmptyTitle>{heading}</EmptyTitle>
-      <EmptyDescription>Save a page to keep it close at hand.</EmptyDescription>
-      <EmptyActions>
-        <Button
-          tone="accent"
-          variant="secondary"
-          onClick={() => ctx.action('onBrowse')('Browse pages')}
-        >
-          Browse pages
-        </Button>
-      </EmptyActions>
-    </Empty>
-  ),
-  code: ({ size, align, heading, media }) =>
-    `<Empty${previewProps({ size, align }, { size: 'm', align: 'center' })}>\n${media === 'icon' ? '  <EmptyMedia icon={FileTextIcon} />\n' : ''}  <EmptyTitle>${previewText(heading)}</EmptyTitle>\n  <EmptyDescription>Save a page to keep it close at hand.</EmptyDescription>\n  <EmptyActions><Button variant="secondary" tone="accent" onClick={handleBrowse}>Browse pages</Button></EmptyActions>\n</Empty>`,
-  matrixViews: [
+  props,
+  code: emptyCode,
+  render: withOverlaySurface(EmptyPlayground, 'border-box'),
+  states: [
     {
       id: 'sizes',
       rows: 'size',
       cols: 'media',
-      title: 'Sizes',
-      reference: () => example('sizes'),
+      title: 'Size and optional media',
+      caption: 'Compare the three scales with a document glyph and with the media slot omitted.',
     },
     {
       id: 'placement',
       rows: 'align',
       cols: 'size',
-      title: 'Alignment and optional slots',
-      reference: () =>
-        example('placement', 'Fixed examples of a card and a description-only table row.'),
+      title: 'Alignment at each size',
+      caption:
+        'The heading, description and action share the center or the logical start edge at each size.',
     },
   ],
   cases: [
     {
-      id: 'reasons',
+      id: 'hosts',
+      title: 'Card and table placement',
+      kind: 'content',
       mode: 'pinned',
+      caption:
+        'The export card supplies its own heading and inset. The history table keeps its column headers and shows a single sentence across both columns.',
+      render: withOverlaySurface(EmptyPlacement, 'border-box'),
+    },
+    {
+      id: 'reasons',
       title: 'Empty collections',
       kind: 'behavior',
-      render: () => example('reasons', 'Static examples.'),
+      mode: 'pinned',
+      caption:
+        'Shared items arrive from someone else. A first collection gives its owner a creation action.',
+      render: withOverlaySurface(EmptyCollections, 'border-box'),
     },
     {
       id: 'activity',
-      mode: 'pinned',
       title: 'Activity states',
       kind: 'behavior',
-      render: () => example('activity', 'Static examples.'),
+      mode: 'pinned',
+      caption:
+        'Paused notifications offer a way to resume. A cleared queue explains when the next request will appear.',
+      render: withOverlaySurface(EmptyActivity, 'border-box'),
     },
     {
       id: 'unavailable',
-      mode: 'pinned',
       title: 'Access and loading failures',
       kind: 'behavior',
-      render: () => example('unavailable', 'Fixed examples. Retry shows the live recovery path.'),
+      mode: 'pinned',
+      caption:
+        'Compare a request for access with a retry after a failed load. The wording identifies who can resolve each problem.',
+      render: withOverlaySurface(EmptyUnavailable, 'border-box'),
     },
     {
       id: 'media',
       title: 'Custom illustrations',
-      kind: 'behavior',
-      render: () => example('media'),
+      kind: 'content',
+      mode: 'pinned',
+      caption:
+        'Landscape and portrait artwork keeps its aspect ratio within the size allotted to each illustration. Decorative images have empty alternatives.',
+      render: withOverlaySurface(EmptyIllustrations, 'border-box'),
     },
     {
       id: 'search',
-      mode: 'live',
       title: 'Live search results',
       kind: 'behavior',
-      render: () =>
-        example('search', 'Try typing “incident” or submitting a search with no matches.'),
+      mode: 'live',
+      reset: true,
+      caption:
+        'Type “incident” to find a runbook. Submit a query with no matches to focus its empty heading, then clear the search to return to the input.',
+      render: withOverlaySurface(EmptySearchExample, 'border-box'),
     },
     {
       id: 'retry',
-      mode: 'live',
       title: 'Retry',
       kind: 'behavior',
-      render: () => example('retry', 'The first retry fails. The second shows the loaded reports.'),
+      mode: 'live',
+      reset: true,
+      caption:
+        'The first retry fails. The second loads two reports. If the retry button still has focus, the reports heading receives it.',
+      render: withOverlaySurface(EmptyRecoveryExample, 'border-box'),
     },
     {
       id: 'overflow',
-      mode: 'pinned',
       title: 'Long copy and action wrapping',
       kind: 'content',
-      render: () =>
-        example('overflow', 'Fixed example. Use 360px, 120% text, and RTL to inspect wrapping.'),
+      mode: 'pinned',
+      caption:
+        'The deployment identifier can break across lines. The actions wrap in reading order when the row runs out of space.',
+      render: withOverlaySurface(EmptyOverflow, 'border-box'),
     },
     {
       id: 'overlay',
+      title: 'Floating notification panel',
+      kind: 'surface',
       mode: 'pinned',
-      title: 'Floating panel preview',
       surface: 'overlay',
       overlayStage: true,
-      kind: 'surface',
-      render: () => example('overlay'),
+      caption:
+        'The compact message aligns with the logical start of the panel. The panel supplies the inset and material around the message.',
+      render: EmptyOverlay,
     },
   ],
-  usage: [
+  compositions: [
     {
       id: 'routes',
-      code: `<>
-  <Empty size="l">
-    <EmptyMedia><img src="/assets/empty-landscape.svg" alt="" width="240" height="180" /></EmptyMedia>
-    <EmptyTitle as="h1">Page not found</EmptyTitle>
-    <EmptyDescription>This page may have moved, or the address may be incorrect.</EmptyDescription>
-    <EmptyActions>
-      <Button asChild><a href="${workspaceHref}">Back to workspace</a></Button>
-    </EmptyActions>
-  </Empty>
-
-  <Empty size="l">
-    <EmptyMedia icon={CloudSlashIcon} color="danger" />
-    <EmptyTitle as="h1">We couldn’t open this page</EmptyTitle>
-    <EmptyDescription>The server ran into a problem. Try reloading the page in a moment.</EmptyDescription>
-    <EmptyActions>
-      <Button>Reload page</Button>
-      <Button asChild variant="secondary" tone="neutral">
-        <a href="${workspaceHref}">Back to workspace</a>
-      </Button>
-    </EmptyActions>
-  </Empty>
-</>`,
       title: 'Full-page recovery',
-      render: () => example('routes', 'Fixed examples for a missing page and a failed load.'),
+      mode: 'live',
+      reset: true,
+      caption:
+        'Both pages link back to the workspace. Reload page recovers the failed view and moves keyboard focus to its content.',
+      code: routesSource.replaceAll('../../prototypes/', './prototypes/'),
+      render: withOverlaySurface(
+        ({ ctx }) => (
+          <EmptyRoutes
+            emptyProps={ctx.subject}
+            workspaceHref="/?item=02-workspace-overview"
+            illustrationSrc="/assets/empty-landscape.svg"
+          />
+        ),
+        'border-box',
+      ),
     },
   ],
 });

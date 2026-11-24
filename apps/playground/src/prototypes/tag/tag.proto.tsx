@@ -148,6 +148,7 @@ export function TagGroup({
   const [announcement, setAnnouncement] = useState('');
   const root = useRef<HTMLDivElement>(null);
   const buttons = useRef(new Map<string, HTMLButtonElement>());
+  const detachedFocus = useRef<string | null>(null);
   const previousItems = useRef(items);
   const disclosureId = useId();
   const limit = maxVisible === undefined ? items.length : Math.max(1, maxVisible);
@@ -165,6 +166,21 @@ export function TagGroup({
   }, [visible, disabled, canExpand, disclosureId]);
   const tabStop = activeId && available.includes(activeId) ? activeId : available[0];
 
+  const registerButton = (id: string, node: HTMLButtonElement | null): void => {
+    if (node) {
+      buttons.current.set(id, node);
+      if (detachedFocus.current === id) {
+        detachedFocus.current = null;
+      }
+    } else {
+      // Once the focused node leaves the DOM, every group sees body as active.
+      if (buttons.current.get(id) === document.activeElement) {
+        detachedFocus.current = id;
+      }
+      buttons.current.delete(id);
+    }
+  };
+
   const focus = (id: string | undefined): void => {
     if (id) {
       setActiveId(id);
@@ -176,16 +192,14 @@ export function TagGroup({
 
   useLayoutEffect(() => {
     const old = previousItems.current;
+    const lostId = detachedFocus.current;
+    detachedFocus.current = null;
     const removed = old.filter((item) => !items.some((current) => current.id === item.id));
     if (removed.length) {
       setAnnouncement(`${removed.map((item) => item.label).join(', ')} removed.`);
       // Do not retrieve focus if someone moved elsewhere while waiting.
-      if (
-        activeId &&
-        !available.includes(activeId) &&
-        (document.activeElement === document.body || root.current?.contains(document.activeElement))
-      ) {
-        const index = old.findIndex((item) => item.id === activeId);
+      if (lostId && document.activeElement === document.body) {
+        const index = old.findIndex((item) => item.id === lostId);
         const next = visible.slice(Math.max(0, index)).find((item) => available.includes(item.id));
         const previous = visible
           .slice(0, Math.max(0, index))
@@ -195,7 +209,7 @@ export function TagGroup({
       }
     }
     previousItems.current = items;
-  }, [items, activeId, available, visible, canExpand, disclosureId, emptyFocusRef]);
+  }, [items, available, visible, canExpand, disclosureId, emptyFocusRef]);
 
   return (
     <div
@@ -261,13 +275,7 @@ export function TagGroup({
           pending={item.pending === true}
           removeLabel={item.removeLabel}
           removeTabIndex={tabStop === item.id ? 0 : -1}
-          removeRef={(node) => {
-            if (node) {
-              buttons.current.set(item.id, node);
-            } else {
-              buttons.current.delete(item.id);
-            }
-          }}
+          removeRef={(node) => registerButton(item.id, node)}
           onFocus={() => setActiveId(item.id)}
           onRemove={() => onRemove(item.id)}
         >
@@ -276,13 +284,7 @@ export function TagGroup({
       ))}
       {canExpand && (
         <button
-          ref={(node) => {
-            if (node) {
-              buttons.current.set(disclosureId, node);
-            } else {
-              buttons.current.delete(disclosureId);
-            }
-          }}
+          ref={(node) => registerButton(disclosureId, node)}
           type="button"
           className="tag-disclosure-proto"
           data-size={size}
@@ -296,7 +298,7 @@ export function TagGroup({
           onFocus={() => setActiveId(disclosureId)}
           onClick={() => setExpanded(!expanded)}
         >
-          <span>{expanded ? 'Show less' : `+${items.length - limit} more`}</span>
+          <span dir="auto">{expanded ? 'Show less' : `+${items.length - limit} more`}</span>
         </button>
       )}
       {!items.length && <span className="tag-group-empty-proto">{emptyMessage}</span>}

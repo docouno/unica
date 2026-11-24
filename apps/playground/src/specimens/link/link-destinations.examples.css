@@ -1,0 +1,22 @@
+.link-fragment-section {
+  scroll-margin-block: var(--space-24);
+}
+
+.link-fragment-section:focus {
+  outline: 2px solid var(--focus-ring-color);
+  outline-offset: 2px;
+  border-radius: var(--radius-xs);
+}
+
+.link-fragment-jump {
+  display: inline-block;
+  padding-block: var(--space-8);
+}
+
+@media (pointer: coarse) {
+  .link-fragment-jump {
+    min-inline-size: 44px;
+    min-block-size: 44px;
+    align-content: center;
+  }
+}

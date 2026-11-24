@@ -1,8 +1,83 @@
 import { Spinner } from '@docouno/unica';
-import { previewProps } from '../preview-code.js';
+import { useId } from 'react';
+import type { ReactElement } from 'react';
 import { defineComponent } from '../../workbench/types.js';
-import { activityNameReference, labelledByText, withActivityNameCode } from './activity-name.js';
-import Study from './spinner.examples.js';
+import type { ComponentValues, PreviewProps, PropSchema } from '../../workbench/types.js';
+import { previewProps } from '../preview-code.js';
+import { withOverlaySurface } from '../shared/with-overlay-surface.js';
+import { labelledByText, withActivityName, withActivityNameCode } from './activity-name.js';
+import {
+  SpinnerForeground,
+  SpinnerMotion,
+  SpinnerOverlay,
+  SpinnerTextScale,
+} from './spinner.examples.js';
+import { SpinnerLifecycleExample } from './spinner-lifecycle.js';
+import { WorkspaceAddressCheck } from './spinner-placement.js';
+import placementSource from './spinner-placement.tsx?raw';
+
+const props = {
+  size: {
+    kind: 'enum',
+    group: 'Geometry',
+    default: 'inherit',
+    description:
+      'Inherit the surrounding font size at 1em, or use a fixed 14, 16 or 20px icon slot.',
+    choices: [{ value: 'inherit' }, { value: 's' }, { value: 'm' }, { value: 'l' }],
+  },
+  tone: {
+    kind: 'enum',
+    group: 'Role',
+    default: 'inherit',
+    description: 'Inherit the surrounding text color or use a neutral, muted or accent foreground.',
+    choices: [{ value: 'inherit' }, { value: 'neutral' }, { value: 'muted' }, { value: 'accent' }],
+  },
+  delay: {
+    kind: 'number',
+    group: 'Availability',
+    default: 0,
+    publicType: 'number',
+    examples: [0, 150],
+    description:
+      'Milliseconds before the drawing appears. The SVG occupies its slot immediately. Negative and non-finite delays use zero.',
+  },
+  'aria-label': {
+    kind: 'string',
+    group: 'Semantics',
+    default: '',
+    label: 'Accessible name',
+    publicType: 'string',
+    examples: ['', 'Checking files'],
+    description: 'Name a standalone glyph. Without an accessible name the Spinner is decorative.',
+  },
+  labelledByText: { ...labelledByText, examples: ['', 'Archive transfer'] },
+  'aria-hidden': {
+    kind: 'boolean',
+    group: 'Semantics',
+    default: false,
+    publicType: "boolean | 'true' | 'false'",
+    description:
+      'Keep a named glyph decorative when surrounding text already describes the operation.',
+  },
+} as const satisfies PropSchema;
+
+function SpinnerPreview({
+  ctx,
+  values: { labelledByText: reference, ...values },
+}: PreviewProps & { readonly values: ComponentValues<typeof props> }): ReactElement {
+  const id = useId();
+  return withActivityName(
+    'Spinner',
+    id,
+    reference,
+    <Spinner
+      {...ctx.subject}
+      {...values}
+      className="spinner-example-preview"
+      aria-labelledby={reference.trim() ? id : undefined}
+    />,
+  );
+}
 
 export default defineComponent({
   id: 'spinner',
@@ -12,105 +87,88 @@ export default defineComponent({
   summary:
     'Compact activity for work with an unknown duration. The surrounding text tells you what is happening.',
   componentName: 'Spinner',
-  props: {
-    size: {
-      kind: 'enum',
-      group: 'Appearance',
-      default: 'inherit',
-      description: 'Diameter of the activity glyph.',
-      choices: [{ value: 'inherit' }, { value: 's' }, { value: 'm' }, { value: 'l' }],
+  props,
+  constraints: [
+    {
+      kind: 'ignored',
+      when: { 'aria-hidden': true },
+      affects: ['aria-label'],
+      reason:
+        'An explicitly hidden Spinner stays out of the accessibility tree even when it has a name.',
     },
-    tone: {
-      kind: 'enum',
-      group: 'Appearance',
-      default: 'inherit',
-      description: 'Foreground color inherited or chosen for the activity.',
-      choices: [
-        { value: 'inherit' },
-        { value: 'neutral' },
-        { value: 'muted' },
-        { value: 'accent' },
-      ],
-    },
-    delay: {
-      kind: 'number',
-      group: 'Activity',
-      default: 0,
-      examples: [0, 150],
-      description: 'Wait this many milliseconds before showing activity.',
-    },
-    'aria-label': {
-      kind: 'string',
-      group: 'Semantics',
-      default: '',
-      label: 'Accessible name',
-      description: 'Accessible name for an otherwise silent glyph.',
-    },
-    labelledByText,
-    'aria-hidden': {
-      kind: 'boolean',
-      group: 'Semantics',
-      default: false,
-      description: 'Hide a redundant glyph from assistive technology.',
-    },
-  },
-  render: ({ ctx, values: { labelledByText, ...props } }) => {
-    const id = `${ctx.id}-operation`;
-    const reference = activityNameReference(id, labelledByText);
-    const frozen =
-      typeof window !== 'undefined' &&
-      (document.documentElement.dataset.wbFreeze === '1' ||
-        new URLSearchParams(window.location.search).get('freeze') === '1');
-    return (
-      <>
-        {reference}
-        <Spinner
-          {...ctx.subject}
-          {...props}
-          delay={frozen ? 0 : props.delay}
-          aria-labelledby={reference ? id : undefined}
-        />
-      </>
-    );
-  },
-  code: ({ labelledByText, ...props }) => {
-    const label = labelledByText.trim() ? ' aria-labelledby="operation-label"' : '';
-    const attributes = previewProps(props, {
+  ],
+  render: withOverlaySurface(SpinnerPreview, 'border-box'),
+  code: ({ labelledByText, ...values }) => {
+    const attributes = previewProps(values, {
       size: 'inherit',
       tone: 'inherit',
       delay: 0,
       'aria-label': '',
       'aria-hidden': false,
     });
-    return withActivityNameCode(`<Spinner${attributes}${label} />`, labelledByText);
+    return withActivityNameCode(
+      'Spinner',
+      labelledByText,
+      (label) => `<Spinner${attributes}${label} />`,
+    );
   },
-  matrixViews: [
+  states: [
     {
       id: 'scale',
       rows: 'size',
-      title: 'One footprint · four sizes',
-      reference: () => <Study section="scale" />,
+      title: 'Glyph size',
+      caption:
+        'The inherited size follows the surrounding font. The three fixed slots measure 14, 16 and 20px.',
     },
     {
       id: 'tones',
       rows: 'tone',
-      title: 'A quiet default · a deliberate accent',
-      reference: () => <Study section="tones" />,
+      title: 'Foreground tone',
+      caption: 'Compare inherited, neutral, muted and accent ink at the same size.',
     },
   ],
   cases: [
     {
+      id: 'text-scale',
+      title: 'Inherit the text size',
+      kind: 'content',
+      mode: 'pinned',
+      caption:
+        'The same 1em Spinner follows the line of small or large body text without an explicit size.',
+      render: withOverlaySurface(SpinnerTextScale, 'border-box'),
+    },
+    {
+      id: 'foreground',
+      title: 'Following the text color',
+      kind: 'content',
+      mode: 'pinned',
+      caption:
+        'Both operations use accent text. The first glyph inherits that color. The second uses a quieter muted tone.',
+      render: withOverlaySurface(SpinnerForeground, 'border-box'),
+    },
+    {
       id: 'motion',
-      title: 'Motion & a readable still frame',
+      title: 'Motion and a readable still frame',
       kind: 'behavior',
-      render: () => <Study section="motion" />,
+      mode: 'live',
+      caption:
+        'Soft and Frost change the length of an orbiting arc. Pixel advances a trail through eight cells. Compare that motion with the fixed glyph used for reduced motion.',
+      render: withOverlaySurface(SpinnerMotion, 'border-box'),
     },
     {
       id: 'lifecycle',
       mode: 'live',
-      title: 'Short waits & completion',
+      title: 'Short waits and completion',
       kind: 'behavior',
-      render: () => <Study section="lifecycle" />,
+      caption:
+        'Each save reserves the same slot and updates the text immediately. A fast save finishes before the 150ms reveal delay. Longer requests show the Spinner until a result replaces it.',
+      actions: [
+        { id: 'save', label: 'Save · 2.2s' },
+        { id: 'quick', label: 'Quick save · 80ms' },
+        { id: 'fail', label: 'Try failure' },
+      ],
+      reset: true,
+      render: withOverlaySurface(SpinnerLifecycleExample, 'border-box'),
     },
     {
       id: 'overlay',
@@ -118,15 +176,44 @@ export default defineComponent({
       surface: 'overlay',
       overlayStage: true,
       kind: 'surface',
-      render: () => <Study section="overlay" />,
+      mode: 'pinned',
+      caption:
+        'A local status names the pending search while the rest of the page remains available.',
+      render: SpinnerOverlay,
     },
   ],
-  usage: [
+  compositions: [
     {
       id: 'placement',
-      code: `<span><Spinner size="s" /> Saving changes</span>`,
-      title: 'Inline & reserved control slots',
-      render: () => <Study section="placement" />,
+      title: 'Inline and reserved control slots',
+      mode: 'live',
+      caption:
+        'Place the activity beside its status text or in the address field’s trailing slot. Editing the address clears the result until it matches the checked value.',
+      controls: {
+        placement: {
+          kind: 'enum',
+          label: 'Spinner placement',
+          default: 'inline',
+          choices: [
+            { value: 'inline', label: 'Inline' },
+            { value: 'field', label: 'Field' },
+          ],
+        },
+        available: { kind: 'boolean', label: 'Address available', default: false },
+      },
+      reset: true,
+      code: placementSource,
+      render: withOverlaySurface(
+        ({ ctx }) => (
+          <WorkspaceAddressCheck
+            placement={ctx.story?.controls.placement === 'field' ? 'field' : 'inline'}
+            outcome={ctx.story?.controls.available === true ? 'available' : 'pending'}
+            announce={!ctx.comparing}
+            spinnerProps={ctx.subject}
+          />
+        ),
+        'border-box',
+      ),
     },
   ],
 });

@@ -1,0 +1,23 @@
+.toast-queue-study {
+  position: relative;
+  display: grid;
+  place-items: center;
+  inline-size: 100%;
+  min-inline-size: 0;
+  block-size: 360px;
+}
+
+.toast-queue-study[data-reading] {
+  block-size: 528px;
+}
+
+.toast-queue-study:focus-visible {
+  outline: 2px solid var(--focus-ring-color);
+  outline-offset: -2px;
+}
+
+.toast-queue-empty {
+  padding: var(--space-4) var(--space-8);
+  border-radius: var(--surface-s-radius);
+  background: var(--bg-canvas);
+}

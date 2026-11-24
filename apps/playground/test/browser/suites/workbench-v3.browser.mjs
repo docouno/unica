@@ -14,6 +14,376 @@ async function navigate(page, params) {
 }
 
 export default {
+  'Bounds follows an inline link when its web font replaces the fallback': async ({
+    page,
+    mount,
+  }) => {
+    await mount('native');
+    const url = new URL('/?item=link&tab=usage&family=frost&scheme=light', page.url());
+    await page.goto(url.href, { waitUntil: 'commit' });
+    await page.locator('html[data-wb-ready="1"]').waitFor({ state: 'attached', timeout: 20_000 });
+
+    const font = '**/inter-latin-wght-italic.woff2';
+    let releaseFont;
+    const fontGate = new Promise((resolve) => {
+      releaseFont = resolve;
+    });
+    await page.route(font, async (route) => {
+      await fontGate;
+      await route.continue();
+    });
+
+    const board = page.locator('[data-wb-block="glyphs"] .wb-artboard');
+    const link = board.getByRole('link', { name: 'Writing for Web Accessibility' });
+    const outline = board.locator('.wb-bounds-outline').first();
+    const label = outline.locator('[data-wb-bounds-label]');
+    let fallbackWidth;
+    try {
+      const requested = page.waitForRequest(font, { timeout: 20_000 });
+      await navigate(page, {
+        item: 'link',
+        tab: 'states',
+        block: 'glyphs',
+        family: 'frost',
+        scheme: 'light',
+        vp: '360',
+        dir: 'rtl',
+        scale: '120',
+        bounds: '1',
+      });
+      await requested;
+      await label.waitFor({ timeout: 20_000 });
+      fallbackWidth = await link.evaluate((node) => node.offsetWidth);
+    } finally {
+      releaseFont();
+    }
+
+    await page.evaluate(() => document.fonts.ready);
+    const size = await link.evaluate((node) => [node.offsetWidth, node.offsetHeight]);
+    assert.notEqual(size[0], fallbackWidth);
+    await label.filter({ hasText: size.join(' × ') + ' px' }).waitFor({ timeout: 4_000 });
+    const outlineSize = await outline.evaluate((node) => [
+      Math.round(parseFloat(node.style.width)),
+      Math.round(parseFloat(node.style.height)),
+    ]);
+    assert.deepEqual(outlineSize, size);
+  },
+
+  'Link section addresses survive a new tab and track native history': async ({ page, mount }) => {
+    await mount('workbench-v3');
+    await navigate(page, {
+      ...Object.fromEntries(new URL(page.url()).searchParams),
+      item: 'link',
+      tab: 'states',
+      block: 'live',
+      solo: 'frost-light',
+    });
+    const path = page.getByRole('navigation', { name: 'On this example' });
+    const details = path.getByRole('link', { name: 'Details' });
+    const original = page.url();
+    const [opened] = await Promise.all([
+      page.context().waitForEvent('page'),
+      details.click({ modifiers: ['Control'] }),
+    ]);
+    try {
+      const target = opened.getByRole('region', { name: 'Details', exact: true });
+      const navigation = opened.getByRole('navigation', { name: 'On this example' });
+      const current = navigation.locator('[aria-current="location"]');
+      await target.waitFor();
+      assert.equal(await target.evaluate((element) => element.matches(':focus')), true);
+      assert.equal(await current.textContent(), 'Details');
+      assert.equal(page.url(), original);
+      await navigation.getByRole('link', { name: 'Summary' }).press('Enter');
+      await current.filter({ hasText: 'Summary' }).waitFor();
+      await opened.goBack();
+      await current.filter({ hasText: 'Details' }).waitFor();
+      await opened.reload({ waitUntil: 'domcontentloaded' });
+      await target.waitFor();
+      assert.equal(await target.evaluate((element) => element.matches(':focus')), true);
+      assert.equal(await current.textContent(), 'Details');
+    } finally {
+      await opened.close();
+    }
+  },
+
+  'Tag removal and restoration keep keyboard focus in the activated artboard': async ({
+    page,
+    mount,
+  }) => {
+    await page.setViewportSize({ width: 1500, height: 900 });
+    await mount('workbench-v3');
+    await navigate(page, { item: 'tag', tab: 'playground', family: 'frost', scheme: 'both' });
+    const boards = page.locator('.wb-artboard');
+    const remove = boards.nth(1).getByRole('button', { name: 'Remove Documentation' });
+    const restore = boards.nth(1).getByRole('button', { name: 'Restore tag' });
+    await remove.focus();
+    await page.keyboard.down('Enter');
+    await page.keyboard.down('Enter');
+    await page.keyboard.up('Enter');
+    assert.equal(await restore.evaluate((button) => button.matches(':focus')), true);
+    assert.equal(await boards.nth(1).locator('[data-wb-subject]').count(), 0);
+    await page.keyboard.press('Space');
+    assert.equal(await remove.evaluate((button) => button.matches(':focus')), true);
+    assert.equal(await boards.nth(1).locator('.tag-proto[data-wb-subject]').count(), 1);
+    assert.equal(
+      await boards.nth(0).getByRole('button', { name: 'Remove Documentation' }).count(),
+      1,
+    );
+    const label = page.getByRole('textbox', { name: 'label', exact: true });
+    await label.fill('   ');
+    await boards.nth(1).getByRole('button', { name: 'Remove Label' }).waitFor();
+    assert.equal(await label.evaluate((input) => input.matches(':focus')), true);
+  },
+
+  'Settling two TagGroup removals retains focus in the group that owned it': async ({
+    page,
+    mount,
+  }) => {
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await mount('workbench-v3');
+    await navigate(page, {
+      item: 'tag',
+      tab: 'states',
+      block: 'removal',
+      family: 'frost',
+      scheme: 'both',
+    });
+    const frame = page.locator('[data-wb-block="removal"]');
+    const groups = frame.getByRole('toolbar', { name: 'Applied labels' });
+    await frame.getByRole('checkbox', { name: 'Wait for confirmation' }).check();
+    for (const group of [groups.nth(0), groups.nth(1)]) {
+      await group.getByRole('button', { name: 'Remove Platform team' }).press('Delete');
+    }
+    // Activation through an assistive command can leave DOM focus in the collection.
+    await frame
+      .getByRole('button', { name: 'Confirm removal' })
+      .evaluate((button) => button.click());
+    const following = groups.nth(1).getByRole('button', { name: 'Remove Needs review' });
+    assert.equal(await following.evaluate((button) => button.matches(':focus')), true);
+    assert.equal(await groups.getByRole('button', { name: 'Remove Platform team' }).count(), 0);
+    await frame.getByRole('checkbox', { name: 'Wait for confirmation' }).uncheck();
+    await groups.nth(1).getByRole('button', { name: 'Remove This month' }).press('Delete');
+    await following.focus();
+    await page.keyboard.down('Enter');
+    await page.keyboard.down('Enter');
+    await page.keyboard.up('Enter');
+    const empty = frame
+      .locator('.wb-artboard')
+      .nth(1)
+      .getByRole('button', { name: 'Reapply labels' });
+    assert.equal(await empty.evaluate((button) => button.matches(':focus')), true);
+    await page.keyboard.press('Enter');
+    const first = groups.nth(1).getByRole('button', { name: 'Remove This month' });
+    assert.equal(await first.evaluate((button) => button.matches(':focus')), true);
+  },
+
+  'Toast exports retain independent identities after an earlier notification is dismissed': async ({
+    page,
+    mount,
+  }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await mount('workbench-v3');
+    await navigate(page, {
+      item: 'toast',
+      tab: 'compositions',
+      block: 'modal',
+      family: 'frost',
+      scheme: 'light',
+      surface: 'overlay',
+      vp: '360',
+      scale: '120',
+      dir: 'rtl',
+    });
+    const open = page.getByRole('button', { name: 'Open export options' });
+    await open.press('Enter');
+    const dialog = page.locator('dialog:modal');
+    const queue = dialog.locator('[popover]:popover-open');
+    const name = dialog.getByRole('textbox', { name: 'File name' });
+    const prepare = dialog.getByRole('button', { name: 'Prepare export' });
+    async function holdEnter(target) {
+      await target.focus();
+      await page.keyboard.down('Enter');
+      await page.evaluate(
+        () => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))),
+      );
+      await page.keyboard.down('Enter');
+      await page.keyboard.up('Enter');
+    }
+    await name.fill('First report');
+    await holdEnter(name);
+    await dialog
+      .getByRole('status')
+      .filter({ hasText: 'First report.txt' })
+      .waitFor({ state: 'attached' });
+    await name.fill('Second report');
+    await holdEnter(prepare);
+    await queue.getByRole('button', { name: /^Expand 3 notifications/ }).press('Enter');
+    const cards = queue.locator('.toast-card');
+    assert.equal(await cards.count(), 3);
+    await holdEnter(
+      cards.filter({ hasText: 'First report.txt' }).getByRole('button', { name: /^Dismiss:/ }),
+    );
+    await name.fill('Third report');
+    await prepare.press('Enter');
+    assert.equal(await cards.count(), 3);
+    await cards
+      .filter({ hasText: 'Third report.txt' })
+      .getByRole('button', { name: /^Dismiss:/ })
+      .press('Enter');
+    assert.equal(await cards.count(), 2);
+    await cards.filter({ hasText: 'Second report.txt' }).waitFor();
+    await page.keyboard.press('Escape');
+    assert.equal(await open.evaluate((button) => button.matches(':focus')), true);
+    await open.press('Enter');
+    const expand = queue.getByRole('button', { name: /^Expand 2 notifications/ });
+    if (await expand.count()) {
+      await expand.press('Enter');
+    }
+    await queue.locator('.toast-card').filter({ hasText: 'Second report.txt' }).waitFor();
+    assert.equal(
+      await queue.locator('.toast-card').filter({ hasText: 'Third report.txt' }).count(),
+      0,
+    );
+    assert.equal(await dialog.getByRole('status').textContent(), '');
+    await page.keyboard.press('Escape');
+    const reset = page.getByRole('button', { name: 'Reset', exact: true });
+    await reset.focus();
+    await page.locator('.toast-dismiss-all').evaluate((button) => button.click());
+    assert.equal(await reset.evaluate((button) => button.matches(':focus')), true);
+  },
+
+  'Dismissing a toast preserves focus owned by another message or artboard': async ({
+    page,
+    mount,
+  }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await mount('workbench-v3');
+    await navigate(page, {
+      item: 'toast',
+      tab: 'states',
+      block: 'reading',
+      family: 'frost',
+      scheme: 'both',
+    });
+    const boards = page.locator('[data-wb-block="reading"] .wb-artboard');
+    const first = boards.first();
+    const close = first
+      .locator('.toast-card')
+      .first()
+      .getByRole('button', { name: /^Dismiss:/ });
+    const undo = first.getByRole('button', { name: 'Undo', exact: true });
+    const next = boards.nth(1).getByRole('button', { name: 'Undo', exact: true });
+    await undo.focus();
+    await close.evaluate((button) => button.click());
+    await page.evaluate(
+      () => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))),
+    );
+    assert.equal(await undo.evaluate((button) => button.matches(':focus')), true);
+    await close.evaluate(
+      (button, destination) => {
+        button.focus();
+        button.click();
+        destination.focus();
+      },
+      await next.elementHandle(),
+    );
+    await page.evaluate(
+      () => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))),
+    );
+    assert.equal(await next.evaluate((button) => button.matches(':focus')), true);
+  },
+
+  'Bounds follows the accordion when its header opens inside a composition': async ({
+    page,
+    mount,
+  }) => {
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await mount('workbench-v3');
+    await navigate(page, {
+      item: 'accordion',
+      tab: 'compositions',
+      block: 'actions',
+      family: 'frost',
+      scheme: 'light',
+      surface: 'overlay',
+      vp: '360',
+      scale: '120',
+      dir: 'rtl',
+      bounds: '1',
+      freeze: '1',
+    });
+    const board = page.locator('[data-wb-block="actions"] .wb-artboard');
+    const roots = board.locator('.accordion-proto[data-wb-subject]');
+    await roots.first().waitFor();
+    assert.equal(await roots.count(), 3);
+    const before = await roots.first().evaluate((el) => [el.offsetWidth, el.offsetHeight]);
+    await page
+      .getByText(before.join(' × ') + ' px', { exact: true })
+      .first()
+      .waitFor();
+    await board.getByRole('button', { name: 'Preview link', exact: true }).press('Enter');
+    const url = board.getByText('https://preview.example.com/releases/2.4', { exact: true });
+    await url.waitFor();
+    const gapBelowUrl = await url.evaluate((element) => {
+      const range = document.createRange();
+      range.selectNodeContents(element);
+      return (
+        element.nextElementSibling.getBoundingClientRect().top -
+        range.getBoundingClientRect().bottom
+      );
+    });
+    assert.ok(gapBelowUrl >= 0, 'The complete URL fits above the expiration note');
+    await page.waitForFunction(([width, height]) => {
+      const accordion = document.querySelector('[data-wb-block="actions"] .accordion-proto');
+      if (!accordion || accordion.offsetWidth !== width || accordion.offsetHeight <= height) {
+        return false;
+      }
+      const dimensions = `${width} × ${accordion.offsetHeight} px`;
+      return [...document.querySelectorAll('[data-wb-bounds-label]')].some(
+        (label) => label.textContent === dimensions,
+      );
+    }, before);
+  },
+
+  'Overlay disclosures stay under the pointer when their content opens': async ({
+    page,
+    mount,
+  }) => {
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await mount('workbench-v3');
+    for (const [route, name] of [
+      [{ item: 'accordion', tab: 'playground' }, 'Fee'],
+      [{ item: 'avatar', tab: 'compositions', block: 'usage' }, 'View all 7'],
+    ]) {
+      await navigate(page, {
+        ...route,
+        surface: 'overlay',
+        family: 'frost',
+        scheme: 'light',
+        vp: '360',
+        scale: '120',
+        dir: 'rtl',
+        raw: '1',
+        freeze: '1',
+      });
+      const board = page.locator('.wb-artboard').first();
+      const trigger = board.getByRole('button', { name, exact: true });
+      await trigger.scrollIntoViewIfNeeded();
+      const panelId = await trigger.getAttribute('aria-controls');
+      assert.ok(panelId);
+      const disclosure = board.locator(`button[aria-controls="${panelId}"]`);
+      const bounds = await trigger.boundingBox();
+      assert.ok(bounds);
+      const x = bounds.x + bounds.width / 2;
+      const y = bounds.y + bounds.height * 0.85;
+      await page.mouse.click(x, y);
+      assert.equal(await disclosure.getAttribute('aria-expanded'), 'true');
+      await page.mouse.click(x, y);
+      assert.equal(await disclosure.getAttribute('aria-expanded'), 'false');
+    }
+  },
+
   'An AppShell save failure clears the shared control and preserves each workspace draft': async ({
     page,
     mount,

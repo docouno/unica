@@ -1,3 +1,12 @@
+/* Give each result enough room to compare the card, including horizontal media and actions. */
+ul:has(> [data-wb-result-row] [data-card-comparison]) {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 36rem), 1fr));
+}
+
+li[data-wb-result-row] [data-card-comparison] {
+  max-inline-size: 100%;
+}
+
 .card-example-stack {
   display: grid;
   gap: var(--space-16);
@@ -16,49 +25,19 @@
   gap: var(--space-8);
   min-inline-size: 0;
 }
-.card-example-cell > [data-unica-card-variant] {
+.card-example-cell > :last-child {
   flex: 1;
-}
-.card-example-toggle-content {
-  align-self: start;
-}
-.card-example-note,
-.card-example-label {
-  margin: 0;
-  color: var(--fg-muted);
-  font-size: var(--text-size-caption-l);
-  line-height: var(--text-size-caption-l-lh);
-}
-.card-example-note {
-  max-inline-size: 72ch;
-}
-.card-example-label {
-  font-weight: 600;
-}
-.card-example-meta {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: var(--space-8);
-  color: var(--fg-muted);
-  font-size: var(--text-size-caption-l);
-  line-height: var(--text-size-caption-l-lh);
 }
 .card-example-facts {
   margin: 0;
   display: grid;
   gap: var(--space-8);
-  font-size: var(--text-size-body-s);
-  line-height: var(--text-size-body-s-lh);
 }
 .card-example-facts > div {
   display: flex;
   flex-wrap: wrap;
   justify-content: space-between;
   gap: var(--space-4) var(--space-16);
-}
-.card-example-facts dt {
-  color: var(--fg-muted);
 }
 .card-example-facts dd {
   margin: 0;
@@ -74,20 +53,6 @@
 .card-example-quiet-section {
   background: var(--bg-surface-subtle);
 }
-.card-example-inline-link:focus-visible {
-  outline: 2px solid var(--focus-ring-color);
-  outline-offset: 2px;
-  border-radius: var(--radius-xs);
-}
-.card-example-inline-link {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-4);
-  color: var(--fg-secondary);
-  font-size: var(--text-size-caption-l);
-  line-height: var(--text-size-caption-l-lh);
-  text-underline-offset: 0.2em;
-}
 .card-example-destination {
   display: grid;
   gap: var(--space-4);
@@ -98,30 +63,6 @@
 .card-example-destination:focus {
   outline: 2px solid var(--focus-ring-color);
   outline-offset: 2px;
-}
-.card-example-controls {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-16);
-}
-.card-example-controls label {
-  display: flex;
-  flex-wrap: wrap;
-  max-inline-size: 100%;
-  align-items: center;
-  gap: var(--space-8);
-  color: var(--fg-muted);
-  font-size: var(--text-size-caption-l);
-}
-.card-example-controls select {
-  min-inline-size: 0;
-  max-inline-size: 100%;
-  font: inherit;
-  color: var(--fg-primary);
-  background: var(--bg-surface);
-  border: 1px solid var(--border-default);
-  border-radius: var(--radius-xs);
-  padding: var(--space-4) var(--space-8);
 }
 .card-example-loading {
   min-block-size: 200px;
@@ -146,9 +87,6 @@
   justify-items: center;
   gap: var(--space-8);
   padding: var(--space-16);
-  color: var(--fg-muted);
-  font-size: var(--text-size-caption-l);
-  line-height: var(--text-size-caption-l-lh);
 }
 .card-example-overlay {
   position: relative;
@@ -159,9 +97,6 @@
   padding: var(--surface-m-padding);
 }
 @media (forced-colors: active) {
-  .card-example-controls select {
-    border-color: ButtonText;
-  }
   .card-example-destination {
     border-color: CanvasText;
   }

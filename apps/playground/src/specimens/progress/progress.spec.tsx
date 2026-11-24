@@ -1,7 +1,7 @@
 import { Progress } from '@docouno/unica';
 import { previewProps } from '../preview-code.js';
 import { defineComponent } from '../../workbench/types.js';
-import { activityNameReference, labelledByText, withActivityNameCode } from './activity-name.js';
+import { labelledByText, withActivityName, withActivityNameCode } from './activity-name.js';
 import {
   BoundariesExample,
   InterruptedComposition,
@@ -159,25 +159,24 @@ export default defineComponent({
   ],
   render: ({ ctx, values: { value, determinate, labelledByText, ...props } }) => {
     const id = `${ctx.id}-operation`;
-    const reference = activityNameReference(id, labelledByText);
+    const reference = labelledByText.trim();
     if (!reference && !props.label.trim() && !props['aria-label'].trim()) {
       return <span>Give the operation a name.</span>;
     }
-    return (
-      <>
-        {reference}
-        <Progress
-          {...ctx.subject}
-          {...props}
-          value={determinate ? value : null}
-          aria-labelledby={reference ? id : undefined}
-        />
-      </>
+    return withActivityName(
+      'Progress',
+      id,
+      reference,
+      <Progress
+        {...ctx.subject}
+        {...props}
+        value={determinate ? value : null}
+        aria-labelledby={reference ? id : undefined}
+      />,
     );
   },
   code: ({ value, determinate, labelledByText, ...props }) => {
-    const label = labelledByText.trim() ? ' aria-labelledby="operation-label"' : '';
-    if (!label && !props.label.trim() && !props['aria-label'].trim()) {
+    if (!labelledByText.trim() && !props.label.trim() && !props['aria-label'].trim()) {
       return '';
     }
     const attributes = previewProps(props, {
@@ -192,8 +191,9 @@ export default defineComponent({
       'aria-valuetext': '',
     });
     return withActivityNameCode(
-      `<Progress value={${determinate ? value : 'null'}}${attributes}${label} />`,
+      'Progress',
       labelledByText,
+      (label) => `<Progress value={${determinate ? value : 'null'}}${attributes}${label} />`,
     );
   },
   states: [

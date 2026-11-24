@@ -84,7 +84,7 @@ An identity and label form an explicit flex row, vertically centered with a fixe
 | M           | 24px   | 40px           | 8px                             | 8px                 |
 | L           | 32px   | 48px           | 8px                             | 10px                |
 
-Insets include the action border. The trailing label padding follows Button (S 12px / Pixel 10px, M 16px, L 20px, before its border). At increased text scale or with a wrapped label, the row may increase the action height; avatar and label stay centered together. Keep native coarse-pointer target expansion from Button. Photo, initials and unknown glyph use the same geometry. Loading hides the entire row without changing its dimensions. Disabled keeps the frame in place and subdues its image/fallback to 45% opacity together with Button's muted label. Focus, hover, press and material travel belong to Button.
+The listed insets include the action border. The borderless Soft secondary button places the avatar 1px closer to the leading edge. The trailing label padding follows Button (S 12px / Pixel 10px, M 16px, L 20px, before its border). At increased text scale or with a wrapped label, the row may increase the action height; avatar and label stay centered together. Keep native coarse-pointer target expansion from Button. Photo, initials and unknown glyph use the same geometry. Loading hides the entire row without changing its dimensions. Disabled keeps the frame in place and subdues its image/fallback to 45% opacity together with Button's muted label. Focus, hover, press and material travel belong to Button.
 
 ## Interaction and accessibility outcomes
 
@@ -98,7 +98,7 @@ Insets include the action border. The trailing label padding follows Button (S 1
 
 ## Review route and implementation boundary
 
-Matrix covers `sizes`. Cases include `fallback`, `images`, `crop`, `groups`, `surfaces`, `direction`, and `names`. Usage includes `usage` and `actions`. The surface study paints Shell, Canvas, Card and real Overlay material over the workbench underlay. Check the existing overview/editor collaboration bars, collection table, document-owner HoverCard and inspector/member rows in the Folio scenes; these are consumers, not duplicate application screens inside the specimen.
+The States tab compares five frame sizes and three image sources in `sizes`. Its cases include `fallback`, `images`, `crop`, `groups`, `surfaces`, `direction`, `names`, and `action-geometry`. The `usage` and `actions` compositions show a full member list and an account profile. Their copied examples and the Usage Quick Start import the prototype relative to `apps/playground/src/`. The surface study paints Shell, Canvas, Card and real Overlay material over the workbench underlay. Check the existing overview/editor collaboration bars, collection table, document-owner HoverCard and inspector/member rows in the Folio scenes; these are consumers, not duplicate application screens inside the specimen.
 
 Check 360/768/1280/1440px, 120% text, RTL, keyboard disclosure, image failure/retry, forced colors and reduced motion. Inspect capital-body centering and action insets at a readable zoom, including the actual owner HoverCard. Judge face recognition, text fit, edge weight and visual quietness together with numerical contrast. A frame perimeter is not a field boundary and should not be strengthened just to resemble an interactive control.
 

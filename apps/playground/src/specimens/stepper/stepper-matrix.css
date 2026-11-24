@@ -1,0 +1,43 @@
+.stepper-preview {
+  inline-size: 100%;
+  min-inline-size: 0;
+}
+
+/* The disclosure grows below its trigger while the enclosing preview gains height. */
+.wb-playground-subject:has(.stepper-preview[data-example-disclosure]) {
+  align-content: start;
+}
+
+/* Leave room for three full labels when the host explicitly asks for a horizontal map. */
+.stepper-preview[data-stepper-layout='horizontal'] {
+  box-sizing: border-box;
+  padding: var(--space-4);
+  overflow-x: auto;
+}
+
+.stepper-preview[data-stepper-layout='horizontal'] > [role='group'] {
+  min-inline-size: calc(21ch + 2 * var(--space-24));
+}
+
+.stepper-preview[data-stepper-layout='horizontal'][data-stepper-process='workspace']
+  > [role='group'] {
+  min-inline-size: calc(33ch + 2 * var(--space-24));
+}
+
+.stepper-preview:focus-visible {
+  outline: 2px solid var(--focus-ring-color);
+  outline-offset: 2px;
+}
+
+/* Keep the stage titles and the compact summary readable in generated comparisons. */
+td:has(.stepper-preview) {
+  min-inline-size: 19rem;
+}
+
+td:has([data-stepper-layout='horizontal']) {
+  min-inline-size: 29rem;
+}
+
+ul:has(> [data-wb-result-row] .stepper-preview) {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 29rem), 1fr));
+}

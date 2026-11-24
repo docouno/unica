@@ -1,74 +1,90 @@
-import { ProgressCircle } from '@docouno/unica';
-import { previewProps } from '../preview-code.js';
 import { defineComponent } from '../../workbench/types.js';
-import { activityNameReference, labelledByText, withActivityNameCode } from './activity-name.js';
-import Study from './progress-circle.examples.js';
+import type { ComponentValues, PropSchema } from '../../workbench/types.js';
+import { withOverlaySurface } from '../shared/with-overlay-surface.js';
+import { labelledByText } from './activity-name.js';
+import { progressCircleCode } from './progress-circle-code.js';
+import { ProgressCirclePlayground } from './progress-circle-playground.js';
+import {
+  ProgressCircleBoundaries,
+  ProgressCircleHandoff,
+  ProgressCircleOverlay,
+  ProgressCircleScale,
+} from './progress-circle.examples.js';
+import { TransferMeasurements } from './progress-circle-transfers.examples.js';
+import transferSource from './progress-circle-transfers.examples.tsx?raw';
+
+const props = {
+  size: {
+    kind: 'enum',
+    group: 'Geometry',
+    default: 'inherit',
+    description: 'Inherit the surrounding text size (1em) or use a fixed icon diameter.',
+    choices: [{ value: 'inherit' }, { value: 's' }, { value: 'm' }, { value: 'l' }],
+  },
+  tone: {
+    kind: 'enum',
+    group: 'Role',
+    default: 'inherit',
+    description: 'Foreground color inherited or chosen for the activity.',
+    choices: [{ value: 'inherit' }, { value: 'neutral' }, { value: 'muted' }, { value: 'accent' }],
+  },
+  value: {
+    kind: 'number',
+    group: 'Content',
+    default: 45,
+    publicType: 'number | null',
+    description:
+      'Required. The example starts at 45. A finite value is clamped between zero and the total. Pass null while the amount is unknown.',
+    examples: [0, 45, 100],
+  },
+  max: {
+    kind: 'number',
+    group: 'Content',
+    default: 100,
+    examples: [80, 100],
+    publicType: 'number',
+    description:
+      'A positive finite total in the same units as the value. An invalid total uses the waiting phase.',
+  },
+  determinate: {
+    kind: 'boolean',
+    group: 'Content',
+    default: true,
+    description:
+      'Supply the numeric value, or pass null to show an operation with no measurement yet.',
+    demo: true,
+  },
+  'aria-label': {
+    kind: 'string',
+    group: 'Semantics',
+    label: 'Accessible name',
+    default: 'Uploading assets',
+    publicType: 'string',
+    examples: ['Uploading assets', ''],
+    description:
+      'Text that names the operation when there is no referenced label. This example starts with “Uploading assets”.',
+  },
+  labelledByText: { ...labelledByText, examples: ['', 'Archive transfer'] },
+  'aria-valuetext': {
+    kind: 'string',
+    group: 'Semantics',
+    label: 'Accessible value text',
+    default: '',
+    description:
+      'Describe a known measurement in its original units. The waiting phase omits value text.',
+  },
+} as const satisfies PropSchema;
+
+export type ProgressCircleValues = ComponentValues<typeof props>;
 
 export default defineComponent({
   id: 'progress-circle',
   title: 'ProgressCircle',
   category: 'Feedback & Status',
   status: 'UI',
-  summary:
-    'The Spinner silhouette adapted to a measured amount. The same small icon slot, with no new visual pattern.',
+  summary: 'A compact progressbar that shows a measured amount or waits in the same icon slot.',
   componentName: 'ProgressCircle',
-  props: {
-    size: {
-      kind: 'enum',
-      group: 'Appearance',
-      default: 'inherit',
-      description: 'Diameter of the activity glyph.',
-      choices: [{ value: 'inherit' }, { value: 's' }, { value: 'm' }, { value: 'l' }],
-    },
-    tone: {
-      kind: 'enum',
-      group: 'Appearance',
-      default: 'inherit',
-      description: 'Foreground color inherited or chosen for the activity.',
-      choices: [
-        { value: 'inherit' },
-        { value: 'neutral' },
-        { value: 'muted' },
-        { value: 'accent' },
-      ],
-    },
-    value: {
-      kind: 'number',
-      group: 'Measurement',
-      default: 45,
-      description: 'Measured completion for a known phase.',
-      examples: [0, 45, 100],
-    },
-    max: {
-      kind: 'number',
-      group: 'Measurement',
-      default: 100,
-      examples: [80, 100],
-      description: 'Positive total in the same units as the value.',
-    },
-    determinate: {
-      kind: 'boolean',
-      group: 'Measurement',
-      default: true,
-      description: 'Turn off while the operation has no measured total.',
-      demo: true,
-    },
-    'aria-label': {
-      kind: 'string',
-      group: 'Semantics',
-      label: 'Accessible name',
-      default: 'Uploading assets',
-      description: 'Text that names the operation.',
-    },
-    labelledByText,
-    'aria-valuetext': {
-      kind: 'string',
-      group: 'Semantics',
-      label: 'Accessible value text',
-      default: '',
-      description: 'Describe the measured amount in its original units.',
-    },
-  },
+  props,
   constraints: [
     {
       kind: 'forbidden',
@@ -83,62 +99,57 @@ export default defineComponent({
       reason: 'An indeterminate phase has no measured amount.',
     },
   ],
-  render: ({ ctx, values: { determinate, value, labelledByText, ...props } }) => {
-    const id = `${ctx.id}-operation`;
-    const reference = activityNameReference(id, labelledByText);
-    if (!reference && !props['aria-label'].trim()) {
-      return <span>Give the operation a name.</span>;
-    }
-    return (
-      <>
-        {reference}
-        <ProgressCircle
-          {...ctx.subject}
-          {...props}
-          value={determinate ? value : null}
-          aria-labelledby={reference ? id : undefined}
-        />
-      </>
-    );
-  },
-  code: ({ determinate, value, labelledByText, ...props }) => {
-    const label = labelledByText.trim() ? ' aria-labelledby="operation-label"' : '';
-    if (!label && !props['aria-label'].trim()) {
-      return '';
-    }
-    const attributes = previewProps(props, {
-      size: 'inherit',
-      tone: 'inherit',
-      max: 100,
-      'aria-valuetext': '',
-    });
-    return withActivityNameCode(
-      `<ProgressCircle value={${determinate ? value : 'null'}}${attributes}${label} />`,
-      labelledByText,
-    );
-  },
-  matrixViews: [
+  render: withOverlaySurface(ProgressCirclePlayground, 'border-box'),
+  code: progressCircleCode,
+  states: [
     {
       id: 'scale',
       rows: 'size',
       cols: 'value',
-      title: 'Spinner → measured amount · one silhouette',
-      reference: () => <Study section="scale" />,
+      title: 'Size and measured value',
+      caption:
+        'Compare the empty, partially filled and complete progressbar in each icon slot. The inherited size follows the surrounding text.',
     },
   ],
   cases: [
     {
+      id: 'shared-footprint',
+      title: 'Spinner and measured progress',
+      kind: 'content',
+      mode: 'pinned',
+      caption:
+        'Each pair places a Spinner beside a ProgressCircle at 64%. The two share the same diameter, stroke and tone at each size.',
+      render: withOverlaySurface(ProgressCircleScale, 'border-box'),
+    },
+    {
       id: 'boundaries',
       title: 'From empty to full',
       kind: 'content',
-      render: () => <Study section="boundaries" />,
+      mode: 'pinned',
+      caption:
+        'The fill advances clockwise from twelve o’clock. Pixel uses eight cells and partially fills the leading cell between eighths of the total. Completion keeps the same tone.',
+      render: withOverlaySurface(ProgressCircleBoundaries, 'border-box'),
     },
     {
       id: 'handoff',
-      mode: 'live',
       title: 'From waiting to measured work',
       kind: 'behavior',
-      render: () => <Study section="handoff" />,
+      mode: 'live',
+      controls: {
+        known: { kind: 'boolean', label: 'Measurement available', default: false },
+        value: {
+          kind: 'number',
+          label: 'Measured percent',
+          default: 42,
+          min: 0,
+          max: 100,
+          step: 1,
+        },
+      },
+      reset: true,
+      caption:
+        'Set the measured percent, then make the measurement available. The archive keeps one progressbar as it moves from preparation to transfer and completion.',
+      render: withOverlaySurface(ProgressCircleHandoff, 'border-box'),
     },
     {
       id: 'overlay',
@@ -146,18 +157,24 @@ export default defineComponent({
       surface: 'overlay',
       overlayStage: true,
       kind: 'surface',
-      render: () => <Study section="overlay" />,
+      mode: 'pinned',
+      caption:
+        'The archive upload has a known total. The document preparation retains its waiting shape on the same surface.',
+      render: ProgressCircleOverlay,
     },
   ],
-  usage: [
+  compositions: [
     {
       id: 'context',
-      code: `<div>
-  <ProgressCircle value={elapsed} max={total} aria-label="Upload progress" />
-  <span>Uploading assets</span>
-</div>`,
-      title: 'File transfers & pipeline stages',
-      render: () => <Study section="context" />,
+      title: 'File transfers and pipeline stages',
+      mode: 'pinned',
+      caption:
+        'The surrounding text explains each unit and phase. A paused transfer keeps its last measurement, and the long collection name wraps beside its icon.',
+      code: transferSource,
+      render: withOverlaySurface(
+        ({ ctx }) => <TransferMeasurements circleProps={ctx.subject} />,
+        'border-box',
+      ),
     },
   ],
 });

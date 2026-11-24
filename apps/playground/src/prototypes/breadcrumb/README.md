@@ -1,6 +1,6 @@
 # Breadcrumb design reference
 
-Open **Breadcrumb** in the Workbench. **Sizes**, **Path anatomy**, and **Link underlines** show the supported forms. **Link states** starts with a live trail and follows with comparison rows. **Narrow and long paths** stresses a trail at up to 320 px of available space. **Ancestor trail above a panel title** shows the same component on a floating surface. For a full header, open **Workspace Overview**, **Document Reader**, or **Rich Editor**.
+Open **Breadcrumb** in the Workbench. **Sizes and separators** and **Link underlines** compare the same trail across all six presets. **Path anatomy** includes a current permalink whose underline remains visible beside plain ancestor links. **Link states** starts with a live trail and follows with comparison rows. **Narrow and long paths** stresses a trail at up to 320 px of available space. **Ancestor trail above a panel title** shows the same component on a floating surface. For a full header, open **Workspace Overview**, **Document Reader**, or **Rich Editor**.
 
 ## Use and anatomy
 
@@ -49,6 +49,6 @@ Tab and Shift+Tab follow enabled links in document order. Enter follows the addr
 
 ## Preview and handoff
 
-The live links use native anchors and open Workbench scenes. Hover, press, and focus in the comparison rows are visual pins. The panel above the title stays open for inspection. Folio uses the same small trail in its workspace headers. The header gives its actions a separate row when the sidebar and actions together leave too little room for the trail. Link a segment when the Workbench has a matching destination and show the other ancestors as static groups.
+Live ancestor links open the workspace and document collection scenes. The current permalink opens the document reader. Copyable examples accept destination addresses for the consuming application. Clearing the current page in Playground leaves the named navigation with both ancestor links. Hover, press, and focus in the comparison rows are visual pins. The panel above the title stays open for inspection. Folio uses the same small trail in its workspace headers. The header gives its actions a separate row when the sidebar and actions together leave too little room for the trail. Link a segment when the Workbench has a matching destination and show the other ancestors as static groups.
 
 The next stage owns the library API and reusable router composition. Addressable links retain native navigation semantics. When a router link becomes unavailable, omit the router child and its render callback so the path does not prefetch or navigate. The shipped list should flatten groups of children in fragments, omit empty nodes, and preserve a numeric zero label.

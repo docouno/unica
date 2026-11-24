@@ -1,12 +1,3 @@
-import { Card, Checkbox, Code } from '@docouno/unica';
-import { useEffect, useState } from 'react';
-import type { ReactElement } from 'react';
-import { StarIcon } from '@phosphor-icons/react';
-import { defineComponent } from '../../workbench/types.js';
-import { Button, IconButton } from '@docouno/unica';
-import { CodeBlock } from '../../prototypes/code-block/code-block.proto.js';
-import type { IconProps as PhosphorIconProps } from '@phosphor-icons/react';
-import { Text, Title } from '@docouno/unica';
 import {
   Accordion,
   AccordionContent,
@@ -14,431 +5,187 @@ import {
   AccordionTrigger,
 } from '../../prototypes/disclosure/disclosure.proto.js';
 import '../../prototypes/disclosure/disclosure.examples.css';
+import { defineComponent } from '../../workbench/types.js';
+import { withOverlaySurface } from '../shared/with-overlay-surface.js';
+import { HeaderActions } from './accordion-actions.examples.js';
+import actionsSource from './accordion-actions.examples.tsx?raw';
+import { OpeningModes, OverlayAccess, TriggerStudy } from './accordion.examples.js';
 
-function SizeStudy(): ReactElement {
-  return (
-    <div className="disclosure-study disclosure-study-grid" data-study="sizes">
-      {(['s', 'm', 'l'] as const).map((size) => (
-        <div className="disclosure-study-sample" key={size}>
-          <Text className="disclosure-study-label" size="caption-l" color="muted">
-            {size.toUpperCase()}
-          </Text>
-          <Accordion headingLevel={3} size={size} defaultValue={['scope']}>
-            <AccordionItem value="scope">
-              <AccordionTrigger>Access scope</AccordionTrigger>
-              <AccordionContent>Workspace members.</AccordionContent>
-            </AccordionItem>
-            <AccordionItem value="history">
-              <AccordionTrigger>Access history</AccordionTrigger>
-              <AccordionContent>Activity from the last 30 days.</AccordionContent>
-            </AccordionItem>
-          </Accordion>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-function AccessGroup({
-  exclusive = false,
-  dividers = true,
-}: {
-  readonly exclusive?: boolean;
-  readonly dividers?: boolean;
-}): ReactElement {
-  return (
-    <Accordion headingLevel={3} defaultValue={['review']} exclusive={exclusive} dividers={dividers}>
-      <AccordionItem value="review">
-        <AccordionTrigger>Review permissions</AccordionTrigger>
-        <AccordionContent>Editors can leave review comments.</AccordionContent>
-      </AccordionItem>
-      <AccordionItem value="publish">
-        <AccordionTrigger>Publish permissions</AccordionTrigger>
-        <AccordionContent>Owners can publish revisions.</AccordionContent>
-      </AccordionItem>
-    </Accordion>
-  );
-}
-
-function OpeningModes(): ReactElement {
-  return (
-    <div className="disclosure-study disclosure-study-grid">
-      <div className="disclosure-study-sample">
-        <Text className="disclosure-study-label" size="caption-l" color="muted">
-          Several sections
-        </Text>
-        <AccessGroup />
-      </div>
-      <div className="disclosure-study-sample">
-        <Text className="disclosure-study-label" size="caption-l" color="muted">
-          One section at a time
-        </Text>
-        <AccessGroup exclusive />
-      </div>
-    </div>
-  );
-}
-
-function TriggerStudy(): ReactElement {
-  return (
-    <div className="disclosure-study disclosure-study-grid">
-      <div className="disclosure-study-sample">
-        <Text className="disclosure-study-label" size="caption-l" color="muted">
-          Tab to inspect keyboard focus
-        </Text>
-        <Accordion headingLevel={3}>
-          <AccordionItem value="scope">
-            <AccordionTrigger>Access scope</AccordionTrigger>
-            <AccordionContent>Workspace members.</AccordionContent>
-          </AccordionItem>
-          <AccordionItem value="history" disabled>
-            <AccordionTrigger>Access history</AccordionTrigger>
-            <AccordionContent>Activity from the last 30 days.</AccordionContent>
-          </AccordionItem>
-        </Accordion>
-      </div>
-      <div className="disclosure-study-sample">
-        <Text className="disclosure-study-label" size="caption-l" color="muted">
-          Unavailable item starts open
-        </Text>
-        <Accordion headingLevel={3} exclusive defaultValue={['scope']}>
-          <AccordionItem value="scope" disabled>
-            <AccordionTrigger>Access scope</AccordionTrigger>
-            <AccordionContent>Workspace members.</AccordionContent>
-          </AccordionItem>
-          <AccordionItem value="history">
-            <AccordionTrigger>Access history</AccordionTrigger>
-            <AccordionContent>Activity from the last 30 days.</AccordionContent>
-          </AccordionItem>
-        </Accordion>
-      </div>
-    </div>
-  );
-}
-
-const previewUrl = 'https://preview.example.com/releases/2.4';
-
-function ReleasePreview(): ReactElement {
-  const [copyLabel, setCopyLabel] = useState('Copy link');
-
-  useEffect(() => {
-    if (copyLabel !== 'Copied') {
-      return;
-    }
-    const reset = window.setTimeout(() => setCopyLabel('Copy link'), 2000);
-    return () => window.clearTimeout(reset);
-  }, [copyLabel]);
-
-  async function copyLink(): Promise<void> {
-    await navigator.clipboard.writeText(previewUrl);
-    setCopyLabel('Copied');
-  }
-
-  return (
-    <Card>
-      <Title as="h2" size="heading-s">
-        Release preview
-      </Title>
-      <Accordion headingLevel={3} size="s" defaultValue={['access']}>
-        <AccordionItem value="link">
-          <AccordionTrigger
-            action={
-              <Button
-                variant="ghost"
-                tone="neutral"
-                size="s"
-                className="disclosure-study-copy"
-                onClick={() => {
-                  copyLink().catch(() => setCopyLabel('Retry copy'));
-                }}
-              >
-                <span aria-live="polite">{copyLabel}</span>
-              </Button>
-            }
-          >
-            Preview link
-          </AccordionTrigger>
-          <AccordionContent>
-            <div className="disclosure-study-link">
-              <span>
-                <Code plate={false}>{previewUrl}</Code>
-              </span>
-              <span>
-                <bdi>Available until Friday at 18:00 UTC.</bdi>
-              </span>
-            </div>
-          </AccordionContent>
-        </AccordionItem>
-        <AccordionItem value="access">
-          <AccordionTrigger>Who can open it</AccordionTrigger>
-          <AccordionContent>
-            <span dir="auto">Anyone with the link can view this preview.</span>
-          </AccordionContent>
-        </AccordionItem>
-      </Accordion>
-    </Card>
-  );
-}
-
-function OnOverlay(): ReactElement {
-  return (
-    <div className="unica-overlay-surface disclosure-study-overlay" data-surface="overlay">
-      <Title as="h2" size="heading-s">
-        Workspace access
-      </Title>
-      <AccessGroup />
-    </div>
-  );
-}
-
-const changedFiles = [
-  {
-    name: 'pricing.ts',
-    diff: '- return net + tax;\n+ return round(net + tax);',
-  },
-  {
-    name: 'pricing.test.ts',
-    diff: '- expect(total).toBe(218.9);\n+ expect(total).toBe(219);',
-  },
-] as const;
-
-function FileReview(): ReactElement {
-  const [expanded, setExpanded] = useState<readonly string[]>(['pricing.ts']);
-  const [reviewed, setReviewed] = useState<readonly string[]>(['pricing.test.ts']);
-
-  function reviewFile(name: string, checked: boolean): void {
-    setReviewed((current) =>
-      checked ? [...current, name] : current.filter((file) => file !== name),
-    );
-    if (checked) {
-      setExpanded((current) => current.filter((file) => file !== name));
-    }
-  }
-
-  return (
-    <Card>
-      <div className="disclosure-study-summary">
-        <Title as="h2" size="heading-s">
-          Changed files
-        </Title>
-        <Text size="caption-l" color="muted" role="status" dir="auto">
-          {reviewed.length} of {changedFiles.length} reviewed
-        </Text>
-      </div>
-      <Accordion headingLevel={3} size="s" value={expanded} onValueChange={setExpanded}>
-        {changedFiles.map(({ name, diff }) => (
-          <AccordionItem value={name} key={name}>
-            <AccordionTrigger
-              action={
-                <Checkbox
-                  size="s"
-                  label="Reviewed"
-                  aria-label={`Reviewed ${name}`}
-                  checked={reviewed.includes(name)}
-                  onCheckedChange={(checked) => reviewFile(name, checked)}
-                />
-              }
-            >
-              <Code plate={false}>{name}</Code>
-            </AccordionTrigger>
-            <AccordionContent>
-              <CodeBlock aria-label={`Changes to ${name}`}>{diff}</CodeBlock>
-            </AccordionContent>
-          </AccordionItem>
-        ))}
-      </Accordion>
-    </Card>
-  );
-}
-
-const queries = [
-  { name: 'Open incidents', description: 'Unresolved incidents from the last 24 hours.' },
-  { name: 'Slow requests', description: 'Requests taking longer than 500 ms in the last hour.' },
-] as const;
-
-function FilledStarIcon(props: PhosphorIconProps): ReactElement {
-  return <StarIcon {...props} weight="fill" />;
-}
-
-function QueryLibrary(): ReactElement {
-  const [favorites, setFavorites] = useState<readonly string[]>(['Slow requests']);
-
-  return (
-    <Card>
-      <Title as="h2" size="heading-s">
-        Query library
-      </Title>
-      <Accordion headingLevel={3} size="s" defaultValue={['Slow requests']}>
-        {queries.map(({ name, description }) => {
-          const favorite = favorites.includes(name);
-          return (
-            <AccordionItem value={name} key={name}>
-              <AccordionTrigger
-                action={
-                  <IconButton
-                    size="s"
-                    variant="ghost"
-                    tone="neutral"
-                    icon={favorite ? FilledStarIcon : StarIcon}
-                    aria-label={`Favorite ${name}`}
-                    title={favorite ? 'Remove from favorites' : 'Add to favorites'}
-                    pressed={favorite}
-                    onPressedChange={(pressed) =>
-                      setFavorites((current) =>
-                        pressed ? [...current, name] : current.filter((query) => query !== name),
-                      )
-                    }
-                  />
-                }
-              >
-                {name}
-              </AccordionTrigger>
-              <AccordionContent>
-                <span dir="auto">{description}</span>
-              </AccordionContent>
-            </AccordionItem>
-          );
-        })}
-      </Accordion>
-    </Card>
-  );
-}
-
-function HeaderActions(): ReactElement {
-  return (
-    <div className="disclosure-study-actions">
-      <ReleasePreview />
-      <FileReview />
-      <QueryLibrary />
-    </div>
-  );
-}
+const initialSections = {
+  closed: [],
+  fee: ['fee'],
+  both: ['fee', 'tax'],
+} as const;
 
 export default defineComponent({
   id: 'accordion',
   title: 'Accordion',
+  componentName: 'Accordion',
   category: 'Surfaces & Structure',
   status: 'Proto',
   summary: 'Group related section headings and reveal their contents in place.',
   props: {
     size: {
       kind: 'enum',
-      group: 'Layout',
+      group: 'Geometry',
       default: 'm',
       description: 'Trigger and panel density.',
       choices: [{ value: 's' }, { value: 'm' }, { value: 'l' }],
     },
     exclusive: {
       kind: 'boolean',
-      group: 'Behavior',
+      group: 'Interaction',
       default: false,
       description: 'Keep at most one item expanded.',
     },
     dividers: {
       kind: 'boolean',
-      group: 'Layout',
+      group: 'Geometry',
       default: true,
       description: 'Draw separators between adjacent items.',
     },
+    defaultValue: {
+      kind: 'slot',
+      publicType: 'readonly string[]',
+      group: 'Interaction',
+      default: 'closed',
+      description:
+        'Item values expanded when the group first appears. Changing this example setting starts a fresh group.',
+      choices: [
+        { value: 'closed', label: 'All closed', code: '[]' },
+        { value: 'fee', label: 'First open', code: "['fee']" },
+        { value: 'both', label: 'Both open', code: "['fee', 'tax']" },
+      ],
+    },
     onValueChange: {
       kind: 'action',
-      group: 'Events',
-      description: 'Reports expanded item values.',
-      code: 'handleValueChange',
+      publicType: '(value: readonly string[]) => void',
+      group: 'Interaction',
+      description: 'Receive the expanded item values when a user toggles a heading.',
+      code: '(expanded) => console.log(expanded)',
     },
   },
+  constraints: [
+    {
+      kind: 'precedence',
+      when: { exclusive: true },
+      affects: [{ key: 'defaultValue', value: 'both' }],
+      reason: 'An exclusive group starts with the first of the requested items expanded.',
+    },
+  ],
+  render: withOverlaySurface(({ values, ctx }) => (
+    <div
+      className="accordion-study-host"
+      data-example-disclosure=""
+      data-matrix={ctx.tab === 'states' || undefined}
+    >
+      <Accordion
+        key={values.defaultValue}
+        {...ctx.subject}
+        headingLevel={3}
+        size={values.size}
+        exclusive={values.exclusive}
+        dividers={values.dividers}
+        defaultValue={initialSections[values.defaultValue]}
+        onValueChange={ctx.action('onValueChange')}
+      >
+        <AccordionItem value="fee">
+          <AccordionTrigger>Fee</AccordionTrigger>
+          <AccordionContent>
+            <bdi>£15</bdi>
+          </AccordionContent>
+        </AccordionItem>
+        <AccordionItem value="tax">
+          <AccordionTrigger>Tax</AccordionTrigger>
+          <AccordionContent>
+            <bdi>£3</bdi>
+          </AccordionContent>
+        </AccordionItem>
+      </Accordion>
+    </div>
+  )),
   code: (
     values,
-  ) => `<Accordion headingLevel={3}${values.size === 'm' ? '' : ` size="${values.size}"`}${values.exclusive ? ' exclusive' : ''}${values.dividers ? '' : ' dividers={false}'} onValueChange={handleValueChange}>
-  <AccordionItem value="access">
-    <AccordionTrigger>Project access</AccordionTrigger>
-    <AccordionContent>Workspace members can read the project.</AccordionContent>
+  ) => `import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from './prototypes/disclosure/disclosure.proto.js';
+
+<Accordion headingLevel={3}${values.size === 'm' ? '' : ` size="${values.size}"`}${values.exclusive ? ' exclusive' : ''}${values.dividers ? '' : ' dividers={false}'}${values.defaultValue === 'closed' ? '' : ` defaultValue={${JSON.stringify(initialSections[values.defaultValue])}}`} onValueChange={(expanded) => console.log(expanded)}>
+  <AccordionItem value="fee">
+    <AccordionTrigger>Fee</AccordionTrigger>
+    <AccordionContent><bdi>£15</bdi></AccordionContent>
   </AccordionItem>
-  <AccordionItem value="history">
-    <AccordionTrigger>Activity history</AccordionTrigger>
-    <AccordionContent>See changes from the last 30 days.</AccordionContent>
+  <AccordionItem value="tax">
+    <AccordionTrigger>Tax</AccordionTrigger>
+    <AccordionContent><bdi>£3</bdi></AccordionContent>
   </AccordionItem>
 </Accordion>`,
-  render: ({ values, ctx }) => (
-    <Accordion
-      {...ctx.subject}
-      headingLevel={3}
-      size={values.size}
-      exclusive={values.exclusive}
-      dividers={values.dividers}
-      onValueChange={ctx.action('onValueChange')}
-    >
-      <AccordionItem value="access">
-        <AccordionTrigger>Project access</AccordionTrigger>
-        <AccordionContent>Workspace members can read the project.</AccordionContent>
-      </AccordionItem>
-      <AccordionItem value="history">
-        <AccordionTrigger>Activity history</AccordionTrigger>
-        <AccordionContent>See changes from the last 30 days.</AccordionContent>
-      </AccordionItem>
-    </Accordion>
-  ),
-  matrixViews: [
+  states: [
     {
       id: 'sizes',
       title: 'Group sizes',
       rows: 'size',
-      reference: () => <SizeStudy />,
+      cols: 'defaultValue',
+      caption: 'Compare trigger density with the same sections closed and expanded.',
     },
     {
       id: 'modes',
       title: 'Opening modes',
       rows: 'exclusive',
-      caption: 'Both groups can close completely. The first also lets you compare open sections.',
-      reference: () => <OpeningModes />,
+      cols: 'defaultValue',
+      caption:
+        'With two initial values, the exclusive group opens only the first section. Toggle the headings to change the selection.',
     },
     {
       id: 'dividers',
-      title: 'Without dividers',
+      title: 'Section dividers',
       rows: 'dividers',
-      reference: () => (
-        <div className="disclosure-study-narrow">
-          <AccessGroup dividers={false} />
-        </div>
-      ),
+      cols: 'size',
+      fixed: { defaultValue: 'fee' },
+      caption: 'The divider follows the open panel and separates it from the next heading.',
     },
   ],
   cases: [
     {
+      id: 'opening-modes',
+      title: 'Independent and exclusive sections',
+      kind: 'behavior',
+      mode: 'live',
+      caption:
+        'Open Publish permissions in each group to compare replacement with independent expansion. Both groups allow every section to close.',
+      render: withOverlaySurface(OpeningModes, 'border-box'),
+    },
+    {
       id: 'states',
       title: 'Focus and availability',
-      caption:
-        'The focus ring is pinned in the first group. Opening Access history in the exclusive group closes the unavailable item.',
       kind: 'behavior',
-      render: () => <TriggerStudy />,
+      mode: 'live',
+      caption:
+        'Tab through the available headings. In the exclusive group, opening Access history closes the previously expanded, unavailable section.',
+      render: withOverlaySurface(TriggerStudy, 'border-box'),
     },
     {
       id: 'overlay',
       title: 'On a floating surface',
       surface: 'overlay',
       overlayStage: true,
-      caption:
-        'The host panel is a static material preview. The disclosure rows inside it are live.',
       kind: 'surface',
-      render: () => <OnOverlay />,
+      mode: 'live',
+      caption:
+        'The host panel provides the material. Expand either permission heading to inspect the rows against it.',
+      render: OverlayAccess,
     },
   ],
-  usage: [
+  compositions: [
     {
       id: 'actions',
       title: 'Independent header actions',
-      code: `<Accordion headingLevel={3} size="s" defaultValue={['Slow requests']}>
-  <AccordionItem value="Slow requests">
-    <AccordionTrigger action={
-      <IconButton icon={StarIcon} aria-label="Favorite Slow requests" pressed={favorite}
-        onPressedChange={setFavorite} />
-    }>
-      Slow requests
-    </AccordionTrigger>
-    <AccordionContent>{description}</AccordionContent>
-  </AccordionItem>
-</Accordion>`,
-      render: () => <HeaderActions />,
+      mode: 'live',
+      caption:
+        'Copy a link from a closed section, fold a reviewed file, or favorite a query while leaving its disclosure state intact.',
+      code: actionsSource.replaceAll('../../prototypes/', './prototypes/'),
+      render: withOverlaySurface(
+        ({ ctx }) => <HeaderActions accordionProps={ctx.subject} />,
+        'border-box',
+      ),
     },
   ],
 });

@@ -2,16 +2,15 @@ import { useId, useState } from 'react';
 import type { ReactElement, ReactNode } from 'react';
 import {
   ArrowRightIcon,
-  ArrowSquareOutIcon,
   BookmarkSimpleIcon,
   CheckIcon,
   FileTextIcon,
   ImageBrokenIcon,
   LockSimpleIcon,
-  StackIcon,
 } from '@phosphor-icons/react';
 import {
   Badge,
+  Button,
   Card,
   CardAction,
   CardBody,
@@ -22,31 +21,48 @@ import {
   CardSection,
   CardTitle,
   Checkbox,
+  Flex,
   Icon,
+  IconButton,
+  Link,
   Skeleton,
   SkeletonText,
   Text,
+  Title,
 } from '@docouno/unica';
-import { Button, IconButton } from '@docouno/unica';
+import { useStoryAction } from '../../workbench/storyFrameState.js';
+import type { PreviewProps } from '../../workbench/types.js';
+import { focusLinkedFragment, specimenBlockPage } from '../shared/specimen-fragment.js';
 import './card.examples.css';
 
-function Note({ children }: { readonly children: ReactNode }): ReactElement {
-  return <p className="card-example-note">{children}</p>;
-}
-
 function Label({ children }: { readonly children: ReactNode }): ReactElement {
-  return <p className="card-example-label">{children}</p>;
+  return (
+    <Text size="caption-l" color="muted" weight="semibold">
+      <bdi>{children}</bdi>
+    </Text>
+  );
 }
 
 function Metadata(): ReactElement {
   return (
-    <div className="card-example-meta">
-      <Icon usage="slot" icon={FileTextIcon} size="s" />
-      <span>8 min read</span>
-      <span aria-hidden="true">·</span>
-      <span>Updated today</span>
-    </div>
+    <Flex align="center" wrap="wrap" gap={8}>
+      <Icon usage="slot" icon={FileTextIcon} size="s" color="muted" />
+      <Text as="span" size="caption-l" color="muted">
+        <bdi>8 min read</bdi>
+      </Text>
+      <Text as="span" size="caption-l" color="muted" aria-hidden="true">
+        ·
+      </Text>
+      <Text as="span" size="caption-l" color="muted">
+        <bdi>Updated today</bdi>
+      </Text>
+    </Flex>
   );
+}
+
+function studySize(ctx: PreviewProps['ctx']): 's' | 'm' | 'l' {
+  const size = ctx.story?.controls.size;
+  return size === 's' || size === 'l' ? size : 'm';
 }
 
 export function SaveAction({ name = 'Field guide' }: { readonly name?: string }): ReactElement {
@@ -105,61 +121,18 @@ function Diagram(): ReactElement {
   );
 }
 
-export function Hierarchy(): ReactElement {
-  return (
-    <div className="card-example-stack">
-      <Note>Two levels of emphasis. Size changes spacing, not the importance of the title.</Note>
-      {(['s', 'm', 'l'] as const).map((size) => (
-        <div key={size} className="card-example-grid">
-          <div className="card-example-cell">
-            <Label>Default · {size.toUpperCase()}</Label>
-            <Card size={size}>
-              <CardHeader>
-                <CardTitle>Project library</CardTitle>
-                <CardDescription>Guides, decisions, and useful references.</CardDescription>
-              </CardHeader>
-              <CardFooter>
-                <Text size="caption-l" color="muted">
-                  24 documents
-                </Text>
-                <Icon usage="slot" icon={StackIcon} size="m" color="muted" />
-              </CardFooter>
-            </Card>
-          </div>
-          <div className="card-example-cell">
-            <Label>Subtle · {size.toUpperCase()}</Label>
-            <Card size={size} variant="subtle">
-              <CardHeader>
-                <CardTitle>Supporting notes</CardTitle>
-                <CardDescription>Context that belongs beside the main content.</CardDescription>
-              </CardHeader>
-              <CardFooter>
-                <Text size="caption-l" color="muted">
-                  Last edited today
-                </Text>
-              </CardFooter>
-            </Card>
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-export function Anatomy(): ReactElement {
+export function Anatomy({ ctx }: PreviewProps): ReactElement {
   const [reviewed, setReviewed] = useState(false);
   return (
     <div className="card-example-stack">
-      <Note>
-        A title and description share one column; compact actions occupy their own. Footer dividers
-        are optional.
-      </Note>
       <div className="card-example-grid">
-        <Card>
+        <Card {...ctx.subject}>
           <CardHeader>
-            <CardTitle>Working together</CardTitle>
+            <CardTitle>
+              <bdi>Working together</bdi>
+            </CardTitle>
             <CardDescription>
-              A practical guide to thoughtful reviews and clear decisions.
+              <bdi>A practical guide to thoughtful reviews and clear decisions.</bdi>
             </CardDescription>
             <CardAction>
               <SaveAction name="Working together" />
@@ -167,18 +140,24 @@ export function Anatomy(): ReactElement {
           </CardHeader>
           <CardBody>
             <Text size="body-s" color="secondary">
-              Keep feedback specific, give it context, and leave the next person a clear place to
-              start.
+              <bdi>
+                Keep feedback specific, give it context, and leave the next person a clear place to
+                start.
+              </bdi>
             </Text>
           </CardBody>
           <CardFooter>
             <Metadata />
           </CardFooter>
         </Card>
-        <Card>
+        <Card {...ctx.subject}>
           <CardHeader>
-            <CardTitle>Release checklist</CardTitle>
-            <CardDescription>Everything needed for the next handoff.</CardDescription>
+            <CardTitle>
+              <bdi>Release checklist</bdi>
+            </CardTitle>
+            <CardDescription>
+              <bdi>Everything needed for the next handoff.</bdi>
+            </CardDescription>
             <CardAction>
               <Badge status="success" size="s">
                 Ready
@@ -188,18 +167,34 @@ export function Anatomy(): ReactElement {
           <CardBody>
             <dl className="card-example-facts">
               <div>
-                <dt>Owner</dt>
-                <dd>Design team</dd>
+                <dt>
+                  <Text as="span" size="body-s" color="muted">
+                    <bdi>Owner</bdi>
+                  </Text>
+                </dt>
+                <dd>
+                  <Text as="span" size="body-s">
+                    <bdi>Design team</bdi>
+                  </Text>
+                </dd>
               </div>
               <div>
-                <dt>Coverage</dt>
-                <dd>12 components</dd>
+                <dt>
+                  <Text as="span" size="body-s" color="muted">
+                    <bdi>Coverage</bdi>
+                  </Text>
+                </dt>
+                <dd>
+                  <Text as="span" size="body-s">
+                    <bdi>12 components</bdi>
+                  </Text>
+                </dd>
               </div>
             </dl>
           </CardBody>
           <CardFooter withBorder>
             <Text size="caption-l" color="muted">
-              {reviewed ? 'Review complete' : 'Ready to review'}
+              <bdi>{reviewed ? 'Review complete' : 'Ready to review'}</bdi>
             </Text>
             <Button
               size="s"
@@ -217,36 +212,26 @@ export function Anatomy(): ReactElement {
   );
 }
 
-export function Media(): ReactElement {
-  const [width, setWidth] = useState(560);
-  const [size, setSize] = useState<'s' | 'm' | 'l'>('m');
-  const [placement, setPlacement] = useState<'flush' | 'inset'>('flush');
+export function Media({ ctx }: PreviewProps): ReactElement {
+  const width = Number(ctx.story?.controls.width ?? 560);
+  const size = studySize(ctx);
+  const placement = ctx.story?.controls.placement === 'inset' ? 'inset' : 'flush';
   return (
     <div className="card-example-stack">
-      <div className="card-example-controls">
-        <label>
-          Size
-          <select value={size} onChange={(event) => setSize(event.target.value as typeof size)}>
-            <option value="s">Small</option>
-            <option value="m">Medium</option>
-            <option value="l">Large</option>
-          </select>
-        </label>
-      </div>
-      <Note>
-        Flush media shares the outer corners. Inset media keeps a concentric inner frame. The card
-        itself never clips focus rings.
-      </Note>
       <div className="card-example-grid">
         <div className="card-example-cell">
           <Label>Flush · cover</Label>
-          <Card size={size}>
+          <Card {...ctx.subject} size={size}>
             <CardSection>
               <Cover />
             </CardSection>
             <CardHeader>
-              <CardTitle>A little room to think</CardTitle>
-              <CardDescription>Field notes from a slower, more focused week.</CardDescription>
+              <CardTitle>
+                <bdi>A little room to think</bdi>
+              </CardTitle>
+              <CardDescription>
+                <bdi>Field notes from a slower, more focused week.</bdi>
+              </CardDescription>
             </CardHeader>
             <CardFooter>
               <Metadata />
@@ -255,13 +240,17 @@ export function Media(): ReactElement {
         </div>
         <div className="card-example-cell">
           <Label>Inset · contain</Label>
-          <Card size={size}>
+          <Card {...ctx.subject} size={size}>
             <CardSection placement="inset">
               <Diagram />
             </CardSection>
             <CardHeader>
-              <CardTitle>Connections, clearly</CardTitle>
-              <CardDescription>A diagram stays complete inside its frame.</CardDescription>
+              <CardTitle>
+                <bdi>Connections, clearly</bdi>
+              </CardTitle>
+              <CardDescription>
+                <bdi>Three services share one gateway.</bdi>
+              </CardDescription>
             </CardHeader>
             <CardFooter>
               <Metadata />
@@ -269,38 +258,23 @@ export function Media(): ReactElement {
           </Card>
         </div>
       </div>
-      <div className="card-example-controls">
-        <label>
-          Horizontal media
-          <select
-            value={placement}
-            onChange={(event) => setPlacement(event.target.value as typeof placement)}
-          >
-            <option value="flush">Flush</option>
-            <option value="inset">Inset</option>
-          </select>
-        </label>
-        <label>
-          Available width ({width}px)
-          <input
-            type="range"
-            min="300"
-            max="680"
-            value={width}
-            onChange={(event) => setWidth(event.target.valueAsNumber)}
-          />
-        </label>
-      </div>
-      <Label>Horizontal · stacks below 28rem of content width</Label>
-      <Card size={size} orientation="horizontal" style={{ inlineSize: `min(100%, ${width}px)` }}>
+      <Label>Horizontal media</Label>
+      <Card
+        {...ctx.subject}
+        size={size}
+        orientation="horizontal"
+        style={{ inlineSize: `min(100%, ${width}px)` }}
+      >
         <CardSection placement={placement}>
           <Cover ratio="4 / 3" />
         </CardSection>
         <CardBody>
           <CardHeader>
-            <CardTitle>Designing for the everyday</CardTitle>
+            <CardTitle>
+              <bdi>Designing for the everyday</bdi>
+            </CardTitle>
             <CardDescription>
-              Small details that make a familiar interface feel considered.
+              <bdi>Small details that make a familiar interface feel considered.</bdi>
             </CardDescription>
             <CardAction>
               <SaveAction name="Designing for the everyday" />
@@ -312,23 +286,34 @@ export function Media(): ReactElement {
         </CardBody>
       </Card>
       <div className="card-example-grid">
-        <Card size={size}>
+        <Card {...ctx.subject} size={size}>
           <CardHeader>
-            <CardTitle>Image proportions</CardTitle>
-            <CardDescription>Contain preserves the entire original image.</CardDescription>
+            <CardTitle>
+              <bdi>Image proportions</bdi>
+            </CardTitle>
+            <CardDescription>
+              <bdi>Contain preserves the entire original image.</bdi>
+            </CardDescription>
           </CardHeader>
           <CardSection>
             <Cover ratio="2 / 1" fit="contain" />
           </CardSection>
         </Card>
-        <Card size={size}>
+        <Card {...ctx.subject} size={size}>
           <CardHeader>
-            <CardTitle>Without an image</CardTitle>
-            <CardDescription>Text-only cards do not reserve an empty media slot.</CardDescription>
+            <CardTitle>
+              <bdi>Without an image</bdi>
+            </CardTitle>
+            <CardDescription>
+              <bdi>Text-only cards do not reserve an empty media slot.</bdi>
+            </CardDescription>
           </CardHeader>
           <CardBody>
             <Text size="body-s" color="secondary">
-              An illustration is optional. The same spacing and content hierarchy work on their own.
+              <bdi>
+                An illustration is optional. The same spacing and content hierarchy work on their
+                own.
+              </bdi>
             </Text>
           </CardBody>
           <CardFooter>
@@ -340,27 +325,57 @@ export function Media(): ReactElement {
   );
 }
 
-export function Sections(): ReactElement {
+export function Sections({ ctx }: PreviewProps): ReactElement {
+  const [showTime, setShowTime] = useState(true);
+  const [showSize, setShowSize] = useState(false);
   return (
     <div className="card-example-grid">
-      <Card>
+      <Card {...ctx.subject}>
         <CardHeader>
-          <CardTitle>Document details</CardTitle>
-          <CardDescription>Related information in a single surface.</CardDescription>
+          <CardTitle>
+            <bdi>Document details</bdi>
+          </CardTitle>
+          <CardDescription>
+            <bdi>Related information in a single surface.</bdi>
+          </CardDescription>
         </CardHeader>
         <CardSection withBorder padded>
           <dl className="card-example-facts">
             <div>
-              <dt>Format</dt>
-              <dd>PDF document</dd>
+              <dt>
+                <Text as="span" size="body-s" color="muted">
+                  <bdi>Format</bdi>
+                </Text>
+              </dt>
+              <dd>
+                <Text as="span" size="body-s">
+                  <bdi>PDF document</bdi>
+                </Text>
+              </dd>
             </div>
             <div>
-              <dt>Size</dt>
-              <dd>2.4 MB</dd>
+              <dt>
+                <Text as="span" size="body-s" color="muted">
+                  <bdi>Size</bdi>
+                </Text>
+              </dt>
+              <dd>
+                <Text as="span" size="body-s">
+                  <bdi>2.4 MB</bdi>
+                </Text>
+              </dd>
             </div>
             <div>
-              <dt>Updated</dt>
-              <dd>Today, 09:42</dd>
+              <dt>
+                <Text as="span" size="body-s" color="muted">
+                  <bdi>Updated</bdi>
+                </Text>
+              </dt>
+              <dd>
+                <Text as="span" size="body-s">
+                  <bdi>Today, 09:42</bdi>
+                </Text>
+              </dd>
             </div>
           </dl>
         </CardSection>
@@ -370,43 +385,61 @@ export function Sections(): ReactElement {
           </Button>
         </CardFooter>
       </Card>
-      <Card>
+      <Card {...ctx.subject}>
         <CardHeader>
-          <CardTitle>Reading preferences</CardTitle>
-          <CardDescription>Controls keep their own behavior and focus.</CardDescription>
+          <CardTitle>
+            <bdi>Reading preferences</bdi>
+          </CardTitle>
+          <CardDescription>
+            <bdi>Choose which details appear below the guide title.</bdi>
+          </CardDescription>
         </CardHeader>
         <CardBody>
-          <Checkbox defaultChecked label="Show reading time" />
-          <Checkbox label="Open links in a new tab" />
+          <Checkbox checked={showTime} onCheckedChange={setShowTime} label="Show reading time" />
+          <Checkbox checked={showSize} onCheckedChange={setShowSize} label="Show file size" />
         </CardBody>
         <CardSection withBorder padded className="card-example-quiet-section">
-          <Text size="caption-l" color="secondary">
-            Changes apply to this device.
+          <Text size="body-s" weight="medium">
+            <bdi>Editorial guide</bdi>
           </Text>
+          {showTime && (
+            <Text size="caption-l" color="secondary">
+              <bdi>8 min read</bdi>
+            </Text>
+          )}
+          {showSize && (
+            <Text size="caption-l" color="secondary">
+              <bdi>2.4 MB</bdi>
+            </Text>
+          )}
         </CardSection>
       </Card>
-      <Card>
+      <Card {...ctx.subject}>
         <CardHeader>
-          <CardTitle>Useful context</CardTitle>
+          <CardTitle>
+            <bdi>Useful context</bdi>
+          </CardTitle>
         </CardHeader>
         <CardBody>
           <Text size="body-s" color="secondary">
-            Use a quieter surface for one supporting group.
+            <bdi>Read the draft before the next review.</bdi>
           </Text>
-          <Card size="s" variant="subtle">
+          <Card {...ctx.subject} size="s" variant="subtle">
             <CardHeader>
-              <CardTitle as="h4">A short reminder</CardTitle>
+              <CardTitle as="h4">
+                <bdi>A short reminder</bdi>
+              </CardTitle>
               <CardDescription>
-                Related details stay close without another prominent frame.
+                <bdi>Bring one question for the author.</bdi>
               </CardDescription>
             </CardHeader>
           </Card>
         </CardBody>
       </Card>
-      <Card variant="subtle">
+      <Card {...ctx.subject} variant="subtle">
         <CardBody>
           <Text size="body-s" color="secondary">
-            A simple note needs only a body. Headers, footers, media, and separators are optional.
+            <bdi>New notes appear here after the next review.</bdi>
           </Text>
         </CardBody>
       </Card>
@@ -414,50 +447,60 @@ export function Sections(): ReactElement {
   );
 }
 
-export function Navigation(): ReactElement {
-  const id = useId();
-  const [opened, setOpened] = useState('Choose a guide above');
+const guides = [
+  ['getting-started', 'Getting started', 'Start with the brief and identify the first milestone.'],
+  ['handoff', 'A more thoughtful handoff', 'Record the decision and name the next reviewer.'],
+  ['sources', 'Handoff source notes', 'Check the original brief and the review comments.'],
+] as const;
+
+export function Navigation({
+  ctx,
+  showGuides = true,
+}: PreviewProps & { readonly showGuides?: boolean }): ReactElement {
+  const size = studySize(ctx);
+  const variant = ctx.story?.controls.variant === 'subtle' ? 'subtle' : 'default';
+  const titleId = useId();
+  const guideId = `card-guide-${ctx.theme.id}`;
+  const guidePage = specimenBlockPage('card', 'states', 'navigation', ctx.theme.id);
   const [selected, setSelected] = useState(false);
   return (
     <div className="card-example-stack">
-      <Note>
-        Live examples. A short card has one large link target. In a richer card, the title link and
-        controls are separate; body text stays selectable.
-      </Note>
       <div className="card-example-grid">
-        <Card asChild>
-          <a
-            href={`#${id}`}
-            aria-labelledby={`${id}-title`}
-            onClick={() => setOpened('Getting started')}
-          >
+        <Card {...ctx.subject} asChild size={size} variant={variant}>
+          <a href={`${guidePage}#${guideId}-getting-started`} aria-labelledby={titleId}>
             <CardHeader>
-              <CardTitle id={`${id}-title`}>Getting started</CardTitle>
-              <CardDescription>Find your way around the essentials.</CardDescription>
+              <CardTitle id={titleId}>
+                <bdi>Getting started</bdi>
+              </CardTitle>
+              <CardDescription>
+                <bdi>Find your way around the essentials.</bdi>
+              </CardDescription>
             </CardHeader>
             <CardFooter>
               <Text size="caption-l" color="muted">
-                Read the guide
+                <bdi>Read the guide</bdi>
               </Text>
               <Icon usage="slot" icon={ArrowRightIcon} size="m" directional />
             </CardFooter>
           </a>
         </Card>
-        <Card>
+        <Card {...ctx.subject} size={size} variant={variant}>
           <CardHeader>
             <CardTitle>
-              <a href={`#${id}`} onClick={() => setOpened('A more thoughtful handoff')}>
-                A more thoughtful handoff
-              </a>
+              <Link tone="inherit" href={`${guidePage}#${guideId}-handoff`}>
+                <bdi>A more thoughtful handoff</bdi>
+              </Link>
             </CardTitle>
-            <CardDescription>Details, rationale, and a useful next step.</CardDescription>
+            <CardDescription>
+              <bdi>Details, rationale, and a useful next step.</bdi>
+            </CardDescription>
             <CardAction>
               <SaveAction name="A more thoughtful handoff" />
             </CardAction>
           </CardHeader>
           <CardBody>
             <Text size="body-s" color="secondary">
-              Select and copy this sentence. Saving the guide never opens it.
+              <bdi>Select and copy this sentence. Saving the guide never opens it.</bdi>
             </Text>
           </CardBody>
           <CardFooter withBorder>
@@ -467,32 +510,37 @@ export function Navigation(): ReactElement {
               onCheckedChange={setSelected}
               label={selected ? 'Selected for export' : 'Select for export'}
             />
-            <a
-              className="card-example-inline-link"
-              href={`#${id}`}
-              onClick={() => setOpened('Handoff source notes')}
-            >
-              Source notes
-              <Icon usage="slot" icon={ArrowSquareOutIcon} size="s" />
-            </a>
+            <Link tone="neutral" size="caption-l" href={`${guidePage}#${guideId}-sources`}>
+              <bdi>Source notes</bdi>
+            </Link>
           </CardFooter>
         </Card>
       </div>
-      <div className="card-example-destination" id={id} tabIndex={-1}>
-        <Text size="caption-l" color="muted">
-          Local preview
-        </Text>
-        <Text size="body-s" weight="medium">
-          {opened}
-        </Text>
-      </div>
+      {showGuides &&
+        guides.map(([slug, name, summary]) => (
+          <article
+            key={slug}
+            ref={focusLinkedFragment}
+            className="card-example-destination"
+            id={`${guideId}-${slug}`}
+            aria-labelledby={`${guideId}-${slug}-heading`}
+            tabIndex={-1}
+          >
+            <Title as="h3" size="body-m" id={`${guideId}-${slug}-heading`}>
+              <bdi>{name}</bdi>
+            </Title>
+            <Text size="body-s" color="secondary">
+              <bdi>{summary}</bdi>
+            </Text>
+          </article>
+        ))}
     </div>
   );
 }
 
-export function States(): ReactElement {
-  const [variant, setVariant] = useState<'default' | 'subtle'>('default');
-  const [size, setSize] = useState<'s' | 'm' | 'l'>('m');
+export function States({ ctx }: PreviewProps): ReactElement {
+  const variant = ctx.story?.controls.variant === 'subtle' ? 'subtle' : 'default';
+  const size = studySize(ctx);
   const states = [
     { label: 'Rest', state: 'rest' },
     { label: 'Hover', state: 'hover' },
@@ -503,35 +551,12 @@ export function States(): ReactElement {
   ] as const;
   return (
     <div className="card-example-stack">
-      <div className="card-example-controls">
-        <label>
-          Surface
-          <select
-            value={variant}
-            onChange={(event) => setVariant(event.target.value as typeof variant)}
-          >
-            <option value="default">Default</option>
-            <option value="subtle">Subtle</option>
-          </select>
-        </label>
-        <label>
-          Size
-          <select value={size} onChange={(event) => setSize(event.target.value as typeof size)}>
-            <option value="s">Small</option>
-            <option value="m">Medium</option>
-            <option value="l">Large</option>
-          </select>
-        </label>
-      </div>
-      <Note>
-        Pinned appearance for comparison. Try real pointer and keyboard input in “Links &
-        independent actions”.
-      </Note>
       <div className="card-example-grid">
         {states.map((state) => (
           <div key={state.label} className="card-example-cell">
             <Label>{state.label}</Label>
             <Card
+              {...ctx.subject}
               variant={variant}
               size={size}
               className="card-example-state"
@@ -539,12 +564,16 @@ export function States(): ReactElement {
               data-preview-focus={'focus' in state ? true : undefined}
             >
               <CardHeader>
-                <CardTitle className="card-example-state-title">Getting started</CardTitle>
-                <CardDescription>A clear place to begin.</CardDescription>
+                <CardTitle className="card-example-state-title">
+                  <bdi>Getting started</bdi>
+                </CardTitle>
+                <CardDescription>
+                  <bdi>A clear place to begin.</bdi>
+                </CardDescription>
               </CardHeader>
               <CardFooter>
                 <Text size="caption-l" color="muted">
-                  Read the guide
+                  <bdi>Read the guide</bdi>
                 </Text>
                 <Icon usage="slot" icon={ArrowRightIcon} size="m" directional />
               </CardFooter>
@@ -552,28 +581,35 @@ export function States(): ReactElement {
           </div>
         ))}
       </div>
-      <Note>
-        No card translation or scale on press. Focus remains independent of fill and border. Static
-        cards have no hover or press response.
-      </Note>
     </div>
   );
 }
 
-export function Availability(): ReactElement {
-  const [loaded, setLoaded] = useState(false);
+export function Availability({ ctx }: PreviewProps): ReactElement {
+  const loaded = ctx.story?.controls.loaded === true;
   const [requested, setRequested] = useState(false);
-  const [recovered, setRecovered] = useState(false);
+  const [image, setImage] = useState<{ attempt: number; status: 'failed' | 'loading' | 'loaded' }>({
+    attempt: 0,
+    status: 'failed',
+  });
+
+  useStoryAction(ctx, (action) => {
+    if (action === 'fail-image') {
+      setImage((previous) => ({ attempt: previous.attempt + 1, status: 'failed' }));
+    }
+  });
+  function reportImage(status: 'loaded' | 'failed'): void {
+    setImage((previous) =>
+      previous.attempt === image.attempt ? { ...previous, status } : previous,
+    );
+  }
+
   return (
     <div className="card-example-stack">
-      <Note>
-        Loading, empty, and error feedback belongs to the content. The card keeps its neutral
-        material.
-      </Note>
       <div className="card-example-grid card-example-natural">
         <div className="card-example-cell">
           <Label>Loading → content</Label>
-          <Card className="card-example-loading" aria-busy={!loaded}>
+          <Card {...ctx.subject} className="card-example-loading" aria-busy={!loaded}>
             <div className="card-example-loading-region">
               <div
                 className="card-example-loaded-copy"
@@ -581,11 +617,15 @@ export function Availability(): ReactElement {
                 style={{ visibility: loaded ? 'visible' : 'hidden' }}
               >
                 <CardHeader>
-                  <CardTitle>Design principles</CardTitle>
-                  <CardDescription>A shared foundation for everyday decisions.</CardDescription>
+                  <CardTitle>
+                    <bdi>Design principles</bdi>
+                  </CardTitle>
+                  <CardDescription>
+                    <bdi>A shared foundation for everyday decisions.</bdi>
+                  </CardDescription>
                 </CardHeader>
                 <Text size="body-s" color="secondary">
-                  Be clear. Make room. Keep the important things close.
+                  <bdi>Be clear. Make room. Keep the important things close.</bdi>
                 </Text>
               </div>
               <div className="card-example-loading-placeholder" aria-hidden="true">
@@ -600,63 +640,69 @@ export function Availability(): ReactElement {
             </div>
             <CardFooter>
               <Text size="caption-l" color="muted">
-                {loaded ? 'Updated today' : 'Loading document…'}
+                <bdi>{loaded ? 'Updated today' : 'Loading document…'}</bdi>
               </Text>
             </CardFooter>
           </Card>
-          <Button
-            className="card-example-toggle-content"
-            size="s"
-            variant="ghost"
-            tone="neutral"
-            onClick={() => setLoaded(!loaded)}
-          >
-            {loaded ? 'Show loading' : 'Show content'}
-          </Button>
         </div>
         <div className="card-example-cell">
           <Label>Empty content</Label>
-          <Card>
+          <Card {...ctx.subject}>
             <CardHeader>
-              <CardTitle>Saved references</CardTitle>
+              <CardTitle>
+                <bdi>Saved references</bdi>
+              </CardTitle>
             </CardHeader>
             <CardBody className="card-example-empty">
               <Icon usage="slot" icon={BookmarkSimpleIcon} size="l" color="muted" />
-              <CardTitle as="h4">Nothing saved yet</CardTitle>
-              <CardDescription>Save a useful guide to keep it close.</CardDescription>
+              <CardTitle as="h4">
+                <bdi>Nothing saved yet</bdi>
+              </CardTitle>
+              <CardDescription>
+                <bdi>Save a useful guide to keep it close.</bdi>
+              </CardDescription>
             </CardBody>
             <CardFooter>
               <Text size="caption-l" color="muted">
-                Use the bookmark action on a guide.
+                <bdi>Use the bookmark action on a guide.</bdi>
               </Text>
             </CardFooter>
           </Card>
         </div>
         <div className="card-example-cell">
           <Label>Unavailable destination</Label>
-          <Card className="card-example-unavailable">
+          <Card {...ctx.subject} className="card-example-unavailable">
             <CardHeader>
-              <CardTitle>Archived research</CardTitle>
-              <CardDescription>This collection is restricted to its owners.</CardDescription>
+              <CardTitle>
+                <bdi>Archived research</bdi>
+              </CardTitle>
+              <CardDescription>
+                <bdi>This collection is restricted to its owners.</bdi>
+              </CardDescription>
               <CardAction>
                 <Icon usage="slot" icon={LockSimpleIcon} size="m" color="muted" />
               </CardAction>
             </CardHeader>
             <CardBody>
               <Text size="body-s" color="secondary">
-                Ask a collection owner for access. The title and reason remain readable.
+                <bdi>Ask a collection owner for access.</bdi>
               </Text>
             </CardBody>
             <CardFooter>
               <Button size="s" variant="secondary" tone="neutral" disabled>
                 Open collection
               </Button>
-              <Button size="s" variant="ghost" tone="neutral" onClick={() => setRequested(true)}>
-                Request access
+              <Button
+                size="s"
+                variant="ghost"
+                tone="neutral"
+                onClick={() => setRequested((current) => !current)}
+              >
+                {requested ? 'Cancel request' : 'Request access'}
               </Button>
               {requested && (
                 <Text role="status" size="body-s">
-                  Access requested
+                  <bdi>Access requested</bdi>
                 </Text>
               )}
             </CardFooter>
@@ -664,34 +710,58 @@ export function Availability(): ReactElement {
         </div>
         <div className="card-example-cell">
           <Label>Media unavailable → retry</Label>
-          <Card>
+          <Card {...ctx.subject}>
             <CardSection>
-              {recovered ? (
-                <Cover />
+              {image.status !== 'failed' ? (
+                <CardMedia aspectRatio="16 / 9">
+                  <img
+                    key={image.attempt}
+                    src="/assets/skeleton-report-landscape.svg"
+                    width={720}
+                    height={405}
+                    alt=""
+                    onLoad={() => reportImage('loaded')}
+                    onError={() => reportImage('failed')}
+                  />
+                </CardMedia>
               ) : (
                 <CardMedia aspectRatio="16 / 9">
                   <div className="card-example-media-fallback">
                     <Icon usage="slot" icon={ImageBrokenIcon} size="l" color="muted" />
-                    <span>Preview unavailable</span>
+                    <Text as="span" size="caption-l" color="muted">
+                      <bdi>Preview unavailable</bdi>
+                    </Text>
                   </div>
                 </CardMedia>
               )}
             </CardSection>
             <CardHeader>
-              <CardTitle>Field notes</CardTitle>
-              <CardDescription>The content remains available if its image fails.</CardDescription>
+              <CardTitle>
+                <bdi>Field notes</bdi>
+              </CardTitle>
+              <CardDescription>
+                <bdi>A guide to the studio’s current work.</bdi>
+              </CardDescription>
             </CardHeader>
             <CardFooter>
               <Text size="caption-l" color="muted">
-                {recovered ? 'Preview loaded' : 'Could not load image'}
+                <bdi>
+                  {image.status === 'failed'
+                    ? 'Could not load image'
+                    : image.status === 'loaded'
+                      ? 'Preview loaded'
+                      : 'Loading preview…'}
+                </bdi>
               </Text>
               <Button
                 size="s"
                 variant="ghost"
                 tone="neutral"
-                onClick={() => setRecovered(!recovered)}
+                onClick={() =>
+                  setImage((previous) => ({ attempt: previous.attempt + 1, status: 'loading' }))
+                }
               >
-                {recovered ? 'Show failure' : 'Retry image'}
+                {image.status === 'loaded' ? 'Reload image' : 'Retry image'}
               </Button>
             </CardFooter>
           </Card>
@@ -701,22 +771,20 @@ export function Availability(): ReactElement {
   );
 }
 
-export function Overflow(): ReactElement {
+export function Overflow({ ctx }: PreviewProps): ReactElement {
   return (
     <div className="card-example-stack">
-      <Note>
-        Titles and descriptions wrap naturally. The footer grows with its labels; content is never
-        hidden merely to equalize card heights.
-      </Note>
       <div className="card-example-grid">
-        <Card>
+        <Card {...ctx.subject}>
           <CardHeader>
             <CardTitle>
-              A considered approach to making complex information easier to understand
+              <bdi>A considered approach to making complex information easier to understand</bdi>
             </CardTitle>
             <CardDescription>
-              Longer descriptions keep their line height and leave room for a compact action without
-              overlapping it.
+              <bdi>
+                Longer descriptions keep their line height and leave room for a compact action
+                without overlapping it.
+              </bdi>
             </CardDescription>
             <CardAction>
               <SaveAction name="A considered approach" />
@@ -724,22 +792,28 @@ export function Overflow(): ReactElement {
           </CardHeader>
           <CardBody>
             <Text size="body-s" color="secondary">
-              references/design-systems/components/surfaces/internationalization-and-accessibility-guidelines
+              <bdi>
+                references/design-systems/components/surfaces/internationalization-and-accessibility-guidelines
+              </bdi>
             </Text>
           </CardBody>
           <CardFooter withBorder>
             <Text size="caption-l" color="muted">
-              Last updated by the documentation working group
+              <bdi>Last updated by the documentation working group</bdi>
             </Text>
             <Button size="s" variant="secondary" tone="neutral" disabled>
               Available after review
             </Button>
           </CardFooter>
         </Card>
-        <Card>
+        <Card {...ctx.subject}>
           <CardHeader>
-            <CardTitle>Short title</CardTitle>
-            <CardDescription>The same grid can contain less text.</CardDescription>
+            <CardTitle>
+              <bdi>Short title</bdi>
+            </CardTitle>
+            <CardDescription>
+              <bdi>A brief for the next review.</bdi>
+            </CardDescription>
             <CardAction>
               <Badge size="s" status="neutral">
                 Draft
@@ -748,12 +822,12 @@ export function Overflow(): ReactElement {
           </CardHeader>
           <CardBody>
             <Text size="body-s" color="secondary">
-              The footer aligns at the bottom when the parent grid stretches its cards.
+              <bdi>Review the draft with an editor.</bdi>
             </Text>
           </CardBody>
           <CardFooter withBorder>
             <Text size="caption-l" color="muted">
-              Updated today
+              <bdi>Updated today</bdi>
             </Text>
             <Button size="s" variant="secondary" tone="neutral" disabled>
               Awaiting review
@@ -765,41 +839,39 @@ export function Overflow(): ReactElement {
   );
 }
 
-export function Overlay(): ReactElement {
-  const [study, setStudy] = useState('hierarchy');
+export function Overlay({ ctx }: PreviewProps): ReactElement {
+  const titleId = useId();
+  const study = ctx.story?.controls.study;
+  const size = studySize(ctx);
+  const variant = ctx.story?.controls.variant === 'subtle' ? 'subtle' : 'default';
   return (
     <div
-      className="unica-overlay-surface card-example-overlay"
-      data-surface="overlay"
+      className={
+        ctx.surface === 'overlay'
+          ? 'unica-overlay-surface card-example-overlay'
+          : 'card-example-overlay'
+      }
+      data-surface={ctx.surface}
       role="group"
-      aria-label="Card inside a floating surface"
+      aria-labelledby={titleId}
     >
-      <CardHeader>
-        <CardTitle>Related reading</CardTitle>
-        <CardDescription>
-          Cards adapt to the floating material. Only the outer panel casts a shadow.
-        </CardDescription>
-      </CardHeader>
-      <div className="card-example-controls">
-        <label>
-          Study
-          <select value={study} onChange={(event) => setStudy(event.target.value)}>
-            <option value="hierarchy">Content hierarchy</option>
-            <option value="states">Pinned navigation states</option>
-            <option value="navigation">Live links &amp; actions</option>
-          </select>
-        </label>
-      </div>
+      <Title id={titleId} as="h2" size="heading-s">
+        <bdi>Related reading</bdi>
+      </Title>
       {study === 'states' ? (
-        <States />
+        <States ctx={ctx} />
       ) : study === 'navigation' ? (
-        <Navigation />
+        <Navigation ctx={ctx} showGuides={false} />
       ) : (
         <>
-          <Card size="s">
+          <Card {...ctx.subject} size={size} variant={variant}>
             <CardHeader>
-              <CardTitle>Working with surfaces</CardTitle>
-              <CardDescription>Hierarchy, spacing, and a little restraint.</CardDescription>
+              <CardTitle>
+                <bdi>Working with surfaces</bdi>
+              </CardTitle>
+              <CardDescription>
+                <bdi>Hierarchy, spacing, and a little restraint.</bdi>
+              </CardDescription>
               <CardAction>
                 <SaveAction name="Working with surfaces" />
               </CardAction>
@@ -808,10 +880,14 @@ export function Overlay(): ReactElement {
               <Metadata />
             </CardFooter>
           </Card>
-          <Card size="s" variant="subtle">
+          <Card {...ctx.subject} size={size} variant="subtle">
             <CardHeader>
-              <CardTitle>One useful note</CardTitle>
-              <CardDescription>Supporting context uses the quieter level.</CardDescription>
+              <CardTitle>
+                <bdi>One useful note</bdi>
+              </CardTitle>
+              <CardDescription>
+                <bdi>Read the short checklist before starting a new draft.</bdi>
+              </CardDescription>
             </CardHeader>
           </Card>
         </>

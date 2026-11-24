@@ -1,0 +1,11 @@
+/* Leave room for the activity glyph and the words in its optional reference label. */
+td:has(:is([data-activity-label='ProgressCircle'], [data-activity-label='Spinner'])) {
+  min-inline-size: 12rem;
+}
+
+ul:has(
+  > [data-wb-result-row]
+    :is([data-activity-label='ProgressCircle'], [data-activity-label='Spinner'])
+) {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr));
+}

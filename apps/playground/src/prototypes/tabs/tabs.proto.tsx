@@ -128,12 +128,18 @@ function distributionStyle(
 const scrollTolerance = 1;
 const focusClearance = 4;
 
-function scrollEdges(list: HTMLElement, rtl: boolean): { start: boolean; end: boolean } {
+function scrollEdges(
+  list: HTMLElement,
+  rtl: boolean,
+  scale: number,
+): { start: boolean; end: boolean } {
   const range = list.scrollWidth - list.clientWidth;
   const offset = rtl ? -list.scrollLeft : list.scrollLeft;
+  // The last native scroll step can round to a screen pixel at fractional zoom.
+  const tolerance = Math.max(scrollTolerance, 1 / scale);
   return {
-    start: range > scrollTolerance && offset > scrollTolerance,
-    end: range > scrollTolerance && range - offset > scrollTolerance,
+    start: range > tolerance && offset > tolerance,
+    end: range > tolerance && range - offset > tolerance,
   };
 }
 
@@ -150,19 +156,23 @@ function measureOverflow(list: HTMLElement): void {
 function tabViewport(list: HTMLElement): {
   left: number;
   right: number;
+  scale: number;
   edges: ReturnType<typeof scrollEdges>;
   rtl: boolean;
 } {
   const bounds = list.getBoundingClientRect();
+  // DOM rectangles include zoom. Scroll offsets and padding use local CSS pixels.
+  const scale = bounds.width > 0 && list.offsetWidth > 0 ? bounds.width / list.offsetWidth : 1;
   const style = getComputedStyle(list);
   const rtl = style.direction === 'rtl';
-  const edges = scrollEdges(list, rtl);
+  const edges = scrollEdges(list, rtl, scale);
   const inset =
     (Number.parseFloat(style.scrollPaddingInlineStart) || focusClearance) - focusClearance;
-  const left = bounds.left + list.clientLeft;
+  const left = bounds.left + list.clientLeft * scale;
   return {
-    left: left + ((rtl ? edges.end : edges.start) ? inset : 0),
-    right: left + list.clientWidth - ((rtl ? edges.start : edges.end) ? inset : 0),
+    left: left + ((rtl ? edges.end : edges.start) ? inset * scale : 0),
+    right: left + (list.clientWidth - ((rtl ? edges.start : edges.end) ? inset : 0)) * scale,
+    scale,
     edges,
     rtl,
   };
@@ -173,12 +183,13 @@ function revealTab(list: HTMLElement, tab: HTMLElement): void {
     return;
   }
   const viewport = tabViewport(list);
-  const left = viewport.left + focusClearance;
-  const right = viewport.right - focusClearance;
+  const clearance = focusClearance * viewport.scale;
+  const left = viewport.left + clearance;
+  const right = viewport.right - clearance;
   const target = tab.getBoundingClientRect();
   const shift = target.left < left ? target.left - left : Math.max(0, target.right - right);
   // Commit even if the target fits, interrupting an in-flight chevron step.
-  list.scrollTo({ left: list.scrollLeft + shift, behavior: 'auto' });
+  list.scrollTo({ left: list.scrollLeft + shift / viewport.scale, behavior: 'auto' });
 }
 
 function scrollTabs(list: HTMLElement, toward: 'start' | 'end'): void {
@@ -211,11 +222,15 @@ export function TabsList({
   const [edges, setEdges] = useState({ start: false, end: false, rtl: false });
 
   const updateEdges = useCallback((viewport: HTMLElement): void => {
-    const { left, right, edges: next, rtl } = tabViewport(viewport);
+    const { left, right, scale, edges: next, rtl } = tabViewport(viewport);
     if (next.start || next.end) {
+      const tolerance = 0.5 * scale;
       const counts = Array.from(viewport.querySelectorAll('.tab-count-proto'), (count) => {
         const bounds = count.getBoundingClientRect();
-        return { count, clipped: bounds.left < left - 0.5 || bounds.right > right + 0.5 };
+        return {
+          count,
+          clipped: bounds.left < left - tolerance || bounds.right > right + tolerance,
+        };
       });
       for (const { count, clipped } of counts) {
         count.toggleAttribute('data-count-clipped', clipped);
@@ -326,6 +341,7 @@ export function TabsList({
       data-size={size}
       data-scroll-start={start || undefined}
       data-scroll-end={end || undefined}
+      data-scroll-rtl={edges.rtl || undefined}
       dir={dir}
       style={style}
     >

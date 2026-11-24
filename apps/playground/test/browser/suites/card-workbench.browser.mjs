@@ -159,6 +159,8 @@ export default {
         name: 'Save A more thoughtful handoff',
         exact: true,
       });
+      const destinationId = await link.evaluate((node) => node.hash.slice(1));
+      const destination = block.locator(`[id="${destinationId}"]`);
       const { width, height } = await getBox(action);
       assert.ok(width >= 44 && height >= 44, `${width}×${height}`);
 
@@ -168,7 +170,8 @@ export default {
       const points = [{ x: target.x + target.width / 2, y: target.y + target.height / 2 }];
       await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: points });
       await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
-      await block.getByText('Getting started', { exact: true }).last().waitFor();
+      const opened = destination.getByText('Getting started', { exact: true });
+      await opened.waitFor();
       await page.waitForFunction(
         (color) =>
           getComputedStyle(document.querySelector('a[data-unica-card-variant]')).backgroundColor ===
@@ -181,6 +184,68 @@ export default {
         ),
         'none',
       );
+      await action.focus();
+      await action.press('Space');
+      assert.equal(await action.getAttribute('aria-pressed'), 'true');
+      await assertFocused(action);
+      assert.equal(await opened.isVisible(), true);
+    },
+
+  'Card guide links reach distinct readable destinations after opening a new tab or reloading':
+    async ({ page, mount }) => {
+      await mount('card-workbench');
+      await navigate(page, {
+        item: 'card',
+        tab: 'states',
+        block: 'overlay',
+        family: 'frost',
+        scheme: 'light',
+        vp: '360',
+      });
+      const overlay = page.locator('[data-wb-block="overlay"]');
+      await overlay.getByRole('combobox', { name: 'Study' }).selectOption('navigation');
+      const source = overlay.getByRole('link', { name: 'Source notes' });
+      const notesId = await source.evaluate((node) => node.hash.slice(1));
+      const oldUrl = page.url();
+      const links = await overlay
+        .locator('.wb-artboard')
+        .getByRole('link')
+        .evaluateAll((nodes) => nodes.map((node) => node.hash));
+      assert.equal(new Set(links).size, 3);
+      const [opened] = await Promise.all([
+        page.context().waitForEvent('page'),
+        source.click({ modifiers: ['Control'] }),
+      ]);
+      try {
+        async function assertGuide(id, heading) {
+          await opened.waitForFunction((id) => {
+            const node = document.getElementById(id);
+            if (!node || node !== document.activeElement || location.hash !== '#' + id) {
+              return false;
+            }
+            const rect = node.getBoundingClientRect();
+            return node.contains(
+              document.elementFromPoint(rect.x + rect.width / 2, rect.y + rect.height / 2),
+            );
+          }, id);
+          await opened.getByRole('article', { name: heading, exact: true }).waitFor();
+        }
+        await assertGuide(notesId, 'Handoff source notes');
+        assert.equal(page.url(), oldUrl);
+        assert.equal(
+          await overlay.getByRole('combobox', { name: 'Study' }).inputValue(),
+          'navigation',
+        );
+
+        const guide = opened.getByRole('link', { name: 'Getting started', exact: true });
+        const guideId = await guide.evaluate((node) => node.hash.slice(1));
+        await guide.press('Enter');
+        await assertGuide(guideId, 'Getting started');
+        await opened.reload({ waitUntil: 'domcontentloaded' });
+        await assertGuide(guideId, 'Getting started');
+      } finally {
+        await opened.close();
+      }
     },
 
   'Card forwards native pointer, keyboard and touch invocation to ContextMenu': async ({

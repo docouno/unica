@@ -1,3 +1,12 @@
+.accordion-study-host {
+  inline-size: min(100%, 28rem);
+}
+
+.accordion-study-host[data-matrix] {
+  inline-size: 13rem;
+  max-inline-size: 100%;
+}
+
 .disclosure-study {
   display: grid;
   gap: var(--space-16);
@@ -8,10 +17,6 @@
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr));
   gap: var(--space-16) var(--space-24);
-}
-
-.disclosure-study-grid[data-study='sizes'] {
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 11rem), 1fr));
 }
 
 .disclosure-study-sample {
@@ -25,29 +30,6 @@
   inline-size: min(100%, 34rem);
 }
 
-.disclosure-study-actions {
-  display: grid;
-  gap: var(--space-16);
-  inline-size: min(100%, 27rem);
-}
-
-.disclosure-study-copy {
-  min-inline-size: 8.25em;
-}
-
-.disclosure-study-link {
-  display: grid;
-  gap: var(--space-4);
-}
-
-.disclosure-study-summary {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: var(--space-4) var(--space-12);
-}
-
 .disclosure-study-overlay {
   position: relative;
   display: grid;
@@ -58,17 +40,6 @@
 
 .disclosure-study-narrow {
   inline-size: min(100%, 24rem);
-}
-
-.disclosure-study-body {
-  display: grid;
-  gap: var(--space-8);
-  padding-block-start: var(--space-12);
-  max-inline-size: 23rem;
-}
-
-.disclosure-study-dismiss {
-  justify-self: start;
 }
 
 .disclosure-study-reason {

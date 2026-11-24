@@ -11,71 +11,10 @@
   gap: var(--space-12);
 }
 
-.skeleton-demo-case > figcaption {
-  color: var(--fg-muted);
-  font-size: var(--text-size-caption-l);
-  line-height: var(--text-size-caption-l-lh);
-}
-
 .skeleton-demo-pair {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: var(--space-24);
-}
-
-.skeleton-demo-avatars {
-  display: flex;
-  align-items: center;
-  gap: var(--space-16);
-  min-block-size: 48px;
-  flex-wrap: wrap;
-}
-
-.skeleton-demo-controls,
-.skeleton-demo-checkbox {
-  display: flex;
-  align-items: center;
-  gap: var(--space-12);
-  flex-wrap: wrap;
-}
-
-.skeleton-demo-control {
-  display: grid;
-  gap: var(--space-4);
-  min-inline-size: 0;
-  max-inline-size: 100%;
-  color: var(--fg-muted);
-  font-size: var(--text-size-caption-l);
-  line-height: var(--text-size-caption-l-lh);
-}
-
-.skeleton-demo-control select {
-  min-inline-size: 0;
-  max-inline-size: 100%;
-  padding: 6px 8px;
-  border: 1px solid var(--control-border);
-  border-radius: var(--size-s-radius);
-  background: var(--control-bg);
-  color: var(--fg-primary);
-  font: inherit;
-}
-
-.skeleton-demo-checkbox {
-  gap: var(--space-8);
-  color: var(--fg-secondary);
-  font-size: var(--text-size-caption-l);
-  line-height: var(--text-size-caption-l-lh);
-}
-
-.skeleton-demo-checkbox input {
-  margin: 0;
-  accent-color: var(--accent-solid);
-}
-
-.skeleton-demo-control select:focus-visible,
-.skeleton-demo-checkbox input:focus-visible {
-  outline: 2px solid var(--focus-ring-color);
-  outline-offset: 3px;
 }
 
 .skeleton-demo-metrics {
@@ -182,24 +121,10 @@
   min-block-size: calc(3 * var(--text-size-caption-l-lh));
 }
 
-.skeleton-demo-footer {
-  display: flex;
-  border-block-start: 1px solid var(--border-subtle);
-  padding-block-start: var(--space-12);
-}
-
 .skeleton-demo-canvas {
   padding: var(--space-16);
   border-radius: var(--surface-m-radius);
   background: var(--bg-canvas);
-}
-
-.skeleton-demo-overlay {
-  position: relative;
-  display: grid;
-  gap: var(--surface-m-gap);
-  inline-size: min(100%, 400px);
-  padding: var(--surface-m-padding);
 }
 
 .skeleton-demo-motion-sample {
@@ -213,13 +138,5 @@
 @container artboard (max-width: 600px) {
   .skeleton-demo-pair {
     grid-template-columns: minmax(0, 1fr);
-  }
-}
-
-@media (forced-colors: active) {
-  .skeleton-demo-control select {
-    border-color: ButtonText;
-    background: Canvas;
-    color: CanvasText;
   }
 }

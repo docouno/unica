@@ -1,0 +1,24 @@
+.pagination-preview {
+  inline-size: 100%;
+  min-inline-size: 0;
+}
+
+/* Give compact labels enough room and keep the numbered window available for comparison. */
+td:has([data-pagination-comparison]) {
+  min-inline-size: 17rem;
+}
+
+td:has([data-pagination-comparison='pages']) {
+  min-inline-size: 26rem;
+}
+
+ul:has(> [data-wb-result-row] [data-pagination-comparison]) {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 29rem), 1fr));
+}
+
+@media (pointer: coarse) {
+  /* Seven page slots and both arrows each need at least 44px. */
+  td:has([data-pagination-comparison='pages']) {
+    min-inline-size: 35rem;
+  }
+}

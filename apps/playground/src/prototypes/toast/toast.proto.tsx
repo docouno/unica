@@ -109,9 +109,13 @@ export function ToastCard({
       </span>
       <div className="toast-copy">
         <div className="toast-title" id={`${id}-title`}>
-          {title}
+          <bdi>{title}</bdi>
         </div>
-        {children && <div className="toast-description">{children}</div>}
+        {children && (
+          <div className="toast-description">
+            {typeof children === 'string' ? <bdi>{children}</bdi> : children}
+          </div>
+        )}
       </div>
       {action && (
         <Button
@@ -139,12 +143,12 @@ export function ToastCard({
       )}
       {stackSummary && (
         <div className="toast-stack-hint">
-          <span>
+          <bdi>
             {stackSummary.count} notifications
             {stackSummary.issues
               ? ` · ${stackSummary.issues} ${stackSummary.issues === 1 ? 'needs' : 'need'} attention`
               : ''}
-          </span>
+          </bdi>
         </div>
       )}
     </div>
@@ -219,6 +223,7 @@ export interface ToastItem extends Omit<ToastCardProps, 'stackSummary' | 'onDism
 }
 
 export interface ToastViewportProps {
+  readonly [attribute: `data-${string}`]: string | number | boolean | undefined;
   readonly items: readonly ToastItem[];
   readonly onDismiss: (id: string) => void;
   readonly onDismissAll: () => void;
@@ -240,8 +245,6 @@ function alignStickyCovers(list: HTMLDivElement): void {
     const timeline = animation.timeline;
     if (
       !(animation instanceof CSSAnimation) ||
-      (animation.animationName !== 'toast-cover-start' &&
-        animation.animationName !== 'toast-cover-end') ||
       !(animation.effect instanceof KeyframeEffect) ||
       !timeline ||
       !('startOffset' in timeline) ||
@@ -256,11 +259,26 @@ function alignStickyCovers(list: HTMLDivElement): void {
     if (!row || timelineLength <= 0) {
       continue;
     }
-    // Chromium can initialise the cover using the opening scroll position.
-    // Anchor the interval to the one-pixel marker instead.
-    const rowHeight = Number.parseFloat(row.style.getPropertyValue('--toast-row-height'));
-    const offset =
-      animation.animationName === 'toast-cover-start' ? timelineLength - 1 - rowHeight : 1;
+    // When a neighbor changes, Chromium can keep an offset from the previous view timeline.
+    // The new marker enters over [0, 1]px and exits over the timeline's last pixel.
+    let offset: number;
+    switch (animation.animationName) {
+      case 'toast-cover-start':
+        offset =
+          timelineLength - 1 - Number.parseFloat(row.style.getPropertyValue('--toast-row-height'));
+        break;
+      case 'toast-cover-end':
+        offset = 1;
+        break;
+      case 'toast-cover-complete':
+        offset = timelineLength - 2;
+        break;
+      case 'toast-uncover-complete':
+        offset = 0;
+        break;
+      default:
+        continue;
+    }
     const startTime = (100 * offset) / timelineLength;
     if (
       !(animation.startTime instanceof CSSUnitValue) ||
@@ -305,6 +323,7 @@ export function ToastViewport({
   placement = 'bottom-end',
   initialExpanded = false,
   className = '',
+  ...attributes
 }: ToastViewportProps): ReactElement | null {
   const [expanded, setExpanded] = useState(initialExpanded);
   const viewport = useRef<HTMLDivElement>(null);
@@ -410,13 +429,17 @@ export function ToastViewport({
   };
   const dismiss = (itemId: string): void => {
     const cards = [...(viewport.current?.querySelectorAll<HTMLElement>('.toast-card') ?? [])];
-    const focusedIndex = cards.findIndex((card) => card.contains(document.activeElement));
+    const active = document.activeElement;
+    const focusedIndex = cards.findIndex((card) => card.contains(active));
     onDismiss(itemId);
     if (items.length <= 2) {
       setExpanded(false);
     }
     if (focusedIndex >= 0) {
       requestAnimationFrame(() => {
+        if (active?.isConnected || document.activeElement !== document.body) {
+          return;
+        }
         const remaining = [
           ...(viewport.current?.querySelectorAll<HTMLElement>('.toast-card') ?? []),
         ];
@@ -460,6 +483,7 @@ export function ToastViewport({
   ) : null;
   return (
     <div
+      {...attributes}
       className={`toast-viewport ${className}`}
       ref={viewport}
       data-placement={placement}
@@ -467,6 +491,15 @@ export function ToastViewport({
       data-grouped={grouped || undefined}
       role="region"
       aria-label="Notifications"
+      onKeyDown={(event) => {
+        if (
+          event.repeat &&
+          (event.key === 'Enter' || event.key === ' ') &&
+          event.target instanceof HTMLButtonElement
+        ) {
+          event.preventDefault();
+        }
+      }}
       onPointerEnter={() => {
         if (!reading) {
           setHeldId(front?.id ?? null);

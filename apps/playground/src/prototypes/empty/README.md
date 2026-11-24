@@ -60,14 +60,14 @@ Use `muted` by default. `accent`, `info`, `success`, `warning`, and `danger` cha
 
 ## Review in the playground
 
-| Location                  | What to inspect                                                                                                                                          |
-| ------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `sizes`, `reasons`        | Compare size steps and the difference between passive emptiness and first-time setup.                                                                    |
-| `activity`, `unavailable` | Paused and completed activity, access restrictions, and failed loads.                                                                                    |
-| `placement`, `overflow`   | Flush alignment with a card’s heading, a description-only native table row, long copy, wrapped actions, and RTL.                                         |
-| `media`, `routes`         | Both file formats and orientations across the artwork bounds, plus the balance of artwork, copy and actions on a missing or failed route.                |
-| `search`, `retry`         | Live filtering and clear, focus after explicit empty submission, and both retry outcomes. The first retry fails and the second shows the loaded reports. |
-| `overlay`                 | A compact state on the workbench’s floating surface. Look at the rim, ink hierarchy and button against the actual overlay.                               |
-| `08-extensions-empty`     | The webhook sandbox card and the filtered installed-connectors message in their collection context.                                                      |
+| Location                         | What to inspect                                                                                                                                          |
+| -------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `sizes`, `reasons`               | Compare size steps and the difference between passive emptiness and first-time setup.                                                                    |
+| `activity`, `unavailable`        | Paused and completed activity, access restrictions, and failed loads.                                                                                    |
+| `placement`, `hosts`, `overflow` | Logical alignment at every size, a card’s heading, a description-only table row, long copy, wrapped actions, and RTL.                                    |
+| `media`, `routes`                | Portrait and landscape art at its size limits. Both routes link to the workspace. Reload restores only the failed view and its keyboard focus.           |
+| `search`, `retry`                | Live filtering and clear, focus after explicit empty submission, and both retry outcomes. The first retry fails and the second shows the loaded reports. |
+| `overlay`                        | A compact state on the workbench’s floating surface. Look at the rim, ink hierarchy and button against the actual overlay.                               |
+| `08-extensions-empty`            | The webhook sandbox card and the filtered installed-connectors message in their collection context.                                                      |
 
-Inspect all six presets. Use 360/768/1280/1440px, 120% text, RTL and the overlay sample. The matrices and layout examples pin their visual content and actions. Search, Retry and Folio use local state and native controls. Requests, navigation and service responses outside those examples belong to the consuming application. Public package signatures and reusable implementation mechanics are defined when the family ships.
+Inspect all six presets. Use 360/768/1280/1440px, 120% text, RTL and the overlay sample. The layout cases pin their content and action appearances. Browse pages in the Playground opens the document collection. Search, Retry and the full-page recovery composition use local state. The copied examples accept `pagesHref` and `workspaceHref` for the host’s native routes. Pass `illustrationSrc` to show a decorative image on the missing page, or use its default document glyph. Public package signatures and reusable implementation mechanics are defined when the family ships.
