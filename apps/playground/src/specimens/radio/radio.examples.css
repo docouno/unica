@@ -20,8 +20,3 @@ td:has(.radio-example-form[data-orientation='horizontal']) {
 ul:has(> [data-wb-result-row] .radio-example-form) {
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 17rem), 1fr));
 }
-
-.radio-example-plate {
-  inline-size: fit-content;
-  max-inline-size: 100%;
-}

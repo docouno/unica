@@ -3,7 +3,7 @@ import type { ReactElement } from 'react';
 import { Box, Button, Flex, Icon, Radio, RadioGroup, Stack, Text } from '@docouno/unica';
 import { WarningCircleIcon } from '@phosphor-icons/react';
 import type { PreviewProps } from '../../workbench/types.js';
-import { Sample } from '../binary-examples.js';
+import { BinaryPlate, Sample } from '../binary-examples.js';
 import './radio.examples.css';
 
 export function Interaction({ ctx }: PreviewProps): ReactElement {
@@ -195,16 +195,12 @@ export function Overflow({ ctx }: PreviewProps): ReactElement {
 }
 export function SurfaceChoices({ ctx }: PreviewProps): ReactElement {
   return (
-    <div
-      className="binary-demo-plate radio-example-plate"
-      data-plate={ctx.surface}
-      data-surface={ctx.surface}
-    >
+    <BinaryPlate surface={ctx.surface}>
       <RadioGroup {...ctx.subject} aria-label="Visibility" defaultValue="team">
         <Radio value="private" label="Private" />
         <Radio value="team" label="Team" />
         <Radio value="public" label="Public" />
       </RadioGroup>
-    </div>
+    </BinaryPlate>
   );
 }
