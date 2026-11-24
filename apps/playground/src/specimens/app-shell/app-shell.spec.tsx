@@ -8,6 +8,7 @@ import {
   TopRail,
 } from '../../prototypes/app-shell/app-shell.proto.js';
 import { defineComponent } from '../../workbench/types.js';
+import { withOverlaySurface } from '../shared/with-overlay-surface.js';
 import {
   DrawerLayouts,
   ExampleNavigation,
@@ -142,6 +143,31 @@ export default defineComponent({
     defaultNavigationCollapsed,
     defaultInspectorCollapsed,
   }) => {
+    const parts = ['AppShell', 'Header'];
+    const examples: string[] = [];
+    if (topRail === 'search') {
+      parts.push('GlobalSearch', 'TopRail');
+    }
+    if (leftRail === 'rail') {
+      parts.push('LeftRail');
+    }
+    if (leftAside === 'documents') {
+      examples.push('ExampleNavigation');
+    }
+    if (rightAside === 'properties') {
+      parts.push('AsidePanel');
+      examples.push('InspectorRows');
+    }
+    const imports = [
+      "import '@docouno/unica/styles.css';",
+      "import { Box, Text } from '@docouno/unica';",
+      `import { ${parts.sort().join(', ')} } from './prototypes/app-shell/app-shell.proto.js';`,
+    ];
+    if (examples.length) {
+      imports.push(
+        `import { ${examples.join(', ')} } from './specimens/app-shell/app-shell.examples.js';`,
+      );
+    }
     const slots = [
       topRail === 'search' ? ' topRail={<TopRail><GlobalSearch /></TopRail>}' : '',
       leftRail === 'rail'
@@ -156,7 +182,9 @@ export default defineComponent({
       defaultNavigationCollapsed ? ' defaultNavigationCollapsed' : '',
       defaultInspectorCollapsed ? ' defaultInspectorCollapsed' : '',
     ].join('');
-    return `<AppShell canvasAs="section" minHeight={320} header={<Header>Research library</Header>}${slots}>
+    return `${imports.join('\n')}
+
+<AppShell canvasAs="section" minHeight={320} header={<Header>Research library</Header>}${slots}>
   <Box padding={16}><Text>Interview notes and findings</Text></Box>
 </AppShell>`;
   },
@@ -196,7 +224,7 @@ export default defineComponent({
       mode: 'live',
       caption:
         'Select a destination or open a branch. In the tree, arrows move focus and Enter selects.',
-      render: NavigationStates,
+      render: withOverlaySurface(NavigationStates, 'border-box'),
     },
     {
       id: 'documents',
@@ -205,7 +233,7 @@ export default defineComponent({
       mode: 'live',
       caption:
         'Switch documents, close a clean or dirty item, and use the full list when the strip overflows.',
-      render: Documents,
+      render: withOverlaySurface(Documents, 'border-box'),
     },
     {
       id: 'responsive',
@@ -223,7 +251,7 @@ export default defineComponent({
       mode: 'pinned',
       caption:
         'Both logical edges shown at compact width. Open the corresponding panel in Responsive shell to try it.',
-      render: DrawerLayouts,
+      render: withOverlaySurface(DrawerLayouts, 'border-box'),
     },
     {
       id: 'properties',
@@ -232,7 +260,7 @@ export default defineComponent({
       mode: 'live',
       caption:
         'Compare an editable setting, a managed value and a validation message with the compact inspector rows.',
-      render: Properties,
+      render: withOverlaySurface(Properties, 'border-box'),
     },
     {
       id: 'save',
@@ -285,7 +313,11 @@ export default defineComponent({
         },
       },
       render: WorkspaceTopology,
-      code: `function Workspace({ layout = 'l-shaped' }) {
+      code: `import '@docouno/unica/styles.css';
+import { Box, Text } from '@docouno/unica';
+import { AppShell, AsidePanel, GlobalSearch, Header, LeftRail, Subbar, TopRail } from './prototypes/app-shell/app-shell.proto.js';
+
+function Workspace({ layout = 'l-shaped' }) {
   const hasNavigation = ['l-shaped', 'classic', 'asides'].includes(layout);
   const hasInspector = ['classic', 'asides'].includes(layout);
   return (

@@ -79,21 +79,19 @@ export default {
     assert.ok(Math.abs(scrolled.shift) <= 1, 'Save actions should stay visible while scrolling');
   },
 
-  'Narrow overlay studies keep reading width for headings and quotations': async ({
-    page,
-    mount,
-  }) => {
+  'Narrow overlay studies keep readable text on the floating surface': async ({ page, mount }) => {
     await page.setViewportSize({ width: 412, height: 950 });
     await mount('workbench-v3');
 
-    for (const [item, block, selector] of [
-      ['app-shell', 'layout', '.shell-study-layout h3'],
-      ['blockquote', 'overflow', 'blockquote p'],
+    for (const [item, tab, block, selector] of [
+      ['app-shell', 'states', 'layout', '.shell-study-layout h3'],
+      ['blockquote', 'states', 'overflow', 'blockquote p'],
+      ['container', 'compositions', 'document', 'h3'],
     ]) {
       await navigate(page, {
         item,
         block,
-        tab: 'states',
+        tab,
         family: 'pixel',
         scheme: 'light',
         surface: 'overlay',
@@ -105,15 +103,18 @@ export default {
       const frame = page.locator(`[data-wb-block="${block}"] .wb-artboard`);
       const reading = frame.locator(selector).first();
       await reading.waitFor({ state: 'attached' });
-      const { stageWidth, textWidth, contained } = await reading.evaluate((element) => {
+      const { stageWidth, textWidth, contained, painted } = await reading.evaluate((element) => {
         const stage = element.closest('[data-stage-content]').getBoundingClientRect();
         const text = element.getBoundingClientRect();
+        const panel = element.closest('.unica-overlay-surface');
         return {
+          painted: panel && getComputedStyle(panel).backgroundColor !== 'rgba(0, 0, 0, 0)',
           stageWidth: stage.width,
           textWidth: text.width,
           contained: text.left >= stage.left - 1 && text.right <= stage.right + 1,
         };
       });
+      assert.ok(painted, `${item} text has no floating surface over the underlay`);
       assert.ok(textWidth >= stageWidth / 2, `${item} text collapsed to ${textWidth}px`);
       assert.ok(contained, `${item} text extends past its overlay stage`);
     }

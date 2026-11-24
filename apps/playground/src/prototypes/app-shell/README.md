@@ -2,6 +2,8 @@
 
 Open the [Workbench](../../../../../docs/workbench.md#inspect-components-and-scenes) at `/?item=app-shell`. States compares rail combinations and compact panel entry points. The live cases cover document navigation, responsive panels, settings and saves. Open `/?item=app-shell&tab=states&block=responsive&family=all&scheme=both&vp=1280` to try dock visibility across all six presets. At 360px, open each sheet from its labeled button. Compositions shows five workspace topologies with the same canvas content. The [Folio scenes](../../../../../docs/compositions/folio.md#explore-the-live-compositions) use the shell in a document workspace, editor, settings and administration.
 
+The Playground and composition snippets use module paths relative to `apps/playground/src/`. The Documents and Properties choices also import the sample navigation and inspector used in the live example.
+
 ## Workspace frame
 
 | Part              | Geometry and purpose                                                                                                                                                                                                                                                                                                                                                                                                                                      |

@@ -713,7 +713,7 @@ function SaveBar({
           usage="slot"
           icon={clean ? CheckIcon : state === 'error' ? WarningCircleIcon : PencilSimpleIcon}
         />
-        <span>
+        <bdi>
           {
             {
               clean: 'All changes saved',
@@ -722,7 +722,7 @@ function SaveBar({
               error: 'Could not save. Your changes are still here.',
             }[state]
           }
-        </span>
+        </bdi>
       </div>
     </StickyActionBar>
   );
@@ -875,14 +875,14 @@ export function LayoutExamples({ ctx }: PreviewProps): ReactElement {
           gap={{ mobile: 8, tablet: 16, wide: 24 }}
         >
           <GridItem span={{ mobile: 1, desktop: 2 }} className="shell-study-layout-cell">
-            Access overview
+            All teams
           </GridItem>
-          <GridItem className="shell-study-layout-cell">Members</GridItem>
-          <GridItem className="shell-study-layout-cell">Service accounts</GridItem>
+          <GridItem className="shell-study-layout-cell">HR</GridItem>
+          <GridItem className="shell-study-layout-cell">IT</GridItem>
           <GridItem className="shell-study-layout-cell" hidden>
             Hidden item
           </GridItem>
-          <GridItem className="shell-study-layout-cell">Pending invitations</GridItem>
+          <GridItem className="shell-study-layout-cell">QA</GridItem>
         </Grid>
       </Example>
       <Example title="Container · 720, 960 and 1280px">
