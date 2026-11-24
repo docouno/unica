@@ -1,0 +1,8 @@
+/* Leave room for the progressbar and the words in its optional reference label. */
+td:has([data-activity-label='ProgressCircle']) {
+  min-inline-size: 12rem;
+}
+
+ul:has(> [data-wb-result-row] [data-activity-label='ProgressCircle']) {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr));
+}

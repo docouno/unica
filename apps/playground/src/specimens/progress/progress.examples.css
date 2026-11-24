@@ -128,33 +128,6 @@
   line-height: var(--text-size-caption-l-lh);
 }
 
-.activity-preview-controls {
-  display: grid;
-  gap: var(--space-8);
-  font-size: var(--text-size-caption-l);
-  line-height: var(--text-size-caption-l-lh);
-}
-
-.activity-preview-controls > select {
-  min-inline-size: 0;
-  inline-size: 100%;
-  min-block-size: var(--size-s-height);
-  border: 1px solid var(--control-border);
-  border-radius: var(--size-s-radius);
-  background: var(--control-bg);
-  padding: var(--space-4) var(--space-8);
-}
-
-.activity-preview-controls > input {
-  inline-size: 100%;
-  margin: 0;
-  accent-color: var(--accent-solid);
-}
-.activity-preview-controls > :is(input, select):focus-visible {
-  outline: 2px solid var(--focus-ring-color);
-  outline-offset: 2px;
-}
-
 .activity-static,
 .activity-static * {
   animation: none;

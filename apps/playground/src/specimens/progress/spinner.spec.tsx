@@ -1,7 +1,7 @@
 import { Spinner } from '@docouno/unica';
 import { previewProps } from '../preview-code.js';
 import { defineComponent } from '../../workbench/types.js';
-import { activityNameReference, labelledByText, withActivityNameCode } from './activity-name.js';
+import { labelledByText, withActivityName, withActivityNameCode } from './activity-name.js';
 import Study from './spinner.examples.js';
 
 export default defineComponent({
@@ -56,25 +56,24 @@ export default defineComponent({
   },
   render: ({ ctx, values: { labelledByText, ...props } }) => {
     const id = `${ctx.id}-operation`;
-    const reference = activityNameReference(id, labelledByText);
+    const reference = labelledByText.trim();
     const frozen =
       typeof window !== 'undefined' &&
       (document.documentElement.dataset.wbFreeze === '1' ||
         new URLSearchParams(window.location.search).get('freeze') === '1');
-    return (
-      <>
-        {reference}
-        <Spinner
-          {...ctx.subject}
-          {...props}
-          delay={frozen ? 0 : props.delay}
-          aria-labelledby={reference ? id : undefined}
-        />
-      </>
+    return withActivityName(
+      'Spinner',
+      id,
+      reference,
+      <Spinner
+        {...ctx.subject}
+        {...props}
+        delay={frozen ? 0 : props.delay}
+        aria-labelledby={reference ? id : undefined}
+      />,
     );
   },
   code: ({ labelledByText, ...props }) => {
-    const label = labelledByText.trim() ? ' aria-labelledby="operation-label"' : '';
     const attributes = previewProps(props, {
       size: 'inherit',
       tone: 'inherit',
@@ -82,7 +81,11 @@ export default defineComponent({
       'aria-label': '',
       'aria-hidden': false,
     });
-    return withActivityNameCode(`<Spinner${attributes}${label} />`, labelledByText);
+    return withActivityNameCode(
+      'Spinner',
+      labelledByText,
+      (label) => `<Spinner${attributes}${label} />`,
+    );
   },
   matrixViews: [
     {
