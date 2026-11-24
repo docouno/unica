@@ -1,6 +1,6 @@
 Alert Arabic typography fixture
 
-Purpose: deterministic Arabic text rendering in the Alert specimen only.
+Purpose: deterministic Arabic text rendering in the Alert and Tag specimens. Tag uses the 400 weight.
 Retrieved: 2026-11-16
 Font: Noto Sans Arabic, weights 400 and 600, text subsets.
 Characters: تم حفظ التغييرات بنجاح يمكن لجميع أعضاء مساحة العمل قراءة الإصدار الجديد الآن.

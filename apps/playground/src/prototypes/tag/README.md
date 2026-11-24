@@ -28,7 +28,7 @@ Use one size within a group. The group gap defaults to 8 px. It wraps whole tags
 
 ## Fit with neighboring components
 
-Tag uses 22 / 26 / 30 px painted heights while fields and buttons retain 30 / 40 / 48 px. Matching size names align text and icon scale, not the outer height of every family. Within a group, tags and the disclosure share a painted height and minimum target height. Beside controls, align their vertical centers. Inside a field, reserve air around the tag and allow the field to grow when values wrap.
+At 100% text with a fine pointer, Tag uses 22 / 26 / 30 px painted heights while fields and buttons use 30 / 40 / 48 px. Bounds measures the whole tag, including the space reserved for its remove target. Matching size names align text and icon scale, not the outer height of every family. Within a group, tags and the disclosure share a painted height and minimum target height. Beside controls, align their vertical centers. Inside a field, reserve air around the tag and allow the field to grow when values wrap.
 
 TagsInput uses 2 / 5 / 6 px vertical padding plus its 1 px border, preserving the control heights for a single row at 100% text with a fine pointer. A coarse pointer reserves a 44 px remove target, so its field can grow. Badge remains a quieter passive marker at 20 / 24 / 28 px; no neighboring component scale changes. The 2 px difference from Badge leaves room for the removal action without making Tag as tall as a field. The 4 px step between Tag sizes is consistent across the family; its painted height need not be a multiple of 4 px.
 
@@ -57,7 +57,7 @@ The current prototype consumes the existing semantic marker palette and the them
 
 Disabled wins over interactions; pending wins over hover/press but retains focus. Pending consumes the shared decorative Spinner at the inherited 12 / 14 / 16 px glyph size and foreground; the plate and target do not resize. Native disabled fieldsets disable the remove button. Reduced motion removes transitions and Spinner motion while preserving a visible waiting indicator and message. Forced colors keeps a system-color outline, readable text, disabled action color, and visible focus.
 
-The six state comparisons pair text-only and leading-icon tags; both samples are explicitly pinned. Other samples remove and restore real local values. The delayed-removal panel has explicit confirmation/rejection controls; it does not pretend to perform a network request.
+The six state comparisons pair text-only and leading-icon tags; both samples are explicitly pinned. Other samples remove and restore real local values. Holding Enter on a remove button must leave its replacement in place until the user makes a new activation. In Removal outcomes, the toolbar can hold a request until **Confirm removal** or **Reject removal**. Only a group with an outstanding request receives the outcome. Confirming several requests keeps keyboard focus with its current owner. Reset restores each group to its starting values.
 
 ## Group disclosure and focus
 
@@ -86,6 +86,8 @@ Tags have no arbitrary width cap by default, but cannot exceed their container. 
 
 For truncated string labels, pointer hover or keyboard focus on the remove button opens the package [Tooltip](../../../../../docs/components/tooltip.md). The full value wraps within the space available to the panel. Escape dismisses the tooltip before an enclosing overlay handles Escape. Rich labels need an explicit plain-text equivalent in the library implementation.
 
+The Arabic sample uses a local Noto Sans Arabic text subset in the label, tooltip, readout, and list. Font provenance and license details are in [the Arabic fixture record](../../../public/assets/licenses/alert-arabic.txt).
+
 A hover tooltip is insufficient on touch. The overflow example also shows an adjacent full-value readout and an explicit **Show full values** list. A consumer with potentially ambiguous truncated values must offer an equivalent reachable inspection view; it cannot rely on a browser `title` or ask the user to remove the value to read it. This inspection action belongs to the surrounding collection, not a hidden second action on the Tag's label.
 
 ## Live reference and consumer fit
@@ -93,14 +95,17 @@ A hover tooltip is insufficient on touch. The overflow example also shows an adj
 | Workbench example | What it settles                                                                                          |
 | ----------------- | -------------------------------------------------------------------------------------------------------- |
 | `anatomy`         | Sizes, leading icons, optical spacing, remove/restore.                                                   |
-| `palette`         | All six semantic colors in all six themes.                                                               |
+| `palette`         | One assigned value across all six statuses and all three sizes.                                          |
+| `status-meaning`  | Real classifications with their own labels and leading glyphs.                                           |
 | `states`          | Local feedback with and without a leading icon, unavailable and pending appearance, focus at every size. |
 | `groups`          | S/M/L wrapping, collapsed/expanded flow, mixed disabled values, keyboard route.                          |
-| `fit`             | Live S/M/L tags inside fields, beside controls and passive badges; shared values expose wrapping.        |
+| `fit`             | A field and Add label action edit the same assigned values across the three sizes in each artboard.      |
 | `locked`          | Readable locked values with working disclosure.                                                          |
 | `overflow`        | Long human labels, an email address, an unbroken identifier, full-value inspection.                      |
 | `removal`         | Last removal, empty state, delayed acceptance/rejection, external focus destination.                     |
 | `overlay`         | The same components on an actual floating material and underlay.                                         |
+
+Quick Start and Playground show an owner handling removal and restoring focus to the tag after **Restore tag**. The copied Fit composition includes the Tag and TagsInput prototype imports and its own value state.
 
 Existing compositions consume this design independently. Collection query facets use TagGroup, with the next filter receiving focus after removal and Reset after the last filter. Static reader and extension metadata use Badge. The shared TagsInput prototype uses Tag for removable strings and owns their contextual corner geometry: field tokens and removal plates use the 4px micro-radius floor in Soft/Frost and 0px in Pixel, while standalone Tag retains its capsule. Its editor owns focus recovery. Inside the field, long labels wrap as complete, selectable text with removal beside the first line; hover and focus do not insert readouts or disclosure content. This contextual text layout leaves standalone Tag unchanged. TagsInput has its own detailed design reference in `../tags-input/README.md`. These are bounded integration corrections, not redesigns of those families or application flows.
 

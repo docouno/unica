@@ -14,6 +14,77 @@ async function navigate(page, params) {
 }
 
 export default {
+  'Tag removal and restoration keep keyboard focus in the activated artboard': async ({
+    page,
+    mount,
+  }) => {
+    await page.setViewportSize({ width: 1500, height: 900 });
+    await mount('workbench-v3');
+    await navigate(page, { item: 'tag', tab: 'playground', family: 'frost', scheme: 'both' });
+    const boards = page.locator('.wb-artboard');
+    const remove = boards.nth(1).getByRole('button', { name: 'Remove Documentation' });
+    const restore = boards.nth(1).getByRole('button', { name: 'Restore tag' });
+    await remove.focus();
+    await page.keyboard.down('Enter');
+    await page.keyboard.down('Enter');
+    await page.keyboard.up('Enter');
+    assert.equal(await restore.evaluate((button) => button.matches(':focus')), true);
+    assert.equal(await boards.nth(1).locator('[data-wb-subject]').count(), 0);
+    await page.keyboard.press('Space');
+    assert.equal(await remove.evaluate((button) => button.matches(':focus')), true);
+    assert.equal(await boards.nth(1).locator('.tag-proto[data-wb-subject]').count(), 1);
+    assert.equal(
+      await boards.nth(0).getByRole('button', { name: 'Remove Documentation' }).count(),
+      1,
+    );
+    const label = page.getByRole('textbox', { name: 'label', exact: true });
+    await label.fill('   ');
+    await boards.nth(1).getByRole('button', { name: 'Remove Label' }).waitFor();
+    assert.equal(await label.evaluate((input) => input.matches(':focus')), true);
+  },
+
+  'Settling two TagGroup removals retains focus in the group that owned it': async ({
+    page,
+    mount,
+  }) => {
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await mount('workbench-v3');
+    await navigate(page, {
+      item: 'tag',
+      tab: 'states',
+      block: 'removal',
+      family: 'frost',
+      scheme: 'both',
+    });
+    const frame = page.locator('[data-wb-block="removal"]');
+    const groups = frame.getByRole('toolbar', { name: 'Applied labels' });
+    await frame.getByRole('checkbox', { name: 'Wait for confirmation' }).check();
+    for (const group of [groups.nth(0), groups.nth(1)]) {
+      await group.getByRole('button', { name: 'Remove Platform team' }).press('Delete');
+    }
+    // Activation through an assistive command can leave DOM focus in the collection.
+    await frame
+      .getByRole('button', { name: 'Confirm removal' })
+      .evaluate((button) => button.click());
+    const following = groups.nth(1).getByRole('button', { name: 'Remove Needs review' });
+    assert.equal(await following.evaluate((button) => button.matches(':focus')), true);
+    assert.equal(await groups.getByRole('button', { name: 'Remove Platform team' }).count(), 0);
+    await frame.getByRole('checkbox', { name: 'Wait for confirmation' }).uncheck();
+    await groups.nth(1).getByRole('button', { name: 'Remove This month' }).press('Delete');
+    await following.focus();
+    await page.keyboard.down('Enter');
+    await page.keyboard.down('Enter');
+    await page.keyboard.up('Enter');
+    const empty = frame
+      .locator('.wb-artboard')
+      .nth(1)
+      .getByRole('button', { name: 'Reapply labels' });
+    assert.equal(await empty.evaluate((button) => button.matches(':focus')), true);
+    await page.keyboard.press('Enter');
+    const first = groups.nth(1).getByRole('button', { name: 'Remove This month' });
+    assert.equal(await first.evaluate((button) => button.matches(':focus')), true);
+  },
+
   'Bounds follows the accordion when its header opens inside a composition': async ({
     page,
     mount,
