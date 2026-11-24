@@ -8,7 +8,9 @@ export function WorkspaceForm({ external = false, subject = {} } = {}) {
   const [submission, setSubmission] = useState('');
   const field = (
     <Stack gap={8}>
-      <label htmlFor={id}>Workspace name</label>
+      <Text as="label" htmlFor={id} size="body-s" color="primary">
+        Workspace name
+      </Text>
       <div {...subject} style={{ display: 'grid' }}>
         <Input
           id={id}

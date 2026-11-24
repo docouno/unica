@@ -191,7 +191,9 @@ export default defineComponent({
     const fieldId = id.trim() ? `${ctx.id}-${id.trim().replace(/\s+/g, '-')}` : ctx.id;
     return (
       <div className="input-study-field">
-        <label htmlFor={fieldId}>Workspace name</label>
+        <Text as="label" htmlFor={fieldId} size="body-s" weight="medium" color="primary">
+          Workspace name
+        </Text>
         <div className="input-study-subject" data-width={props.width} {...ctx.subject}>
           <PreviewInput
             {...props}
@@ -254,14 +256,14 @@ export default defineComponent({
       ? '(event) => { setText(event.currentTarget.value); console.log(event.currentTarget.value); }'
       : '(event) => console.log(event.currentTarget.value)';
     return `import { useId${controlled ? ', useState' : ''} } from 'react';
-import { Input, Stack${description ? ', Text' : ''} } from '@docouno/unica';${glyphs.length ? '\nimport { ' + glyphs.join(', ') + " } from '@phosphor-icons/react';" : ''}
+import { Input, Stack, Text } from '@docouno/unica';${glyphs.length ? '\nimport { ' + glyphs.join(', ') + " } from '@phosphor-icons/react';" : ''}
 import '@docouno/unica/styles.css';
 
 export function WorkspaceInput() {
   ${idLine}${controlled ? `\n  const [text, setText] = useState(${JSON.stringify(value)});` : ''}
   return (
     <Stack gap={8}>
-      <label htmlFor={id}>Workspace name</label>
+      <Text as="label" htmlFor={id} size="body-s" weight="medium" color="primary">Workspace name</Text>
       <Input id={id}${hintAttribute}${valueAttribute}${icons}${attributes} onChange={${change}}${props.clearable ? " onClear={() => console.log('onClear')}" : ''} />${hint}
     </Stack>
   );

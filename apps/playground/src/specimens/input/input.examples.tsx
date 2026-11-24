@@ -52,7 +52,15 @@ export function InputRoles({ ctx }: PreviewProps): ReactElement {
         </Sample>
         <Sample title="Ghost inline editor">
           <div className="input-study-property">
-            <label htmlFor={`${id}-reference`}>Reference</label>
+            <Text
+              as="label"
+              htmlFor={`${id}-reference`}
+              size="body-s"
+              weight="medium"
+              color="primary"
+            >
+              Reference
+            </Text>
             <MeasuredInput
               subject={ctx.subject}
               id={`${id}-reference`}
@@ -337,7 +345,9 @@ export function InputLive({ ctx }: PreviewProps): ReactElement {
   return (
     <div className="input-study-stack input-study-form">
       <div className="input-study-field">
-        <label htmlFor={id}>Workspace address</label>
+        <Text as="label" htmlFor={id} size="body-s" weight="medium" color="primary">
+          Workspace address
+        </Text>
         <MeasuredInput
           subject={ctx.subject}
           id={id}

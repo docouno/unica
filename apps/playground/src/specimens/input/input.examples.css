@@ -31,14 +31,10 @@ ul:has(> [data-wb-result-row] .input-study-subject) {
 
 .input-study-support {
   gap: var(--space-4);
-  min-block-size: calc(2 * var(--text-size-caption-l-lh) * var(--text-size-caption-l));
 }
 
-.input-study-field > label,
-.input-study-property > label {
-  font-size: var(--text-size-body-s);
-  font-weight: 500;
-  overflow-wrap: anywhere;
+.input-study-support > [role='status'] {
+  min-block-size: var(--text-size-caption-l-lh);
 }
 
 .input-study-property {
