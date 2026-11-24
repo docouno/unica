@@ -1,15 +1,19 @@
-.divider-demo-stack,
-.divider-demo-sample {
+.divider-demo-layout,
+.divider-demo-overlay {
+  inline-size: min(100%, 30rem);
+}
+
+.divider-demo-columns {
   display: grid;
-  min-inline-size: 0;
+  grid-template-columns: minmax(0, 1fr) 1px minmax(0, 1fr);
   gap: var(--space-24);
 }
 
-.divider-demo-sample {
-  gap: var(--space-12);
+.divider-demo-comparisons {
+  inline-size: min(100%, 18rem);
 }
 
-/* Example names sit outside the tinted area occupied by the actual divider. */
+/* Keep each position label outside the area occupied by the divider. */
 .divider-demo-case {
   display: grid;
   align-content: start;
@@ -18,41 +22,9 @@
   margin: 0;
 }
 
-.divider-demo-case-title {
-  color: var(--fg-primary);
-  font-size: var(--text-size-caption-l);
-  font-weight: 600;
-  line-height: var(--text-size-caption-l-lh);
-}
-
 .divider-demo-stage {
-  display: grid;
-  align-content: center;
-  min-inline-size: 0;
+  justify-content: center;
   min-block-size: 4rem;
-  padding: var(--space-16);
-  border-radius: var(--surface-s-radius);
-  background: var(--bg-surface);
-}
-
-.divider-demo-comparisons {
-  display: grid;
-  gap: var(--space-24);
-  inline-size: min(100%, 18rem);
-  min-inline-size: 0;
-}
-
-.divider-demo-row {
-  display: flex;
-  align-items: center;
-  gap: var(--space-12);
-  min-inline-size: 0;
-}
-
-.divider-demo-columns {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 1px minmax(0, 1fr);
-  gap: var(--space-24);
 }
 
 .divider-demo-grid {
@@ -66,34 +38,4 @@
 .divider-demo-canvas {
   padding: var(--surface-m-padding);
   background: var(--bg-canvas);
-}
-
-.divider-demo-overlay {
-  position: relative;
-  inline-size: min(100%, 30rem);
-  padding: var(--surface-m-padding);
-}
-
-.divider-demo-toolbar {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-12);
-  align-items: center;
-}
-
-.divider-demo-toolbar-pair {
-  display: flex;
-  align-items: center;
-  gap: var(--space-12);
-  min-inline-size: 0;
-}
-
-.divider-demo-toolbar-group {
-  display: flex;
-  gap: var(--space-4);
-}
-
-/* The host owns the optical inset around a stretched toolbar separator. */
-.divider-demo-toolbar-rule {
-  margin-block: var(--space-4);
 }
