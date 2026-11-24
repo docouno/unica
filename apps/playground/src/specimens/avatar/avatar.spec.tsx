@@ -224,7 +224,7 @@ export default defineComponent({
       code: directorySource.replaceAll('../../prototypes/', './prototypes/'),
       render: withOverlaySurface(
         ({ ctx }) => (
-          <div data-avatar-disclosure-preview="">
+          <div data-example-disclosure="">
             <ContributorDirectory max={Number(ctx.story?.controls.max ?? 3)} />
           </div>
         ),
@@ -240,7 +240,7 @@ export default defineComponent({
       code: profileSource.replaceAll('../../prototypes/', './prototypes/'),
       render: withOverlaySurface(
         () => (
-          <div data-avatar-disclosure-preview="">
+          <div data-example-disclosure="">
             <AccountProfile />
           </div>
         ),

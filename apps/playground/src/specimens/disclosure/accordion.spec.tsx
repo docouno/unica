@@ -74,7 +74,11 @@ export default defineComponent({
     },
   ],
   render: withOverlaySurface(({ values, ctx }) => (
-    <div className="accordion-study-host" data-matrix={ctx.tab === 'states' || undefined}>
+    <div
+      className="accordion-study-host"
+      data-example-disclosure=""
+      data-matrix={ctx.tab === 'states' || undefined}
+    >
       <Accordion
         key={values.defaultValue}
         {...ctx.subject}

@@ -15,7 +15,7 @@ export function ActionGeometry() {
 
   return (
     <div
-      data-avatar-disclosure-preview=""
+      data-example-disclosure=""
       style={{
         display: 'grid',
         gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 11rem), 1fr))',

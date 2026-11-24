@@ -10,11 +10,6 @@
   font-family: 'Avatar CJK fixture', var(--font-family-base);
 }
 
-/* Keep the trigger under the pointer when its list expands on a floating surface. */
-[data-stage-content]:has([data-avatar-disclosure-preview]) {
-  align-self: flex-start;
-}
-
 .avatar-example-stack {
   display: flex;
   flex-direction: column;

@@ -29,7 +29,7 @@ function AccessGroup({ exclusive = false }: { readonly exclusive?: boolean }): R
 
 export function OpeningModes(): ReactElement {
   return (
-    <div className="disclosure-study disclosure-study-grid">
+    <div className="disclosure-study disclosure-study-grid" data-example-disclosure="">
       <div className="disclosure-study-sample">
         <Text className="disclosure-study-label" size="caption-l" color="muted">
           Several sections
@@ -48,7 +48,7 @@ export function OpeningModes(): ReactElement {
 
 export function TriggerStudy(): ReactElement {
   return (
-    <div className="disclosure-study disclosure-study-grid">
+    <div className="disclosure-study disclosure-study-grid" data-example-disclosure="">
       <div className="disclosure-study-sample">
         <Text className="disclosure-study-label" size="caption-l" color="muted">
           Available and unavailable triggers
@@ -99,6 +99,7 @@ export function OverlayAccess({ ctx }: PreviewProps): ReactElement {
           ? 'unica-overlay-surface disclosure-study-overlay'
           : 'disclosure-study-overlay'
       }
+      data-example-disclosure=""
       data-surface={ctx.surface}
     >
       <Title as="h2" size="heading-s">

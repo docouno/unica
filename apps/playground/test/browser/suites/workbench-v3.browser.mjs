@@ -14,6 +14,45 @@ async function navigate(page, params) {
 }
 
 export default {
+  'Overlay disclosures stay under the pointer when their content opens': async ({
+    page,
+    mount,
+  }) => {
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await mount('workbench-v3');
+    for (const [route, name] of [
+      [{ item: 'accordion', tab: 'playground' }, 'Fee'],
+      [{ item: 'avatar', tab: 'compositions', block: 'usage' }, 'View all 7'],
+    ]) {
+      await navigate(page, {
+        ...route,
+        surface: 'overlay',
+        family: 'frost',
+        scheme: 'light',
+        vp: '360',
+        scale: '120',
+        dir: 'rtl',
+        raw: '1',
+        freeze: '1',
+      });
+      const board = page.locator('.wb-artboard').first();
+      const trigger = board.getByRole('button', { name, exact: true });
+      await trigger.scrollIntoViewIfNeeded();
+      const panelId = await trigger.getAttribute('aria-controls');
+      assert.ok(panelId);
+      const disclosure = board.locator(`button[aria-controls="${panelId}"]`);
+      const bounds = await trigger.boundingBox();
+      assert.ok(bounds);
+      const x = bounds.x + bounds.width / 2;
+      const y = bounds.y + bounds.height * 0.85;
+      await page.mouse.click(x, y);
+      assert.equal(await disclosure.getAttribute('aria-expanded'), 'true');
+      await page.mouse.click(x, y);
+      assert.equal(await disclosure.getAttribute('aria-expanded'), 'false');
+    }
+  },
+
   'An AppShell save failure clears the shared control and preserves each workspace draft': async ({
     page,
     mount,

@@ -13,3 +13,8 @@
   box-sizing: content-box;
   flex: none;
 }
+
+/* A disclosure grows below its trigger so a second click can close it in place. */
+[data-stage-content]:has([data-example-disclosure]) {
+  align-self: flex-start;
+}
