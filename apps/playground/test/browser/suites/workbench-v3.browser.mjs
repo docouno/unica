@@ -14,6 +14,71 @@ async function navigate(page, params) {
 }
 
 export default {
+  'An AppShell save failure clears the shared control and preserves each workspace draft': async ({
+    page,
+    mount,
+  }) => {
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await mount('workbench-v3');
+    await navigate(page, { item: 'app-shell', tab: 'states', block: 'save' });
+
+    const frame = page.locator('[data-wb-block="save"]');
+    const toolbar = frame.getByRole('group', { name: 'Save, discard and retry controls' });
+    const fail = toolbar.getByRole('checkbox', { name: 'Simulate a save failure' });
+    const artboards = frame.locator('.wb-artboard');
+    const first = artboards.first();
+    const fields = artboards.getByRole('textbox', { name: 'Workspace name' });
+    await fields.first().waitFor();
+    assert.equal(await fields.count(), 6);
+    const initial = await fields.first().inputValue();
+    const edited = 'Editorial workspace';
+    await page.clock.install({ time: new Date('2026-01-01T00:00:00Z') });
+    await page.clock.pauseAt(new Date('2026-01-01T00:00:01Z'));
+    await fields.first().fill(edited);
+    await fail.check();
+    await first.getByRole('button', { name: 'Save changes' }).click();
+    assert.equal(await fail.isChecked(), false);
+    const second = artboards.nth(1);
+    await second.getByRole('button', { name: 'Save changes' }).click();
+    await page.clock.runFor(700);
+    await second.getByText('All changes saved', { exact: true }).waitFor();
+    const retry = first.getByRole('button', { name: 'Retry save' });
+    await retry.waitFor();
+    assert.equal(await fail.isChecked(), false);
+    assert.equal(await fields.first().inputValue(), edited);
+    assert.equal(await artboards.getByText('Unsaved changes', { exact: true }).count(), 4);
+
+    await retry.click();
+    await page.clock.runFor(700);
+    await first.getByText('All changes saved', { exact: true }).waitFor();
+    assert.deepEqual(await fields.evaluateAll((inputs) => inputs.map((input) => input.value)), [
+      edited,
+      ...Array(5).fill(initial),
+    ]);
+    await toolbar.getByRole('button', { name: 'Reset' }).click();
+    assert.equal(await fields.first().inputValue(), initial);
+    assert.equal(await artboards.getByText('Unsaved changes', { exact: true }).count(), 6);
+
+    await navigate(page, {
+      item: 'app-shell',
+      tab: 'states',
+      block: 'save',
+      family: 'soft',
+      scheme: 'light',
+      vp: '1280',
+    });
+    const canvas = frame.locator('.wb-artboard .app-shell-main');
+    await canvas.waitFor();
+    const scrolled = await canvas.evaluate((element) => {
+      const bar = element.querySelector('.app-shell-sticky-bar');
+      const before = bar.getBoundingClientRect().bottom;
+      element.scrollTop = element.scrollHeight;
+      return { distance: element.scrollTop, shift: bar.getBoundingClientRect().bottom - before };
+    });
+    assert.ok(scrolled.distance > 0, 'The desktop canvas needs content to scroll');
+    assert.ok(Math.abs(scrolled.shift) <= 1, 'Save actions should stay visible while scrolling');
+  },
+
   'Workbench v3 StoryFrame controls, actions, and reset synchronize across all 6 themes without header jump':
     async ({ page, mount }) => {
       await page.setViewportSize({ width: 1280, height: 900 });

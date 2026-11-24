@@ -800,10 +800,6 @@
   max-inline-size: 100%;
 }
 
-.app-shell-property-status {
-  color: var(--status-danger-soft-fg);
-}
-
 .app-shell-sticky-bar {
   flex-wrap: wrap;
   min-block-size: 56px;

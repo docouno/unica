@@ -1,4 +1,5 @@
 import type { JSX } from 'react';
+import appShellSpec from '../../../src/specimens/app-shell/app-shell.spec.js';
 import buttonSpec from '../../../src/specimens/button/button.spec.js';
 import progressSpec from '../../../src/specimens/progress/progress.spec.js';
 import { unicaWorkbenchBase } from '../../../src/unica.workbench.shared.js';
@@ -16,7 +17,7 @@ const docsById: Readonly<
 
 const config: WorkbenchConfig = {
   ...unicaWorkbenchBase,
-  components: [buttonSpec, progressSpec],
+  components: [buttonSpec, progressSpec, appShellSpec],
   scenes: [],
   docs: {
     defaultImportFrom: '@docouno/unica',
