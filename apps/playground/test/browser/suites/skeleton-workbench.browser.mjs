@@ -307,6 +307,7 @@ export default {
       });
       const example = page.locator('[data-wb-block="availability"]');
       const card = example.locator('.card-example-loading');
+      const loaded = example.getByRole('checkbox', { name: 'Show loaded content', exact: true });
       const placeholder = card.locator('.card-example-skeleton-title');
       const loadingHeight = (await getBox(card)).height;
       await waitForSweep();
@@ -316,10 +317,12 @@ export default {
           await animation.finished;
         }
       });
-      await example.getByRole('button', { name: 'Show content' }).click();
+      await loaded.check();
+      assert.equal(await card.getAttribute('aria-busy'), 'false');
       assert.equal(await placeholder.count(), 0);
       await assertBox(card, { height: loadingHeight });
-      await example.getByRole('button', { name: 'Show loading' }).click();
+      await loaded.uncheck();
+      assert.equal(await card.getAttribute('aria-busy'), 'true');
       await placeholder.waitFor();
       await waitForSweep();
       await assertBox(card, { height: loadingHeight });

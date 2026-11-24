@@ -159,6 +159,8 @@ export default {
         name: 'Save A more thoughtful handoff',
         exact: true,
       });
+      const destinationId = await link.evaluate((node) => node.hash.slice(1));
+      const destination = block.locator(`[id="${destinationId}"]`);
       const { width, height } = await getBox(action);
       assert.ok(width >= 44 && height >= 44, `${width}×${height}`);
 
@@ -168,7 +170,8 @@ export default {
       const points = [{ x: target.x + target.width / 2, y: target.y + target.height / 2 }];
       await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: points });
       await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
-      await block.getByText('Getting started', { exact: true }).last().waitFor();
+      const opened = destination.getByText('Getting started', { exact: true });
+      await opened.waitFor();
       await page.waitForFunction(
         (color) =>
           getComputedStyle(document.querySelector('a[data-unica-card-variant]')).backgroundColor ===
@@ -181,6 +184,11 @@ export default {
         ),
         'none',
       );
+      await action.focus();
+      await action.press('Space');
+      assert.equal(await action.getAttribute('aria-pressed'), 'true');
+      await assertFocused(action);
+      assert.equal(await opened.isVisible(), true);
     },
 
   'Card forwards native pointer, keyboard and touch invocation to ContextMenu': async ({
