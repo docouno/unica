@@ -1,4 +1,17 @@
+.number-playground-form,
+.number-pairing {
+  inline-size: 100%;
+  min-inline-size: 0;
+}
+td:has(.number-playground-form) {
+  min-inline-size: 18rem;
+}
+ul:has(> [data-wb-result-row] .number-playground-form) {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr));
+}
+
 .number-examples-proto {
+  inline-size: 100%;
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 248px), 1fr));
   gap: 24px;
@@ -11,26 +24,10 @@
   gap: 12px;
   min-inline-size: 0;
 }
-.number-example-title-proto {
-  color: var(--fg-muted);
-  font: 500 var(--text-size-caption-l)/1.5 var(--font-family-base);
-  overflow-wrap: anywhere;
-}
 .number-demo-stack-proto {
   display: grid;
   gap: 20px;
   min-inline-size: 0;
-}
-.number-demo-note-proto {
-  margin: 0;
-  color: var(--fg-muted);
-  font: 400 var(--text-size-caption-l)/1.6 var(--font-family-base);
-  overflow-wrap: anywhere;
-}
-.number-demo-actions-proto {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
 }
 .number-size-comparison-proto {
   display: grid;
@@ -42,30 +39,19 @@
   grid-column: 1 / -1;
 }
 .number-material-proto {
+  inline-size: min(100%, 18rem);
   display: grid;
   gap: 20px;
   min-inline-size: 0;
   padding: 24px;
   border: 1px solid var(--border-subtle);
   border-radius: var(--surface-m-radius);
+}
+.number-material-proto[data-surface='base'] {
   background: var(--bg-surface);
 }
 .number-material-proto[data-surface='overlay'] {
   border-color: var(--_overlay-border);
-  background: var(--bg-overlay);
-  box-shadow: var(--_overlay-shadow-popover);
-  backdrop-filter: var(--_overlay-backdrop);
-}
-.number-overlay-stage-proto {
-  position: relative;
-  isolation: isolate;
-  min-inline-size: 0;
-  padding: 12px;
-}
-.number-underlay-proto {
-  position: absolute;
-  z-index: -1;
-  inset: 0;
 }
 .number-inspector-proto {
   display: grid;
@@ -90,21 +76,4 @@
   .number-material-proto {
     padding: 16px;
   }
-}
-
-.number-underlay-proto {
-  display: grid;
-  gap: 16px;
-  padding: 24px;
-  background: var(--bg-canvas);
-}
-.number-underlay-proto > span {
-  block-size: 28px;
-  inline-size: 65%;
-  border-radius: var(--size-s-radius);
-  background: var(--accent-soft-bg);
-}
-.number-underlay-proto > span:nth-child(2) {
-  inline-size: 90%;
-  background: var(--bg-surface);
 }

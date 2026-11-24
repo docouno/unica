@@ -271,4 +271,40 @@ export default {
       assert.ok(clear.x >= shell.x && clear.x + clear.width <= shell.x + shell.width);
     }
   },
+  'NumberInput Workbench fits the field and restores step availability on native reset': async ({
+    page,
+    mount,
+  }) => {
+    await mount('input-workbench');
+    for (const surface of ['base', 'overlay']) {
+      await open(page, {
+        item: 'number-input',
+        tab: 'playground',
+        surface,
+        vp: '360',
+        scale: '120',
+        dir: 'rtl',
+      });
+      const art = page.locator('.wb-artboard').first();
+      const field = art.getByRole('spinbutton', { name: 'Seat quota' });
+      await field.waitFor();
+      assert.ok(await field.evaluate((input) => input.closest('.ff-proto').clientWidth > 140));
+      const increase = art.getByRole('button', { name: 'Increase value' });
+      await field.fill('100');
+      assert.equal(await increase.isDisabled(), true);
+      await field.evaluate((input) => {
+        input.form.addEventListener('reset', (event) => event.preventDefault(), { once: true });
+        input.form.reset();
+      });
+      assert.equal(await field.inputValue(), '100');
+      assert.equal(await increase.isDisabled(), true);
+      await field.evaluate((input) => input.form.reset());
+      await art.locator('[data-action="increment"]:enabled').waitFor();
+      assert.equal(await field.inputValue(), '25');
+      await field.press('ArrowUp');
+      assert.deepEqual(await field.evaluate((input) => [...new FormData(input.form)]), [
+        ['quota', '26'],
+      ]);
+    }
+  },
 };

@@ -1,55 +1,51 @@
 import { FormField } from '../form-field/form-field.proto.js';
 import { useId, useState } from 'react';
 import type { ReactElement, ReactNode } from 'react';
-import { Button } from '@docouno/unica';
-import { Input } from '@docouno/unica';
+import { Button, Input, Text } from '@docouno/unica';
+import type { PreviewProps } from '../../workbench/types.js';
+import { useStoryAction } from '../../workbench/storyFrameState.js';
 import type { FieldStatus, FieldVariant } from '@docouno/unica';
 import { NumberInput } from './number-input.proto.js';
 import './number-input.examples.css';
 
 function Example({
   title,
+  titleId,
   children,
 }: {
   readonly title: string;
+  readonly titleId?: string;
   readonly children: ReactNode;
 }): ReactElement {
   return (
     <div className="number-example-proto">
-      <div className="number-example-title-proto">{title}</div>
+      <Text as="span" id={titleId} size="caption-l" weight="medium" color="muted">
+        <bdi>{title}</bdi>
+      </Text>
       {children}
     </div>
   );
 }
 
-export function NumberRoles(): ReactElement {
+export function NumberRoles({ ctx }: PreviewProps): ReactElement {
   return (
     <div className="number-examples-proto">
       {(['default', 'ghost'] as const).map((variant) => (
-        <Example
-          key={variant}
-          title={variant === 'default' ? 'Default · form slot' : 'Ghost · inline editing'}
-        >
+        <Example key={variant} title={variant === 'default' ? 'Form field' : 'Inline editor'}>
           <div className="number-demo-stack-proto">
             {(['s', 'm', 'l'] as const).map((size) => (
               <NumberInput
+                {...ctx.subject}
                 key={size}
                 size={size}
                 variant={variant}
-                label={`${size.toUpperCase()} · Quantity`}
-                defaultValue={12}
+                label={`${size.toUpperCase()} · Optional limit`}
+                placeholder="No limit"
                 min={0}
-                max={99}
+                suffix="items"
+                description={<bdi>Leave empty for unlimited items.</bdi>}
               />
             ))}
-            <NumberInput
-              variant={variant}
-              label="Optional limit"
-              placeholder="No limit"
-              min={0}
-              suffix="items"
-              description="Empty means no limit. A step begins from zero."
-            />
           </div>
         </Example>
       ))}
@@ -57,34 +53,37 @@ export function NumberRoles(): ReactElement {
   );
 }
 
-export function NumberAnatomy(): ReactElement {
+export function NumberAnatomy({ ctx }: PreviewProps): ReactElement {
   const id = useId();
   return (
     <div className="number-examples-proto">
       <Example title="An amount">
         <NumberInput
+          {...ctx.subject}
           label="Unit price"
           prefix="$"
           suffix="USD"
           defaultValue={24.5}
           min={0}
           step={0.5}
-          description="Units stay outside the editable number."
+          description={<bdi>Enter the price in US dollars.</bdi>}
         />
       </Example>
       <Example title="Signed decimal">
         <NumberInput
+          {...ctx.subject}
           label="Exposure adjustment"
           defaultValue={-1.25}
           min={-5}
           max={5}
           step={0.25}
           suffix="EV"
-          description="Negative values retain their reading order in RTL."
+          description={<bdi>Adjust exposure in quarter stops.</bdi>}
         />
       </Example>
-      <Example title="Intrinsic width · units, status & checking">
+      <Example title="Intrinsic width with feedback">
         <NumberInput
+          {...ctx.subject}
           label="Reserved capacity"
           prefix="≈"
           defaultValue={64}
@@ -92,43 +91,48 @@ export function NumberAnatomy(): ReactElement {
           width="auto"
           status="warning"
           loading
-          message="Checking capacity; 64 GiB is close to the quota."
+          message={<bdi>Checking the remaining quota in gibibytes.</bdi>}
         />
       </Example>
-      <Example title="Compact intrinsic width">
+      <Example title="Compact amount">
         <NumberInput
+          {...ctx.subject}
           label="Copies"
           defaultValue={2}
           min={1}
           max={9}
           width="auto"
-          description="An 8ch content basis, with an action at each edge."
+          description={<bdi>Choose up to nine copies.</bdi>}
         />
       </Example>
       {(['s', 'm', 'l'] as const).map((size) => (
-        <Example key={size} title={`${size.toUpperCase()} · shared control rhythm`}>
-          <div className="number-size-comparison-proto">
+        <Example key={size} title={`${size.toUpperCase()} · controls`}>
+          <form
+            className="number-size-comparison-proto"
+            onSubmit={(event) => event.preventDefault()}
+          >
             <FormField htmlFor={`${id}-reference-${size}`} label="Reference" size={size}>
               <Input id={`${id}-reference-${size}`} size={size} defaultValue="Document" />
             </FormField>
             <NumberInput
+              {...ctx.subject}
               size={size}
               aria-label={`${size} copies`}
               defaultValue={2}
               min={1}
               max={9}
             />
-            <Button size={size} variant="secondary" tone="neutral">
-              Apply
+            <Button size={size} variant="secondary" tone="neutral" type="reset">
+              Reset
             </Button>
-          </div>
+          </form>
         </Example>
       ))}
     </div>
   );
 }
 
-export function NumberInteraction(): ReactElement {
+export function NumberInteraction({ ctx }: PreviewProps): ReactElement {
   const states = [
     ['Rest', undefined, undefined],
     ['Field hover', 'hover', undefined],
@@ -146,6 +150,7 @@ export function NumberInteraction(): ReactElement {
           <div className="number-demo-stack-proto">
             {states.map(([name, previewState, previewAction]) => (
               <NumberInput
+                {...ctx.subject}
                 key={name}
                 label={name}
                 defaultValue={12}
@@ -159,75 +164,66 @@ export function NumberInteraction(): ReactElement {
           </div>
         </Example>
       ))}
-      <Example title="Live · click, Tab, arrow keys, hold">
-        <NumberInput
-          label="Quantity"
-          defaultValue={12}
-          min={0}
-          max={99}
-          description="Tab to the editor. Use ↑ / ↓ or hold a button. Wheel scrolling leaves the value alone."
-        />
+      <Example title="Live quantity">
+        <NumberInput {...ctx.subject} label="Quantity" defaultValue={12} min={0} max={99} />
       </Example>
     </div>
   );
 }
 
-const feedback: readonly [FieldStatus, string, string][] = [
-  ['neutral', 'Standard limit', 'Choose a limit from 1 to 50.'],
-  ['info', 'Recommended limit', 'A limit of 12 suits most workloads.'],
-  ['success', 'Capacity confirmed', '12 workers fit the available capacity.'],
-  ['warning', 'Near the quota', 'This leaves little room for another workload.'],
-  ['danger', 'Limit exceeds capacity', 'Enter 50 or less, or decrease to 50.'],
+const feedback: readonly [FieldStatus, string, number, string][] = [
+  ['neutral', 'Standard limit', 12, 'Choose a limit from 1 to 50.'],
+  ['info', 'Recommended limit', 12, 'A limit of 12 suits most workloads.'],
+  ['success', 'Capacity confirmed', 12, 'The capacity check passed.'],
+  ['warning', 'Near the quota', 48, 'This leaves little room for another workload.'],
+  ['danger', 'Limit exceeds capacity', 125, 'Enter 50 or less, or decrease to 50.'],
 ];
-export function NumberFeedback(): ReactElement {
+export function NumberFeedback({ ctx }: PreviewProps): ReactElement {
   return (
     <div className="number-examples-proto">
       {(['default', 'ghost'] as const).map((variant) => (
-        <Example
-          key={variant}
-          title={
-            variant === 'default'
-              ? 'Default · edge, shape, explanation'
-              : 'Ghost · baseline, shape, explanation'
-          }
-        >
+        <Example key={variant} title={variant === 'default' ? 'Form field' : 'Inline editor'}>
           <div className="number-demo-stack-proto">
-            {feedback.map(([status, label, message]) => (
+            {feedback.map(([status, label, value, message]) => (
               <NumberInput
+                {...ctx.subject}
                 key={status}
                 label={label}
                 variant={variant}
                 status={status}
-                defaultValue={status === 'danger' ? 125 : 12}
+                defaultValue={value}
                 min={1}
                 max={50}
-                message={message}
+                message={<bdi>{message}</bdi>}
               />
             ))}
           </div>
         </Example>
       ))}
-      <Example title="Status remains visible with focus">
+      <Example title="Focused fields">
         <div className="number-demo-stack-proto">
           <NumberInput
+            {...ctx.subject}
             label="Keyboard focus · danger"
             defaultValue={125}
             min={0}
             max={50}
             status="danger"
             previewState="keyboard-focus"
-            message="Enter a number from 0 to 50."
+            message={<bdi>Enter a number from 0 to 50.</bdi>}
           />
           <NumberInput
+            {...ctx.subject}
             label="Pointer focus · warning"
             defaultValue={48}
             min={0}
             max={50}
             status="warning"
             previewState="pointer-focus"
-            message="Only 2 workers remain available."
+            message={<bdi>Few workers remain available.</bdi>}
           />
           <NumberInput
+            {...ctx.subject}
             variant="ghost"
             label="Ghost · keyboard focus · success"
             defaultValue={12}
@@ -235,7 +231,7 @@ export function NumberFeedback(): ReactElement {
             max={50}
             status="success"
             previewState="keyboard-focus"
-            message="Capacity confirmed."
+            message={<bdi>Capacity confirmed.</bdi>}
           />
         </div>
       </Example>
@@ -243,11 +239,24 @@ export function NumberFeedback(): ReactElement {
   );
 }
 
-function AvailabilityColumn({ variant }: { readonly variant: FieldVariant }): ReactElement {
+function AvailabilityColumn({
+  variant,
+  ctx,
+}: PreviewProps & { readonly variant: FieldVariant }): ReactElement {
+  const contextId = useId();
   return (
-    <Example title={variant === 'default' ? 'Default' : 'Ghost'}>
+    <Example
+      titleId={contextId}
+      title={
+        variant === 'default'
+          ? 'Form field · interval in seconds'
+          : 'Inline editor · interval in seconds'
+      }
+    >
       <div className="number-demo-stack-proto">
         <NumberInput
+          {...ctx.subject}
+          aria-describedby={contextId}
           variant={variant}
           label="Editable"
           defaultValue={12}
@@ -256,14 +265,18 @@ function AvailabilityColumn({ variant }: { readonly variant: FieldVariant }): Re
           max={120}
         />
         <NumberInput
+          {...ctx.subject}
+          aria-describedby={contextId}
           variant={variant}
           label="Read-only"
           defaultValue={30}
           suffix="s"
           readOnly
-          description="Set by the workspace policy. You can copy this value."
+          description={<bdi>The workspace policy sets the interval.</bdi>}
         />
         <NumberInput
+          {...ctx.subject}
+          aria-describedby={contextId}
           variant={variant}
           label="Read-only · keyboard focus"
           defaultValue={30}
@@ -272,31 +285,39 @@ function AvailabilityColumn({ variant }: { readonly variant: FieldVariant }): Re
           previewState="keyboard-focus"
         />
         <NumberInput
+          {...ctx.subject}
+          aria-describedby={contextId}
           variant={variant}
           label="Disabled"
           defaultValue={30}
           suffix="s"
           disabled
-          description="Enable scheduled snapshots to edit the interval."
+          description={<bdi>Enable scheduled snapshots to edit the interval.</bdi>}
         />
         <NumberInput
+          {...ctx.subject}
+          aria-describedby={contextId}
           variant={variant}
           label="Checking · still editable"
           defaultValue={30}
           suffix="s"
           loading
-          message="Checking the interval…"
+          message={<bdi>Checking the interval…</bdi>}
         />
         <NumberInput
+          {...ctx.subject}
+          aria-describedby={contextId}
           variant={variant}
           label="Read-only · loading"
           defaultValue={30}
           suffix="s"
           loading
           readOnly
-          message="Applying the workspace policy…"
+          message={<bdi>Applying the workspace policy…</bdi>}
         />
         <NumberInput
+          {...ctx.subject}
+          aria-describedby={contextId}
           variant={variant}
           label="Warning · loading"
           defaultValue={110}
@@ -305,9 +326,11 @@ function AvailabilityColumn({ variant }: { readonly variant: FieldVariant }): Re
           suffix="s"
           status="warning"
           loading
-          message="Checking whether this interval meets policy…"
+          message={<bdi>Checking whether this interval meets policy…</bdi>}
         />
         <NumberInput
+          {...ctx.subject}
+          aria-describedby={contextId}
           variant={variant}
           label="Read-only · danger"
           defaultValue={125}
@@ -315,9 +338,11 @@ function AvailabilityColumn({ variant }: { readonly variant: FieldVariant }): Re
           suffix="s"
           status="danger"
           readOnly
-          message="The policy exceeds the supported 120 s. Contact an administrator."
+          message={<bdi>The policy exceeds the supported 120 s. Contact an administrator.</bdi>}
         />
         <NumberInput
+          {...ctx.subject}
+          aria-describedby={contextId}
           variant={variant}
           label="Disabled · status and loading suppressed"
           defaultValue={125}
@@ -325,29 +350,30 @@ function AvailabilityColumn({ variant }: { readonly variant: FieldVariant }): Re
           status="danger"
           loading
           disabled
-          message="Unavailable while scheduled snapshots are off."
+          message={<bdi>Unavailable while scheduled snapshots are off.</bdi>}
         />
       </div>
     </Example>
   );
 }
-export function NumberAvailability(): ReactElement {
+export function NumberAvailability({ ctx }: PreviewProps): ReactElement {
   return (
     <div className="number-examples-proto">
-      <AvailabilityColumn variant="default" />
-      <AvailabilityColumn variant="ghost" />
+      <AvailabilityColumn ctx={ctx} variant="default" />
+      <AvailabilityColumn ctx={ctx} variant="ghost" />
     </div>
   );
 }
 
 function BoundaryExample({
+  ctx,
   label,
   initial,
   min,
   max,
   step = 1,
   suffix,
-}: {
+}: PreviewProps & {
   readonly label: string;
   readonly initial: number | '';
   readonly min?: number;
@@ -378,6 +404,7 @@ function BoundaryExample({
       : `Range ${min ?? '−∞'} to ${max ?? '∞'}; step ${step}.`;
   return (
     <NumberInput
+      {...ctx.subject}
       label={label}
       value={value}
       min={min}
@@ -385,7 +412,7 @@ function BoundaryExample({
       step={step}
       suffix={suffix}
       status={invalid ? 'danger' : 'neutral'}
-      message={message}
+      message={<bdi>{message}</bdi>}
       onValueChange={(next) => {
         setValue(next);
         setChecked(false);
@@ -404,38 +431,66 @@ function BoundaryExample({
     />
   );
 }
-export function NumberBounds(): ReactElement {
+export function NumberBounds({ ctx }: PreviewProps): ReactElement {
   return (
     <div className="number-examples-proto">
-      <Example title="Only the outward action is unavailable">
+      <Example title="Domain edges">
         <div className="number-demo-stack-proto">
-          <BoundaryExample label="At the minimum" initial={0} min={0} max={50} />
-          <BoundaryExample label="At the maximum" initial={50} min={0} max={50} />
-          <BoundaryExample label="One permitted value" initial={5} min={5} max={5} />
+          <BoundaryExample ctx={ctx} label="At the minimum" initial={0} min={0} max={50} />
+          <BoundaryExample ctx={ctx} label="At the maximum" initial={50} min={0} max={50} />
+          <BoundaryExample ctx={ctx} label="One permitted value" initial={5} min={5} max={5} />
         </div>
       </Example>
-      <Example title="Keep the entered value; explain the correction">
+      <Example title="Out-of-range and off-step">
         <div className="number-demo-stack-proto">
-          <BoundaryExample label="Above the maximum" initial={125} min={0} max={50} />
-          <BoundaryExample label="Below the minimum" initial={-5} min={0} max={50} />
-          <BoundaryExample label="Between steps" initial={12} min={0} max={50} step={5} />
-          <BoundaryExample label="Maximum between steps" initial={12} min={0} max={12} step={5} />
+          <BoundaryExample ctx={ctx} label="Above the maximum" initial={125} min={0} max={50} />
+          <BoundaryExample ctx={ctx} label="Below the minimum" initial={-5} min={0} max={50} />
+          <BoundaryExample ctx={ctx} label="Between steps" initial={12} min={0} max={50} step={5} />
+          <BoundaryExample
+            ctx={ctx}
+            label="Maximum between steps"
+            initial={12}
+            min={0}
+            max={12}
+            step={5}
+          />
         </div>
       </Example>
       <Example title="Empty, fractional, and negative domains">
         <div className="number-demo-stack-proto">
-          <BoundaryExample label="Empty positive range" initial="" min={5} max={120} step={5} />
-          <BoundaryExample label="Tenths" initial={0.2} min={0} max={1} step={0.1} />
-          <BoundaryExample label="Negative decimal" initial={-1.25} min={-5} max={5} step={0.25} />
-          <BoundaryExample label="Any precision" initial={0.25} step="any" />
-          <BoundaryExample label="Negative range" initial="" min={-20} max={-5} step={5} />
+          <BoundaryExample
+            ctx={ctx}
+            label="Empty positive range"
+            initial=""
+            min={5}
+            max={120}
+            step={5}
+          />
+          <BoundaryExample ctx={ctx} label="Tenths" initial={0.2} min={0} max={1} step={0.1} />
+          <BoundaryExample
+            ctx={ctx}
+            label="Negative decimal"
+            initial={-1.25}
+            min={-5}
+            max={5}
+            step={0.25}
+          />
+          <BoundaryExample ctx={ctx} label="Any precision" initial={0.25} step="any" />
+          <BoundaryExample
+            ctx={ctx}
+            label="Negative range"
+            initial=""
+            min={-20}
+            max={-5}
+            step={5}
+          />
         </div>
       </Example>
     </div>
   );
 }
 
-export function NumberLive(): ReactElement {
+export function NumberLive({ ctx }: PreviewProps): ReactElement {
   const [value, setValue] = useState<number | ''>(12);
   const [state, setState] = useState<'editing' | 'checking' | 'accepted' | 'rejected'>('editing');
   const [reason, setReason] = useState('');
@@ -456,11 +511,31 @@ export function NumberLive(): ReactElement {
       setState('checking');
     }
   };
+  useStoryAction(ctx, (action) => {
+    if (action === 'check') {
+      check();
+    }
+    if (state !== 'checking') {
+      return;
+    }
+    if (action === 'accept') {
+      setState('accepted');
+    }
+    if (action === 'capacity') {
+      if (value !== '' && value <= 8) {
+        setState('accepted');
+      } else {
+        setReason('Only 8 workers are available. Enter 8 or fewer.');
+        setState('rejected');
+      }
+    }
+  });
   return (
     <div className="number-examples-proto">
-      <Example title="Local checking and correction">
+      <Example title="Capacity check">
         <div className="number-demo-stack-proto">
           <NumberInput
+            {...ctx.subject}
             label="Worker limit"
             required
             value={value}
@@ -469,15 +544,19 @@ export function NumberLive(): ReactElement {
             suffix="jobs"
             loading={state === 'checking'}
             status={state === 'rejected' ? 'danger' : state === 'accepted' ? 'success' : 'neutral'}
-            description="Choose how many jobs can run at the same time."
+            description={<bdi>Each worker can run one job at a time.</bdi>}
             message={
-              state === 'checking'
-                ? 'Checking available capacity…'
-                : state === 'accepted'
-                  ? `${value} workers fit the available capacity.`
-                  : state === 'rejected'
-                    ? reason
-                    : 'Enter 1 to 50. Check when you are ready.'
+              <span role="status">
+                <bdi>
+                  {state === 'checking'
+                    ? 'Checking available capacity…'
+                    : state === 'accepted'
+                      ? `Capacity confirmed for ${value} ${value === 1 ? 'worker' : 'workers'}.`
+                      : state === 'rejected'
+                        ? reason
+                        : 'Enter a whole number from 1 to 50.'}
+                </bdi>
+              </span>
             }
             onValueChange={(next) => {
               setValue(next);
@@ -496,73 +575,30 @@ export function NumberLive(): ReactElement {
               }
             }}
           />
-          <div className="number-demo-actions-proto">
-            <Button size="s" variant="secondary" tone="neutral" onClick={check}>
-              Check limit
-            </Button>
-            {state === 'checking' && (
-              <>
-                <Button
-                  size="s"
-                  variant="secondary"
-                  tone="neutral"
-                  onClick={() => setState('accepted')}
-                >
-                  Confirm capacity
-                </Button>
-                <Button
-                  size="s"
-                  variant="ghost"
-                  tone="neutral"
-                  onClick={() => {
-                    setReason('Only 8 workers are available now. Enter 8 or fewer.');
-                    setState('rejected');
-                  }}
-                >
-                  Capacity changed
-                </Button>
-              </>
-            )}
-            <Button
-              size="s"
-              variant="ghost"
-              tone="neutral"
-              onClick={() => {
-                setValue(12);
-                setBad(false);
-                setState('editing');
-              }}
-            >
-              Restore example
-            </Button>
-          </div>
-          <p className="number-demo-note-proto">
-            Response buttons control this preview; there is no network request. A new edit clears a
-            stale result.
-          </p>
         </div>
       </Example>
-      <Example title="Inline properties · external labels">
-        <InlineProperties />
+      <Example title="Dimensions">
+        <InlineProperties ctx={ctx} />
       </Example>
     </div>
   );
 }
 
-function InlineProperties(): ReactElement {
+function InlineProperties({ ctx }: PreviewProps): ReactElement {
   const id = useId();
   return (
     <div className="number-inspector-proto">
       {(
         [
-          ['Width', 320, 'px'],
-          ['Height', 240, 'px'],
-          ['Opacity', 80, '%'],
+          ['Width (pixels)', 320, 'px'],
+          ['Height (pixels)', 240, 'px'],
+          ['Opacity (percent)', 80, '%'],
         ] as const
       ).map(([label, value, suffix], index) => (
         <div className="number-inspector-row-proto" key={label}>
           <label htmlFor={`${id}-${index}`}>{label}</label>
           <NumberInput
+            {...ctx.subject}
             id={`${id}-${index}`}
             variant="ghost"
             size="s"
@@ -573,78 +609,86 @@ function InlineProperties(): ReactElement {
           />
         </div>
       ))}
-      <p className="number-demo-note-proto">Units and actions remain visible before interaction.</p>
     </div>
   );
 }
 
-export function NumberOverflow(): ReactElement {
+export function NumberOverflow({ ctx }: PreviewProps): ReactElement {
   return (
     <div className="number-examples-proto">
       <Example title="Long labels and feedback">
-        <NumberInput
+        <BoundaryExample
+          ctx={ctx}
           label="Maximum number of concurrent background export jobs"
-          defaultValue={125}
+          initial={125}
           min={1}
           max={50}
           suffix="jobs"
-          status="danger"
-          message="This workspace supports up to 50 concurrent jobs. Keep the entered value visible while explaining how to correct it."
         />
       </Example>
-      <Example title="Long number · native editing viewport">
+      <Example title="Long quantity">
         <NumberInput
+          {...ctx.subject}
           label="Sample count"
           defaultValue={123456789012345}
           suffix="items"
           step="any"
-          description="Digits stay on one line. Focus and use the caret to inspect the whole number."
         />
       </Example>
-      <Example title="Long unit · short visible abbreviation">
+      <Example title="Abbreviated unit">
         <NumberInput
+          {...ctx.subject}
           label="Transfer rate in megabytes per second"
           defaultValue={128.5}
           suffix="MB/s"
           min={0}
           step={0.5}
-          description="Put the full unit in the label; keep the affix short."
+          description={<bdi>Set the maximum rate for background transfers.</bdi>}
         />
       </Example>
-      <Example title="Crowded slots · same actions">
+      <Example title="Storage and quota">
         <NumberInput
+          {...ctx.subject}
           label="Allocated storage"
           prefix="≈"
           defaultValue={1024}
           suffix="GiB"
           status="warning"
           loading
-          message="Checking quota. Status and busy feedback coexist."
+          message={<bdi>Checking how many gibibytes fit within the storage quota.</bdi>}
         />
       </Example>
-      <Example title="Intrinsic field in a narrow container">
-        <NumberInput label="Item count" defaultValue={123456} min={0} width="auto" />
-      </Example>
-      <Example title="Direction follows the workbench">
+      <Example title="Intrinsic width">
         <NumberInput
+          {...ctx.subject}
+          label="Item count"
+          defaultValue={123456}
+          min={0}
+          width="auto"
+        />
+      </Example>
+      <Example title="Signed temperature">
+        <NumberInput
+          {...ctx.subject}
           label="Temperature offset"
           defaultValue={-12.5}
           min={-40}
           max={40}
           suffix="°C"
           step={0.5}
-          description="The signed decimal reads consistently when the shell is mirrored."
+          description={<bdi>Adjust the temperature in half-degree Celsius increments.</bdi>}
         />
       </Example>
     </div>
   );
 }
 
-function SurfaceFields(): ReactElement {
-  return (
-    <>
+export function NumberSurfaces({ ctx }: PreviewProps): ReactElement {
+  const fields = (
+    <div className="number-demo-stack-proto">
       <NumberInput
-        label="Snapshot interval"
+        {...ctx.subject}
+        label="Snapshot interval in seconds"
         defaultValue={30}
         min={5}
         max={120}
@@ -652,45 +696,33 @@ function SurfaceFields(): ReactElement {
         suffix="s"
       />
       <NumberInput
+        {...ctx.subject}
         variant="ghost"
-        label="Inline threshold"
+        label="Inline threshold in percent"
         defaultValue={75}
         min={0}
         max={100}
         suffix="%"
       />
       <NumberInput
+        {...ctx.subject}
         label="Requested capacity"
         defaultValue={125}
         min={1}
         max={50}
         status="danger"
         previewState="keyboard-focus"
-        message="Enter 50 or less."
+        message={<bdi>Enter 50 or less.</bdi>}
       />
-    </>
+    </div>
   );
-}
-export function NumberSurfaces(): ReactElement {
-  return (
-    <div className="number-examples-proto">
-      <Example title="Base · ordinary form surface">
-        <div className="number-material-proto" data-surface="base">
-          <SurfaceFields />
-        </div>
-      </Example>
-      <Example title="Overlay · static material plate">
-        <div className="number-overlay-stage-proto">
-          <div className="number-underlay-proto" aria-hidden="true">
-            <span />
-            <span />
-            <span />
-          </div>
-          <div className="number-material-proto" data-surface="overlay">
-            <SurfaceFields />
-          </div>
-        </div>
-      </Example>
+  return ctx.surface === 'overlay' ? (
+    <div className="number-material-proto unica-overlay-surface" data-surface="overlay">
+      {fields}
+    </div>
+  ) : (
+    <div className="number-material-proto" data-surface="base">
+      {fields}
     </div>
   );
 }
