@@ -1,33 +1,19 @@
-import { useState } from 'react';
 import type { ReactElement, ReactNode } from 'react';
-import {
-  BellIcon,
-  ChatCircleIcon,
-  EnvelopeSimpleIcon,
-  GearIcon,
-  TrayIcon,
-} from '@phosphor-icons/react';
+import { BellIcon, EnvelopeSimpleIcon, GearIcon, TrayIcon } from '@phosphor-icons/react';
+import { Badge, Box, Button, Flex, Icon, IconButton, Indicator, Stack, Text } from '@docouno/unica';
+import type { IndicatorProps } from '@docouno/unica';
 import { Avatar } from '../../prototypes/avatar/avatar.proto.js';
-import { Button, IconButton } from '@docouno/unica';
-import { Badge, Icon, Indicator } from '@docouno/unica';
-import type { IndicatorPosition, IndicatorProps, IndicatorStatus } from '@docouno/unica';
+import type { PreviewProps } from '../../workbench/types.js';
+import { ExampleSurface } from '../shared/example-surface.js';
 import './indicator.examples.css';
 
-const sizes: readonly NonNullable<IndicatorProps['size']>[] = ['s', 'm', 'l'];
-const statuses: readonly IndicatorStatus[] = [
-  'neutral',
-  'accent',
-  'info',
-  'success',
-  'warning',
-  'danger',
-];
-const corners: readonly IndicatorPosition[] = [
-  'top-start',
-  'top-end',
-  'bottom-start',
-  'bottom-end',
-];
+// A pinned control keeps its normal shape. Expose the meaning of the whole sample as one image.
+function PinnedIndicator({
+  label,
+  ...props
+}: IndicatorProps & { readonly label: string }): ReactElement {
+  return <Indicator {...props} role="img" aria-label={label} />;
+}
 
 function Sample({
   label,
@@ -37,439 +23,286 @@ function Sample({
   readonly children: ReactNode;
 }): ReactElement {
   return (
-    <div className="indicator-example-sample">
-      <div className="indicator-example-object">{children}</div>
-      <span className="indicator-example-label">{label}</span>
-    </div>
+    <Stack align="center" gap={12}>
+      {children}
+      <Text size="caption-l" align="center">
+        {label}
+      </Text>
+    </Stack>
   );
 }
 
-export function IndicatorOverview(): ReactElement {
+export function IndicatorOverview({ ctx }: PreviewProps): ReactElement {
   return (
-    <div className="indicator-example-stack">
-      <div className="indicator-example-use">
-        <div className="indicator-example-toolbar">
-          <Indicator count={3} size="s">
-            <IconButton icon={BellIcon} aria-label="Notifications, 3 unread" />
-          </Indicator>
-          <IconButton icon={GearIcon} variant="ghost" aria-label="Settings" />
-        </div>
-        <div>
-          <strong>Unread notifications</strong>
-          <p>One small signal beside everyday actions.</p>
-        </div>
-      </div>
-      <div className="indicator-example-use">
-        <div className="indicator-example-object">
-          <Indicator dot status="success" overlap="circular" position="bottom-end">
-            <Avatar src="/assets/avatar-portrait-wide.png" alt="Sample collaborator" />
-          </Indicator>
-        </div>
-        <div>
-          <strong>Available to collaborate</strong>
-          <p>Presence keeps a visible text equivalent.</p>
-        </div>
-      </div>
-      <div className="indicator-example-use">
-        <div className="indicator-example-object">
-          <Indicator count={12} size="s" status="neutral">
-            <Button variant="secondary" tone="neutral" size="s" aria-label="Inbox, 12 unread">
-              Inbox
-            </Button>
-          </Indicator>
-        </div>
-        <div>
-          <strong>Waiting in your inbox</strong>
-          <p>Known quantity, without an alarm color.</p>
-        </div>
-      </div>
-    </div>
+    <Stack gap={24} align="start" className="indicator-example-clearance">
+      <Flex align="center" wrap="wrap" gap={24}>
+        <PinnedIndicator {...ctx.subject} label="Notifications, 3 unread" count={3} size="s">
+          <IconButton inert icon={BellIcon} aria-label="Notifications" />
+        </PinnedIndicator>
+        <span role="img" aria-label="Settings">
+          <IconButton inert icon={GearIcon} variant="ghost" aria-label="Settings" />
+        </span>
+      </Flex>
+      <Flex align="center" wrap="wrap" gap={12}>
+        <Indicator {...ctx.subject} dot status="success" overlap="circular" position="bottom-end">
+          <Avatar src="/assets/avatar-portrait-wide.png" alt="Collaborator" />
+        </Indicator>
+        <Text size="body-s">Available</Text>
+      </Flex>
+      <PinnedIndicator
+        {...ctx.subject}
+        label="Inbox, 12 unread"
+        count={12}
+        status="neutral"
+        size="s"
+      >
+        <Button inert variant="secondary" tone="neutral" size="s">
+          Inbox
+        </Button>
+      </PinnedIndicator>
+    </Stack>
   );
 }
 
-export function IndicatorScale(): ReactElement {
+export function IndicatorScale({ ctx }: PreviewProps): ReactElement {
   return (
-    <div className="indicator-example-stack">
-      {sizes.map((size) => (
-        <div className="indicator-example-scale" key={size}>
-          <span className="indicator-example-label">{size.toUpperCase()}</span>
-          <Sample label="One digit">
-            <Indicator count={4} size={size}>
-              <IconButton icon={BellIcon} size={size} aria-label="Notifications, 4 unread" />
-            </Indicator>
-          </Sample>
-          <Sample label="Capped">
-            <Indicator count={105} size={size}>
-              <IconButton icon={TrayIcon} size={size} aria-label="Inbox, 105 unread" />
-            </Indicator>
-          </Sample>
-          <Sample label="Presence">
-            <Indicator dot size={size} status="success" overlap="circular" position="bottom-end">
-              <Avatar size={size} fallback="AL" alt="Sample collaborator, available" />
-            </Indicator>
-          </Sample>
-        </div>
+    <Stack gap={24}>
+      {(['s', 'm', 'l'] as const).map((size) => (
+        <Stack key={size} gap={12}>
+          <Text size="body-s" weight="medium">
+            {size.toUpperCase()}
+          </Text>
+          <div className="indicator-example-samples indicator-example-scale">
+            <Sample label="One digit">
+              <PinnedIndicator
+                {...ctx.subject}
+                label="4 unread notifications"
+                count={4}
+                size={size}
+              >
+                <IconButton inert icon={BellIcon} size={size} aria-label="Notifications" />
+              </PinnedIndicator>
+            </Sample>
+            <Sample label="Capped">
+              <PinnedIndicator {...ctx.subject} label="Inbox, 105 unread" count={105} size={size}>
+                <IconButton inert icon={TrayIcon} size={size} aria-label="Inbox" />
+              </PinnedIndicator>
+            </Sample>
+            <Sample label="Available">
+              <Indicator
+                {...ctx.subject}
+                dot
+                size={size}
+                status="success"
+                overlap="circular"
+                position="bottom-end"
+              >
+                <Avatar size={size} fallback="AL" alt="Collaborator AL" />
+              </Indicator>
+            </Sample>
+          </div>
+        </Stack>
       ))}
-    </div>
+    </Stack>
   );
 }
 
-export function IndicatorStatuses(): ReactElement {
+export function IndicatorCorners({ ctx }: PreviewProps): ReactElement {
+  const dot = ctx.story?.controls.dot === true;
+  const signal = dot ? { dot: true as const } : { count: 3 };
   return (
-    <div className="indicator-example-statuses">
-      {statuses.map((status) => (
-        <div className="indicator-example-status" key={status}>
-          <span className="indicator-example-label">{status}</span>
-          <Indicator count={8} size="s" status={status}>
-            <IconButton
-              icon={TrayIcon}
-              size="s"
-              aria-label={`${status} counter example, 8 items`}
-            />
-          </Indicator>
-          <Indicator dot status={status} overlap="circular" position="bottom-end">
-            <Avatar size="s" fallback="AL" alt={`${status} presence example`} />
-          </Indicator>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-export function IndicatorCorners(): ReactElement {
-  const [dot, setDot] = useState(false);
-  return (
-    <div className="indicator-example-stack">
-      <label className="indicator-example-choice">
-        <input type="checkbox" checked={dot} onChange={(event) => setDot(event.target.checked)} />
-        Show dots instead of counters
-      </label>
+    <Stack gap={24}>
       {(['rectangular', 'circular'] as const).map((overlap) => (
-        <div key={overlap} className="indicator-example-stack">
-          <span className="indicator-example-label">
+        <Stack key={overlap} gap={12}>
+          <Text size="body-s" weight="medium">
             {overlap === 'circular' ? 'Avatar contour' : 'Control corners'}
-          </span>
-          <div className="indicator-example-corners">
-            {corners.map((position) => (
+          </Text>
+          <div className="indicator-example-samples">
+            {(['top-start', 'top-end', 'bottom-start', 'bottom-end'] as const).map((position) => (
               <Sample key={position} label={position}>
-                <Indicator
-                  {...(dot ? { dot: true } : { count: 3 })}
-                  size="s"
-                  overlap={overlap}
-                  position={position}
-                >
-                  {overlap === 'circular' ? (
-                    <Avatar fallback="AL" alt={`Avatar, ${position} marker`} />
-                  ) : (
-                    <IconButton
-                      icon={BellIcon}
-                      aria-label={dot ? 'Notifications, new activity' : 'Notifications, 3 unread'}
+                {overlap === 'circular' ? (
+                  <Indicator
+                    {...ctx.subject}
+                    {...signal}
+                    size="s"
+                    overlap={overlap}
+                    position={position}
+                  >
+                    <Avatar
+                      size="l"
+                      fallback="AL"
+                      alt={dot ? 'Collaborator AL, new activity' : 'Collaborator AL, 3 updates'}
                     />
-                  )}
-                </Indicator>
+                  </Indicator>
+                ) : (
+                  <PinnedIndicator
+                    {...ctx.subject}
+                    {...signal}
+                    size="s"
+                    position={position}
+                    label={dot ? 'Notifications, new activity' : 'Notifications, 3 unread'}
+                  >
+                    <IconButton inert icon={BellIcon} aria-label="Notifications" />
+                  </PinnedIndicator>
+                )}
               </Sample>
             ))}
           </div>
-        </div>
+        </Stack>
       ))}
-      <p className="indicator-example-note">
-        Start and end follow the reading direction. The avatar anchor follows its outline in every
-        material.
-      </p>
-    </div>
+    </Stack>
   );
 }
 
-export function IndicatorData(): ReactElement {
-  const [count, setCount] = useState<number | null>(3);
-  const [visible, setVisible] = useState(true);
-  const [showZero, setShowZero] = useState(false);
-  const [hostVisible, setHostVisible] = useState(true);
-  const name =
-    count === null ? 'Notifications, count unavailable' : `Notifications, ${count} unread`;
+function SurfaceSignals({
+  ctx,
+  withBorder = true,
+  showPresence = true,
+}: PreviewProps & {
+  readonly withBorder?: boolean;
+  readonly showPresence?: boolean;
+}): ReactElement {
   return (
-    <div className="indicator-example-stack">
-      <div className="indicator-example-data-grid">
-        {[
-          { label: 'No data', count: null },
-          { label: 'Invalid count', count: -1 },
-          { label: 'Zero · hidden', count: 0 },
-          { label: 'Zero · shown', count: 0, showZero: true },
-          { label: 'One digit', count: 9 },
-          { label: 'Two digits', count: 10 },
-          { label: 'At limit', count: 99 },
-          { label: 'Over limit', count: 105 },
-          { label: 'Limit 9', count: 12, max: 9 },
-        ].map((sample) => (
-          <Sample key={sample.label} label={sample.label}>
-            <Indicator
-              count={sample.count}
-              showZero={sample.showZero ?? false}
-              max={sample.max ?? 99}
-              size="s"
-            >
-              <IconButton
-                icon={BellIcon}
-                aria-label={
-                  sample.count === null || sample.count < 0
-                    ? 'Notifications, count unavailable'
-                    : `Notifications, ${sample.count} unread`
-                }
-              />
-            </Indicator>
-          </Sample>
-        ))}
-      </div>
-      <div className="indicator-example-live">
-        <div className="indicator-example-toolbar">
-          <Indicator count={count} visible={visible} showZero={showZero}>
-            <IconButton
-              icon={BellIcon}
-              aria-label={name}
-              hidden={!hostVisible}
-              onClick={() => setCount(0)}
-            />
-          </Indicator>
-          <IconButton icon={GearIcon} variant="ghost" aria-label="Settings next to notifications" />
-          <span className="indicator-example-label" role="status">
-            {count === null ? 'Count unavailable' : `${count} unread`}
-          </span>
-        </div>
-        <div className="indicator-example-actions">
-          <Button
-            variant="secondary"
-            tone="neutral"
-            size="s"
-            onClick={() => setCount((value) => (value ?? 0) + 1)}
-          >
-            Add one
-          </Button>
-          <Button variant="ghost" tone="neutral" size="s" onClick={() => setCount(99)}>
-            Set 99
-          </Button>
-          <Button variant="ghost" tone="neutral" size="s" onClick={() => setCount(105)}>
-            Set 105
-          </Button>
-          <Button variant="ghost" tone="neutral" size="s" onClick={() => setCount(null)}>
-            No data
-          </Button>
-        </div>
-        <div className="indicator-example-actions">
-          <label className="indicator-example-choice">
-            <input
-              type="checkbox"
-              checked={visible}
-              onChange={(event) => setVisible(event.target.checked)}
-            />
-            Show marker
-          </label>
-          <label className="indicator-example-choice">
-            <input
-              type="checkbox"
-              checked={showZero}
-              onChange={(event) => setShowZero(event.target.checked)}
-            />
-            Show zero
-          </label>
-          <label className="indicator-example-choice">
-            <input
-              type="checkbox"
-              checked={hostVisible}
-              onChange={(event) => setHostVisible(event.target.checked)}
-            />
-            Show host
-          </label>
-        </div>
-        <p className="indicator-example-note">
-          Live: activate the bell to mark all as read. Focus and the neighboring action stay in
-          place.
-        </p>
-      </div>
-    </div>
-  );
-}
-
-function SurfacePair({ withBorder = true }: { readonly withBorder?: boolean }): ReactElement {
-  return (
-    <div className="indicator-example-surface-pair">
-      <Indicator count={12} size="s" withBorder={withBorder}>
-        <IconButton icon={BellIcon} aria-label="Notifications, 12 unread" />
-      </Indicator>
-      <Indicator
-        dot
-        status="success"
-        overlap="circular"
-        position="bottom-end"
+    <Flex align="center" wrap="wrap" gap={24} className="indicator-example-clearance">
+      <PinnedIndicator
+        {...ctx.subject}
+        label="Notifications, 12 unread"
+        count={12}
+        size="s"
         withBorder={withBorder}
       >
-        <Avatar src="/assets/avatar-portrait-wide.png" alt="Sample collaborator, available" />
-      </Indicator>
-      <Indicator count={3} size="s" withBorder={withBorder}>
-        <Button size="s" aria-label="Inbox, 3 unread">
+        <IconButton inert icon={BellIcon} aria-label="Notifications" />
+      </PinnedIndicator>
+      {showPresence && (
+        <Flex align="center" gap={12}>
+          <Indicator
+            {...ctx.subject}
+            dot
+            status="success"
+            overlap="circular"
+            position="bottom-end"
+            withBorder={withBorder}
+          >
+            <Avatar src="/assets/avatar-portrait-wide.png" alt="Collaborator" />
+          </Indicator>
+          <Text size="caption-l">Available</Text>
+        </Flex>
+      )}
+      <PinnedIndicator
+        {...ctx.subject}
+        label="Inbox, 3 unread"
+        count={3}
+        size="s"
+        withBorder={withBorder}
+      >
+        <Button inert size="s">
           Inbox
         </Button>
-      </Indicator>
-    </div>
+      </PinnedIndicator>
+    </Flex>
   );
 }
 
-export function IndicatorSurfaces(): ReactElement {
+export function IndicatorSurfaces({ ctx }: PreviewProps): ReactElement {
   return (
-    <div className="indicator-example-stack">
-      {(['shell', 'canvas', 'surface'] as const).map((surface) => (
-        <div key={surface} className="indicator-example-surface" data-ground={surface}>
-          <div className="indicator-example-surface-row">
-            <span className="indicator-example-label">{surface} · separated</span>
-            <SurfacePair />
-          </div>
-          <div className="indicator-example-surface-row">
-            <span className="indicator-example-label">without separator</span>
-            <SurfacePair withBorder={false} />
-          </div>
-        </div>
+    <Stack gap={16}>
+      {(['shell', 'canvas', 'surface'] as const).map((ground) => (
+        <Stack key={ground} gap={16} className="indicator-example-ground" data-ground={ground}>
+          <Text size="body-s" weight="medium">
+            {ground}
+          </Text>
+          {[true, false].map((withBorder) => (
+            <Stack key={String(withBorder)} gap={4}>
+              <Text size="caption-l">{withBorder ? 'With separator' : 'Without separator'}</Text>
+              <SurfaceSignals ctx={ctx} withBorder={withBorder} />
+            </Stack>
+          ))}
+        </Stack>
       ))}
-    </div>
+    </Stack>
   );
 }
 
-export function IndicatorOverlay(): ReactElement {
+export function IndicatorOverlay({ ctx }: PreviewProps): ReactElement {
   return (
-    <div className="indicator-example-overlay" data-surface="overlay">
-      <strong>Activity & availability</strong>
-      <p className="indicator-example-note">Compact markers on a floating surface.</p>
-      <SurfacePair />
-      <div className="indicator-example-use">
-        <Indicator dot status="success" overlap="circular" position="bottom-end">
-          <Avatar src="/assets/avatar-portrait-tall.png" alt="Sample collaborator" />
-        </Indicator>
-        <div>
-          <strong>Available</strong>
-          <p>Ready for a conversation</p>
-        </div>
-      </div>
-      <div className="indicator-example-use">
-        <Indicator dot status="warning" overlap="circular" position="bottom-end">
-          <Avatar fallback="AL" alt="Sample collaborator" />
-        </Indicator>
-        <div>
-          <strong>Away</strong>
-          <p>Replies may take a little longer</p>
-        </div>
-      </div>
-      <div className="indicator-example-use">
-        <Indicator dot visible={false} status="neutral" overlap="circular" position="bottom-end">
-          <Avatar fallback="RK" alt="Sample collaborator" />
-        </Indicator>
-        <div>
-          <strong>Offline</strong>
-          <p>Leave a message for later</p>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-export function IndicatorHostStates(): ReactElement {
-  return (
-    <div className="indicator-example-stack">
-      <div className="indicator-example-data-grid">
-        <Sample label="Hover, hold, or Tab">
-          <Indicator count={12} size="s">
-            <IconButton icon={BellIcon} aria-label="Notifications, 12 unread" />
-          </Indicator>
-        </Sample>
-        <Sample label="Disabled host">
-          <Indicator count={12} size="s" status="neutral">
-            <IconButton
-              icon={BellIcon}
-              aria-label="Notifications unavailable, 12 unread"
-              disabled
-            />
-          </Indicator>
-        </Sample>
-        <Sample label="Busy host">
-          <Indicator count={12} size="s">
-            <IconButton icon={BellIcon} aria-label="Refreshing notifications, 12 unread" loading />
-          </Indicator>
-        </Sample>
-        <Sample label="Dot">
-          <Indicator dot>
-            <IconButton icon={ChatCircleIcon} aria-label="Messages, new activity" />
-          </Indicator>
-        </Sample>
-        <Sample label="Count">
-          <Indicator count={105}>
-            <IconButton icon={TrayIcon} aria-label="Inbox, 105 unread" />
-          </Indicator>
-        </Sample>
-      </div>
-      <p className="indicator-example-note">
-        The host owns its focus and interaction feedback. A known count can remain when the host is
-        unavailable.
-      </p>
-      <div className="indicator-example-actions">
-        <Indicator count={3} size="s">
-          <Button variant="secondary" tone="neutral" size="s" aria-label="Open inbox, 3 unread">
-            Open inbox
-          </Button>
-        </Indicator>
-        <Button variant="ghost" tone="neutral" size="s">
-          Next action
-        </Button>
-      </div>
-      <p className="indicator-example-note">
-        Live: Tab to Open inbox. Only the host receives focus; the marker is never a separate stop.
-      </p>
-    </div>
-  );
-}
-
-export function IndicatorBoundaries(): ReactElement {
-  return (
-    <div className="indicator-example-stack">
-      <div className="indicator-example-long">
-        <Indicator count={105} size="s" width="full">
-          <Button
-            variant="secondary"
-            tone="neutral"
-            aria-label="Review all incoming collaboration requests, 105 unread"
+    <ExampleSurface surface={ctx.surface} sizing="border-box" gap={16}>
+      <Text size="body-s" weight="medium">
+        Activity &amp; availability
+      </Text>
+      <SurfaceSignals ctx={ctx} showPresence={false} />
+      {(
+        [
+          {
+            label: 'Available',
+            status: 'success',
+            src: '/assets/avatar-portrait-tall.png',
+            alt: 'Collaborator',
+          },
+          { label: 'Away', status: 'warning', fallback: 'AL', alt: 'Collaborator AL' },
+          { label: 'Offline', status: 'neutral', fallback: 'RK', alt: 'Collaborator RK' },
+        ] as const
+      ).map(({ label, status, ...avatar }) => (
+        <Flex key={label} align="center" gap={16}>
+          <Indicator
+            {...ctx.subject}
+            dot
+            status={status}
+            visible={label !== 'Offline'}
+            overlap="circular"
+            position="bottom-end"
           >
+            <Avatar {...avatar} />
+          </Indicator>
+          <Text size="body-s">{label}</Text>
+        </Flex>
+      ))}
+    </ExampleSurface>
+  );
+}
+
+export function IndicatorBoundaries({ ctx }: PreviewProps): ReactElement {
+  return (
+    <Stack gap={24}>
+      <Box paddingBlock={12} paddingInline={24}>
+        <PinnedIndicator
+          {...ctx.subject}
+          label="Review all incoming collaboration requests, 105 unread"
+          count={105}
+          size="s"
+          width="full"
+        >
+          <Button inert variant="secondary" tone="neutral">
             Review all incoming collaboration requests
           </Button>
-        </Indicator>
-      </div>
-      <p className="indicator-example-note">
-        The host can wrap; the number stays on one line. Keep clearance outside the host for the
-        largest marker.
-      </p>
-      <div className="indicator-example-contained">
-        <span>Incoming requests</span>
+        </PinnedIndicator>
+      </Box>
+      <Flex className="indicator-example-contained" align="center" justify="space-between" gap={12}>
+        <Text size="body-s">Incoming requests</Text>
         <Badge size="s">
           <bdi dir="ltr">99+</bdi>
         </Badge>
-      </div>
-      <p className="indicator-example-note">
-        In a clipped or crowded row, keep the quantity in flow with Badge.
-      </p>
-      <div className="indicator-example-actions">
-        <span className="indicator-example-object">
-          <Indicator dot size="s" withBorder={false}>
-            <Icon icon={EnvelopeSimpleIcon} size="l" aria-label="Unread message" />
-          </Indicator>
-        </span>
-        <span className="indicator-example-note">A bare glyph needs its own accessible name.</span>
-      </div>
-      <div className="indicator-example-directions">
+      </Flex>
+      <Box padding={8}>
+        <Indicator {...ctx.subject} dot size="s" withBorder={false}>
+          <Icon icon={EnvelopeSimpleIcon} size="l" aria-label="Unread message" />
+        </Indicator>
+      </Box>
+      <Flex justify="space-around" wrap="wrap" gap={24} className="indicator-example-clearance">
         {(['ltr', 'rtl'] as const).map((direction) => (
-          <div key={direction} dir={direction} className="indicator-example-direction">
-            <span className="indicator-example-label">{direction.toUpperCase()}</span>
-            <Indicator count={105} size="s">
-              <IconButton icon={BellIcon} aria-label="Notifications, 105 unread" />
-            </Indicator>
-            <span className="indicator-example-label">top-end</span>
+          <div key={direction} dir={direction}>
+            <Sample label={direction.toUpperCase()}>
+              <PinnedIndicator
+                {...ctx.subject}
+                label="Notifications, 105 unread"
+                count={105}
+                size="s"
+              >
+                <IconButton inert icon={BellIcon} aria-label="Notifications" />
+              </PinnedIndicator>
+            </Sample>
           </div>
         ))}
-      </div>
-    </div>
+      </Flex>
+    </Stack>
   );
 }

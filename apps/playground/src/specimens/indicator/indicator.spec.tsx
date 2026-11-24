@@ -1,16 +1,17 @@
-import { Indicator } from '@docouno/unica';
 import { defineComponent } from '../../workbench/types.js';
 import type { ComponentValues, PropSchema } from '../../workbench/types.js';
-import { previewProps, previewText } from '../preview-code.js';
+import { withOverlaySurface } from '../shared/with-overlay-surface.js';
+import { indicatorCode } from './indicator-code.js';
+import { IndicatorPlayground } from './indicator-playground.js';
+import { UnreadNotifications } from './indicator-notifications.examples.js';
+import notificationsSource from './indicator-notifications.examples.tsx?raw';
+import { IndicatorData, IndicatorHostStates } from './indicator.behavior.examples.js';
 import {
   IndicatorBoundaries,
   IndicatorCorners,
-  IndicatorData,
-  IndicatorHostStates,
   IndicatorOverlay,
   IndicatorOverview,
   IndicatorScale,
-  IndicatorStatuses,
   IndicatorSurfaces,
 } from './indicator.examples.js';
 
@@ -20,7 +21,9 @@ const props = {
     group: 'Host',
     default: 'button',
     label: 'Host element',
-    description: 'One measurable element keeps its own semantics and interaction.',
+    publicType: 'ReactElement',
+    description:
+      'Required. This example starts with a button. Supply one measurable host that keeps its own semantics and interaction.',
     choices: [
       { value: 'button', label: 'Native button' },
       { value: 'avatar', label: 'Fixed-size avatar' },
@@ -30,19 +33,20 @@ const props = {
     kind: 'enum',
     group: 'Host',
     default: 'auto',
-    description: 'Use the host’s natural width or fill the available space.',
+    description:
+      'Use the host’s natural width or fill the space available after reserving room for the marker at its corner.',
     choices: [{ value: 'auto' }, { value: 'full' }],
   },
   size: {
     kind: 'enum',
-    group: 'Marker',
+    group: 'Geometry',
     default: 'm',
     description: 'The dot diameter or the minimum counter size.',
     choices: [{ value: 's' }, { value: 'm' }, { value: 'l' }],
   },
   status: {
     kind: 'enum',
-    group: 'Marker',
+    group: 'Role',
     default: 'accent',
     description: 'The semantic color of the signal.',
     choices: [
@@ -56,19 +60,19 @@ const props = {
   },
   withBorder: {
     kind: 'boolean',
-    group: 'Marker',
+    group: 'Geometry',
     default: true,
     description: 'Paint a 2px separator outside the marker.',
   },
   visible: {
     kind: 'boolean',
-    group: 'Marker',
+    group: 'Availability',
     default: true,
     description: 'Display the marker while leaving the host in place.',
   },
   position: {
     kind: 'enum',
-    group: 'Placement',
+    group: 'Geometry',
     default: 'top-end',
     description: 'Attach to a logical corner of the host.',
     choices: [
@@ -80,7 +84,7 @@ const props = {
   },
   overlap: {
     kind: 'enum',
-    group: 'Placement',
+    group: 'Geometry',
     default: 'rectangular',
     description: 'Anchor to a rectangular corner or inset along a theme-shaped avatar.',
     choices: [{ value: 'rectangular' }, { value: 'circular' }],
@@ -89,20 +93,23 @@ const props = {
     kind: 'boolean',
     group: 'Content',
     default: false,
-    description: 'Show a dot for new activity.',
+    description: 'Show a dot for new activity. Dot mode excludes count, max and showZero.',
   },
   count: {
     kind: 'number',
     group: 'Content',
     default: 3,
-    description: 'The actual unread count, before applying the visual cap.',
+    publicType: 'number | null | undefined',
+    description:
+      'This example starts at 3. An omitted count or null means the quantity is unavailable. Supply the actual non-negative safe integer before applying a visual cap.',
     examples: [0, 3, 120],
   },
   max: {
     kind: 'number',
     group: 'Content',
     default: 99,
-    description: 'Numbers above this positive integer are shown with a plus sign.',
+    publicType: 'number',
+    description: 'A positive safe integer. Larger counts show the cap followed by a plus sign.',
     examples: [9, 99],
   },
   showZero: {
@@ -113,54 +120,7 @@ const props = {
   },
 } as const satisfies PropSchema;
 
-const libraryDefaults = {
-  position: 'top-end',
-  size: 'm',
-  status: 'accent',
-  overlap: 'rectangular',
-  width: 'auto',
-  withBorder: true,
-  visible: true,
-  dot: false,
-  max: 99,
-  showZero: false,
-} as const;
-const avatarStyle = {
-  display: 'inline-grid',
-  placeItems: 'center',
-  inlineSize: 40,
-  blockSize: 40,
-  borderRadius: 'var(--radius-full)',
-  backgroundColor: 'var(--bg-surface-raised)',
-  color: 'var(--fg-primary)',
-} as const;
-const hostLabels = { button: 'Notifications', avatar: 'Sample collaborator' };
-
-function indicatorPreview({
-  children: host,
-  dot,
-  count,
-  max,
-  showZero,
-  ...shared
-}: ComponentValues<typeof props>) {
-  const text = hostLabels[host];
-  let activity = 'count unavailable';
-  if (dot) {
-    activity = 'new activity';
-  } else if (Number.isSafeInteger(count) && count >= 0) {
-    activity = `${count} unread`;
-  }
-  return {
-    host,
-    text,
-    name: `${text}, ${activity}`,
-    marker: dot ? { ...shared, dot: true as const } : { ...shared, count, max, showZero },
-  };
-}
-
-const usageCount = 3;
-const usageName = `Notifications, ${usageCount} unread`;
+export type IndicatorValues = ComponentValues<typeof props>;
 
 export default defineComponent({
   id: 'indicator',
@@ -201,38 +161,16 @@ export default defineComponent({
       reason: 'Hiding the marker takes priority over its content, appearance and placement.',
     },
   ],
-  render: ({ ctx, values }) => {
-    const { host, text, name, marker } = indicatorPreview(values);
-    return (
-      <Indicator {...ctx.subject} {...marker}>
-        {host === 'avatar' ? (
-          <span role="img" aria-label={name} style={avatarStyle}>
-            AL
-          </span>
-        ) : (
-          <button type="button" aria-label={name}>
-            {text}
-          </button>
-        )}
-      </Indicator>
-    );
-  },
-  code: (values) => {
-    const { host, text, name, marker } = indicatorPreview(values);
-    const hostCode =
-      host === 'avatar'
-        ? `<span role="img" aria-label=${previewText(name)} style={${JSON.stringify(avatarStyle)}}>AL</span>`
-        : `<button type="button" aria-label=${previewText(name)}>${text}</button>`;
-    return `<Indicator${previewProps(marker, libraryDefaults)}>\n  ${hostCode}\n</Indicator>`;
-  },
-  matrixViews: [
+  render: withOverlaySurface(IndicatorPlayground, 'border-box'),
+  code: indicatorCode,
+  states: [
     {
       id: 'scale',
       rows: 'size',
       cols: 'dot',
-      title: 'Dot & count · S / M / L',
-      caption: '16 / 20 / 24px counters and 6 / 8 / 12px dots. Match the marker to its host.',
-      reference: () => <IndicatorScale />,
+      title: 'Dot and count sizes',
+      caption:
+        'Counters start at 16, 20 and 24 pixels and grow with text. Dots keep their 6, 8 and 12 pixel diameters.',
     },
     {
       id: 'status',
@@ -240,73 +178,125 @@ export default defineComponent({
       cols: 'dot',
       title: 'Semantic signals',
       caption:
-        'Accent for new activity, neutral for quantity. Reserve warning and danger for their meaning.',
-      reference: () => <IndicatorStatuses />,
+        'Compare the same counter and activity dot in each status. Use warning or danger for a signal that needs attention.',
     },
     {
       id: 'corners',
       rows: 'position',
       cols: 'size',
       title: 'Four logical corners',
-      reference: () => <IndicatorCorners />,
+      caption:
+        'Compare how far each size extends past the button at the four logical corners. Inline start and end follow the writing direction.',
     },
   ],
   cases: [
     {
+      id: 'hosts-at-scale',
+      title: 'Choosing a size for the host',
+      kind: 'content',
+      mode: 'pinned',
+      caption:
+        'Compare one digit, a capped counter and a presence dot on their icon button and avatar hosts at each size.',
+      render: withOverlaySurface(IndicatorScale, 'border-box'),
+    },
+    {
+      id: 'host-contours',
+      title: 'Button and avatar contours',
+      kind: 'content',
+      mode: 'pinned',
+      controls: {
+        dot: { kind: 'boolean', label: 'Show dots', default: false },
+      },
+      caption:
+        'Switch between dots and counters at all four corners. The avatar anchor moves inward along a rounded outline and follows a square corner in Pixel.',
+      render: withOverlaySurface(IndicatorCorners, 'border-box'),
+    },
+    {
       id: 'data',
-      title: 'Counts, zero & absence',
+      title: 'Counts, zero and absence',
       kind: 'behavior',
-      render: () => <IndicatorData />,
+      mode: 'live',
+      controls: {
+        visible: { kind: 'boolean', label: 'Show marker', default: true },
+        showZero: { kind: 'boolean', label: 'Show zero', default: false },
+        hostVisible: { kind: 'boolean', label: 'Show host', default: true },
+      },
+      actions: [
+        { id: 'increment', label: 'Add one' },
+        { id: 'limit', label: 'Set 99' },
+        { id: 'capped', label: 'Set 105' },
+        { id: 'unavailable', label: 'No data' },
+      ],
+      reset: true,
+      caption:
+        'Compare unavailable, invalid, zero and capped counts. The example treats invalid data as unavailable. Change the shared sample count, then activate one bell to mark its notifications as read.',
+      render: withOverlaySurface(IndicatorData, 'border-box'),
     },
     {
       id: 'surfaces',
       title: 'Separation on each surface',
       kind: 'surface',
-      render: () => <IndicatorSurfaces />,
+      mode: 'pinned',
+      caption:
+        'Each host sits on the shell, canvas or surface pigment. Compare the marker with and without the two-pixel separator on the same background.',
+      render: withOverlaySurface(IndicatorSurfaces, 'border-box'),
     },
     {
       id: 'overlay',
       title: 'On a floating surface',
+      kind: 'surface',
+      mode: 'pinned',
       surface: 'overlay',
       overlayStage: true,
-      kind: 'surface',
-      render: () => <IndicatorOverlay />,
+      caption:
+        'The separator takes its pigment from the floating panel. The presence labels stay visible for available, away and offline collaborators.',
+      render: IndicatorOverlay,
     },
     {
       id: 'host-states',
       title: 'The host keeps its interaction',
       kind: 'behavior',
-      render: () => <IndicatorHostStates />,
+      mode: 'live',
+      reset: true,
+      caption:
+        'Activate an available host by pointer or keyboard and follow focus to its neighbor. Busy and disabled hosts retain their last known quantity.',
+      render: withOverlaySurface(IndicatorHostStates, 'border-box'),
     },
     {
       id: 'boundaries',
-      title: 'Space, wrapping & direction',
+      title: 'Space, wrapping and direction',
       kind: 'content',
-      render: () => <IndicatorBoundaries />,
+      mode: 'pinned',
+      caption:
+        'A full-width button can wrap while its count stays on one line. Compare an inline Badge in a constrained row, a bare glyph and the top-end anchor in both directions.',
+      render: withOverlaySurface(IndicatorBoundaries, 'border-box'),
     },
     {
       id: 'overview',
       title: 'Choosing a signal',
       kind: 'content',
-      render: () => <IndicatorOverview />,
+      mode: 'pinned',
+      caption:
+        'Use an accent counter for unread activity, a presence dot with a visible label for availability and a neutral counter for an ordinary quantity.',
+      render: withOverlaySurface(IndicatorOverview, 'border-box'),
     },
   ],
-  usage: [
+  compositions: [
     {
       id: 'overview',
-      code: `import { Indicator } from '@docouno/unica';
-import '@docouno/unica/styles.css';
-
-<Indicator count={${usageCount}} size="s">
-  <button type="button" aria-label="${usageName}">Notifications</button>
-</Indicator>`,
       title: 'Unread notifications',
-      render: () => (
-        <Indicator count={usageCount} size="s">
-          <button type="button" aria-label={usageName}>
-            Notifications
-          </button>
-        </Indicator>
+      mode: 'live',
+      reset: true,
+      caption:
+        'Open the notification list to read the three messages. The counter clears and the same button closes or reopens the list.',
+      code: notificationsSource,
+      render: withOverlaySurface(
+        ({ ctx }) => (
+          <div data-example-disclosure="">
+            <UnreadNotifications indicatorProps={ctx.subject} />
+          </div>
+        ),
+        'border-box',
       ),
     },
   ],
