@@ -41,20 +41,6 @@
   margin: 0;
 }
 
-.layout-example hr {
-  align-self: stretch;
-  flex: none;
-  min-inline-size: 1px;
-  min-block-size: 1px;
-  margin: 0;
-  border: 0;
-  background: var(--border-default);
-}
-
-.layout-example input {
-  max-inline-size: 100%;
-}
-
 .layout-cell {
   min-inline-size: 0;
 }
