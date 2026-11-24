@@ -596,7 +596,9 @@ function InlineProperties({ ctx }: PreviewProps): ReactElement {
         ] as const
       ).map(([label, value, suffix], index) => (
         <div className="number-inspector-row-proto" key={label}>
-          <label htmlFor={`${id}-${index}`}>{label}</label>
+          <Text as="label" htmlFor={`${id}-${index}`} size="body-s">
+            {label}
+          </Text>
           <NumberInput
             {...ctx.subject}
             id={`${id}-${index}`}

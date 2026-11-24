@@ -63,10 +63,6 @@ ul:has(> [data-wb-result-row] .number-playground-form) {
   grid-template-columns: minmax(5rem, 1fr) minmax(0, 180px);
   gap: 16px;
   align-items: center;
-  font-size: var(--text-size-body-s);
-}
-.number-inspector-row-proto > label {
-  overflow-wrap: anywhere;
 }
 @container artboard (max-width: 440px) {
   .number-inspector-row-proto {
