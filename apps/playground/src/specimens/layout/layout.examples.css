@@ -64,7 +64,7 @@
   block-size: 100%;
 }
 
-.layout-track-markers > .unica-box {
+.layout-track-markers > * {
   block-size: var(--space-8);
   border: 1px solid var(--border-default);
   border-block-start: 0;
