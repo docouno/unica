@@ -650,8 +650,8 @@ export default defineComponent({
   </article>
 </Card>`,
       render: withOverlaySurface(
-        () => (
-          <Card asChild>
+        ({ ctx }) => (
+          <Card {...ctx.subject} asChild>
             <article>
               <CardHeader>
                 <CardTitle as="h2">Field guide</CardTitle>

@@ -120,12 +120,12 @@ function Diagram(): ReactElement {
   );
 }
 
-export function Anatomy(): ReactElement {
+export function Anatomy({ ctx }: PreviewProps): ReactElement {
   const [reviewed, setReviewed] = useState(false);
   return (
     <div className="card-example-stack">
       <div className="card-example-grid">
-        <Card>
+        <Card {...ctx.subject}>
           <CardHeader>
             <CardTitle>
               <bdi>Working together</bdi>
@@ -149,7 +149,7 @@ export function Anatomy(): ReactElement {
             <Metadata />
           </CardFooter>
         </Card>
-        <Card>
+        <Card {...ctx.subject}>
           <CardHeader>
             <CardTitle>
               <bdi>Release checklist</bdi>
@@ -220,7 +220,7 @@ export function Media({ ctx }: PreviewProps): ReactElement {
       <div className="card-example-grid">
         <div className="card-example-cell">
           <Label>Flush · cover</Label>
-          <Card size={size}>
+          <Card {...ctx.subject} size={size}>
             <CardSection>
               <Cover />
             </CardSection>
@@ -239,7 +239,7 @@ export function Media({ ctx }: PreviewProps): ReactElement {
         </div>
         <div className="card-example-cell">
           <Label>Inset · contain</Label>
-          <Card size={size}>
+          <Card {...ctx.subject} size={size}>
             <CardSection placement="inset">
               <Diagram />
             </CardSection>
@@ -258,7 +258,12 @@ export function Media({ ctx }: PreviewProps): ReactElement {
         </div>
       </div>
       <Label>Horizontal media</Label>
-      <Card size={size} orientation="horizontal" style={{ inlineSize: `min(100%, ${width}px)` }}>
+      <Card
+        {...ctx.subject}
+        size={size}
+        orientation="horizontal"
+        style={{ inlineSize: `min(100%, ${width}px)` }}
+      >
         <CardSection placement={placement}>
           <Cover ratio="4 / 3" />
         </CardSection>
@@ -280,7 +285,7 @@ export function Media({ ctx }: PreviewProps): ReactElement {
         </CardBody>
       </Card>
       <div className="card-example-grid">
-        <Card size={size}>
+        <Card {...ctx.subject} size={size}>
           <CardHeader>
             <CardTitle>
               <bdi>Image proportions</bdi>
@@ -293,7 +298,7 @@ export function Media({ ctx }: PreviewProps): ReactElement {
             <Cover ratio="2 / 1" fit="contain" />
           </CardSection>
         </Card>
-        <Card size={size}>
+        <Card {...ctx.subject} size={size}>
           <CardHeader>
             <CardTitle>
               <bdi>Without an image</bdi>
@@ -319,12 +324,12 @@ export function Media({ ctx }: PreviewProps): ReactElement {
   );
 }
 
-export function Sections(): ReactElement {
+export function Sections({ ctx }: PreviewProps): ReactElement {
   const [showTime, setShowTime] = useState(true);
   const [showSize, setShowSize] = useState(false);
   return (
     <div className="card-example-grid">
-      <Card>
+      <Card {...ctx.subject}>
         <CardHeader>
           <CardTitle>
             <bdi>Document details</bdi>
@@ -379,7 +384,7 @@ export function Sections(): ReactElement {
           </Button>
         </CardFooter>
       </Card>
-      <Card>
+      <Card {...ctx.subject}>
         <CardHeader>
           <CardTitle>
             <bdi>Reading preferences</bdi>
@@ -408,7 +413,7 @@ export function Sections(): ReactElement {
           )}
         </CardSection>
       </Card>
-      <Card>
+      <Card {...ctx.subject}>
         <CardHeader>
           <CardTitle>
             <bdi>Useful context</bdi>
@@ -418,7 +423,7 @@ export function Sections(): ReactElement {
           <Text size="body-s" color="secondary">
             <bdi>Read the draft before the next review.</bdi>
           </Text>
-          <Card size="s" variant="subtle">
+          <Card {...ctx.subject} size="s" variant="subtle">
             <CardHeader>
               <CardTitle as="h4">
                 <bdi>A short reminder</bdi>
@@ -430,7 +435,7 @@ export function Sections(): ReactElement {
           </Card>
         </CardBody>
       </Card>
-      <Card variant="subtle">
+      <Card {...ctx.subject} variant="subtle">
         <CardBody>
           <Text size="body-s" color="secondary">
             <bdi>New notes appear here after the next review.</bdi>
@@ -441,23 +446,48 @@ export function Sections(): ReactElement {
   );
 }
 
-export function Navigation({ ctx }: PreviewProps): ReactElement {
+const guides = [
+  ['getting-started', 'Getting started', 'Start with the brief and identify the first milestone.'],
+  ['handoff', 'A more thoughtful handoff', 'Record the decision and name the next reviewer.'],
+  ['sources', 'Handoff source notes', 'Check the original brief and the review comments.'],
+] as const;
+
+// A guide can mount after the browser's initial fragment navigation.
+function focusLinkedGuide(node: HTMLElement | null): void {
+  if (node) {
+    const { activeElement, body, location } = node.ownerDocument;
+    if (activeElement === body && location.hash === `#${node.id}`) {
+      node.focus();
+    }
+  }
+}
+
+export function Navigation({
+  ctx,
+  showGuides = true,
+}: PreviewProps & { readonly showGuides?: boolean }): ReactElement {
   const size = studySize(ctx);
   const variant = ctx.story?.controls.variant === 'subtle' ? 'subtle' : 'default';
-  const id = useId();
-  const [opened, setOpened] = useState('Choose a guide above');
+  const titleId = useId();
+  const guideId = `card-guide-${ctx.theme.id}`;
+  const params = new URLSearchParams(typeof window === 'undefined' ? '' : window.location.search);
+  let guidePage = '';
+  if (params.get('block') !== 'navigation') {
+    // The overview mounts cases on scroll, and the overlay's chosen study resets on reload.
+    params.set('item', 'card');
+    params.set('tab', 'states');
+    params.set('block', 'navigation');
+    params.set('solo', ctx.theme.id);
+    guidePage = `?${params}`;
+  }
   const [selected, setSelected] = useState(false);
   return (
     <div className="card-example-stack">
       <div className="card-example-grid">
-        <Card asChild size={size} variant={variant}>
-          <a
-            href={`#${id}`}
-            aria-labelledby={`${id}-title`}
-            onClick={() => setOpened('Getting started')}
-          >
+        <Card {...ctx.subject} asChild size={size} variant={variant}>
+          <a href={`${guidePage}#${guideId}-getting-started`} aria-labelledby={titleId}>
             <CardHeader>
-              <CardTitle id={`${id}-title`}>
+              <CardTitle id={titleId}>
                 <bdi>Getting started</bdi>
               </CardTitle>
               <CardDescription>
@@ -472,14 +502,10 @@ export function Navigation({ ctx }: PreviewProps): ReactElement {
             </CardFooter>
           </a>
         </Card>
-        <Card size={size} variant={variant}>
+        <Card {...ctx.subject} size={size} variant={variant}>
           <CardHeader>
             <CardTitle>
-              <Link
-                tone="inherit"
-                href={`#${id}`}
-                onClick={() => setOpened('A more thoughtful handoff')}
-              >
+              <Link tone="inherit" href={`${guidePage}#${guideId}-handoff`}>
                 <bdi>A more thoughtful handoff</bdi>
               </Link>
             </CardTitle>
@@ -502,25 +528,30 @@ export function Navigation({ ctx }: PreviewProps): ReactElement {
               onCheckedChange={setSelected}
               label={selected ? 'Selected for export' : 'Select for export'}
             />
-            <Link
-              tone="neutral"
-              size="caption-l"
-              href={`#${id}`}
-              onClick={() => setOpened('Handoff source notes')}
-            >
+            <Link tone="neutral" size="caption-l" href={`${guidePage}#${guideId}-sources`}>
               <bdi>Source notes</bdi>
             </Link>
           </CardFooter>
         </Card>
       </div>
-      <div className="card-example-destination" id={id} tabIndex={-1}>
-        <Text size="caption-l" color="muted">
-          <bdi>Local preview</bdi>
-        </Text>
-        <Text size="body-s" weight="medium">
-          <bdi>{opened}</bdi>
-        </Text>
-      </div>
+      {showGuides &&
+        guides.map(([slug, name, summary]) => (
+          <article
+            key={slug}
+            ref={focusLinkedGuide}
+            className="card-example-destination"
+            id={`${guideId}-${slug}`}
+            aria-labelledby={`${guideId}-${slug}-heading`}
+            tabIndex={-1}
+          >
+            <Title as="h3" size="body-m" id={`${guideId}-${slug}-heading`}>
+              <bdi>{name}</bdi>
+            </Title>
+            <Text size="body-s" color="secondary">
+              <bdi>{summary}</bdi>
+            </Text>
+          </article>
+        ))}
     </div>
   );
 }
@@ -543,6 +574,7 @@ export function States({ ctx }: PreviewProps): ReactElement {
           <div key={state.label} className="card-example-cell">
             <Label>{state.label}</Label>
             <Card
+              {...ctx.subject}
               variant={variant}
               size={size}
               className="card-example-state"
@@ -595,7 +627,7 @@ export function Availability({ ctx }: PreviewProps): ReactElement {
       <div className="card-example-grid card-example-natural">
         <div className="card-example-cell">
           <Label>Loading → content</Label>
-          <Card className="card-example-loading" aria-busy={!loaded}>
+          <Card {...ctx.subject} className="card-example-loading" aria-busy={!loaded}>
             <div className="card-example-loading-region">
               <div
                 className="card-example-loaded-copy"
@@ -633,7 +665,7 @@ export function Availability({ ctx }: PreviewProps): ReactElement {
         </div>
         <div className="card-example-cell">
           <Label>Empty content</Label>
-          <Card>
+          <Card {...ctx.subject}>
             <CardHeader>
               <CardTitle>
                 <bdi>Saved references</bdi>
@@ -657,7 +689,7 @@ export function Availability({ ctx }: PreviewProps): ReactElement {
         </div>
         <div className="card-example-cell">
           <Label>Unavailable destination</Label>
-          <Card className="card-example-unavailable">
+          <Card {...ctx.subject} className="card-example-unavailable">
             <CardHeader>
               <CardTitle>
                 <bdi>Archived research</bdi>
@@ -696,7 +728,7 @@ export function Availability({ ctx }: PreviewProps): ReactElement {
         </div>
         <div className="card-example-cell">
           <Label>Media unavailable → retry</Label>
-          <Card>
+          <Card {...ctx.subject}>
             <CardSection>
               {image.status !== 'failed' ? (
                 <CardMedia aspectRatio="16 / 9">
@@ -757,11 +789,11 @@ export function Availability({ ctx }: PreviewProps): ReactElement {
   );
 }
 
-export function Overflow(): ReactElement {
+export function Overflow({ ctx }: PreviewProps): ReactElement {
   return (
     <div className="card-example-stack">
       <div className="card-example-grid">
-        <Card>
+        <Card {...ctx.subject}>
           <CardHeader>
             <CardTitle>
               <bdi>A considered approach to making complex information easier to understand</bdi>
@@ -792,7 +824,7 @@ export function Overflow(): ReactElement {
             </Button>
           </CardFooter>
         </Card>
-        <Card>
+        <Card {...ctx.subject}>
           <CardHeader>
             <CardTitle>
               <bdi>Short title</bdi>
@@ -847,10 +879,10 @@ export function Overlay({ ctx }: PreviewProps): ReactElement {
       {study === 'states' ? (
         <States ctx={ctx} />
       ) : study === 'navigation' ? (
-        <Navigation ctx={ctx} />
+        <Navigation ctx={ctx} showGuides={false} />
       ) : (
         <>
-          <Card size={size} variant={variant}>
+          <Card {...ctx.subject} size={size} variant={variant}>
             <CardHeader>
               <CardTitle>
                 <bdi>Working with surfaces</bdi>
@@ -866,7 +898,7 @@ export function Overlay({ ctx }: PreviewProps): ReactElement {
               <Metadata />
             </CardFooter>
           </Card>
-          <Card size={size} variant="subtle">
+          <Card {...ctx.subject} size={size} variant="subtle">
             <CardHeader>
               <CardTitle>
                 <bdi>One useful note</bdi>
