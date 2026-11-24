@@ -1,11 +1,11 @@
 import { ArrowRightIcon, FileTextIcon, MagnifyingGlassIcon } from '@phosphor-icons/react';
 import { Flex, Icon, Text, UnicaProvider } from '@docouno/unica';
 import type { IconAdapter } from '@docouno/unica';
+import { ExampleSurface } from '../shared/example-surface.js';
 import { previewProps } from '../preview-code.js';
 import { defineComponent } from '../../workbench/types.js';
 import {
   ColorExamples,
-  IconFrame,
   NameExample,
   OverlayExamples,
   ShapeExamples,
@@ -216,7 +216,7 @@ export default defineComponent({
       ...semantics,
     };
     return (
-      <IconFrame ctx={ctx}>
+      <ExampleSurface surface={ctx.surface}>
         <UnicaProvider iconAdapter={adapter === 'custom' ? outlineAdapter : 'phosphor'}>
           <Flex align="center" justify={ctx.tab === 'playground' ? 'center' : 'start'} gap={8}>
             {nameMode === 'labelledby' && (
@@ -236,7 +236,7 @@ export default defineComponent({
             )}
           </Flex>
         </UnicaProvider>
-      </IconFrame>
+      </ExampleSurface>
     );
   },
   code: ({ icon, adapter, nameMode, ...props }) => {

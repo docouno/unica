@@ -1,4 +1,5 @@
 import { Code } from '@docouno/unica';
+import { ExampleSurface } from '../shared/example-surface.js';
 import { defineComponent } from '../../workbench/types.js';
 import { previewProps, previewText } from '../preview-code.js';
 import {
@@ -9,7 +10,6 @@ import {
 } from './code.compositions.js';
 import {
   BoundariesExample,
-  CodeFrame,
   MessagesExample,
   OverlayExample,
   PlainActions,
@@ -85,13 +85,13 @@ export default defineComponent({
     },
   },
   render: ({ ctx, values: { children, ...props } }) => (
-    <CodeFrame ctx={ctx}>
+    <ExampleSurface surface={ctx.surface}>
       <span dir={props.dir} style={{ textAlign: ctx.tab === 'playground' ? 'center' : undefined }}>
         <Code {...ctx.subject} {...props}>
           {children}
         </Code>
       </span>
-    </CodeFrame>
+    </ExampleSurface>
   ),
   code: ({ children, ...props }) =>
     `<Code${previewProps(props, { size: 'inherit', status: 'inherit', plate: true, dir: 'ltr' })}>${previewText(children)}</Code>`,

@@ -1,25 +1,9 @@
 import type { ReactElement, ReactNode } from 'react';
 import { Divider, Flex, Kbd, KbdGroup, Stack, Text, Title } from '@docouno/unica';
 import type { PreviewProps } from '../../workbench/types.js';
+import { ExampleSurface } from '../shared/example-surface.js';
 import { KeyboardViewport } from './kbd.viewport.js';
 import './kbd.examples.css';
-
-export function KbdFrame({
-  ctx,
-  children,
-}: PreviewProps & { readonly children: ReactNode }): ReactElement {
-  return (
-    <Stack
-      gap={12}
-      data-surface={ctx.surface}
-      className={
-        ctx.surface === 'overlay' ? 'kbd-study-frame unica-overlay-surface' : 'kbd-study-frame'
-      }
-    >
-      {children}
-    </Stack>
-  );
-}
 
 function KeyRow({
   label,
@@ -49,7 +33,7 @@ const keyFamilies = [
 
 export function Keycaps({ ctx }: PreviewProps): ReactElement {
   return (
-    <KbdFrame ctx={ctx}>
+    <ExampleSurface surface={ctx.surface}>
       {keyFamilies.map(({ label, keys }) => (
         <KeyRow key={label} label={label}>
           {keys.map((key) => (
@@ -59,13 +43,13 @@ export function Keycaps({ ctx }: PreviewProps): ReactElement {
           ))}
         </KeyRow>
       ))}
-    </KbdFrame>
+    </ExampleSurface>
   );
 }
 
 export function Sizing({ ctx }: PreviewProps): ReactElement {
   return (
-    <KbdFrame ctx={ctx}>
+    <ExampleSurface surface={ctx.surface}>
       <Title as="h3" size="heading-m">
         <bdi>
           Search with{' '}
@@ -112,13 +96,13 @@ export function Sizing({ ctx }: PreviewProps): ReactElement {
           </KeyRow>
         ))}
       </Flex>
-    </KbdFrame>
+    </ExampleSurface>
   );
 }
 
 export function Notation({ ctx }: PreviewProps): ReactElement {
   return (
-    <KbdFrame ctx={ctx}>
+    <ExampleSurface surface={ctx.surface}>
       <KeyRow label="Command palette · macOS">
         <KbdGroup size="s" separator="">
           <Kbd>⇧</Kbd>
@@ -170,13 +154,13 @@ export function Notation({ ctx }: PreviewProps): ReactElement {
           <Kbd>P</Kbd>
         </KbdGroup>
       </KeyRow>
-    </KbdFrame>
+    </ExampleSurface>
   );
 }
 
 export function Reflow({ ctx }: PreviewProps): ReactElement {
   return (
-    <KbdFrame ctx={ctx}>
+    <ExampleSurface surface={ctx.surface}>
       <Stack gap={8} divider={<Divider />}>
         <Flex align="center" justify="space-between" gap={8} wrap="wrap">
           <Text size="body-s">Open the palette</Text>
@@ -242,6 +226,6 @@ export function Reflow({ ctx }: PreviewProps): ReactElement {
           </KbdGroup>
         </KeyboardViewport>
       </Stack>
-    </KbdFrame>
+    </ExampleSurface>
   );
 }

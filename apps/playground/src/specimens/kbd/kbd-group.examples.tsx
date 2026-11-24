@@ -1,10 +1,10 @@
 import { Card, Kbd, KbdGroup, Stack, Text, Title } from '@docouno/unica';
+import { ExampleSurface } from '../shared/example-surface.js';
 import type { PreviewProps } from '../../workbench/types.js';
-import { KbdFrame } from './kbd.examples.js';
 
 export function GroupSizeExample({ ctx }: PreviewProps) {
   return (
-    <KbdFrame ctx={ctx}>
+    <ExampleSurface surface={ctx.surface}>
       <Stack gap={4} align="start">
         <Text size="caption-l" color="secondary">
           Medium group
@@ -23,7 +23,7 @@ export function GroupSizeExample({ ctx }: PreviewProps) {
           <Kbd size="s">K</Kbd>
         </KbdGroup>
       </Stack>
-    </KbdFrame>
+    </ExampleSurface>
   );
 }
 
@@ -31,7 +31,7 @@ export function VisibleStepsExample({ ctx }: PreviewProps) {
   const showShift = ctx.story?.controls.showShift !== false;
   const showEnter = ctx.story?.controls.showEnter !== false;
   return (
-    <KbdFrame ctx={ctx}>
+    <ExampleSurface surface={ctx.surface}>
       <Stack gap={4} align="start">
         <Text size="body-s">Selected keys</Text>
         <KbdGroup {...ctx.subject} size="s">
@@ -44,13 +44,13 @@ export function VisibleStepsExample({ ctx }: PreviewProps) {
           </Text>
         )}
       </Stack>
-    </KbdFrame>
+    </ExampleSurface>
   );
 }
 
 export function SequenceExample({ ctx }: PreviewProps) {
   return (
-    <KbdFrame ctx={ctx}>
+    <ExampleSurface surface={ctx.surface}>
       <Card size="s">
         <Stack align="start" gap={8}>
           <Text size="caption-l" color="secondary">
@@ -71,7 +71,7 @@ export function SequenceExample({ ctx }: PreviewProps) {
           </KbdGroup>
         </Stack>
       </Card>
-    </KbdFrame>
+    </ExampleSurface>
   );
 }
 

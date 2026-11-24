@@ -1,4 +1,4 @@
-import type { CSSProperties, ReactElement, ReactNode } from 'react';
+import type { CSSProperties, ReactElement } from 'react';
 import {
   ArrowRightIcon,
   BellIcon,
@@ -28,29 +28,13 @@ import {
 } from '@docouno/unica';
 import type { GlyphComponent, IconColor } from '@docouno/unica';
 import type { PreviewProps } from '../../workbench/types.js';
+import { ExampleSurface } from '../shared/example-surface.js';
 import { WideGlyph } from './icon.glyph.js';
 import './icon.examples.css';
 
-export function IconFrame({
-  ctx,
-  children,
-}: PreviewProps & { readonly children: ReactNode }): ReactElement {
-  return (
-    <Stack
-      gap={12}
-      data-surface={ctx.surface}
-      className={
-        ctx.surface === 'overlay' ? 'icon-study-frame unica-overlay-surface' : 'icon-study-frame'
-      }
-    >
-      {children}
-    </Stack>
-  );
-}
-
 export function SizeExamples({ ctx }: PreviewProps): ReactElement {
   return (
-    <IconFrame ctx={ctx}>
+    <ExampleSurface surface={ctx.surface}>
       <Flex gap={24} wrap="wrap" align="end">
         {(['s', 'm', 'l'] as const).map((size) => (
           <Stack align="center" gap={4} key={size}>
@@ -97,13 +81,13 @@ export function SizeExamples({ ctx }: PreviewProps): ReactElement {
           </Text>
         </Stack>
       </UnicaProvider>
-    </IconFrame>
+    </ExampleSurface>
   );
 }
 
 export function ShapeExamples({ ctx }: PreviewProps): ReactElement {
   return (
-    <IconFrame ctx={ctx}>
+    <ExampleSurface surface={ctx.surface}>
       <Flex gap={12} wrap="wrap" align="center">
         {(['m', 'l'] as const).map((size) => (
           <span className="icon-frame-guide" key={size}>
@@ -131,7 +115,7 @@ export function ShapeExamples({ ctx }: PreviewProps): ReactElement {
           <bdi>quarterly-release-readiness-checklist.md</bdi>
         </Text>
       </Flex>
-    </IconFrame>
+    </ExampleSurface>
   );
 }
 
@@ -173,7 +157,7 @@ function ColorList({
 
 export function ColorExamples({ ctx }: PreviewProps): ReactElement {
   return (
-    <IconFrame ctx={ctx}>
+    <ExampleSurface surface={ctx.surface}>
       <Grid columns={{ mobile: 1, tablet: 2 }} gap={16}>
         <Stack gap={12} data-icon-surface={ctx.surface}>
           <Title as="h3" size="heading-s">
@@ -190,7 +174,7 @@ export function ColorExamples({ ctx }: PreviewProps): ReactElement {
           </Stack>
         </Card>
       </Grid>
-    </IconFrame>
+    </ExampleSurface>
   );
 }
 
@@ -214,7 +198,7 @@ export function OverlayExamples({ ctx }: PreviewProps): ReactElement {
 export function TokenExample({ ctx }: PreviewProps): ReactElement {
   const enlarged = ctx.story?.controls.enlarged === true;
   return (
-    <IconFrame ctx={ctx}>
+    <ExampleSurface surface={ctx.surface}>
       <Flex
         align="center"
         gap={8}
@@ -233,7 +217,7 @@ export function TokenExample({ ctx }: PreviewProps): ReactElement {
           <bdi>Theme default outside the override</bdi>
         </Text>
       </Flex>
-    </IconFrame>
+    </ExampleSurface>
   );
 }
 
@@ -244,7 +228,7 @@ export function NameExample({ ctx }: PreviewProps): ReactElement {
   const fallback = source === 'fallback';
   const titled = source === 'title';
   return (
-    <IconFrame ctx={ctx}>
+    <ExampleSurface surface={ctx.surface}>
       <Flex gap={12} align="center">
         <Icon
           {...ctx.subject}
@@ -265,6 +249,6 @@ export function NameExample({ ctx }: PreviewProps): ReactElement {
           </Text>
         )}
       </Flex>
-    </IconFrame>
+    </ExampleSurface>
   );
 }

@@ -1,4 +1,3 @@
-import type { ReactNode } from 'react';
 import {
   Alert,
   AlertDescription,
@@ -12,28 +11,13 @@ import {
   Text,
   Title,
 } from '@docouno/unica';
+import { ExampleSurface } from '../shared/example-surface.js';
 import type { PreviewProps } from '../../workbench/types.js';
 import './code.examples.css';
 
-export function CodeFrame({ ctx, children }: PreviewProps & { readonly children: ReactNode }) {
-  return (
-    <Stack
-      gap={12}
-      data-surface={ctx.surface}
-      className={
-        ctx.surface === 'overlay'
-          ? 'code-example-frame unica-overlay-surface'
-          : 'code-example-frame'
-      }
-    >
-      {children}
-    </Stack>
-  );
-}
-
 export function WrappingExample({ ctx }: PreviewProps) {
   return (
-    <CodeFrame ctx={ctx}>
+    <ExampleSurface surface={ctx.surface}>
       <Stack gap={12} className="code-example-prose" lang="en" dir="ltr">
         <Text size="body-m">
           Open{' '}
@@ -56,13 +40,13 @@ export function WrappingExample({ ctx }: PreviewProps) {
           keeps the file name unchanged.
         </Text>
       </Stack>
-    </CodeFrame>
+    </ExampleSurface>
   );
 }
 
 export function SurfacesExample({ ctx }: PreviewProps) {
   return (
-    <CodeFrame ctx={ctx}>
+    <ExampleSurface surface={ctx.surface}>
       <Text size="body-s">
         <bdi>
           Read <Code {...ctx.subject}>Cache-Control</Code> before reusing a response.
@@ -82,7 +66,7 @@ export function SurfacesExample({ ctx }: PreviewProps) {
           </bdi>
         </Text>
       </Card>
-    </CodeFrame>
+    </ExampleSurface>
   );
 }
 
@@ -101,7 +85,7 @@ const responses = [
 
 export function MessagesExample({ ctx }: PreviewProps) {
   return (
-    <CodeFrame ctx={ctx}>
+    <ExampleSurface surface={ctx.surface}>
       {responses.map(({ status, title, header, value }) => (
         <Alert key={status} status={status} size="s" role="none">
           <AlertTitle>
@@ -118,13 +102,13 @@ export function MessagesExample({ ctx }: PreviewProps) {
           </AlertDescription>
         </Alert>
       ))}
-    </CodeFrame>
+    </ExampleSurface>
   );
 }
 
 export function BoundariesExample({ ctx }: PreviewProps) {
   return (
-    <CodeFrame ctx={ctx}>
+    <ExampleSurface surface={ctx.surface}>
       <Alert status="info" size="s" role="none">
         <AlertTitle>
           <bdi>Support receipt</bdi>
@@ -152,7 +136,7 @@ export function BoundariesExample({ ctx }: PreviewProps) {
           </Stack>
         </AlertDescription>
       </Alert>
-    </CodeFrame>
+    </ExampleSurface>
   );
 }
 
@@ -187,7 +171,7 @@ export function OverlayExample({ ctx }: PreviewProps) {
 
 export function PlainActions({ ctx }: PreviewProps) {
   return (
-    <CodeFrame ctx={ctx}>
+    <ExampleSurface surface={ctx.surface}>
       <Flex wrap="wrap" align="center" gap={12}>
         <Button asChild size="s">
           <a href="https://developer.mozilla.org/en-US/docs/Web/API/Window/fetch">
@@ -205,6 +189,6 @@ export function PlainActions({ ctx }: PreviewProps) {
           </bdi>
         </Link>
       </Flex>
-    </CodeFrame>
+    </ExampleSurface>
   );
 }

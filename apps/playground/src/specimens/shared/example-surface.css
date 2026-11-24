@@ -1,0 +1,9 @@
+.example-surface {
+  inline-size: 100%;
+  min-inline-size: 0;
+}
+
+.example-surface[data-surface='overlay'] {
+  position: relative;
+  padding: var(--surface-s-padding);
+}

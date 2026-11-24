@@ -1,5 +1,6 @@
 import { Blockquote } from '@docouno/unica';
 import { QuotesIcon } from '@phosphor-icons/react';
+import { ExampleSurface } from '../shared/example-surface.js';
 import { defineComponent } from '../../workbench/types.js';
 import { previewProps, previewText } from '../preview-code.js';
 import {
@@ -9,7 +10,6 @@ import {
   OverflowExample,
   OverlayExample,
   ReadingExample,
-  QuoteStudy,
   blockquoteSourceUrl,
   readingCode,
 } from './blockquote.examples.js';
@@ -97,7 +97,7 @@ export default defineComponent({
     },
   },
   render: ({ ctx, values: { children, attribution, citeUrl, iconLeft, iconRight, ...props } }) => (
-    <QuoteStudy ctx={ctx}>
+    <ExampleSurface surface={ctx.surface} gap={16}>
       <Blockquote
         {...ctx.subject}
         {...props}
@@ -108,7 +108,7 @@ export default defineComponent({
       >
         {children ? <bdi>{children}</bdi> : null}
       </Blockquote>
-    </QuoteStudy>
+    </ExampleSurface>
   ),
   code: ({ children, attribution, iconLeft, iconRight, ...props }) => {
     const attributes = previewProps(props, {

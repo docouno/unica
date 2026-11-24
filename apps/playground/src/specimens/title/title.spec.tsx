@@ -1,8 +1,9 @@
 import { Title } from '@docouno/unica';
+import { ExampleSurface } from '../shared/example-surface.js';
 import { defineComponent } from '../../workbench/types.js';
 import type { Constraint } from '../../workbench/types.js';
 import { previewProps, previewText } from '../preview-code.js';
-import { TextFrame } from '../text/text.examples.js';
+
 import { clampPrecedence, clampSteps, typographyControls } from '../text/typography.controls.js';
 import { BaselineExample, WrappingExample } from './title.examples.js';
 import { HeadingViewport } from './title.viewport.js';
@@ -120,11 +121,11 @@ export default defineComponent({
       </Title>
     );
     return (
-      <TextFrame ctx={ctx}>
+      <ExampleSurface surface={ctx.surface}>
         <div style={measure}>
           {unwrapped ? <HeadingViewport>{heading}</HeadingViewport> : heading}
         </div>
-      </TextFrame>
+      </ExampleSurface>
     );
   },
   code: ({ children, size, lineClamp, align, italic, ...props }) => {

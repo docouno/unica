@@ -1,13 +1,9 @@
 import { Input, Stack, Text } from '@docouno/unica';
 import type { TextSize, TextTag } from '@docouno/unica';
+import { ExampleSurface } from '../shared/example-surface.js';
 import { previewProps, previewText } from '../preview-code.js';
 import { defineComponent } from '../../workbench/types.js';
-import {
-  InheritanceExample,
-  OverflowExample,
-  SurfacesExample,
-  TextFrame,
-} from './text.examples.js';
+import { InheritanceExample, OverflowExample, SurfacesExample } from './text.examples.js';
 import { ReaderExample, SettingsExample, readerCode, settingsCode } from './text.compositions.js';
 import { clampPrecedence, typographyControls } from './typography.controls.js';
 
@@ -115,7 +111,7 @@ export default defineComponent({
     if (as === 'label' && htmlFor === 'field') {
       const fieldId = `${ctx.id}-field`;
       return (
-        <TextFrame ctx={ctx}>
+        <ExampleSurface surface={ctx.surface}>
           <Stack align="start" gap={4} style={measure}>
             <Text {...textProps} as="label" htmlFor={fieldId}>
               <bdi>{children}</bdi>
@@ -128,18 +124,18 @@ export default defineComponent({
               width="full"
             />
           </Stack>
-        </TextFrame>
+        </ExampleSurface>
       );
     }
 
     return (
-      <TextFrame ctx={ctx}>
+      <ExampleSurface surface={ctx.surface}>
         <div style={measure}>
           <Text {...textProps} as={as}>
             <bdi>{children}</bdi>
           </Text>
         </div>
-      </TextFrame>
+      </ExampleSurface>
     );
   },
   code: ({ htmlFor, children, weight, lineClamp, align, italic, ...props }) => {

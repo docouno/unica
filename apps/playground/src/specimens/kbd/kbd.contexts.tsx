@@ -1,8 +1,8 @@
 import { useId, useState } from 'react';
 import { Box, Button, Card, Flex, Input, Kbd, Stack, Text, Title, Tooltip } from '@docouno/unica';
+import { ExampleSurface } from '../shared/example-surface.js';
 import { MenuPreview } from '../../prototypes/menu/menu.proto.js';
 import type { PreviewProps } from '../../workbench/types.js';
-import { KbdFrame } from './kbd.examples.js';
 
 const documents = ['Release notes', 'Design review', 'Support handbook'];
 
@@ -15,7 +15,7 @@ export function Surfaces({ ctx }: PreviewProps) {
   );
 
   return (
-    <KbdFrame ctx={ctx}>
+    <ExampleSurface surface={ctx.surface}>
       <Text size="body-s">
         <bdi>
           Use <Kbd {...ctx.subject}>Tab</Kbd> to reach the document filter.
@@ -73,7 +73,7 @@ export function Surfaces({ ctx }: PreviewProps) {
           </Text>
         </Stack>
       </Card>
-    </KbdFrame>
+    </ExampleSurface>
   );
 }
 
@@ -128,7 +128,7 @@ export function OwnerStates({ ctx }: PreviewProps) {
   const [count, setCount] = useState(1);
   const available = removing ? count > 0 : count < documents.length;
   return (
-    <KbdFrame ctx={ctx}>
+    <ExampleSurface surface={ctx.surface}>
       <Stack gap={8} align="start">
         <Button
           variant={variant}
@@ -150,7 +150,7 @@ export function OwnerStates({ ctx }: PreviewProps) {
           </bdi>
         </Text>
       </Stack>
-    </KbdFrame>
+    </ExampleSurface>
   );
 }
 
@@ -162,7 +162,7 @@ export function ActionContext({ ctx }: PreviewProps) {
   const canSave = title !== '' && title !== saved;
 
   return (
-    <KbdFrame ctx={ctx}>
+    <ExampleSurface surface={ctx.surface}>
       <form
         onSubmit={(event) => {
           event.preventDefault();
@@ -197,7 +197,7 @@ export function ActionContext({ ctx }: PreviewProps) {
       <Text size="body-s" role="status" style={{ overflowWrap: 'anywhere' }}>
         <bdi>Saved label</bdi> · <bdi>{saved}</bdi>
       </Text>
-    </KbdFrame>
+    </ExampleSurface>
   );
 }
 

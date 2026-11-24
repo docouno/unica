@@ -1,7 +1,7 @@
-import type { ReactNode } from 'react';
 import { QuotesIcon } from '@phosphor-icons/react';
 import type { IconProps as PhosphorIconProps } from '@phosphor-icons/react';
 import { Blockquote, Card, Code, Link, Stack, Text, Title } from '@docouno/unica';
+import { ExampleSurface } from '../shared/example-surface.js';
 import type { PreviewProps } from '../../workbench/types.js';
 import './blockquote.examples.css';
 
@@ -12,25 +12,9 @@ export function OpeningQuotes(props: PhosphorIconProps) {
   return <QuotesIcon {...props} style={{ ...props.style, transform: 'rotate(180deg)' }} />;
 }
 
-export function QuoteStudy({ ctx, children }: PreviewProps & { readonly children: ReactNode }) {
-  return (
-    <Stack
-      gap={16}
-      data-surface={ctx.surface}
-      className={
-        ctx.surface === 'overlay'
-          ? 'quote-example-frame unica-overlay-surface'
-          : 'quote-example-frame'
-      }
-    >
-      {children}
-    </Stack>
-  );
-}
-
 export function AnatomyExample({ ctx }: PreviewProps) {
   return (
-    <QuoteStudy ctx={ctx}>
+    <ExampleSurface surface={ctx.surface} gap={16}>
       <Blockquote {...ctx.subject}>
         <bdi>Make the important thing easy to find.</bdi>
       </Blockquote>
@@ -52,13 +36,13 @@ export function AnatomyExample({ ctx }: PreviewProps) {
       >
         <bdi>Let the reader’s next question shape the next paragraph.</bdi>
       </Blockquote>
-    </QuoteStudy>
+    </ExampleSurface>
   );
 }
 
 export function ContentExample({ ctx }: PreviewProps) {
   return (
-    <QuoteStudy ctx={ctx}>
+    <ExampleSurface surface={ctx.surface} gap={16}>
       <Blockquote {...ctx.subject} attribution={<cite>Contribution guide</cite>}>
         <p>
           <bdi>
@@ -103,13 +87,13 @@ export function ContentExample({ ctx }: PreviewProps) {
           <bdi>We kept the opening and added a worked example.</bdi>
         </p>
       </Blockquote>
-    </QuoteStudy>
+    </ExampleSurface>
   );
 }
 
 export function OverflowExample({ ctx }: PreviewProps) {
   return (
-    <QuoteStudy ctx={ctx}>
+    <ExampleSurface surface={ctx.surface} gap={16}>
       <Blockquote
         {...ctx.subject}
         iconLeft={OpeningQuotes}
@@ -152,7 +136,7 @@ export function OverflowExample({ ctx }: PreviewProps) {
           is quoted from another source.
         </bdi>
       </Blockquote>
-    </QuoteStudy>
+    </ExampleSurface>
   );
 }
 
@@ -187,7 +171,7 @@ export function OverlayExample({ ctx }: PreviewProps) {
 
 export function ReadingExample({ ctx }: PreviewProps) {
   return (
-    <QuoteStudy ctx={ctx}>
+    <ExampleSurface surface={ctx.surface} gap={16}>
       <Text size="body-s">
         <bdi>The field team took two water-level readings after the rain.</bdi>
       </Text>
@@ -209,7 +193,7 @@ export function ReadingExample({ ctx }: PreviewProps) {
           <bdi>Both markers were dry during the morning survey.</bdi>
         </Blockquote>
       </Card>
-    </QuoteStudy>
+    </ExampleSurface>
   );
 }
 

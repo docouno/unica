@@ -1,11 +1,11 @@
 import { useId, useState } from 'react';
 import { Divider, Input, Stack, Text, Title } from '@docouno/unica';
+import { ExampleSurface } from '../shared/example-surface.js';
 import type { PreviewProps } from '../../workbench/types.js';
-import { TextFrame } from './text.examples.js';
 
 export function ReaderExample({ ctx }: PreviewProps) {
   return (
-    <TextFrame ctx={ctx}>
+    <ExampleSurface surface={ctx.surface}>
       <article dir="auto" style={{ maxInlineSize: '60ch' }}>
         <Stack gap={12}>
           <Title as="h2" size="heading-m">
@@ -24,7 +24,7 @@ export function ReaderExample({ ctx }: PreviewProps) {
           </Text>
         </Stack>
       </article>
-    </TextFrame>
+    </ExampleSurface>
   );
 }
 
@@ -56,7 +56,7 @@ export function SettingsExample({ ctx }: PreviewProps) {
   const [name, setName] = useState('Docs team');
 
   return (
-    <TextFrame ctx={ctx}>
+    <ExampleSurface surface={ctx.surface}>
       <Stack gap={4} style={{ maxInlineSize: '28rem' }}>
         <Text {...ctx.subject} as="label" htmlFor={fieldId} weight="medium">
           Display name
@@ -80,7 +80,7 @@ export function SettingsExample({ ctx }: PreviewProps) {
           By <bdi>{name.trim() || 'Unnamed author'}</bdi>
         </Text>
       </Stack>
-    </TextFrame>
+    </ExampleSurface>
   );
 }
 

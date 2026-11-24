@@ -1,4 +1,5 @@
 import { Kbd } from '@docouno/unica';
+import { ExampleSurface } from '../shared/example-surface.js';
 import { defineComponent } from '../../workbench/types.js';
 import { previewProps, previewText } from '../preview-code.js';
 import {
@@ -8,7 +9,7 @@ import {
   Surfaces,
   actionsCode,
 } from './kbd.contexts.js';
-import { KbdFrame, Keycaps, Notation, Reflow, Sizing } from './kbd.examples.js';
+import { Keycaps, Notation, Reflow, Sizing } from './kbd.examples.js';
 import { KeyboardViewport } from './kbd.viewport.js';
 
 export default defineComponent({
@@ -54,13 +55,13 @@ export default defineComponent({
     },
   ],
   render: ({ ctx, values: { children, label, size } }) => (
-    <KbdFrame ctx={ctx}>
+    <ExampleSurface surface={ctx.surface}>
       <KeyboardViewport label="Key preview">
         <Kbd {...ctx.subject} label={label || undefined} size={size}>
           {children}
         </Kbd>
       </KeyboardViewport>
-    </KbdFrame>
+    </ExampleSurface>
   ),
   code: ({ children, ...props }) =>
     `<Kbd${previewProps(props, { size: 'inherit', label: '' })}>${previewText(children)}</Kbd>`,

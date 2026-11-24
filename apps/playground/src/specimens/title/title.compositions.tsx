@@ -1,11 +1,11 @@
 import { useId } from 'react';
 import { Button, Divider, Stack, Text, Title } from '@docouno/unica';
+import { ExampleSurface } from '../shared/example-surface.js';
 import type { PreviewProps } from '../../workbench/types.js';
-import { TextFrame } from '../text/text.examples.js';
 
 export function AuthExample({ ctx }: PreviewProps) {
   return (
-    <TextFrame ctx={ctx}>
+    <ExampleSurface surface={ctx.surface}>
       <header style={{ maxInlineSize: '32.5rem' }}>
         <Stack gap={8}>
           <Title {...ctx.subject} textWrap="balance">
@@ -16,7 +16,7 @@ export function AuthExample({ ctx }: PreviewProps) {
           </Text>
         </Stack>
       </header>
-    </TextFrame>
+    </ExampleSurface>
   );
 }
 
@@ -38,7 +38,7 @@ export function SignInIntroduction() {
 
 export function EditorExample({ ctx }: PreviewProps) {
   return (
-    <TextFrame ctx={ctx}>
+    <ExampleSurface surface={ctx.surface}>
       <article style={{ maxInlineSize: '47.5rem' }}>
         <Stack gap={16}>
           <Title textWrap="balance">
@@ -57,7 +57,7 @@ export function EditorExample({ ctx }: PreviewProps) {
           </Stack>
         </Stack>
       </article>
-    </TextFrame>
+    </ExampleSurface>
   );
 }
 
@@ -84,7 +84,7 @@ export function DrawerExample({ ctx }: PreviewProps) {
 
   return (
     <div style={{ inlineSize: 'min(100%, 32.5rem)' }}>
-      <TextFrame ctx={ctx}>
+      <ExampleSurface surface={ctx.surface}>
         <aside aria-labelledby={headingId}>
           <Stack gap={12}>
             <Title {...ctx.subject} id={headingId} as="h2" size="heading-xl" textWrap="balance">
@@ -99,7 +99,7 @@ export function DrawerExample({ ctx }: PreviewProps) {
             </Text>
           </Stack>
         </aside>
-      </TextFrame>
+      </ExampleSurface>
     </div>
   );
 }
@@ -130,7 +130,7 @@ export function ModalExample({ ctx }: PreviewProps) {
   const headingId = dialogId + '-heading';
 
   return (
-    <TextFrame ctx={ctx}>
+    <ExampleSurface surface={ctx.surface}>
       <Stack gap={8} align="start" style={{ inlineSize: '100%', containerType: 'inline-size' }}>
         <Title {...ctx.subject} as="h2" size="heading-m">
           <bdi>Workspace invitations</bdi>
@@ -175,7 +175,7 @@ export function ModalExample({ ctx }: PreviewProps) {
           </Stack>
         </dialog>
       </Stack>
-    </TextFrame>
+    </ExampleSurface>
   );
 }
 

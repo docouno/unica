@@ -1,27 +1,9 @@
 import type { ReactElement, ReactNode } from 'react';
 import { Card, Flex, Link, Stack, Text } from '@docouno/unica';
 import type { TextColor } from '@docouno/unica';
+import { ExampleSurface } from '../shared/example-surface.js';
 import type { PreviewProps } from '../../workbench/types.js';
 import './text.examples.css';
-
-export function TextFrame({
-  ctx,
-  children,
-}: PreviewProps & { readonly children: ReactNode }): ReactElement {
-  return (
-    <Stack
-      gap={12}
-      data-surface={ctx.surface}
-      className={
-        ctx.surface === 'overlay'
-          ? 'text-example-frame unica-overlay-surface'
-          : 'text-example-frame'
-      }
-    >
-      {children}
-    </Stack>
-  );
-}
 
 function Sample({ label, children }: { readonly label: string; readonly children: ReactNode }) {
   return (
@@ -36,7 +18,7 @@ function Sample({ label, children }: { readonly label: string; readonly children
 
 export function InheritanceExample({ ctx }: PreviewProps): ReactElement {
   return (
-    <TextFrame ctx={ctx}>
+    <ExampleSurface surface={ctx.surface}>
       <Sample label="Semantic emphasis">
         <Text>
           <bdi>
@@ -75,7 +57,7 @@ export function InheritanceExample({ ctx }: PreviewProps): ReactElement {
           </bdi>
         </Text>
       </Sample>
-    </TextFrame>
+    </ExampleSurface>
   );
 }
 
@@ -149,7 +131,7 @@ function ColorSet({
 
 export function SurfacesExample({ ctx }: PreviewProps): ReactElement {
   return (
-    <TextFrame ctx={ctx}>
+    <ExampleSurface surface={ctx.surface}>
       {ctx.surface === 'overlay' ? (
         <ColorSet title="Overlay surface" subject={ctx.subject} />
       ) : (
@@ -162,7 +144,7 @@ export function SurfacesExample({ ctx }: PreviewProps): ReactElement {
           </Card>
         </Flex>
       )}
-    </TextFrame>
+    </ExampleSurface>
   );
 }
 
@@ -171,7 +153,7 @@ const reviewNote =
 
 export function OverflowExample({ ctx }: PreviewProps): ReactElement {
   return (
-    <TextFrame ctx={ctx}>
+    <ExampleSurface surface={ctx.surface}>
       <Stack gap={12} className="text-example-measure">
         <Sample label="Natural wrapping">
           <Text>
@@ -209,6 +191,6 @@ export function OverflowExample({ ctx }: PreviewProps): ReactElement {
           </Text>
         </Sample>
       </Stack>
-    </TextFrame>
+    </ExampleSurface>
   );
 }

@@ -8,15 +8,15 @@ import {
   TextItalicIcon,
 } from '@phosphor-icons/react';
 import { Button, Flex, Icon, IconButton, Input, Stack, Text } from '@docouno/unica';
+import { ExampleSurface } from '../shared/example-surface.js';
 import type { PreviewProps } from '../../workbench/types.js';
-import { IconFrame } from './icon.examples.js';
 
 export function EditorExample({ ctx }: PreviewProps) {
   const [bold, setBold] = useState(false);
   const [italic, setItalic] = useState(false);
 
   return (
-    <IconFrame ctx={ctx}>
+    <ExampleSurface surface={ctx.surface}>
       <Flex role="group" aria-label="Text formatting" gap={4} wrap="wrap">
         <IconButton
           icon={TextBIcon}
@@ -49,7 +49,7 @@ export function EditorExample({ ctx }: PreviewProps) {
       <Text size="body-l" weight={bold ? 'bold' : 'regular'} italic={italic}>
         <Icon {...ctx.subject} icon={FileTextIcon} usage="slot" /> <bdi>Release notes</bdi>
       </Text>
-    </IconFrame>
+    </ExampleSurface>
   );
 }
 
@@ -89,7 +89,7 @@ export function ConnectorExample({ ctx }: PreviewProps) {
   const mirroredTitle = sync.paused ? sync.snapshot : title;
 
   return (
-    <IconFrame ctx={ctx}>
+    <ExampleSurface surface={ctx.surface}>
       <Stack gap={4}>
         <Text as="label" size="body-s" htmlFor={fieldId}>
           Source title
@@ -124,7 +124,7 @@ export function ConnectorExample({ ctx }: PreviewProps) {
           {sync.paused ? 'Resume sync' : 'Pause sync'}
         </Button>
       </Flex>
-    </IconFrame>
+    </ExampleSurface>
   );
 }
 

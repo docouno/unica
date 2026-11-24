@@ -1,13 +1,3 @@
-.text-example-frame {
-  inline-size: 100%;
-  min-inline-size: 0;
-}
-
-.text-example-frame[data-surface='overlay'] {
-  position: relative;
-  padding: var(--surface-s-padding);
-}
-
 .text-example-palette {
   flex: 1 1 16rem;
   min-inline-size: 0;

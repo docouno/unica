@@ -1,5 +1,6 @@
 import { Kbd, KbdGroup } from '@docouno/unica';
 import type { ReactElement } from 'react';
+import { ExampleSurface } from '../shared/example-surface.js';
 import { defineComponent } from '../../workbench/types.js';
 import type { Values } from '../../workbench/types.js';
 import { previewProps, previewText } from '../preview-code.js';
@@ -9,7 +10,7 @@ import {
   VisibleStepsExample,
   sequenceCode,
 } from './kbd-group.examples.js';
-import { KbdFrame } from './kbd.examples.js';
+
 import { KeyboardViewport } from './kbd.viewport.js';
 
 type Step = string | readonly string[];
@@ -90,13 +91,13 @@ export default defineComponent({
     },
   ],
   render: ({ ctx, values: { children, ...props } }) => (
-    <KbdFrame ctx={ctx}>
+    <ExampleSurface surface={ctx.surface}>
       <KeyboardViewport label="Shortcut preview">
         <KbdGroup {...ctx.subject} {...props}>
           {examples[children].map(renderStep)}
         </KbdGroup>
       </KeyboardViewport>
-    </KbdFrame>
+    </ExampleSurface>
   ),
   code: ({ children, ...props }) => groupCode(examples[children], props),
   states: [

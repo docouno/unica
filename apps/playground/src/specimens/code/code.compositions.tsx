@@ -1,11 +1,11 @@
 import { useId, useState } from 'react';
 import { Button, Code, Flex, Link, Text, Title } from '@docouno/unica';
+import { ExampleSurface } from '../shared/example-surface.js';
 import type { PreviewProps } from '../../workbench/types.js';
-import { CodeFrame } from './code.examples.js';
 
 export function ReadingComposition({ ctx }: PreviewProps) {
   return (
-    <CodeFrame ctx={ctx}>
+    <ExampleSurface surface={ctx.surface}>
       <Title as="h3" size="heading-m">
         <bdi>
           A safer default for <Code {...ctx.subject}>retry()</Code>
@@ -29,7 +29,7 @@ export function ReadingComposition({ ctx }: PreviewProps) {
           The <Code>onRetry</Code> callback receives the attempt number.
         </bdi>
       </Text>
-    </CodeFrame>
+    </ExampleSurface>
   );
 }
 
@@ -63,7 +63,7 @@ export function ActionsComposition({ ctx }: PreviewProps) {
   const configId = useId();
 
   return (
-    <CodeFrame ctx={ctx}>
+    <ExampleSurface surface={ctx.surface}>
       <Flex align="center" gap={8} wrap="wrap">
         <Button
           size="s"
@@ -98,7 +98,7 @@ export function ActionsComposition({ ctx }: PreviewProps) {
           enables the full family of strict type checks.
         </bdi>
       </Text>
-    </CodeFrame>
+    </ExampleSurface>
   );
 }
 
