@@ -7,3 +7,9 @@
   position: relative;
   padding: var(--surface-s-padding);
 }
+
+/* Keep the demonstrated layout's full width; the stage gutter holds its panel inset. */
+.example-surface[data-sizing='content-box'] {
+  box-sizing: content-box;
+  flex: none;
+}

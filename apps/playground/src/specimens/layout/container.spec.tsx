@@ -1,5 +1,6 @@
 import { Container, Stack, Text, Title } from '@docouno/unica';
 import { defineComponent } from '../../workbench/types.js';
+import { withOverlaySurface } from '../shared/with-overlay-surface.js';
 import { choiceProp, spacingValues, viewportNote } from './layout.options.js';
 import './layout.examples.css';
 
@@ -36,7 +37,7 @@ export default defineComponent({
       description: 'Center the column when space is available. False aligns it to inline start.',
     },
   },
-  render: ({ ctx, values }) => (
+  render: withOverlaySurface(({ ctx, values }) => (
     <div className="layout-example layout-container-frame">
       <Container
         {...ctx.subject}
@@ -49,7 +50,7 @@ export default defineComponent({
         </Text>
       </Container>
     </div>
-  ),
+  )),
   code: (_, attributes) => `<Container${attributes}>
   <Text as="span" size="body-s">Document content</Text>
 </Container>`,
@@ -77,7 +78,7 @@ export default defineComponent({
       mode: 'pinned',
       caption:
         'Both columns fill a narrow frame. When more than 720px is available, the first stays against the right edge and the second has equal margins.',
-      render: ({ ctx }) => (
+      render: withOverlaySurface(({ ctx }) => (
         <div className="layout-cases" dir="rtl">
           <div className="layout-example layout-container-frame">
             <Container {...ctx.subject} size="s" centered={false}>
@@ -94,7 +95,7 @@ export default defineComponent({
             </Container>
           </div>
         </div>
-      ),
+      )),
     },
     {
       id: 'narrow-gutter',
@@ -104,7 +105,7 @@ export default defineComponent({
       caption:
         'The two 16px gutters fit inside the column, even when its frame narrows below 360px.',
       width: 360,
-      render: ({ ctx }) => (
+      render: withOverlaySurface(({ ctx }) => (
         <div className="layout-example layout-container-frame">
           <Container {...ctx.subject} size="l" gutter={16}>
             <Text as="span" size="body-s" className="layout-demo-tile">
@@ -112,7 +113,7 @@ export default defineComponent({
             </Text>
           </Container>
         </div>
-      ),
+      )),
     },
   ],
   compositions: [
@@ -122,22 +123,24 @@ export default defineComponent({
       mode: 'pinned',
       caption:
         'The reading column stops at 720px. Its inline gutter grows from 8px to 24px at the tablet viewport breakpoint.',
-      render: ({ ctx }) => (
+      render: withOverlaySurface(({ ctx }) => (
         <div className="layout-example layout-container-frame">
           <Container {...ctx.subject} size="s" gutter={{ mobile: 8, tablet: 24 }}>
             <Stack gap={8}>
               <Title as="h3" size="heading-s">
                 Release notes
               </Title>
-              <Text size="body-s">Review changes to the publishing workflow.</Text>
+              <Text size="body-s">
+                <bdi>Review changes to the publishing workflow.</bdi>
+              </Text>
             </Stack>
           </Container>
         </div>
-      ),
+      )),
       code: `<Container size="s" gutter={{ mobile: 8, tablet: 24 }}>
   <Stack gap={8}>
     <Title as="h3" size="heading-s">Release notes</Title>
-    <Text size="body-s">Review changes to the publishing workflow.</Text>
+    <Text size="body-s"><bdi>Review changes to the publishing workflow.</bdi></Text>
   </Stack>
 </Container>`,
     },

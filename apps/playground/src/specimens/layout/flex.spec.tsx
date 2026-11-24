@@ -1,5 +1,6 @@
 import { Flex, Text } from '@docouno/unica';
 import { defineComponent } from '../../workbench/types.js';
+import { withOverlaySurface } from '../shared/with-overlay-surface.js';
 import { RecordActions, ReversedFocusOrder, recordActionsCode } from './flex.examples.js';
 import { LayoutExample } from './layout.examples.js';
 import {
@@ -78,7 +79,7 @@ export default defineComponent({
     ),
     gap: choiceProp(spacingValues, '0', 'Space between items and lines.', 'Responsive<Spacing>'),
   },
-  render: ({ ctx, values }) => (
+  render: withOverlaySurface(({ ctx, values }) => (
     <LayoutExample>
       <Flex
         {...ctx.subject}
@@ -93,7 +94,7 @@ export default defineComponent({
         <FlowItems />
       </Flex>
     </LayoutExample>
-  ),
+  )),
   code: (_, attributes) => `<Flex${attributes} style={{ minBlockSize: '6rem' }}>
   ${flowItemsCode}
 </Flex>`,
@@ -130,13 +131,13 @@ export default defineComponent({
       caption:
         'Items move to the next line as soon as their widths and the 16px gap exceed the row.',
       width: 168,
-      render: ({ ctx }) => (
+      render: withOverlaySurface(({ ctx }) => (
         <LayoutExample>
           <Flex {...ctx.subject} gap={16} wrap="wrap" className="layout-flow">
             <FlowItems />
           </Flex>
         </LayoutExample>
-      ),
+      )),
     },
     {
       id: 'source-order',
@@ -145,7 +146,7 @@ export default defineComponent({
       mode: 'live',
       caption: 'Tab reaches Draft, In review, and Ready in that order.',
       reset: true,
-      render: ReversedFocusOrder,
+      render: withOverlaySurface(ReversedFocusOrder),
     },
   ],
   compositions: [
@@ -155,7 +156,7 @@ export default defineComponent({
       mode: 'live',
       caption:
         'Open the record or download the same text. When the actions wrap, Download follows Open record.',
-      render: RecordActions,
+      render: withOverlaySurface(RecordActions),
       code: recordActionsCode,
     },
   ],

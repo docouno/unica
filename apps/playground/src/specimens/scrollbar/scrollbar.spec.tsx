@@ -1,4 +1,5 @@
 import { defineComponent } from '../../workbench/types.js';
+import { withOverlaySurface } from '../shared/with-overlay-surface.js';
 import {
   AxesExample,
   OverflowExample,
@@ -57,7 +58,7 @@ export default defineComponent({
       description: 'Report the scroll owner’s native event in the action log.',
     },
   },
-  render: ScrollbarPlayground,
+  render: withOverlaySurface(ScrollbarPlayground),
   code: scrollbarPlaygroundCode,
   states: [
     {
@@ -99,7 +100,7 @@ export default defineComponent({
       kind: 'behavior',
       controls: { allTopics: { kind: 'boolean', label: 'Show all topics', default: false } },
       reset: true,
-      render: OverflowExample,
+      render: withOverlaySurface(OverflowExample),
     },
     {
       id: 'axes',
@@ -120,7 +121,7 @@ export default defineComponent({
       surface: 'base',
       caption:
         'The guide title and topic count stay in view while the named content region scrolls by wheel, touch, or keyboard.',
-      render: ReadingComposition,
+      render: withOverlaySurface(ReadingComposition),
       code: readingCompositionCode,
     },
   ],

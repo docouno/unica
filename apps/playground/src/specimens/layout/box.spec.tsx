@@ -1,5 +1,6 @@
 import { Box, Stack, Text, Title } from '@docouno/unica';
 import { defineComponent } from '../../workbench/types.js';
+import { withOverlaySurface } from '../shared/with-overlay-surface.js';
 import { LayoutExample } from './layout.examples.js';
 import { choiceProp, spacingOptions, viewportNote } from './layout.options.js';
 
@@ -89,7 +90,7 @@ export default defineComponent({
       reason: 'Inline-start padding takes priority over the inline axis at that edge.',
     },
   ],
-  render: ({ ctx, values }) => (
+  render: withOverlaySurface(({ ctx, values }) => (
     <LayoutExample>
       <div>
         Start{' '}
@@ -120,7 +121,7 @@ export default defineComponent({
         End
       </div>
     </LayoutExample>
-  ),
+  )),
   code: (_, attributes) => `<div>
   Start{' '}
   <Box${attributes}><Text as="span" size="body-s">Content</Text></Box>{' '}
@@ -151,13 +152,13 @@ export default defineComponent({
       kind: 'content',
       mode: 'pinned',
       caption: 'Block padding stays at 16. Inline padding uses 8 except for 0 at inline start.',
-      render: ({ ctx }) => (
+      render: withOverlaySurface(({ ctx }) => (
         <LayoutExample>
           <Box {...ctx.subject} padding={16} paddingInline={8} paddingInlineStart={0}>
             <Box className="layout-outline">Nested Box</Box>
           </Box>
         </LayoutExample>
-      ),
+      )),
     },
   ],
   compositions: [
@@ -166,20 +167,22 @@ export default defineComponent({
       title: 'Checklist section',
       mode: 'pinned',
       caption: 'One padding value gives the heading and its instructions the same inset.',
-      render: ({ ctx }) => (
+      render: withOverlaySurface(({ ctx }) => (
         <Box {...ctx.subject} as="section" padding={24} aria-labelledby={ctx.id}>
           <Stack gap={8}>
             <Title id={ctx.id} as="h3" size="heading-s">
               Release checklist
             </Title>
-            <Text size="body-s">Review the changes and confirm a release date.</Text>
+            <Text size="body-s">
+              <bdi>Review the changes and confirm a release date.</bdi>
+            </Text>
           </Stack>
         </Box>
-      ),
+      )),
       code: `<Box as="section" padding={24} aria-labelledby="release-checklist">
   <Stack gap={8}>
     <Title id="release-checklist" as="h3" size="heading-s">Release checklist</Title>
-    <Text size="body-s">Review the changes and confirm a release date.</Text>
+    <Text size="body-s"><bdi>Review the changes and confirm a release date.</bdi></Text>
   </Stack>
 </Box>`,
     },
@@ -189,7 +192,7 @@ export default defineComponent({
       mode: 'pinned',
       caption:
         'Use main for the page root. The preview uses a named section inside the existing main landmark.',
-      render: ({ ctx }) => (
+      render: withOverlaySurface(({ ctx }) => (
         <Box
           {...ctx.subject}
           as="section"
@@ -203,15 +206,17 @@ export default defineComponent({
             <Title id={ctx.id} as="h2" size="heading-m">
               What changed
             </Title>
-            <Text size="body-s">A record of changes in each release.</Text>
+            <Text size="body-s">
+              <bdi>A record of changes in each release.</bdi>
+            </Text>
           </Stack>
         </Box>
-      ),
+      )),
       code: `<Box as="main" padding={{ mobile: 16, desktop: 32 }} aria-labelledby="release-title">
   <Stack gap={8}>
     <Text size="caption-l" color="muted">Release notes</Text>
     <Title id="release-title" as="h1" size="heading-m">What changed</Title>
-    <Text size="body-s">A record of changes in each release.</Text>
+    <Text size="body-s"><bdi>A record of changes in each release.</bdi></Text>
   </Stack>
 </Box>`,
     },

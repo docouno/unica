@@ -1,6 +1,7 @@
 import { Fragment } from 'react';
 import { Divider, Stack, Text } from '@docouno/unica';
 import { defineComponent } from '../../workbench/types.js';
+import { withOverlaySurface } from '../shared/with-overlay-surface.js';
 import { LayoutExample } from './layout.examples.js';
 import {
   alignOptions,
@@ -55,7 +56,7 @@ export default defineComponent({
       ],
     },
   },
-  render: ({ ctx, values }) => (
+  render: withOverlaySurface(({ ctx, values }) => (
     <LayoutExample>
       <Stack
         {...ctx.subject}
@@ -78,7 +79,7 @@ export default defineComponent({
         </Fragment>
       </Stack>
     </LayoutExample>
-  ),
+  )),
   code: (_, attributes) => `import { Fragment } from 'react';
 
 <Stack${attributes}>
@@ -120,7 +121,7 @@ export default defineComponent({
       mode: 'pinned',
       caption:
         'The empty child takes no space. Zero counts as one child and the fragment contributes two, giving four items and three separators.',
-      render: NormalizedChildren,
+      render: withOverlaySurface(NormalizedChildren),
     },
     {
       id: 'divider-toggle',
@@ -130,7 +131,7 @@ export default defineComponent({
       caption: 'Edit the project name, then toggle dividers. The input keeps its value.',
       controls: { showDividers: { kind: 'boolean', label: 'Show dividers', default: true } },
       reset: true,
-      render: DividerToggle,
+      render: withOverlaySurface(DividerToggle),
     },
   ],
   compositions: [
@@ -140,7 +141,7 @@ export default defineComponent({
       mode: 'live',
       caption:
         'The links lead to three sections of the layout guide. Each divider separates two topics.',
-      render: HelpTopics,
+      render: withOverlaySurface(HelpTopics),
       code: helpTopicsCode,
     },
   ],

@@ -1,5 +1,6 @@
 import { Box, Card, Grid, GridItem, Text } from '@docouno/unica';
 import { defineComponent } from '../../workbench/types.js';
+import { withOverlaySurface } from '../shared/with-overlay-surface.js';
 import { LayoutExample } from './layout.examples.js';
 import { choiceProp, responsiveTracksType, trackOptions, viewportNote } from './layout.options.js';
 
@@ -44,7 +45,7 @@ export default defineComponent({
     affects: spanTargets,
     reason: 'Choose either a named area or a column span.',
   })),
-  render: ({ ctx, values }) => {
+  render: withOverlaySurface(({ ctx, values }) => {
     const itemProps =
       values.area === 'None' ? { span: spanOptions[values.span] } : { area: values.area };
     return (
@@ -63,7 +64,7 @@ export default defineComponent({
         </Grid>
       </LayoutExample>
     );
-  },
+  }),
   code: ({ area }, attributes) => {
     const map = area === 'None' ? '' : ` areas={${JSON.stringify(placement)}}`;
     return `<Grid columns={12} gap={4}${map}>
@@ -96,7 +97,7 @@ export default defineComponent({
       mode: 'live',
       caption:
         'At a viewport width of 1024px, the lead grows from one track to two and moves Details to the third track.',
-      render: ({ ctx }) => (
+      render: withOverlaySurface(({ ctx }) => (
         <LayoutExample>
           <Grid columns={3} gap={8}>
             <GridItem {...ctx.subject} span={{ desktop: 2 }} className="layout-cell">
@@ -111,7 +112,7 @@ export default defineComponent({
             </GridItem>
           </Grid>
         </LayoutExample>
-      ),
+      )),
     },
   ],
   compositions: [
@@ -121,7 +122,7 @@ export default defineComponent({
       mode: 'pinned',
       caption:
         'The featured release occupies two of the three columns. Its history summary takes the remaining column.',
-      render: ({ ctx }) => (
+      render: withOverlaySurface(({ ctx }) => (
         <Grid columns={3} gap={8}>
           <GridItem {...ctx.subject} span={2}>
             <Card size="s">
@@ -136,7 +137,7 @@ export default defineComponent({
             </Card>
           </GridItem>
         </Grid>
-      ),
+      )),
       code: `import '@docouno/unica/styles.css';
 import { Card, Grid, GridItem, Text } from '@docouno/unica';
 

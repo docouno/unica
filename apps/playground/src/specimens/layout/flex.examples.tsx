@@ -38,7 +38,7 @@ export function ReversedFocusOrder({ ctx }: PreviewProps) {
           ))}
         </Flex>
         <Text role="status" size="body-s" color="secondary">
-          {stage?.requirement ?? 'Choose a stage to read its description.'}
+          <bdi>{stage?.requirement ?? 'Choose a stage to read its description.'}</bdi>
         </Text>
       </Stack>
     </LayoutExample>
@@ -75,7 +75,7 @@ export function RecordActions({ ctx }: PreviewProps) {
         </Button>
       </Flex>
       <Text id={recordId} hidden={!open} size="body-s">
-        {record}
+        <bdi>{record}</bdi>
       </Text>
     </Stack>
   );
@@ -103,7 +103,7 @@ export function RecordActions() {
           </a>
         </Button>
       </Flex>
-      <Text id={recordId} hidden={!open} size="body-s">{record}</Text>
+      <Text id={recordId} hidden={!open} size="body-s"><bdi>{record}</bdi></Text>
     </Stack>
   );
 }`;

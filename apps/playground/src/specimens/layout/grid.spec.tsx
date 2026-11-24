@@ -1,6 +1,7 @@
 import { Box, Card, Container, Grid, GridItem, Text } from '@docouno/unica';
 import type { PreviewProps } from '../../workbench/types.js';
 import { defineComponent } from '../../workbench/types.js';
+import { withOverlaySurface } from '../shared/with-overlay-surface.js';
 import { LayoutExample } from './layout.examples.js';
 import {
   choiceProp,
@@ -129,7 +130,7 @@ export default defineComponent({
       reason: 'The workspace map has three tracks. Omit columns to infer the count, or use 3.',
     },
   ],
-  render: ({ ctx, values }) => (
+  render: withOverlaySurface(({ ctx, values }) => (
     <Box className="layout-example" style={{ overflowX: 'auto' }}>
       <Grid
         {...ctx.subject}
@@ -151,7 +152,7 @@ export default defineComponent({
         ))}
       </Grid>
     </Box>
-  ),
+  )),
   code: ({ areas }, attributes) => {
     const items = markers.map(({ area, label }) => {
       const placement = areas === 'None' ? '' : ` area="${area}"`;
@@ -192,7 +193,7 @@ export default defineComponent({
       mode: 'live',
       caption:
         'The outer grid moves from one to two to four columns at viewport widths of 768 and 1440px. The inner grid keeps Notes and History in one column.',
-      render: NestedGrid,
+      render: withOverlaySurface(NestedGrid),
     },
     {
       id: 'workspace-map',
@@ -201,7 +202,7 @@ export default defineComponent({
       mode: 'pinned',
       caption:
         'Topics spans two rows, and Notes spans two columns. The unassigned Index fills the open cell beside History.',
-      render: WorkspaceMap,
+      render: withOverlaySurface(WorkspaceMap),
     },
   ],
   compositions: [
@@ -211,7 +212,7 @@ export default defineComponent({
       mode: 'live',
       caption:
         'Queue totals stay in reading order as the overview switches from one column to two at 768px and three at 1024px.',
-      render: ResponsiveOverview,
+      render: withOverlaySurface(ResponsiveOverview),
       code: `import '@docouno/unica/styles.css';
 import { Card, Container, Grid, GridItem, Text } from '@docouno/unica';
 
