@@ -39,9 +39,10 @@ The row uses immediate state changes at every motion preference. There is no sli
 
 ## Inspect the reference
 
-- **Control sizes** and **Numbered windows** start with comparable cases. All rows can be stepped, including the five-digit range.
-- **Pointer, focus and boundaries** has a pinned comparison and a live two-page row. **Compact in narrow columns** shows the compact equivalent, long labels and keyboard behavior at each edge.
-- **Collection footer** and **Inside a floating surface** show the same live list and footer in the page flow and in an open popover. The range and list update together. The list reserves its three-row space on the shorter last page so the footer stays in place. The base examples also show a one-page collection and an empty collection. **Addressable pages** uses real fragment links and browser history.
+- **Control sizes** compares the automatic, numbered and compact layouts in three sizes. **Numbered windows** compares the initial page with the collection total, including a collection with a single page.
+- **Pointer and focus states** pins interaction appearances. **Keyboard focus at the boundaries** lets you operate both numbered and compact controls with Enter or Space. **Compact in narrow columns** shows how a narrow host handles a five-digit total. Explore the seven- and eight-page thresholds and the start, middle and end of a larger collection in **Numbered window edges**.
+- **Collection footer** and **Inside a floating surface** use the same documents and footer. The result range changes with the list. The list reserves three rows on the shorter last page so the footer stays in place. The composition also shows a one-page collection and an empty collection.
+- **Addressable pages** opens dated field notes with ordinary links. Each destination has its own URL. Opening another tab, reloading or using browser history restores the corresponding entry.
 - In Folio's **Document Collection & Date Filter**, Next changes the table or cards and the result range. Tier-0 and Verified reset the page. Drafts shows the empty result. The table checkbox acts on its current page and prior selections remain available across pages. See the [Folio composition](../../../../../docs/compositions/folio.md).
 
-The preview provides local state, native fragment navigation and immediate boundary and compact-switch focus examples. The library implementation owns router integration, server rendering, localization, full focus restoration across external changes and the public API.
+The preview provides local state, native document navigation and immediate boundary and compact-switch focus examples. The library implementation owns router integration, server rendering, localization, full focus restoration across external changes and the public API.

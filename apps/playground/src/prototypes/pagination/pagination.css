@@ -215,12 +215,17 @@ button.pagination-cell-proto[aria-current='page'] {
     color: GrayText;
   }
 
+  /* Chromium can paint a transparent resting edge as ButtonText in forced colors. */
+  .pagination-cell-proto:not([aria-current], :disabled, [aria-disabled]) {
+    border-style: none;
+  }
+
   .pagination-cell-proto:not([aria-current], :disabled, [aria-disabled]):is(
       :hover,
       :active,
       [data-preview='hover'],
       [data-preview='pressed']
     ) {
-    border-color: ButtonText;
+    border: 1px solid ButtonText;
   }
 }
