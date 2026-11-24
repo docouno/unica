@@ -1,27 +1,24 @@
-import { Badge, Kbd, Text, Title } from '@docouno/unica';
-import { previewProps, previewText } from '../preview-code.js';
+import { Title } from '@docouno/unica';
 import { defineComponent } from '../../workbench/types.js';
-import {
-  EditorCopy,
-  Example,
-  longHeading,
-  OverlayCopy,
-  SignInCopy,
-} from '../text/typography.examples.js';
-import type { HeadingTag, TitleSize } from '@docouno/unica';
 import type { Constraint } from '../../workbench/types.js';
+import { previewProps, previewText } from '../preview-code.js';
+import { TextFrame } from '../text/text.examples.js';
 import { clampPrecedence, clampSteps, typographyControls } from '../text/typography.controls.js';
+import { BaselineExample, WrappingExample } from './title.examples.js';
+import { HeadingViewport } from './title.viewport.js';
+import {
+  AuthExample,
+  DrawerExample,
+  EditorExample,
+  ModalExample,
+  authCode,
+  drawerCode,
+  editorCode,
+  modalCode,
+} from './title.compositions.js';
 
-const sizes: readonly TitleSize[] = [
-  'display-l',
-  'display-m',
-  'display-s',
-  'heading-xl',
-  'heading-l',
-  'heading-m',
-  'heading-s',
-  'body-m',
-];
+const defaultHeading = 'A shared place for the knowledge that moves your team forward';
+const measure = { inlineSize: 'min(100%, 26rem)', marginInline: 'auto' };
 
 export default defineComponent({
   id: 'title',
@@ -46,12 +43,13 @@ export default defineComponent({
       ],
     },
     size: {
-      kind: 'slot',
-      group: 'Typography',
+      kind: 'enum',
+      group: 'Geometry',
       default: 'auto',
-      description: 'Choose an independent size or use the heading level’s default.',
+      description:
+        'When omitted, h1 through h6 use display-s, heading-xl, heading-l, heading-m, heading-s, and body-m respectively. An explicit size preserves the heading level.',
       choices: [
-        { value: 'auto', label: 'From level' },
+        { value: 'auto', label: 'From level', omit: true },
         { value: 'display-l', label: 'Display L' },
         { value: 'display-m', label: 'Display M' },
         { value: 'display-s', label: 'Display S' },
@@ -64,24 +62,32 @@ export default defineComponent({
     },
     weight: {
       kind: 'enum',
-      group: 'Typography',
+      group: 'Role',
       default: 'semibold',
       description: 'Visual weight of the heading.',
       choices: [{ value: 'medium' }, { value: 'semibold' }, { value: 'bold' }],
     },
     ...typographyControls,
+    italic: {
+      ...typographyControls.italic,
+      description:
+        'Omit to inherit the surrounding font style. An explicit boolean selects italic or upright headings.',
+    },
     textWrap: {
       kind: 'enum',
-      group: 'Overflow',
+      group: 'Geometry',
       default: 'wrap',
-      description: 'How the heading uses its line measure.',
+      description:
+        'Wrap normally, keep one line, or let the browser improve line breaks with pretty or balance.',
       choices: [{ value: 'wrap' }, { value: 'nowrap' }, { value: 'pretty' }, { value: 'balance' }],
     },
     children: {
       kind: 'string',
       group: 'Content',
-      default: 'A shared place for the knowledge that moves your team forward',
-      description: 'Heading to measure or wrap.',
+      default: defaultHeading,
+      publicType: 'ReactNode',
+      description: 'Inline heading content. The editor starts with a sample headline.',
+      examples: [defaultHeading, 'Aa', '7', 'Release notes'],
     },
   },
   constraints: [
@@ -99,19 +105,28 @@ export default defineComponent({
       reason: 'Line clamp sets its own wrapping behavior.',
     })),
   ],
-  render: ({ ctx, values: { children, size, lineClamp, align, italic, ...props } }) => (
-    <Title
-      {...ctx.subject}
-      {...props}
-      size={size === 'auto' ? undefined : size}
-      lineClamp={lineClamp === 'off' ? undefined : Number(lineClamp)}
-      align={align === 'inherit' ? undefined : align}
-      italic={italic === 'auto' ? undefined : italic === 'italic'}
-      style={{ maxInlineSize: 'min(100%, 26rem)' }}
-    >
-      {children}
-    </Title>
-  ),
+  render: ({ ctx, values: { children, size, lineClamp, align, italic, ...props } }) => {
+    const unwrapped = props.textWrap === 'nowrap' && !props.truncate && lineClamp === 'off';
+    const heading = (
+      <Title
+        {...ctx.subject}
+        {...props}
+        size={size === 'auto' ? undefined : size}
+        lineClamp={lineClamp === 'off' ? undefined : Number(lineClamp)}
+        align={align === 'inherit' ? undefined : align}
+        italic={italic === 'auto' ? undefined : italic === 'italic'}
+      >
+        <bdi>{children}</bdi>
+      </Title>
+    );
+    return (
+      <TextFrame ctx={ctx}>
+        <div style={measure}>
+          {unwrapped ? <HeadingViewport>{heading}</HeadingViewport> : heading}
+        </div>
+      </TextFrame>
+    );
+  },
   code: ({ children, size, lineClamp, align, italic, ...props }) => {
     const attributes = previewProps(
       {
@@ -132,154 +147,116 @@ export default defineComponent({
         truncate: false,
       },
     );
-    return `<Title${attributes}>${previewText(children)}</Title>`;
+    const unwrapped = props.textWrap === 'nowrap' && !props.truncate && lineClamp === 'off';
+    const heading = `<Title${attributes}><bdi>${previewText(children)}</bdi></Title>`;
+    const layout = "style={{ inlineSize: 'min(100%, 26rem)', marginInline: 'auto' }}";
+    if (unwrapped) {
+      return `import { useState } from 'react';
+import '@docouno/unica/styles.css';
+import { Title } from '@docouno/unica';
+
+export function UnwrappedHeading() {
+  const [overflowing, setOverflowing] = useState(false);
+  return (
+    <div ${layout}>
+      <div className="unica-scrollbar"
+        style={{ overflowX: 'auto', minInlineSize: 0, outlineColor: 'var(--focus-ring-color)', outlineOffset: 2 }}
+        role={overflowing ? 'region' : undefined}
+        aria-label={overflowing ? 'Scrollable single-line heading' : undefined}
+        tabIndex={overflowing ? 0 : undefined}
+        ref={owner => {
+          if (!owner?.firstElementChild) {
+            return;
+          }
+          const observer = new ResizeObserver(() => setOverflowing(owner.scrollWidth > owner.clientWidth));
+          observer.observe(owner);
+          observer.observe(owner.firstElementChild);
+          return () => observer.disconnect();
+        }}>
+        <div style={{ minInlineSize: 'max-content' }}>${heading}</div>
+      </div>
+    </div>
+  );
+}`;
+    }
+    return `<div ${layout}>${heading}</div>`;
   },
-  matrixViews: [
+  states: [
     {
       id: 'scale',
       rows: 'size',
-      title: 'Visual heading scale',
-      reference: () => (
-        <div className="type-study">
-          {sizes.map((size) => (
-            <Example key={size} label={size}>
-              <Title as="h2" size={size} data-sample-size={size}>
-                Shared ideas
-              </Title>
-            </Example>
-          ))}
-        </div>
-      ),
+      title: 'Visual scale on one heading level',
+      caption:
+        'Compare eight explicit sizes with the default for a level-two heading. The native heading level stays the same in every row.',
+      fixed: { as: 'h2', children: 'Aa' },
     },
     {
       id: 'semantics',
       rows: 'as',
       cols: 'weight',
-      title: 'Semantic defaults & heading weight',
-      reference: () => (
-        <div className="type-study">
-          {(['h1', 'h2', 'h3', 'h4', 'h5', 'h6'] as readonly HeadingTag[]).map((as) => (
-            <Example key={as} label={as}>
-              <Title as={as}>The next chapter</Title>
-            </Example>
-          ))}
-          <Example label="h2 with heading-m">
-            <Title as="h2" size="heading-m">
-              A compact section, still a level-two heading
-            </Title>
-          </Example>
-          {(['medium', 'semibold', 'bold'] as const).map((weight) => (
-            <Example key={weight} label={weight}>
-              <Title as="h2" size="heading-m" weight={weight}>
-                Workspace decisions
-              </Title>
-            </Example>
-          ))}
-        </div>
-      ),
+      title: 'Heading levels and weights',
+      caption:
+        'Each heading level supplies its own size when size is omitted. Compare medium, semibold, and bold at each level.',
+      fixed: { size: 'auto', children: '7' },
     },
   ],
   cases: [
     {
       id: 'wrapping',
-      title: 'Live wrapping & overflow priority',
+      title: 'Line breaks and overflow',
       kind: 'content',
-      render: () => (
-        <div className="type-study">
-          {(['wrap', 'nowrap', 'pretty', 'balance'] as const).map((textWrap) => (
-            <Example key={textWrap} label={textWrap}>
-              <div className="type-measure type-nowrap-window">
-                <Title as="h2" size="heading-xl" textWrap={textWrap}>
-                  {longHeading}
-                </Title>
-              </div>
-            </Example>
-          ))}
-          <Example label="truncate wins over balance">
-            <div className="type-measure">
-              <Title as="h2" size="heading-xl" textWrap="balance" truncate>
-                {longHeading}
-              </Title>
-            </div>
-          </Example>
-          <Example label="lineClamp=2 wins over truncate + nowrap">
-            <div className="type-measure">
-              <Title as="h2" size="heading-xl" textWrap="nowrap" truncate lineClamp={2}>
-                {longHeading}
-              </Title>
-            </div>
-          </Example>
-        </div>
-      ),
+      mode: 'live',
+      caption:
+        'Compare three wrapping strategies for one heading. Scroll the single line, then inspect how truncation and a two-line clamp take precedence.',
+      render: WrappingExample,
     },
     {
       id: 'baseline',
-      title: 'Inline baseline studies',
+      title: 'Inline elements in a heading',
       kind: 'behavior',
-      render: () => (
-        <div className="type-study">
-          <Text size="caption-l" color="secondary">
-            Inline alignment with Kbd, Badge, and a link.
-          </Text>
-          <Title as="h2" size="heading-m" className="type-baseline">
-            Release notes{' '}
-            <Badge size="s" status="info">
-              Updated
-            </Badge>
-          </Title>
-          <Title as="h2" size="heading-m" className="type-baseline">
-            Quick find <Kbd>Ctrl K</Kbd>
-          </Title>
-          <Title as="h2" size="heading-m" className="type-baseline">
-            Read the{' '}
-            <a className="type-inline-link" href="?item=text&tab=usage&block=reader">
-              review guide
-            </a>
-          </Title>
-          <Text size="body-s" color="secondary">
-            Review the outcome, the supporting evidence, and the next step.
-          </Text>
-        </div>
-      ),
+      mode: 'live',
+      caption:
+        'The guides mark the bottom of each line box. Compare the badge, shortcut and link alongside the heading text. Follow the link to the handbook entry.',
+      render: BaselineExample,
     },
   ],
-  usage: [
+  compositions: [
     {
       id: 'auth',
-      code: `<header>
-  <Title textWrap="balance">Good work starts with shared context.</Title>
-  <Text color="secondary">Bring your notes, decisions, and people together in one calm workspace.</Text>
-</header>`,
-      title: 'Folio · Sign-in introduction',
-      render: () => <SignInCopy />,
+      title: 'Sign-in introduction',
+      mode: 'pinned',
+      caption: 'A balanced page heading and a short instruction introduce sign-in.',
+      code: authCode,
+      render: AuthExample,
     },
     {
       id: 'editor',
-      code: `<Title textWrap="balance">Make room for the next good idea</Title>`,
-      title: 'Folio · Editor, 760px maximum measure',
-      render: () => <EditorCopy />,
+      title: 'Article and section headings',
+      mode: 'pinned',
+      caption:
+        'The document title and compact section heading keep their native h1 and h2 levels at different visual sizes.',
+      code: editorCode,
+      render: EditorExample,
     },
     {
       id: 'drawer',
-      code: `<header>
-  <Title as="h2" size="heading-xl" textWrap="balance">Everything this page connects</Title>
-  <Text color="secondary">Keep ownership, review dates, and related decisions close to the document.</Text>
-</header>`,
-      title: 'Folio · 520px drawer copy',
+      title: 'Details panel heading',
+      mode: 'pinned',
       surface: 'overlay',
       overlayStage: true,
-      render: () => <OverlayCopy kind="drawer" />,
+      caption:
+        'The visible heading names a narrow complementary region containing the owner and review interval.',
+      code: drawerCode,
+      render: DrawerExample,
     },
     {
       id: 'modal',
-      code: `<header>
-  <Title as="h2" size="heading-xl" textWrap="balance">Invite your team to the workspace</Title>
-  <Text color="secondary">Give people the context and access they need to contribute with confidence.</Text>
-</header>`,
-      title: 'Folio · 548px invitation copy',
-      surface: 'overlay',
-      overlayStage: true,
-      render: () => <OverlayCopy kind="modal" />,
+      title: 'Name a native dialog',
+      mode: 'live',
+      caption:
+        'Open the native dialog to read the invitation policy. Its heading supplies the accessible name. Close or Escape returns focus to the trigger.',
+      code: modalCode,
+      render: ModalExample,
     },
   ],
 });
