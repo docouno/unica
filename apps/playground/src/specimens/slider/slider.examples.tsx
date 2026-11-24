@@ -4,7 +4,7 @@ import { Flex, Icon, RangeSlider, Slider, Stack, Text } from '@docouno/unica';
 import type { PreviewProps } from '../../workbench/types.js';
 import type { RangeSliderProps, RangeSliderValue, SliderProps } from '@docouno/unica';
 import { WarningCircleIcon } from '@phosphor-icons/react';
-import { NumberInput } from '../../prototypes/number-input/number-input.proto.js';
+import { percent } from './slider.controls.js';
 import './slider.examples.css';
 
 type FieldContent = {
@@ -12,7 +12,7 @@ type FieldContent = {
   readonly description?: string | undefined;
 };
 
-interface StudyProps extends Partial<PreviewProps> {
+interface StudyProps {
   readonly rangeSubject?: PreviewProps['ctx']['subject'] | undefined;
   readonly sliderSubject?: PreviewProps['ctx']['subject'] | undefined;
 }
@@ -179,7 +179,6 @@ function RangeField({
   );
 }
 
-const percent = (value: number): string => `${value}%`;
 const money = (value: number): string => `$${value.toLocaleString('en-US')}`;
 const percentMarks = [
   { value: 0, label: '0%' },
@@ -203,57 +202,6 @@ function Example({
       </Text>
       {children}
     </Stack>
-  );
-}
-
-export function ExactValue(): ReactElement {
-  const [value, setValue] = useState(60);
-  const [entry, setEntry] = useState<number | ''>(value);
-  return (
-    <div className="slider-examples">
-      <div className="slider-pair-example">
-        <SliderField
-          label="Image quality"
-          value={value}
-          onValueChange={(next) => {
-            setValue(next);
-            setEntry(next);
-          }}
-          formatValue={percent}
-          marks={percentMarks}
-          description="Drag for a quick adjustment or enter a whole percentage."
-        />
-        <NumberInput
-          aria-label="Exact image quality percentage"
-          value={entry}
-          onValueChange={(next) => {
-            setEntry(next);
-            if (next !== '' && next >= 0 && next <= 100) {
-              setValue(Math.round(next));
-            }
-          }}
-          onBlur={() => setEntry(value)}
-          suffix="%"
-          min={0}
-          max={100}
-        />
-      </div>
-      <RangeField
-        label="Price range"
-        min={0}
-        max={500}
-        step={5}
-        defaultValue={[100, 350]}
-        formatValue={money}
-        thumbLabels={['Minimum price', 'Maximum price']}
-        marks={[
-          { value: 0, label: '$0' },
-          { value: 250, label: '$250' },
-          { value: 500, label: '$500' },
-        ]}
-        description="Both bounds are inclusive. Adjust either end independently."
-      />
-    </div>
   );
 }
 
@@ -298,11 +246,12 @@ function RangeErrorExample({ rangeSubject }: StudyProps = {}): ReactElement {
   );
 }
 
-export function SizesExample(): ReactElement {
+export function SizesExample({ sliderSubject }: StudyProps): ReactElement {
   return (
-    <div className="slider-examples">
+    <Stack gap={24} className="slider-study-width">
       <Example title="S · Compact">
         <SliderField
+          {...sliderSubject}
           size="s"
           label="Typography scale"
           min={80}
@@ -319,6 +268,7 @@ export function SizesExample(): ReactElement {
       </Example>
       <Example title="M · Default">
         <SliderField
+          {...sliderSubject}
           label="Image quality"
           defaultValue={65}
           formatValue={percent}
@@ -327,6 +277,7 @@ export function SizesExample(): ReactElement {
       </Example>
       <Example title="L · Spacious">
         <SliderField
+          {...sliderSubject}
           size="l"
           label="Playback volume"
           defaultValue={40}
@@ -334,7 +285,7 @@ export function SizesExample(): ReactElement {
           marks={percentMarks}
         />
       </Example>
-    </div>
+    </Stack>
   );
 }
 
@@ -388,12 +339,17 @@ export function RangeExample({ rangeSubject }: StudyProps = {}): ReactElement {
   );
 }
 
-export function InteractionExample(): ReactElement {
+export function InteractionExample({ sliderSubject }: StudyProps): ReactElement {
   return (
-    <div className="slider-examples">
-      <SliderField label="Image quality" defaultValue={60} formatValue={percent} />
+    <Stack gap={24} className="slider-study-width">
+      <SliderField
+        {...sliderSubject}
+        label="Image quality"
+        defaultValue={60}
+        formatValue={percent}
+      />
       <RangeField label="Playback window" defaultValue={[25, 70]} formatValue={percent} />
-    </div>
+    </Stack>
   );
 }
 
@@ -439,12 +395,25 @@ export function AvailabilityExample({
   );
 }
 
-export function BoundsExample(): ReactElement {
+export function BoundsExample({ sliderSubject }: StudyProps): ReactElement {
   return (
-    <div className="slider-examples">
-      <SliderField label="Minimum" defaultValue={0} formatValue={percent} marks={percentMarks} />
-      <SliderField label="Maximum" defaultValue={100} formatValue={percent} marks={percentMarks} />
+    <Stack gap={24} className="slider-study-width">
       <SliderField
+        {...sliderSubject}
+        label="Minimum"
+        defaultValue={0}
+        formatValue={percent}
+        marks={percentMarks}
+      />
+      <SliderField
+        {...sliderSubject}
+        label="Maximum"
+        defaultValue={100}
+        formatValue={percent}
+        marks={percentMarks}
+      />
+      <SliderField
+        {...sliderSubject}
         label="Line spacing"
         min={1}
         max={2}
@@ -458,6 +427,7 @@ export function BoundsExample(): ReactElement {
         ]}
       />
       <SliderField
+        {...sliderSubject}
         label="Exposure compensation"
         min={-2}
         max={2}
@@ -478,7 +448,7 @@ export function BoundsExample(): ReactElement {
         formatValue={percent}
         marks={percentMarks}
       />
-    </div>
+    </Stack>
   );
 }
 

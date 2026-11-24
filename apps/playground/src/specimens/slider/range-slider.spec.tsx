@@ -7,6 +7,7 @@ import {
   demoPresentation,
   demoScale,
   sliderConstraints,
+  scaleMessage,
   sliderPresentationCode,
   rejectedScaleCode,
   sliderControls,
@@ -26,8 +27,6 @@ import formSource from './range-price-form.tsx?raw';
 const initial: RangeSliderValue = [25, 75];
 const labels = ['Minimum price', 'Maximum price'] as const;
 
-const scaleMessage =
-  'Use whole-number bounds from −10,000 to 10,000, with the minimum at or below the maximum and a positive whole-number step up to 10,000.';
 const gapMessage = 'Use a whole-number gap from zero to the number of reachable steps.';
 const approval = 'This price interval needs review.';
 

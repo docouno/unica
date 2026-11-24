@@ -83,10 +83,15 @@ export const sliderControls = {
     description:
       'The native form owner ID. Leave empty to use the enclosing form. This example prefixes a custom ID so copies stay independent.',
   },
-  onValueChange: eventProp('Reports each new proposed value.', 'handleValueChange'),
+  onValueChange: eventProp(
+    'Receives each new proposed number in the original units.',
+    '(next) => console.log(next)',
+    '(next: number) => void',
+  ),
   onValueCommit: eventProp(
     'Reports the accepted value when editing finishes.',
-    'handleValueCommit',
+    '(next) => console.log(next)',
+    '(next: number) => void',
   ),
 } as const;
 
@@ -99,6 +104,9 @@ export const sliderConstraints = [
       'A disabled control skips native focus and form submission, suppresses validation paint, and blocks edits.',
   },
 ] as const;
+
+export const scaleMessage =
+  'Use whole-number bounds from −10,000 to 10,000, with the minimum at or below the maximum and a positive whole-number step up to 10,000.';
 
 export function demoScale(min: number, max: number, step: number): boolean {
   // Keep the inspector's free-text edits within its small demonstration domain.
