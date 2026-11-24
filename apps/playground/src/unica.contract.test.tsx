@@ -224,7 +224,7 @@ it('restores the material and case caption of a directly addressed RadioCard pre
   expect(artboards.every((artboard) => artboard.querySelector('[data-surface="overlay"]'))).toBe(
     true,
   );
-  const caption = screen.getByText(/Static floating plate with live inputs/);
+  const caption = screen.getByText(/Choose who can open a page on the floating plate/);
   expect(caption.closest('.wb-artboard')).toBeNull();
 
   const chosen = (): number[] =>

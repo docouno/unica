@@ -1,3 +1,5 @@
+import type { MouseEvent } from 'react';
+
 /** Keep a fragment in its open case, or address the canonical block in the source theme. */
 export function specimenBlockPage(
   item: string,
@@ -23,5 +25,41 @@ export function focusLinkedFragment(node: HTMLElement | null): void {
     if (activeElement === body && location.hash === `#${node.id}`) {
       node.focus();
     }
+  }
+}
+
+// Follow a mounted study's canonical address without reloading its edited inputs.
+export function followStudyFragment(event: MouseEvent<HTMLAnchorElement>): void {
+  const link = event.currentTarget;
+  const view = link.ownerDocument.defaultView;
+  if (
+    !view ||
+    event.defaultPrevented ||
+    event.button !== 0 ||
+    event.altKey ||
+    event.ctrlKey ||
+    event.metaKey ||
+    event.shiftKey ||
+    link.target ||
+    link.search === view.location.search
+  ) {
+    return;
+  }
+  const target = link.ownerDocument.getElementById(link.hash.slice(1));
+  if (target) {
+    event.preventDefault();
+    const address = new URL(link.href);
+    // Keep all compared owners mounted; the shared link still opens its source theme alone.
+    if (!new URLSearchParams(view.location.search).has('solo')) {
+      address.searchParams.delete('solo');
+    }
+    view.history.pushState(null, '', address);
+    view.dispatchEvent(new PopStateEvent('popstate'));
+    target.focus({ preventScroll: true });
+    view.requestAnimationFrame(() => {
+      if (link.ownerDocument.activeElement === target) {
+        target.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+      }
+    });
   }
 }

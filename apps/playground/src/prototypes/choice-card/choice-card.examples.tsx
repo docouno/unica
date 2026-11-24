@@ -2,6 +2,7 @@ import { Badge, Button, Flex, Link, Stack, Text } from '@docouno/unica';
 import type { PreviewContext } from '../../workbench/types.js';
 import {
   focusLinkedFragment,
+  followStudyFragment,
   specimenBlockPage,
 } from '../../specimens/shared/specimen-fragment.js';
 import { useId, useState } from 'react';
@@ -82,6 +83,7 @@ export function Sizes({ kind, ctx }: StudyProps): ReactElement {
               {...ctx?.subject}
               size={size}
               name={`${name}-${size}`}
+              value={kind === 'radio' ? 'workspace' : undefined}
               label={copy[kind].label}
               description={<bdi>{copy[kind].description}</bdi>}
             />
@@ -89,6 +91,7 @@ export function Sizes({ kind, ctx }: StudyProps): ReactElement {
               {...ctx?.subject}
               size={size}
               name={`${name}-${size}`}
+              value={kind === 'radio' ? 'invited' : undefined}
               label={kind === 'radio' ? 'Invited people' : copy[kind].label}
               description={
                 <bdi>
@@ -115,7 +118,11 @@ export function Anatomy({ kind, ctx }: StudyProps): ReactElement {
   const [details, setDetails] = useState(false);
   return (
     <Stack gap={24}>
-      <div className="choice-study-grid">
+      <div
+        className="choice-study-grid"
+        role={kind === 'radio' ? 'radiogroup' : undefined}
+        aria-label={kind === 'radio' ? 'History plan' : undefined}
+      >
         <Card
           {...ctx?.subject}
           label={
@@ -139,6 +146,7 @@ export function Anatomy({ kind, ctx }: StudyProps): ReactElement {
             </bdi>
           }
           name={`${id}-plan`}
+          value={kind === 'radio' ? 'standard' : undefined}
           defaultChecked
           secondary={
             <>
@@ -153,13 +161,16 @@ export function Anatomy({ kind, ctx }: StudyProps): ReactElement {
               >
                 {details ? 'Hide details' : 'View details'}
               </Button>
-              <Link href={`${page}#${terms}`}>View terms</Link>
+              <Link href={`${page}#${terms}`} onClick={followStudyFragment}>
+                View terms
+              </Link>
             </>
           }
         />
         <Card
           {...ctx?.subject}
           name={`${id}-plan`}
+          value={kind === 'radio' ? 'advanced' : undefined}
           indicatorPlacement="end"
           label={
             kind === 'radio' ? 'Advanced' : kind === 'switch' ? 'Weekly summary' : 'Audit archive'
@@ -180,11 +191,15 @@ export function Anatomy({ kind, ctx }: StudyProps): ReactElement {
                   <bdi>Mondays · 09:00</bdi>
                 </Text>
               ) : (
-                <strong>
+                <Text as="strong" size="caption-l" color="secondary">
                   <bdi>
-                    $8<span className="choice-study-unit"> / member / month</span>
+                    $8
+                    <Text as="span" size="caption-l" weight="regular" color="muted">
+                      {' '}
+                      / member / month
+                    </Text>
                   </bdi>
-                </strong>
+                </Text>
               )}
               <Badge size="s">{kind === 'switch' ? 'Email' : 'Optional'}</Badge>
             </>
@@ -278,7 +293,11 @@ export function Interaction({ kind, ctx }: StudyProps): ReactElement {
                   : 'Rest'
           }
         >
-          <div className="choice-study-grid">
+          <div
+            className="choice-study-grid"
+            role={kind === 'radio' ? 'radiogroup' : undefined}
+            aria-label={kind === 'radio' ? `${state} access level` : undefined}
+          >
             <Card
               {...ctx?.subject}
               name={`${id}-${state}`}
@@ -375,7 +394,11 @@ export function Availability({ kind, ctx }: StudyProps): ReactElement {
                   : 'Required by your organization.'}
               </bdi>
             }
-            secondary={<Link href={`${page}#${target}`}>View policy</Link>}
+            secondary={
+              <Link href={`${page}#${target}`} onClick={followStudyFragment}>
+                View policy
+              </Link>
+            }
             metadata={
               <>
                 <LockSimpleIcon size={14} aria-hidden="true" />
@@ -404,7 +427,11 @@ export function Availability({ kind, ctx }: StudyProps): ReactElement {
                   : 'Verify the workspace before inviting guests.'}
               </bdi>
             }
-            secondary={<Link href={`${page}#${target}`}>Verification requirements</Link>}
+            secondary={
+              <Link href={`${page}#${target}`} onClick={followStudyFragment}>
+                Verification requirements
+              </Link>
+            }
             disabled
           />
           <Card
@@ -498,6 +525,8 @@ export function Validation({ kind, ctx }: StudyProps<'checkbox' | 'radio'>): Rea
           className="choice-study-grid"
           role={kind === 'radio' ? 'radiogroup' : 'group'}
           aria-labelledby={`${id}-title`}
+          aria-required={kind === 'radio' ? true : undefined}
+          aria-invalid={kind === 'radio' && invalid ? true : undefined}
           aria-describedby={`${id}-help${invalid ? ` ${id}-error` : ''}`}
         >
           {options.map(({ value, label }, index) => (
@@ -514,9 +543,13 @@ export function Validation({ kind, ctx }: StudyProps<'checkbox' | 'radio'>): Rea
               label={label}
               description={
                 <bdi>
-                  {index
-                    ? 'Keep a complete copy for long-term reference.'
-                    : 'A compact format for everyday work.'}
+                  {kind === 'radio'
+                    ? index
+                      ? 'Keep a full year of revision history.'
+                      : 'Keep the last 90 days of edits.'
+                    : index
+                      ? 'Keep a complete copy for long-term reference.'
+                      : 'A compact format for everyday work.'}
                 </bdi>
               }
               status={invalid ? 'danger' : 'neutral'}
@@ -597,6 +630,7 @@ export function Overflow({ kind, ctx }: StudyProps): ReactElement {
         <Card
           {...ctx?.subject}
           name={id}
+          value={kind === 'radio' ? 'full-history' : undefined}
           label={
             kind === 'radio'
               ? 'Retain complete page history for every collection in this workspace'
@@ -618,17 +652,36 @@ export function Overflow({ kind, ctx }: StudyProps): ReactElement {
             </>
           }
           secondary={
-            <Link href={`${page}#${target}`}>Read the retention and notification policy</Link>
+            <Link href={`${page}#${target}`} onClick={followStudyFragment}>
+              {kind === 'radio'
+                ? 'Compare retention rules'
+                : 'Read the retention and notification policy'}
+            </Link>
           }
         />
         <Card
           {...ctx?.subject}
           name={id}
-          label={<bdi>team_archive_export_2027_release_candidate_with_all_attachments</bdi>}
-          description={<bdi>Include the signed release archive and its attachments.</bdi>}
+          value={kind === 'radio' ? 'release-snapshots' : undefined}
+          label={
+            <bdi>
+              {kind === 'radio'
+                ? 'retain_signed_release_snapshots_and_attachments_for_seven_years'
+                : 'team_archive_export_2027_release_candidate_with_all_attachments'}
+            </bdi>
+          }
+          description={
+            <bdi>
+              {kind === 'radio'
+                ? 'Keep only signed releases and their attachments for seven years.'
+                : 'Include the signed release archive and its attachments.'}
+            </bdi>
+          }
           metadata={
             <Text as="span" size="caption-l" color="secondary">
-              <bdi>Organization-wide permission</bdi>
+              <bdi>
+                {kind === 'radio' ? 'Release snapshots only' : 'Organization-wide permission'}
+              </bdi>
             </Text>
           }
           defaultChecked
@@ -645,8 +698,9 @@ export function Overflow({ kind, ctx }: StudyProps): ReactElement {
         className="choice-study-note"
       >
         <bdi>
-          Archive owners keep one copy per release. Review reminders go only to people who can
-          access the collection.
+          {kind === 'radio'
+            ? 'Full history keeps every edit indefinitely. The snapshot policy keeps one copy per signed release for seven years.'
+            : 'Archive owners keep one copy per release. Review reminders go only to people who can access the collection.'}
         </bdi>
       </Text>
     </Stack>

@@ -32,10 +32,6 @@ ul:has(> [data-wb-result-row] [data-choice-card-sample]) {
   line-height: var(--text-size-body-s-lh);
   overflow-wrap: anywhere;
 }
-.choice-study-unit {
-  font-weight: 400;
-  color: var(--fg-muted);
-}
 .choice-study-field {
   display: grid;
   justify-items: start;
