@@ -14,6 +14,61 @@ async function navigate(page, params) {
 }
 
 export default {
+  'Bounds follows an inline link when its web font replaces the fallback': async ({
+    page,
+    mount,
+  }) => {
+    await mount('native');
+    const url = new URL('/?item=link&tab=usage&family=frost&scheme=light', page.url());
+    await page.goto(url.href, { waitUntil: 'commit' });
+    await page.locator('html[data-wb-ready="1"]').waitFor({ state: 'attached', timeout: 20_000 });
+
+    const font = '**/inter-latin-wght-italic.woff2';
+    let releaseFont;
+    const fontGate = new Promise((resolve) => {
+      releaseFont = resolve;
+    });
+    await page.route(font, async (route) => {
+      await fontGate;
+      await route.continue();
+    });
+
+    const board = page.locator('[data-wb-block="glyphs"] .wb-artboard');
+    const link = board.getByRole('link', { name: 'Writing for Web Accessibility' });
+    const outline = board.locator('.wb-bounds-outline').first();
+    const label = outline.locator('[data-wb-bounds-label]');
+    let fallbackWidth;
+    try {
+      const requested = page.waitForRequest(font, { timeout: 20_000 });
+      await navigate(page, {
+        item: 'link',
+        tab: 'states',
+        block: 'glyphs',
+        family: 'frost',
+        scheme: 'light',
+        vp: '360',
+        dir: 'rtl',
+        scale: '120',
+        bounds: '1',
+      });
+      await requested;
+      await label.waitFor({ timeout: 20_000 });
+      fallbackWidth = await link.evaluate((node) => node.offsetWidth);
+    } finally {
+      releaseFont();
+    }
+
+    await page.evaluate(() => document.fonts.ready);
+    const size = await link.evaluate((node) => [node.offsetWidth, node.offsetHeight]);
+    assert.notEqual(size[0], fallbackWidth);
+    await label.filter({ hasText: size.join(' × ') + ' px' }).waitFor({ timeout: 4_000 });
+    const outlineSize = await outline.evaluate((node) => [
+      Math.round(parseFloat(node.style.width)),
+      Math.round(parseFloat(node.style.height)),
+    ]);
+    assert.deepEqual(outlineSize, size);
+  },
+
   'Link section addresses survive a new tab and track native history': async ({ page, mount }) => {
     await mount('workbench-v3');
     await navigate(page, {

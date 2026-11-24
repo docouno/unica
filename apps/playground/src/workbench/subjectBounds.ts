@@ -185,6 +185,7 @@ export function useSubjectBounds(
     let nativeHosts = new Set<Element>();
     let layer: HTMLDivElement | undefined;
     let frame = 0;
+    let waitingOnFonts = false;
 
     const schedule = (): void => {
       if (frame === 0) {
@@ -288,6 +289,18 @@ export function useSubjectBounds(
         layer?.remove();
         layer = undefined;
       }
+      // Inline text can change width without producing a ResizeObserver entry.
+      const fonts = scope.ownerDocument.fonts;
+      if (samples.length && !waitingOnFonts && fonts?.status === 'loading') {
+        waitingOnFonts = true;
+        const remeasure = (): void => {
+          if (waitingOnFonts) {
+            waitingOnFonts = false;
+            schedule();
+          }
+        };
+        fonts.ready.then(remeasure, remeasure);
+      }
       nativeHosts = nextNativeHosts;
       for (const element of moving) {
         const active =
@@ -379,6 +392,7 @@ export function useSubjectBounds(
     draw();
 
     return () => {
+      waitingOnFonts = false;
       window.cancelAnimationFrame(frame);
       resize?.disconnect();
       watch.disconnect();
