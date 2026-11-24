@@ -14,6 +14,43 @@ async function navigate(page, params) {
 }
 
 export default {
+  'Link section addresses survive a new tab and track native history': async ({ page, mount }) => {
+    await mount('workbench-v3');
+    await navigate(page, {
+      ...Object.fromEntries(new URL(page.url()).searchParams),
+      item: 'link',
+      tab: 'states',
+      block: 'live',
+      solo: 'frost-light',
+    });
+    const path = page.getByRole('navigation', { name: 'On this example' });
+    const details = path.getByRole('link', { name: 'Details' });
+    const original = page.url();
+    const [opened] = await Promise.all([
+      page.context().waitForEvent('page'),
+      details.click({ modifiers: ['Control'] }),
+    ]);
+    try {
+      const target = opened.getByRole('region', { name: 'Details', exact: true });
+      const navigation = opened.getByRole('navigation', { name: 'On this example' });
+      const current = navigation.locator('[aria-current="location"]');
+      await target.waitFor();
+      assert.equal(await target.evaluate((element) => element.matches(':focus')), true);
+      assert.equal(await current.textContent(), 'Details');
+      assert.equal(page.url(), original);
+      await navigation.getByRole('link', { name: 'Summary' }).press('Enter');
+      await current.filter({ hasText: 'Summary' }).waitFor();
+      await opened.goBack();
+      await current.filter({ hasText: 'Details' }).waitFor();
+      await opened.reload({ waitUntil: 'domcontentloaded' });
+      await target.waitFor();
+      assert.equal(await target.evaluate((element) => element.matches(':focus')), true);
+      assert.equal(await current.textContent(), 'Details');
+    } finally {
+      await opened.close();
+    }
+  },
+
   'Tag removal and restoration keep keyboard focus in the activated artboard': async ({
     page,
     mount,

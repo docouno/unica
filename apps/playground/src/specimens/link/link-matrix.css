@@ -1,0 +1,8 @@
+/* Keep the linked words and their optional glyphs readable on the sample surface. */
+tr:has(> td + td) > td:has([data-link-comparison]) {
+  min-inline-size: 13rem;
+}
+
+ul:has(> [data-wb-result-row] [data-link-comparison]) {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr));
+}
