@@ -80,7 +80,8 @@ export default defineComponent({
       </Stack>
     </LayoutExample>
   )),
-  code: (_, attributes) => `import { Fragment } from 'react';
+  code: ({ divider }, attributes) => `import { Fragment } from 'react';
+import { ${divider === 'rule' ? 'Divider, ' : ''}Stack, Text } from '@docouno/unica';
 
 <Stack${attributes}>
   <Text as="span" size="body-s">Draft</Text>
