@@ -15,6 +15,125 @@ async function navigate(page, params) {
 }
 
 export default {
+  'Drawer scrolls the whole panel when the keyboard leaves too little room': async ({
+    page,
+    origin,
+  }) => {
+    await page.setViewportSize({ width: 1500, height: 950 });
+    const route = new URL(
+      '/?item=drawer&tab=states&block=overflow&vp=768&scale=120&dir=rtl',
+      origin,
+    );
+    await page.goto(route.href, { waitUntil: 'domcontentloaded' });
+    const frame = page.locator('section[data-wb-block="overflow"]');
+    const setting = frame.getByRole('combobox', { name: 'Available height' }).first();
+    await setting.waitFor({ timeout: 20_000 });
+    const panel = frame.locator('.wb-artboard').first().getByRole('dialog');
+    const note = panel.getByRole('textbox', { name: 'Digest note' });
+    await note.press('End');
+    await setting.selectOption('keyboard');
+    await page.waitForFunction(
+      (node) => node.tabIndex === 0 && node.scrollHeight > node.clientHeight,
+      await panel.elementHandle(),
+    );
+    await page.waitForFunction(
+      (node) => {
+        const panelRect = node.closest('[role="dialog"]').getBoundingClientRect();
+        const editorRect = node.getBoundingClientRect();
+        return (
+          node === document.activeElement &&
+          editorRect.top >= panelRect.top - 1 &&
+          editorRect.bottom <= panelRect.bottom + 1
+        );
+      },
+      await note.elementHandle(),
+    );
+    await panel.press('End');
+    const save = panel.getByRole('button', { name: 'Save settings' });
+    await page.waitForFunction(
+      (button) => {
+        const panelRect = button.closest('[role="dialog"]').getBoundingClientRect();
+        const actionRect = button.getBoundingClientRect();
+        return actionRect.top >= panelRect.top && actionRect.bottom <= panelRect.bottom + 1;
+      },
+      await save.elementHandle(),
+    );
+  },
+
+  'Drawer handle follows the pointer in a scaled artboard': async ({ page, origin }) => {
+    await page.setViewportSize({ width: 1500, height: 950 });
+    const route = new URL('/?item=drawer&tab=states&block=sheet&vp=768&scale=120&dir=rtl', origin);
+    await page.goto(route.href, { waitUntil: 'domcontentloaded' });
+    const board = page.locator('section[data-wb-block="sheet"] .wb-artboard').first();
+    const panel = board.getByRole('dialog');
+    const grip = panel.locator('.dialog-handle');
+    await grip.waitFor({ timeout: 20_000 });
+    await grip.scrollIntoViewIfNeeded();
+    const gripBox = await grip.boundingBox();
+    const before = await panel.boundingBox();
+    const x = gripBox.x + gripBox.width / 2;
+    const y = gripBox.y + gripBox.height / 2;
+    await page.mouse.move(x, y);
+    await page.mouse.down();
+    try {
+      await page.mouse.move(x, y + 12, { steps: 4 });
+      const after = await panel.boundingBox();
+      assert.ok(Math.abs(after.y - before.y - 12) <= 1, 'The sheet must follow a 12px drag');
+    } finally {
+      await page.mouse.up();
+    }
+    assert.equal(await panel.isVisible(), true);
+  },
+
+  'Drawer backdrop keeps focus and consumes a dismissing tap above the opener': async ({
+    page,
+    origin,
+  }) => {
+    const touch = await page
+      .context()
+      .browser()
+      .newContext({ hasTouch: true, viewport: { width: 1500, height: 950 } });
+    try {
+      const canvas = await touch.newPage();
+      const route = new URL(
+        '/?item=drawer&tab=playground&family=frost&scheme=dark&vp=1440',
+        origin,
+      );
+      await canvas.goto(route.href, { waitUntil: 'domcontentloaded' });
+      const board = canvas.locator('.wb-artboard').first();
+      const opener = board.getByRole('button', { name: 'Filter activity' });
+      const panel = board.getByRole('dialog');
+      await opener.waitFor({ timeout: 20_000 });
+      const trigger = await opener.elementHandle();
+      for (const dismissible of [false, true]) {
+        if (dismissible) {
+          await canvas.getByRole('checkbox', { name: /^dismissOnBackdrop/i }).check();
+        }
+        await opener.press('Enter');
+        await panel.waitFor();
+        await board.locator('.dialog-scrim').scrollIntoViewIfNeeded();
+        const point = await trigger.evaluate((button) => {
+          const box = button.getBoundingClientRect();
+          const x = box.x + box.width / 2;
+          const y = box.y + box.height / 2;
+          return { x, y, scrim: document.elementFromPoint(x, y)?.matches('.dialog-scrim') };
+        });
+        assert.ok(point.scrim, 'The backdrop must cover the opener at the tested point');
+        if (dismissible) {
+          await canvas.touchscreen.tap(point.x, point.y);
+        } else {
+          await canvas.mouse.click(point.x, point.y);
+          assert.ok(await panel.evaluate((node) => node.contains(document.activeElement)));
+          await canvas.keyboard.press('Escape');
+        }
+        await panel.waitFor({ state: 'detached' });
+        assert.ok(await trigger.evaluate((node) => node === document.activeElement));
+      }
+    } finally {
+      await touch.close();
+    }
+  },
+
   'Search fields fill their Playground slot on the base surface': async ({ page, origin }) => {
     for (const [item, label] of [
       ['autocomplete', 'Document title'],

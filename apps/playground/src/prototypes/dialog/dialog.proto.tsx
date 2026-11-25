@@ -104,14 +104,14 @@ interface DialogSurfaceProps extends ModalContentProps {
 
 function observeOverflow(panel: HTMLElement): () => void {
   const body = panel.querySelector<HTMLElement>(':scope > .dialog-body');
-  const content = body?.firstElementChild;
-  const header = panel.querySelector(':scope > .dialog-header');
-  const footer = panel.querySelector(':scope > .dialog-footer');
-  const handle = panel.querySelector(':scope > .dialog-handle');
+  const content = body?.querySelector<HTMLElement>(':scope > .dialog-body-content');
+  const header = panel.querySelector<HTMLElement>(':scope > .dialog-header');
+  const footer = panel.querySelector<HTMLElement>(':scope > .dialog-footer');
+  const handle = panel.querySelector<HTMLElement>(':scope > .dialog-handle');
   const update = (): void => {
     // Measure the available reading area without relying on the current scroll mode.
     const chromeHeight = [header, footer, handle].reduce(
-      (height, part) => height + (part?.getBoundingClientRect().height ?? 0),
+      (height, part) => height + (part?.offsetHeight ?? 0),
       0,
     );
     const padding = getComputedStyle(panel);
@@ -125,7 +125,7 @@ function observeOverflow(panel: HTMLElement): () => void {
       parseFloat(padding.paddingBlockStart) -
       parseFloat(padding.paddingBlockEnd) -
       bodyInset;
-    const natural = content?.getBoundingClientRect().height ?? 0;
+    const natural = content?.offsetHeight ?? 0;
     const whole = available < Math.min(96, natural) - 1;
     panel.toggleAttribute('data-whole-scroll', whole);
     panel.tabIndex = whole ? 0 : -1;
@@ -146,11 +146,12 @@ function observeOverflow(panel: HTMLElement): () => void {
     }
     const scrollOwner = panel.hasAttribute('data-whole-scroll') ? panel : body;
     const visible = scrollOwner.getBoundingClientRect();
+    const scale = visible.height / scrollOwner.offsetHeight || 1;
     const target = active.getBoundingClientRect();
     if (target.top < visible.top) {
-      scrollOwner.scrollTop += target.top - visible.top - 4;
+      scrollOwner.scrollTop += (target.top - visible.top) / scale - 4;
     } else if (target.bottom > visible.bottom) {
-      scrollOwner.scrollTop += target.bottom - visible.bottom + 4;
+      scrollOwner.scrollTop += (target.bottom - visible.bottom) / scale + 4;
     }
   };
   const observer = new ResizeObserver((entries) => {
@@ -268,6 +269,7 @@ function DialogSurface({
       <div
         className="dialog-scrim"
         aria-hidden="true"
+        onMouseDown={(event) => event.preventDefault()}
         onPointerDown={(event) => {
           backdropPress.current = event.isPrimary && event.button === 0;
         }}
@@ -276,15 +278,17 @@ function DialogSurface({
         }}
         onPointerUp={(event) => {
           const scrim = event.currentTarget;
-          const pressedHere = backdropPress.current;
-          backdropPress.current = false;
-          // Touch can implicitly capture the pointer to the scrim.
-          if (
-            dismissOnBackdrop &&
-            pressedHere &&
+          // Touch can implicitly capture a release outside the scrim.
+          backdropPress.current =
+            backdropPress.current &&
             event.isPrimary &&
-            scrim.ownerDocument.elementFromPoint(event.clientX, event.clientY) === scrim
-          ) {
+            scrim.ownerDocument.elementFromPoint(event.clientX, event.clientY) === scrim;
+        }}
+        onClick={() => {
+          // Keep the scrim mounted through the touch's compatibility mouse events.
+          const accepted = backdropPress.current;
+          backdropPress.current = false;
+          if (dismissOnBackdrop && accepted) {
             onOpenChange?.(false);
           }
         }}
@@ -402,6 +406,7 @@ export function ModalContent(props: ModalContentProps): ReactElement {
 interface DragSession {
   readonly pointerId: number;
   readonly start: number;
+  readonly scale: number;
   readonly time: number;
   readonly panel: HTMLElement;
   readonly layer: HTMLElement;
@@ -439,6 +444,7 @@ function DrawerHandle(): ReactElement {
         sessionRef.current = {
           pointerId: event.pointerId,
           start: event.clientY,
+          scale: panel.getBoundingClientRect().height / panel.offsetHeight || 1,
           time: event.timeStamp,
           panel,
           layer,
@@ -450,7 +456,7 @@ function DrawerHandle(): ReactElement {
         if (!session || session.pointerId !== event.pointerId) {
           return;
         }
-        const distance = Math.max(0, event.clientY - session.start);
+        const distance = Math.max(0, (event.clientY - session.start) / session.scale);
         const minimumOpacity = 0.45;
         const opacity = Math.max(minimumOpacity, 1 - distance / session.panel.offsetHeight);
         session.layer.style.setProperty('--drawer-drag-distance', `${distance}px`);
@@ -461,7 +467,7 @@ function DrawerHandle(): ReactElement {
         if (!session || session.pointerId !== event.pointerId) {
           return;
         }
-        const distance = event.clientY - session.start;
+        const distance = (event.clientY - session.start) / session.scale;
         const threshold = Math.min(120, session.panel.offsetHeight * 0.3);
         const velocity = distance / Math.max(1, event.timeStamp - session.time);
         reset();

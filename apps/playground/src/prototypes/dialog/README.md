@@ -26,7 +26,7 @@ The Workbench renders bounded panels with isolated local controls so six themes 
 
 ## Drawer
 
-Open **Drawer** in the Workbench. Activity filters compare all four placements and the two size axes. Edit delivery settings before closing to inspect the draft guard. Drag a short distance and release to inspect settling, then drag farther to request close. The presentation control can show a button-only sheet or switch to adaptive placement. The long form includes a simulated keyboard inset. **Folio → Page Properties & Relations Drawer** shows the same parts with a denser product form and a reviewer picker.
+Open **Drawer** in the Workbench. In States, compare the four edges and three width ceilings, edit delivery settings, or scroll the long form with a simulated keyboard inset. A short drag settles back. A longer drag requests close and asks about unsaved changes. The presentation control can disable swiping or choose adaptive placement. In Compositions, Activity filters submits the selected action, actor and scheduled-event flag, shows the accepted criteria and restores them on the next opening. **Folio → Page Properties & Relations Drawer** shows the same parts with a denser product form and a reviewer picker.
 
 ### Surface and placement
 
