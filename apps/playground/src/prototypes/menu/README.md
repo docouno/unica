@@ -42,7 +42,7 @@ No available commands is a decision for the invoking surface. Remove actions tha
 
 ## Inspect the reference
 
-- In **Menu**, **Commands and sizes**, **Row states and choices** and **Submenu** pin visual states for comparison. The panels are static except for native scrolling. **Open, choose and dismiss** and **Long content and scrolling** let you invoke the menu, explore active states and try keyboard navigation, choices, disabled rows, placement and dismissal.
+- In **Menu**, **Commands and sizes**, **Command columns and keyboard hints**, **Row states and choices** and **Submenu** compare static panels. **Open, choose and dismiss** has live checkbox and radio choices, a working guide link, and file commands that report requests. Its Copy link command writes the guide URL and reports the outcome. **Long content and scrolling** pairs a capped list with a live folder chooser. **Document commands** pairs the menu with a published document and a local receipt for rename and export requests.
 - In Folio's **Document Reader & Overlays**, open **Document actions** in the toolbar. The action menu shares the toolbar's density. **Compare revisions** changes the active inspector tab.
 - The preview supplies one live submenu level and uses a short pointer grace period to demonstrate crossing into the child. It has local command effects and no global keyboard shortcuts. The full pointer-intent, adaptive placement, native focus lifetime and consumer integration are part of the library implementation.
 

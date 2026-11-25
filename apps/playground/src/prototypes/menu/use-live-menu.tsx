@@ -191,6 +191,7 @@ export function useLiveMenu({
   }, []);
   const [invocation, setInvocation] = useState<MenuInvocation | null>(null);
   const [branch, setBranch] = useState<BranchState | null>(null);
+  const returningToBranch = useRef<string | null>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const hovered = useRef<string | undefined>(undefined);
   const typed = useRef({ value: '', time: 0 });
@@ -258,7 +259,19 @@ export function useLiveMenu({
   useLayoutEffect(() => {
     const root = rootRef.current;
     const child = childRef.current;
-    if (!root || !branch || !invocation) {
+    const returning = returningToBranch.current;
+    returningToBranch.current = null;
+    if (!root || !invocation) {
+      return;
+    }
+    if (!branch) {
+      if (returning !== null && root.matches(':popover-open')) {
+        rootPlacement(root, invocation, align, true);
+        focusRow(
+          root,
+          rowElements(root).find((row) => row.dataset.option === returning),
+        );
+      }
       return;
     }
     if (branch.side === 'inline') {
@@ -326,24 +339,13 @@ export function useLiveMenu({
     }
     clearIntent();
     const child = childRef.current;
-    const ownedFocus = child?.contains(document.activeElement);
+    const returnFocus = restore || child?.contains(document.activeElement);
     child?.hidePopover();
-    setBranch(null);
-    if (!restore && !ownedFocus) {
-      return;
+    if (returnFocus && branch.side === 'inline') {
+      returningToBranch.current = branch.id;
     }
-    const root = rootRef.current;
-    if (branch.side === 'inline' && root && invocation) {
-      requestAnimationFrame(() => {
-        if (root.matches(':popover-open')) {
-          rootPlacement(root, invocation, align, true);
-          focusRow(
-            root,
-            rowElements(root).find((row) => row.dataset.option === branch.id),
-          );
-        }
-      });
-    } else {
+    setBranch(null);
+    if (returnFocus && branch.side !== 'inline') {
       branch.row.focus({ preventScroll: true });
     }
   };

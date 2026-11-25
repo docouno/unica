@@ -216,15 +216,14 @@ export function MenuPreview({
   label,
   items,
   size = 'm',
-  className = '',
+  ...attributes
 }: {
   readonly label: string;
   readonly items: readonly MenuEntry[];
   readonly size?: MenuSize;
-  readonly className?: string;
-}): ReactElement {
+} & ComponentPropsWithRef<'div'>): ReactElement {
   return (
-    <MenuSurface role="group" aria-label={label} size={size} className={className}>
+    <MenuSurface {...attributes} role="group" aria-label={label} size={size}>
       <MenuRows items={items} preview />
     </MenuSurface>
   );

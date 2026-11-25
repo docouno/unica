@@ -15,6 +15,50 @@ async function navigate(page, params) {
 }
 
 export default {
+  'Two Escape keys return from an inline submenu to its own trigger': async ({ page, origin }) => {
+    await page.setViewportSize({ width: 1500, height: 950 });
+    const route = new URL(
+      '/?item=menu&tab=states&block=live&family=soft&scheme=both&vp=768',
+      origin,
+    );
+    await page.goto(route.href, { waitUntil: 'domcontentloaded' });
+    const board = page.locator('[data-wb-block="live"] .wb-artboard').first();
+    const trigger = board.getByRole('button', { name: 'View options' });
+    await trigger.waitFor({ timeout: 20_000 });
+    await trigger.press('ArrowDown');
+    await board.getByRole('menuitemcheckbox', { name: 'Preview' }).press('End');
+    await board.getByRole('menuitem', { name: 'Sort by' }).press('ArrowRight');
+    const child = board.getByRole('menu', { name: 'Sort by' });
+    const firstChoice = child.getByRole('menuitemradio', { name: 'Last modified' });
+    await page.waitForFunction(
+      (row) => row === document.activeElement,
+      await firstChoice.elementHandle(),
+    );
+    assert.equal(await board.getByRole('menu').count(), 1);
+
+    // Capture which row owns focus when the parent list replaces the child.
+    const transition = await child.evaluateHandle((panel) => {
+      const state = { focused: false };
+      const observer = new MutationObserver(() => {
+        const parentRow = panel.querySelector('[role="menuitem"][aria-haspopup="menu"]');
+        if (parentRow) {
+          observer.disconnect();
+          state.focused = parentRow === document.activeElement;
+        }
+      });
+      observer.observe(panel, { childList: true, subtree: true });
+      return state;
+    });
+    await page.keyboard.press('Escape');
+    await page.keyboard.press('Escape');
+    assert.ok(
+      await transition.evaluate((state) => state.focused),
+      'Restoring the parent list lost focus',
+    );
+    await board.getByRole('menu').waitFor({ state: 'hidden' });
+    assert.ok(await trigger.evaluate((button) => button === document.activeElement));
+  },
+
   'Escape dismisses a hovered frame preview while the catalog keeps keyboard focus': async ({
     page,
     origin,
