@@ -31,6 +31,15 @@ async function checkReferenceNames(page) {
   }
 }
 
+async function assertTopicFits(editor, name) {
+  const lines = await editor.getByText(name, { exact: true }).evaluate((label) => {
+    const range = document.createRange();
+    range.selectNodeContents(label);
+    return range.getClientRects().length;
+  });
+  assert.equal(lines, 1, name + ' must fit on one line');
+}
+
 export default {
   'Open HoverCard previews survive changing the comparison surface': async ({ page, origin }) => {
     await page.goto(
@@ -339,6 +348,59 @@ export default {
       await board.getByRole('listbox').waitFor();
       await page.keyboard.press('Escape');
       assert.equal(await field.evaluate((node) => node === document.activeElement), true);
+    }
+  },
+
+  'TagsInput keeps committed topics readable and removable in the base Playground': async ({
+    page,
+    origin,
+  }) => {
+    await page.goto(
+      new URL(
+        '/?item=tags-input&tab=playground&family=frost&scheme=light&surface=base&vp=360&scale=120&dir=rtl',
+        origin,
+      ).href,
+      { waitUntil: 'domcontentloaded' },
+    );
+    const editor = page.locator('.wb-artboard .tags-editor-proto[data-wb-subject]');
+    const draft = editor.getByRole('textbox', { name: 'Topics' });
+    const remove = (name) => editor.getByRole('button', { name: 'Remove ' + name, exact: true });
+    await draft.waitFor({ state: 'attached', timeout: 20_000 });
+    for (const name of ['Design', 'Research']) {
+      await assertTopicFits(editor, name);
+      assert.ok(await remove(name).isVisible());
+    }
+    assert.ok((await editor.boundingBox()).width > 240, 'Topics must span the phone field slot');
+    await draft.fill('Maps');
+    await editor.getByRole('button', { name: 'Add tags' }).click();
+    await remove('Maps').waitFor();
+    await remove('Design').click();
+    await remove('Design').waitFor({ state: 'detached' });
+    assert.ok(await remove('Research').isVisible());
+    assert.ok(await remove('Maps').isVisible());
+  },
+
+  'TagsInput keeps each size and variant readable on the narrow overlay': async ({
+    page,
+    origin,
+  }) => {
+    await page.goto(
+      new URL(
+        '/?item=tags-input&tab=states&slice=roles&family=pixel&scheme=light&surface=overlay&vp=360&scale=120&dir=rtl&freeze=1',
+        origin,
+      ).href,
+      { waitUntil: 'domcontentloaded' },
+    );
+    const slice = page.locator('section[data-wb-slice="roles"]');
+    for (const variant of ['default', 'ghost']) {
+      for (const size of ['s', 'm', 'l']) {
+        const field = slice.locator(
+          `.tags-editor-proto[data-variant="${variant}"][data-size="${size}"]`,
+        );
+        await field.waitFor({ timeout: 20_000 });
+        await assertTopicFits(field, 'Design');
+        await assertTopicFits(field, 'Research');
+      }
     }
   },
 

@@ -2,6 +2,7 @@ import { TagsInput } from '../../prototypes/tags-input/tags-input.proto.js';
 import { size, variant, status, disabled, readOnly, eventProp } from '../control-props.js';
 import { defineComponent } from '../../workbench/types.js';
 import { previewProps } from '../preview-code.js';
+import { ExampleSurface } from '../shared/example-surface.js';
 import { withOverlaySurface } from '../shared/with-overlay-surface.js';
 import {
   TagsAnatomy,
@@ -95,8 +96,8 @@ export default defineComponent({
       reason: 'A disabled field suppresses status feedback and keeps its accepted values visible.',
     },
   ],
-  render: withOverlaySurface(
-    ({ values: { initialValues, initialDraft, ...values }, ctx }) => (
+  render: ({ values: { initialValues, initialDraft, ...values }, ctx }) => (
+    <ExampleSurface surface={ctx.surface} sizing="border-box">
       <TagsInput
         {...values}
         {...ctx.subject}
@@ -109,8 +110,7 @@ export default defineComponent({
         onValuesChange={ctx.action('onValuesChange')}
         onDraftChange={ctx.action('onDraftChange')}
       />
-    ),
-    'border-box',
+    </ExampleSurface>
   ),
   code: ({ initialValues, maxTags, ...values }) => {
     const attrs = previewProps(values, {
@@ -136,7 +136,7 @@ export function TopicEditor() {
     {
       id: 'roles',
       rows: 'size',
-      cols: 'variant',
+      group: 'variant',
       title: 'Default and ghost by size',
       caption:
         'Compare the same two accepted topics and a five-tag limit across the three field sizes.',
