@@ -501,6 +501,20 @@ export default {
     await reset.press('Enter');
     await receipt.waitFor({ state: 'hidden' });
     assert.equal(await weekly.isChecked(), false);
+
+    await form.evaluate(async (node) => {
+      node.reset();
+      node.requestSubmit();
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+    const daily = form.getByRole('radio', { name: 'Daily', exact: true });
+    assert.ok(await daily.evaluate((input) => input === document.activeElement));
+    const group = form.getByRole('radiogroup', { description: /Choose a delivery frequency/ });
+    assert.equal(
+      await group.count(),
+      1,
+      'The later validation message describes the focused group',
+    );
   },
 
   'FileInput submits dropped bytes and follows the actual form owner on reset': async ({

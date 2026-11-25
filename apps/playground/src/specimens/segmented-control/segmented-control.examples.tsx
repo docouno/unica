@@ -1,4 +1,4 @@
-import { useId, useState } from 'react';
+import { useId, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import { ListIcon, SquaresFourIcon, SunIcon, MoonIcon, DesktopIcon } from '@phosphor-icons/react';
 import { Button, Flex, Title, SegmentedControl, Stack, Text } from '@docouno/unica';
@@ -206,23 +206,34 @@ export function AvailabilityExamples({ ctx }: PreviewProps) {
 
 export function FieldExample({ ctx }: PreviewProps) {
   const id = useId();
-  const [error, setError] = useState(false);
-  const [result, setResult] = useState('');
+  const [feedback, setFeedback] = useState<{ error?: true; result?: string }>({});
+  const feedbackRevision = useRef(0);
+  const { error, result } = feedback;
+
+  function report(next: typeof feedback) {
+    feedbackRevision.current += 1;
+    setFeedback(next);
+  }
+
   return (
     <form
       onSubmit={(event) => {
         event.preventDefault();
         const frequency = new FormData(event.currentTarget).get('frequency');
-        setResult(typeof frequency === 'string' ? frequency : '');
+        report(typeof frequency === 'string' ? { result: frequency } : {});
       }}
       onReset={(event) => {
         const reset = event.nativeEvent;
         const form = event.currentTarget;
-        // A document listener can cancel the reset after it leaves this form.
+        const revision = feedbackRevision.current;
+        // Wait for late cancellation, then clear only feedback that predates this reset.
         setTimeout(() => {
-          if (!reset.defaultPrevented && form.isConnected) {
-            setError(false);
-            setResult('');
+          if (
+            !reset.defaultPrevented &&
+            form.isConnected &&
+            feedbackRevision.current === revision
+          ) {
+            setFeedback({});
           }
         }, 0);
       }}
@@ -247,11 +258,8 @@ export function FieldExample({ ctx }: PreviewProps) {
             status={error ? 'danger' : 'neutral'}
             aria-labelledby={`${id}-label`}
             aria-describedby={error ? `${id}-help ${id}-error` : `${id}-help`}
-            onInvalid={() => setError(true)}
-            onValueChange={() => {
-              setError(false);
-              setResult('');
-            }}
+            onInvalid={() => report({ error: true })}
+            onValueChange={() => report({})}
             items={frequencies}
           />
         </FormField>
