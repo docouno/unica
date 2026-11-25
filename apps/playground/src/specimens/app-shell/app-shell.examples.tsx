@@ -52,6 +52,8 @@ import type {
 } from '../../prototypes/app-shell/navigation.proto.js';
 import '../../prototypes/app-shell/app-shell.examples.css';
 
+type Subject = PreviewProps['ctx']['subject'];
+
 function Example({
   title,
   children,
@@ -138,11 +140,14 @@ const navSections: readonly NavigationSection[] = [
 
 export function ExampleNavigation({
   onNavigate,
+  subject,
 }: {
+  readonly subject?: Subject;
   readonly onNavigate?: (value: string, label: string) => void;
 }): ReactElement {
   return (
     <AsidePanel
+      {...subject}
       title="Studio workspace"
       leading={<WorkspaceBadge>ST</WorkspaceBadge>}
       footer={
@@ -206,6 +211,7 @@ export function WorkspaceTopology({ ctx }: PreviewProps): ReactElement {
   const hasInspector = layout === 'classic' || layout === 'asides';
   return (
     <AppShell
+      {...ctx.subject}
       canvasAs="section"
       minHeight={320}
       topRail={
@@ -252,26 +258,26 @@ export function WorkspaceTopology({ ctx }: PreviewProps): ReactElement {
   );
 }
 
-export function NavigationStates(): ReactElement {
+export function NavigationStates({ ctx: { subject } }: PreviewProps): ReactElement {
   const [rail, setRail] = useState<RailDestination>('documents');
   const [drafts, setDrafts] = useState<readonly NavigationItem[]>([]);
   return (
     <div className="shell-study-panels">
       <Example title="Workspace rail">
         <div className="shell-study-rail">
-          <LeftRail active={rail} onNavigate={setRail} showBrand />
+          <LeftRail {...subject} active={rail} onNavigate={setRail} showBrand />
         </div>
       </Example>
       <Example title="NavList · routes and disclosure groups">
-        <AsidePanel title="Settings">
+        <AsidePanel {...subject} title="Settings">
           <NavList label="Settings" sections={navSections} defaultActive="notifications" />
         </AsidePanel>
       </Example>
       <Example title="TreeView · branches and leaves">
-        <ExampleNavigation />
+        <ExampleNavigation subject={subject} />
       </Example>
       <Example title="Empty tree">
-        <AsidePanel title="New workspace">
+        <AsidePanel {...subject} title="New workspace">
           <TreeView
             label="Documents"
             items={drafts}
@@ -312,7 +318,7 @@ const tabs: readonly DocumentTab[] = [
   { value: 'archive', label: 'Archive', dirty: true },
 ];
 
-export function Documents(): ReactElement {
+export function Documents({ ctx }: PreviewProps): ReactElement {
   const [items, setItems] = useState([...tabs]);
   const [value, select] = useState('interviews');
   const [newFocus, setNewFocus] = useState<string>();
@@ -345,7 +351,7 @@ export function Documents(): ReactElement {
           canvasAs="section"
           minHeight={260}
           topRail={
-            <TopRail brand={null}>
+            <TopRail {...ctx.subject} brand={null}>
               <DocumentTabs
                 items={items}
                 value={value}
@@ -366,6 +372,7 @@ export function Documents(): ReactElement {
         >
           <Canvas title={items.find((item) => item.value === value)?.label ?? 'Open a document'} />
           <dialog
+            {...ctx.subject}
             className="dialog-surface shell-study-confirm"
             ref={confirmation}
             aria-labelledby={labelId}
@@ -406,13 +413,13 @@ export function Documents(): ReactElement {
         </AppShell>
       </Example>
       <Example title="Empty strip">
-        <EmptyDocuments />
+        <EmptyDocuments ctx={ctx} />
       </Example>
     </div>
   );
 }
 
-function EmptyDocuments(): ReactElement {
+function EmptyDocuments({ ctx }: PreviewProps): ReactElement {
   const [open, setOpen] = useState(false);
   const [nextFocus, setNextFocus] = useState<string>();
   return (
@@ -420,7 +427,7 @@ function EmptyDocuments(): ReactElement {
       canvasAs="section"
       minHeight={155}
       topRail={
-        <TopRail brand={null}>
+        <TopRail {...ctx.subject} brand={null}>
           <DocumentTabs
             items={open ? [{ value: 'draft', label: 'Untitled' }] : []}
             value={open ? 'draft' : ''}
@@ -454,14 +461,21 @@ function EmptyDocuments(): ReactElement {
   );
 }
 
-export function InspectorRows({ children }: { readonly children?: ReactNode }): ReactElement {
+export function InspectorRows({
+  children,
+  subject,
+}: {
+  readonly children?: ReactNode;
+  readonly subject?: Subject;
+}): ReactElement {
   const keyId = useId();
   return (
     <div className="shell-study-inspector">
-      <PropertyRow label="Owner">
+      <PropertyRow {...subject} label="Owner">
         <Text size="caption-l">Research team</Text>
       </PropertyRow>
       <PropertyRow
+        {...subject}
         label="Visibility"
         status={
           <Badge size="s" status="neutral">
@@ -473,7 +487,7 @@ export function InspectorRows({ children }: { readonly children?: ReactNode }): 
           Workspace
         </Text>
       </PropertyRow>
-      <PropertyRow label="Reference" controlId={keyId}>
+      <PropertyRow {...subject} label="Reference" controlId={keyId}>
         <Input
           id={keyId}
           dir="ltr"
@@ -488,11 +502,21 @@ export function InspectorRows({ children }: { readonly children?: ReactNode }): 
   );
 }
 
-export function ResponsiveShell(): ReactElement {
+export function ResponsiveShell({ ctx: { subject } }: PreviewProps): ReactElement {
   const [name, setName] = useState('Interview synthesis');
   const workspace = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    // The shell owns the native sheets, including the chrome outside their aside content.
+    const panels = workspace.current?.querySelectorAll('dialog.app-shell-panel');
+    for (const [attribute, value] of Object.entries(subject)) {
+      panels?.forEach((panel) => panel.setAttribute(attribute, value));
+    }
+  }, [subject]);
+
   return (
     <AppShell
+      {...subject}
       canvasAs="section"
       ref={workspace}
       viewportHeight={580}
@@ -576,7 +600,13 @@ export function ResponsiveShell(): ReactElement {
   );
 }
 
-function MobilePreview({ side }: { readonly side: 'start' | 'end' }): ReactElement {
+function MobilePreview({
+  side,
+  subject,
+}: {
+  readonly side: 'start' | 'end';
+  readonly subject: Subject;
+}): ReactElement {
   const start = side === 'start';
   return (
     <div className="shell-study-mobile-pin" aria-hidden="true" inert>
@@ -593,6 +623,7 @@ function MobilePreview({ side }: { readonly side: 'start' | 'end' }): ReactEleme
       </AppShell>
       <div className="shell-study-mobile-scrim" />
       <div
+        {...subject}
         className="shell-study-mobile-sheet app-shell-sheet"
         data-preview="pinned"
         data-side={side}
@@ -620,7 +651,7 @@ function MobilePreview({ side }: { readonly side: 'start' | 'end' }): ReactEleme
   );
 }
 
-export function Properties(): ReactElement {
+export function Properties({ ctx: { subject } }: PreviewProps): ReactElement {
   const id = useId();
   const [alias, setAlias] = useState('Design team!');
   const invalidAlias = !/^(?:\p{L}\p{M}*|\p{Nd}|-)*$/u.test(alias);
@@ -629,6 +660,7 @@ export function Properties(): ReactElement {
       <Example title="SettingsRow · standard settings">
         <Card className="app-shell-example-properties" size="s">
           <SettingsRow
+            {...subject}
             label="Default view"
             description={<bdi>Applies when opening a project on this device.</bdi>}
             controlId={`${id}-view`}
@@ -642,6 +674,7 @@ export function Properties(): ReactElement {
             />
           </SettingsRow>
           <SettingsRow
+            {...subject}
             label="Permission inheritance"
             description={<bdi>Managed by your workspace administrator.</bdi>}
             status={
@@ -661,6 +694,7 @@ export function Properties(): ReactElement {
             />
           </SettingsRow>
           <SettingsRow
+            {...subject}
             label="Workspace alias"
             description={
               <Text
@@ -696,7 +730,7 @@ export function Properties(): ReactElement {
       </Example>
       <Example title="PropertyRow · narrow inspector">
         <AsidePanel side="right" title="Document properties">
-          <InspectorRows />
+          <InspectorRows subject={subject} />
         </AsidePanel>
       </Example>
     </div>
@@ -707,9 +741,11 @@ type SaveState = 'clean' | 'dirty' | 'saving' | 'error';
 
 function SaveBar({
   state,
+  subject,
   onDiscard,
   onSave,
 }: {
+  readonly subject: Subject;
   readonly state: SaveState;
   readonly onDiscard?: () => void;
   readonly onSave?: MouseEventHandler<HTMLButtonElement>;
@@ -718,6 +754,7 @@ function SaveBar({
   const clean = state === 'clean';
   return (
     <StickyActionBar
+      {...subject}
       data-state={state}
       aria-label="Document changes"
       actions={
@@ -808,6 +845,7 @@ export function SaveStates({ ctx }: PreviewProps): ReactElement {
         </Card>
       </div>
       <SaveBar
+        subject={ctx.subject}
         state={state}
         onSave={({ currentTarget: trigger }) => {
           if (fail) {
@@ -843,11 +881,11 @@ export function SaveStates({ ctx }: PreviewProps): ReactElement {
   );
 }
 
-export function SaveStateGallery(): ReactElement {
+export function SaveStateGallery({ ctx }: PreviewProps): ReactElement {
   return (
     <div className="shell-study-save-previews" inert>
       {(['clean', 'dirty', 'saving', 'error'] as const).map((state) => (
-        <SaveBar key={state} state={state} />
+        <SaveBar key={state} state={state} subject={ctx.subject} />
       ))}
     </div>
   );
@@ -881,6 +919,7 @@ export function LayoutExamples({ ctx }: PreviewProps): ReactElement {
     >
       <Example title="Box, Stack and Flex · spacing, baseline and wrapping">
         <Box
+          {...ctx.subject}
           className="shell-study-layout-guide shell-study-layout-box"
           padding={{ tablet: 24, desktop: 32 }}
         >
@@ -909,6 +948,7 @@ export function LayoutExamples({ ctx }: PreviewProps): ReactElement {
       </Example>
       <Example title="Grid and GridItem · one to four tracks">
         <Grid
+          {...ctx.subject}
           className="shell-study-layout-guide"
           columns={{ mobile: 1, tablet: 2, desktop: 3, wide: 4 }}
           gap={{ mobile: 8, tablet: 16, wide: 24 }}
@@ -928,6 +968,7 @@ export function LayoutExamples({ ctx }: PreviewProps): ReactElement {
         <Stack gap={8}>
           {(['s', 'm', 'l'] as const).map((size, index) => (
             <Container
+              {...ctx.subject}
               size={size}
               className="shell-study-layout-guide shell-study-layout-measure"
               key={size}
@@ -941,14 +982,14 @@ export function LayoutExamples({ ctx }: PreviewProps): ReactElement {
   );
 }
 
-export function DrawerLayouts(): ReactElement {
+export function DrawerLayouts({ ctx }: PreviewProps): ReactElement {
   return (
     <div className="shell-study-panels">
       <Example title="Navigation">
-        <MobilePreview side="start" />
+        <MobilePreview side="start" subject={ctx.subject} />
       </Example>
       <Example title="Inspector">
-        <MobilePreview side="end" />
+        <MobilePreview side="end" subject={ctx.subject} />
       </Example>
     </div>
   );
