@@ -12,21 +12,6 @@
   gap: var(--space-2);
   min-inline-size: 0;
 }
-.hover-demo-kicker {
-  display: flex;
-  align-items: start;
-  gap: var(--space-8);
-  color: var(--fg-secondary);
-  font-size: var(--text-size-caption-l);
-  line-height: var(--text-size-caption-l-lh);
-}
-.hover-demo-kicker > span,
-.hover-demo-kicker > bdi {
-  min-inline-size: 0;
-}
-.hover-demo-kicker > .hover-demo-glyph {
-  flex: none;
-}
 .hover-demo-facts {
   display: flex;
   flex-wrap: wrap;
@@ -38,25 +23,4 @@
 .hover-demo-facts > * {
   min-inline-size: 0;
   max-inline-size: 100%;
-}
-.hover-demo-separated {
-  border-block-start: 1px solid var(--border-subtle);
-  padding-block-start: var(--space-12);
-}
-.hover-demo-tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-4);
-}
-.hover-demo-loading {
-  display: grid;
-  gap: var(--space-12);
-  min-block-size: 88px;
-  align-content: start;
-}
-.hover-demo-unavailable {
-  display: grid;
-  gap: var(--space-8);
-  min-block-size: 88px;
-  align-content: center;
 }

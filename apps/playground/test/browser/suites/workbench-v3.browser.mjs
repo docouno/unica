@@ -15,6 +15,52 @@ async function navigate(page, params) {
 }
 
 export default {
+  'Escape dismisses a hovered frame preview while the catalog keeps keyboard focus': async ({
+    page,
+    origin,
+  }) => {
+    await page.setViewportSize({ width: 2000, height: 950 });
+    const route = new URL(
+      '/?item=hover-card&tab=states&block=interaction&family=frost&scheme=both&vp=360&dir=rtl',
+      origin,
+    );
+    await page.goto(route.href, { waitUntil: 'domcontentloaded' });
+    const frames = page.locator('[data-wb-block="interaction"] .wb-artboard iframe');
+    const owner = frames.first().contentFrame();
+    const peer = frames.last().contentFrame();
+    const link = owner.getByRole('link');
+    const card = owner.locator('.unica-hover-card:popover-open');
+    const outside = page
+      .getByRole('group', { name: 'Component status' })
+      .getByRole('button', { name: 'UI', exact: true });
+    await link.waitFor({ timeout: 20_000 });
+    assert.equal(await frames.count(), 2);
+    await outside.focus();
+    await link.hover();
+    await card.waitFor();
+    assert.ok(await outside.evaluate((node) => node === document.activeElement));
+    await page.keyboard.press('Escape');
+    await card.waitFor({ state: 'hidden' });
+    assert.ok(await outside.evaluate((node) => node === document.activeElement));
+    assert.equal(await peer.locator('.unica-hover-card:popover-open').count(), 0);
+
+    const side = page
+      .locator('[data-wb-block="interaction"]')
+      .getByRole('combobox', { name: 'Side', exact: true });
+    await outside.hover();
+    await side.focus();
+    await link.hover();
+    await card.waitFor();
+    await side.press('Alt+ArrowDown');
+    const selector = await side.elementHandle();
+    await page.waitForFunction((select) => select.matches(':open'), selector);
+    await page.keyboard.press('Escape');
+    await page.waitForFunction((select) => !select.matches(':open'), selector);
+    assert.ok(await card.isVisible(), 'The open native selector owns its first Escape key');
+    await page.keyboard.press('Escape');
+    await card.waitFor({ state: 'hidden' });
+  },
+
   'Drawer scrolls the whole panel when the keyboard leaves too little room': async ({
     page,
     origin,
