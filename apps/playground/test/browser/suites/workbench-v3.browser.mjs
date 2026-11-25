@@ -32,6 +32,29 @@ async function checkReferenceNames(page) {
 }
 
 export default {
+  'Open HoverCard previews survive changing the comparison surface': async ({ page, origin }) => {
+    await page.goto(
+      new URL(
+        '/?item=hover-card&tab=compositions&block=identity&family=frost&scheme=both&surface=base',
+        origin,
+      ).href,
+      { waitUntil: 'domcontentloaded' },
+    );
+    const frames = page.locator('[data-wb-block="identity"] iframe');
+    const preview = (index) => frames.nth(index).contentFrame().locator(':popover-open');
+    await preview(0).waitFor({ timeout: 20_000 });
+    await preview(1).waitFor();
+    await page.getByRole('combobox', { name: 'Surface', exact: true }).selectOption('overlay');
+    for (const index of [0, 1]) {
+      await frames
+        .nth(index)
+        .contentFrame()
+        .locator('.hint-example-viewport-content[data-surface="overlay"]')
+        .waitFor();
+      await preview(index).waitFor();
+    }
+  },
+
   'An editor keeps its modal open for Escape during IME composition': async ({ page, origin }) => {
     await page.goto(
       new URL('/?item=modal&tab=states&block=guard&family=frost&scheme=both', origin).href,
