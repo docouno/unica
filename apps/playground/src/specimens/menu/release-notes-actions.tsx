@@ -1,4 +1,4 @@
-import { useId, useState } from 'react';
+import { useId, useRef, useState } from 'react';
 import { CopyIcon, DotsThreeIcon, FileTextIcon, PencilSimpleIcon } from '@phosphor-icons/react';
 import { Card, Flex, Icon, IconButton, Input, Link, Stack, Text } from '@docouno/unica';
 import { FormField } from '../../prototypes/form-field/form-field.proto.js';
@@ -13,14 +13,21 @@ export function ReleaseNotesActions({
   const noteId = useId();
   const [selection, setSelection] = useState('');
   const [receipt, setReceipt] = useState('');
+  const latestAction = useRef(0);
   const copySelection = () => {
+    const action = ++latestAction.current;
+    const finish = (copied = false) => {
+      if (latestAction.current === action) {
+        setReceipt(copied ? `Copied: ${selection}` : `Could not copy: ${selection}`);
+      }
+    };
     if (!navigator.clipboard) {
-      setReceipt(`Could not copy: ${selection}`);
+      finish();
       return;
     }
     navigator.clipboard.writeText(selection).then(
-      () => setReceipt(`Copied: ${selection}`),
-      () => setReceipt(`Could not copy: ${selection}`),
+      () => finish(true),
+      () => finish(),
     );
   };
   return (
@@ -45,7 +52,10 @@ export function ReleaseNotesActions({
           id: 'rename',
           label: 'Rename document',
           icon: PencilSimpleIcon,
-          run: () => setReceipt('Rename requested for release notes.'),
+          run: () => {
+            latestAction.current++;
+            setReceipt('Rename requested for release notes.');
+          },
         },
       ]}
       trigger={(bindings) => (

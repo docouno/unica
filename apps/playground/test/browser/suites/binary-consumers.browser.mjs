@@ -233,6 +233,27 @@ export default {
     await menu.getByRole('menuitem', { name: 'Copy selected text' }).click();
     await page.getByRole('status').filter({ hasText: 'Copied: Select part' }).waitFor();
     assert.equal(await page.evaluate(() => navigator.clipboard.readText()), 'Select part');
+
+    const finishCopy = await page.evaluateHandle(() => {
+      let complete;
+      const pending = new Promise((resolve) => {
+        complete = resolve;
+      });
+      navigator.clipboard.writeText = () => pending;
+      return complete;
+    });
+    await rightClickSelection();
+    await menu.getByRole('menuitem', { name: 'Copy selected text' }).click();
+    const card = page.getByRole('group', { name: 'Release notes', exact: true });
+    await card.getByRole('button', { name: 'Release notes actions' }).press('Enter');
+    await menu.getByRole('menuitem', { name: 'Rename document' }).press('Enter');
+    const receipt = card.getByRole('status');
+    await receipt.getByText('Rename requested for release notes.', { exact: true }).waitFor();
+    await finishCopy.evaluate(async (resolve) => {
+      resolve();
+      await new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done)));
+    });
+    assert.equal(await receipt.textContent(), 'Rename requested for release notes.');
   },
 
   'FormField keeps option names and described group feedback while List keeps its trailing Switch':
