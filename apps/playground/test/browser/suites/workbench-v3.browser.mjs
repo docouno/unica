@@ -15,6 +15,68 @@ async function navigate(page, params) {
 }
 
 export default {
+  'TagsInput renders its mixed-script tags in the offline workbench': async ({ page, origin }) => {
+    const route = new URL(
+      '/?item=tags-input&tab=states&block=overflow&family=soft&scheme=light&dir=rtl',
+      origin,
+    );
+    await page.goto(route.href, { waitUntil: 'domcontentloaded' });
+    const board = page.locator('section[data-wb-block="overflow"] .wb-artboard').first();
+    const words = ['العمارة', 'עברית', '東京'];
+    await board.getByText(words[2], { exact: true }).waitFor({ timeout: 20_000 });
+    await page.evaluate(() => document.fonts.ready);
+    for (const word of words) {
+      const missing = await board.getByText(word, { exact: true }).evaluate((label) => {
+        const canvas = document.createElement('canvas');
+        const context = canvas.getContext('2d');
+        const style = getComputedStyle(label);
+        context.font = style.fontWeight + ' 36px ' + style.fontFamily;
+        function draw(character) {
+          context.clearRect(0, 0, canvas.width, canvas.height);
+          context.fillText(character, 8, 50);
+          return canvas.toDataURL();
+        }
+        const missingGlyph = draw('\u0378');
+        return [...new Set(label.textContent)].filter(
+          (character) => draw(character) === missingGlyph,
+        );
+      });
+      assert.deepEqual(missing, [], 'Every character in ' + word + ' has a glyph');
+    }
+  },
+
+  'TagsInput keeps the draft text beside Add when the matrix scales down': async ({
+    page,
+    origin,
+  }) => {
+    await page.setViewportSize({ width: 1500, height: 950 });
+    const route = new URL(
+      '/?item=tags-input&tab=states&block=drafts&vp=1440&dir=rtl&scale=120&surface=overlay',
+      origin,
+    );
+    await page.goto(route.href, { waitUntil: 'domcontentloaded' });
+    const board = page.locator('section[data-wb-block="drafts"] .wb-artboard').first();
+    const field = board
+      .locator('.tags-editor-proto[data-size="l"][data-variant="default"]')
+      .first();
+    const input = field.getByRole('textbox');
+    await input.waitFor({ timeout: 20_000 });
+    await input.fill('One\nTwo\nThree\nSummer collection acquisitions — ' + 'W'.repeat(250));
+    await input.blur();
+    const textEdge = await input.evaluate((element) => {
+      const style = getComputedStyle(element);
+      return (
+        element.getBoundingClientRect().left +
+        (element.clientLeft + Number.parseFloat(style.paddingLeft)) * element.currentCSSZoom
+      );
+    });
+    const add = await field.getByRole('button', { name: 'Add tags' }).boundingBox();
+    assert.ok(
+      add && textEdge >= add.x + add.width - 1,
+      'The RTL editing area ends before the Add button',
+    );
+  },
+
   'Select shows the remaining choices in a scaled narrow field': async ({ page, origin }) => {
     await page.setViewportSize({ width: 1500, height: 900 });
     const route = new URL(

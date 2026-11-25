@@ -249,10 +249,25 @@ it('uses the actual tag limit in the readout before and after an inspector edit'
   const displayedLimits = (): string[] | null => jsx.textContent?.match(/maxTags=\{\d+\}/g) ?? null;
   expect(displayedLimits()).toEqual(['maxTags={5}']);
 
-  fireEvent.change(screen.getByRole('spinbutton', { name: 'maxTags' }), {
-    target: { value: '2' },
-  });
+  const limit = screen.getByRole('spinbutton', { name: 'maxTags' });
+  const draft = screen.getByRole('textbox', { name: 'Topics' });
+  fireEvent.change(draft, { target: { value: 'Cartography' } });
+  fireEvent.change(limit, { target: { value: '2.5' } });
   expect(displayedLimits()).toEqual(['maxTags={2}']);
+  expect(screen.getByRole<HTMLButtonElement>('button', { name: 'Add tags' }).disabled).toBe(true);
+  expect(screen.getByText('2 / 2')).toBeTruthy();
+
+  fireEvent.change(limit, { target: { value: '-1' } });
+  expect(displayedLimits()).toEqual(['maxTags={0}']);
+  expect(screen.getByText('No tags can be added.')).toBeTruthy();
+  expect(screen.getByText('2 / 0')).toBeTruthy();
+  expect(draft).toHaveProperty('value', 'Cartography');
+  fireEvent.keyDown(draft, { key: 'Enter' });
+  expect(draft.getAttribute('aria-invalid')).toBe('true');
+  fireEvent.change(limit, { target: { value: '3' } });
+  expect(draft.getAttribute('aria-invalid')).toBeNull();
+  expect(draft).toHaveProperty('value', 'Cartography');
+  expect(screen.getByRole<HTMLButtonElement>('button', { name: 'Add tags' }).disabled).toBe(false);
 });
 
 it('keeps src/workbench portable with zero app-specific imports or Unica token leaks', async () => {

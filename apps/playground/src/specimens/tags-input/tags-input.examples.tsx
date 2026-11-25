@@ -1,29 +1,34 @@
-import { FormField } from '../form-field/form-field.proto.js';
 import { useId, useRef, useState } from 'react';
 import type { ReactElement, ReactNode } from 'react';
+import { Button, Card, Input, Stack, Text } from '@docouno/unica';
 import type { ControlSize } from '@docouno/unica';
-import { Button } from '@docouno/unica';
-import { Input } from '@docouno/unica';
-import { TagGroup } from '../tag/tag.proto.js';
-import { TagsInput } from './tags-input.proto.js';
+import { FormField } from '../../prototypes/form-field/form-field.proto.js';
+import { TagGroup } from '../../prototypes/tag/tag.proto.js';
+import { TagsInput } from '../../prototypes/tags-input/tags-input.proto.js';
+import type { PreviewProps } from '../../workbench/types.js';
+import { ExampleSurface } from '../shared/example-surface.js';
 import './tags-input.examples.css';
 
 function Example({
   title,
   children,
+  inert,
 }: {
+  readonly inert?: boolean;
   readonly title: string;
   readonly children: ReactNode;
 }): ReactElement {
   return (
-    <div className="tags-example-proto">
-      <div className="tags-example-title-proto">{title}</div>
+    <Stack gap={16} inert={inert} style={{ minInlineSize: 0 }}>
+      <Text size="caption-l" color="secondary">
+        <bdi>{title}</bdi>
+      </Text>
       {children}
-    </div>
+    </Stack>
   );
 }
 
-export function TagsRoles(): ReactElement {
+export function TagsRoles({ ctx }: PreviewProps): ReactElement {
   return (
     <div className="tags-examples-proto">
       {(['default', 'ghost'] as const).map((variant) => (
@@ -31,9 +36,10 @@ export function TagsRoles(): ReactElement {
           key={variant}
           title={variant === 'default' ? 'Default · form field' : 'Ghost · inline property'}
         >
-          <div className="tags-demo-stack-proto">
+          <Stack gap={16}>
             {(['s', 'm', 'l'] as const).map((size) => (
               <TagsInput
+                {...ctx.subject}
                 key={size}
                 label={`${size.toUpperCase()} · Topics`}
                 variant={variant}
@@ -42,24 +48,30 @@ export function TagsRoles(): ReactElement {
               />
             ))}
             <TagsInput
+              {...ctx.subject}
               label="Empty"
               variant={variant}
-              placeholder="Add a topic…"
+              placeholder="Add a topic"
               description="Enter or Add to confirm. Spaces and commas belong to the tag."
             />
-          </div>
+          </Stack>
         </Example>
       ))}
     </div>
   );
 }
 
-function ShapeComparison({ size }: { readonly size: ControlSize }): ReactElement {
+function ShapeComparison({
+  size,
+  ctx,
+}: PreviewProps & { readonly size: ControlSize }): ReactElement {
   const [values, setValues] = useState<readonly string[]>(['Research', 'Field notes']);
   const editor = useRef<HTMLTextAreaElement>(null);
   return (
     <Example title={`${size.toUpperCase()} · same values in two contexts`}>
-      <div className="tags-example-title-proto">Outside the field</div>
+      <Text size="caption-l" color="secondary">
+        Outside the field
+      </Text>
       <TagGroup
         size={size}
         items={values.map((value) => ({ id: value, label: value, removeLabel: `Remove ${value}` }))}
@@ -69,34 +81,35 @@ function ShapeComparison({ size }: { readonly size: ControlSize }): ReactElement
         emptyMessage="No subjects"
       />
       <TagsInput
+        {...ctx.subject}
         ref={editor}
         size={size}
         label="Inside the field"
         values={values}
         onValuesChange={setValues}
-        placeholder="Add a subject…"
-        description="The two views share their values. Add or remove in either view."
+        placeholder="Add a subject"
       />
     </Example>
   );
 }
 
-export function TagsShape(): ReactElement {
+export function TagsShape({ ctx }: PreviewProps): ReactElement {
   return (
     <div className="tags-examples-proto">
       {(['s', 'm', 'l'] as const).map((size) => (
-        <ShapeComparison key={size} size={size} />
+        <ShapeComparison key={size} size={size} ctx={ctx} />
       ))}
     </div>
   );
 }
 
-export function TagsAnatomy(): ReactElement {
+export function TagsAnatomy({ ctx }: PreviewProps): ReactElement {
   const id = useId();
   return (
     <div className="tags-examples-proto">
       <Example title="One shared field">
         <TagsInput
+          {...ctx.subject}
           label="Topics"
           initialValues={['Research', 'Field notes', 'Paris, Texas']}
           initialDraft="Oral history"
@@ -105,30 +118,31 @@ export function TagsAnatomy(): ReactElement {
       </Example>
       <Example title="No selected options or menu">
         <TagsInput
+          {...ctx.subject}
           label="Allowed domains"
           initialValues={['example.org', 'archive.example']}
-          placeholder="Add a domain…"
+          placeholder="Add a domain"
           description="A free-form set of strings. Use Combobox for suggestions or a catalog."
         />
       </Example>
       {(['s', 'm', 'l'] as const).map((size) => (
-        <Example title={`${size.toUpperCase()} · shared control rhythm`} key={size}>
-          <div className="tags-demo-stack-proto">
+        <Example title={`${size.toUpperCase()} · shared control rhythm`} key={size} inert>
+          <Stack gap={16}>
             <FormField htmlFor={`${id}-title-${size}`} label="Collection title" size={size}>
               <Input id={`${id}-title-${size}`} size={size} defaultValue="Field notes" />
             </FormField>
-            <TagsInput size={size} label="Topics" initialValues={['Research']} />
+            <TagsInput {...ctx.subject} size={size} label="Topics" initialValues={['Research']} />
             <Button size={size} variant="secondary" tone="neutral">
               Save collection
             </Button>
-          </div>
+          </Stack>
         </Example>
       ))}
     </div>
   );
 }
 
-export function TagsInteraction(): ReactElement {
+export function TagsInteraction({ ctx }: PreviewProps): ReactElement {
   const comparisons = [
     ['Rest · empty draft', undefined, ''],
     ['Field hover', 'hover', ''],
@@ -142,10 +156,11 @@ export function TagsInteraction(): ReactElement {
   return (
     <div className="tags-examples-proto">
       {(['default', 'ghost'] as const).map((variant) => (
-        <Example title={variant === 'default' ? 'Default' : 'Ghost'} key={variant}>
-          <div className="tags-demo-stack-proto">
+        <Example title={variant === 'default' ? 'Default' : 'Ghost'} key={variant} inert>
+          <Stack gap={16}>
             {comparisons.map(([label, previewState, initialDraft]) => (
               <TagsInput
+                {...ctx.subject}
                 key={label}
                 label={label}
                 variant={variant}
@@ -154,69 +169,81 @@ export function TagsInteraction(): ReactElement {
                 previewState={previewState}
               />
             ))}
-          </div>
+          </Stack>
         </Example>
       ))}
       <Example title="Live keyboard & pointer">
         <TagsInput
+          {...ctx.subject}
           label="Try it"
           initialValues={['Research', 'Interviews']}
-          description="Tab into the editor. At its start, use the backward arrow; on an empty draft, Backspace focuses the last ×. A second press removes it. Escape returns to editing."
+          description="Tab into the editor. At its start, use the backward arrow. On an empty draft, Backspace focuses the last ×. A second press removes it. Escape returns to editing."
         />
       </Example>
     </div>
   );
 }
 
-export function TagsFeedback(): ReactElement {
+export function TagsFeedback({ ctx }: PreviewProps): ReactElement {
   return (
-    <div className="tags-examples-proto">
-      <TagsInput
-        label="Info · visibility"
-        status="info"
-        initialValues={['Research']}
-        message="Topics are visible to everyone with collection access."
-      />
-      <TagsInput
-        label="Success · checked values"
-        status="success"
-        initialValues={['example.org']}
-        message="All domains are verified."
-      />
-      <TagsInput
-        label="Warning · review before sharing"
-        status="warning"
-        initialValues={['External reviewers']}
-        message="Some recipients are outside your organization."
-      />
-      <TagsInput
-        label="Danger · field validation"
-        status="danger"
-        initialValues={['example.org']}
-        message="Add at least two domains before continuing."
-      />
-      <TagsInput
-        label="Required · empty after checking"
-        required
-        status="danger"
-        message="Add at least one topic."
-      />
-      <TagsInput
-        label="Ghost · invalid draft"
-        variant="ghost"
-        initialDraft="example"
-        initialError="Nothing added. Line 1: Enter a complete domain."
-        validate={(value) =>
-          /^[^\s.]+(?:\.[^\s.]+)+$/.test(value) ? undefined : 'Enter a complete domain.'
-        }
-      />
-      <TagsInput
-        label="Duplicate · retained draft"
-        initialValues={['Research']}
-        initialDraft="Research"
-        initialError="Nothing added. Line 1: “Research” is already included."
-      />
-    </div>
+    <Stack gap={24}>
+      <div className="tags-examples-proto" inert>
+        <TagsInput
+          {...ctx.subject}
+          label="Info · visibility"
+          status="info"
+          initialValues={['Research']}
+          message="Topics are visible to everyone with collection access."
+        />
+        <TagsInput
+          {...ctx.subject}
+          label="Success · checked values"
+          status="success"
+          initialValues={['example.org']}
+          message="All domains are verified."
+        />
+        <TagsInput
+          {...ctx.subject}
+          label="Warning · review before sharing"
+          status="warning"
+          initialValues={['External reviewers']}
+          message="Some recipients are outside your organization."
+        />
+        <TagsInput
+          {...ctx.subject}
+          label="Danger · field validation"
+          status="danger"
+          initialValues={['example.org']}
+          message="Add at least two domains before continuing."
+        />
+        <TagsInput
+          {...ctx.subject}
+          label="Required · empty after checking"
+          required
+          status="danger"
+          message="Add at least one topic."
+        />
+      </div>
+      <div className="tags-examples-proto">
+        <TagsInput
+          {...ctx.subject}
+          label="Ghost · invalid draft"
+          variant="ghost"
+          initialDraft="example"
+          initialError="Nothing added. Line 1: Enter a complete domain."
+          validate={(value) =>
+            /^[^\s.]+(?:\.[^\s.]+)+$/.test(value) ? undefined : 'Enter a complete domain.'
+          }
+        />
+        <TagsInput
+          {...ctx.subject}
+          label="Duplicate · retained draft"
+          initialValues={['Research']}
+          initialDraft="Research"
+          initialError="Nothing added. Line 1: “Research” is already included."
+        />
+      </div>
+    </Stack>
   );
 }
 
@@ -224,61 +251,31 @@ function validateEmail(value: string): string | undefined {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value) ? undefined : 'Enter a complete email address.';
 }
 
-function BatchLab(): ReactElement {
-  const [version, setVersion] = useState(0);
-  const [sample, setSample] = useState('editor@example.org\nmissing-domain\nreviewer@example.org');
-  return (
-    <div className="tags-demo-stack-proto">
-      <TagsInput
-        key={version}
-        label="Recipients"
-        initialValues={['team@example.org']}
-        initialDraft={sample}
-        initialError={
-          sample.includes('missing-domain')
-            ? 'Nothing added. Line 2: Enter a complete email address.'
-            : ''
-        }
-        validate={validateEmail}
-        maxTags={8}
-        description="Fix missing-domain, then use Add. Valid lines wait with the rejected line; nothing disappears."
-      />
-      <div className="tags-demo-actions-proto">
-        <Button
-          size="s"
-          variant="secondary"
-          tone="neutral"
-          onClick={() => {
-            setSample('editor@example.org\nmissing-domain\nreviewer@example.org');
-            setVersion(version + 1);
-          }}
-        >
-          Load rejected batch
-        </Button>
-        <Button
-          size="s"
-          variant="ghost"
-          tone="neutral"
-          onClick={() => {
-            setSample('editor@example.org\nreviewer@example.org');
-            setVersion(version + 1);
-          }}
-        >
-          Load valid batch
-        </Button>
-      </div>
-    </div>
-  );
-}
-
-export function TagsBatches(): ReactElement {
+export function TagsBatches({ ctx }: PreviewProps): ReactElement {
+  const action = ctx.story?.lastAction;
+  const rejected = action?.id !== 'valid';
   return (
     <div className="tags-examples-proto">
       <Example title="Repair a batch · live local validation">
-        <BatchLab />
+        <TagsInput
+          {...ctx.subject}
+          key={action?.seq ?? 0}
+          label="Recipients"
+          initialValues={['team@example.org']}
+          initialDraft={
+            rejected
+              ? 'editor@example.org\nmissing-domain\nreviewer@example.org'
+              : 'editor@example.org\nreviewer@example.org'
+          }
+          initialError={rejected ? 'Nothing added. Line 2: Enter a complete email address.' : ''}
+          validate={validateEmail}
+          maxTags={8}
+          description="Use one complete address per line. Correct any rejected line, then add the batch."
+        />
       </Example>
       <Example title="Free text · punctuation is content">
         <TagsInput
+          {...ctx.subject}
           label="Places"
           initialValues={['Paris, Texas', 'New York']}
           initialDraft="Portland, Maine"
@@ -287,6 +284,7 @@ export function TagsBatches(): ReactElement {
       </Example>
       <Example title="Rejected batch · capacity">
         <TagsInput
+          {...ctx.subject}
           label="Topics"
           initialValues={['Research']}
           initialDraft={'History\nPhotography\nInterviews'}
@@ -296,6 +294,7 @@ export function TagsBatches(): ReactElement {
       </Example>
       <Example title="Four visible lines · native scroll beyond">
         <TagsInput
+          {...ctx.subject}
           label="Recipients"
           initialDraft={
             'one@example.org\ntwo@example.org\nincomplete\nthree@example.org\nfour@example.org\nfive@example.org'
@@ -309,33 +308,12 @@ export function TagsBatches(): ReactElement {
   );
 }
 
-function ReadingLab(): ReactElement {
-  const [readOnly, setReadOnly] = useState(false);
-  return (
-    <div className="tags-demo-stack-proto">
-      <TagsInput
-        label="Subjects"
-        initialValues={['Oral history', 'Paris, Texas']}
-        initialDraft="Not yet added"
-        readOnly={readOnly}
-        description={
-          readOnly
-            ? 'Read only. Select and copy the full values.'
-            : 'A draft is separate from accepted values.'
-        }
-      />
-      <Button size="s" variant="secondary" tone="neutral" onClick={() => setReadOnly(!readOnly)}>
-        {readOnly ? 'Resume editing' : 'Switch to read only'}
-      </Button>
-    </div>
-  );
-}
-
-export function TagsAvailability(): ReactElement {
+export function TagsAvailability({ ctx }: PreviewProps): ReactElement {
   return (
     <div className="tags-examples-proto">
       <Example title="Limit reached · remove to free a place">
         <TagsInput
+          {...ctx.subject}
           label="Topics"
           initialValues={['Research', 'History', 'Photography']}
           maxTags={3}
@@ -344,6 +322,7 @@ export function TagsAvailability(): ReactElement {
       </Example>
       <Example title="Limit reached · keep a draft">
         <TagsInput
+          {...ctx.subject}
           label="Topics"
           initialValues={['Research', 'History']}
           initialDraft="Interviews"
@@ -353,6 +332,7 @@ export function TagsAvailability(): ReactElement {
       </Example>
       <Example title="Read only · all values, no actions">
         <TagsInput
+          {...ctx.subject}
           label="Allowed domains"
           initialValues={[
             'research.example.org',
@@ -365,6 +345,7 @@ export function TagsAvailability(): ReactElement {
       </Example>
       <Example title="Read only · preserved unadded text">
         <TagsInput
+          {...ctx.subject}
           label="Topics"
           initialValues={['Research', 'Field notes']}
           initialDraft={'Oral history\nUnreviewed material'}
@@ -374,6 +355,7 @@ export function TagsAvailability(): ReactElement {
       </Example>
       <Example title="Disabled · populated">
         <TagsInput
+          {...ctx.subject}
           label="Topics"
           initialValues={['Research', 'Field notes']}
           disabled
@@ -382,6 +364,7 @@ export function TagsAvailability(): ReactElement {
       </Example>
       <Example title="Disabled · empty Ghost">
         <TagsInput
+          {...ctx.subject}
           label="Topics"
           variant="ghost"
           disabled
@@ -389,18 +372,30 @@ export function TagsAvailability(): ReactElement {
         />
       </Example>
       <Example title="Live transition · editing ↔ reading">
-        <ReadingLab />
+        <TagsInput
+          {...ctx.subject}
+          label="Subjects"
+          initialValues={['Oral history', 'Paris, Texas']}
+          initialDraft="Not yet added"
+          readOnly={ctx.story?.controls.readOnly === true}
+          description={
+            ctx.story?.controls.readOnly
+              ? 'Select and copy the complete accepted values.'
+              : 'The draft stays separate from the accepted values.'
+          }
+        />
       </Example>
     </div>
   );
 }
 
-export function TagsOverflow(): ReactElement {
+export function TagsOverflow({ ctx }: PreviewProps): ReactElement {
   const address = 'digital-collections-and-research-coordination@example.org';
   return (
     <div className="tags-examples-proto">
       <Example title="Long values · readable in place">
         <TagsInput
+          {...ctx.subject}
           label="Recipients"
           initialValues={[address, 'editor@example.org']}
           description="Complete values wrap inside their tags. Hover and focus keep the layout still."
@@ -408,6 +403,7 @@ export function TagsOverflow(): ReactElement {
       </Example>
       <Example title="Long identifier · no hidden text">
         <TagsInput
+          {...ctx.subject}
           label="Subjects"
           initialValues={[
             'Digital preservation and access to community photography collections',
@@ -418,6 +414,7 @@ export function TagsOverflow(): ReactElement {
       </Example>
       <Example title="Many values · wrap, never hide">
         <TagsInput
+          {...ctx.subject}
           label="Subjects"
           initialValues={[
             'Research',
@@ -434,6 +431,7 @@ export function TagsOverflow(): ReactElement {
       </Example>
       <Example title="Long draft · no content loss">
         <TagsInput
+          {...ctx.subject}
           label="Subject"
           initialDraft="A descriptive subject with enough detail to wrap naturally within a narrow field without turning into a tiny horizontal viewport"
           description="The first wrap opens the editor across the field, with dedicated space beside the text for Add."
@@ -441,6 +439,7 @@ export function TagsOverflow(): ReactElement {
       </Example>
       <Example title="Bounded draft · full-width scroll">
         <TagsInput
+          {...ctx.subject}
           label="Recipients"
           initialValues={['team@example.org']}
           initialDraft={
@@ -451,6 +450,7 @@ export function TagsOverflow(): ReactElement {
       </Example>
       <Example title="Disabled · complete values stay visible">
         <TagsInput
+          {...ctx.subject}
           label="Recipients"
           initialValues={[address, 'editor@example.org']}
           disabled
@@ -459,13 +459,16 @@ export function TagsOverflow(): ReactElement {
       </Example>
       <Example title="Mixed reading directions">
         <TagsInput
+          {...ctx.subject}
           label="Research languages and places"
+          className="tags-mixed-script-study"
           initialValues={['Paris, Texas', 'العمارة', 'עברית', '東京']}
-          description="The interface mirrors; each accepted string preserves its own reading direction."
+          description="Each accepted string keeps its own reading direction as the field mirrors."
         />
       </Example>
       <Example title="Long label and help">
         <TagsInput
+          {...ctx.subject}
           label="Subjects used to organize the collection and its public discovery page"
           initialValues={['Digital preservation']}
           description="Use specific, meaningful phrases. The label, help, feedback, and complete values all wrap at narrow widths and with larger text."
@@ -475,7 +478,7 @@ export function TagsOverflow(): ReactElement {
   );
 }
 
-export function TagsDrafts(): ReactElement {
+export function TagsDrafts({ ctx }: PreviewProps): ReactElement {
   const draft =
     'one@example.org\ntwo@example.org\nthree@example.org\nfour@example.org\nfive@example.org\nsix@example.org\nseven@example.org';
   return (
@@ -485,14 +488,16 @@ export function TagsDrafts(): ReactElement {
           key={variant}
           title={`${variant === 'default' ? 'Default' : 'Ghost'} · full-width draft`}
         >
-          <div className="tags-demo-stack-proto">
+          <Stack gap={16}>
             <TagsInput
+              {...ctx.subject}
               label="Short draft · no scrollbar"
               variant={variant}
               initialValues={['team@example.org']}
               initialDraft="one@example.org"
             />
             <TagsInput
+              {...ctx.subject}
               label="Two lines · no scrollbar"
               variant={variant}
               initialValues={['team@example.org']}
@@ -500,6 +505,7 @@ export function TagsDrafts(): ReactElement {
             />
             {(['s', 'm', 'l'] as const).map((size) => (
               <TagsInput
+                {...ctx.subject}
                 key={size}
                 size={size}
                 variant={variant}
@@ -509,102 +515,105 @@ export function TagsDrafts(): ReactElement {
                 description="Text scrolls to the field edge. Add keeps its own space."
               />
             ))}
-          </div>
+          </Stack>
         </Example>
       ))}
     </div>
   );
 }
 
-export function TagsSurfaces(): ReactElement {
+export function TagsSurfaces({ ctx }: PreviewProps): ReactElement {
   const id = useId();
   return (
     <div className="tags-examples-proto">
-      <div className="tags-material-proto" data-surface="base">
-        <div className="tags-example-title-proto">Base · a form slot</div>
-        <FormField htmlFor={`${id}-base`} label="Collection">
-          <Input id={`${id}-base`} defaultValue="Field notes" />
-        </FormField>
-        <TagsInput
-          label="Topics"
-          initialValues={['Research', 'Oral history']}
-          placeholder="Add a topic…"
-        />
-        <TagsInput
-          variant="ghost"
-          label="Inline topics"
-          initialValues={['Archive']}
-          placeholder="Add a topic…"
-        />
-      </div>
-      <div className="tags-overlay-stage-proto">
-        <div className="tags-material-underlay-proto" aria-hidden="true">
-          <span />
-          <span />
-          <span />
-        </div>
-        <div className="tags-material-proto" data-surface="overlay">
-          <div className="tags-example-title-proto">Overlay · the same field</div>
-          <FormField htmlFor={`${id}-overlay`} label="Collection">
-            <Input id={`${id}-overlay`} defaultValue="Field notes" />
-          </FormField>
-          <TagsInput
-            label="Topics"
-            initialValues={['Research', 'Oral history']}
-            placeholder="Add a topic…"
-          />
-          <TagsInput
-            variant="ghost"
-            label="Inline topics"
-            initialValues={['Archive']}
-            placeholder="Add a topic…"
-          />
-        </div>
-      </div>
+      {(['base', 'overlay'] as const).map((surface) => {
+        const fields = (
+          <Example title={surface === 'base' ? 'Base · a form slot' : 'Overlay · the same field'}>
+            <FormField htmlFor={`${id}-${surface}`} label="Collection">
+              <Input id={`${id}-${surface}`} defaultValue="Field notes" />
+            </FormField>
+            <TagsInput
+              {...ctx.subject}
+              label="Topics"
+              initialValues={['Research', 'Oral history']}
+              placeholder="Add a topic"
+            />
+            <TagsInput
+              {...ctx.subject}
+              variant="ghost"
+              label="Inline topics"
+              initialValues={['Archive']}
+              placeholder="Add a topic"
+            />
+          </Example>
+        );
+        return surface === 'base' ? (
+          <Card key={surface} variant="subtle" size="s" data-surface="base">
+            {fields}
+          </Card>
+        ) : (
+          <ExampleSurface key={surface} surface={surface} sizing="border-box">
+            {fields}
+          </ExampleSurface>
+        );
+      })}
     </div>
   );
 }
 
-export function TagsSubmission(): ReactElement {
-  const id = useId();
-  const [submitted, setSubmitted] = useState(false);
+export function TagsSubmission({ ctx }: PreviewProps): ReactElement {
+  const [values, setValues] = useState<readonly string[]>(['Research']);
+  const [receipt, setReceipt] = useState('');
   return (
     <div className="tags-examples-proto">
       <Example title="Draft protection · local native form">
         <form
-          className="tags-demo-stack-proto"
           onSubmit={(event) => {
             event.preventDefault();
-            setSubmitted(true);
+            const topics = new FormData(event.currentTarget)
+              .getAll('topic')
+              .filter((value) => typeof value === 'string');
+            setReceipt(
+              topics.length
+                ? `Submitted topics: ${topics.join(', ')}`
+                : 'Submitted without topics.',
+            );
           }}
         >
-          <TagsInput
-            id={id}
-            label="Topics"
-            initialValues={['Research']}
-            initialDraft="Unadded topic"
-            onValuesChange={() => setSubmitted(false)}
-            onDraftChange={() => setSubmitted(false)}
-            description="Continue with a draft: the editor explains what remains. Add or clear the draft, then continue. Leaving the field never accepts it."
-          />
-          <div className="tags-demo-actions-proto">
-            <Button type="submit" variant="secondary" tone="neutral">
-              Continue
-            </Button>
-          </div>
-          {submitted && (
-            <p className="tags-demo-note-proto" role="status">
-              Ready to continue. No unadded draft remains.
-            </p>
-          )}
+          <Stack gap={16}>
+            <TagsInput
+              {...ctx.subject}
+              label="Topics"
+              values={values}
+              initialDraft="Unadded topic"
+              onValuesChange={(next) => {
+                setValues(next);
+                setReceipt('');
+              }}
+              onDraftChange={() => setReceipt('')}
+              description="Add or clear the draft before continuing. Leaving the field preserves the draft."
+            />
+            {values.map((value) => (
+              <input key={value} type="hidden" name="topic" value={value} />
+            ))}
+            <div>
+              <Button type="submit" variant="secondary" tone="neutral">
+                Continue
+              </Button>
+            </div>
+            <Text size="body-s" color="secondary" role="status">
+              <bdi>{receipt}</bdi>
+            </Text>
+          </Stack>
         </form>
       </Example>
       <Example title="Ghost · a compact property">
         <TagsInput
+          {...ctx.subject}
           label="Topics"
           variant="ghost"
           initialValues={['Research', 'Field notes']}
-          description="The same editing model in a quieter inline field. No suggestions, hidden picker, or automatic acceptance on blur."
+          description="Add accepts the draft. Moving focus away leaves it available for editing."
         />
       </Example>
     </div>

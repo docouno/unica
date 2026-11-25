@@ -1,0 +1,15 @@
+TagsInput mixed-script typography fixture
+
+File: tags-input-hebrew-400.ttf (Noto Sans Hebrew, weight 400)
+Text: עברית
+Purpose: deterministic rendering of the TagsInput mixed reading directions example.
+
+Google Fonts text subset:
+https://fonts.googleapis.com/css2?family=Noto+Sans+Hebrew%3Awght%40400&text=%D7%A2%D7%91%D7%A8%D7%99%D7%AA
+
+Downloaded font, preserved without further modification:
+https://fonts.gstatic.com/l/font?kit=or3HQ7v33eiDljA1IufXTtVf7V6RvEEdhQlk0LlGxCyaeNKYZC0sqk3xXGiXd4qtojpraXueQmWP5j1vWg&skey=2dca3e9dc954f0e4&v=v50
+
+License: SIL Open Font License 1.1, included as tags-input-hebrew-OFL.txt.
+Upstream license:
+https://raw.githubusercontent.com/google/fonts/main/ofl/notosanshebrew/OFL.txt

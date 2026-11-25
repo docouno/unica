@@ -50,7 +50,7 @@ export function TagsInput({
   size = 'm',
   variant = 'default',
   status = 'neutral',
-  maxTags,
+  maxTags: limit,
   validate,
   previewState,
   initialError = '',
@@ -61,7 +61,7 @@ export function TagsInput({
   readOnly = false,
   hidden,
   required,
-  placeholder = 'Add a tag…',
+  placeholder = 'Add a tag',
   ref,
   'data-wb-subject': subject,
   ...props
@@ -86,11 +86,20 @@ export function TagsInput({
   const composing = useRef(false);
   const [localValues, setLocalValues] = useState<readonly string[]>(initialValues);
   const [draft, setDraft] = useState(initialDraft);
-  const [error, setError] = useState(initialError);
+  const [rejection, setRejection] = useState<string | { batchSize: number }>(initialError);
   const [announcement, setAnnouncement] = useState('');
   const [expandedDraft, setExpandedDraft] = useState(initialDraft.includes('\n'));
   const tags = values ?? localValues;
+  const maxTags = limit === undefined ? undefined : Math.max(0, Math.floor(limit));
   const atLimit = maxTags !== undefined && tags.length >= maxTags;
+  const capacityError = (batchSize: number): string => {
+    if (maxTags === undefined || tags.length + batchSize <= maxTags) {
+      return '';
+    }
+    const places = Math.max(0, maxTags - tags.length);
+    return `Nothing added. This batch exceeds the ${maxTags}-tag limit. ${places} ${places === 1 ? 'place' : 'places'} available.`;
+  };
+  const error = typeof rejection === 'string' ? rejection : capacityError(rejection.batchSize);
   const effectiveStatus = disabled ? 'neutral' : error && !readOnly ? 'danger' : status;
   const feedback = disabled ? undefined : error && !readOnly ? error : message;
   const projection = readOnly ? tags.join('\n') : draft;
@@ -136,18 +145,16 @@ export function TagsInput({
       }
       seen.add(candidate.value);
     }
-    if (!reason && maxTags !== undefined && tags.length + candidates.length > maxTags) {
-      reason = `This batch exceeds the ${maxTags}-tag limit. ${Math.max(0, maxTags - tags.length)} places available.`;
-    }
-    if (reason) {
+    const failure = reason ? `Nothing added. ${reason}` : capacityError(candidates.length);
+    if (failure) {
       updateDraft(text);
-      setError(`Nothing added. ${reason}`);
-      setAnnouncement(`Nothing added. ${reason}`);
+      setRejection(reason ? failure : { batchSize: candidates.length });
+      setAnnouncement(reason ? failure : '');
       return;
     }
     update([...tags, ...candidates.map(({ value }) => value)]);
     updateDraft('');
-    setError('');
+    setRejection('');
     setAnnouncement(`${candidates.length === 1 ? 'Tag' : `${candidates.length} tags`} added.`);
   };
   const remove = (tag: string, keyboard = false): void => {
@@ -157,7 +164,7 @@ export function TagsInput({
     const index = tags.indexOf(tag);
     const next = tags.filter((value) => value !== tag);
     update(next);
-    setError('');
+    setRejection('');
     setAnnouncement(`Removed ${tag}.`);
     if (keyboard && next.length) {
       requestAnimationFrame(() =>
@@ -188,12 +195,12 @@ export function TagsInput({
         css.lineHeight,
         css.letterSpacing,
         css.wordSpacing,
-        action?.getBoundingClientRect().width,
+        action ? getComputedStyle(action).inlineSize : '',
       ].join(':');
     };
     const resize = (): void => {
       if (action) {
-        tail?.style.setProperty('--tags-action-width', `${action.getBoundingClientRect().width}px`);
+        tail?.style.setProperty('--tags-action-width', getComputedStyle(action).inlineSize);
       }
       node.style.height = 'auto';
       node.style.height = `${node.scrollHeight}px`;
@@ -255,14 +262,13 @@ export function TagsInput({
     );
     const invalid = (): void => {
       if (draft.trim()) {
-        setError('Add or clear the draft before continuing.');
+        setRejection('Add or clear the draft before continuing.');
       }
     };
     node.addEventListener('invalid', invalid);
     return () => node.removeEventListener('invalid', invalid);
   }, [draft, readOnly, disabled]);
 
-  const support = <>{feedback}</>;
   const describedBy =
     [
       props['aria-describedby'],
@@ -280,8 +286,8 @@ export function TagsInput({
         descriptionId={description ? `${editorId}-description` : undefined}
         messageId={feedback ? `${editorId}-message` : undefined}
         required={required}
-        description={description}
-        message={feedback ? support : ''}
+        description={typeof description === 'string' ? <bdi>{description}</bdi> : description}
+        message={typeof feedback === 'string' && feedback ? <bdi>{feedback}</bdi> : feedback}
         status={effectiveStatus}
       >
         <span
@@ -382,7 +388,7 @@ export function TagsInput({
               aria-describedby={describedBy}
               onChange={(event) => {
                 updateDraft(event.currentTarget.value);
-                setError('');
+                setRejection('');
               }}
               onCompositionStart={(event) => {
                 composing.current = true;
@@ -462,7 +468,17 @@ export function TagsInput({
       </FormField>
       {maxTags !== undefined && (
         <div className="tags-capacity-proto" id={`${editorId}-limit`}>
-          <span>{atLimit && !disabled && !readOnly ? 'Remove a tag to add another.' : ' '}</span>
+          <span>
+            {atLimit && !disabled && !readOnly && (
+              <bdi>
+                {maxTags === 0
+                  ? 'No tags can be added.'
+                  : tags.length === maxTags
+                    ? 'Remove a tag to add another.'
+                    : `Remove ${tags.length - maxTags + 1} tags to add another.`}
+              </bdi>
+            )}
+          </span>
           <bdi dir="ltr">
             {tags.length} / {maxTags}
           </bdi>
@@ -471,11 +487,11 @@ export function TagsInput({
       {readOnly && draft && (
         <div className="tags-retained-proto">
           <span>Unadded draft</span>
-          <div>{draft}</div>
+          <div dir="auto">{draft}</div>
         </div>
       )}
       <span className="tags-announcement-proto" aria-live="polite" aria-atomic="true">
-        {announcement}
+        {typeof rejection === 'string' ? announcement : error}
       </span>
     </div>
   );
