@@ -403,6 +403,56 @@ export default {
     );
   },
 
+  'Picker comparisons leave room for their initial text and actions': async ({ page, origin }) => {
+    await page.setViewportSize({ width: 360, height: 780 });
+    for (const [item, slice, text] of [['autocomplete', 'roles', 'Release notes']]) {
+      const route = new URL('/', origin);
+      route.search = new URLSearchParams({
+        item,
+        slice,
+        tab: 'states',
+        family: 'all',
+        scheme: 'both',
+        surface: 'overlay',
+        vp: 'auto',
+        scale: '120',
+        dir: 'rtl',
+        raw: '1',
+        freeze: '1',
+      }).toString();
+      await page.goto(route.href);
+      await page.locator('html[data-wb-ready="1"]').waitFor({ state: 'attached', timeout: 20_000 });
+      const inputs = page.locator(`[data-wb-slice="${slice}"] td input:not([type="hidden"])`);
+      const geometry = await inputs.evaluateAll((editors) =>
+        editors.map((input) => {
+          const row = input.closest('[data-wb-subject]');
+          const rect = input.getBoundingClientRect();
+          const buttons = Array.from(row.querySelectorAll('button'), (button) =>
+            button.getBoundingClientRect(),
+          );
+          return {
+            value: input.value || input.placeholder,
+            available: input.clientWidth,
+            content: input.scrollWidth,
+            overlap: buttons.some(
+              (button) => Math.min(rect.right, button.right) > Math.max(rect.left, button.left),
+            ),
+          };
+        }),
+      );
+      assert.equal(geometry.length, 36, item);
+      for (const result of geometry) {
+        assert.equal(result.value, text, item);
+        assert.equal(
+          result.available,
+          result.content,
+          item + ' must show the complete initial text',
+        );
+        assert.equal(result.overlap, false, item + ' actions must leave the editor clear');
+      }
+    }
+  },
+
   'Selection fields fill their Playground slot on the base surface': async ({ page, origin }) => {
     for (const [item, label] of [
       ['autocomplete', 'Document title'],

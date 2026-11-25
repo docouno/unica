@@ -25,6 +25,7 @@ import { titles } from './document-titles.js';
 import { InsertBlock } from './insert-block.js';
 import commandsSource from './block-commands.ts?raw';
 import insertSource from './insert-block.tsx?raw';
+import './autocomplete-matrix.css';
 
 const messages = {
   neutral: '',
@@ -69,7 +70,7 @@ export default defineComponent({
   render: withOverlaySurface(({ values, ctx }) => {
     const message = !values.disabled && messages[values.status];
     return (
-      <form {...ctx.form} style={{ inlineSize: '100%' }}>
+      <form {...ctx.form} data-autocomplete-comparison="" style={{ inlineSize: '100%' }}>
         <Autocomplete
           {...values}
           {...ctx.subject}

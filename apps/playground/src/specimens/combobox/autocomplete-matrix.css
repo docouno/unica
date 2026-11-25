@@ -1,0 +1,7 @@
+tr[data-wb-result-row] > td:has([data-autocomplete-comparison]) {
+  min-inline-size: 15rem;
+}
+
+tr[data-wb-result-row] > td:has([data-surface='overlay'] [data-autocomplete-comparison]) {
+  min-inline-size: 18.5rem;
+}
