@@ -58,7 +58,7 @@ const examples = {
     import('../../../src/scenes/09-user-preferences.scene.js').then(scenePreview),
   ),
   'Build queue': lazy(async () => ({
-    default: (await import('../../../src/prototypes/table/table.examples.js')).BuildQueue,
+    default: (await import('../../../src/specimens/table/table.examples.js')).BuildQueue,
   })),
   'Context menu': ContextMenuExample,
   'Form field groups': lazy(async () => ({

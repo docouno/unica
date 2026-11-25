@@ -113,20 +113,22 @@ export function TableCell({ align, control, ...props }: TableCellProps): ReactEl
   return <td {...props} data-align={align} data-control={control} />;
 }
 
-function visibleTableArea(
-  viewport: HTMLDivElement,
-  target: Element,
-): { top: number; right: number; bottom: number; left: number } {
+function visibleTableArea(viewport: HTMLDivElement, target: Element) {
   const box = viewport.getBoundingClientRect();
-  const left = box.left + viewport.clientLeft;
-  const top = box.top + viewport.clientTop;
+  // Match client measurements to the visual coordinates of the anchor and sticky header.
+  const scaleX = box.width / viewport.offsetWidth || 1;
+  const scaleY = box.height / viewport.offsetHeight || 1;
+  const left = box.left + viewport.clientLeft * scaleX;
+  const top = box.top + viewport.clientTop * scaleY;
   const header =
     target.closest('tbody, tfoot') &&
     viewport.querySelector(':scope > table[data-sticky-header] > thead');
   return {
     top: Math.max(top, header ? header.getBoundingClientRect().bottom : top),
-    right: left + viewport.clientWidth,
-    bottom: top + viewport.clientHeight,
+    right: left + viewport.clientWidth * scaleX,
+    bottom: top + viewport.clientHeight * scaleY,
+    scaleX,
+    scaleY,
     left,
   };
 }
@@ -216,17 +218,22 @@ export function TableScroll({
         }
         const visible = visibleTableArea(element, target);
         const box = target.getBoundingClientRect();
-        const inset = 4;
+        const insetX = 4 * visible.scaleX;
+        const insetY = 4 * visible.scaleY;
         const left =
-          box.left < visible.left + inset
-            ? box.left - visible.left - inset
-            : Math.max(0, box.right - visible.right + inset);
+          box.left < visible.left + insetX
+            ? box.left - visible.left - insetX
+            : Math.max(0, box.right - visible.right + insetX);
         const top =
-          box.top < visible.top + inset
-            ? box.top - visible.top - inset
-            : Math.max(0, box.bottom - visible.bottom + inset);
+          box.top < visible.top + insetY
+            ? box.top - visible.top - insetY
+            : Math.max(0, box.bottom - visible.bottom + insetY);
         if (left || top) {
-          element.scrollBy({ left, top, behavior: 'instant' });
+          element.scrollBy({
+            left: left / visible.scaleX,
+            top: top / visible.scaleY,
+            behavior: 'instant',
+          });
         }
       }}
     />

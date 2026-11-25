@@ -149,6 +149,31 @@ export default {
       assert.deepEqual(await checkedFlags(), [false, false, false, false]);
     },
 
+  'TableScroll dismisses a row menu and keeps focus when its anchor scrolls out under zoom':
+    async ({ page, mount }) => {
+      await mountExample(page, mount, 'Build queue');
+      await page.getByTestId('Build queue').evaluate((host) => {
+        host.style.zoom = '0.5';
+      });
+      const region = page.getByRole('region', { name: 'Build queue' });
+      const trigger = region.getByRole('button', { name: 'Reporting API actions' });
+      await trigger.press('Enter');
+      await page.getByRole('menuitem', { name: 'Pin build' }).waitFor();
+      await region.evaluate((viewport) => viewport.scrollTo({ top: 0, behavior: 'instant' }));
+      await page.waitForFunction(() => {
+        const anchor = document.querySelector('button[aria-label="Reporting API actions"]');
+        return (
+          anchor.getBoundingClientRect().top >=
+          anchor.closest('[role="region"]').getBoundingClientRect().bottom
+        );
+      });
+      await page.getByRole('menu').waitFor({ state: 'hidden', timeout: 3000 });
+      assert.equal(
+        await region.evaluate((viewport) => viewport.ownerDocument.activeElement === viewport),
+        true,
+      );
+    },
+
   'Build queue selection excludes locked rows and leaves row actions independent': async ({
     page,
     mount,
