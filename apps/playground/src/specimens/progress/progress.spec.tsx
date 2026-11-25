@@ -1,17 +1,20 @@
-import { Progress } from '@docouno/unica';
+import { Progress, Text } from '@docouno/unica';
 import { previewProps } from '../preview-code.js';
+import { withOverlaySurface } from '../shared/with-overlay-surface.js';
 import { defineComponent } from '../../workbench/types.js';
 import { labelledByText, withActivityName, withActivityNameCode } from './activity-name.js';
 import {
   BoundariesExample,
-  InterruptedComposition,
   LabelsExample,
   MotionExample,
   OverlayExample,
   PhaseExample,
-  TransferRowComposition,
   WaitingExample,
 } from './progress.examples.js';
+import { ArchiveTransfer } from './archive-transfer.js';
+import transferSource from './archive-transfer.tsx?raw';
+import { TransferRecovery } from './transfer-recovery.js';
+import recoverySource from './transfer-recovery.tsx?raw';
 
 export default defineComponent({
   id: 'progress',
@@ -45,21 +48,22 @@ export default defineComponent({
     },
     value: {
       kind: 'number',
-      group: 'Measurement',
+      group: 'Content',
       default: 45,
-      description: 'Measured completion for a known phase.',
+      publicType: 'number | null',
+      description: 'Measured amount. Pass null while progress cannot be measured.',
       examples: [0, 45, 100],
     },
     max: {
       kind: 'number',
-      group: 'Measurement',
+      group: 'Content',
       default: 100,
       examples: [80, 100],
       description: 'Positive total in the same units as the value.',
     },
     determinate: {
       kind: 'boolean',
-      group: 'Measurement',
+      group: 'Content',
       default: true,
       description: 'Use the measured value. Turn off for a phase with no known duration.',
       demo: true,
@@ -72,13 +76,13 @@ export default defineComponent({
     },
     paused: {
       kind: 'boolean',
-      group: 'Activity',
+      group: 'Interaction',
       default: false,
       description: 'Keep the measured amount visible while the phase is paused.',
     },
     active: {
       kind: 'boolean',
-      group: 'Activity',
+      group: 'Interaction',
       default: false,
       description: 'Indicate that work is advancing.',
     },
@@ -157,27 +161,32 @@ export default defineComponent({
       reason: 'This status suppresses the leading-edge glow.',
     })),
   ],
-  render: ({ ctx, values: { value, determinate, labelledByText, ...props } }) => {
-    const id = `${ctx.id}-operation`;
-    const reference = labelledByText.trim();
-    if (!reference && !props.label.trim() && !props['aria-label'].trim()) {
-      return <span>Give the operation a name.</span>;
-    }
-    return withActivityName(
-      'Progress',
-      id,
-      reference,
-      <Progress
-        {...ctx.subject}
-        {...props}
-        value={determinate ? value : null}
-        aria-labelledby={reference ? id : undefined}
-      />,
-    );
-  },
+  render: withOverlaySurface(
+    ({ ctx, values: { value, determinate, labelledByText, ...props } }) => {
+      const id = `${ctx.id}-operation`;
+      const reference = labelledByText.trim();
+      if (!reference && !props.label.trim() && !props['aria-label'].trim()) {
+        return <Text size="body-s">Give the operation a name.</Text>;
+      }
+      return withActivityName(
+        'Progress',
+        id,
+        reference,
+        <Progress
+          {...ctx.subject}
+          {...props}
+          value={determinate ? value : null}
+          aria-labelledby={reference ? id : undefined}
+        />,
+      );
+    },
+    'border-box',
+  ),
   code: ({ value, determinate, labelledByText, ...props }) => {
     if (!labelledByText.trim() && !props.label.trim() && !props['aria-label'].trim()) {
-      return '';
+      return `import { Text } from '@docouno/unica';
+
+<Text size="body-s">Give the operation a name.</Text>`;
     }
     const attributes = previewProps(props, {
       size: 'm',
@@ -227,7 +236,7 @@ export default defineComponent({
         '99.6% still reads 99%. Reaching 100% does not choose a success color or dismiss the task.',
       kind: 'content',
       mode: 'pinned',
-      render: () => <BoundariesExample />,
+      render: withOverlaySurface(BoundariesExample, 'border-box'),
     },
     {
       id: 'waiting',
@@ -236,7 +245,7 @@ export default defineComponent({
         'Preparing and transferring share the same accent paint. The candy stripe changes texture without dimming the operation; reduced motion stops its travel.',
       kind: 'behavior',
       mode: 'pinned',
-      render: () => <WaitingExample />,
+      render: withOverlaySurface(WaitingExample, 'border-box'),
     },
     {
       id: 'labels',
@@ -245,7 +254,7 @@ export default defineComponent({
         'Custom units replace percentages, long labels wrap cleanly, and compact variants omit empty headers while keeping an accessible name.',
       kind: 'behavior',
       mode: 'pinned',
-      render: () => <LabelsExample />,
+      render: withOverlaySurface(LabelsExample, 'border-box'),
     },
     {
       id: 'motion',
@@ -262,7 +271,7 @@ export default defineComponent({
         { id: 'replay', label: 'Replay' },
       ],
       reset: true,
-      render: ({ ctx }) => <MotionExample ctx={ctx} />,
+      render: withOverlaySurface(MotionExample, 'border-box'),
     },
     {
       id: 'phases',
@@ -289,7 +298,7 @@ export default defineComponent({
         value: { kind: 'number', label: 'Percent', default: 64, min: 0, max: 100, step: 1 },
       },
       reset: true,
-      render: ({ ctx }) => <PhaseExample ctx={ctx} />,
+      render: withOverlaySurface(PhaseExample, 'border-box'),
     },
     {
       id: 'overlay',
@@ -299,49 +308,35 @@ export default defineComponent({
       overlayStage: true,
       kind: 'surface',
       mode: 'pinned',
-      render: () => <OverlayExample />,
+      render: OverlayExample,
     },
   ],
   compositions: [
     {
       id: 'transfer-controls',
       title: 'Transfer with pause & cancel actions',
-      caption: 'Pausing keeps the last measured bytes visible and quiets active motion.',
+      caption:
+        'Pause and resume an upload at 42 of 80 MB. Cancel closes the transfer and reports where it stopped.',
       mode: 'live',
       reset: true,
-      code: `<>
-  <Progress
-    label="Uploading archive"
-    value={42}
-    max={80}
-    valueLabel="42 of 80 MB"
-    active={!paused}
-    paused={paused}
-    status={paused ? 'neutral' : 'accent'}
-  />
-  <Button variant="secondary" size="s" onClick={togglePause}>
-    {paused ? 'Resume' : 'Pause'}
-  </Button>
-  <Button variant="ghost" size="s">Cancel</Button>
-</>`,
-      render: () => <TransferRowComposition />,
+      code: transferSource,
+      render: withOverlaySurface(
+        ({ ctx }) => <ArchiveTransfer progressProps={ctx.subject} />,
+        'border-box',
+      ),
     },
     {
       id: 'interrupted-recovery',
       title: 'Interrupted transfer with explanation & retry',
-      caption: 'Danger preserves the measured amount while surrounding copy explains the recovery.',
+      caption:
+        'Retry opens the reconnection phase and keeps the last confirmed percentage in the message. Dismiss closes the status. The example holds the reconnection phase for inspection.',
       mode: 'live',
       reset: true,
-      code: `<>
-  <Progress label="Archive transfer" value={64} status="danger" />
-  <Icon usage="slot" icon={WarningCircleIcon} size="s" color="danger" />
-  <Text size="caption-l" color="muted">
-    Connection interrupted at 64%. Retry resumes without losing uploaded bytes.
-  </Text>
-  <Button variant="secondary" size="s" onClick={handleRetry}>Retry transfer</Button>
-  <Button variant="ghost" size="s">Dismiss</Button>
-</>`,
-      render: () => <InterruptedComposition />,
+      code: recoverySource,
+      render: withOverlaySurface(
+        ({ ctx }) => <TransferRecovery progressProps={ctx.subject} />,
+        'border-box',
+      ),
     },
   ],
 });

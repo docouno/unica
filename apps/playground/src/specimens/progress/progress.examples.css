@@ -15,32 +15,12 @@
   min-inline-size: 0;
 }
 
-.activity-row {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: var(--space-12);
-  min-inline-size: 0;
-}
-
-.activity-overlay,
 .activity-example-panel {
   inline-size: 100%;
   max-inline-size: 480px;
   padding: var(--surface-m-padding);
-}
-
-.activity-example-panel {
   position: relative;
   min-inline-size: 0;
-}
-
-.activity-overlay {
-  border: 1px solid var(--_overlay-border);
-  border-radius: var(--surface-m-radius);
-  background: var(--bg-overlay);
-  backdrop-filter: var(--_overlay-backdrop);
-  box-shadow: var(--_overlay-rim), var(--_overlay-shadow-popover);
 }
 
 .activity-reserved {
@@ -50,14 +30,6 @@
   block-size: var(--size-m-icon);
   align-items: center;
   justify-content: center;
-}
-
-@media (forced-colors: active) {
-  .activity-overlay {
-    background: Canvas;
-    border-color: CanvasText;
-    box-shadow: none;
-  }
 }
 
 .activity-outcome {

@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import type { ReactElement } from 'react';
 import { CheckCircleIcon, PauseCircleIcon, WarningCircleIcon } from '@phosphor-icons/react';
-import { Button, Divider, Icon, Progress, Text } from '@docouno/unica';
+import { Divider, Icon, Progress, Stack, Text } from '@docouno/unica';
 import { useStoryAction } from '../../workbench/storyFrameState.js';
-import type { PreviewContext } from '../../workbench/types.js';
+import type { PreviewProps } from '../../workbench/types.js';
 import './progress.examples.css';
 
 const PROGRESS_PHASES = [
@@ -21,71 +21,97 @@ function isPhase(value: unknown): value is Phase {
   return typeof value === 'string' && (PROGRESS_PHASES as readonly string[]).includes(value);
 }
 
-export function BoundariesExample(): ReactElement {
+export function BoundariesExample({ ctx }: PreviewProps): ReactElement {
   return (
     <div className="activity-study">
-      <Progress value={0} label="Ready to transfer" />
-      <Progress value={1} label="First measured progress" />
-      <Progress value={64} label="Transferring archive" />
-      <Progress value={99.6} label="Last bytes remaining" />
-      <Progress value={100} label="Transfer complete" />
+      <Progress {...ctx.subject} value={0} label="Ready to transfer" />
+      <Progress {...ctx.subject} value={1} label="First measured progress" />
+      <Progress {...ctx.subject} value={64} label="Transferring archive" />
+      <Progress {...ctx.subject} value={99.6} label="Last bytes remaining" />
+      <Progress {...ctx.subject} value={100} label="Transfer complete" />
     </div>
   );
 }
 
-export function WaitingExample(): ReactElement {
+export function WaitingExample({ ctx }: PreviewProps): ReactElement {
   return (
     <div className="activity-study">
       {(['s', 'm', 'l'] as const).map((size) => (
         <div className="activity-stack" key={size}>
-          <Progress size={size} value={null} label={`Preparing archive · ${size.toUpperCase()}`} />
-          <Progress size={size} value={64} label={`Transferring archive · ${size.toUpperCase()}`} />
+          <Progress
+            {...ctx.subject}
+            size={size}
+            value={null}
+            label={`Preparing archive · ${size.toUpperCase()}`}
+          />
+          <Progress
+            {...ctx.subject}
+            size={size}
+            value={64}
+            label={`Transferring archive · ${size.toUpperCase()}`}
+          />
         </div>
       ))}
       <Divider />
-      <Progress value={null} label="Static waiting preview" className="activity-static" />
+      <Progress
+        {...ctx.subject}
+        value={null}
+        label="Static waiting preview"
+        className="activity-static"
+      />
     </div>
   );
 }
 
-export function LabelsExample(): ReactElement {
+export function LabelsExample({ ctx }: PreviewProps): ReactElement {
+  const captionGap = ctx.comparing ? 48 : 32;
   return (
-    <div className="activity-study">
-      <Progress value={42} max={80} label="Uploading archive" valueLabel="42 of 80 MB" />
+    <div className="activity-study" style={ctx.comparing ? { gap: 'var(--space-48)' } : undefined}>
       <Progress
+        {...ctx.subject}
+        value={42}
+        max={80}
+        label="Uploading archive"
+        valueLabel="42 of 80 MB"
+      />
+      <Progress
+        {...ctx.subject}
         value={64}
         label="A long operation name wraps naturally without pushing the value outside its container"
       />
       <Progress
+        {...ctx.subject}
         value={1284}
         max={1528}
         label="Validating records"
         valueLabel="1,284 of 1,528 records checked"
       />
-      <Progress value={64} label="Quiet background task" showValue={false} />
-      <div className="activity-stack">
+      <Progress {...ctx.subject} value={64} label="Quiet background task" showValue={false} />
+      <Stack gap={captionGap}>
         <Text size="caption-l" color="muted">
           Value only · externally named
         </Text>
-        <Progress value={64} aria-label="Archive transfer" />
-      </div>
-      <div className="activity-stack">
+        <Progress {...ctx.subject} value={64} aria-label="Archive transfer" />
+      </Stack>
+      <Stack gap={captionGap}>
         <Text size="caption-l" color="muted">
           Track only · no empty header
         </Text>
-        <Progress value={64} showValue={false} aria-label="Background transfer" size="s" />
-      </div>
+        <Progress
+          {...ctx.subject}
+          value={64}
+          showValue={false}
+          aria-label="Background transfer"
+          size="s"
+        />
+      </Stack>
     </div>
   );
 }
 
-export function MotionExample({
-  ctx,
-}: {
-  readonly ctx?: PreviewContext | undefined;
-}): ReactElement {
+export function MotionExample({ ctx }: PreviewProps): ReactElement {
   const [value, setValue] = useState(64);
-  const active = ctx?.story?.controls.active !== false;
+  const active = ctx.story?.controls.active !== false;
 
   useStoryAction(ctx, (actionId) => {
     if (actionId === 'reach-100') {
@@ -99,6 +125,7 @@ export function MotionExample({
   return (
     <div className="activity-study">
       <Progress
+        {...ctx.subject}
         value={value}
         label={
           value === 100
@@ -111,15 +138,15 @@ export function MotionExample({
         paused={value < 100 && !active}
         status={value === 100 || active ? 'accent' : 'neutral'}
       />
-      <Progress value={64} label="Saved measurement · no active work" />
+      <Progress {...ctx.subject} value={64} label="Saved measurement · no active work" />
     </div>
   );
 }
 
-export function PhaseExample({ ctx }: { readonly ctx?: PreviewContext | undefined }): ReactElement {
-  const rawPhase = ctx?.story?.controls.phase;
+export function PhaseExample({ ctx }: PreviewProps): ReactElement {
+  const rawPhase = ctx.story?.controls.phase;
   const phase: Phase = isPhase(rawPhase) ? rawPhase : 'Transferring';
-  const rawValue = ctx?.story?.controls.value;
+  const rawValue = ctx.story?.controls.value;
   const value = typeof rawValue === 'number' ? rawValue : 64;
   const unknown = phase === 'Preparing' || phase === 'Verifying';
   const full = phase === 'Transferred' || phase === 'Complete';
@@ -153,6 +180,7 @@ export function PhaseExample({ ctx }: { readonly ctx?: PreviewContext | undefine
     <div className="activity-study">
       <div className="activity-stack">
         <Progress
+          {...ctx.subject}
           label={phase === 'Verifying' ? 'Verifying archive' : 'Archive transfer'}
           value={unknown ? null : full ? 100 : value}
           status={status}
@@ -169,7 +197,7 @@ export function PhaseExample({ ctx }: { readonly ctx?: PreviewContext | undefine
             />
           )}
           <Text size="caption-l" color="muted">
-            {copy}
+            <bdi>{copy}</bdi>
           </Text>
         </div>
       </div>
@@ -177,73 +205,23 @@ export function PhaseExample({ ctx }: { readonly ctx?: PreviewContext | undefine
   );
 }
 
-export function OverlayExample(): ReactElement {
+export function OverlayExample({ ctx }: PreviewProps): ReactElement {
   return (
-    <div className="activity-overlay activity-study">
-      <Progress value={null} label="Preparing archive" />
-      <Progress value={1284} max={1528} label="Validating archive" valueLabel="1,284 of 1,528" />
+    <div
+      className="activity-study activity-example-panel unica-overlay-surface"
+      data-surface="overlay"
+    >
+      <Progress {...ctx.subject} value={null} label="Preparing archive" />
+      <Progress
+        {...ctx.subject}
+        value={1284}
+        max={1528}
+        label="Validating archive"
+        valueLabel="1,284 of 1,528"
+      />
       <Text size="caption-l" color="muted">
-        Records are checked before they become available.
+        <bdi>Records are checked before they become available.</bdi>
       </Text>
-    </div>
-  );
-}
-
-export function TransferRowComposition(): ReactElement {
-  const [paused, setPaused] = useState(false);
-  return (
-    <div className="activity-study">
-      <div className="activity-stack">
-        <Progress
-          label={paused ? 'Upload paused' : 'Uploading archive'}
-          value={42}
-          max={80}
-          valueLabel="42 of 80 MB"
-          active={!paused}
-          paused={paused}
-          status={paused ? 'neutral' : 'accent'}
-        />
-        <div className="activity-row">
-          <Button variant="secondary" size="s" onClick={() => setPaused((value) => !value)}>
-            {paused ? 'Resume' : 'Pause'}
-          </Button>
-          <Button variant="ghost" size="s">
-            Cancel
-          </Button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-export function InterruptedComposition(): ReactElement {
-  const [retrying, setRetrying] = useState(false);
-  return (
-    <div className="activity-study">
-      <div className="activity-stack">
-        <Progress
-          label={retrying ? 'Reconnecting transfer' : 'Archive transfer'}
-          value={retrying ? null : 64}
-          status={retrying ? 'accent' : 'danger'}
-          active={retrying}
-        />
-        <div className="activity-outcome">
-          {!retrying && <Icon usage="slot" icon={WarningCircleIcon} size="s" color="danger" />}
-          <Text size="caption-l" color="muted">
-            {retrying
-              ? 'Resuming from the last confirmed chunk…'
-              : 'Connection interrupted at 64%. Retry resumes without losing uploaded bytes.'}
-          </Text>
-        </div>
-        <div className="activity-row">
-          <Button variant="secondary" size="s" loading={retrying} onClick={() => setRetrying(true)}>
-            Retry transfer
-          </Button>
-          <Button variant="ghost" size="s" onClick={() => setRetrying(false)}>
-            Dismiss
-          </Button>
-        </div>
-      </div>
     </div>
   );
 }
