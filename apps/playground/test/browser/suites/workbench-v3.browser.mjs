@@ -301,10 +301,11 @@ export default {
     }
   },
 
-  'Search fields fill their Playground slot on the base surface': async ({ page, origin }) => {
+  'Selection fields fill their Playground slot on the base surface': async ({ page, origin }) => {
     for (const [item, label] of [
       ['autocomplete', 'Document title'],
       ['combobox', 'Owning team'],
+      ['select', 'Deployment region'],
     ]) {
       const route = new URL('/', origin);
       route.search = new URLSearchParams({
@@ -320,9 +321,12 @@ export default {
       }).toString();
       await page.goto(route.href, { waitUntil: 'domcontentloaded' });
       const board = page.locator('.wb-artboard').first();
-      const field = board.getByRole('combobox');
-      await field.waitFor({ timeout: 20_000 });
-      const subject = board.locator('[data-wb-subject]');
+      const field =
+        item === 'select'
+          ? board.getByRole('button', { name: 'Deployment region: Amsterdam' })
+          : board.getByRole('combobox');
+      await field.waitFor({ state: 'attached', timeout: 20_000 });
+      const subject = board.locator('[data-wb-subject]:visible');
       const box = await subject.boundingBox();
       assert.ok(box && box.width > 240, label + ' must span the phone field slot');
       await page
@@ -331,9 +335,9 @@ export default {
         })
         .waitFor();
       await field.click();
-      await field.press('ArrowDown');
+      await page.keyboard.press('ArrowDown');
       await board.getByRole('listbox').waitFor();
-      await field.press('Escape');
+      await page.keyboard.press('Escape');
       assert.equal(await field.evaluate((node) => node === document.activeElement), true);
     }
   },

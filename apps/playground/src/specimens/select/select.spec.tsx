@@ -14,6 +14,7 @@ import {
   eventProp,
 } from '../control-props.js';
 import { previewProps } from '../preview-code.js';
+import { ExampleSurface } from '../shared/example-surface.js';
 import { withOverlaySurface } from '../shared/with-overlay-surface.js';
 import {
   FieldRoles,
@@ -115,8 +116,8 @@ export default defineComponent({
       reason: 'Read-only fields can open and filter the catalog but cannot clear the answer.',
     },
   ],
-  render: withOverlaySurface(
-    ({ values, ctx }) => (
+  render: ({ values, ctx }) => (
+    <ExampleSurface surface={ctx.surface} sizing="border-box">
       <Select
         {...values}
         {...ctx.subject}
@@ -133,8 +134,7 @@ export default defineComponent({
           ? { onValuesChange: ctx.action('onValuesChange') }
           : { onValueChange: ctx.action('onValueChange') })}
       />
-    ),
-    'border-box',
+    </ExampleSurface>
   ),
   code: (values) => {
     const attrs = previewProps(values, {
