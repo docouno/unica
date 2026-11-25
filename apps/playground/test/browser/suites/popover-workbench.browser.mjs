@@ -234,7 +234,8 @@ export default {
       await trigger.press('Enter');
       assert.equal(await field.inputValue(), 'Publication notes');
       await field.press('Escape');
-      await assertFocused(trigger);
+      await panel.waitFor({ state: 'hidden' });
+      await trigger.and(owner.locator(':focus')).waitFor();
     },
 
   'Popover Cases validate, preserve a failed draft, retry, and discard cancelled edits': async ({
