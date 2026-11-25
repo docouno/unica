@@ -69,7 +69,7 @@ export default defineComponent({
   render: withOverlaySurface(({ values, ctx }) => {
     const message = !values.disabled && messages[values.status];
     return (
-      <form {...ctx.form}>
+      <form {...ctx.form} style={{ inlineSize: '100%' }}>
         <Autocomplete
           {...values}
           {...ctx.subject}

@@ -1,5 +1,6 @@
 .suggestion-field-proto {
   display: grid;
+  inline-size: 100%;
   align-content: start;
   gap: var(--space-8);
   min-inline-size: 0;

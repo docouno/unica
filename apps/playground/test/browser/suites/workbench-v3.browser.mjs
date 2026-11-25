@@ -15,6 +15,43 @@ async function navigate(page, params) {
 }
 
 export default {
+  'Search fields fill their Playground slot on the base surface': async ({ page, origin }) => {
+    for (const [item, label] of [
+      ['autocomplete', 'Document title'],
+      ['combobox', 'Owning team'],
+    ]) {
+      const route = new URL('/', origin);
+      route.search = new URLSearchParams({
+        item,
+        tab: 'playground',
+        family: 'frost',
+        scheme: 'light',
+        surface: 'base',
+        vp: '360',
+        scale: '120',
+        dir: 'rtl',
+        bounds: '1',
+      }).toString();
+      await page.goto(route.href, { waitUntil: 'domcontentloaded' });
+      const board = page.locator('.wb-artboard').first();
+      const field = board.getByRole('combobox');
+      await field.waitFor({ timeout: 20_000 });
+      const subject = board.locator('[data-wb-subject]');
+      const box = await subject.boundingBox();
+      assert.ok(box && box.width > 240, label + ' must span the phone field slot');
+      await page
+        .getByText(Math.round(box.width) + ' × ' + Math.round(box.height) + ' px', {
+          exact: true,
+        })
+        .waitFor();
+      await field.click();
+      await field.press('ArrowDown');
+      await board.getByRole('listbox').waitFor();
+      await field.press('Escape');
+      assert.equal(await field.evaluate((node) => node === document.activeElement), true);
+    }
+  },
+
   'TagsInput renders its mixed-script tags in the offline workbench': async ({ page, origin }) => {
     const route = new URL(
       '/?item=tags-input&tab=states&block=overflow&family=soft&scheme=light&dir=rtl',
