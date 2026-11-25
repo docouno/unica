@@ -405,7 +405,10 @@ export default {
 
   'Picker comparisons leave room for their initial text and actions': async ({ page, origin }) => {
     await page.setViewportSize({ width: 360, height: 780 });
-    for (const [item, slice, text] of [['autocomplete', 'roles', 'Release notes']]) {
+    for (const [item, slice, text] of [
+      ['autocomplete', 'roles', 'Release notes'],
+      ['combobox', 'roles', 'Search options'],
+    ]) {
       const route = new URL('/', origin);
       route.search = new URLSearchParams({
         item,
@@ -423,23 +426,34 @@ export default {
       await page.goto(route.href);
       await page.locator('html[data-wb-ready="1"]').waitFor({ state: 'attached', timeout: 20_000 });
       const inputs = page.locator(`[data-wb-slice="${slice}"] td input:not([type="hidden"])`);
-      const geometry = await inputs.evaluateAll((editors) =>
-        editors.map((input) => {
+      const geometry = await inputs.evaluateAll((editors) => {
+        const measure = document.createElement('canvas').getContext('2d');
+        return editors.map((input) => {
           const row = input.closest('[data-wb-subject]');
           const rect = input.getBoundingClientRect();
           const buttons = Array.from(row.querySelectorAll('button'), (button) =>
             button.getBoundingClientRect(),
           );
+          const value = input.value || input.placeholder;
+          const style = getComputedStyle(input);
+          measure.font = [style.fontStyle, style.fontWeight, style.fontSize, style.fontFamily].join(
+            ' ',
+          );
+          measure.letterSpacing = style.letterSpacing === 'normal' ? '0px' : style.letterSpacing;
+          const textWidth =
+            measure.measureText(value).width +
+            parseFloat(style.paddingLeft) +
+            parseFloat(style.paddingRight);
           return {
-            value: input.value || input.placeholder,
+            value,
             available: input.clientWidth,
-            content: input.scrollWidth,
+            content: Math.max(input.scrollWidth, Math.round(textWidth)),
             overlap: buttons.some(
               (button) => Math.min(rect.right, button.right) > Math.max(rect.left, button.left),
             ),
           };
-        }),
-      );
+        });
+      });
       assert.equal(geometry.length, 36, item);
       for (const result of geometry) {
         assert.equal(result.value, text, item);

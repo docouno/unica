@@ -18,6 +18,7 @@ import teamsSource from './team-options.ts?raw';
 import regionsSource from './regional-teams.ts?raw';
 import { TeamAssignment } from './team-assignment.js';
 import assignmentSource from './team-assignment.tsx?raw';
+import './combobox-matrix.css';
 
 const messages = {
   neutral: '',
@@ -89,6 +90,7 @@ export default defineComponent({
       <Combobox
         {...field}
         {...ctx.subject}
+        data-combobox-comparison=""
         label="Owning team"
         options={teams}
         {...(searchState === 'ready' ? {} : { searchState })}

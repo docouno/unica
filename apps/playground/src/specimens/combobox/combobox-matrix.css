@@ -1,0 +1,7 @@
+tr[data-wb-result-row] > td:has([data-combobox-comparison]) {
+  min-inline-size: 20.5rem;
+}
+
+tr[data-wb-result-row] > td:has([data-surface='overlay'] [data-combobox-comparison]) {
+  min-inline-size: 24rem;
+}
