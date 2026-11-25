@@ -132,8 +132,20 @@ export default {
     assert.equal(await field.inputValue(), 'Release notes');
     assert.equal(await trigger.getAttribute('aria-expanded'), 'true');
     await field.fill('Release checklist');
+    await field.evaluate((input) => input.setSelectionRange(7, 7));
     await field.press('Enter');
     await assertFocused(field);
+    assert.equal(await field.evaluate((input) => input.selectionStart), 7);
+    await field.fill('Unsaved draft');
+    const resetValues = await field.evaluate((input) => {
+      const form = input.form;
+      form.reset();
+      const values = [input.value, new FormData(form).get('name')];
+      form.requestSubmit();
+      return values;
+    });
+    assert.deepEqual(resetValues, ['Release checklist', 'Release checklist']);
+    await page.getByText('Page name: Release checklist', { exact: true }).waitFor();
     await field.fill('Another draft');
     await page.evaluate(() => {
       document.addEventListener('reset', (event) => event.preventDefault(), { once: true });
@@ -169,7 +181,7 @@ export default {
     assert.equal(await page.locator(nativePanel).count(), 0);
     await page.getByRole('tab', { name: 'Events' }).click();
     const events = page.getByRole('tabpanel', { name: 'Events' });
-    assert.equal(await events.getByText('reset', { exact: true }).count(), 3);
+    assert.equal(await events.getByText('reset', { exact: true }).count(), 4);
     assert.deepEqual(await events.getByRole('listitem').last().locator('code').allTextContents(), [
       'onOpenChange',
       'true',

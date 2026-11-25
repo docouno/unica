@@ -1,4 +1,5 @@
 import { useId, useState } from 'react';
+import { flushSync } from 'react-dom';
 import {
   Button,
   Input,
@@ -17,40 +18,51 @@ import {
 import '@docouno/unica/styles.css';
 
 function NameForm({ formId = '', name = '', formProps = {}, onSave = console.log }) {
-  const [draft, setDraft] = useState(name);
+  const [revision, setRevision] = useState(0);
+  const inputId = formId + '-name';
   return (
     <form
       {...formProps}
       id={formId}
-      onReset={(event) => {
-        const reset = event.nativeEvent;
-        const form = event.currentTarget;
-        setTimeout(() => {
-          if (!reset.defaultPrevented && form.isConnected) {
-            setDraft(name);
-          }
-        }, 0);
-      }}
       onSubmit={(event) => {
         event.preventDefault();
-        const value = new FormData(event.currentTarget).get('name');
-        if (typeof value === 'string') {
-          const saved = value.trim();
-          setDraft(saved);
-          onSave(saved);
+        const form = event.currentTarget;
+        const value = new FormData(form).get('name');
+        if (typeof value !== 'string' || value === name) {
+          return;
+        }
+        const input = form.querySelector('input');
+        const leadingSpaces = value.length - value.trimStart().length;
+        const selection =
+          input && input === form.ownerDocument.activeElement
+            ? {
+                start: Math.max(0, (input.selectionStart ?? 0) - leadingSpaces),
+                end: Math.max(0, (input.selectionEnd ?? 0) - leadingSpaces),
+                direction: input.selectionDirection ?? 'none',
+              }
+            : null;
+        // The next native reset must already see the newly accepted default.
+        flushSync(() => {
+          onSave(value.trim());
+          setRevision((current) => current + 1);
+        });
+        if (selection) {
+          const savedInput = form.querySelector('input');
+          savedInput?.focus({ preventScroll: true });
+          savedInput?.setSelectionRange(selection.start, selection.end, selection.direction);
         }
       }}
     >
       <Stack gap={8}>
-        <Text as="label" htmlFor={formId + '-name'} size="body-s" color="secondary">
+        <Text as="label" htmlFor={inputId} size="body-s" color="secondary">
           Display name
         </Text>
         <Input
-          id={formId + '-name'}
+          key={revision}
+          id={inputId}
           dir="auto"
           name="name"
-          value={draft}
-          onChange={(event) => setDraft(event.currentTarget.value)}
+          defaultValue={name}
           required
           pattern={'.*\\S.*'}
         />
