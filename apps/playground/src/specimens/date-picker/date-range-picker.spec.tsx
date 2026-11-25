@@ -26,6 +26,7 @@ import { PeriodRecords } from './period-records.js';
 import recordsSource from './period-records.tsx?raw';
 import { PeriodDuration } from './period-duration.js';
 import durationSource from './period-duration.tsx?raw';
+import './date-range-picker-matrix.css';
 
 const samplePeriod = ['2026-09-14', '2026-09-18'] as const;
 const unavailable = ['2026-09-19'];
@@ -102,7 +103,8 @@ export default defineComponent({
       <DateRangePicker
         {...values}
         subjectAttributes={ctx.subject}
-        style={{ inlineSize: 'min(100%, 22rem)' }}
+        data-date-range-comparison=""
+        style={{ inlineSize: 'min(100%, var(--date-range-comparison-width, 22rem))' }}
         label={values.variant === 'ghost' ? 'Inline date window' : 'Date window'}
         defaultValue={samplePeriod}
         unavailable={unavailable}

@@ -403,68 +403,101 @@ export default {
     );
   },
 
-  'Picker comparisons leave room for their initial text and actions': async ({ page, origin }) => {
-    await page.setViewportSize({ width: 360, height: 780 });
-    for (const [item, slice, text] of [
-      ['autocomplete', 'roles', 'Release notes'],
-      ['combobox', 'roles', 'Search options'],
-      ['date-picker', 'fields', '16/09/2026'],
-    ]) {
-      const route = new URL('/', origin);
-      route.search = new URLSearchParams({
-        item,
-        slice,
-        tab: 'states',
-        family: 'all',
-        scheme: 'both',
-        surface: 'overlay',
-        vp: 'auto',
-        scale: '120',
-        dir: 'rtl',
-        raw: '1',
-        freeze: '1',
-      }).toString();
-      await page.goto(route.href);
-      await page.locator('html[data-wb-ready="1"]').waitFor({ state: 'attached', timeout: 20_000 });
-      const inputs = page.locator(`[data-wb-slice="${slice}"] td input:not([type="hidden"])`);
-      const geometry = await inputs.evaluateAll((editors) => {
-        const measure = document.createElement('canvas').getContext('2d');
-        return editors.map((input) => {
-          const row = input.closest('[data-wb-subject]');
-          const rect = input.getBoundingClientRect();
-          const buttons = Array.from(row.querySelectorAll('button'), (button) =>
-            button.getBoundingClientRect(),
-          );
-          const value = input.value || input.placeholder;
-          const style = getComputedStyle(input);
-          measure.font = [style.fontStyle, style.fontWeight, style.fontSize, style.fontFamily].join(
-            ' ',
-          );
-          measure.letterSpacing = style.letterSpacing === 'normal' ? '0px' : style.letterSpacing;
-          const textWidth =
-            measure.measureText(value).width +
-            parseFloat(style.paddingLeft) +
-            parseFloat(style.paddingRight);
-          return {
-            value,
-            available: input.clientWidth,
-            content: Math.max(input.scrollWidth, Math.round(textWidth)),
-            overlap: buttons.some(
-              (button) => Math.min(rect.right, button.right) > Math.max(rect.left, button.left),
-            ),
-          };
+  'Picker comparisons leave room for their initial text and actions': async ({
+    page,
+    origin,
+    watchPage,
+  }) => {
+    const period = '14/09/2026 – 18/09/2026';
+    const phone = watchPage(
+      await page
+        .context()
+        .browser()
+        .newPage({
+          isMobile: true,
+          hasTouch: true,
+          viewport: { width: 360, height: 780 },
+        }),
+    );
+    try {
+      for (const [view, item, slice, text, vp = 'auto', width = 360] of [
+        [page, 'autocomplete', 'roles', 'Release notes'],
+        [page, 'combobox', 'roles', 'Search options'],
+        [page, 'date-picker', 'fields', '16/09/2026'],
+        [page, 'date-range-picker', 'fields', period],
+        [phone, 'date-range-picker', 'fields', period],
+        [page, 'date-range-picker', 'fields', period, '768', 1500],
+        [phone, 'date-range-picker', 'fields', period, '1280', 360],
+      ]) {
+        await view.setViewportSize({ width, height: 780 });
+        const params = {
+          item,
+          slice,
+          tab: 'states',
+          family: 'all',
+          scheme: 'both',
+          surface: 'overlay',
+          vp,
+          scale: '120',
+          dir: 'rtl',
+          raw: '1',
+          freeze: '1',
+        };
+        if (view.url() === 'about:blank') {
+          const route = new URL('/', origin);
+          route.search = new URLSearchParams(params).toString();
+          await view.goto(route.href);
+        } else {
+          await navigate(view, params);
+        }
+        await view
+          .locator('html[data-wb-ready="1"]')
+          .waitFor({ state: 'attached', timeout: 20_000 });
+        const inputs = view.locator(`[data-wb-slice="${slice}"] td input:not([type="hidden"])`);
+        const geometry = await inputs.evaluateAll((editors) => {
+          const measure = document.createElement('canvas').getContext('2d');
+          return editors.map((input) => {
+            const row = input.closest('[data-wb-subject]');
+            const rect = input.getBoundingClientRect();
+            const buttons = Array.from(row.querySelectorAll('button'), (button) =>
+              button.getBoundingClientRect(),
+            );
+            const value = input.value || input.placeholder;
+            const style = getComputedStyle(input);
+            measure.font = [
+              style.fontStyle,
+              style.fontWeight,
+              style.fontSize,
+              style.fontFamily,
+            ].join(' ');
+            measure.letterSpacing = style.letterSpacing === 'normal' ? '0px' : style.letterSpacing;
+            const textWidth =
+              measure.measureText(value).width +
+              parseFloat(style.paddingLeft) +
+              parseFloat(style.paddingRight);
+            return {
+              value,
+              available: input.clientWidth,
+              content: Math.max(input.scrollWidth, Math.round(textWidth)),
+              overlap: buttons.some(
+                (button) => Math.min(rect.right, button.right) > Math.max(rect.left, button.left),
+              ),
+            };
+          });
         });
-      });
-      assert.equal(geometry.length, 36, item);
-      for (const result of geometry) {
-        assert.equal(result.value, text, item);
-        assert.equal(
-          result.available,
-          result.content,
-          item + ' must show the complete initial text',
-        );
-        assert.equal(result.overlap, false, item + ' actions must leave the editor clear');
+        assert.equal(geometry.length, 36, item);
+        for (const result of geometry) {
+          assert.equal(result.value, text, item);
+          assert.equal(
+            result.available,
+            result.content,
+            item + ' must show the complete initial text',
+          );
+          assert.equal(result.overlap, false, item + ' actions must leave the editor clear');
+        }
       }
+    } finally {
+      await phone.close();
     }
   },
 
