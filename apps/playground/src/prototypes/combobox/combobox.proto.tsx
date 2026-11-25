@@ -402,36 +402,41 @@ function SuggestionField({
     row,
   } = useSuggestionPlacement(open && !previewOpen && !unavailable, close);
   const focusInput = (): void => input.current?.focus({ preventScroll: true });
-  const resetTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const pendingResets = useRef<Event[]>([]);
   useLayoutEffect(() => {
     const editor = input.current;
     const form = editor?.form;
     if (catalog || !editor || !form) {
       return;
     }
-    function syncReset(event: Event): void {
+    const resets = pendingResets.current;
+    let timer: ReturnType<typeof setTimeout>;
+    const syncReset = (event: Event): void => {
       if (!event.isTrusted || event.target !== form) {
         return;
       }
-      clearTimeout(resetTimer.current);
-      // The input restores its own default. Wait for all listeners to decide cancellation.
-      resetTimer.current = setTimeout(() => {
-        if (!event.defaultPrevented && editor) {
+      resets.push(event);
+      clearTimeout(timer);
+      // A late cancellation cannot undo an earlier reset that already restored the input.
+      timer = setTimeout(() => {
+        if (resets.some((reset) => !reset.defaultPrevented)) {
           setText(editor.value);
           setRequested(undefined);
           setOpen(false);
         }
+        resets.length = 0;
       }, 0);
-    }
+    };
     form.addEventListener('reset', syncReset);
     return () => {
-      clearTimeout(resetTimer.current);
+      clearTimeout(timer);
+      resets.length = 0;
       form.removeEventListener('reset', syncReset);
     };
   }, [catalog, input]);
 
   const changeText = (next: string): void => {
-    clearTimeout(resetTimer.current);
+    pendingResets.current.length = 0;
     setText(next);
     onTextChange?.(next);
   };

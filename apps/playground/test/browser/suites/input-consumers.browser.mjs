@@ -60,6 +60,32 @@ export default {
     );
     await form.locator('input[name="title"][aria-expanded="false"]').waitFor();
     assert.equal(await input.inputValue(), 'Draft title');
+
+    await page.goto(
+      new URL('/?item=autocomplete&tab=playground&family=soft&scheme=light', page.url()).href,
+    );
+    const title = page.getByRole('combobox', { name: 'Document title', exact: true });
+    await title.waitFor({ timeout: 30_000 });
+    await title.fill('Incident');
+    const suggestions = page.getByRole('listbox', { name: 'Suggestions', exact: true });
+    await suggestions.getByRole('option', { name: 'Incident follow-up' }).waitFor();
+    const posted = await title.evaluate(async (editor) => {
+      const owner = editor.form;
+      owner.reset();
+      owner.ownerDocument.addEventListener('reset', (event) => event.preventDefault(), {
+        once: true,
+      });
+      owner.reset();
+      await new Promise((resolve) => setTimeout(resolve, 0));
+      return new FormData(owner).get('title');
+    });
+    assert.equal(posted, 'Release notes');
+    assert.equal(await title.getAttribute('aria-expanded'), 'false');
+    await title.press('ArrowDown');
+    assert.equal(await title.getAttribute('aria-controls'), await suggestions.getAttribute('id'));
+    assert.deepEqual(await suggestions.getByRole('option').allTextContents(), ['Release notes']);
+    await title.press('Enter');
+    assert.equal(await title.inputValue(), 'Release notes');
   },
   'Input consumers retain picker slot order in both directions and Clear updates every form axis once':
     async ({ page, mount }) => {
