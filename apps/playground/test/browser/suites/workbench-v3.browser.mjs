@@ -412,6 +412,39 @@ export default {
     }
   },
 
+  'TagsInput keeps Research whole beside its removal target on a phone': async ({
+    page,
+    origin,
+    watchPage,
+  }) => {
+    const touch = await page
+      .context()
+      .browser()
+      .newContext({ isMobile: true, hasTouch: true, viewport: { width: 360, height: 780 } });
+    try {
+      const mobile = watchPage(await touch.newPage());
+      await mobile.goto(
+        new URL(
+          '/?item=tags-input&tab=states&slice=roles&family=all&scheme=both&surface=overlay&vp=auto&scale=120&dir=rtl&freeze=1&raw=1',
+          origin,
+        ).href,
+      );
+      const board = mobile.locator(
+        '[data-wb-slice="roles"] .wb-artboard[data-theme="frost-light"]',
+      );
+      const field = board.locator('.tags-editor-proto[data-size="l"][data-variant="default"]');
+      const remove = field.getByRole('button', { name: 'Remove Research', exact: true });
+      await remove.waitFor({ timeout: 20_000 });
+      await mobile.evaluate(() => document.fonts.ready);
+      await assertTopicFits(field, 'Research');
+      await remove.tap();
+      await remove.waitFor({ state: 'detached' });
+      assert.ok(await field.getByRole('button', { name: 'Remove Design' }).isVisible());
+    } finally {
+      await touch.close();
+    }
+  },
+
   'TagsInput renders its mixed-script tags in the offline workbench': async ({ page, origin }) => {
     const route = new URL(
       '/?item=tags-input&tab=states&block=overflow&family=soft&scheme=light&dir=rtl',
