@@ -334,7 +334,9 @@ it('configures the 4-tab Workbench architecture and resolves Markdown docs for e
     );
     const snippet = container.querySelector('#wb-usage-quick-start pre')?.textContent ?? '';
     for (const match of snippet.matchAll(/import\s+\{([^}]+)\}\s+from\s+'@docouno\/unica'/g)) {
-      for (const symbol of match[1]!.split(',').map((part) => part.trim())) {
+      const names = match[1]!.replace(/,\s*$/u, '').split(',');
+      for (const name of names) {
+        const symbol = name.trim();
         expect(
           packageExports.has(symbol),
           `Usage Quick Start for ${component.id} imports unknown symbol ${symbol}`,
