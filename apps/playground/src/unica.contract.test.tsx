@@ -148,7 +148,8 @@ it('connects the Button inspector to the toggle authority and a real anchor host
   const link = screen.getByRole('link', { name: 'Create' });
   expect(link.tagName).toBe('A');
   expect(link.getAttribute('href')).toBe('/?item=02-workspace-overview');
-  expect(jsx()).toContain('<a href="/?item=02-workspace-overview">Create</a>');
+  expect(jsx()).toContain('<a href={href}>Create</a>');
+  expect(jsx()).not.toContain('02-workspace-overview');
   expect(screen.getByRole<HTMLOptionElement>('option', { name: 'submit' }).disabled).toBe(true);
 });
 
