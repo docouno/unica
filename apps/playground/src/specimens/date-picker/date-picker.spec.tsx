@@ -16,6 +16,7 @@ import { previewProps, previewText } from '../preview-code.js';
 import { Anatomy, FieldStates, Panels, Locales, LivePickers } from './date-picker.examples.js';
 import { ReviewSchedule } from './review-schedule.js';
 import scheduleSource from './review-schedule.tsx?raw';
+import './date-picker-matrix.css';
 
 const reviewDate = '2026-09-16';
 const messages = {
@@ -83,6 +84,7 @@ export default defineComponent({
     return (
       <DatePicker
         {...values}
+        data-date-picker-comparison=""
         style={{ inlineSize: 'min(100%, 22rem)' }}
         subjectAttributes={ctx.subject}
         label={values.variant === 'ghost' ? 'Inline review date' : 'Review date'}

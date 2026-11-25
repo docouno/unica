@@ -408,6 +408,7 @@ export default {
     for (const [item, slice, text] of [
       ['autocomplete', 'roles', 'Release notes'],
       ['combobox', 'roles', 'Search options'],
+      ['date-picker', 'fields', '16/09/2026'],
     ]) {
       const route = new URL('/', origin);
       route.search = new URLSearchParams({
