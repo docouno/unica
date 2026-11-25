@@ -64,16 +64,27 @@ function occupiedRect(element: Element, rect: DOMRect, style: CSSStyleDeclaratio
   }
 
   // Badges and tightly set inline text can paint outside the measured border box.
+  // A text range includes descendants of clipping boxes, even when their text is invisible.
   const range = document.createRange();
-  range.selectNodeContents(element);
-  const contents = range.getBoundingClientRect();
-  if (contents.width === 0 || contents.height === 0) {
-    return rect;
+  let { left, right, top, bottom } = rect;
+  for (const child of element.childNodes) {
+    range.selectNode(child);
+    const contents =
+      child instanceof Element && !getComputedStyle(child).overflow.includes('visible')
+        ? child.getBoundingClientRect()
+        : range.getBoundingClientRect();
+    if (!contents.width || !contents.height) {
+      continue;
+    }
+    if (extendsInline) {
+      left = Math.min(left, contents.left);
+      right = Math.max(right, contents.right);
+    }
+    if (extendsBlock) {
+      top = Math.min(top, contents.top);
+      bottom = Math.max(bottom, contents.bottom);
+    }
   }
-  const left = extendsInline ? Math.min(rect.left, contents.left) : rect.left;
-  const right = extendsInline ? Math.max(rect.right, contents.right) : rect.right;
-  const top = extendsBlock ? Math.min(rect.top, contents.top) : rect.top;
-  const bottom = extendsBlock ? Math.max(rect.bottom, contents.bottom) : rect.bottom;
   return new DOMRect(left, top, right - left, bottom - top);
 }
 
@@ -155,6 +166,35 @@ function labelPosition(
     ...occupied.flatMap((rect) => [rect.top - height - labelGap, rect.bottom + labelGap]),
   ]);
   const inLayer = (top: number): boolean => top >= layer.top && top + height <= layer.bottom;
+  // A column of narrow subjects leaves room beyond its shared edge.
+  if (subject.width < width) {
+    const column = samples.filter(({ nativeHost }) => nativeHost === sample.nativeHost);
+    const flushLeft = column.every(({ rect }) => Math.abs(rect.left - subject.left) < 1);
+    const flushRight = column.every(({ rect }) => Math.abs(rect.right - subject.right) < 1);
+    if (flushLeft !== flushRight) {
+      const side = flushLeft ? before : after;
+      const centered = subject.top + (subject.height - height) / 2;
+      // Leave a label and a one-pixel gap for each later row.
+      const rowsBelow = column.filter(({ rect }) => rect.top > subject.top).length;
+      const latest = layer.bottom - height - rowsBelow * (height + 1);
+      const starts = [
+        Math.min(centered, latest),
+        ...placed.map(({ bottom }) => bottom + 1),
+        centered,
+        ...tops,
+      ];
+      for (const top of starts) {
+        if (
+          top <= subject.bottom + labelGap &&
+          top + height >= subject.top - labelGap &&
+          inLayer(top) &&
+          fits(side, top, occupied)
+        ) {
+          return new DOMRect(side, top, width, height);
+        }
+      }
+    }
+  }
   // A board of tiny targets has no interior space for dimensions. Keep its free gaps available.
   if (samples.some(({ rect }) => rect.height >= height)) {
     for (const [left, top] of [

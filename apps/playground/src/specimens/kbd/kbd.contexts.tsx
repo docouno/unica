@@ -105,6 +105,13 @@ export function OverlayContext({ ctx }: PreviewProps) {
       </Flex>
       <MenuPreview
         label="Document commands"
+        ref={(menu) => {
+          // MenuPreview renders its own Kbd for each shortcut.
+          const shortcuts = menu?.querySelectorAll('kbd');
+          for (const [attribute, value] of Object.entries(ctx.subject)) {
+            shortcuts?.forEach((key) => key.setAttribute(attribute, value));
+          }
+        }}
         items={[
           { id: 'find', label: 'Find in document', shortcut: '⌘F' },
           { id: 'palette', label: 'Command palette', shortcut: '⇧⌘P', preview: 'hover' },

@@ -1079,6 +1079,68 @@ export default {
     }
   },
 
+  'Bounds keeps menu shortcut dimensions beside their keys': async ({ page, origin }) => {
+    await page.setViewportSize({ width: 1540, height: 950 });
+    await page.goto(new URL('/?item=kbd&tab=states&block=overlay', origin).href);
+    await page.locator('html[data-wb-ready="1"]').waitFor({ state: 'attached', timeout: 20_000 });
+    for (const [family, width] of [
+      ['all', 1365],
+      ['all', 1440],
+      ['all', 1540],
+      ['frost', 2400],
+    ]) {
+      await page.setViewportSize({ width, height: 950 });
+      await navigate(page, {
+        item: 'kbd',
+        tab: 'states',
+        block: 'overlay',
+        family,
+        scheme: family === 'all' ? 'both' : 'light',
+        vp: '1280',
+        bounds: '1',
+      });
+      const menu = page.getByRole('group', { name: 'Document commands' }).first();
+      const positions = await menu.evaluate(async (group) => {
+        await document.fonts.ready;
+        await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+        const board = group.closest('.wb-artboard');
+        const outlines = [...board.querySelectorAll('.wb-bounds-outline')];
+        const captions = [...group.querySelectorAll('bdi')].map((element) => {
+          const range = document.createRange();
+          range.selectNodeContents(element);
+          return range.getBoundingClientRect();
+        });
+        return [...group.querySelectorAll('kbd')].map((key) => {
+          const rect = key.getBoundingClientRect();
+          const outline = outlines.find((element) => {
+            const box = element.getBoundingClientRect();
+            return ['left', 'right', 'top', 'bottom'].every(
+              (edge) => Math.abs(box[edge] - rect[edge]) < 1,
+            );
+          });
+          const label = outline?.querySelector('[data-wb-bounds-label]')?.getBoundingClientRect();
+          return Boolean(
+            label &&
+            Math.max(
+              label.left - rect.right,
+              rect.left - label.right,
+              label.top - rect.bottom,
+              rect.top - label.bottom,
+            ) <= 5 &&
+            captions.every(
+              (text) =>
+                text.right <= label.left ||
+                text.left >= label.right ||
+                text.bottom <= label.top ||
+                text.top >= label.bottom,
+            ),
+          );
+        });
+      });
+      assert.deepEqual(positions, [true, true, true], family + ' at ' + width);
+    }
+  },
+
   'Bounds leaves dense badge content visible when labels have room outside': async ({
     page,
     origin,
