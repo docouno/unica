@@ -1,55 +1,3 @@
-.hint-study-stack {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: var(--space-16);
-  inline-size: 100%;
-}
-
-.hint-study-row {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--space-12);
-  min-inline-size: 0;
-}
-
-.hint-study-copy {
-  color: var(--fg-secondary);
-  font-size: var(--text-size-body-s);
-  line-height: var(--text-size-body-s-lh);
-}
-
-.hint-study-controls {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-12);
-  color: var(--fg-secondary);
-  font-size: var(--text-size-caption-l);
-  line-height: var(--text-size-caption-l-lh);
-}
-
-.hint-study-controls label {
-  display: grid;
-  gap: var(--space-4);
-  min-inline-size: 0;
-}
-
-.hint-study-controls select {
-  min-block-size: 30px;
-  max-inline-size: 100%;
-  border: 1px solid var(--border-strong);
-  border-radius: var(--radius-xs);
-  padding: var(--space-4) var(--space-8);
-  background: var(--bg-surface);
-  color: var(--fg-primary);
-  font: inherit;
-}
-
-.hint-study-controls select:focus-visible {
-  outline: 2px solid var(--focus-ring-color);
-  outline-offset: 2px;
-}
-
 .hint-study-anchor {
   position: absolute;
   inset-block-start: 50%;
@@ -83,16 +31,4 @@
 
 .hint-study-anchor[data-position='bottom-end'] {
   justify-items: end;
-}
-
-@media (pointer: coarse) {
-  .hint-study-controls select {
-    min-block-size: 44px;
-  }
-}
-
-@media (forced-colors: active) {
-  .hint-study-controls select {
-    border-color: ButtonText;
-  }
 }

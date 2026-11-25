@@ -17,6 +17,11 @@ function applyEnvironment(
 ): void {
   const root = target.documentElement;
   const inherited = frame.ownerDocument.defaultView?.getComputedStyle(frame);
+  if (frame.closest('[data-wb-capture-route]')) {
+    root.dataset.wbFreeze = '1';
+  } else {
+    delete root.dataset.wbFreeze;
+  }
   root.dataset.theme = theme.id;
   root.style.colorScheme = theme.colorScheme;
   root.dir = inherited?.direction || 'ltr';

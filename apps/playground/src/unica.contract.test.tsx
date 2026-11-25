@@ -344,8 +344,8 @@ it('configures the 4-tab Workbench architecture and resolves Markdown docs for e
       }
     }
     if (component.id === 'tooltip') {
-      expect(snippet).toContain("import { Tooltip } from '@docouno/unica'");
-      expect(snippet).not.toMatch(/import\s+\{[^}]*CopyIcon[^}]*\}/);
+      expect(snippet).toMatch(/import\s+\{[^}]*\bTooltip\b[^}]*\}\s+from\s+'@docouno\/unica'/);
+      expect(snippet).toContain("import { CopyIcon } from '@phosphor-icons/react'");
     } else if (component.id === 'stack') {
       expect(snippet).toMatch(/import\s+\{[^}]*\bStack\b[^}]*\}\s+from\s+'@docouno\/unica'/);
       expect(snippet).toMatch(/import\s+\{[^}]*\bText\b[^}]*\}\s+from\s+'@docouno\/unica'/);

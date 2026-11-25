@@ -1,8 +1,12 @@
+import { useId, useState } from 'react';
+import type { ReactNode } from 'react';
 import {
+  Button,
+  Flex,
+  IconButton,
   Input,
   Kbd,
   KbdGroup,
-  Link,
   Popover,
   PopoverBody,
   PopoverClose,
@@ -11,12 +15,11 @@ import {
   PopoverHeader,
   PopoverTitle,
   PopoverTrigger,
+  Stack,
   Text,
   Tooltip,
   TooltipProvider,
 } from '@docouno/unica';
-import { useState } from 'react';
-import type { ReactElement } from 'react';
 import {
   ArrowCounterClockwiseIcon,
   ArrowSquareOutIcon,
@@ -26,153 +29,220 @@ import {
   StarIcon,
 } from '@phosphor-icons/react';
 import { OverlayExampleFrame } from '../../examples/OverlayExampleFrame.js';
-import { OverlayPlacementStudy } from '../../examples/overlay-studies.js';
-import { Button, IconButton } from '@docouno/unica';
-import type { PreviewContext } from '../../workbench/types.js';
+import { placementAlignments, placementSides } from '../../examples/overlay-placement-options.js';
+import type { PreviewProps } from '../../workbench/types.js';
+import { ExampleSurface } from '../shared/example-surface.js';
+import { PreferencesLink } from './preferences-link.js';
+import '../../examples/overlay-studies.css';
 
-type ExampleProps = { readonly ctx: PreviewContext };
-
-export function TooltipContentExamples({ ctx }: ExampleProps): ReactElement {
-  const [example, setExample] = useState('shortcut');
-  const description = 'Keep this panel visible while you browse other documents.';
+function Frame({
+  ctx,
+  title,
+  height,
+  position = 'bottom-center',
+  sourceSurface = false,
+  children,
+}: PreviewProps & {
+  title: string;
+  height: number;
+  position?: string;
+  sourceSurface?: boolean;
+  children: ReactNode;
+}) {
   return (
-    <div className="hint-study-stack">
-      <div className="hint-study-controls">
-        <label>
-          Tooltip content
-          <select value={example} onChange={(event) => setExample(event.currentTarget.value)}>
-            <option value="label">Label</option>
-            <option value="shortcut">Label and shortcut</option>
-            <option value="description">Additional explanation</option>
-          </select>
-        </label>
+    <OverlayExampleFrame ctx={ctx} title={title} height={height}>
+      <div className="hint-study-anchor" data-position={position}>
+        {sourceSurface ? (
+          <div>
+            <ExampleSurface surface={ctx.surface}>{children}</ExampleSurface>
+          </div>
+        ) : (
+          children
+        )}
       </div>
-      <OverlayExampleFrame ctx={ctx} title="Tooltip content example" height={152}>
-        <div className="hint-study-anchor" data-position="bottom-center">
-          <Tooltip
-            {...ctx.subject}
-            label={example === 'description' ? description : 'Pin inspector'}
-            describe={example === 'description'}
-            shortcut={example === 'shortcut' ? '⌘I' : undefined}
-            defaultOpen
-          >
-            <IconButton icon={SidebarSimpleIcon} aria-label="Pin inspector" size="s" />
-          </Tooltip>
-        </div>
-      </OverlayExampleFrame>
-    </div>
+    </OverlayExampleFrame>
   );
 }
 
-export function TooltipStateExamples({ ctx }: ExampleProps): ReactElement {
-  const [example, setExample] = useState('focus');
-  const unavailable = example === 'unavailable';
-  const selected = example === 'selected';
+export function TooltipContentExamples({ ctx }: PreviewProps) {
+  const content = ctx.story?.controls.content ?? 'shortcut';
+  const [pinned, setPinned] = useState(false);
+  const action = pinned ? 'Unpin inspector' : 'Pin inspector';
   return (
-    <div className="hint-study-stack">
-      <div className="hint-study-controls">
-        <label>
-          Source state
-          <select value={example} onChange={(event) => setExample(event.currentTarget.value)}>
-            <option value="focus">Keyboard focus</option>
-            <option value="selected">Selected</option>
-            <option value="unavailable">Unavailable</option>
-          </select>
-        </label>
-      </div>
-      <OverlayExampleFrame ctx={ctx} title="Tooltip source states" height={142}>
-        <div className="hint-study-anchor" data-position="bottom-center">
-          <Tooltip
-            {...ctx.subject}
-            key={example}
-            label={unavailable ? 'Publish' : selected ? 'Remove from saved' : 'Preferences'}
-            defaultOpen={selected}
-          >
-            <IconButton
-              icon={unavailable ? ArrowSquareOutIcon : selected ? StarIcon : GearIcon}
-              aria-label={unavailable ? 'Publish' : selected ? 'Remove from saved' : 'Preferences'}
-              {...(selected ? { pressed: true } : {})}
-              disabled={unavailable}
-              size="s"
-            />
-          </Tooltip>
-          {unavailable && (
-            <Text size="body-s" color="secondary">
-              Only editors can publish.
-            </Text>
-          )}
-        </div>
-      </OverlayExampleFrame>
-    </div>
+    <Frame ctx={ctx} title="Tooltip content example" height={184}>
+      <Tooltip
+        {...ctx.subject}
+        key={String(content)}
+        label={
+          content === 'description'
+            ? 'Keep this panel visible while you browse other documents.'
+            : action
+        }
+        describe={content === 'description'}
+        shortcut={content === 'shortcut' ? '⌘I' : undefined}
+        defaultOpen
+      >
+        <IconButton
+          {...ctx.subject}
+          icon={SidebarSimpleIcon}
+          aria-label="Pin inspector"
+          size="s"
+          pressed={pinned}
+          onPressedChange={setPinned}
+        />
+      </Tooltip>
+    </Frame>
   );
 }
 
-export function TooltipOverflowExamples({ ctx }: ExampleProps): ReactElement {
+function SourceState({ ctx, mode }: PreviewProps & { mode: string }) {
+  const [saved, setSaved] = useState(true);
+  const [message, setMessage] = useState('');
+  const reasonId = useId();
+  const unavailable = mode === 'unavailable';
+  const toggle = mode === 'selected';
+  const label = unavailable
+    ? 'Publish'
+    : toggle
+      ? saved
+        ? 'Remove from saved'
+        : 'Save document'
+      : 'Preferences';
   return (
-    <div className="hint-study-stack">
-      <OverlayExampleFrame ctx={ctx} title="Long tooltip and whole shortcut" height={184}>
-        <div className="hint-study-anchor" data-position="bottom-center">
-          <Tooltip
+    <Stack align="center" gap={4}>
+      <Tooltip {...ctx.subject} label={label} defaultOpen={toggle}>
+        <IconButton
+          {...ctx.subject}
+          icon={unavailable ? ArrowSquareOutIcon : toggle ? StarIcon : GearIcon}
+          aria-label={toggle ? 'Save document' : label}
+          aria-describedby={unavailable ? reasonId : undefined}
+          disabled={unavailable}
+          size="s"
+          {...(toggle
+            ? { pressed: saved, onPressedChange: setSaved }
+            : { onClick: () => setMessage('Preferences requested.') })}
+        />
+      </Tooltip>
+      {unavailable && (
+        <Text size="body-s" color="secondary" id={reasonId} dir="auto">
+          Only editors can publish.
+        </Text>
+      )}
+      {message && (
+        <Text size="body-s" color="secondary" dir="auto" role="status">
+          {message}
+        </Text>
+      )}
+    </Stack>
+  );
+}
+
+export function TooltipStateExamples({ ctx }: PreviewProps) {
+  const mode = String(ctx.story?.controls.source ?? 'focus');
+  return (
+    <Frame ctx={ctx} title="Tooltip source states" height={178} sourceSurface>
+      <SourceState key={mode} ctx={ctx} mode={mode} />
+    </Frame>
+  );
+}
+
+const identifier = 'replica-eu-central-production-archive-2026';
+
+export function TooltipOverflowExamples({ ctx }: PreviewProps) {
+  const [result, setResult] = useState('');
+  return (
+    <Stack gap={12} style={{ inlineSize: '100%' }}>
+      <Frame ctx={ctx} title="Long tooltip and whole shortcut" height={232}>
+        <Tooltip
+          {...ctx.subject}
+          label="Search across all documents in this workspace"
+          style={{ inlineSize: '13rem' }}
+          shortcut={
+            <KbdGroup>
+              <Kbd>Ctrl</Kbd>
+              <Kbd>Shift</Kbd>
+              <Kbd>F</Kbd>
+            </KbdGroup>
+          }
+          defaultOpen
+        >
+          <IconButton
             {...ctx.subject}
-            label="Search across all documents in this workspace"
-            style={{ inlineSize: '13rem' }}
-            shortcut={
-              <KbdGroup>
-                <Kbd>Ctrl</Kbd>
-                <Kbd>Shift</Kbd>
-                <Kbd>F</Kbd>
-              </KbdGroup>
-            }
-            defaultOpen
+            icon={MagnifyingGlassIcon}
+            aria-label="Search"
+            size="s"
+            onClick={() => setResult('Search requested.')}
+          />
+        </Tooltip>
+      </Frame>
+      <Flex wrap="wrap" align="center" gap={12}>
+        <Tooltip {...ctx.subject} label={identifier}>
+          <Button
+            {...ctx.subject}
+            variant="ghost"
+            tone="neutral"
+            size="s"
+            onClick={() => setResult(identifier)}
           >
-            <IconButton icon={MagnifyingGlassIcon} aria-label="Search" size="s" />
-          </Tooltip>
-        </div>
-      </OverlayExampleFrame>
-      <div className="hint-study-row">
-        <Tooltip label="replica-eu-central-production-archive-2026">
-          <Button variant="ghost" tone="neutral" size="s">
             Full identifier
           </Button>
         </Tooltip>
-        <Tooltip label="" shortcut="⌘K">
-          <Button variant="ghost" tone="neutral" size="s">
+        <Tooltip {...ctx.subject} label="" shortcut="⌘K">
+          <Button
+            {...ctx.subject}
+            variant="ghost"
+            tone="neutral"
+            size="s"
+            onClick={() => setResult('Empty label activated.')}
+          >
             Empty label
           </Button>
         </Tooltip>
-      </div>
-    </div>
+      </Flex>
+      <Text
+        role="status"
+        dir="auto"
+        size="body-s"
+        color="secondary"
+        style={{ overflowWrap: 'anywhere' }}
+      >
+        {result}
+      </Text>
+    </Stack>
   );
 }
 
-export function TooltipLiveExamples({ ctx }: ExampleProps): ReactElement {
+export function TooltipLiveExamples({ ctx }: PreviewProps) {
   const [action, setAction] = useState('');
   const [saved, setSaved] = useState(false);
   const saveLabel = saved ? 'Remove from saved' : 'Save document';
   return (
-    <div className="hint-study-stack">
+    <Stack gap={8} align="start">
       <TooltipProvider>
-        <div className="hint-study-row">
+        <Flex wrap="wrap" align="center" gap={12}>
           <Tooltip {...ctx.subject} label="Search" shortcut="⌘K">
             <IconButton
+              {...ctx.subject}
               icon={MagnifyingGlassIcon}
               aria-label="Search"
               variant="ghost"
-              onClick={() => setAction('Search activated.')}
+              onClick={() => setAction('Search requested.')}
             />
           </Tooltip>
-          <Tooltip label="Preferences" shortcut="⌘,">
+          <Tooltip {...ctx.subject} label="Preferences" shortcut="⌘,">
             <IconButton
+              {...ctx.subject}
               icon={GearIcon}
               aria-label="Preferences"
               variant="ghost"
-              onClick={() => setAction('Preferences activated.')}
+              onClick={() => setAction('Preferences requested.')}
             />
           </Tooltip>
-          <Tooltip label={saveLabel}>
+          <Tooltip {...ctx.subject} label={saveLabel}>
             <IconButton
+              {...ctx.subject}
               icon={StarIcon}
-              aria-label={saveLabel}
+              aria-label="Save document"
               variant="ghost"
               pressed={saved}
               onPressedChange={(next) => {
@@ -181,64 +251,80 @@ export function TooltipLiveExamples({ ctx }: ExampleProps): ReactElement {
               }}
             />
           </Tooltip>
-        </div>
+        </Flex>
       </TooltipProvider>
-      <Text size="body-s" color="secondary" role="status">
+      <Text size="body-s" color="secondary" role="status" dir="auto">
         {action}
       </Text>
-    </div>
+    </Stack>
   );
 }
 
-export function TooltipPlacementExamples({ ctx }: ExampleProps): ReactElement {
+export function TooltipPlacementExamples({ ctx }: PreviewProps) {
+  const controls = ctx.story?.controls;
+  const side = placementSides.find((value) => value === controls?.side) ?? 'top';
+  const align = placementAlignments.find((value) => value === controls?.align) ?? 'center';
+  const position = String(controls?.position ?? 'center');
+  const [requested, setRequested] = useState(false);
   return (
-    <OverlayPlacementStudy
-      ctx={ctx}
-      title="Tooltip placement"
-      height={244}
-      initialSide="top"
-      initialAlign="center"
-    >
-      {(side, align) => (
-        <Tooltip
+    <Frame ctx={ctx} title="Tooltip placement" height={244} position={position}>
+      <Tooltip
+        {...ctx.subject}
+        key={`${side}-${align}-${position}`}
+        side={side}
+        align={align}
+        label="Preferences"
+        shortcut="⌘,"
+        defaultOpen
+      >
+        <IconButton
           {...ctx.subject}
-          side={side}
-          align={align}
-          label="Preferences"
-          shortcut="⌘,"
-          defaultOpen
-        >
-          <IconButton icon={GearIcon} aria-label="Preferences" />
-        </Tooltip>
+          icon={GearIcon}
+          aria-label="Preferences"
+          onClick={() => setRequested(true)}
+        />
+      </Tooltip>
+      {requested && (
+        <div>
+          <ExampleSurface surface={ctx.surface}>
+            <Text size="body-s" color="secondary" role="status" dir="auto">
+              Preferences requested.
+            </Text>
+          </ExampleSurface>
+        </div>
       )}
-    </OverlayPlacementStudy>
+    </Frame>
   );
 }
 
-export function TooltipNestedExample({ ctx }: ExampleProps): ReactElement {
+export function TooltipNestedExample({ ctx }: PreviewProps) {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState('Release notes');
   return (
-    <OverlayExampleFrame ctx={ctx} title="Tooltip inside a settings popover" height={332}>
-      <div className="hint-study-anchor" data-position="top-start">
-        <Popover open={open} onOpenChange={setOpen}>
-          <PopoverTrigger asChild>
-            <Button size="s">Page settings</Button>
-          </PopoverTrigger>
-          <PopoverContent size="s" align="start">
-            <PopoverHeader>
-              <PopoverTitle>Page settings</PopoverTitle>
-              <PopoverClose aria-label="Close page settings" />
-            </PopoverHeader>
-            <PopoverBody className="hint-study-row">
+    <Frame ctx={ctx} title="Tooltip inside a settings popover" height={332} position="top-start">
+      <Popover open={open} onOpenChange={setOpen}>
+        <PopoverTrigger asChild>
+          <Button {...ctx.subject} size="s">
+            Page settings
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent size="s" align="start">
+          <PopoverHeader>
+            <PopoverTitle>Page settings</PopoverTitle>
+            <PopoverClose aria-label="Close page settings" />
+          </PopoverHeader>
+          <PopoverBody>
+            <Flex gap={8} align="center">
               <Input
                 aria-label="Page name"
+                dir="auto"
                 value={name}
                 onChange={(event) => setName(event.currentTarget.value)}
                 size="s"
               />
               <Tooltip {...ctx.subject} label="Restore default settings">
                 <IconButton
+                  {...ctx.subject}
                   icon={ArrowCounterClockwiseIcon}
                   aria-label="Restore default settings"
                   variant="ghost"
@@ -246,35 +332,33 @@ export function TooltipNestedExample({ ctx }: ExampleProps): ReactElement {
                   onClick={() => setName('Release notes')}
                 />
               </Tooltip>
-            </PopoverBody>
-            <PopoverFooter>
-              <Button size="s" variant="secondary" tone="accent" onClick={() => setOpen(false)}>
-                Done
-              </Button>
-            </PopoverFooter>
-          </PopoverContent>
-        </Popover>
-      </div>
-    </OverlayExampleFrame>
+            </Flex>
+          </PopoverBody>
+          <PopoverFooter>
+            <Button size="s" variant="secondary" tone="accent" onClick={() => setOpen(false)}>
+              Done
+            </Button>
+          </PopoverFooter>
+        </PopoverContent>
+      </Popover>
+    </Frame>
   );
 }
 
-export function TooltipContextExamples({ ctx }: ExampleProps): ReactElement {
+export function TooltipContextExamples({ ctx }: PreviewProps) {
   return (
-    <OverlayExampleFrame ctx={ctx} title="Tooltip on a Preferences link" height={166}>
-      <div className="hint-study-anchor" data-position="center-start">
-        <Tooltip
-          {...ctx.subject}
-          label="Preferences & shortcuts"
-          shortcut="⌘,"
-          side="end"
-          defaultOpen
-        >
-          <Link href="?item=09-user-preferences" target="_top" tone="neutral">
-            <GearIcon size="1em" aria-hidden="true" /> Preferences
-          </Link>
-        </Tooltip>
-      </div>
-    </OverlayExampleFrame>
+    <Frame
+      ctx={ctx}
+      title="Tooltip on a Preferences link"
+      height={184}
+      position="center-start"
+      sourceSurface
+    >
+      <PreferencesLink
+        href="?item=09-user-preferences"
+        linkProps={{ target: '_top' }}
+        subject={ctx.subject}
+      />
+    </Frame>
   );
 }
