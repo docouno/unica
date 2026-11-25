@@ -14,7 +14,9 @@ import {
 } from '../../prototypes/table/table.proto.js';
 import '@docouno/unica/styles.css';
 
-const cellInset = { paddingInline: 'clamp(var(--space-4), 1.5%, var(--table-cell-x))' };
+const cellInset = {
+  paddingInline: 'clamp(var(--space-2), 4% - var(--space-16), var(--table-cell-x))',
+};
 
 const policiesByPage = [
   [

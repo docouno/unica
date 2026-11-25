@@ -14,6 +14,23 @@ async function navigate(page, params) {
   }, params);
 }
 
+async function checkReferenceNames(page) {
+  const table = page.getByRole('table', { name: 'Recovery references' });
+  await table.waitFor({ timeout: 30_000 });
+  await page.getByRole('button', { name: 'Next page', exact: true }).press('Enter');
+  await page.evaluate(() => document.fonts.ready);
+  for (const name of ['Volume snapshots', 'Restore point retention']) {
+    const lines = await table.getByText(name, { exact: true }).evaluate((label) => {
+      const text = label.firstChild;
+      const range = document.createRange();
+      range.setStart(text, text.textContent.lastIndexOf(' ') + 1);
+      range.setEnd(text, text.length);
+      return range.getClientRects().length;
+    });
+    assert.equal(lines, 1, name);
+  }
+}
+
 export default {
   'An editor keeps its modal open for Escape during IME composition': async ({ page, origin }) => {
     await page.goto(
@@ -476,6 +493,7 @@ export default {
   'Table keeps document names readable on the second reference page at mobile width': async ({
     page,
     origin,
+    mount,
   }) => {
     await page.setViewportSize({ width: 360, height: 780 });
     await page.goto(
@@ -485,20 +503,26 @@ export default {
       ).href,
       { waitUntil: 'domcontentloaded' },
     );
+    await checkReferenceNames(page);
+
+    await mount('recovery-references', { theme: 'soft-light', textScale: 120, direction: 'rtl' });
+    const host = page.getByRole('main');
+    await host.evaluate((node) => {
+      node.style.inlineSize = '250px';
+    });
+    await checkReferenceNames(page);
+    await host.evaluate((node) => node.style.removeProperty('inline-size'));
     const table = page.getByRole('table', { name: 'Recovery references' });
-    await table.waitFor({ timeout: 30_000 });
-    await page.getByRole('button', { name: 'Next page', exact: true }).press('Enter');
-    await page.evaluate(() => document.fonts.ready);
-    for (const name of ['Volume snapshots', 'Restore point retention']) {
-      const lines = await table.getByText(name, { exact: true }).evaluate((label) => {
-        const text = label.firstChild;
-        const range = document.createRange();
-        range.setStart(text, text.textContent.lastIndexOf(' ') + 1);
-        range.setEnd(text, text.length);
-        return range.getClientRects().length;
-      });
-      assert.equal(lines, 1, name);
-    }
+    const horizontalOverflow = () =>
+      table.evaluate((node) => node.parentElement.scrollWidth - node.parentElement.clientWidth);
+    assert.equal(await horizontalOverflow(), 0, 'The revised date column fits the mobile document');
+
+    await page.setViewportSize({ width: 840, height: 780 });
+    await host.evaluate((node) => {
+      node.style.display = 'flex';
+    });
+    await page.getByRole('button', { name: 'Previous page', exact: true }).press('Enter');
+    assert.equal(await horizontalOverflow(), 0, 'The reference table fits its flex row');
   },
 
   'SegmentedControl keeps the submitted frequency when a native reset is canceled': async ({
