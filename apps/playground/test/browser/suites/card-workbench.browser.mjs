@@ -305,15 +305,21 @@ export default {
     await page.waitForTimeout(550);
     assert.equal(await menu.isVisible(), false);
     assert.equal(await tile.getAttribute('data-test-openings'), null);
-    assert.equal(await block.getByText('Rename · Invoice draft', { exact: true }).count(), 0);
+    assert.equal(
+      await block.getByText('Rename requested for Invoice draft.', { exact: true }).count(),
+      0,
+    );
 
     await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints });
     await menu.waitFor();
     await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
     assert.equal(await menu.isVisible(), true);
     assert.equal(await tile.getAttribute('data-test-openings'), '1');
-    await menu.getByRole('menuitem', { name: 'Rename' }).click();
-    await block.getByText('Rename · Invoice draft', { exact: true }).waitFor();
+    await assertFocused(menu);
+    await page.keyboard.press('ArrowDown');
+    await assertFocused(menu.getByRole('menuitem', { name: 'Rename', exact: true }));
+    await page.keyboard.press('Enter');
+    await block.getByText('Rename requested for Invoice draft.', { exact: true }).waitFor();
   },
   'Folio preserves Card interactions in sign-in, overview, collection and invitations': async ({
     page,

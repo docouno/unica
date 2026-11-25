@@ -275,7 +275,7 @@ export default {
     await note.focus();
     await page.keyboard.press('Shift+F10');
     assert.equal(await menu.count(), 0);
-    const card = page.locator('.context-study-live-target');
+    const card = page.getByRole('group', { name: 'Release notes', exact: true });
     await card.click({ button: 'right', position: { x: 4, y: 4 } });
     await menu.waitFor();
   },

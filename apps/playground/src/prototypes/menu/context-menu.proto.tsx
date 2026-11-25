@@ -20,6 +20,7 @@ type ContextTargetProps<T extends HTMLElement> = Required<
     | 'onPointerMove'
     | 'onPointerUp'
     | 'onPointerCancel'
+    | 'onMouseDownCapture'
     | 'onClickCapture'
   >
 > & {
@@ -286,6 +287,12 @@ function useContextMenu<T extends HTMLElement>({
         if (hold.current?.id === event.pointerId) {
           clearTimeout(hold.current.timer);
           hold.current = null;
+        }
+      },
+      onMouseDownCapture: (event) => {
+        // A completed touch hold can synthesize a mouse press that refocuses the tile.
+        if (suppressTap.current && event.button === 0) {
+          event.preventDefault();
         }
       },
       onClickCapture: (event) => {

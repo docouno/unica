@@ -1,0 +1,119 @@
+import { useId, useState } from 'react';
+import { CopyIcon, DotsThreeIcon, FileTextIcon, PencilSimpleIcon } from '@phosphor-icons/react';
+import { Card, Flex, Icon, IconButton, Input, Link, Stack, Text } from '@docouno/unica';
+import { FormField } from '../../prototypes/form-field/form-field.proto.js';
+import { ContextMenu } from '../../prototypes/menu/context-menu.proto.js';
+import '@docouno/unica/styles.css';
+
+export function ReleaseNotesActions({
+  allowSelection = false,
+  menuProps = {},
+  targetProps = {},
+} = {}) {
+  const noteId = useId();
+  const [selection, setSelection] = useState('');
+  const [receipt, setReceipt] = useState('');
+  const copySelection = () => {
+    if (!navigator.clipboard) {
+      setReceipt(`Could not copy: ${selection}`);
+      return;
+    }
+    navigator.clipboard.writeText(selection).then(
+      () => setReceipt(`Copied: ${selection}`),
+      () => setReceipt(`Could not copy: ${selection}`),
+    );
+  };
+  return (
+    <ContextMenu
+      {...menuProps}
+      label="Release notes actions"
+      size="s"
+      align="end"
+      shouldOpen={({ native, source, selection }) =>
+        !native || Boolean(allowSelection && selection && source.closest('[data-document-excerpt]'))
+      }
+      onInvoke={(context) => setSelection(context.selection)}
+      items={[
+        {
+          id: 'copy',
+          label: 'Copy selected text',
+          icon: CopyIcon,
+          disabled: !selection,
+          run: copySelection,
+        },
+        {
+          id: 'rename',
+          label: 'Rename document',
+          icon: PencilSimpleIcon,
+          run: () => setReceipt('Rename requested for release notes.'),
+        },
+      ]}
+      trigger={(bindings) => (
+        <IconButton
+          {...bindings}
+          size="s"
+          variant="ghost"
+          icon={DotsThreeIcon}
+          aria-label="Release notes actions"
+        />
+      )}
+      target={(bindings, trigger, panel) => (
+        <Card
+          {...bindings}
+          {...targetProps}
+          size="s"
+          data-surface="base"
+          style={{ inlineSize: 'min(25rem, 100%)' }}
+          role="group"
+          aria-label="Release notes"
+        >
+          <Stack gap={12}>
+            <Flex align="center" gap={8} style={{ minInlineSize: 0 }}>
+              <Icon
+                usage="slot"
+                icon={FileTextIcon}
+                size="m"
+                color="secondary"
+                style={{
+                  flex: 'none',
+                  inlineSize: 28,
+                  blockSize: 28,
+                  padding: 4,
+                  borderRadius: 'var(--radius-xs)',
+                  backgroundColor: 'var(--neutral-soft-bg)',
+                }}
+              />
+              <Text
+                size="body-s"
+                weight="semibold"
+                style={{ flex: 1, minInlineSize: 0, overflowWrap: 'anywhere' }}
+              >
+                React 19 release notes
+              </Text>
+              {trigger}
+            </Flex>
+            <Text data-document-excerpt="" size="body-s" color="secondary" dir="auto">
+              Select part of this sentence and right-click it.
+            </Text>
+            <FormField htmlFor={noteId} label="Revision note" size="s">
+              <div data-native-context-region="">
+                <Input id={noteId} size="s" defaultValue="Fixes in this release" />
+              </div>
+            </FormField>
+            <Link href="https://react.dev/blog/2024/12/05/react-19">Open the source document</Link>
+          </Stack>
+          <Text
+            size="caption-l"
+            color="secondary"
+            role="status"
+            dir="auto"
+            style={{ marginBlockStart: receipt ? 'var(--space-8)' : 0, overflowWrap: 'anywhere' }}
+          >
+            {receipt}
+          </Text>
+          {panel}
+        </Card>
+      )}
+    />
+  );
+}

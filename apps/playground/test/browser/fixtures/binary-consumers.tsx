@@ -1,35 +1,40 @@
 import { lazy, Suspense, useState } from 'react';
+import { StoryFrame } from '../../../src/workbench/StoryFrame.js';
 import { componentCompositions } from '../../../src/workbench/schema.js';
 import type { SceneDefinition } from '../../../src/workbench/types.js';
 
 const ContextMenuExample = lazy(async () => {
   const { default: contextMenu } = await import('../../../src/specimens/menu/context-menu.spec.js');
-  const NativeContextMenu = componentCompositions(contextMenu).find(
-    ({ id }) => id === 'native',
-  )?.render;
-  if (!NativeContextMenu) {
+  const example = componentCompositions(contextMenu).find(({ id }) => id === 'native');
+  if (!example) {
     throw new Error('Missing native context menu example');
   }
+  const NativeContextMenu = example.render;
   return {
     default: () => (
-      <NativeContextMenu
-        ctx={{
-          id: 'context-menu-fixture',
-          tab: 'compositions',
-          theme: {
-            id: 'soft-dark',
-            label: 'Soft Dark',
-            family: 'soft',
-            familyLabel: 'Soft',
-            colorScheme: 'dark',
-          },
-          surface: 'base',
-          comparing: false,
-          subject: { 'data-wb-subject': '' },
-          form: { 'data-wb-form': '' },
-          action: () => () => undefined,
-        }}
-      />
+      <StoryFrame title={example.title} controls={example.controls}>
+        {(story) => (
+          <NativeContextMenu
+            ctx={{
+              story,
+              id: 'context-menu-fixture',
+              tab: 'compositions',
+              theme: {
+                id: 'soft-dark',
+                label: 'Soft Dark',
+                family: 'soft',
+                familyLabel: 'Soft',
+                colorScheme: 'dark',
+              },
+              surface: 'base',
+              comparing: false,
+              subject: { 'data-wb-subject': '' },
+              form: { 'data-wb-form': '' },
+              action: () => () => undefined,
+            }}
+          />
+        )}
+      </StoryFrame>
     ),
   };
 });

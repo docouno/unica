@@ -22,8 +22,7 @@
   max-inline-size: 100%;
 }
 
-.context-study-pin > p,
-.context-study-live > p {
+.context-study-pin > p {
   display: inline-block;
   max-inline-size: 100%;
   padding: var(--space-2) var(--space-4);
@@ -73,49 +72,8 @@
   inline-size: 100%;
 }
 
-.context-study-live-target {
-  inline-size: min(25rem, 100%);
-}
-
 .context-study-target[data-context-open='point'] {
   border-color: var(--border-strong);
-}
-
-.context-study-target[data-touch-hold] {
-  user-select: none;
-  -webkit-touch-callout: none;
-}
-
-.context-study-target:focus-visible {
-  outline: 2px solid var(--focus-ring-color);
-  outline-offset: 2px;
-}
-
-.context-study-file {
-  display: flex;
-  align-items: center;
-  gap: var(--space-8);
-  min-inline-size: 0;
-}
-
-.context-study-file-icon {
-  display: inline-grid;
-  place-items: center;
-  flex: none;
-  inline-size: 28px;
-  block-size: 28px;
-  border-radius: var(--radius-xs);
-  background: var(--neutral-soft-bg);
-  color: var(--fg-secondary);
-}
-
-.context-study-file-name {
-  flex: 1;
-  min-inline-size: 0;
-  overflow-wrap: anywhere;
-  font-weight: 600;
-  font-size: var(--text-size-body-s);
-  line-height: var(--text-size-body-s-lh);
 }
 
 .context-study-live {
@@ -126,15 +84,4 @@
   gap: var(--space-12);
   padding-block-start: var(--space-64);
   padding-inline: min(8%, var(--space-32));
-}
-
-.context-study-note {
-  gap: var(--space-12);
-}
-
-@media (pointer: coarse) {
-  .context-study-trigger {
-    min-inline-size: 44px;
-    min-block-size: 44px;
-  }
 }

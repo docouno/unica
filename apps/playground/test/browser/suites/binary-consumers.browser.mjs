@@ -146,8 +146,11 @@ export default {
   'Context menu offers document actions for selected text only when enabled': async ({
     page,
     mount,
+    origin,
   }) => {
     await mountExample(page, mount, 'Context menu');
+    await page.context().grantPermissions(['clipboard-read', 'clipboard-write'], { origin });
+    await page.evaluate(() => navigator.clipboard.writeText('Previous clipboard'));
     const paragraph = page.getByText('Select part of this sentence and right-click it.', {
       exact: true,
     });
@@ -173,7 +176,8 @@ export default {
     assert.equal(await option.isChecked(), true);
     await rightClickSelection();
     await menu.getByRole('menuitem', { name: 'Copy selected text' }).click();
-    await page.getByText('Selected text: Select part', { exact: true }).waitFor();
+    await page.getByRole('status').filter({ hasText: 'Copied: Select part' }).waitFor();
+    assert.equal(await page.evaluate(() => navigator.clipboard.readText()), 'Select part');
   },
 
   'FormField keeps option names and described group feedback while List keeps its trailing Switch':
