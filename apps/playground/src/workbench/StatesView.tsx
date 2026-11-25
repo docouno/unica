@@ -71,11 +71,6 @@ export interface StatesViewProps {
     settings?: StageSettings,
     story?: StoryContext,
   ) => ReactNode;
-  readonly renderMatrixReference: (
-    theme: WorkbenchTheme,
-    view: MatrixView,
-    story?: StoryContext,
-  ) => ReactNode;
 }
 
 type StateSection =
@@ -309,7 +304,6 @@ export function StatesView({
   renderArtboards,
   renderPreview,
   renderMatrixSubject,
-  renderMatrixReference,
 }: StatesViewProps): ReactElement {
   const { surface, raw, freeze, block, slice, mode } = route;
   const [globalFilters, setGlobalFilters] = useState<Values>({});
@@ -458,7 +452,6 @@ export function StatesView({
         onModeChange={(selected: MatrixMode) => update({ mode: selected }, 'replace')}
         renderArtboards={renderArtboards}
         renderSubject={renderMatrixSubject}
-        renderReference={renderMatrixReference}
       />
     );
   }
@@ -596,7 +589,6 @@ export function StatesView({
             if (section.kind === 'slice') {
               const { view } = section;
               const built = sliceGrids.get(section.key)!;
-              const hasAxes = Boolean(view.rows || view.cols || view.group);
 
               return (
                 <LazyStateSection
@@ -627,32 +619,25 @@ export function StatesView({
                         renderArtboards(
                           (theme) => (
                             <div className="wb-matrix-artboard">
-                              {(hasAxes || !view.reference) && (
-                                <SliceGrid
-                                  grid={built.grid}
-                                  rowLimit={built.totalRows}
-                                  axes={built.axes}
-                                  labelProp={labelProp}
-                                  labelValue={labelValue}
-                                  renderSample={(values, identity) => (
-                                    <OverviewSample
-                                      key={JSON.stringify([identity, values])}
-                                      component={component}
-                                      theme={theme}
-                                      assignment={values}
-                                      identity={identity}
-                                      view={view}
-                                      story={story}
-                                      renderSubject={renderMatrixSubject}
-                                    />
-                                  )}
-                                />
-                              )}
-                              {view.reference && (
-                                <div className="wb-matrix-reference">
-                                  {renderMatrixReference(theme, view, story)}
-                                </div>
-                              )}
+                              <SliceGrid
+                                grid={built.grid}
+                                rowLimit={built.totalRows}
+                                axes={built.axes}
+                                labelProp={labelProp}
+                                labelValue={labelValue}
+                                renderSample={(values, identity) => (
+                                  <OverviewSample
+                                    key={JSON.stringify([identity, values])}
+                                    component={component}
+                                    theme={theme}
+                                    assignment={values}
+                                    identity={identity}
+                                    view={view}
+                                    story={story}
+                                    renderSubject={renderMatrixSubject}
+                                  />
+                                )}
+                              />
                             </div>
                           ),
                           { slice: view.id, canFocus: canFocusSection },

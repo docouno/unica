@@ -1,4 +1,4 @@
-import { useId, useState } from 'react';
+import { useState } from 'react';
 import type { ReactElement } from 'react';
 import {
   ArrowRightIcon,
@@ -12,10 +12,10 @@ import {
   TrashIcon,
   UploadSimpleIcon,
 } from '@phosphor-icons/react';
-import { Button, IconButton, Input, Text } from '@docouno/unica';
+import { Button, IconButton, Text } from '@docouno/unica';
 import type { ButtonSize, ButtonTone, ButtonVariant } from '@docouno/unica';
 import type { IconProps as PhosphorIconProps } from '@phosphor-icons/react';
-import type { PreviewContext } from '../../workbench/types.js';
+import type { PreviewProps } from '../../workbench/types.js';
 import './button.examples.css';
 
 const variants: readonly ButtonVariant[] = ['primary', 'secondary', 'ghost'];
@@ -69,12 +69,12 @@ const toggleStates: readonly StateSample[] = [
   { label: 'On + disabled + pending', props: { pressed: true, disabled: true, loading: true } },
 ];
 
-export function LightExample({ ctx }: { readonly ctx?: PreviewContext | undefined }): ReactElement {
-  const loading = ctx?.story?.controls.loading === true;
-  const disabled = ctx?.story?.controls.disabled === true;
+export function LightExample({ ctx }: PreviewProps): ReactElement {
+  const loading = ctx.story?.controls.loading === true;
+  const disabled = ctx.story?.controls.disabled === true;
   const [activations, setActivations] = useState(0);
   return (
-    <div className="button-study">
+    <div className="button-study" data-comparing={ctx.comparing || undefined}>
       <div className="button-study-response">
         {variants.map((variant) => (
           <div className="button-study-group" key={variant}>
@@ -83,6 +83,7 @@ export function LightExample({ ctx }: { readonly ctx?: PreviewContext | undefine
             </Text>
             <div className="button-study-pair">
               <Button
+                {...ctx.subject}
                 variant={variant}
                 tone={variant === 'primary' ? 'accent' : 'neutral'}
                 iconLeft={PlusIcon}
@@ -93,6 +94,7 @@ export function LightExample({ ctx }: { readonly ctx?: PreviewContext | undefine
                 Create
               </Button>
               <IconButton
+                {...ctx.subject}
                 variant={variant}
                 tone={variant === 'primary' ? 'accent' : 'neutral'}
                 icon={PlusIcon}
@@ -106,27 +108,25 @@ export function LightExample({ ctx }: { readonly ctx?: PreviewContext | undefine
         ))}
       </div>
       <Text size="body-s" color="muted" role="status">
-        {disabled
-          ? 'Actions unavailable.'
-          : loading
-            ? 'Request pending.'
-            : `Activations: ${activations}.`}
+        <bdi>
+          {disabled
+            ? 'Actions unavailable.'
+            : loading
+              ? 'Request pending.'
+              : `Activations: ${activations}.`}
+        </bdi>
       </Text>
     </div>
   );
 }
 
-export function StateExamples({
-  ctx,
-}: {
-  readonly ctx?: PreviewContext | undefined;
-}): ReactElement {
-  const rawTone = ctx?.story?.controls.tone;
-  const rawSize = ctx?.story?.controls.size;
+export function StateExamples({ ctx }: PreviewProps): ReactElement {
+  const rawTone = ctx.story?.controls.tone;
+  const rawSize = ctx.story?.controls.size;
   const tone: ButtonTone = isTone(rawTone) ? rawTone : 'accent';
   const size: ButtonSize = isSize(rawSize) ? rawSize : 'm';
   return (
-    <div className="button-study">
+    <div className="button-study" data-comparing={ctx.comparing || undefined}>
       {variants.map((variant) => (
         <div className="button-study-group" key={variant}>
           <Text size="caption-l" weight="semibold" color="muted">
@@ -136,10 +136,11 @@ export function StateExamples({
             {actionStates.map(({ label, props }) => (
               <div className="button-study-sample" key={label}>
                 <div className="button-study-pair">
-                  <Button variant={variant} tone={tone} size={size} {...props}>
+                  <Button {...ctx.subject} variant={variant} tone={tone} size={size} {...props}>
                     {toneActions[tone].label}
                   </Button>
                   <IconButton
+                    {...ctx.subject}
                     variant={variant}
                     tone={tone}
                     size={size}
@@ -160,13 +161,9 @@ export function StateExamples({
   );
 }
 
-export function ToggleExamples({
-  ctx,
-}: {
-  readonly ctx?: PreviewContext | undefined;
-}): ReactElement {
-  const rawTone = ctx?.story?.controls.tone;
-  const rawSize = ctx?.story?.controls.size;
+export function ToggleExamples({ ctx }: PreviewProps): ReactElement {
+  const rawTone = ctx.story?.controls.tone;
+  const rawSize = ctx.story?.controls.size;
   const tone: ButtonTone = isTone(rawTone) ? rawTone : 'neutral';
   const size: ButtonSize = isSize(rawSize) ? rawSize : 's';
   const [bold, setBold] = useState(true);
@@ -178,9 +175,10 @@ export function ToggleExamples({
         ? { label: 'Pin', icon: PushPinIcon }
         : { label: 'Bold', icon: TextBIcon };
   return (
-    <div className="button-study">
-      <div className="button-study-row">
+    <div className="button-study" data-comparing={ctx.comparing || undefined}>
+      <div className="button-study-row button-study-commands">
         <IconButton
+          {...ctx.subject}
           variant="ghost"
           size="m"
           icon={TextBIcon}
@@ -188,10 +186,17 @@ export function ToggleExamples({
           pressed={bold}
           onPressedChange={setBold}
         />
-        <Button variant="secondary" tone="accent" iconLeft={PushPinIcon} defaultPressed={false}>
+        <Button
+          {...ctx.subject}
+          variant="secondary"
+          tone="accent"
+          iconLeft={PushPinIcon}
+          defaultPressed={false}
+        >
           Pin
         </Button>
         <IconButton
+          {...ctx.subject}
           variant="ghost"
           size="m"
           tone="danger"
@@ -211,6 +216,7 @@ export function ToggleExamples({
               <div className="button-study-sample" key={label}>
                 <div className="button-study-pair">
                   <Button
+                    {...ctx.subject}
                     variant={variant}
                     tone={tone}
                     size={size}
@@ -220,6 +226,7 @@ export function ToggleExamples({
                     {action.label}
                   </Button>
                   <IconButton
+                    {...ctx.subject}
                     variant={variant}
                     tone={tone}
                     size={size}
@@ -240,14 +247,10 @@ export function ToggleExamples({
   );
 }
 
-export function OverflowExamples({
-  ctx,
-}: {
-  readonly ctx?: PreviewContext | undefined;
-}): ReactElement {
-  const loading = ctx?.story?.controls.loading === true;
+export function OverflowExamples({ ctx }: PreviewProps): ReactElement {
+  const loading = ctx.story?.controls.loading === true;
   return (
-    <div className="button-study">
+    <div className="button-study" data-comparing={ctx.comparing || undefined}>
       {sizes.map((size) => (
         <div className="button-study-group" key={size}>
           <Text size="caption-l" color="muted">
@@ -255,6 +258,7 @@ export function OverflowExamples({
           </Text>
           <div className="button-study-narrow">
             <Button
+              {...ctx.subject}
               size={size}
               width="full"
               iconLeft={UploadSimpleIcon}
@@ -270,7 +274,7 @@ export function OverflowExamples({
           Unbroken content · defensive fallback
         </Text>
         <div className="button-study-narrow">
-          <Button width="full" variant="secondary" tone="neutral">
+          <Button {...ctx.subject} width="full" variant="secondary" tone="neutral">
             Restore workspace_research_archive_2026
           </Button>
         </div>
@@ -281,6 +285,7 @@ export function OverflowExamples({
         </Text>
         <div className="button-study-narrow">
           <Button
+            {...ctx.subject}
             width="full"
             iconLeft={UploadSimpleIcon}
             iconRight={ForwardArrowIcon}
@@ -294,8 +299,14 @@ export function OverflowExamples({
         {sizes.map((size) => (
           <div className="button-study-sample" key={size}>
             <div className="button-study-pair">
-              <IconButton size={size} icon={PlusIcon} aria-label="Add item" />
-              <IconButton size={size} icon={PlusIcon} aria-label="Add item" loading />
+              <IconButton {...ctx.subject} size={size} icon={PlusIcon} aria-label="Add item" />
+              <IconButton
+                {...ctx.subject}
+                size={size}
+                icon={PlusIcon}
+                aria-label="Add item"
+                loading
+              />
             </div>
             <Text size="caption-m" color="muted">
               {size} · rest / loading
@@ -307,14 +318,15 @@ export function OverflowExamples({
   );
 }
 
-export function OpenTriggerExample(): ReactElement {
+export function OpenTriggerExample({ ctx }: PreviewProps): ReactElement {
   return (
-    <div className="button-study">
+    <div className="button-study" data-comparing={ctx.comparing || undefined}>
       <div className="button-study-open-samples">
         {[false, true].map((expanded) => (
           <div className="button-study-sample" key={String(expanded)}>
             <div className="button-study-pair">
               <Button
+                {...ctx.subject}
                 variant="secondary"
                 tone="neutral"
                 iconRight={CaretDownIcon}
@@ -323,6 +335,7 @@ export function OpenTriggerExample(): ReactElement {
                 Actions
               </Button>
               <IconButton
+                {...ctx.subject}
                 variant="ghost"
                 icon={DotsThreeIcon}
                 aria-label="Document actions"
@@ -340,43 +353,3 @@ export function OpenTriggerExample(): ReactElement {
 }
 
 export const workspaceDestination = '/?item=02-workspace-overview';
-
-export function FormExample({ ctx }: { readonly ctx?: PreviewContext | undefined }): ReactElement {
-  const [message, setMessage] = useState('');
-  const fallbackId = useId();
-  const fieldId = ctx ? `${ctx.id}-draft-title` : fallbackId;
-  return (
-    <form
-      className="button-study-form"
-      onSubmit={(event) => {
-        event.preventDefault();
-        const data = new FormData(event.currentTarget, event.nativeEvent.submitter);
-        const title = data.get('title');
-        if (typeof title === 'string') {
-          setMessage(`${data.get('intent') === 'save' ? 'Saved' : 'Submitted'} “${title}”.`);
-        }
-      }}
-      onReset={() => setMessage('Draft title reset.')}
-    >
-      <div className="button-study-field">
-        <Text as="label" size="body-s" color="secondary" htmlFor={fieldId}>
-          Draft title
-        </Text>
-        <Input id={fieldId} name="title" defaultValue="Untitled" required />
-      </div>
-      <div className="button-study-row">
-        <Button type="reset" variant="ghost">
-          Reset
-        </Button>
-        <Button type="submit" name="intent" value="save">
-          Save draft
-        </Button>
-      </div>
-      {message && (
-        <Text size="body-s" color="muted" role="status">
-          {message}
-        </Text>
-      )}
-    </form>
-  );
-}

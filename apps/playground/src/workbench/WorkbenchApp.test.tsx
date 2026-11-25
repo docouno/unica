@@ -13,11 +13,11 @@ const field = defineComponent({
   category: 'Controls',
   status: 'Proto',
   props: {},
-  matrixViews: [{ id: 'basic', title: 'Basic' }],
+  states: [{ id: 'basic', title: 'Basic' }],
   cases: [
     { id: 'overflow', title: 'Overflow', kind: 'content', render: () => <span>Long text</span> },
   ],
-  usage: [{ id: 'paired', title: 'Paired', render: () => <span>Paired example</span> }],
+  compositions: [{ id: 'paired', title: 'Paired', render: () => <span>Paired example</span> }],
   render: ({ ctx }) => <input {...ctx.subject} aria-label="Test field" />,
 });
 
@@ -115,6 +115,10 @@ it('normalizes v3 routes, resolves legacy tab aliases, and ignores stale switche
     tab: 'states',
     slice: 'basic',
     mode: 'pairwise',
+  });
+  expect(readRoute('?item=field&mode=combinator', config)).toMatchObject({
+    tab: 'states',
+    mode: 'slice',
   });
   expect(readRoute('?item=field&tab=matrix&slice=basic', config)).toMatchObject({
     tab: 'states',
@@ -245,7 +249,6 @@ it('keeps dark and light together and preserves the same artboard when isolating
 
 it('preserves inspected matrix rows on isolation and bounds work when the selection expands', () => {
   const sample = vi.fn(() => <input aria-label="Cell value" />);
-  const reference = vi.fn(() => <span>Reference</span>);
   const axis = (count: number) => ({
     kind: 'enum' as const,
     group: 'Geometry',
@@ -259,7 +262,7 @@ it('preserves inspected matrix rows on isolation and bounds work when the select
     category: field.category,
     status: field.status,
     props: { row: axis(4), col: axis(3) },
-    matrixViews: [{ id: 'basic', title: 'Basic', rows: 'row', cols: 'col', reference }],
+    states: [{ id: 'basic', title: 'Basic', rows: 'row', cols: 'col' }],
     render: sample,
   });
   window.history.replaceState(null, '', '/?item=field&tab=matrix&scheme=dark');
@@ -271,13 +274,11 @@ it('preserves inspected matrix rows on isolation and bounds work when the select
   const edited = cells()[3]!;
   fireEvent.change(edited, { target: { value: 'Keep this edit' } });
   sample.mockClear();
-  reference.mockClear();
   fireEvent.change(screen.getByRole('searchbox'), { target: { value: 'field' } });
   fireEvent.click(screen.getByRole('button', { name: 'RTL' }));
   fireEvent.click(screen.getByRole('button', { name: '120% Text' }));
   fireEvent.change(screen.getByRole('combobox', { name: 'Width' }), { target: { value: '360' } });
   expect(sample).not.toHaveBeenCalled();
-  expect(reference).not.toHaveBeenCalled();
   expect(cells()[3]).toBe(edited);
   fireEvent.click(board.getByRole('button', { name: 'Expand Haze Night' }));
   expect(cells()[3]).toBe(edited);
@@ -649,6 +650,7 @@ it('supports custom declarative componentTabs and synchronized scene StoryFrame 
             markdown: [
               '[Open Field](/?item=field)',
               '[Pairwise](/?item=field&mode=pairwise)',
+              '[Combinator](/?item=field&mode=combinator)',
               '[Basic slice](/?item=field&slice=basic)',
               '[Matrix overview](/?item=field&tab=matrix&mode=overview)',
               '[With hash](/?item=field&tab=usage#wb-doc-props)',
@@ -664,6 +666,9 @@ it('supports custom declarative componentTabs and synchronized scene StoryFrame 
   );
   expect(screen.getByRole('link', { name: 'Pairwise' }).getAttribute('href')).toBe(
     '/?item=field&tab=states&family=haze&scheme=light&mode=pairwise',
+  );
+  expect(screen.getByRole('link', { name: 'Combinator' }).getAttribute('href')).toBe(
+    '/?item=field&tab=states&family=haze&scheme=light&mode=slice',
   );
   expect(screen.getByRole('link', { name: 'Basic slice' }).getAttribute('href')).toBe(
     '/?item=field&tab=states&family=haze&scheme=light&slice=basic',

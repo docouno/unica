@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { afterEach, expect, it, vi } from 'vitest';
 import { Matrix } from './Matrix.js';
 import { defineComponent } from './types.js';
-import type { ComponentDefinition, MatrixMode, MatrixView, WorkbenchTheme } from './types.js';
+import type { ComponentDefinition, MatrixMode, WorkbenchTheme } from './types.js';
 
 afterEach(cleanup);
 
@@ -43,7 +43,7 @@ const grouped = defineComponent({
       reason: 'A takes precedence.',
     },
   ],
-  matrixViews: [
+  states: [
     {
       id: 'features',
       title: 'Features',
@@ -52,7 +52,6 @@ const grouped = defineComponent({
       cols: 'b',
       group: 'c',
       surface: 'overlay',
-      reference: () => <span>Authored reference</span>,
     },
   ],
   render: ({ values: { a, b, c }, ctx }) => (
@@ -116,7 +115,7 @@ function MatrixFixture({
     id: 'test',
     theme,
     surface: 'base' as const,
-    tab: 'matrix' as const,
+    tab: 'states' as const,
     comparing: themeCount > 1,
     subject: { 'data-wb-subject': '' as const },
     form: { 'data-wb-form': '' as const },
@@ -138,24 +137,22 @@ function MatrixFixture({
           ))}
         </>
       )}
-      renderSubject={(_theme, values, _identity, view) => (
-        <Demo values={values} ctx={{ ...context, surface: view?.surface ?? 'base' }} />
+      renderSubject={(_theme, values, _identity, view, story) => (
+        <Demo
+          values={values}
+          ctx={{ ...context, surface: view?.surface ?? 'base', ...(story ? { story } : {}) }}
+        />
       )}
-      renderReference={(_theme, view: MatrixView) => {
-        const Reference = view.reference;
-        return Reference && <Reference ctx={context} />;
-      }}
     />
   );
 }
 
-it('renders an addressable grouped slice with reference and explains forbidden cells', () => {
+it('renders an addressable grouped slice and explains forbidden cells', () => {
   const { container } = render(<MatrixFixture />);
   const subjects = () => container.querySelectorAll('[data-wb-subject]');
   expect(screen.getAllByRole('table')).toHaveLength(2);
   expect(screen.getByRole('heading', { name: 'Features' })).toBeTruthy();
   expect(screen.getByText('Compare the component features.')).toBeTruthy();
-  expect(screen.getByText('Authored reference')).toBeTruthy();
   expect(subjects()).toHaveLength(7);
 
   const forbidden = screen.getByText('N/A · Ignored · Precedence');
@@ -214,7 +211,7 @@ it('keeps slice focus and releases a named pin when it becomes a free axis', asy
   const definition = {
     ...grouped,
     constraints: [],
-    matrixViews: [
+    states: [
       { id: 'all', title: 'All features', rows: 'a' },
       { id: 'pinned', title: 'Pinned feature', rows: 'a', fixed: { b: false } },
     ],
@@ -231,11 +228,10 @@ it('keeps slice focus and releases a named pin when it becomes a free axis', asy
 
 it('renders each valid sample once while revealing a large slice and captures all rows', () => {
   const sample = vi.fn(() => <span data-wb-subject="" />);
-  const reference = vi.fn(() => <span>Reference</span>);
   const definition = {
     ...wide(9, 2),
     render: sample,
-    matrixViews: [{ id: 'all', title: 'All', rows: 'a', cols: 'b', reference }],
+    states: [{ id: 'all', title: 'All', rows: 'a', cols: 'b' }],
   };
   const { container } = render(<MatrixFixture definition={definition} />);
   const rows = () => container.querySelectorAll('tbody tr').length;
@@ -247,7 +243,6 @@ it('renders each valid sample once while revealing a large slice and captures al
   }
   expect(rows()).toBe(9);
   expect(sample).toHaveBeenCalledTimes(17);
-  expect(reference).toHaveBeenCalledTimes(1);
   cleanup();
   const capture = render(<MatrixFixture definition={definition} raw />);
   expect(capture.container.querySelectorAll('tbody tr')).toHaveLength(9);
@@ -278,9 +273,6 @@ it('resets slice StoryFrame controls when switching slices or clicking Reset mat
             ],
           },
         },
-        reference: ({ ctx }) => (
-          <span data-testid="slice-control">first:{String(ctx.story?.controls.density)}</span>
-        ),
       },
       {
         id: 'second',
@@ -289,71 +281,45 @@ it('resets slice StoryFrame controls when switching slices or clicking Reset mat
         controls: {
           pinned: { kind: 'boolean', label: 'Pinned', default: false },
         },
-        reference: ({ ctx }) => (
-          <span data-testid="slice-control">second:{String(ctx.story?.controls.pinned)}</span>
-        ),
       },
     ],
-    render: ({ values: { a }, ctx }) => <span {...ctx.subject}>{String(a)}</span>,
+    render: ({ values: { a }, ctx }) => (
+      <span {...ctx.subject}>
+        {String(a)}: {String(ctx.story?.controls.density ?? ctx.story?.controls.pinned)}
+      </span>
+    ),
   });
 
-  function ControlledMatrixFixture(): ReactElement {
-    const [mode, setMode] = useState<MatrixMode>('slice');
-    const [slice, setSlice] = useState<string>();
-    const Demo = definition.render;
-    const baseCtx = {
-      id: 'test',
-      theme,
-      surface: 'base' as const,
-      tab: 'states' as const,
-      comparing: false,
-      subject: { 'data-wb-subject': '' as const },
-      form: { 'data-wb-form': '' as const },
-      action: () => () => {},
-    };
-    return (
-      <Matrix
-        component={definition}
-        slice={slice}
-        mode={mode}
-        raw={false}
-        themes={[theme]}
-        onSliceChange={setSlice}
-        onModeChange={setMode}
-        renderArtboards={(draw) => <div>{draw(theme)}</div>}
-        renderSubject={(_theme, values, _identity, _view, story) => (
-          <Demo values={values} ctx={{ ...baseCtx, ...(story ? { story } : {}) }} />
-        )}
-        renderReference={(_theme, view: MatrixView, story) => {
-          const Reference = view.reference;
-          return Reference && <Reference ctx={{ ...baseCtx, ...(story ? { story } : {}) }} />;
-        }}
-      />
+  const { container } = render(<MatrixFixture definition={definition} />);
+  function expectCells(value: string): void {
+    const cells = Array.from(
+      container.querySelectorAll('[data-wb-subject]'),
+      (node) => node.textContent,
     );
+    expect(cells).toEqual([`false: ${value}`, `true: ${value}`]);
   }
 
-  render(<ControlledMatrixFixture />);
-  expect(screen.getByTestId('slice-control').textContent).toBe('first:comfortable');
+  expectCells('comfortable');
   fireEvent.change(screen.getByRole('combobox', { name: 'Density' }), {
     target: { value: 'compact' },
   });
-  expect(screen.getByTestId('slice-control').textContent).toBe('first:compact');
+  expectCells('compact');
 
   // Clicking Reset matrix resets the slice StoryFrame controls via externalRevision.
   fireEvent.click(screen.getByRole('button', { name: 'Reset matrix' }));
-  expect(screen.getByTestId('slice-control').textContent).toBe('first:comfortable');
+  expectCells('comfortable');
 
   // Switching to a slice with a different controls schema remounts cleanly without leaking values.
   fireEvent.change(screen.getByRole('combobox', { name: 'Density' }), {
     target: { value: 'compact' },
   });
   fireEvent.change(screen.getByLabelText('Slice'), { target: { value: 'second' } });
-  expect(screen.getByTestId('slice-control').textContent).toBe('second:false');
+  expectCells('false');
   expect(screen.queryByRole('combobox', { name: 'Density' })).toBeNull();
   fireEvent.click(screen.getByRole('checkbox', { name: 'Pinned' }));
-  expect(screen.getByTestId('slice-control').textContent).toBe('second:true');
+  expectCells('true');
 
   // Returning to first slice starts from clean defaults.
   fireEvent.change(screen.getByLabelText('Slice'), { target: { value: 'first' } });
-  expect(screen.getByTestId('slice-control').textContent).toBe('first:comfortable');
+  expectCells('comfortable');
 });

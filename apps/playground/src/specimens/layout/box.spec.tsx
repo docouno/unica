@@ -179,12 +179,21 @@ export default defineComponent({
           </Stack>
         </Box>
       )),
-      code: `<Box as="section" padding={24} aria-labelledby="release-checklist">
-  <Stack gap={8}>
-    <Title id="release-checklist" as="h3" size="heading-s">Release checklist</Title>
-    <Text size="body-s"><bdi>Review the changes and confirm a release date.</bdi></Text>
-  </Stack>
-</Box>`,
+      code: `import { useId } from 'react';
+import { Box, Stack, Text, Title } from '@docouno/unica';
+
+export function ReleaseChecklist() {
+  const headingId = useId();
+
+  return (
+    <Box as="section" padding={24} aria-labelledby={headingId}>
+      <Stack gap={8}>
+        <Title id={headingId} as="h3" size="heading-s">Release checklist</Title>
+        <Text size="body-s"><bdi>Review the changes and confirm a release date.</bdi></Text>
+      </Stack>
+    </Box>
+  );
+}`,
     },
     {
       id: 'standalone-page',
@@ -212,13 +221,22 @@ export default defineComponent({
           </Stack>
         </Box>
       )),
-      code: `<Box as="main" padding={{ mobile: 16, desktop: 32 }} aria-labelledby="release-title">
-  <Stack gap={8}>
-    <Text size="caption-l" color="muted">Release notes</Text>
-    <Title id="release-title" as="h1" size="heading-m">What changed</Title>
-    <Text size="body-s"><bdi>A record of changes in each release.</bdi></Text>
-  </Stack>
-</Box>`,
+      code: `import { useId } from 'react';
+import { Box, Stack, Text, Title } from '@docouno/unica';
+
+export function ReleaseNotesPage() {
+  const headingId = useId();
+
+  return (
+    <Box as="main" padding={{ mobile: 16, desktop: 32 }} aria-labelledby={headingId}>
+      <Stack gap={8}>
+        <Text size="caption-l" color="muted">Release notes</Text>
+        <Title id={headingId} as="h1" size="heading-m">What changed</Title>
+        <Text size="body-s"><bdi>A record of changes in each release.</bdi></Text>
+      </Stack>
+    </Box>
+  );
+}`,
     },
   ],
 });

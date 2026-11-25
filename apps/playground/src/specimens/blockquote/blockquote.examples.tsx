@@ -40,6 +40,53 @@ export function AnatomyExample({ ctx }: PreviewProps) {
   );
 }
 
+const statusPassages = [
+  {
+    status: 'neutral',
+    passage: 'Keep the explanation close to the decision it supports.',
+    credit: 'Editorial principles',
+  },
+  {
+    status: 'info',
+    passage: 'The preview format is available for evaluation.',
+    credit: 'Release notes · Information',
+  },
+  {
+    status: 'success',
+    passage: 'The updated procedure meets the acceptance criteria.',
+    credit: 'Review summary · Accepted',
+  },
+  {
+    status: 'warning',
+    passage: 'Existing clients may continue using the previous format during the transition.',
+    credit: 'Migration guide · Caution',
+  },
+  {
+    status: 'danger',
+    passage: 'Unverified backups must never be treated as a recovery guarantee.',
+    credit: 'Safety policy · Prohibition',
+  },
+] as const;
+
+export function StatusMeaningsExample({ ctx }: PreviewProps) {
+  return (
+    <ExampleSurface surface={ctx.surface} gap={16}>
+      {statusPassages.map(({ status, passage, credit }) => (
+        <Blockquote
+          key={status}
+          {...ctx.subject}
+          size="s"
+          status={status}
+          iconLeft={status === 'info' ? OpeningQuotes : undefined}
+          attribution={<cite dir="auto">{credit}</cite>}
+        >
+          <bdi>{passage}</bdi>
+        </Blockquote>
+      ))}
+    </ExampleSurface>
+  );
+}
+
 export function ContentExample({ ctx }: PreviewProps) {
   return (
     <ExampleSurface surface={ctx.surface} gap={16}>

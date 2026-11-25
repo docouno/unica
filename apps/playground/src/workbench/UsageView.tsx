@@ -122,8 +122,7 @@ function formatPropType(prop: PropDefinition): string {
   switch (prop.kind) {
     case 'enum': {
       const publicChoices = prop.choices.filter((choice) => !choice.omit);
-      const list = publicChoices.length > 0 ? publicChoices : prop.choices;
-      return list.map((choice) => JSON.stringify(choice.value)).join(' | ');
+      return publicChoices.map((choice) => JSON.stringify(choice.value)).join(' | ') || 'undefined';
     }
     case 'slot': {
       const snippets = prop.choices
@@ -215,7 +214,7 @@ function PropsTable({
           <tr>
             <th scope="col">Prop</th>
             <th scope="col">Type / values</th>
-            <th scope="col">Default</th>
+            <th scope="col">Playground default</th>
             <th scope="col">Description</th>
           </tr>
         </thead>

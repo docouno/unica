@@ -1,12 +1,15 @@
-import { Button, IconButton, Input, Text } from '@docouno/unica';
+import { Button, Flex, IconButton, Input, Text } from '@docouno/unica';
 import { PlusIcon, TrashIcon } from '@phosphor-icons/react';
 import { useState } from 'react';
 import type { MouseEvent, ReactElement } from 'react';
 import { defineComponent } from '../../workbench/types.js';
 import type { ComponentValues, PreviewContext, PropSchema } from '../../workbench/types.js';
+import { DraftForm } from './draft-form.js';
+import draftFormSource from './draft-form.tsx?raw';
+import { WorkspaceButton } from './workspace-button.js';
+import workspaceButtonSource from './workspace-button.tsx?raw';
 import { previewText } from '../preview-code.js';
 import {
-  FormExample,
   ForwardArrowIcon,
   LightExample,
   OpenTriggerExample,
@@ -140,15 +143,15 @@ const props = {
   },
   onClick: {
     kind: 'action',
-    group: 'Events',
+    group: 'Interaction',
     description: 'Records an activation from the rendered control.',
     code: 'handleActivation',
   },
   onPressedChange: {
     kind: 'action',
-    group: 'Events',
+    group: 'Interaction',
     description: 'Records the proposed selection after an allowed toggle activation.',
-    code: 'handlePressedChange',
+    code: 'setPressed',
   },
 } as const satisfies PropSchema;
 
@@ -266,19 +269,59 @@ function buttonCode(values: ButtonValues): string {
     expanded !== 'auto' && (expanded === 'true' ? 'aria-expanded' : 'aria-expanded={false}'),
     !asChild && toggle === 'controlled' && 'pressed={pressed}',
     !asChild && toggle === 'uncontrolled' && `defaultPressed={${values.initiallyPressed}}`,
-    !asChild && toggle !== 'none' && 'onPressedChange={handlePressedChange}',
+    !asChild && toggle !== 'none' && 'onPressedChange={setPressed}',
     'onClick={handleActivation}',
   ]
     .filter(Boolean)
     .join(' ');
   const opening = `<${name} ${attributes}`;
-  if (asChild) {
-    const anchor = `<a href="${workspaceDestination}"`;
-    return `${opening}>
-  ${square ? `${anchor} />` : `${anchor}>${labelContent}</a>`}
-</${name}>`;
-  }
-  return square ? `${opening} />` : `${opening}>${labelContent}</${name}>`;
+  const anchor = square ? '<a href={href} />' : `<a href={href}>${labelContent}</a>`;
+  const button = asChild
+    ? `${opening}>${anchor}</${name}>`
+    : square
+      ? `${opening} />`
+      : `${opening}>${labelContent}</${name}>`;
+  const toggles = !asChild && toggle !== 'none';
+  const form = !asChild && (type === 'submit' || type === 'reset');
+  const glyphs = [...(leading || square ? [icon] : []), ...(trailing ? ['ArrowRightIcon'] : [])];
+  const components = [
+    name,
+    'Stack',
+    'Text',
+    ...(trailing ? ['Icon'] : []),
+    ...(form ? ['Input'] : []),
+  ];
+  const imports = [
+    `import { ${form ? 'useId, ' : ''}useState } from 'react';`,
+    `import { ${components.join(', ')} } from '@docouno/unica';`,
+    "import '@docouno/unica/styles.css';",
+    ...(glyphs.length ? [`import { ${glyphs.join(', ')} } from '@phosphor-icons/react';`] : []),
+  ];
+  const example = form
+    ? `<form style={{ inlineSize: "100%" }} onSubmit={(event) => {
+    event.preventDefault();
+    setMessage("Submitted “" + new FormData(event.currentTarget).get("title") + "”.");
+  }} onReset={() => setMessage("Draft title reset.")}>
+    <Stack align="start" gap={8}>
+      <Text as="label" size="body-s" color="secondary" htmlFor={fieldId}>Draft title</Text>
+      <Input id={fieldId} name="title" dir="auto" defaultValue="Untitled" required />
+      ${button}
+    </Stack>
+  </form>`
+    : button;
+
+  return `${imports.join('\n')}
+${trailing ? `function ForwardArrowIcon() { return <Icon usage="slot" size="${size}" icon={ArrowRightIcon} directional />; }` : ''}
+export function ButtonExample(${asChild ? "{ href = '/workspace' } = {}" : ''}) {
+  const [activations, setActivations] = useState(0);
+  const handleActivation = () => setActivations((count) => count + 1);
+  ${toggles ? `const [pressed, setPressed] = useState(${values.initiallyPressed});` : ''}
+  ${form ? "const fieldId = useId(); const [message, setMessage] = useState('');" : ''}
+  return <Stack align="start" gap={8}>
+    ${example}
+    <Text size="body-s" color="muted" role="status" dir="auto">Activations: {activations}.${toggles ? " Selected: {pressed ? 'yes' : 'no'}." : ''}${form ? " {' '}{message}" : ''}</Text>
+  </Stack>;
+}`;
 }
 
 const stateCaption = 'Hover, hold, or Tab to an action to inspect its live interaction states.';
@@ -341,7 +384,7 @@ export default defineComponent({
           <Text as="label" size="body-s" color="secondary" htmlFor={fieldId}>
             Draft title
           </Text>
-          <Input id={fieldId} name="title" defaultValue="Untitled" required />
+          <Input id={fieldId} name="title" dir="auto" defaultValue="Untitled" required />
         </div>
         {subject}
       </form>
@@ -375,7 +418,7 @@ export default defineComponent({
         disabled: { kind: 'boolean', label: 'Disabled', default: false },
       },
       reset: true,
-      render: ({ ctx }) => <LightExample ctx={ctx} />,
+      render: LightExample,
     },
     {
       id: 'states',
@@ -406,7 +449,7 @@ export default defineComponent({
         },
       },
       reset: true,
-      render: ({ ctx }) => <StateExamples ctx={ctx} />,
+      render: StateExamples,
     },
     {
       id: 'toggles',
@@ -438,7 +481,7 @@ export default defineComponent({
         },
       },
       reset: true,
-      render: ({ ctx }) => <ToggleExamples ctx={ctx} />,
+      render: ToggleExamples,
     },
     {
       id: 'open',
@@ -447,7 +490,7 @@ export default defineComponent({
         'Open and closed states are fixed for comparison. Tab to either trigger to inspect focus.',
       kind: 'behavior',
       mode: 'pinned',
-      render: () => <OpenTriggerExample />,
+      render: OpenTriggerExample,
     },
     {
       id: 'overflow',
@@ -460,22 +503,34 @@ export default defineComponent({
         loading: { kind: 'boolean', label: 'Pending request', default: false },
       },
       reset: true,
-      render: ({ ctx }) => <OverflowExamples ctx={ctx} />,
+      render: OverflowExamples,
     },
   ],
   compositions: [
     {
       id: 'actions',
       title: 'Confirm or cancel',
-      code: `<>
-  <Button variant="ghost">Cancel</Button>
-  <Button>Save changes</Button>
-</>`,
-      render: () => (
-        <div className="button-study-row">
-          <Button variant="ghost">Cancel</Button>
-          <Button>Save changes</Button>
-        </div>
+      mode: 'pinned',
+      caption:
+        'This pinned pair compares emphasis. Save changes is primary and Cancel is a quieter ghost action.',
+      code: `import { Button, Flex } from '@docouno/unica';
+import '@docouno/unica/styles.css';
+
+export function FormActions() {
+  return (
+    <Flex align="center" wrap="wrap" gap={12}>
+      <Button variant="ghost">Cancel</Button>
+      <Button>Save changes</Button>
+    </Flex>
+  );
+}`,
+      render: ({ ctx }) => (
+        <Flex align="center" wrap="wrap" gap={12}>
+          <Button {...ctx.subject} variant="ghost">
+            Cancel
+          </Button>
+          <Button {...ctx.subject}>Save changes</Button>
+        </Flex>
       ),
     },
     {
@@ -483,27 +538,16 @@ export default defineComponent({
       title: 'Submit or reset a form',
       mode: 'live',
       reset: true,
-      code: `<form onSubmit={handleSubmit} onReset={handleReset}>
-  <Text as="label" size="body-s" color="secondary" htmlFor="draft-title">
-    Draft title
-  </Text>
-  <Input id="draft-title" name="title" defaultValue="Untitled" required />
-  <Button type="reset" variant="ghost">Reset</Button>
-  <Button type="submit" name="intent" value="save">Save draft</Button>
-</form>`,
-      render: ({ ctx }) => <FormExample ctx={ctx} />,
+      code: draftFormSource,
+      render: ({ ctx }) => <DraftForm buttonProps={ctx.subject} />,
     },
     {
       id: 'navigation',
       title: 'Navigate to a destination',
       mode: 'live',
-      code: `<Button asChild>
-  <a href="${workspaceDestination}">Open workspace</a>
-</Button>`,
-      render: () => (
-        <Button asChild>
-          <a href={workspaceDestination}>Open workspace</a>
-        </Button>
+      code: workspaceButtonSource,
+      render: ({ ctx }) => (
+        <WorkspaceButton buttonProps={ctx.subject} href={workspaceDestination} />
       ),
     },
   ],

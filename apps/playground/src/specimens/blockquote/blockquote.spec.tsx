@@ -10,6 +10,7 @@ import {
   OverflowExample,
   OverlayExample,
   ReadingExample,
+  StatusMeaningsExample,
   blockquoteSourceUrl,
   readingCode,
 } from './blockquote.examples.js';
@@ -159,6 +160,15 @@ export default defineComponent({
       caption:
         'Compare an uncredited passage, author and source credits, and paired marks. Narrow quotes move the marks above and below the passage.',
       render: AnatomyExample,
+    },
+    {
+      id: 'status-meanings',
+      title: 'Status in context',
+      kind: 'content',
+      mode: 'pinned',
+      caption:
+        'The passage and its source credit distinguish a migration caution from a safety prohibition.',
+      render: StatusMeaningsExample,
     },
     {
       id: 'content',

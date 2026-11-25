@@ -64,16 +64,27 @@ function occupiedRect(element: Element, rect: DOMRect, style: CSSStyleDeclaratio
   }
 
   // Badges and tightly set inline text can paint outside the measured border box.
+  // A text range includes descendants of clipping boxes, even when their text is invisible.
   const range = document.createRange();
-  range.selectNodeContents(element);
-  const contents = range.getBoundingClientRect();
-  if (contents.width === 0 || contents.height === 0) {
-    return rect;
+  let { left, right, top, bottom } = rect;
+  for (const child of element.childNodes) {
+    range.selectNode(child);
+    const contents =
+      child instanceof Element && !getComputedStyle(child).overflow.includes('visible')
+        ? child.getBoundingClientRect()
+        : range.getBoundingClientRect();
+    if (!contents.width || !contents.height) {
+      continue;
+    }
+    if (extendsInline) {
+      left = Math.min(left, contents.left);
+      right = Math.max(right, contents.right);
+    }
+    if (extendsBlock) {
+      top = Math.min(top, contents.top);
+      bottom = Math.max(bottom, contents.bottom);
+    }
   }
-  const left = extendsInline ? Math.min(rect.left, contents.left) : rect.left;
-  const right = extendsInline ? Math.max(rect.right, contents.right) : rect.right;
-  const top = extendsBlock ? Math.min(rect.top, contents.top) : rect.top;
-  const bottom = extendsBlock ? Math.max(rect.bottom, contents.bottom) : rect.bottom;
   return new DOMRect(left, top, right - left, bottom - top);
 }
 
@@ -103,67 +114,252 @@ function addOutline(
 }
 
 function labelPosition(
-  subject: DOMRect,
+  sample: MeasuredSubject,
   label: DOMRect,
   layer: DOMRect,
+  samples: readonly MeasuredSubject[],
   occupied: readonly DOMRect[],
+  placed: readonly DOMRect[],
 ): DOMRect {
-  // Try the subject's own edges first, then gaps left by neighboring subjects and labels.
-  const rightLimit = Math.max(layer.left, layer.right - label.width);
+  const subject = sample.rect;
+  const { width, height } = label;
+  const rightLimit = Math.max(layer.left, layer.right - width);
   const constrainLeft = (left: number): number => Math.max(layer.left, Math.min(left, rightLimit));
+  const fits = (
+    left: number,
+    top: number,
+    rectangles: readonly DOMRect[],
+    tolerance = 0,
+  ): boolean => {
+    const right = left + width - tolerance;
+    const bottom = top + height - tolerance;
+    for (const rect of rectangles) {
+      if (
+        right > rect.left &&
+        left + tolerance < rect.right &&
+        bottom > rect.top &&
+        top + tolerance < rect.bottom
+      ) {
+        return false;
+      }
+    }
+    return true;
+  };
+  const above = subject.top - height - labelGap;
+  const below = subject.bottom + labelGap;
+  const aligned = constrainLeft(subject.left);
+  const before = constrainLeft(subject.left - width - labelGap);
+  const after = constrainLeft(subject.right + labelGap);
   const lefts = new Set([
-    constrainLeft(subject.left),
+    aligned,
     layer.left,
     rightLimit,
     ...occupied.flatMap((rect) => [
-      constrainLeft(rect.left - label.width - labelGap),
+      constrainLeft(rect.left - width - labelGap),
       constrainLeft(rect.right + labelGap),
     ]),
   ]);
   const tops = new Set([
-    subject.top - label.height - labelGap,
-    subject.bottom + labelGap,
+    above,
+    below,
     subject.top,
-    ...occupied.flatMap((rect) => [rect.top - label.height - labelGap, rect.bottom + labelGap]),
+    ...occupied.flatMap((rect) => [rect.top - height - labelGap, rect.bottom + labelGap]),
   ]);
-
-  for (const top of tops) {
-    if (top < layer.top || top + label.height > layer.bottom) {
-      continue;
-    }
-    for (const left of lefts) {
-      if (
-        occupied.every(
-          (rect) =>
-            left + label.width <= rect.left ||
-            left >= rect.right ||
-            top + label.height <= rect.top ||
-            top >= rect.bottom,
-        )
-      ) {
-        return new DOMRect(left, top, label.width, label.height);
+  const inLayer = (top: number): boolean => top >= layer.top && top + height <= layer.bottom;
+  // A column of narrow subjects leaves room beyond its shared edge.
+  if (subject.width < width) {
+    const column = samples.filter(({ nativeHost }) => nativeHost === sample.nativeHost);
+    const flushLeft = column.every(({ rect }) => Math.abs(rect.left - subject.left) < 1);
+    const flushRight = column.every(({ rect }) => Math.abs(rect.right - subject.right) < 1);
+    if (flushLeft !== flushRight) {
+      const side = flushLeft ? before : after;
+      const centered = subject.top + (subject.height - height) / 2;
+      // Leave a label and a one-pixel gap for each later row.
+      const rowsBelow = column.filter(({ rect }) => rect.top > subject.top).length;
+      const latest = layer.bottom - height - rowsBelow * (height + 1);
+      const starts = [
+        Math.min(centered, latest),
+        ...placed.map(({ bottom }) => bottom + 1),
+        centered,
+        ...tops,
+      ];
+      for (const top of starts) {
+        if (
+          top <= subject.bottom + labelGap &&
+          top + height >= subject.top - labelGap &&
+          inLayer(top) &&
+          fits(side, top, occupied)
+        ) {
+          return new DOMRect(side, top, width, height);
+        }
       }
     }
   }
+  // A board of tiny targets has no interior space for dimensions. Keep its free gaps available.
+  if (samples.some(({ rect }) => rect.height >= height)) {
+    for (const [left, top] of [
+      [aligned, above],
+      [aligned, below],
+      [before, subject.top],
+      [after, subject.top],
+    ] as const) {
+      if (inLayer(top) && fits(left, top, occupied)) {
+        if (top === below && inLayer(above)) {
+          // Keep a free slot above the subject before moving into the row of supporting text.
+          for (const candidate of lefts) {
+            const center = candidate + width / 2;
+            if (
+              center >= subject.left &&
+              center <= subject.right &&
+              fits(candidate, above, occupied)
+            ) {
+              return new DOMRect(candidate, above, width, height);
+            }
+          }
+        }
+        return new DOMRect(left, top, width, height);
+      }
+    }
 
-  const floatAbove = Math.min(...occupied.map((rect) => rect.top)) - label.height - labelGap;
-  const floatBelow = Math.max(...occupied.map((rect) => rect.bottom)) + labelGap;
-  const top = subject.top - floatAbove <= floatBelow - subject.bottom ? floatAbove : floatBelow;
-  return new DOMRect(constrainLeft(subject.left), top, label.width, label.height);
+    // One pixel between labels leaves room to align each measurement with its own row or column.
+    const preferredX = new Set([
+      aligned,
+      before,
+      after,
+      constrainLeft(subject.left + (subject.width - width) / 2),
+      ...lefts,
+      ...placed.flatMap((rect) => [
+        constrainLeft(rect.left - width - 1),
+        constrainLeft(rect.right + 1),
+      ]),
+    ]);
+    const preferredY = new Set([
+      above,
+      below,
+      subject.top,
+      subject.bottom - height,
+      subject.top + (subject.height - height) / 2,
+      layer.top,
+      layer.bottom - height,
+      ...tops,
+      ...placed.flatMap((rect) => [rect.top - height - 1, rect.bottom + 1]),
+    ]);
+    const columns = [
+      ...new Set([
+        ...preferredX,
+        ...samples.flatMap(({ occupied }) => [
+          constrainLeft(occupied.left - width),
+          constrainLeft(occupied.right),
+        ]),
+      ]),
+    ].filter((left) => left <= subject.right + height && left + width >= subject.left - height);
+    const rows = [
+      ...new Set([
+        ...preferredY,
+        ...samples.flatMap(({ occupied }) => [occupied.top - height, occupied.bottom]),
+      ]),
+    ].filter(
+      (top) =>
+        inLayer(top) && top <= subject.bottom + height && top + height >= subject.top - height,
+    );
+    // A side can line up with a row even when the label is wider than its subject.
+    const candidates = rows
+      .flatMap((top) =>
+        columns.map((left) => {
+          const dx = Math.abs(left + width / 2 - (subject.left + subject.width / 2));
+          const dy = Math.abs(top + height / 2 - (subject.top + subject.height / 2));
+          return {
+            left,
+            top,
+            touching: !preferredX.has(left) || !preferredY.has(top),
+            centered:
+              dx <= Math.max(width, subject.width) / 2 ||
+              dy <= Math.max(height, subject.height) / 2,
+            across: dx < (width + subject.width) / 2 || dy < (height + subject.height) / 2,
+            gap: Math.max(
+              0,
+              subject.left - left - width,
+              left - subject.right,
+              subject.top - top - height,
+              top - subject.bottom,
+            ),
+            distance: (left - subject.left) ** 2 + (top - subject.top) ** 2,
+          };
+        }),
+      )
+      .filter((point) => point.across)
+      .sort(
+        (a, b) =>
+          Number(a.touching) - Number(b.touching) ||
+          Number(b.centered) - Number(a.centered) ||
+          a.gap - b.gap ||
+          a.distance - b.distance,
+      );
+    let point = candidates.find(
+      ({ left, top, touching }) => !touching && fits(left, top, occupied),
+    );
+    if (!point) {
+      // Nested subjects can share their enclosing canvas. Keep unrelated contents unobscured.
+      const backgrounds = samples.filter(({ element }) => element.contains(sample.element));
+      const foreground = samples
+        .filter((entry) => !backgrounds.includes(entry))
+        .map((entry) => entry.occupied);
+      point = candidates.find(
+        ({ left, top, touching }) =>
+          fits(left, top, placed) &&
+          fits(left, top, foreground, touching ? 1 : 0) &&
+          backgrounds.some(({ rect }) => {
+            const insideX = left >= rect.left && left + width <= rect.right;
+            const insideY = top >= rect.top && top + height <= rect.bottom;
+            return (
+              (insideX && (insideY || (top <= rect.top && top + height >= rect.bottom))) ||
+              (insideY && left <= rect.left && left + width >= rect.right)
+            );
+          }),
+      );
+    }
+    if (point) {
+      return new DOMRect(point.left, point.top, width, height);
+    }
+  }
+
+  // Small subjects can run out of adjacent space. Keep their contents and earlier labels clear.
+  for (const top of tops) {
+    if (!inLayer(top)) {
+      continue;
+    }
+    for (const left of lefts) {
+      if (fits(left, top, occupied)) {
+        return new DOMRect(left, top, width, height);
+      }
+    }
+  }
+  const aboveAll = Math.min(...occupied.map((rect) => rect.top)) - height - labelGap;
+  const belowAll = Math.max(...occupied.map((rect) => rect.bottom)) + labelGap;
+  return new DOMRect(
+    aligned,
+    subject.top - aboveAll <= belowAll - subject.bottom ? aboveAll : belowAll,
+    width,
+    height,
+  );
 }
 
 function placeLabels(
-  entries: readonly { rect: DOMRect; label: HTMLSpanElement }[],
+  entries: readonly { sample: MeasuredSubject; label: HTMLSpanElement }[],
   layer: DOMRect,
   scale: number,
-  occupied: DOMRect[],
+  samples: readonly MeasuredSubject[],
 ): void {
+  const placed: DOMRect[] = [];
+  const occupied = samples.map((sample) => sample.occupied);
   const measurements = entries.map(({ label }) => label.getBoundingClientRect());
-  for (const [index, { rect, label }] of entries.entries()) {
-    const position = labelPosition(rect, measurements[index]!, layer, occupied);
+  for (const [index, { sample, label }] of entries.entries()) {
+    const { rect } = sample;
+    const position = labelPosition(sample, measurements[index]!, layer, samples, occupied, placed);
+    occupied.push(position);
     label.style.left = `${(position.left - rect.left) / scale}px`;
     label.style.top = `${(position.top - rect.top) / scale}px`;
-    occupied.push(position);
+    placed.push(position);
   }
 }
 
@@ -270,21 +466,17 @@ export function useSubjectBounds(
         activeLayer.replaceChildren();
         const layerRect = activeLayer.getBoundingClientRect();
         const scale = inTopLayer ? 1 : artboardScale;
-        const entries = samples.map(({ element, rect, nativeHost }) => {
+        const entries = samples.map((sample) => {
+          const { element, rect, nativeHost } = sample;
           const subjectScale = nativeHost ? 1 : artboardScale;
           const size =
             sizes.get(element) ??
             (element instanceof HTMLElement
               ? { width: element.offsetWidth, height: element.offsetHeight }
               : { width: rect.width / subjectScale, height: rect.height / subjectScale });
-          return { rect, label: addOutline(activeLayer, layerRect, scale, rect, size) };
+          return { sample, label: addOutline(activeLayer, layerRect, scale, rect, size) };
         });
-        placeLabels(
-          entries,
-          layerRect,
-          scale,
-          samples.map(({ occupied }) => occupied),
-        );
+        placeLabels(entries, layerRect, scale, samples);
       } else {
         layer?.remove();
         layer = undefined;

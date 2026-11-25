@@ -94,10 +94,10 @@ function showInspector(
 
 it.each([
   ['playground', 'subject'],
-  ['states', 'reference'],
+  ['states', 'subject'],
   ['states', 'case'],
   ['compositions', 'composition'],
-] as const)('exposes the %s route to authored previews', (tab, marker) => {
+] as const)('exposes the %s route to the %s preview', (tab, marker) => {
   showInspector(
     defineComponent({
       id: 'route',
@@ -106,13 +106,7 @@ it.each([
       status: 'UI',
       props: {},
       render: ({ ctx }) => <p>subject: {ctx.tab}</p>,
-      states: [
-        {
-          id: 'default',
-          title: 'Default',
-          reference: ({ ctx }) => <p>reference: {ctx.tab}</p>,
-        },
-      ],
+      states: [{ id: 'default', title: 'Default' }],
       cases: [
         {
           id: 'case',
@@ -429,7 +423,7 @@ it('shares example descriptions and highlighted JSX across theme previews in Sta
         render: () => <button type="button">Open</button>,
       },
     ],
-    usage: [
+    compositions: [
       {
         id: 'settings',
         title: 'Settings',

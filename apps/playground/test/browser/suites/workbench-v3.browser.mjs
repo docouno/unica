@@ -40,6 +40,27 @@ async function assertLabelFits(editor, name) {
   assert.equal(lines, 1, name + ' must fit on one line');
 }
 
+async function boundsLeavesTextVisible(locator) {
+  return locator.evaluate(async (node) => {
+    await document.fonts.ready;
+    await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+    const text = document.createRange();
+    text.selectNodeContents(node);
+    const ink = text.getBoundingClientRect();
+    return [...node.closest('.wb-artboard').querySelectorAll('[data-wb-bounds-label]')].every(
+      (label) => {
+        const box = label.getBoundingClientRect();
+        return (
+          box.right <= ink.left ||
+          box.left >= ink.right ||
+          box.bottom <= ink.top ||
+          box.top >= ink.bottom
+        );
+      },
+    );
+  });
+}
+
 export default {
   'Open HoverCard previews survive changing the comparison surface': async ({ page, origin }) => {
     await page.goto(
@@ -951,6 +972,218 @@ export default {
       await board.getByRole('status').filter({ hasText: 'Drop one file at a time' }).count(),
       0,
     );
+  },
+
+  'Bounds keeps measurements inside a scaled artboard filled by its subjects': async ({
+    page,
+    origin,
+  }) => {
+    await page.setViewportSize({ width: 1365, height: 950 });
+    await page.goto(new URL('/?item=app-shell&tab=compositions&block=topologies', origin).href);
+    const ready = page.locator('html[data-wb-ready="1"]');
+    await ready.waitFor({ state: 'attached', timeout: 20_000 });
+    for (const [tab, block, count, overrides] of [
+      ['compositions', 'topologies', 1, {}],
+      ['states', 'responsive', 3, {}],
+      ['states', 'layout', 5, {}],
+      ['states', 'navigation', 4, {}],
+      ['states', 'properties', 6, {}],
+      [
+        'states',
+        'properties',
+        6,
+        { vp: '360', scale: '120', dir: 'rtl', surface: 'overlay', raw: '1' },
+      ],
+    ]) {
+      await navigate(page, {
+        item: 'app-shell',
+        tab,
+        block,
+        vp: '1280',
+        family: 'all',
+        scheme: 'both',
+        surface: 'base',
+        bounds: '1',
+        ...overrides,
+      });
+      await ready.waitFor({ state: 'attached' });
+      const boards = page.locator('.wb-story-frame .wb-artboard');
+      await page.waitForFunction(
+        (expected) =>
+          document.querySelectorAll('.wb-story-frame [data-wb-bounds-label]').length === expected,
+        count * 6,
+        { timeout: 30000 },
+      );
+      await page.evaluate(() => document.fonts.ready);
+      assert.equal(await boards.count(), 6);
+      for (const board of await boards.all()) {
+        const result = await board.evaluate(async (artboard, layoutStrips) => {
+          await new Promise((resolve) =>
+            requestAnimationFrame(() => requestAnimationFrame(resolve)),
+          );
+          const box = artboard.getBoundingClientRect();
+          const nodes = [...artboard.querySelectorAll('[data-wb-bounds-label]')];
+          const labels = nodes.map((node) => node.getBoundingClientRect());
+          return {
+            count: labels.length,
+            nearOwnOutline: nodes.every((node, index) => {
+              const outline = node.parentElement.getBoundingClientRect();
+              const label = labels[index];
+              const gap = Math.max(
+                label.left - outline.right,
+                outline.left - label.right,
+                label.top - outline.bottom,
+                outline.top - label.bottom,
+              );
+              const alongX = label.left < outline.right && label.right > outline.left;
+              const alongY = label.top < outline.bottom && label.bottom > outline.top;
+              if (layoutStrips && index >= 2) {
+                const center = label.top + label.height / 2;
+                return gap <= 4 && center >= outline.top && center <= outline.bottom;
+              }
+              return gap <= label.height && (alongX || alongY);
+            }),
+            inside: labels.every(
+              (label) =>
+                label.left >= box.left - 1 &&
+                label.right <= box.right + 1 &&
+                label.top >= box.top - 1 &&
+                label.bottom <= box.bottom + 1,
+            ),
+            separate: labels.every((a, index) =>
+              labels
+                .slice(index + 1)
+                .every(
+                  (b) =>
+                    a.bottom <= b.top + 1 ||
+                    b.bottom <= a.top + 1 ||
+                    a.right <= b.left + 1 ||
+                    b.right <= a.left + 1,
+                ),
+            ),
+          };
+        }, block === 'layout');
+        assert.deepEqual(
+          result,
+          { count, nearOwnOutline: true, inside: true, separate: true },
+          block,
+        );
+        if (block === 'properties' && !overrides.vp) {
+          const heading = board.getByText('Document properties', { exact: true });
+          assert.ok(
+            await boundsLeavesTextVisible(heading),
+            'A dimension label covers the inspector heading',
+          );
+        }
+      }
+    }
+  },
+
+  'Bounds keeps menu shortcut dimensions beside their keys': async ({ page, origin }) => {
+    await page.setViewportSize({ width: 1540, height: 950 });
+    await page.goto(new URL('/?item=kbd&tab=states&block=overlay', origin).href);
+    await page.locator('html[data-wb-ready="1"]').waitFor({ state: 'attached', timeout: 20_000 });
+    for (const [family, width] of [
+      ['all', 1365],
+      ['all', 1440],
+      ['all', 1540],
+      ['frost', 2400],
+    ]) {
+      await page.setViewportSize({ width, height: 950 });
+      await navigate(page, {
+        item: 'kbd',
+        tab: 'states',
+        block: 'overlay',
+        family,
+        scheme: family === 'all' ? 'both' : 'light',
+        vp: '1280',
+        bounds: '1',
+      });
+      const menu = page.getByRole('group', { name: 'Document commands' }).first();
+      const positions = await menu.evaluate(async (group) => {
+        await document.fonts.ready;
+        await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+        const board = group.closest('.wb-artboard');
+        const outlines = [...board.querySelectorAll('.wb-bounds-outline')];
+        const captions = [...group.querySelectorAll('bdi')].map((element) => {
+          const range = document.createRange();
+          range.selectNodeContents(element);
+          return range.getBoundingClientRect();
+        });
+        return [...group.querySelectorAll('kbd')].map((key) => {
+          const rect = key.getBoundingClientRect();
+          const outline = outlines.find((element) => {
+            const box = element.getBoundingClientRect();
+            return ['left', 'right', 'top', 'bottom'].every(
+              (edge) => Math.abs(box[edge] - rect[edge]) < 1,
+            );
+          });
+          const label = outline?.querySelector('[data-wb-bounds-label]')?.getBoundingClientRect();
+          return Boolean(
+            label &&
+            Math.max(
+              label.left - rect.right,
+              rect.left - label.right,
+              label.top - rect.bottom,
+              rect.top - label.bottom,
+            ) <= 5 &&
+            captions.every(
+              (text) =>
+                text.right <= label.left ||
+                text.left >= label.right ||
+                text.bottom <= label.top ||
+                text.top >= label.bottom,
+            ),
+          );
+        });
+      });
+      assert.deepEqual(positions, [true, true, true], family + ' at ' + width);
+    }
+  },
+
+  'Bounds leaves dense badge content visible when labels have room outside': async ({
+    page,
+    origin,
+  }) => {
+    await page.setViewportSize({ width: 1440, height: 950 });
+    await page.goto(
+      `${origin}/?item=badge&tab=states&block=surfaces&family=all&scheme=both&surface=base&vp=1280&bounds=1`,
+    );
+    const board = page.locator('.wb-story-frame .wb-artboard').first();
+    await board.locator('[data-wb-bounds-label]').last().waitFor();
+    const measurements = await board.evaluate(async (root) => {
+      await document.fonts.ready;
+      await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+      const subjects = [...root.querySelectorAll('[data-wb-subject]')].map((node) =>
+        node.getBoundingClientRect(),
+      );
+      return [...root.querySelectorAll('[data-wb-bounds-label]')].map((node) => {
+        const label = node.getBoundingClientRect();
+        return subjects.every(
+          (subject) =>
+            label.right <= subject.left + 1 ||
+            label.left >= subject.right - 1 ||
+            label.bottom <= subject.top + 1 ||
+            label.top >= subject.bottom - 1,
+        );
+      });
+    });
+    assert.equal(measurements.length, 36);
+    assert.ok(measurements.every(Boolean), 'A dimension label covers a badge');
+  },
+
+  'Bounds preserves the date format hint when a label can stay above its field': async ({
+    page,
+    origin,
+  }) => {
+    await page.setViewportSize({ width: 1920, height: 950 });
+    await page.goto(
+      `${origin}/?item=date-picker&tab=states&block=states&family=soft&scheme=dark&vp=1280&bounds=1`,
+    );
+    const board = page.locator('.wb-story-frame .wb-artboard');
+    await board.locator('[data-wb-bounds-label]').last().waitFor();
+    const hint = board.getByText('DD/MM/YYYY · you can also paste an ISO date', { exact: true });
+    assert.ok(await boundsLeavesTextVisible(hint), 'A dimension label covers the date format hint');
   },
 
   'Bounds follows an inline link when its web font replaces the fallback': async ({
