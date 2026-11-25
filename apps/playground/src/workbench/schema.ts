@@ -12,19 +12,11 @@ import type {
 } from './types.js';
 
 export function componentStates(component: ComponentDefinition): readonly MatrixView[] {
-  const states = component.states ?? [];
-  const legacy = component.matrixViews ?? [];
-  return states.length && legacy.length ? [...states, ...legacy] : states.length ? states : legacy;
+  return component.states ?? [];
 }
 
 export function componentCompositions(component: ComponentDefinition): readonly CompositionBlock[] {
-  const compositions = component.compositions ?? [];
-  const legacy = component.usage ?? [];
-  return compositions.length && legacy.length
-    ? [...compositions, ...legacy]
-    : compositions.length
-      ? compositions
-      : legacy;
+  return component.compositions ?? [];
 }
 
 export function finiteDomain(prop: PropDefinition): readonly PropValue[] {
@@ -282,14 +274,6 @@ function validateStoryFrameOptions(options: StoryFrameOptions, label: string): v
 export function validateComponent(component: ComponentDefinition): void {
   const prefix = `"${component.id}"`;
   const { props, constraints, cases = [] } = component;
-  assert(
-    !(component.states && component.matrixViews),
-    `${prefix} cannot declare both "states" and legacy "matrixViews".`,
-  );
-  assert(
-    !(component.compositions && component.usage),
-    `${prefix} cannot declare both "compositions" and legacy "usage".`,
-  );
   const slices = componentStates(component);
   const compositions = componentCompositions(component);
 

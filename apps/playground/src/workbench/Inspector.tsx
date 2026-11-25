@@ -14,7 +14,6 @@ import { useSubjectBounds } from './subjectBounds.js';
 import type {
   ComponentDefinition,
   InspectorTab,
-  MatrixView,
   PreviewBlock,
   PreviewContext,
   PropValue,
@@ -396,25 +395,6 @@ function initialState(component: ComponentDefinition): PlaygroundState {
   return { values, draft: values, numberDrafts: {} };
 }
 
-function resolveTabKind(
-  tab: InspectorTab,
-  activeTab?: WorkbenchTabDefinition,
-): WorkbenchTabDefinition['kind'] {
-  if (activeTab) {
-    return activeTab.kind;
-  }
-  if (tab === 'states' || tab === 'matrix' || tab === 'cases') {
-    return 'states';
-  }
-  if (tab === 'compositions') {
-    return 'compositions';
-  }
-  if (tab === 'usage') {
-    return 'usage';
-  }
-  return 'playground';
-}
-
 export function Inspector({
   component,
   route,
@@ -440,7 +420,7 @@ export function Inspector({
   }, []);
   const { tab, surface, raw, bounds, block } = route;
   const comparing = themes.length > 1;
-  const tabKind = resolveTabKind(tab, activeTab);
+  const tabKind = activeTab?.kind ?? tab;
 
   const commitDraft = (state: PlaygroundState, draft: Values): PlaygroundState => ({
     ...state,
@@ -523,23 +503,6 @@ export function Inspector({
       ),
     [Component, renderPreview, surface],
   );
-  const renderMatrixReference = useCallback(
-    (theme: WorkbenchTheme, view: MatrixView, story?: StoryContext) => {
-      const Reference = view.reference;
-      return Reference
-        ? renderPreview(
-            theme,
-            view.id,
-            view,
-            (ctx) => <Reference ctx={ctx} />,
-            surface,
-            undefined,
-            story,
-          )
-        : null;
-    },
-    [renderPreview, surface],
-  );
 
   if (tabKind === 'custom' && activeTab?.render) {
     return (
@@ -559,7 +522,6 @@ export function Inspector({
         renderArtboards={renderArtboards}
         renderPreview={renderPreview}
         renderMatrixSubject={renderMatrixSubject}
-        renderMatrixReference={renderMatrixReference}
       />
     );
   }

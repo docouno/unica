@@ -177,13 +177,13 @@ it('fails clearly for invalid defaults, duplicate keys, bad axes, and stale scen
   expect(() =>
     validateComponent({
       ...component,
-      matrixViews: [{ id: 'unknown', title: 'Unknown', rows: 'missing' }],
+      states: [{ id: 'unknown', title: 'Unknown', rows: 'missing' }],
     }),
   ).toThrow(/invalid axis/);
   expect(() =>
     validateComponent({
       ...component,
-      matrixViews: [
+      states: [
         { id: 'slice', title: 'One' },
         { id: 'slice', title: 'Two' },
       ],
@@ -303,22 +303,6 @@ it('validates StoryFrame controls/actions, combined states/compositions IDs, and
       ],
     }),
   ).toThrow(/unique/);
-
-  expect(() =>
-    validateComponent({
-      ...base,
-      states: [{ id: 'shared', title: 'New' }],
-      matrixViews: [{ id: 'other', title: 'Legacy' }],
-    }),
-  ).toThrow(/cannot declare both/i);
-
-  expect(() =>
-    validateComponent({
-      ...base,
-      compositions: [{ id: 'c1', title: 'New', render: () => null }],
-      usage: [{ id: 'c2', title: 'Legacy', render: () => null }],
-    }),
-  ).toThrow(/cannot declare both/i);
 
   expect(() =>
     validateComponent({

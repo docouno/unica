@@ -53,11 +53,6 @@ interface MatrixProps {
     sample?: Pick<MatrixView, 'surface' | 'overlayStage'>,
     story?: StoryContext,
   ) => ReactNode;
-  readonly renderReference: (
-    theme: WorkbenchTheme,
-    view: MatrixView,
-    story?: StoryContext,
-  ) => ReactNode;
 }
 
 interface MatrixViewProps extends MatrixProps {
@@ -192,24 +187,6 @@ const MatrixSample = memo(function MatrixSample({
       {decision.valid && renderSubject(theme, assignment, identity, view, story)}
       <RuleNotes rules={decision.matches} />
     </>
-  );
-});
-
-const MatrixReference = memo(function MatrixReference({
-  theme,
-  view,
-  story,
-  renderReference,
-}: Pick<MatrixProps, 'renderReference'> & {
-  readonly theme: WorkbenchTheme;
-  readonly view: MatrixView;
-  readonly story?: StoryContext | undefined;
-}): ReactElement {
-  return (
-    <div className="wb-matrix-reference">
-      <h3 className="wb-matrix-group-label">Reference example</h3>
-      {renderReference(theme, view, story)}
-    </div>
   );
 });
 
@@ -406,7 +383,6 @@ function MatrixContent({
   onModeChange,
   renderArtboards,
   renderSubject,
-  renderReference,
 }: MatrixViewProps): ReactElement {
   const { props } = component;
   const themeCount = themes.length;
@@ -572,14 +548,6 @@ function MatrixContent({
           </ul>
         )}
         {visible < rowCount && <MoreRows visible={visible} total={rowCount} onMore={showMore} />}
-        {modeShown === 'slice' && view?.reference && (
-          <MatrixReference
-            theme={theme}
-            view={view}
-            story={story}
-            renderReference={renderReference}
-          />
-        )}
       </div>
     ));
 

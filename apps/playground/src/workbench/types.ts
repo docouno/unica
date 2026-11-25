@@ -187,12 +187,6 @@ export interface CompositionBlock extends PreviewBlock {
   readonly code?: string;
 }
 
-/**
- * @deprecated Compatibility alias for `CompositionBlock` during specimen migration.
- * Author new specimens with `compositions` instead of `usage`.
- */
-export type UsageBlock = CompositionBlock;
-
 export interface MatrixView extends StoryFrameOptions {
   readonly id: string;
   readonly title: string;
@@ -203,11 +197,6 @@ export interface MatrixView extends StoryFrameOptions {
   readonly fixed?: Values;
   readonly surface?: Surface;
   readonly overlayStage?: boolean;
-  /**
-   * @deprecated Legacy unmigrated slice reference. In v3 specimens, keep `states` slices purely
-   * generated without `reference` and author standalone examples as `cases`.
-   */
-  readonly reference?: ComponentType<PreviewProps>;
 }
 
 export type SlotRenderers = Readonly<Record<string, Readonly<Record<string, ReactNode>>>>;
@@ -225,19 +214,9 @@ interface ComponentMetadata {
   readonly constraints?: readonly Constraint[];
   /** Declarative state slices shown sequentially on the States tab. */
   readonly states?: readonly MatrixView[];
-  /**
-   * @deprecated Compatibility alias for `states` during specimen migration.
-   * Do not combine with `states`.
-   */
-  readonly matrixViews?: readonly MatrixView[];
   readonly cases?: readonly CaseBlock[];
   /** Concise product-independent local compositions shown on the Compositions tab. */
   readonly compositions?: readonly CompositionBlock[];
-  /**
-   * @deprecated Compatibility alias for `compositions` during specimen migration.
-   * Do not combine with `compositions`.
-   */
-  readonly usage?: readonly UsageBlock[];
 }
 
 export interface ComponentDefinition extends ComponentMetadata {

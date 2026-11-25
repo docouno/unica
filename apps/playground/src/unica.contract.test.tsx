@@ -2,10 +2,12 @@ import babel from 'prettier/plugins/babel';
 import estree from 'prettier/plugins/estree';
 import { format } from 'prettier/standalone';
 import { readdir, readFile } from 'node:fs/promises';
-import { resolve } from 'node:path';
+import { relative, resolve } from 'node:path';
+import ts from 'typescript';
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, beforeAll, expect, it } from 'vitest';
 import * as UnicaPackage from '@docouno/unica';
+import { exampleIssues, unboundJsxTags } from './unica.contract-helpers.js';
 import { unicaWorkbench } from './unica.workbench.js';
 import { UsageView } from './workbench/UsageView.js';
 import { WorkbenchApp } from './workbench/WorkbenchApp.js';
@@ -47,6 +49,104 @@ async function collectFiles(dirPath: string, exts: readonly string[]): Promise<s
   }
   return results;
 }
+
+const pairedPrototypes = new Set([
+  'checkbox-card',
+  'date-range-picker',
+  'dropzone',
+  'file-input',
+  'listbox',
+  'number-input',
+  'radio-card',
+  'select',
+  'tags-input',
+]);
+
+it.each(unicaWorkbench.components)('$id declares states, cases and compositions', (component) => {
+  expect(Object.keys(component)).not.toContain('matrixViews');
+  expect(Object.keys(component)).not.toContain('usage');
+  for (const slice of component.states ?? []) {
+    expect(Object.keys(slice), slice.id).not.toContain('reference');
+  }
+  const compositions = component.compositions ?? [];
+  expect(compositions.length).toBeGreaterThanOrEqual(pairedPrototypes.has(component.id) ? 2 : 1);
+  for (const block of [...(component.cases ?? []), ...compositions]) {
+    expect(['live', 'pinned'], block.id).toContain(block.mode);
+  }
+});
+
+// These choices use the same word for a public value and for an omitted prop.
+const familyChoiceOmissions: Readonly<Record<string, boolean>> = {
+  'alert.role.none': false,
+  'text.color.inherit': false,
+  'title.color.inherit': false,
+  'text.align.inherit': true,
+  'title.align.inherit': true,
+};
+
+it.each(unicaWorkbench.components)(
+  '$id documents omitted enum values accurately',
+  ({ id, props }) => {
+    for (const [key, prop] of Object.entries(props)) {
+      if (prop.kind !== 'enum' || prop.demo) {
+        continue;
+      }
+      for (const { value, omit } of prop.choices) {
+        const scopedOmission = familyChoiceOmissions[`${id}.${key}.${value}`];
+        if (
+          scopedOmission === undefined &&
+          !['', 'omitted', 'unset', 'default', 'auto'].includes(value)
+        ) {
+          continue;
+        }
+        const publicValue =
+          (value === 'default' && key === 'variant') ||
+          (value === 'auto' &&
+            (key === 'width' ||
+              (id === 'code' && key === 'dir') ||
+              (id === 'toast' && key === 'actionLayout')));
+        expect
+          .soft(Boolean(omit), `${id}.${key} = ${JSON.stringify(value)}`)
+          .toBe(scopedOmission ?? !publicValue);
+      }
+    }
+  },
+);
+
+const compositionExamples = unicaWorkbench.components.flatMap(({ id, compositions }) =>
+  (compositions ?? []).map((block) => ({
+    name: `${id}/${block.id}`,
+    code: block.code?.trim() ?? '',
+  })),
+);
+
+it.each(compositionExamples)('$name contains copyable JavaScript JSX', async ({ name, code }) => {
+  expect(code, 'Missing JSX').not.toBe('');
+  const issues = exampleIssues(`${name}.tsx`, code, 'composition');
+  expect(issues, issues.join('\n')).toEqual([]);
+  const options = {
+    plugins: [babel, estree],
+    printWidth: 72,
+    singleQuote: true,
+    semi: /^\s*import\b/m.test(code),
+  };
+  const javascript = await format(code, { ...options, parser: 'babel' });
+  await expect(format(code, { ...options, parser: 'babel-ts' })).resolves.toBe(javascript);
+});
+
+it('keeps harness controls and legacy tab checks out of authored examples', async () => {
+  const issues: string[] = [];
+  const src = import.meta.dirname;
+  for (const folder of ['specimens', 'examples', 'prototypes']) {
+    for (const file of await collectFiles(resolve(src, folder), ['.ts', '.tsx'])) {
+      if (file.endsWith('.proto.tsx')) {
+        continue;
+      }
+      issues.push(...exampleIssues(relative(src, file), await readFile(file, 'utf8')));
+    }
+  }
+  expect(issues, issues.join('\n')).toEqual([]);
+});
 
 it('discovers shipped actions and scene entries and renders six themed Subjects', () => {
   expect(() => validateCatalog(unicaWorkbench)).not.toThrow();
@@ -293,7 +393,7 @@ it('keeps src/workbench portable with zero app-specific imports or Unica token l
   expect(bridgeCss).toContain('.wb-artboard[data-theme]');
 });
 
-it('configures the 4-tab Workbench architecture and resolves Markdown docs for every component', async () => {
+it('configures the 4-tab Workbench architecture and resolves relative documentation links', () => {
   expect(unicaWorkbench.componentTabs?.map((tab) => [tab.id, tab.kind])).toEqual([
     ['playground', 'playground'],
     ['states', 'states'],
@@ -302,62 +402,9 @@ it('configures the 4-tab Workbench architecture and resolves Markdown docs for e
   ]);
   expect(unicaWorkbench.docs?.resolve).toBeDefined();
 
-  for (const component of unicaWorkbench.components) {
-    const source = unicaWorkbench.docs!.resolve!(component);
-    expect(source, `Missing docs source for ${component.id}`).toBeDefined();
-    expect(source?.markdown, `Missing Markdown loader for ${component.id}`).toBeDefined();
-    if (component.status === 'UI') {
-      expect(source?.importFrom, `Missing package importFrom for UI ${component.id}`).toBe(
-        '@docouno/unica',
-      );
-      expect(source?.sourceLabel).toMatch(/^docs\/components\/.+\.md$/);
-    } else {
-      expect(source?.sourceLabel).toMatch(/^apps\/playground\/src\/prototypes\/.+\/README\.md$/);
-    }
-    const content =
-      typeof source!.markdown === 'function' ? await source!.markdown() : source!.markdown!;
-    expect(content.trim().length, `Empty Markdown doc for ${component.id}`).toBeGreaterThan(20);
-  }
-
-  // Every UI component's Usage Quick Start only imports symbols actually exported by @docouno/unica.
-  const packageExports = new Set(Object.keys(UnicaPackage));
-  expect(unicaWorkbench.docs?.exportedNames).toEqual(packageExports);
-  for (const component of unicaWorkbench.components.filter((entry) => entry.status === 'UI')) {
-    const { container, unmount } = render(
-      <UsageView
-        component={component}
-        scenes={unicaWorkbench.scenes}
-        docsConfig={unicaWorkbench.docs}
-        raw
-        itemHref={({ item }) => `/?item=${item}`}
-        navigateItem={() => {}}
-      />,
-    );
-    const snippet = container.querySelector('#wb-usage-quick-start pre')?.textContent ?? '';
-    for (const match of snippet.matchAll(/import\s+\{([^}]+)\}\s+from\s+'@docouno\/unica'/g)) {
-      const names = match[1]!.replace(/,\s*$/u, '').split(',');
-      for (const name of names) {
-        const symbol = name.trim();
-        expect(
-          packageExports.has(symbol),
-          `Usage Quick Start for ${component.id} imports unknown symbol ${symbol}`,
-        ).toBe(true);
-      }
-    }
-    if (component.id === 'tooltip') {
-      expect(snippet).toMatch(/import\s+\{[^}]*\bTooltip\b[^}]*\}\s+from\s+'@docouno\/unica'/);
-      expect(snippet).toContain("import { CopyIcon } from '@phosphor-icons/react'");
-    } else if (component.id === 'stack') {
-      expect(snippet).toMatch(/import\s+\{[^}]*\bStack\b[^}]*\}\s+from\s+'@docouno\/unica'/);
-      expect(snippet).toMatch(/import\s+\{[^}]*\bText\b[^}]*\}\s+from\s+'@docouno\/unica'/);
-      expect(snippet).toContain("import { Fragment } from 'react'");
-      expect(snippet).not.toMatch(/import\s+\{[^}]*Fragment[^}]*\}\s+from\s+'@docouno\/unica'/);
-    } else if (component.id === 'scrollbar') {
-      expect(snippet).toContain("import '@docouno/unica/styles.css'");
-      expect(snippet).not.toContain("from '@docouno/unica'");
-    }
-    unmount();
-  }
+  const ids = unicaWorkbench.components.map(({ id }) => id);
+  expect(ids).toEqual(expect.arrayContaining([...pairedPrototypes]));
+  expect(unicaWorkbench.docs?.exportedNames).toEqual(new Set(Object.keys(UnicaPackage)));
 
   // Relative docs/components/*.md links from prototype READMEs resolve cleanly to Usage routes, while external URLs are never hijacked.
   const protoComponent = unicaWorkbench.components.find((entry) => entry.status === 'Proto')!;
@@ -374,6 +421,117 @@ it('configures the 4-tab Workbench architecture and resolves Markdown docs for e
     ),
   ).toBeUndefined();
 });
+
+it('reports missing or type-only JSX tags while respecting local components and native APIs', () => {
+  const source = ts.createSourceFile(
+    'quick-start.tsx',
+    [
+      "import * as React from 'react';",
+      "import { Box, type Button } from '@docouno/unica';",
+      "const label = new Text('Draft');",
+      'function Local({ Text }) { return <Text>{label.data}</Text>; }',
+      'export default <React.Fragment><Box /><Text /><Button /></React.Fragment>;',
+    ].join('\n'),
+    ts.ScriptTarget.Latest,
+  );
+  expect(unboundJsxTags(source)).toEqual([
+    expect.stringContaining("'Text'"),
+    expect.stringContaining("'Button'"),
+  ]);
+});
+
+it.each(unicaWorkbench.components)(
+  '$id renders its Usage contract and reference',
+  async (component) => {
+    const source = unicaWorkbench.docs!.resolve!(component);
+    expect(source, `Missing docs source for ${component.id}`).toBeDefined();
+    expect(source?.markdown, `Missing Markdown loader for ${component.id}`).toBeDefined();
+    if (component.status === 'UI') {
+      expect(source?.importFrom, `Missing package importFrom for UI ${component.id}`).toBe(
+        '@docouno/unica',
+      );
+      expect(source?.sourceLabel).toMatch(/^docs\/components\/.+\.md$/);
+    } else {
+      expect(source?.importFrom).toBeUndefined();
+      expect(source?.sourceLabel).toMatch(/^apps\/playground\/src\/prototypes\/.+\/README\.md$/);
+    }
+    const scenes = unicaWorkbench.scenes.filter((scene) => scene.uses?.includes(component.id));
+    const { container } = render(
+      <UsageView
+        component={component}
+        scenes={scenes}
+        docsConfig={unicaWorkbench.docs}
+        raw
+        itemHref={({ item }) => `/?item=${item}`}
+        navigateItem={() => {}}
+      />,
+    );
+    await screen.findByRole('region', { name: 'Reference documentation' });
+    expect(
+      container.querySelector('#wb-usage-reference')?.textContent?.trim().length,
+    ).toBeGreaterThan(20);
+    const sceneLinks = within(
+      screen.getByRole('navigation', { name: 'Consuming scenes' }),
+    ).queryAllByRole('link');
+    expect(sceneLinks.map((link) => link.getAttribute('href'))).toEqual(
+      scenes.map(({ id }) => `/?item=${id}`),
+    );
+    for (const [label, demo] of [
+      ['Public props', false],
+      ['Playground-only settings', true],
+    ] as const) {
+      const names = [
+        ...container.querySelectorAll(`table[aria-label="${label}"] tbody tr td:first-child code`),
+      ].map((el) => el.textContent);
+      expect(names).toEqual(
+        Object.keys(component.props).filter((key) => Boolean(component.props[key]?.demo) === demo),
+      );
+    }
+    const constraints = component.constraints ?? [];
+    const constraintRows = within(
+      screen.getByRole('region', { name: 'Props & constraints' }),
+    ).queryAllByRole('listitem');
+    expect(constraintRows).toHaveLength(constraints.length);
+    for (const [index, rule] of constraints.entries()) {
+      expect(constraintRows[index]?.textContent).toContain(rule.reason);
+    }
+    const snippet = container.querySelector('#wb-usage-quick-start pre')?.textContent ?? '';
+    expect(snippet.trim()).not.toBe('');
+    const quickStart = ts.createSourceFile('quick-start.tsx', snippet, ts.ScriptTarget.Latest);
+    expect(unboundJsxTags(quickStart)).toEqual([]);
+    for (const statement of quickStart.statements) {
+      if (
+        !ts.isImportDeclaration(statement) ||
+        !ts.isStringLiteral(statement.moduleSpecifier) ||
+        statement.moduleSpecifier.text !== '@docouno/unica'
+      ) {
+        continue;
+      }
+      const imports = statement.importClause?.namedBindings;
+      if (imports && ts.isNamedImports(imports) && !statement.importClause?.isTypeOnly) {
+        for (const symbol of imports.elements) {
+          if (symbol.isTypeOnly) {
+            continue;
+          }
+          const name = (symbol.propertyName ?? symbol.name).text;
+          expect(Object.hasOwn(UnicaPackage, name), `Unknown package export ${name}`).toBe(true);
+        }
+      }
+    }
+    if (component.id === 'tooltip') {
+      expect(snippet).toMatch(/import\s+\{[^}]*\bTooltip\b[^}]*\}\s+from\s+'@docouno\/unica'/);
+      expect(snippet).toContain("import { CopyIcon } from '@phosphor-icons/react'");
+    } else if (component.id === 'stack') {
+      expect(snippet).toMatch(/import\s+\{[^}]*\bStack\b[^}]*\}\s+from\s+'@docouno\/unica'/);
+      expect(snippet).toMatch(/import\s+\{[^}]*\bText\b[^}]*\}\s+from\s+'@docouno\/unica'/);
+      expect(snippet).toContain("import { Fragment } from 'react'");
+      expect(snippet).not.toMatch(/import\s+\{[^}]*Fragment[^}]*\}\s+from\s+'@docouno\/unica'/);
+    } else if (component.id === 'scrollbar') {
+      expect(snippet).toContain("import '@docouno/unica/styles.css'");
+      expect(snippet).not.toContain("from '@docouno/unica'");
+    }
+  },
+);
 
 it('keeps Unica theme editor tokens and macro outputs aligned with styles.css', async () => {
   const editor = unicaWorkbench.themeEditor;

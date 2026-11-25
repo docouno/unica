@@ -175,7 +175,3 @@
   padding-inline-start: 1rem;
   overflow-wrap: anywhere;
 }
-
-.wb-matrix-reference {
-  min-inline-size: 0;
-}
