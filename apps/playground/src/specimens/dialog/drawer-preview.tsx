@@ -11,7 +11,7 @@ import {
 } from '../../prototypes/dialog/dialog.proto.js';
 import '@docouno/unica/styles.css';
 
-export function ActivityFilterPanel({
+export function ActivityDetailsPanel({
   contentProps = {},
   subject = {},
   pinned = false,
@@ -39,14 +39,14 @@ export function ActivityFilterPanel({
         {!pinned && (
           <div inert={open} style={{ visibility: open ? 'hidden' : 'visible' }}>
             <DrawerTrigger {...(!open ? subject : {})} variant="secondary">
-              Filter activity
+              View activity details
             </DrawerTrigger>
           </div>
         )}
         <DrawerContent {...subject} {...contentProps} inactive={pinned} described>
-          <DrawerHeader>
-            <DrawerTitle>Activity filters</DrawerTitle>
-            <DrawerDescription>Actor and action filters.</DrawerDescription>
+          <DrawerHeader closeLabel="Close activity details">
+            <DrawerTitle>Release notes</DrawerTitle>
+            <DrawerDescription>QA approved version 3.</DrawerDescription>
           </DrawerHeader>
           <DrawerFooter>
             <DrawerClose>Done</DrawerClose>

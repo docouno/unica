@@ -277,8 +277,8 @@ export default {
       );
       await canvas.goto(route.href, { waitUntil: 'domcontentloaded' });
       const board = canvas.locator('.wb-artboard').first();
-      const opener = board.getByRole('button', { name: 'Filter activity' });
-      const panel = board.getByRole('dialog');
+      const opener = board.getByRole('button', { name: 'View activity details', exact: true });
+      const panel = board.getByRole('dialog', { name: 'Release notes', exact: true });
       await opener.waitFor({ timeout: 20_000 });
       const trigger = await opener.elementHandle();
       for (const dismissible of [false, true]) {
@@ -287,6 +287,14 @@ export default {
         }
         await opener.press('Enter');
         await panel.waitFor();
+        assert.equal(
+          await panel.evaluate(
+            (node) =>
+              node.ownerDocument.getElementById(node.getAttribute('aria-describedby'))?.textContent,
+          ),
+          'QA approved version 3.',
+        );
+        await panel.getByText('QA approved version 3.', { exact: true }).waitFor();
         await board.locator('.dialog-scrim').scrollIntoViewIfNeeded();
         const point = await trigger.evaluate((button) => {
           const box = button.getBoundingClientRect();

@@ -4,7 +4,7 @@ import { choice, eventProp, toggle } from '../control-props.js';
 import { ActivityFilters } from './activity-filters.js';
 import filtersSource from './activity-filters.tsx?raw';
 import { DeliverySettings } from './delivery-settings.js';
-import { ActivityFilterPanel } from './drawer-preview.js';
+import { ActivityDetailsPanel } from './drawer-preview.js';
 import panelSource from './drawer-preview.tsx?raw';
 
 const sizes = ['s', 'm', 'l'] as const;
@@ -12,7 +12,7 @@ const sides = ['start', 'end', 'top', 'bottom'] as const;
 const adaptiveSide = { narrow: 'bottom', wide: 'end' } as const;
 const editablePanel = panelSource
   .replaceAll('../../prototypes/', './prototypes/')
-  .replace('export function ActivityFilterPanel', 'function ActivityFilterPanel');
+  .replace('export function ActivityDetailsPanel', 'function ActivityDetailsPanel');
 
 export default defineComponent({
   id: 'drawer',
@@ -65,7 +65,7 @@ export default defineComponent({
   },
   render: ({ values, ctx }) => (
     <DialogStudy height={320}>
-      <ActivityFilterPanel
+      <ActivityDetailsPanel
         contentProps={{
           size: values.size,
           width: values.width,
@@ -80,8 +80,8 @@ export default defineComponent({
   ),
   code: ({ size, width, side, dismissOnBackdrop }) => `${editablePanel}
 
-export function FilterPanel() {
-  return <ActivityFilterPanel contentProps={${JSON.stringify({ size, width, side, dismissOnBackdrop })}} />;
+export function ActivityDetails() {
+  return <ActivityDetailsPanel contentProps={${JSON.stringify({ size, width, side, dismissOnBackdrop })}} />;
 }`,
   states: [
     {
