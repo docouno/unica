@@ -15,6 +15,36 @@ async function mountExample(page, mount, name) {
 }
 
 export default {
+  'List keeps English punctuation with its row description in an RTL owner': async ({
+    page,
+    mount,
+  }) => {
+    await mount('binary-consumers', { direction: 'rtl' });
+    await showExample(page, 'List actions');
+    const copy = page.getByText('Check whether exports can reach cold storage.', { exact: true });
+    const positions = await copy.evaluate((element) => {
+      const text = element.firstChild;
+      const range = element.ownerDocument.createRange();
+      const end = text.textContent.length;
+      range.setStart(text, end - 2);
+      range.setEnd(text, end - 1);
+      const letter = range.getBoundingClientRect();
+      range.setStart(text, end - 1);
+      range.setEnd(text, end);
+      const period = range.getBoundingClientRect();
+      return {
+        letterEnd: letter.right,
+        periodStart: period.left,
+        direction: getComputedStyle(element.closest('li')).direction,
+      };
+    });
+    assert.equal(positions.direction, 'rtl');
+    assert.ok(
+      positions.periodStart >= positions.letterEnd - 1,
+      'Period follows the final English letter',
+    );
+  },
+
   'Folio trust and pager sync remain independently interactive': async ({ page, mount }) => {
     await mountExample(page, mount, 'Folio sign-in');
     const consentName = 'Keep this device trusted for 30 days';

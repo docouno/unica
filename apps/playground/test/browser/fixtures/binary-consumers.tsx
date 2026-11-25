@@ -65,7 +65,7 @@ const examples = {
     default: (await import('../../../src/specimens/form-field/field-groups.js')).Groups,
   })),
   'List actions': lazy(async () => ({
-    default: (await import('../../../src/prototypes/list/list.examples.js')).LiveRows,
+    default: (await import('../../../src/specimens/list/list.examples.js')).LiveRows,
   })),
 };
 
