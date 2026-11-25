@@ -15,6 +15,42 @@ async function navigate(page, params) {
 }
 
 export default {
+  'An editor keeps its modal open for Escape during IME composition': async ({ page, origin }) => {
+    await page.goto(
+      new URL('/?item=modal&tab=states&block=guard&family=frost&scheme=both', origin).href,
+    );
+    const boards = page.locator('[data-wb-block="guard"] .wb-artboard');
+    const owner = boards.first();
+    const name = owner.getByRole('textbox', { name: /^Project name/ });
+    const peer = boards.last().getByRole('textbox', { name: /^Project name/ });
+    await name.waitFor({ timeout: 20_000 });
+    const peerValue = await peer.inputValue();
+    await name.press('End');
+    const session = await page.context().newCDPSession(page);
+    try {
+      await session.send('Input.imeSetComposition', {
+        text: 'とう',
+        selectionStart: 2,
+        selectionEnd: 2,
+      });
+      await page.keyboard.press('Escape');
+      assert.equal(await owner.getByRole('alertdialog').count(), 0);
+      assert.ok(await name.evaluate((input) => input === document.activeElement));
+
+      await session.send('Input.insertText', { text: '東京' });
+      const accepted = await name.inputValue();
+      assert.ok(accepted.endsWith('東京'));
+      await page.keyboard.press('Escape');
+      const confirmation = owner.getByRole('alertdialog', { name: 'Discard unsaved changes?' });
+      await confirmation.getByRole('button', { name: 'Keep editing' }).press('Enter');
+      assert.ok(await name.evaluate((input) => input === document.activeElement));
+      assert.equal(await name.inputValue(), accepted);
+      assert.equal(await peer.inputValue(), peerValue);
+    } finally {
+      await session.detach();
+    }
+  },
+
   'Two Escape keys return from an inline submenu to its own trigger': async ({ page, origin }) => {
     await page.setViewportSize({ width: 1500, height: 950 });
     const route = new URL(

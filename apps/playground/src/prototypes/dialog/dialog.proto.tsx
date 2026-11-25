@@ -259,7 +259,7 @@ function DialogSurface({
         }
         if (event.key === 'Tab') {
           wrapPreviewTab(event);
-        } else if (event.key === 'Escape') {
+        } else if (event.key === 'Escape' && !event.nativeEvent.isComposing) {
           event.preventDefault();
           event.stopPropagation();
           onOpenChange?.(false);
