@@ -331,7 +331,7 @@ export function DatePicker({
         required={required}
         description={description}
         descriptionId={`${id}-description`}
-        message={feedback || ''}
+        message={typeof feedback === 'string' && feedback ? <bdi>{feedback}</bdi> : feedback || ''}
         messageId={`${id}-message`}
         status={disabled ? 'neutral' : fieldStatus}
         feedbackIcon={false}
@@ -435,7 +435,7 @@ export function DatePicker({
                 open && !disabled ? 'Close calendar' : readOnly ? 'View calendar' : 'Select date'
               }
               aria-expanded={open && !disabled}
-              aria-controls={`${id}-panel`}
+              aria-controls={open && !disabled ? `${id}-panel` : undefined}
               disabled={disabled}
               onClick={(event) => {
                 if (open) {
@@ -633,7 +633,7 @@ export function DateRangePicker({
         required={required}
         description={description}
         descriptionId={`${id}-description`}
-        message={feedback || ''}
+        message={typeof feedback === 'string' && feedback ? <bdi>{feedback}</bdi> : feedback || ''}
         messageId={`${id}-message`}
         status={disabled ? 'neutral' : fieldStatus}
         feedbackIcon={false}
@@ -743,7 +743,7 @@ export function DateRangePicker({
                     : 'Choose date range'
               }
               aria-expanded={open && !disabled}
-              aria-controls={`${id}-panel`}
+              aria-controls={open && !disabled ? `${id}-panel` : undefined}
               disabled={disabled}
               onClick={(event) => {
                 if (open) {

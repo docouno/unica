@@ -14,7 +14,876 @@ async function navigate(page, params) {
   }, params);
 }
 
+async function checkReferenceNames(page) {
+  const table = page.getByRole('table', { name: 'Recovery references' });
+  await table.waitFor({ timeout: 30_000 });
+  await page.getByRole('button', { name: 'Next page', exact: true }).press('Enter');
+  await page.evaluate(() => document.fonts.ready);
+  for (const name of ['Volume snapshots', 'Restore point retention']) {
+    const lines = await table.getByText(name, { exact: true }).evaluate((label) => {
+      const text = label.firstChild;
+      const range = document.createRange();
+      range.setStart(text, text.textContent.lastIndexOf(' ') + 1);
+      range.setEnd(text, text.length);
+      return range.getClientRects().length;
+    });
+    assert.equal(lines, 1, name);
+  }
+}
+
+async function assertLabelFits(editor, name) {
+  const lines = await editor.getByText(name, { exact: true }).evaluate((label) => {
+    const range = document.createRange();
+    range.selectNodeContents(label);
+    return range.getClientRects().length;
+  });
+  assert.equal(lines, 1, name + ' must fit on one line');
+}
+
 export default {
+  'Open HoverCard previews survive changing the comparison surface': async ({ page, origin }) => {
+    await page.goto(
+      new URL(
+        '/?item=hover-card&tab=compositions&block=identity&family=frost&scheme=both&surface=base',
+        origin,
+      ).href,
+      { waitUntil: 'domcontentloaded' },
+    );
+    const frames = page.locator('[data-wb-block="identity"] iframe');
+    const preview = (index) => frames.nth(index).contentFrame().locator(':popover-open');
+    await preview(0).waitFor({ timeout: 20_000 });
+    await preview(1).waitFor();
+    await page.getByRole('combobox', { name: 'Surface', exact: true }).selectOption('overlay');
+    for (const index of [0, 1]) {
+      await frames
+        .nth(index)
+        .contentFrame()
+        .locator('.hint-example-viewport-content[data-surface="overlay"]')
+        .waitFor();
+      await preview(index).waitFor();
+    }
+  },
+
+  'An editor keeps its modal open for Escape during IME composition': async ({ page, origin }) => {
+    await page.goto(
+      new URL('/?item=modal&tab=states&block=guard&family=frost&scheme=both', origin).href,
+    );
+    const boards = page.locator('[data-wb-block="guard"] .wb-artboard');
+    const owner = boards.first();
+    const name = owner.getByRole('textbox', { name: /^Project name/ });
+    const peer = boards.last().getByRole('textbox', { name: /^Project name/ });
+    await name.waitFor({ timeout: 20_000 });
+    const peerValue = await peer.inputValue();
+    await name.press('End');
+    const session = await page.context().newCDPSession(page);
+    try {
+      await session.send('Input.imeSetComposition', {
+        text: 'とう',
+        selectionStart: 2,
+        selectionEnd: 2,
+      });
+      await page.keyboard.press('Escape');
+      assert.equal(await owner.getByRole('alertdialog').count(), 0);
+      assert.ok(await name.evaluate((input) => input === document.activeElement));
+
+      await session.send('Input.insertText', { text: '東京' });
+      const accepted = await name.inputValue();
+      assert.ok(accepted.endsWith('東京'));
+      await page.keyboard.press('Escape');
+      const confirmation = owner.getByRole('alertdialog', { name: 'Discard unsaved changes?' });
+      await confirmation.getByRole('button', { name: 'Keep editing' }).press('Enter');
+      assert.ok(await name.evaluate((input) => input === document.activeElement));
+      assert.equal(await name.inputValue(), accepted);
+      assert.equal(await peer.inputValue(), peerValue);
+    } finally {
+      await session.detach();
+    }
+  },
+
+  'Two Escape keys return from an inline submenu to its own trigger': async ({ page, origin }) => {
+    await page.setViewportSize({ width: 1500, height: 950 });
+    const route = new URL(
+      '/?item=menu&tab=states&block=live&family=soft&scheme=both&vp=768',
+      origin,
+    );
+    await page.goto(route.href, { waitUntil: 'domcontentloaded' });
+    const board = page.locator('[data-wb-block="live"] .wb-artboard').first();
+    const trigger = board.getByRole('button', { name: 'View options' });
+    await trigger.waitFor({ timeout: 20_000 });
+    await trigger.press('ArrowDown');
+    await board.getByRole('menuitemcheckbox', { name: 'Preview' }).press('End');
+    await board.getByRole('menuitem', { name: 'Sort by' }).press('ArrowRight');
+    const child = board.getByRole('menu', { name: 'Sort by' });
+    const firstChoice = child.getByRole('menuitemradio', { name: 'Last modified' });
+    await page.waitForFunction(
+      (row) => row === document.activeElement,
+      await firstChoice.elementHandle(),
+    );
+    assert.equal(await board.getByRole('menu').count(), 1);
+
+    // Capture which row owns focus when the parent list replaces the child.
+    const transition = await child.evaluateHandle((panel) => {
+      const state = { focused: false };
+      const observer = new MutationObserver(() => {
+        const parentRow = panel.querySelector('[role="menuitem"][aria-haspopup="menu"]');
+        if (parentRow) {
+          observer.disconnect();
+          state.focused = parentRow === document.activeElement;
+        }
+      });
+      observer.observe(panel, { childList: true, subtree: true });
+      return state;
+    });
+    await page.keyboard.press('Escape');
+    await page.keyboard.press('Escape');
+    assert.ok(
+      await transition.evaluate((state) => state.focused),
+      'Restoring the parent list lost focus',
+    );
+    await board.getByRole('menu').waitFor({ state: 'hidden' });
+    assert.ok(await trigger.evaluate((button) => button === document.activeElement));
+  },
+
+  'Escape dismisses a hovered frame preview while the catalog keeps keyboard focus': async ({
+    page,
+    origin,
+  }) => {
+    await page.setViewportSize({ width: 2000, height: 950 });
+    const route = new URL(
+      '/?item=hover-card&tab=states&block=interaction&family=frost&scheme=both&vp=360&dir=rtl',
+      origin,
+    );
+    await page.goto(route.href, { waitUntil: 'domcontentloaded' });
+    const frames = page.locator('[data-wb-block="interaction"] .wb-artboard iframe');
+    const owner = frames.first().contentFrame();
+    const peer = frames.last().contentFrame();
+    const link = owner.getByRole('link');
+    const card = owner.locator('.unica-hover-card:popover-open');
+    const outside = page
+      .getByRole('group', { name: 'Component status' })
+      .getByRole('button', { name: 'UI', exact: true });
+    await link.waitFor({ timeout: 20_000 });
+    assert.equal(await frames.count(), 2);
+    await outside.focus();
+    await link.hover();
+    await card.waitFor();
+    assert.ok(await outside.evaluate((node) => node === document.activeElement));
+    await page.keyboard.press('Escape');
+    await card.waitFor({ state: 'hidden' });
+    assert.ok(await outside.evaluate((node) => node === document.activeElement));
+    assert.equal(await peer.locator('.unica-hover-card:popover-open').count(), 0);
+
+    const side = page
+      .locator('[data-wb-block="interaction"]')
+      .getByRole('combobox', { name: 'Side', exact: true });
+    await outside.hover();
+    await side.focus();
+    await link.hover();
+    await card.waitFor();
+    await side.press('Alt+ArrowDown');
+    const selector = await side.elementHandle();
+    await page.waitForFunction((select) => select.matches(':open'), selector);
+    await page.keyboard.press('Escape');
+    await page.waitForFunction((select) => !select.matches(':open'), selector);
+    assert.ok(await card.isVisible(), 'The open native selector owns its first Escape key');
+    await page.keyboard.press('Escape');
+    await card.waitFor({ state: 'hidden' });
+  },
+
+  'Drawer scrolls the whole panel when the keyboard leaves too little room': async ({
+    page,
+    origin,
+  }) => {
+    await page.setViewportSize({ width: 1500, height: 950 });
+    const route = new URL(
+      '/?item=drawer&tab=states&block=overflow&vp=768&scale=120&dir=rtl',
+      origin,
+    );
+    await page.goto(route.href, { waitUntil: 'domcontentloaded' });
+    const frame = page.locator('section[data-wb-block="overflow"]');
+    const setting = frame.getByRole('combobox', { name: 'Available height' }).first();
+    await setting.waitFor({ timeout: 20_000 });
+    const panel = frame.locator('.wb-artboard').first().getByRole('dialog');
+    const note = panel.getByRole('textbox', { name: 'Digest note' });
+    await note.press('End');
+    await setting.selectOption('keyboard');
+    await page.waitForFunction(
+      (node) => node.tabIndex === 0 && node.scrollHeight > node.clientHeight,
+      await panel.elementHandle(),
+    );
+    await page.waitForFunction(
+      (node) => {
+        const panelRect = node.closest('[role="dialog"]').getBoundingClientRect();
+        const editorRect = node.getBoundingClientRect();
+        return (
+          node === document.activeElement &&
+          editorRect.top >= panelRect.top - 1 &&
+          editorRect.bottom <= panelRect.bottom + 1
+        );
+      },
+      await note.elementHandle(),
+    );
+    await panel.press('End');
+    const save = panel.getByRole('button', { name: 'Save settings' });
+    await page.waitForFunction(
+      (button) => {
+        const panelRect = button.closest('[role="dialog"]').getBoundingClientRect();
+        const actionRect = button.getBoundingClientRect();
+        return actionRect.top >= panelRect.top && actionRect.bottom <= panelRect.bottom + 1;
+      },
+      await save.elementHandle(),
+    );
+  },
+
+  'Drawer handle follows the pointer in a scaled artboard': async ({ page, origin }) => {
+    await page.setViewportSize({ width: 1500, height: 950 });
+    const route = new URL('/?item=drawer&tab=states&block=sheet&vp=768&scale=120&dir=rtl', origin);
+    await page.goto(route.href, { waitUntil: 'domcontentloaded' });
+    const board = page.locator('section[data-wb-block="sheet"] .wb-artboard').first();
+    const panel = board.getByRole('dialog');
+    const grip = panel.locator('.dialog-handle');
+    await grip.waitFor({ timeout: 20_000 });
+    await grip.scrollIntoViewIfNeeded();
+    const gripBox = await grip.boundingBox();
+    const before = await panel.boundingBox();
+    const x = gripBox.x + gripBox.width / 2;
+    const y = gripBox.y + gripBox.height / 2;
+    await page.mouse.move(x, y);
+    await page.mouse.down();
+    try {
+      await page.mouse.move(x, y + 12, { steps: 4 });
+      const after = await panel.boundingBox();
+      assert.ok(Math.abs(after.y - before.y - 12) <= 1, 'The sheet must follow a 12px drag');
+    } finally {
+      await page.mouse.up();
+    }
+    assert.equal(await panel.isVisible(), true);
+  },
+
+  'Drawer backdrop keeps focus and consumes a dismissing tap above the opener': async ({
+    page,
+    origin,
+    watchPage,
+  }) => {
+    const touch = await page
+      .context()
+      .browser()
+      .newContext({ hasTouch: true, viewport: { width: 1500, height: 950 } });
+    try {
+      const canvas = watchPage(await touch.newPage());
+      const route = new URL(
+        '/?item=drawer&tab=playground&family=frost&scheme=dark&vp=1440',
+        origin,
+      );
+      await canvas.goto(route.href, { waitUntil: 'domcontentloaded' });
+      const board = canvas.locator('.wb-artboard').first();
+      const opener = board.getByRole('button', { name: 'View activity details', exact: true });
+      const panel = board.getByRole('dialog', { name: 'Release notes', exact: true });
+      await opener.waitFor({ timeout: 20_000 });
+      const trigger = await opener.elementHandle();
+      for (const dismissible of [false, true]) {
+        if (dismissible) {
+          await canvas.getByRole('checkbox', { name: /^dismissOnBackdrop/i }).check();
+        }
+        await opener.press('Enter');
+        await panel.waitFor();
+        assert.equal(
+          await panel.evaluate(
+            (node) =>
+              node.ownerDocument.getElementById(node.getAttribute('aria-describedby'))?.textContent,
+          ),
+          'QA approved version 3.',
+        );
+        await panel.getByText('QA approved version 3.', { exact: true }).waitFor();
+        await board.locator('.dialog-scrim').scrollIntoViewIfNeeded();
+        const point = await trigger.evaluate((button) => {
+          const box = button.getBoundingClientRect();
+          const x = box.x + box.width / 2;
+          const y = box.y + box.height / 2;
+          return { x, y, scrim: document.elementFromPoint(x, y)?.matches('.dialog-scrim') };
+        });
+        assert.ok(point.scrim, 'The backdrop must cover the opener at the tested point');
+        if (dismissible) {
+          await canvas.touchscreen.tap(point.x, point.y);
+        } else {
+          await canvas.mouse.click(point.x, point.y);
+          assert.ok(await panel.evaluate((node) => node.contains(document.activeElement)));
+          await canvas.keyboard.press('Escape');
+        }
+        await panel.waitFor({ state: 'detached' });
+        assert.ok(await trigger.evaluate((node) => node === document.activeElement));
+      }
+    } finally {
+      await touch.close();
+    }
+  },
+
+  'Listbox size comparisons show readable roles with independent selection': async ({
+    page,
+    origin,
+  }) => {
+    await page.goto(
+      new URL(
+        '/?item=listbox&tab=states&slice=sizes&family=frost&scheme=light&vp=360&scale=120&dir=rtl&surface=overlay&freeze=1',
+        origin,
+      ).href,
+    );
+    const lists = page.locator('[data-wb-slice="sizes"] [role="listbox"]');
+    await lists.last().waitFor({ timeout: 20_000 });
+    await page.evaluate(() => document.fonts.ready);
+    assert.equal(await lists.count(), 6);
+    for (const list of await lists.all()) {
+      for (const label of ['Viewer', 'Commenter', 'Editor', 'Administrator']) {
+        await assertLabelFits(list, label);
+      }
+      const viewer = list.getByRole('option', { name: 'Viewer', exact: true });
+      const editor = list.getByRole('option', { name: 'Editor', exact: true });
+      assert.equal(await viewer.getAttribute('aria-selected'), 'false');
+      assert.equal(await editor.getAttribute('aria-selected'), 'true');
+      await viewer.click();
+      assert.equal(await viewer.getAttribute('aria-selected'), 'true');
+      assert.equal(
+        await editor.getAttribute('aria-selected'),
+        String((await list.getAttribute('aria-multiselectable')) === 'true'),
+      );
+    }
+    const last = lists.last();
+    const region = last.locator('xpath=ancestor::*[@role="region"][1]');
+    await last.getByRole('option', { name: 'Viewer', exact: true }).hover();
+    await region.evaluate((node) => {
+      node.scrollLeft = 0;
+    });
+    await page.mouse.wheel(-100, 0);
+    await page.waitForFunction((node) => node.scrollLeft < 0, await region.elementHandle(), {
+      timeout: 5000,
+    });
+  },
+
+  'Select role comparisons show the full selected region and open their own list': async ({
+    page,
+    origin,
+  }) => {
+    await page.setViewportSize({ width: 360, height: 780 });
+    await page.goto(
+      new URL(
+        '/?item=select&tab=states&slice=roles&family=all&scheme=both&vp=auto&scale=120&dir=rtl&surface=overlay&freeze=1&raw=1',
+        origin,
+      ).href,
+    );
+    const board = page.locator('[data-wb-slice="roles"] .wb-artboard[data-theme="frost-light"]');
+    const triggers = board.locator('.select-trigger-proto');
+    await triggers.last().waitFor({ timeout: 20_000 });
+    await page.evaluate(() => document.fonts.ready);
+    assert.equal(await triggers.count(), 6);
+    for (const trigger of await triggers.all()) {
+      const summary = trigger.locator('.select-summary-labels-proto');
+      assert.equal(await summary.textContent(), 'Amsterdam');
+      assert.ok(
+        await summary.evaluate((node) => node.clientWidth === node.scrollWidth),
+        'The selected region must fit beside the trigger affordance',
+      );
+    }
+    const trigger = triggers.last();
+    await trigger.click();
+    const panel = page.locator(':popover-open');
+    assert.equal(await panel.getAttribute('id'), await trigger.getAttribute('aria-controls'));
+    const list = panel.getByRole('listbox');
+    const selected = list.getByRole('option', { name: 'Amsterdam', exact: true });
+    assert.equal(await selected.getAttribute('aria-selected'), 'true');
+    assert.equal(
+      await list.getAttribute('aria-activedescendant'),
+      await selected.getAttribute('id'),
+    );
+    await list.getByRole('option', { name: 'London', exact: true }).click();
+    await panel.waitFor({ state: 'hidden' });
+    assert.equal(await trigger.locator('.select-summary-labels-proto').textContent(), 'London');
+    assert.equal(
+      await triggers.first().locator('.select-summary-labels-proto').textContent(),
+      'Amsterdam',
+    );
+  },
+
+  'Picker comparisons leave room for their initial text and actions': async ({
+    page,
+    origin,
+    watchPage,
+  }) => {
+    const period = '14/09/2026 – 18/09/2026';
+    const phone = watchPage(
+      await page
+        .context()
+        .browser()
+        .newPage({
+          isMobile: true,
+          hasTouch: true,
+          viewport: { width: 360, height: 780 },
+        }),
+    );
+    try {
+      for (const [view, item, slice, text, vp = 'auto', width = 360] of [
+        [page, 'autocomplete', 'roles', 'Release notes'],
+        [page, 'combobox', 'roles', 'Search options'],
+        [page, 'date-picker', 'fields', '16/09/2026'],
+        [page, 'date-range-picker', 'fields', period],
+        [phone, 'date-range-picker', 'fields', period],
+        [page, 'date-range-picker', 'fields', period, '768', 1500],
+        [phone, 'date-range-picker', 'fields', period, '1280', 360],
+      ]) {
+        await view.setViewportSize({ width, height: 780 });
+        const params = {
+          item,
+          slice,
+          tab: 'states',
+          family: 'all',
+          scheme: 'both',
+          surface: 'overlay',
+          vp,
+          scale: '120',
+          dir: 'rtl',
+          raw: '1',
+          freeze: '1',
+        };
+        if (view.url() === 'about:blank') {
+          const route = new URL('/', origin);
+          route.search = new URLSearchParams(params).toString();
+          await view.goto(route.href);
+        } else {
+          await navigate(view, params);
+        }
+        await view
+          .locator('html[data-wb-ready="1"]')
+          .waitFor({ state: 'attached', timeout: 20_000 });
+        const inputs = view.locator(`[data-wb-slice="${slice}"] td input:not([type="hidden"])`);
+        const geometry = await inputs.evaluateAll((editors) => {
+          const measure = document.createElement('canvas').getContext('2d');
+          return editors.map((input) => {
+            const row = input.closest('[data-wb-subject]');
+            const rect = input.getBoundingClientRect();
+            const buttons = Array.from(row.querySelectorAll('button'), (button) =>
+              button.getBoundingClientRect(),
+            );
+            const value = input.value || input.placeholder;
+            const style = getComputedStyle(input);
+            measure.font = [
+              style.fontStyle,
+              style.fontWeight,
+              style.fontSize,
+              style.fontFamily,
+            ].join(' ');
+            measure.letterSpacing = style.letterSpacing === 'normal' ? '0px' : style.letterSpacing;
+            const textWidth =
+              measure.measureText(value).width +
+              parseFloat(style.paddingLeft) +
+              parseFloat(style.paddingRight);
+            return {
+              value,
+              available: input.clientWidth,
+              content: Math.max(input.scrollWidth, Math.round(textWidth)),
+              overlap: buttons.some(
+                (button) => Math.min(rect.right, button.right) > Math.max(rect.left, button.left),
+              ),
+            };
+          });
+        });
+        assert.equal(geometry.length, 36, item);
+        for (const result of geometry) {
+          assert.equal(result.value, text, item);
+          assert.equal(
+            result.available,
+            result.content,
+            item + ' must show the complete initial text',
+          );
+          assert.equal(result.overlap, false, item + ' actions must leave the editor clear');
+        }
+      }
+    } finally {
+      await phone.close();
+    }
+  },
+
+  'Selection fields fill their Playground slot on the base surface': async ({ page, origin }) => {
+    for (const [item, label] of [
+      ['autocomplete', 'Document title'],
+      ['combobox', 'Owning team'],
+      ['select', 'Deployment region'],
+    ]) {
+      const route = new URL('/', origin);
+      route.search = new URLSearchParams({
+        item,
+        tab: 'playground',
+        family: 'frost',
+        scheme: 'light',
+        surface: 'base',
+        vp: '360',
+        scale: '120',
+        dir: 'rtl',
+        bounds: '1',
+      }).toString();
+      await page.goto(route.href, { waitUntil: 'domcontentloaded' });
+      const board = page.locator('.wb-artboard').first();
+      const field =
+        item === 'select'
+          ? board.getByRole('button', { name: 'Deployment region: Amsterdam' })
+          : board.getByRole('combobox');
+      await field.waitFor({ state: 'attached', timeout: 20_000 });
+      const subject = board.locator('[data-wb-subject]:visible');
+      const box = await subject.boundingBox();
+      assert.ok(box && box.width > 240, label + ' must span the phone field slot');
+      await page
+        .getByText(Math.round(box.width) + ' × ' + Math.round(box.height) + ' px', {
+          exact: true,
+        })
+        .waitFor();
+      await field.click();
+      await page.keyboard.press('ArrowDown');
+      await board.getByRole('listbox').waitFor();
+      await page.keyboard.press('Escape');
+      assert.equal(await field.evaluate((node) => node === document.activeElement), true);
+    }
+  },
+
+  'TagsInput keeps committed topics readable and removable in the base Playground': async ({
+    page,
+    origin,
+  }) => {
+    await page.goto(
+      new URL(
+        '/?item=tags-input&tab=playground&family=frost&scheme=light&surface=base&vp=360&scale=120&dir=rtl',
+        origin,
+      ).href,
+      { waitUntil: 'domcontentloaded' },
+    );
+    const editor = page.locator('.wb-artboard .tags-editor-proto[data-wb-subject]');
+    const draft = editor.getByRole('textbox', { name: 'Topics' });
+    const remove = (name) => editor.getByRole('button', { name: 'Remove ' + name, exact: true });
+    await draft.waitFor({ state: 'attached', timeout: 20_000 });
+    for (const name of ['Design', 'Research']) {
+      await assertLabelFits(editor, name);
+      assert.ok(await remove(name).isVisible());
+    }
+    assert.ok((await editor.boundingBox()).width > 240, 'Topics must span the phone field slot');
+    await draft.fill('Maps');
+    await editor.getByRole('button', { name: 'Add tags' }).click();
+    await remove('Maps').waitFor();
+    await remove('Design').click();
+    await remove('Design').waitFor({ state: 'detached' });
+    assert.ok(await remove('Research').isVisible());
+    assert.ok(await remove('Maps').isVisible());
+  },
+
+  'TagsInput keeps each size and variant readable on the narrow overlay': async ({
+    page,
+    origin,
+  }) => {
+    await page.goto(
+      new URL(
+        '/?item=tags-input&tab=states&slice=roles&family=pixel&scheme=light&surface=overlay&vp=360&scale=120&dir=rtl&freeze=1',
+        origin,
+      ).href,
+      { waitUntil: 'domcontentloaded' },
+    );
+    const slice = page.locator('section[data-wb-slice="roles"]');
+    for (const variant of ['default', 'ghost']) {
+      for (const size of ['s', 'm', 'l']) {
+        const field = slice.locator(
+          `.tags-editor-proto[data-variant="${variant}"][data-size="${size}"]`,
+        );
+        await field.waitFor({ timeout: 20_000 });
+        await assertLabelFits(field, 'Design');
+        await assertLabelFits(field, 'Research');
+      }
+    }
+  },
+
+  'TagsInput keeps Research whole beside its removal target on a phone': async ({
+    page,
+    origin,
+    watchPage,
+  }) => {
+    const touch = await page
+      .context()
+      .browser()
+      .newContext({ isMobile: true, hasTouch: true, viewport: { width: 360, height: 780 } });
+    try {
+      const mobile = watchPage(await touch.newPage());
+      await mobile.goto(
+        new URL(
+          '/?item=tags-input&tab=states&slice=roles&family=all&scheme=both&surface=overlay&vp=auto&scale=120&dir=rtl&freeze=1&raw=1',
+          origin,
+        ).href,
+      );
+      const board = mobile.locator(
+        '[data-wb-slice="roles"] .wb-artboard[data-theme="frost-light"]',
+      );
+      const field = board.locator('.tags-editor-proto[data-size="l"][data-variant="default"]');
+      const remove = field.getByRole('button', { name: 'Remove Research', exact: true });
+      await remove.waitFor({ timeout: 20_000 });
+      await mobile.evaluate(() => document.fonts.ready);
+      await assertLabelFits(field, 'Research');
+      await remove.tap();
+      await remove.waitFor({ state: 'detached' });
+      assert.ok(await field.getByRole('button', { name: 'Remove Design' }).isVisible());
+    } finally {
+      await touch.close();
+    }
+  },
+
+  'TagsInput renders its mixed-script tags in the offline workbench': async ({ page, origin }) => {
+    const route = new URL(
+      '/?item=tags-input&tab=states&block=overflow&family=soft&scheme=light&dir=rtl',
+      origin,
+    );
+    await page.goto(route.href, { waitUntil: 'domcontentloaded' });
+    const board = page.locator('section[data-wb-block="overflow"] .wb-artboard').first();
+    const words = ['العمارة', 'עברית', '東京'];
+    await board.getByText(words[2], { exact: true }).waitFor({ timeout: 20_000 });
+    await page.evaluate(() => document.fonts.ready);
+    for (const word of words) {
+      const missing = await board.getByText(word, { exact: true }).evaluate((label) => {
+        const canvas = document.createElement('canvas');
+        const context = canvas.getContext('2d');
+        const style = getComputedStyle(label);
+        context.font = style.fontWeight + ' 36px ' + style.fontFamily;
+        function draw(character) {
+          context.clearRect(0, 0, canvas.width, canvas.height);
+          context.fillText(character, 8, 50);
+          return canvas.toDataURL();
+        }
+        const missingGlyph = draw('\u0378');
+        return [...new Set(label.textContent)].filter(
+          (character) => draw(character) === missingGlyph,
+        );
+      });
+      assert.deepEqual(missing, [], 'Every character in ' + word + ' has a glyph');
+    }
+  },
+
+  'TagsInput keeps the draft text beside Add when the matrix scales down': async ({
+    page,
+    origin,
+  }) => {
+    await page.setViewportSize({ width: 1500, height: 950 });
+    const route = new URL(
+      '/?item=tags-input&tab=states&block=drafts&vp=1440&dir=rtl&scale=120&surface=overlay',
+      origin,
+    );
+    await page.goto(route.href, { waitUntil: 'domcontentloaded' });
+    const board = page.locator('section[data-wb-block="drafts"] .wb-artboard').first();
+    const field = board
+      .locator('.tags-editor-proto[data-size="l"][data-variant="default"]')
+      .first();
+    const input = field.getByRole('textbox');
+    await input.waitFor({ timeout: 20_000 });
+    await input.fill('One\nTwo\nThree\nSummer collection acquisitions — ' + 'W'.repeat(250));
+    await input.blur();
+    const textEdge = await input.evaluate((element) => {
+      const style = getComputedStyle(element);
+      return (
+        element.getBoundingClientRect().left +
+        (element.clientLeft + Number.parseFloat(style.paddingLeft)) * element.currentCSSZoom
+      );
+    });
+    const add = await field.getByRole('button', { name: 'Add tags' }).boundingBox();
+    assert.ok(
+      add && textEdge >= add.x + add.width - 1,
+      'The RTL editing area ends before the Add button',
+    );
+  },
+
+  'Select shows the remaining choices in a scaled narrow field': async ({ page, origin }) => {
+    await page.setViewportSize({ width: 1500, height: 900 });
+    const route = new URL(
+      '/?item=select&tab=states&block=summary&vp=1440&dir=rtl&scale=120',
+      origin,
+    );
+    await page.goto(route.href, { waitUntil: 'domcontentloaded' });
+    const field = page.getByRole('button', { name: /^Filter regions: Amsterdam/ }).first();
+    await field.waitFor({ timeout: 20_000 });
+    await page.evaluate(() => document.fonts.ready);
+    assert.match(await field.getAttribute('aria-label'), /Frankfurt.*London.*Stockholm/);
+    assert.equal(
+      await field.getByText('Amsterdam', { exact: true }).filter({ visible: true }).count(),
+      1,
+    );
+    assert.equal(await field.getByText('+4', { exact: true }).filter({ visible: true }).count(), 1);
+  },
+
+  'Select retry restores the shared catalog and keeps the saved choices': async ({
+    page,
+    origin,
+  }) => {
+    const route = new URL(
+      '/?item=select&tab=states&block=loading&family=frost&scheme=both',
+      origin,
+    );
+    await page.goto(route.href, { waitUntil: 'domcontentloaded' });
+    const frame = page.locator('section[data-wb-block="loading"]');
+    const boards = frame.locator('.wb-artboard');
+    const retry = boards.getByRole('button', { name: 'Try again' });
+    await retry.first().waitFor({ timeout: 20_000 });
+    assert.equal(await retry.count(), 2);
+    const fields = boards.getByRole('button', { name: 'Available regions: London' });
+    assert.equal(await fields.count(), 2);
+    await retry.first().press('Enter');
+    assert.equal(await retry.count(), 0, 'Retry recovers the catalog in both themes');
+    assert.equal(await frame.getByRole('combobox').inputValue(), 'ready');
+    assert.equal(await fields.count(), 2);
+    const list = boards.first().locator('[role="listbox"]:focus');
+    const selected = list.getByRole('option', { name: 'London', exact: true, selected: true });
+    const selectedId = await selected.getAttribute('id');
+    assert.ok(selectedId);
+    assert.equal(await list.getAttribute('aria-activedescendant'), selectedId);
+    await list.press('ArrowDown');
+    assert.notEqual(await list.getAttribute('aria-activedescendant'), selectedId);
+    assert.equal(await selected.count(), 1, 'Browsing another row keeps London selected');
+  },
+
+  'Date pickers select the touched day at the edge of an in-flow calendar on a phone': async ({
+    page,
+    origin,
+    watchPage,
+  }) => {
+    const touch = await page
+      .context()
+      .browser()
+      .newContext({
+        hasTouch: true,
+        isMobile: true,
+        viewport: { width: 360, height: 780 },
+      });
+    try {
+      const mobile = watchPage(await touch.newPage());
+      const view = {
+        tab: 'states',
+        family: 'frost',
+        scheme: 'light',
+        dir: 'rtl',
+        scale: '120',
+      };
+      for (const [item, block, expected] of [
+        ['date-picker', 'panels', '07/09/2026'],
+        ['date-picker', 'anatomy', '07/09/2026'],
+        ['date-range-picker', 'panels', '07/09/2026 – 13/09/2026'],
+      ]) {
+        const params = { ...view, item, block };
+        if (mobile.url() === 'about:blank') {
+          const route = new URL('/', origin);
+          route.search = new URLSearchParams(params).toString();
+          await mobile.goto(route.href, { waitUntil: 'domcontentloaded' });
+        } else {
+          await navigate(mobile, params);
+        }
+        const field = mobile
+          .locator(`[data-wb-block="${block}"] .wb-artboard .date-picker-proto`)
+          .first();
+        const seventh = field.locator('button[data-date="2026-09-07"]');
+        const eighth = field.locator('button[data-date="2026-09-08"]');
+        await seventh.waitFor({ timeout: 20_000 });
+        await mobile.evaluate(() => document.fonts.ready);
+        await seventh.scrollIntoViewIfNeeded();
+        const day = await seventh.boundingBox();
+        const neighbor = await eighth.boundingBox();
+        assert.ok(day && neighbor);
+        await mobile.touchscreen.tap(day.x + 1.5, day.y + day.height / 2);
+        const editor = field.getByRole('textbox');
+        if (item === 'date-range-picker') {
+          assert.equal(await editor.inputValue(), '');
+          await field.locator('button[data-date="2026-09-13"]').tap();
+        }
+        await seventh.waitFor({ state: 'detached' });
+        assert.equal(await editor.inputValue(), expected, item + '/' + block);
+        assert.ok(day.width >= 44 && day.height >= 44);
+        assert.ok(
+          neighbor.x + neighbor.width <= day.x + 0.01,
+          'The adjacent day has its own touch target',
+        );
+      }
+    } finally {
+      await touch.close();
+    }
+  },
+
+  'Table keeps document names readable on the second reference page at mobile width': async ({
+    page,
+    origin,
+    mount,
+  }) => {
+    await page.setViewportSize({ width: 360, height: 780 });
+    await page.goto(
+      new URL(
+        '/?item=table&tab=compositions&block=reference&family=pixel&scheme=light&surface=overlay&scale=120&dir=rtl&raw=1',
+        origin,
+      ).href,
+      { waitUntil: 'domcontentloaded' },
+    );
+    await checkReferenceNames(page);
+
+    await mount('recovery-references', { theme: 'soft-light', textScale: 120, direction: 'rtl' });
+    const host = page.getByRole('main');
+    await host.evaluate((node) => {
+      node.style.inlineSize = '250px';
+    });
+    await checkReferenceNames(page);
+    await host.evaluate((node) => node.style.removeProperty('inline-size'));
+    const table = page.getByRole('table', { name: 'Recovery references' });
+    const horizontalOverflow = () =>
+      table.evaluate((node) => node.parentElement.scrollWidth - node.parentElement.clientWidth);
+    assert.equal(await horizontalOverflow(), 0, 'The revised date column fits the mobile document');
+
+    await page.setViewportSize({ width: 840, height: 780 });
+    await host.evaluate((node) => {
+      node.style.display = 'flex';
+    });
+    await page.getByRole('button', { name: 'Previous page', exact: true }).press('Enter');
+    assert.equal(await horizontalOverflow(), 0, 'The reference table fits its flex row');
+  },
+
+  'SegmentedControl keeps the submitted frequency when a native reset is canceled': async ({
+    page,
+    origin,
+  }) => {
+    await page.goto(
+      new URL('/?item=segmented-control&tab=states&block=field&family=soft&scheme=light', origin)
+        .href,
+      { waitUntil: 'domcontentloaded' },
+    );
+    const form = page.locator('[data-wb-block="field"] .wb-artboard form');
+    const weekly = form.getByRole('radio', { name: 'Weekly', exact: true });
+    await weekly.waitFor({ timeout: 20_000 });
+    await weekly.press('Space');
+    await form.locator('button[type="submit"]').press('Enter');
+    const receipt = form.getByRole('status').filter({ hasText: /weekly/i });
+    await receipt.waitFor();
+    await page.evaluate(() =>
+      document.addEventListener('reset', (event) => event.preventDefault(), { once: true }),
+    );
+    const reset = form.locator('button[type="reset"]');
+    await reset.press('Enter');
+    await page.evaluate(
+      () => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))),
+    );
+    assert.equal(await weekly.isChecked(), true);
+    assert.equal(await receipt.count(), 1, 'A canceled reset preserves the submitted frequency');
+
+    await reset.press('Enter');
+    await receipt.waitFor({ state: 'hidden' });
+    assert.equal(await weekly.isChecked(), false);
+
+    await form.evaluate(async (node) => {
+      node.reset();
+      node.requestSubmit();
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+    const daily = form.getByRole('radio', { name: 'Daily', exact: true });
+    assert.ok(await daily.evaluate((input) => input === document.activeElement));
+    const group = form.getByRole('radiogroup', { description: /Choose a delivery frequency/ });
+    assert.equal(
+      await group.count(),
+      1,
+      'The later validation message describes the focused group',
+    );
+  },
+
   'FileInput submits dropped bytes and follows the actual form owner on reset': async ({
     page,
     mount,

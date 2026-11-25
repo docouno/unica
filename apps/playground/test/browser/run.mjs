@@ -69,22 +69,25 @@ function hoverPreviewCopy(root) {
 async function runScenario(t, browser, origin, renderFixture, scenario) {
   const context = await browser.newContext({ viewport: { width: 800, height: 600 } });
   t.after(() => context.close());
-  const page = await context.newPage();
+  const errors = [];
+  function watchPage(page) {
+    page.on('pageerror', (error) => errors.push(error.message));
+    page.on('console', (message) => {
+      if (message.type() === 'error') {
+        errors.push(message.text());
+      }
+    });
+    page.on('response', (response) => {
+      if (response.status() >= 400) {
+        errors.push(`HTTP ${response.status()} from ${response.url()}`);
+      }
+    });
+    return page;
+  }
+
+  const page = watchPage(await context.newPage());
   page.setDefaultTimeout(5000);
   page.setDefaultNavigationTimeout(10000);
-
-  const errors = [];
-  page.on('pageerror', (error) => errors.push(error.message));
-  page.on('console', (message) => {
-    if (message.type() === 'error') {
-      errors.push(message.text());
-    }
-  });
-  page.on('response', (response) => {
-    if (response.status() >= 400) {
-      errors.push(`HTTP ${response.status()} from ${response.url()}`);
-    }
-  });
 
   async function mount(
     fixture,
@@ -113,7 +116,7 @@ async function runScenario(t, browser, origin, renderFixture, scenario) {
   }
 
   try {
-    await scenario({ page, mount, renderFixture });
+    await scenario({ page, mount, renderFixture, origin, watchPage });
   } catch (error) {
     if (!errors.length) {
       throw error;

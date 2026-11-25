@@ -34,6 +34,20 @@ const scenarios = {
     await options.waitFor();
     assert.equal(await plain.getAttribute('role'), 'presentation');
     await assertFocused(options);
+    const accessibility = await page.context().newCDPSession(page);
+    try {
+      const { nodes } = await accessibility.send('Accessibility.getFullAXTree');
+      const choices = nodes.filter((node) => node.role?.value === 'option');
+      assert.deepEqual(
+        choices.map((option) => [option.name.value, option.description?.value]),
+        [
+          ['Viewer', undefined],
+          ['Editor', 'Edit pages and publish changes'],
+        ],
+      );
+    } finally {
+      await accessibility.detach();
+    }
     await page.keyboard.press('ArrowDown');
     await page.keyboard.press('Enter');
     await plain.waitFor({ state: 'hidden' });

@@ -327,8 +327,8 @@ function SuggestionMessage({
     <div className="suggestion-notice-proto" role="status" data-warning={warning || undefined}>
       <Icon usage="slot" icon={icon} />
       <div className="suggestion-notice-copy-proto">
-        <strong>{title}</strong>
-        {detail && <span>{detail}</span>}
+        <strong>{typeof title === 'string' ? <bdi>{title}</bdi> : title}</strong>
+        {detail && <span>{typeof detail === 'string' ? <bdi>{detail}</bdi> : detail}</span>}
       </div>
     </div>
   );
@@ -351,7 +351,7 @@ function SuggestionField({
   previewActive,
   size = 'm',
   width = 'full',
-  placeholder = 'Search options…',
+  placeholder = 'Search options',
   clearable = true,
   iconLeft,
   disabled,
@@ -402,18 +402,66 @@ function SuggestionField({
     row,
   } = useSuggestionPlacement(open && !previewOpen && !unavailable, close);
   const focusInput = (): void => input.current?.focus({ preventScroll: true });
+  const pendingResets = useRef<Event[]>([]);
+  useLayoutEffect(() => {
+    const editor = input.current;
+    const form = editor?.form;
+    if (catalog || !editor || !form) {
+      return;
+    }
+    const resets = pendingResets.current;
+    let timer: ReturnType<typeof setTimeout>;
+    const syncReset = (event: Event): void => {
+      if (!event.isTrusted || event.target !== form) {
+        return;
+      }
+      resets.push(event);
+      clearTimeout(timer);
+      // A late cancellation cannot undo an earlier reset that already restored the input.
+      timer = setTimeout(() => {
+        if (resets.some((reset) => !reset.defaultPrevented)) {
+          setText(editor.value);
+          setRequested(undefined);
+          setOpen(false);
+        }
+        resets.length = 0;
+      }, 0);
+    };
+    form.addEventListener('reset', syncReset);
+    return () => {
+      clearTimeout(timer);
+      resets.length = 0;
+      form.removeEventListener('reset', syncReset);
+    };
+  }, [catalog, input]);
+
   const changeText = (next: string): void => {
+    pendingResets.current.length = 0;
     setText(next);
     onTextChange?.(next);
   };
+  const writeText = (next: string): void => {
+    const editor = input.current;
+    const view = editor?.ownerDocument.defaultView;
+    if (!catalog && editor && view && editor.value !== next) {
+      // Use the same input event path as typing so the native field keeps its reset value.
+      const descriptor = Object.getOwnPropertyDescriptor(view.HTMLInputElement.prototype, 'value');
+      if (descriptor?.set) {
+        descriptor.set.call(editor, next);
+        editor.dispatchEvent(new view.Event('input', { bubbles: true }));
+        return;
+      }
+    }
+    changeText(next);
+  };
   const pick = (option: Suggestion): void => {
-    close();
     if (catalog) {
       setSelection(option);
       setEditing(false);
       onSelectionChange?.(option);
     }
-    changeText(catalog ? option.label : (option.insertText ?? option.label));
+    writeText(catalog ? option.label : (option.insertText ?? option.label));
+    close();
     onSuggestion?.(option);
     focusInput();
   };
@@ -438,7 +486,7 @@ function SuggestionField({
     setSelection(undefined);
     setEditing(false);
     if (text) {
-      changeText('');
+      writeText('');
     }
     if (confirmed) {
       onSelectionChange?.(null);
@@ -589,7 +637,11 @@ function SuggestionField({
       <div className="choice-list-frame-proto suggestion-frame-proto" data-size={size}>
         {(browsingCopy || replacement) && (
           <div className="suggestion-panel-recovery-proto">
-            {browsingCopy && <span id={recoveryId}>Choose a result.</span>}
+            {browsingCopy && (
+              <span id={recoveryId}>
+                <bdi>Choose a result.</bdi>
+              </span>
+            )}
             {!browsingCopy && replacement && <span>Selection pending</span>}
             {replacement && <RestoreButton inPanel onClick={restore} />}
           </div>
@@ -664,7 +716,9 @@ function SuggestionField({
             disabled={disabled}
             readOnly={readOnly}
             iconLeft={iconLeft ?? undefined}
-            value={text}
+            value={catalog ? text : undefined}
+            defaultValue={catalog ? undefined : initialText}
+            dir="auto"
             role="combobox"
             autoComplete="off"
             aria-autocomplete="list"
@@ -767,7 +821,11 @@ function SuggestionField({
       </FormField>
       {unconfirmed && !unavailable && !shown && (recoveryCopy || replacement) && (
         <div className="suggestion-recovery-proto">
-          {recoveryCopy && <span id={recoveryId}>{recoveryCopy}</span>}
+          {recoveryCopy && (
+            <span id={recoveryId}>
+              <bdi>{recoveryCopy}</bdi>
+            </span>
+          )}
           {replacement && <RestoreButton onClick={restore} />}
         </div>
       )}
@@ -798,7 +856,7 @@ export function Combobox({
 export function Autocomplete({
   defaultValue,
   browsable = false,
-  placeholder = 'Enter text…',
+  placeholder = 'Enter text',
   ...props
 }: AutocompleteProps): ReactElement {
   return (

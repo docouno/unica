@@ -1,581 +1,199 @@
-import { Alert, AlertDescription, AlertTitle, Input, Textarea } from '@docouno/unica';
-import { FormField } from '../../prototypes/form-field/form-field.proto.js';
-import { useId, useRef, useState } from 'react';
-import type { ReactElement } from 'react';
+import { DialogStudy } from '../../prototypes/dialog/dialog.examples.js';
 import { defineComponent } from '../../workbench/types.js';
-import { Button } from '@docouno/unica';
-import { CheckboxCard } from '../../prototypes/choice-card/choice-card.proto.js';
-import { Select } from '../../prototypes/select/select.proto.js';
-import { ToastCard } from '../../prototypes/toast/toast.proto.js';
-import {
-  DialogSizeControls,
-  DialogStudy,
-  StudySelect,
-} from '../../prototypes/dialog/dialog.examples.js';
-import {
-  Modal,
-  ModalBody,
-  ModalClose,
-  ModalContent,
-  ModalDescription,
-  ModalFooter,
-  ModalHeader,
-  ModalTitle,
-  ModalTrigger,
-} from '../../prototypes/dialog/dialog.proto.js';
-import type { DialogSize } from '../../prototypes/dialog/dialog.proto.js';
+import { choice, eventProp, toggle } from '../control-props.js';
+import { DeleteExport } from './delete-export.js';
+import confirmationSource from './delete-export.tsx?raw';
+import { EditProject } from './edit-project.js';
+import { ExportDetails } from './export-details.js';
+import detailsSource from './export-details.tsx?raw';
+import { ReleaseReview } from './release-review.js';
+import releaseSource from './release-review.tsx?raw';
 
-const projectName = 'Editorial archive';
-const roles = [
-  { value: 'editor', label: 'Editor', description: 'Edit and publish project content' },
-  { value: 'reviewer', label: 'Reviewer', description: 'Read and leave feedback' },
-  { value: 'viewer', label: 'Viewer', description: 'Read project content' },
-];
-
-function EditProject({
-  overflow = false,
-  guarded = false,
-}: {
-  readonly overflow?: boolean;
-  readonly guarded?: boolean;
-}): ReactElement {
-  const formId = useId();
-  const descriptionId = useId();
-  const instructionsId = useId();
-  const nameRef = useRef<HTMLInputElement>(null);
-  const touchLaunch = useRef(false);
-  const cancelRef = useRef<HTMLButtonElement>(null);
-  const lastField = useRef<HTMLElement>(null);
-  const [open, setOpen] = useState(true);
-  const [edited, setEdited] = useState(false);
-  const [focusOnOpen, setFocusOnOpen] = useState(false);
-  const [confirm, setConfirm] = useState(false);
-  const [size, setSize] = useState<DialogSize>('m');
-  const [width, setWidth] = useState<DialogSize>('m');
-  const [height, setHeight] = useState<'roomy' | 'short' | 'keyboard'>('roomy');
-  const [status, setStatus] = useState<'ready' | 'invalid' | 'pending' | 'failed'>('ready');
-  const [saved, setSaved] = useState(false);
-  const requestClose = (): void => {
-    if (guarded && edited) {
-      const focused = document.activeElement;
-      lastField.current = focused instanceof HTMLElement ? focused : nameRef.current;
-      setConfirm(true);
-    } else {
-      setOpen(false);
-    }
-  };
-  const changeOpen = (nextOpen: boolean): void => {
-    if (nextOpen) {
-      setFocusOnOpen(!touchLaunch.current && !overflow);
-      setSaved(false);
-      setOpen(true);
-    } else {
-      requestClose();
-    }
-  };
-  const complete = (): void => {
-    setEdited(false);
-    setOpen(false);
-    setSaved(true);
-  };
-  const controls = overflow ? (
-    <StudySelect
-      label="Available height"
-      value={height}
-      options={[
-        ['roomy', 'Reading area'],
-        ['short', 'Short window'],
-        ['keyboard', 'Keyboard inset'],
-      ]}
-      onChange={setHeight}
-    />
-  ) : guarded ? undefined : (
-    <>
-      <DialogSizeControls
-        size={size}
-        width={width}
-        onSizeChange={setSize}
-        onWidthChange={setWidth}
-      />
-      <StudySelect
-        label="Save state"
-        value={status}
-        options={[
-          ['ready', 'Ready'],
-          ['invalid', 'Field error'],
-          ['pending', 'Saving'],
-          ['failed', 'Save failed'],
-        ]}
-        onChange={setStatus}
-      />
-    </>
-  );
-  return (
-    <DialogStudy
-      controls={controls}
-      height={
-        height === 'keyboard'
-          ? 245
-          : height === 'short'
-            ? 360
-            : overflow
-              ? 494
-              : guarded
-                ? 520
-                : 565
-      }
-    >
-      <Modal open={open} onOpenChange={changeOpen}>
-        <div inert={open}>
-          <ModalTrigger
-            variant="secondary"
-            tone="neutral"
-            onPointerDown={(event) => {
-              touchLaunch.current = event.pointerType === 'touch';
-            }}
-            onKeyDown={() => {
-              touchLaunch.current = false;
-            }}
-          >
-            Edit project
-          </ModalTrigger>
-        </div>
-        <ModalContent
-          size={size}
-          width={width}
-          described
-          inactive={confirm}
-          initialFocus={focusOnOpen ? nameRef : undefined}
-        >
-          <ModalHeader closeLabel="Close project editor">
-            <ModalTitle>
-              {overflow ? 'Project access and publishing settings' : 'Edit project'}
-            </ModalTitle>
-            <ModalDescription>
-              {guarded
-                ? 'Publishing details for the editorial archive.'
-                : 'Update the information teammates see in the project directory.'}
-            </ModalDescription>
-          </ModalHeader>
-          <ModalBody>
-            <form
-              className="dialog-study-form"
-              id={formId}
-              onChange={() => setEdited(true)}
-              onSubmit={(event) => {
-                event.preventDefault();
-                if (status === 'pending') {
-                  return;
-                }
-                if (status === 'invalid') {
-                  nameRef.current?.focus();
-                } else {
-                  complete();
-                }
-              }}
-            >
-              {status === 'failed' && (
-                <Alert status="danger" size="s">
-                  <AlertTitle>Changes couldn’t be saved</AlertTitle>
-                  <AlertDescription>Your edits are still here. Try saving again.</AlertDescription>
-                </Alert>
-              )}
-              <div className="dialog-study-form-section">
-                <FormField
-                  htmlFor={`${formId}-project`}
-                  label="Project name"
-                  required
-                  status={status === 'invalid' ? 'danger' : 'neutral'}
-                  message={status === 'invalid' ? 'A project already uses this name.' : undefined}
-                  messageId={`${formId}-project-message`}
-                  feedbackIcon={false}
-                >
-                  <Input
-                    id={`${formId}-project`}
-                    ref={nameRef}
-                    defaultValue={projectName}
-                    required
-                    status={status === 'invalid' ? 'danger' : undefined}
-                    aria-describedby={
-                      status === 'invalid' ? `${formId}-project-message` : undefined
-                    }
-                  />
-                </FormField>
-                <FormField label="Description" htmlFor={descriptionId}>
-                  <Textarea
-                    id={descriptionId}
-                    defaultValue="Source files and review notes for the quarterly editorial release."
-                    rows={2}
-                  />
-                </FormField>
-              </div>
-              {!guarded && (
-                <div className="dialog-study-fields">
-                  <FormField htmlFor={`${formId}-owner`} label="Owner">
-                    <Input id={`${formId}-owner`} defaultValue="Editorial team" />
-                  </FormField>
-                  <Select label="Default access" options={roles} defaultValue="reviewer" />
-                </div>
-              )}
-              {overflow && (
-                <>
-                  <div className="dialog-study-form-section">
-                    <h3>Publishing</h3>
-                    <CheckboxCard
-                      label="Include in search"
-                      defaultChecked
-                      description="People with access can find this project in search."
-                    />
-                    <CheckboxCard
-                      label="Notify reviewers on publication"
-                      description="Send a notification when changes go live."
-                    />
-                  </div>
-                  <div className="dialog-study-form-section">
-                    <h3>Review</h3>
-                    <FormField htmlFor={`${formId}-review-owner`} label="Review owner">
-                      <Input id={`${formId}-review-owner`} defaultValue="Content operations" />
-                    </FormField>
-                    <FormField label="Review instructions" htmlFor={instructionsId}>
-                      <Textarea
-                        id={instructionsId}
-                        rows={3}
-                        defaultValue="Verify the source credits, then confirm that the release notes match the published changes."
-                      />
-                    </FormField>
-                  </div>
-                </>
-              )}
-            </form>
-          </ModalBody>
-          <ModalFooter>
-            <ModalClose>Cancel</ModalClose>
-            <Button form={formId} type="submit" loading={status === 'pending'}>
-              {status === 'failed' ? 'Try again' : 'Save changes'}
-            </Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
-      <Modal open={confirm} onOpenChange={setConfirm}>
-        <ModalContent
-          role="alertdialog"
-          width="s"
-          size="s"
-          described
-          className="dialog-discard-confirmation"
-          initialFocus={cancelRef}
-          returnFocus={lastField}
-        >
-          <ModalHeader closeLabel={false}>
-            <ModalTitle>Discard unsaved changes?</ModalTitle>
-            <ModalDescription>Your edits to the editorial archive will be lost.</ModalDescription>
-          </ModalHeader>
-          <ModalFooter>
-            <ModalClose ref={cancelRef}>Keep editing</ModalClose>
-            <Button
-              tone="danger"
-              onClick={() => {
-                lastField.current = null;
-                setConfirm(false);
-                setEdited(false);
-                setOpen(false);
-              }}
-            >
-              Discard changes
-            </Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
-      <span className="dialog-study-announcement" role="status">
-        {saved ? 'Project updated' : ''}
-      </span>
-      {saved && (
-        <div className="dialog-study-notice">
-          <ToastCard status="success" title="Project updated" onDismiss={() => setSaved(false)} />
-        </div>
-      )}
-    </DialogStudy>
-  );
-}
-
-function DeleteExport(): ReactElement {
-  const [open, setOpen] = useState(true);
-  const [deleted, setDeleted] = useState(false);
-  const [focusOnOpen, setFocusOnOpen] = useState(false);
-  const cancelRef = useRef<HTMLButtonElement>(null);
-  return (
-    <DialogStudy height={340}>
-      <Modal open={open} onOpenChange={setOpen}>
-        <div inert={open}>
-          <ModalTrigger
-            variant="secondary"
-            tone="neutral"
-            onClick={() => {
-              setFocusOnOpen(true);
-              setDeleted(false);
-            }}
-          >
-            Review export deletion
-          </ModalTrigger>
-        </div>
-        <ModalContent
-          role="alertdialog"
-          width="s"
-          size="s"
-          described
-          initialFocus={focusOnOpen ? cancelRef : undefined}
-        >
-          <ModalHeader closeLabel={false}>
-            <ModalTitle>Delete this export?</ModalTitle>
-            <ModalDescription>
-              The download link for the November report will stop working. The original report will
-              remain available.
-            </ModalDescription>
-          </ModalHeader>
-          <ModalFooter>
-            <ModalClose ref={cancelRef}>Cancel</ModalClose>
-            <Button
-              tone="danger"
-              onClick={() => {
-                setDeleted(true);
-                setOpen(false);
-              }}
-            >
-              Delete export
-            </Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
-      <span className="dialog-study-announcement" role="status">
-        {deleted ? 'Export deleted' : ''}
-      </span>
-      {deleted && (
-        <div className="dialog-study-notice">
-          <ToastCard status="success" title="Export deleted" onDismiss={() => setDeleted(false)} />
-        </div>
-      )}
-    </DialogStudy>
-  );
-}
-
-function ReadOnly(): ReactElement {
-  const [open, setOpen] = useState(true);
-  const [notified, setNotified] = useState(true);
-  const titleRef = useRef<HTMLHeadingElement>(null);
-  return (
-    <DialogStudy height={500}>
-      <Modal open={open} onOpenChange={setOpen}>
-        <div inert={open}>
-          <ModalTrigger variant="secondary" tone="neutral">
-            View export details
-          </ModalTrigger>
-        </div>
-        <ModalContent
-          width="s"
-          described
-          dismissOnBackdrop
-          notification={
-            notified && (
-              <ToastCard
-                status="success"
-                title="Export ready"
-                onDismiss={() => {
-                  setNotified(false);
-                  titleRef.current?.focus({ preventScroll: true });
-                }}
-              >
-                October report
-              </ToastCard>
-            )
-          }
-        >
-          <ModalHeader closeLabel="Close export details">
-            <ModalTitle ref={titleRef} tabIndex={-1}>
-              Export details
-            </ModalTitle>
-            <ModalDescription>November report</ModalDescription>
-          </ModalHeader>
-          <ModalBody>
-            <dl className="dialog-study-facts">
-              <div>
-                <dt>Format</dt>
-                <dd>PDF document</dd>
-              </div>
-              <div>
-                <dt>Created</dt>
-                <dd>November 12, 2026</dd>
-              </div>
-              <div>
-                <dt>Access</dt>
-                <dd>People with the link</dd>
-              </div>
-            </dl>
-          </ModalBody>
-        </ModalContent>
-      </Modal>
-    </DialogStudy>
-  );
-}
+const sizes = ['s', 'm', 'l'] as const;
+const editableReview = releaseSource
+  .replaceAll('../../prototypes/', './prototypes/')
+  .replace('export function ReleaseReview', 'function ReleaseReview');
 
 export default defineComponent({
   id: 'modal',
   title: 'Modal',
   category: 'Overlays',
   status: 'Proto',
-  summary:
-    'A centered surface for one focused task. See Invite & Access under Folio for a denser form.',
+  summary: 'A centered panel for a focused task, a decision or read-only details.',
   defaultSurface: 'overlay',
   props: {
-    size: {
-      kind: 'enum',
-      group: 'ModalContent',
-      default: 'm',
-      description: 'Panel density.',
-      choices: [{ value: 's' }, { value: 'm' }, { value: 'l' }],
-    },
-    width: {
-      kind: 'enum',
-      group: 'ModalContent',
-      default: 'm',
-      description: 'Width ceiling for the panel.',
-      choices: [{ value: 's' }, { value: 'm' }, { value: 'l' }],
-    },
+    size: choice(
+      'Geometry',
+      'ModalContent density. Controls panel insets and spacing.',
+      sizes,
+      'm',
+    ),
+    width: choice(
+      'Geometry',
+      'ModalContent width ceiling. S, M and L use 24, 36 and 52rem within the available workspace.',
+      sizes,
+      'm',
+    ),
     presentation: {
-      kind: 'enum',
-      group: 'Example',
-      default: 'live',
-      description: 'Launch the panel or inspect a pinned comparison.',
+      ...choice(
+        'Host',
+        'Launch the panel or pin it for inspection. The standalone example opens from its trigger.',
+        ['live', 'pinned'],
+        'live',
+      ),
       demo: true,
-      choices: [{ value: 'live' }, { value: 'pinned' }],
     },
-    dismissOnBackdrop: {
-      kind: 'boolean',
-      group: 'Behavior',
-      default: false,
-      description: 'Allow clicking the scrim to dismiss the panel.',
-    },
-    onOpenChange: {
-      kind: 'action',
-      group: 'Events',
-      description: 'Reports whether the panel opens or closes.',
-      code: 'handleOpenChange',
-    },
+    dismissOnBackdrop: toggle(
+      'Interaction',
+      'Dismiss ModalContent when a primary press and release both land on the backdrop.',
+    ),
+    onOpenChange: eventProp(
+      'Modal reports a request to open or close. The owner decides whether to accept it.',
+      '(open) => console.log(open)',
+      '(open: boolean) => void',
+    ),
   },
-  code: (values) => `<Modal open={open} onOpenChange={handleOpenChange}>
-  <ModalTrigger>Review release</ModalTrigger>
-  <ModalContent described${values.size === 'm' ? '' : ` size="${values.size}"`}${values.width === 'm' ? '' : ` width="${values.width}"`}${values.dismissOnBackdrop ? ' dismissOnBackdrop' : ''}>
-    <ModalHeader>
-      <ModalTitle>Publish release</ModalTitle>
-      <ModalDescription>Publish this release to the workspace when you are ready.</ModalDescription>
-    </ModalHeader>
-    <ModalFooter><ModalClose>Done</ModalClose></ModalFooter>
-  </ModalContent>
-</Modal>`,
-  render: function ModalSubject({ values, ctx }) {
-    const [open, setOpen] = useState(false);
-    const pinned = values.presentation === 'pinned';
-    return (
-      <DialogStudy height={320}>
-        <Modal
-          open={pinned || open}
-          onOpenChange={(next) => {
-            setOpen(next);
-            ctx.action('onOpenChange')(next);
-          }}
-        >
-          {!pinned && (
-            <div className="dialog-drawer-launch" inert={open}>
-              <ModalTrigger {...(!open ? ctx.subject : {})} variant="secondary">
-                Review release
-              </ModalTrigger>
-            </div>
-          )}
-          <ModalContent
-            {...ctx.subject}
-            inactive={pinned}
-            described
-            size={values.size}
-            width={values.width}
-            dismissOnBackdrop={values.dismissOnBackdrop}
-          >
-            <ModalHeader>
-              <ModalTitle>Publish release</ModalTitle>
-              <ModalDescription>
-                Publish this release to the workspace when you are ready.
-              </ModalDescription>
-            </ModalHeader>
-            <ModalFooter>
-              <ModalClose>Done</ModalClose>
-            </ModalFooter>
-          </ModalContent>
-        </Modal>
-      </DialogStudy>
-    );
-  },
-  matrixViews: [
+  render: ({ values, ctx }) => (
+    <DialogStudy height={320}>
+      <ReleaseReview
+        contentProps={{
+          size: values.size,
+          width: values.width,
+          dismissOnBackdrop: values.dismissOnBackdrop,
+        }}
+        pinned={values.presentation === 'pinned'}
+        subject={ctx.subject}
+        onOpenChange={ctx.action('onOpenChange')}
+      />
+    </DialogStudy>
+  ),
+  code: ({ size, width, dismissOnBackdrop }) =>
+    `${editableReview}
+
+export function PreviewRelease() {
+  return <ReleaseReview contentProps={${JSON.stringify({ size, width, dismissOnBackdrop })}} />;
+}`,
+  states: [
     {
       id: 'dimensions',
       title: 'Panel dimensions',
-      caption: 'Pinned inline comparison. Use Playground to launch and dismiss the panel.',
+      caption:
+        'Each width group shows compact, regular and spacious insets. Panels stop at the workspace boundary. These comparisons stay open. Use Playground to launch and dismiss a panel.',
       rows: 'size',
-      cols: 'width',
+      group: 'width',
       fixed: { presentation: 'pinned' },
     },
   ],
   cases: [
     {
       id: 'editor',
-      title: 'Editor · Width, density and save states',
+      title: 'Project editor and save feedback',
       overlayStage: true,
       kind: 'behavior',
-      render: () => <EditProject />,
+      mode: 'live',
+      reset: true,
+      controls: {
+        width: {
+          kind: 'enum',
+          label: 'Width',
+          default: 'm',
+          choices: [
+            { value: 's', label: 'S · 24rem' },
+            { value: 'm', label: 'M · 36rem' },
+            { value: 'l', label: 'L · 52rem' },
+          ],
+        },
+        size: {
+          kind: 'enum',
+          label: 'Density',
+          default: 'm',
+          choices: [
+            { value: 's', label: 'Compact' },
+            { value: 'm', label: 'Regular' },
+            { value: 'l', label: 'Spacious' },
+          ],
+        },
+        status: {
+          kind: 'enum',
+          label: 'Save state',
+          default: 'ready',
+          choices: [
+            { value: 'ready', label: 'Ready' },
+            { value: 'invalid', label: 'Field error' },
+            { value: 'pending', label: 'Saving' },
+            { value: 'failed', label: 'Save failed' },
+          ],
+        },
+      },
+      caption:
+        'Edit the project and save to restore the accepted values on the next opening. Field error marks the rejected name until you edit it. Saving holds submission. Try again accepts the retained draft and returns the save state to Ready.',
+      render: EditProject,
     },
     {
       id: 'overflow',
-      title: 'Overflow · Body scroll and short window',
+      title: 'Long form and available height',
       overlayStage: true,
       kind: 'content',
-      render: () => <EditProject overflow />,
+      mode: 'live',
+      reset: true,
+      controls: {
+        height: {
+          kind: 'enum',
+          label: 'Available height',
+          default: 'roomy',
+          choices: [
+            { value: 'roomy', label: 'Reading area' },
+            { value: 'short', label: 'Short window' },
+            { value: 'keyboard', label: 'Keyboard inset' },
+          ],
+        },
+      },
+      caption:
+        'Scroll to publishing and review settings. When less than 96px of reading space remains, the whole panel scrolls so its fields and save action stay reachable.',
+      render: ({ ctx }) => <EditProject ctx={ctx} overflow />,
     },
     {
       id: 'guard',
-      title: 'Unsaved changes · Edit before closing',
+      title: 'Unsaved changes',
       overlayStage: true,
       kind: 'behavior',
-      render: () => <EditProject guarded />,
+      mode: 'live',
+      reset: true,
+      caption:
+        'Change the name or description and request close. Keep editing returns to the draft. Discard changes restores the last saved project. Returning both fields to their saved values allows an immediate close.',
+      render: ({ ctx }) => <EditProject ctx={ctx} guarded />,
     },
   ],
-  usage: [
+  compositions: [
     {
       id: 'confirmation',
       title: 'Destructive confirmation',
       overlayStage: true,
-      code: `<Modal open={open} onOpenChange={setOpen}>
-  <ModalTrigger>Review export deletion</ModalTrigger>
-  <ModalContent role="alertdialog" size="s" width="s" described initialFocus={cancelRef}>
-    <ModalHeader closeLabel={false}><ModalTitle>Delete this export?</ModalTitle>
-      <ModalDescription>{description}</ModalDescription>
-    </ModalHeader>
-    <ModalFooter>
-      <ModalClose ref={cancelRef}>Cancel</ModalClose>
-      <Button tone="danger" onClick={deleteExport}>Delete export</Button>
-    </ModalFooter>
-  </ModalContent>
-</Modal>`,
-      render: () => <DeleteExport />,
+      mode: 'live',
+      reset: true,
+      caption:
+        'Cancel keeps the November export available. Delete export marks it as deleted and moves focus to the result. Reset restores the export.',
+      render: ({ ctx }) => (
+        <DialogStudy height={340}>
+          <DeleteExport subject={ctx.subject} />
+        </DialogStudy>
+      ),
+      code: confirmationSource.replaceAll('../../prototypes/', './prototypes/'),
     },
     {
       id: 'details',
-      title: 'Read-only details · Notification above the active panel',
+      title: 'Export details and notification',
       overlayStage: true,
-      code: `<Modal open={open} onOpenChange={setOpen}>
-  <ModalContent described notification={saved && <ToastCard status="success" title="Link copied" />}>
-    <ModalHeader><ModalTitle>Export details</ModalTitle></ModalHeader>
-    <ModalBody>{details}</ModalBody>
-    <ModalFooter><Button onClick={copyLink}>Copy link</Button></ModalFooter>
-  </ModalContent>
-</Modal>`,
-      render: () => <ReadOnly />,
+      mode: 'live',
+      reset: true,
+      caption:
+        'Inspect the November export and its ready notification. Dismiss the notice to return focus to the title. Close the panel or press its backdrop to return to the trigger.',
+      render: ({ ctx }) => (
+        <DialogStudy height={500}>
+          <ExportDetails subject={ctx.subject} />
+        </DialogStudy>
+      ),
+      code: detailsSource.replaceAll('../../prototypes/', './prototypes/'),
     },
   ],
 });

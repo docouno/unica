@@ -1,0 +1,3 @@
+tr[data-wb-result-row] > td:has([data-surface='overlay'] .select-trigger-proto[data-wb-subject]) {
+  min-inline-size: 16.5rem;
+}

@@ -1,413 +1,25 @@
-import { size, disabled, readOnly, choice, required, eventProp } from '../control-props.js';
-import { useId, useState } from 'react';
-import type { ReactElement, ReactNode } from 'react';
-import {
-  ListIcon,
-  SquaresFourIcon,
-  ColumnsIcon,
-  SunIcon,
-  MoonIcon,
-  DesktopIcon,
-} from '@phosphor-icons/react';
-import { Button, Input, SegmentedControl } from '@docouno/unica';
+import { useId } from 'react';
+import { SegmentedControl, Stack, Text } from '@docouno/unica';
 import { defineComponent } from '../../workbench/types.js';
-import type { SegmentedControlOption } from '@docouno/unica';
-import './segmented-control.examples.css';
+import { size, disabled, readOnly, choice, required, eventProp } from '../control-props.js';
+import { previewProps } from '../preview-code.js';
+import { withOverlaySurface } from '../shared/with-overlay-surface.js';
+import { periods, layouts, glyphLayouts, catalogCode } from './segmented-control.options.js';
+import {
+  LiveExample,
+  SizeExamples,
+  LayoutExamples,
+  StateExamples,
+  AvailabilityExamples,
+  FieldExample,
+  OverflowExamples,
+  OverlayExample,
+} from './segmented-control.examples.js';
+import { ViewToolbar } from './view-toolbar.js';
+import toolbarSource from './view-toolbar.tsx?raw';
 
-const periods: readonly SegmentedControlOption[] = [
-  { value: 'day', label: 'Day' },
-  { value: 'week', label: 'Week' },
-  { value: 'month', label: 'Month' },
-];
-
-const layouts = [
-  { value: 'list', label: 'List', iconLeft: ListIcon },
-  { value: 'grid', label: 'Grid', iconLeft: SquaresFourIcon },
-  { value: 'columns', label: 'Columns', iconLeft: ColumnsIcon },
-] as const satisfies readonly SegmentedControlOption[];
-
-const glyphLayouts = layouts.map((item) => ({ ...item, iconOnly: true as const }));
-
-const settings = [
-  { value: 'light', label: 'Light', iconLeft: SunIcon },
-  { value: 'dark', label: 'Dark', iconLeft: MoonIcon },
-  { value: 'system', label: 'System', iconLeft: DesktopIcon },
-] as const satisfies readonly SegmentedControlOption[];
-
-const frequencies: readonly SegmentedControlOption[] = [
-  { value: 'daily', label: 'Daily' },
-  { value: 'weekly', label: 'Weekly' },
-  { value: 'monthly', label: 'Monthly' },
-];
-
-function Example({
-  label,
-  children,
-  note,
-}: {
-  readonly label: string;
-  readonly children: ReactNode;
-  readonly note?: string;
-}): ReactElement {
-  return (
-    <div className="segment-example">
-      <div className="segment-example-label">{label}</div>
-      {children}
-      {note && <p className="segment-example-note">{note}</p>}
-    </div>
-  );
-}
-
-function LiveExample(): ReactElement {
-  const [value, setValue] = useState('week');
-  const [mode, setMode] = useState('list');
-  return (
-    <div className="segment-examples">
-      <Example
-        label="Time range"
-        note="Click an option or use the arrow keys. Selection stays put on a second click."
-      >
-        <SegmentedControl
-          items={periods}
-          value={value}
-          onValueChange={setValue}
-          aria-label="Time range"
-        />
-        <p className="segment-example-result" aria-live="polite">
-          {value === 'day'
-            ? 'Today · 24 hours'
-            : value === 'week'
-              ? 'This week · 7 days'
-              : 'This month · 30 days'}
-        </p>
-      </Example>
-      <Example
-        label="View mode"
-        note="The view changes immediately; focus stays on the chosen option."
-      >
-        <SegmentedControl
-          items={layouts.slice(0, 2)}
-          value={mode}
-          onValueChange={setMode}
-          aria-label="View mode"
-        />
-        <div className="segment-view-preview" data-view={mode} aria-hidden="true">
-          {['Project notes', 'Design assets', 'Release plan'].map((label) => (
-            <div key={label}>
-              <span className="segment-view-mark" />
-              <span>{label}</span>
-            </div>
-          ))}
-        </div>
-      </Example>
-    </div>
-  );
-}
-
-function SizeExamples(): ReactElement {
-  return (
-    <div className="segment-examples">
-      {(['s', 'm', 'l'] as const).map((size, index) => (
-        <Example key={size} label={`${size.toUpperCase()} · ${[30, 40, 48][index]} px`}>
-          <div className="segment-example-row">
-            <SegmentedControl
-              items={periods}
-              size={size}
-              defaultValue={periods[index]?.value}
-              aria-label={`Time range ${size}`}
-            />
-            <SegmentedControl
-              items={glyphLayouts}
-              size={size}
-              defaultValue="grid"
-              aria-label={`Layout ${size}`}
-            />
-          </div>
-        </Example>
-      ))}
-    </div>
-  );
-}
-
-function LayoutExamples(): ReactElement {
-  return (
-    <div className="segment-examples">
-      <Example label="Equal peers · full width">
-        <SegmentedControl
-          items={settings}
-          width="full"
-          defaultValue="system"
-          aria-label="Color mode"
-        />
-      </Example>
-      <Example label="Five short options">
-        <SegmentedControl
-          size="s"
-          defaultValue="month"
-          aria-label="Chart interval"
-          items={[
-            { value: 'day', label: '1D' },
-            { value: 'week', label: '1W' },
-            { value: 'month', label: '1M' },
-            { value: 'year', label: '1Y' },
-            { value: 'all', label: 'All' },
-          ]}
-        />
-      </Example>
-      <Example
-        label="Vertical · explicit layout"
-        note="A compact column for a narrow inspector. Long descriptions belong in a radio group."
-      >
-        <SegmentedControl
-          orientation="vertical"
-          defaultValue="comfortable"
-          aria-label="Content density"
-          items={[
-            { value: 'compact', label: 'Compact' },
-            { value: 'comfortable', label: 'Comfortable' },
-            { value: 'spacious', label: 'Spacious' },
-          ]}
-        />
-      </Example>
-    </div>
-  );
-}
-
-function StateExamples(): ReactElement {
-  return (
-    <div className="segment-examples">
-      <Example
-        label="Hover, held press, and selection"
-        note="Hold a pointer down on a segment, then release on it to select. Release outside the control to cancel."
-      >
-        <SegmentedControl items={periods} defaultValue="week" aria-label="Time range interaction" />
-      </Example>
-      <Example
-        label="Focus separate from selection"
-        note="Tab to Week and move with the arrow keys. This example keeps Week selected while focus moves."
-      >
-        <SegmentedControl items={periods} value="week" aria-label="Fixed time range" />
-      </Example>
-    </div>
-  );
-}
-
-function AvailabilityExamples(): ReactElement {
-  return (
-    <div className="segment-examples">
-      <Example
-        label="One option unavailable"
-        note="Yearly reports become available after 12 months."
-      >
-        <SegmentedControl
-          aria-label="Report interval"
-          defaultValue="month"
-          items={[...periods, { value: 'year', label: 'Year', disabled: true }]}
-        />
-      </Example>
-      <Example
-        label="Selected option unavailable"
-        note="The previous choice remains visible. Choose another interval to continue."
-      >
-        <SegmentedControl
-          aria-label="Previous report interval"
-          defaultValue="week"
-          items={periods.map((item) => ({ ...item, disabled: item.value === 'week' }))}
-        />
-      </Example>
-      <Example
-        label="Entire group unavailable"
-        note="Connect a data source to change the interval."
-      >
-        <SegmentedControl
-          aria-label="Unavailable interval"
-          items={periods}
-          defaultValue="week"
-          disabled
-        />
-      </Example>
-      <Example
-        label="Read only"
-        note="This interval is managed by your workspace. You can focus and read it."
-      >
-        <SegmentedControl
-          aria-label="Managed interval"
-          items={periods}
-          defaultValue="week"
-          readOnly
-        />
-      </Example>
-    </div>
-  );
-}
-
-function FieldExample(): ReactElement {
-  const id = useId();
-  const [error, setError] = useState(false);
-  const [result, setResult] = useState('');
-  return (
-    <form
-      className="segment-examples"
-      onSubmit={(event) => {
-        event.preventDefault();
-        const frequency = new FormData(event.currentTarget).get('frequency');
-        setResult(typeof frequency === 'string' ? frequency : '');
-      }}
-      onReset={() => {
-        setError(false);
-        setResult('');
-      }}
-    >
-      <Example label="No initial answer · required choice">
-        <p id={`${id}-label`} className="segment-field-label">
-          Delivery frequency <span aria-hidden="true">*</span>
-        </p>
-        <SegmentedControl
-          defaultValue={null}
-          name="frequency"
-          required
-          status={error ? 'danger' : 'neutral'}
-          aria-labelledby={`${id}-label`}
-          aria-describedby={`${id}-help`}
-          onInvalid={() => setError(true)}
-          onValueChange={() => {
-            setError(false);
-            setResult('');
-          }}
-          items={frequencies}
-        />
-        <p id={`${id}-help`} className="segment-example-note" data-error={error || undefined}>
-          {error
-            ? 'Choose how often you want to receive a digest.'
-            : 'One digest with the changes that matter to you.'}
-        </p>
-        <div className="segment-example-row">
-          <Button type="submit" size="s" variant="secondary" tone="neutral">
-            Save frequency
-          </Button>
-          <Button type="reset" size="s" variant="ghost" tone="neutral">
-            Reset
-          </Button>
-          <output className="segment-example-note">
-            {result && `Submitted frequency: ${result}`}
-          </output>
-        </div>
-      </Example>
-    </form>
-  );
-}
-
-function OverflowExamples(): ReactElement {
-  return (
-    <div className="segment-examples">
-      <Example
-        label="Translation · 280 px container"
-        note="The rail stays in one row. Scroll locally or use the arrow keys to reveal every complete label."
-      >
-        <div className="segment-narrow-example">
-          <SegmentedControl
-            aria-label="Localized date range"
-            defaultValue="week"
-            items={[
-              { value: 'day', label: 'Heute' },
-              { value: 'week', label: 'Diese Woche' },
-              { value: 'month', label: 'Dieser Monat' },
-            ]}
-          />
-        </div>
-      </Example>
-      <Example
-        label="Prefer a deliberate narrow layout"
-        note="Use short labels, a vertical rail, or a different picker before relying on horizontal overflow."
-      >
-        <div className="segment-narrow-example">
-          <SegmentedControl
-            width="full"
-            orientation="vertical"
-            aria-label="Narrow date range"
-            defaultValue="week"
-            items={[
-              { value: 'day', label: 'Heute' },
-              { value: 'week', label: 'Diese Woche' },
-              { value: 'month', label: 'Dieser Monat' },
-            ]}
-          />
-        </div>
-      </Example>
-      <Example label="Mixed lengths · no truncation">
-        <SegmentedControl
-          width="full"
-          aria-label="Notification scope"
-          items={[
-            { value: 'all', label: 'Everything' },
-            { value: 'mentions', label: 'Mentions only' },
-          ]}
-        />
-      </Example>
-    </div>
-  );
-}
-
-function ToolbarExamples(): ReactElement {
-  return (
-    <div className="segment-examples">
-      {(['s', 'm', 'l'] as const).map((size) => (
-        <Example key={size} label={`${size.toUpperCase()} · shared control height`}>
-          <div className="segment-example-row segment-toolbar-example">
-            <SegmentedControl
-              size={size}
-              aria-label={`Layout in ${size} controls`}
-              items={[
-                { value: 'list', label: 'List' },
-                { value: 'grid', label: 'Grid' },
-              ]}
-            />
-            <Input
-              className="segment-search-example"
-              size={size}
-              aria-label={`Find items ${size}`}
-              placeholder="Find…"
-            />
-            <Button size={size} variant="secondary" tone="neutral">
-              Apply
-            </Button>
-          </div>
-        </Example>
-      ))}
-    </div>
-  );
-}
-
-function OverlayExample(): ReactElement {
-  return (
-    <div className="segment-overlay-example">
-      <h3>View options</h3>
-      <Example label="Layout">
-        <SegmentedControl
-          width="full"
-          aria-label="Overlay layout"
-          items={[
-            { value: 'list', label: 'List', iconLeft: ListIcon },
-            { value: 'grid', label: 'Grid', iconLeft: SquaresFourIcon },
-          ]}
-        />
-      </Example>
-      <Example label="Density">
-        <SegmentedControl
-          size="s"
-          width="full"
-          defaultValue="comfortable"
-          aria-label="Overlay density"
-          items={[
-            { value: 'compact', label: 'Compact' },
-            { value: 'comfortable', label: 'Comfortable' },
-          ]}
-        />
-      </Example>
-      <p className="segment-example-note">Changes apply to this view.</p>
-    </div>
-  );
-}
+const catalogs = { periods, layouts, glyphLayouts };
+const reviewMessage = 'Review this preference before continuing.';
 
 export default defineComponent({
   id: 'segmented-control',
@@ -429,28 +41,37 @@ export default defineComponent({
     ),
     width: choice('Geometry', 'Size to the options or fill the slot.', ['auto', 'full'], 'auto'),
     required,
-    status: choice('Field', 'Validation feedback for the group.', ['neutral', 'danger'], 'neutral'),
+    status: choice(
+      'Semantics',
+      'Validation feedback for the group.',
+      ['neutral', 'danger'],
+      'neutral',
+    ),
     defaultValue: {
       kind: 'slot',
-      group: 'Field',
-      description: 'Mount with the first available option or an empty answer.',
+      group: 'Interaction',
+      publicType: 'string | null',
+      description:
+        'Initial selection restored by Reset. Omitting the value selects the first available option. Pass null to start unanswered.',
       choices: [
-        { value: 'implicit', label: 'First available' },
+        { value: 'implicit', label: 'First available', omit: true },
         { value: 'empty', label: 'No selection', code: 'null' },
       ],
       default: 'implicit',
     },
     name: {
       kind: 'string',
-      group: 'Field',
+      group: 'Host',
       description: 'Form data key. An empty name omits the field from FormData.',
       default: 'preference',
       examples: ['preference', ''],
     },
     items: {
       kind: 'slot',
-      group: 'Options',
-      description: 'The option array supplies stable values, labels, and optional leading glyphs.',
+      group: 'Content',
+      publicType: 'readonly SegmentedControlOption[]',
+      description:
+        'Options supply stable values and accessible text labels. Each icon-only option also supplies its glyph.',
       choices: [
         { value: 'periods', label: 'Periods', code: 'periods' },
         { value: 'layouts', label: 'Layouts with icons', code: 'layouts' },
@@ -458,7 +79,11 @@ export default defineComponent({
       ],
       default: 'periods',
     },
-    onValueChange: eventProp('Reports a requested or committed selection.', 'handleValueChange'),
+    onValueChange: eventProp(
+      'Receives the value of the requested option. A controlled owner decides whether to accept it.',
+      '(value) => console.log(value)',
+      '(value: string) => void',
+    ),
   },
   constraints: [
     {
@@ -476,95 +101,171 @@ export default defineComponent({
         'A read-only group preserves its value and allows focus. It cannot require a new choice.',
     },
   ],
-  render: function SegmentPreview({ values: { items, defaultValue, ...values }, ctx }) {
-    const options = { periods, layouts, glyphLayouts }[items];
+  render: withOverlaySurface(function SegmentPreview({
+    values: { items, defaultValue, ...values },
+    ctx,
+  }) {
+    const messageId = useId();
+    const invalid = values.status === 'danger' && !values.disabled;
     return (
       <form {...ctx.form}>
-        <SegmentedControl
-          {...values}
-          {...ctx.subject}
-          key={`${items}-${defaultValue}`}
-          aria-label="View preference"
-          items={options}
-          defaultValue={defaultValue === 'empty' ? null : undefined}
-          onValueChange={ctx.action('onValueChange')}
-        />
+        <Stack gap={8}>
+          <SegmentedControl
+            {...values}
+            {...ctx.subject}
+            key={`${items}-${defaultValue}`}
+            aria-label="View preference"
+            aria-describedby={invalid ? messageId : undefined}
+            items={catalogs[items]}
+            defaultValue={defaultValue === 'empty' ? null : undefined}
+            onValueChange={ctx.action('onValueChange')}
+          />
+          {invalid && (
+            <Text id={messageId} size="caption-l" color="danger">
+              <bdi>{reviewMessage}</bdi>
+            </Text>
+          )}
+        </Stack>
       </form>
     );
+  }, 'border-box'),
+  code: ({ items, defaultValue, ...values }) => {
+    const attrs = previewProps(values, {
+      size: 'm',
+      disabled: false,
+      readOnly: false,
+      orientation: 'horizontal',
+      width: 'auto',
+      required: false,
+      status: 'neutral',
+    });
+    const invalid = values.status === 'danger' && !values.disabled;
+    const catalog = catalogCode(items);
+    return `${invalid ? "import { useId } from 'react';\n" : ''}import { SegmentedControl${invalid ? ', Text' : ''} } from '@docouno/unica';
+${catalog.imports}import '@docouno/unica/styles.css';
+
+export function ViewPreference() {
+  ${invalid ? 'const messageId = useId();\n  ' : ''}return (
+    <form onSubmit={(event) => event.preventDefault()}>
+      <SegmentedControl aria-label="View preference" items={${catalog.items}}${defaultValue === 'empty' ? ' defaultValue={null}' : ''}${attrs}${invalid ? ' aria-describedby={messageId}' : ''} onValueChange={(value) => console.log(value)} />
+      ${invalid ? `<Text id={messageId} size="caption-l" color="danger"><bdi>${reviewMessage}</bdi></Text>` : ''}
+    </form>
+  );
+}`;
   },
-  code: ({ items, name }, attributes) =>
-    `<SegmentedControl aria-label="View preference"${items === 'periods' ? ' items={periods}' : ''}${name === 'preference' ? ' name="preference"' : ''}${attributes} />`,
-  matrixViews: [
+  states: [
     {
       id: 'sizes',
       rows: 'size',
-      title: 'Three sizes · text & icons',
-      caption: 'Icon-only options carry an accessible text name.',
-      reference: () => <SizeExamples />,
+      title: 'Three sizes',
+      caption: 'Compare the text rail at small, medium and large sizes.',
     },
     {
       id: 'layout',
       rows: 'orientation',
       cols: 'width',
-      title: 'Width, orientation & content',
-      reference: () => <LayoutExamples />,
+      title: 'Width and orientation',
+      caption:
+        'Compare a rail fitted to the labels with one that fills the available width in each orientation.',
     },
   ],
   cases: [
     {
+      id: 'density',
+      title: 'Text and icon-only choices',
+      kind: 'content',
+      mode: 'live',
+      reset: true,
+      caption:
+        'Each size pairs a text rail with named icon-only options. At 100% text with a fine pointer, the base rail heights are 30, 40 and 48px. Touch targets can increase the height.',
+      render: withOverlaySurface(SizeExamples, 'border-box'),
+    },
+    {
+      id: 'layouts',
+      title: 'Full width, short labels and a column',
+      kind: 'content',
+      mode: 'live',
+      reset: true,
+      caption:
+        'On a wide rail, the three color modes have equal widths. Compare five short intervals on a compact rail and three densities in a fitted column.',
+      render: withOverlaySurface(LayoutExamples, 'border-box'),
+    },
+    {
       id: 'live',
       title: 'Choose a value',
-      caption: 'Use pointer or keyboard to change a time range or a view preference.',
       kind: 'behavior',
-      render: () => <LiveExample />,
+      mode: 'live',
+      reset: true,
+      caption:
+        'Choose the day, week or month containing September 16, 2026. In the second group, List and Grid immediately rearrange the same three documents.',
+      render: withOverlaySurface(LiveExample, 'border-box'),
     },
     {
       id: 'states',
       title: 'Interaction states',
-      caption:
-        'Use the pointer to test hover and press. Use Tab and the arrow keys to compare focus with selection.',
       kind: 'behavior',
-      render: () => <StateExamples />,
+      mode: 'live',
+      reset: true,
+      caption:
+        'Hold a pointer on the first rail, then release inside or outside the option. In the second rail, Tab to Week and use the arrows to move focus while the owner keeps Week selected.',
+      render: withOverlaySurface(StateExamples, 'border-box'),
     },
     {
       id: 'availability',
-      title: 'Availability & retained choice',
+      title: 'Availability and retained choice',
       kind: 'behavior',
-      render: () => <AvailabilityExamples />,
+      mode: 'live',
+      reset: true,
+      caption:
+        'Year is unavailable in the first group. The second retains a disabled Week until you choose another option. The disabled group is skipped by Tab. The read-only group allows keyboard inspection.',
+      render: withOverlaySurface(AvailabilityExamples, 'border-box'),
     },
     {
       id: 'field',
-      title: 'Empty answer & validation',
-      caption:
-        'Save to validate and read the native form value. Reset returns the group to its initial empty answer.',
+      title: 'Empty answer and validation',
       kind: 'behavior',
-      render: () => <FieldExample />,
+      mode: 'live',
+      reset: true,
+      caption:
+        'Save an unanswered frequency to focus the group and see its error. Choose a frequency and save to confirm the submitted value. Reset restores the empty answer.',
+      render: withOverlaySurface(FieldExample, 'border-box'),
     },
     {
       id: 'overflow',
-      title: 'Narrow width & translation',
+      title: 'Narrow width and translation',
       kind: 'content',
-      render: () => <OverflowExamples />,
+      mode: 'live',
+      reset: true,
+      caption:
+        'The two German rails have up to 280px. Arrow through the horizontal choices to reveal their labels, then compare the vertical arrangement and the unequal English labels below.',
+      render: withOverlaySurface(OverflowExamples, 'border-box'),
     },
     {
       id: 'overlay',
-      title: 'On a floating surface',
+      title: 'View options on a floating surface',
+      kind: 'surface',
       surface: 'overlay',
       overlayStage: true,
-      kind: 'surface',
-      render: () => <OverlayExample />,
+      mode: 'live',
+      reset: true,
+      caption:
+        'Choose a layout and a density independently. Both rails share a surface. Switch between Base and Overlay to compare their materials.',
+      render: OverlayExample,
     },
   ],
-  usage: [
+  compositions: [
     {
       id: 'alignment',
       title: 'Alongside other controls',
-      code: `<>
-  <SegmentedControl size="m" items={layouts} aria-label="Layout" />
-  <Input size="m" aria-label="Find items" />
-  <Button size="m" variant="secondary" tone="neutral">Apply</Button>
-</>`,
-      render: () => <ToolbarExamples />,
+      mode: 'live',
+      reset: true,
+      caption:
+        'Each row pairs controls of the same size and aligns their centers. Choose List or Grid and search the document titles. Apply shows the matching documents in that row. An empty search includes all three.',
+      render: withOverlaySurface(
+        ({ ctx }) => <ViewToolbar controlProps={ctx.subject} />,
+        'border-box',
+      ),
+      code: toolbarSource,
     },
   ],
 });

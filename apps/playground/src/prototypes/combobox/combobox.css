@@ -1,5 +1,6 @@
 .suggestion-field-proto {
   display: grid;
+  inline-size: 100%;
   align-content: start;
   gap: var(--space-8);
   min-inline-size: 0;
@@ -7,6 +8,11 @@
 
 .suggestion-field-proto[data-width='auto'] {
   inline-size: min(100%, 20rem);
+}
+
+/* The editable text detects its direction. Keep control slots in the host's order. */
+.suggestion-input-proto[dir='auto'] {
+  direction: inherit;
 }
 
 .suggestion-editor-row-proto {

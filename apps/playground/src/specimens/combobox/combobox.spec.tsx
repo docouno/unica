@@ -6,373 +6,68 @@ import {
   disabled,
   readOnly,
   required,
-  choice,
   eventProp,
 } from '../control-props.js';
-import { useState } from 'react';
-import type { ReactElement } from 'react';
-import {
-  BuildingOfficeIcon,
-  CloudIcon,
-  DatabaseIcon,
-  GlobeHemisphereWestIcon,
-  ShieldCheckIcon,
-} from '@phosphor-icons/react';
-import { Button } from '@docouno/unica';
-import { Text } from '@docouno/unica';
 import { defineComponent } from '../../workbench/types.js';
 import { Combobox } from '../../prototypes/combobox/combobox.proto.js';
-import type { Suggestion } from '../../prototypes/combobox/combobox.proto.js';
-import { Study } from '../../prototypes/combobox/combobox.study.js';
+import { withOverlaySurface } from '../shared/with-overlay-surface.js';
+import { previewProps, previewText } from '../preview-code.js';
+import { Roles, Choices, Availability, Responses, Overflow } from './combobox.examples.js';
+import { teams } from './team-options.js';
+import teamsSource from './team-options.ts?raw';
+import regionsSource from './regional-teams.ts?raw';
+import { TeamAssignment } from './team-assignment.js';
+import assignmentSource from './team-assignment.tsx?raw';
+import './combobox-matrix.css';
 
-const teams = [
-  {
-    value: 'data',
-    label: 'Data Platform',
-    description: 'Storage, backups and replication',
-    group: 'Engineering',
-    icon: DatabaseIcon,
-  },
-  {
-    value: 'network',
-    label: 'Edge Networking',
-    description: 'Traffic, DNS and routing',
-    group: 'Engineering',
-    icon: GlobeHemisphereWestIcon,
-  },
-  {
-    value: 'cloud',
-    label: 'Cloud Foundations',
-    description: 'Compute and deployment infrastructure',
-    group: 'Engineering',
-    icon: CloudIcon,
-  },
-  {
-    value: 'security',
-    label: 'Security Operations',
-    description: 'Access and incident response',
-    group: 'Operations',
-    icon: ShieldCheckIcon,
-  },
-  {
-    value: 'office',
-    label: 'Workplace Systems',
-    description: 'Provisioned by your administrator',
-    group: 'Operations',
-    icon: BuildingOfficeIcon,
-    disabled: true,
-  },
-] as const satisfies readonly Suggestion[];
-
-const longTeam: Suggestion = {
-  value: 'continuity',
-  label: 'International Infrastructure Continuity and Recovery',
-  description: 'Cross-region escalation for critical outages',
-  group: 'Operations',
-  icon: CloudIcon,
+const messages = {
+  neutral: '',
+  info: 'The owning team receives notifications.',
+  success: 'Team selection is available.',
+  warning: 'Some teams have limited coverage.',
+  danger: 'Choose an owning team before continuing.',
 };
-
-function Roles(): ReactElement {
-  return (
-    <div className="suggestion-study-grid-proto">
-      {(['default', 'ghost'] as const).map((variant) => (
-        <div className="suggestion-study-proto" key={variant}>
-          <Text size="caption-l" color="secondary">
-            {variant === 'default' ? 'Form field' : 'Inline field'}
-          </Text>
-          {(['s', 'm', 'l'] as const).map((size) => (
-            <Combobox
-              key={size}
-              variant={variant}
-              size={size}
-              width={size === 'l' ? 'auto' : 'full'}
-              label={`Owning team · ${size.toUpperCase()}`}
-              options={teams}
-              defaultSelection={variant === 'ghost' ? teams[0] : undefined}
-            />
-          ))}
-        </div>
-      ))}
-    </div>
-  );
-}
-
-function Choices(): ReactElement {
-  return (
-    <div className="suggestion-study-grid-proto">
-      <Study title="Catalog reopened · Tab to edit">
-        <Combobox
-          label="Owning team"
-          options={[teams[0], teams[1], teams[4]]}
-          defaultSelection={teams[0]}
-          previewOpen
-          previewActive="network"
-        />
-      </Study>
-      <Study title="Replacement in progress · Click to edit">
-        <Combobox
-          label="Owning team"
-          options={teams}
-          defaultSelection={teams[0]}
-          previewDraft="cloud"
-          previewOpen
-          previewActive="cloud"
-        />
-      </Study>
-      <Study title="Replacement after dismissal">
-        <Combobox
-          label="Owning team"
-          options={teams}
-          defaultSelection={teams[0]}
-          previewDraft="cloud"
-        />
-      </Study>
-      <Study title="Replacement after validation">
-        <Combobox
-          label="Owning team"
-          options={teams}
-          defaultSelection={teams[0]}
-          previewDraft="cloud"
-          status="danger"
-          message="Choose a team from the list before saving."
-          required
-        />
-      </Study>
-    </div>
-  );
-}
-
-function Availability(): ReactElement {
-  return (
-    <div className="suggestion-study-grid-proto">
-      <Study title="Read-only">
-        <Combobox
-          label="Owning team"
-          options={teams}
-          defaultSelection={teams[0]}
-          readOnly
-          description="Managed by the workspace policy."
-        />
-      </Study>
-      <Study title="Disabled">
-        <Combobox
-          label="Owning team"
-          options={teams}
-          defaultSelection={teams[0]}
-          disabled
-          description="Select a workspace first."
-        />
-      </Study>
-      <Study title="Information">
-        <Combobox
-          label="Owning team"
-          options={teams}
-          defaultSelection={teams[0]}
-          status="info"
-          message="Inherited from the workspace."
-        />
-      </Study>
-      <Study title="Confirmed">
-        <Combobox
-          label="Owning team"
-          options={teams}
-          defaultSelection={teams[0]}
-          status="success"
-          message="This team can receive escalations."
-        />
-      </Study>
-      <Study title="Warning">
-        <Combobox
-          label="Owning team"
-          options={teams}
-          defaultSelection={teams[1]}
-          variant="ghost"
-          status="warning"
-          message="This team has limited weekend coverage."
-        />
-      </Study>
-      <Study title="Required">
-        <Combobox
-          label="Owning team"
-          options={teams}
-          required
-          status="danger"
-          message="Choose an owning team."
-        />
-      </Study>
-    </div>
-  );
-}
-
-function Responses(): ReactElement {
-  return (
-    <div className="suggestion-study-grid-proto">
-      <Study title="Waiting for a query">
-        <Combobox label="Owning team" options={teams} minimumQueryLength={2} previewOpen />
-      </Study>
-      <Study title="Searching during replacement">
-        <Combobox
-          label="Owning team"
-          options={teams}
-          defaultSelection={teams[0]}
-          previewDraft="edge"
-          searchState="loading"
-          previewOpen
-        />
-      </Study>
-      <Study title="No matches">
-        <Combobox
-          label="Owning team"
-          options={teams}
-          defaultSelection={teams[0]}
-          previewDraft="mobile"
-          previewOpen
-        />
-      </Study>
-      <Study title="Results unavailable">
-        <Combobox
-          label="Owning team"
-          options={teams}
-          defaultSelection={teams[0]}
-          previewDraft="edge"
-          searchState="error"
-          previewOpen
-        />
-      </Study>
-      <Study title="Empty catalog">
-        <Combobox
-          label="Owning team"
-          options={[]}
-          previewOpen
-          listMessage="Add teams in workspace settings."
-        />
-      </Study>
-      <Study title="Current result unavailable">
-        <Combobox
-          label="Owning team"
-          options={[teams[4]]}
-          defaultSelection={teams[4]}
-          previewOpen
-        />
-      </Study>
-    </div>
-  );
-}
-
-function Overflow(): ReactElement {
-  const options = [
-    longTeam,
-    ...teams,
-    ...['Central Europe', 'North America', 'Asia Pacific', 'South America'].map((region) => ({
-      value: region,
-      label: `${region} Incident Response`,
-      group: 'Regional teams',
-    })),
-  ];
-  return (
-    <div className="suggestion-study-grid-proto">
-      <Study title="Wrapping rows and scroll">
-        <Combobox
-          label="Escalation team"
-          size="s"
-          options={options}
-          defaultSelection={longTeam}
-          previewOpen
-          previewActive={longTeam.value}
-        />
-      </Study>
-      <Study title="Large field and wrapped details">
-        <Combobox
-          label="Escalation team"
-          size="l"
-          variant="ghost"
-          options={[longTeam]}
-          defaultSelection={longTeam}
-          previewOpen
-        />
-      </Study>
-    </div>
-  );
-}
-
-function Assignment(): ReactElement {
-  const [committed, setCommitted] = useState<Suggestion | null>(teams[0]);
-  const [attempted, setAttempted] = useState(false);
-  const [saved, setSaved] = useState(false);
-  const invalid = attempted && committed === null;
-  return (
-    <form
-      className="suggestion-usage-proto suggestion-save-pair-proto"
-      noValidate
-      onSubmit={(event) => {
-        event.preventDefault();
-        setAttempted(true);
-        setSaved(committed !== null);
-        if (!committed) {
-          event.currentTarget.querySelector('input')?.focus();
-        }
-      }}
-    >
-      <Combobox
-        label="Escalation team"
-        iconLeft={null}
-        options={[
-          ...teams,
-          longTeam,
-          ...['North America', 'Central Europe', 'Asia Pacific', 'South America'].map((region) => ({
-            value: region,
-            label: `${region} Incident Response`,
-            group: 'Regional teams',
-          })),
-        ]}
-        defaultSelection={teams[0]}
-        required
-        status={invalid ? 'danger' : 'neutral'}
-        description="This team receives incident notifications."
-        message={invalid ? 'Choose a team from the list before saving.' : undefined}
-        onSelectionChange={setCommitted}
-        onQueryChange={() => {
-          setAttempted(false);
-          setSaved(false);
-        }}
-      />
-      <Button type="submit" aria-label="Save assignment" className="suggestion-save-proto">
-        Save
-      </Button>
-      {saved && (
-        <Text size="caption-l" color="secondary" role="status" className="suggestion-saved-proto">
-          Assigned to {committed?.label}.
-        </Text>
-      )}
-    </form>
-  );
-}
 
 export default defineComponent({
   id: 'combobox',
   title: 'Combobox',
   category: 'Selection & Pickers',
   status: 'Proto',
+  summary:
+    'Search a catalog and confirm an option, or restore the previous selection after editing.',
   componentName: 'Combobox',
   props: {
     size,
     variant,
-    status,
+    status: {
+      ...status,
+      description: 'Field feedback. Each non-neutral status demonstrates a fixed message.',
+    },
     width,
     disabled,
     readOnly,
     required,
-    searchState: choice(
-      'Results',
-      'Result availability while searching.',
-      ['ready', 'loading', 'error'],
-      'ready',
-    ),
+    searchState: {
+      kind: 'enum',
+      group: 'Interaction',
+      default: 'ready',
+      description: 'Open the catalog to inspect ready, loading or failed results.',
+      choices: [
+        { value: 'ready', label: 'Ready', omit: true },
+        { value: 'loading', label: 'Loading' },
+        { value: 'error', label: 'Error' },
+      ],
+    },
     onSelectionChange: eventProp(
-      'Reports the committed option or the cleared selection.',
-      'handleSelectionChange',
+      'Receives the confirmed option or null when the selection is cleared. The event log shows its stable value.',
+      '(selection) => console.log(selection?.value ?? null)',
+      '(selection: Suggestion | null) => void',
     ),
-    onQueryChange: eventProp('Reports the text being used to search.', 'handleQueryChange'),
+    onQueryChange: eventProp(
+      'Receives the displayed search text when it is edited or a selection is confirmed.',
+      '(text) => console.log(text)',
+      '(text: string) => void',
+    ),
   },
   constraints: [
     {
@@ -381,82 +76,130 @@ export default defineComponent({
       affects: ['searchState', 'status'],
       reason: 'Disabled fields suppress result and feedback visuals.',
     },
+    {
+      kind: 'ignored',
+      when: { readOnly: true },
+      affects: ['searchState'],
+      reason: 'Read-only fields keep the catalog closed.',
+    },
   ],
-  render: ({ values, ctx }) => {
+  render: withOverlaySurface(({ values, ctx }) => {
     const { searchState, ...field } = values;
+    const message = !values.disabled && messages[values.status];
     return (
       <Combobox
         {...field}
         {...ctx.subject}
+        data-combobox-comparison=""
         label="Owning team"
         options={teams}
         {...(searchState === 'ready' ? {} : { searchState })}
+        message={message ? <bdi>{message}</bdi> : undefined}
         onSelectionChange={(option) => ctx.action('onSelectionChange')(option?.value ?? null)}
         onQueryChange={ctx.action('onQueryChange')}
       />
     );
+  }, 'border-box'),
+  code: (values) => {
+    const attrs = previewProps(values, {
+      size: 'm',
+      variant: 'default',
+      status: 'neutral',
+      width: 'full',
+      disabled: false,
+      readOnly: false,
+      required: false,
+      searchState: 'ready',
+    });
+    const message = !values.disabled && messages[values.status];
+    return `import { Combobox } from './prototypes/combobox/combobox.proto.js';
+import '@docouno/unica/styles.css';
+${teamsSource.trim()}
+
+export function OwningTeam() {
+  return <Combobox label="Owning team" options={teams}${attrs}${message ? ` message={<bdi>${previewText(message)}</bdi>}` : ''} onSelectionChange={(option) => console.log(option?.value ?? null)} onQueryChange={(text) => console.log(text)} />;
+}`;
   },
-  code: (_values, attributes) => `<Combobox label="Owning team" options={teams}${attributes} />`,
-  matrixViews: [
+  states: [
     {
       id: 'roles',
       rows: 'size',
       cols: 'variant',
       title: 'Roles and sizes',
-      reference: () => <Roles />,
+      caption:
+        'Compare the bordered form field with the inline editing role at each density. Open the catalog or type to find an owning team.',
     },
   ],
   cases: [
     {
+      id: 'existing-teams',
+      title: 'Empty and assigned fields',
+      kind: 'behavior',
+      mode: 'live',
+      reset: true,
+      caption:
+        'The form fields start empty. Each inline field has a confirmed Data Platform selection. Reopen it to choose another team. Large fields cap their width at 20rem.',
+      render: withOverlaySurface(Roles, 'border-box'),
+    },
+    {
       id: 'choices',
-      title: 'Selection and replacement · pinned',
-      overlayStage: true,
+      title: 'Selection and replacement',
+      surface: 'overlay',
       kind: 'behavior',
       mode: 'pinned',
-      render: () => <Choices />,
+      caption:
+        'Compare a reopened catalog, an active replacement, a dismissed draft and a rejected draft. The check identifies a confirmed team, and the active row marks a keyboard destination.',
+      render: Choices,
     },
     {
       id: 'availability',
-      title: 'Availability and validation · pinned',
+      title: 'Availability and validation',
       kind: 'behavior',
       mode: 'pinned',
-      render: () => <Availability />,
+      caption:
+        'Compare read-only and disabled assignments with informational, confirmed, warning and required field feedback.',
+      render: Availability,
     },
     {
       id: 'responses',
-      title: 'Search feedback · pinned',
-      overlayStage: true,
+      title: 'Search feedback',
+      surface: 'overlay',
       kind: 'behavior',
       mode: 'pinned',
-      render: () => <Responses />,
+      caption:
+        'Inspect the minimum query, searching, no matches, failed lookup, empty catalog and unavailable selection. The field keeps the current query or confirmed label visible.',
+      render: Responses,
     },
     {
       id: 'overflow',
-      title: 'Long labels and scrolling · pinned',
-      overlayStage: true,
+      title: 'Long labels and bounded panels',
+      surface: 'overlay',
       kind: 'content',
       mode: 'pinned',
-      render: () => <Overflow />,
+      caption:
+        'The compact panel shows the top of a catalog at its height limit. The large inline field shows a long confirmed name and wrapping details. Scroll the live catalog in Team assignment.',
+      render: Overflow,
     },
   ],
-  usage: [
+  compositions: [
     {
       id: 'assignment',
-      title: 'Team assignment · live',
-      overlayStage: true,
-      code: `<form onSubmit={saveAssignment}>
-  <Combobox
-    label="Escalation team"
-    options={teams}
-    defaultSelection={teams[0]}
-    required
-    onSelectionChange={setCommitted}
-  />
-  <Button type="submit">Save</Button>
-</form>`,
-      render: () => (
+      title: 'Team assignment',
+      surface: 'overlay',
+      mode: 'live',
+      reset: true,
+      caption:
+        'Save the assigned team, then type a replacement. An unconfirmed draft cannot be saved. Restore the previous selection or choose another team and save its assignment.',
+      code: assignmentSource
+        .replaceAll('../../prototypes/', './prototypes/')
+        .replace("import { teams } from './team-options.js';", teamsSource.trim())
+        .replace(
+          "import { longTeam, regionalTeams } from './regional-teams.js';",
+          regionsSource.replace("import { CloudIcon } from '@phosphor-icons/react';", '').trim(),
+        ),
+      render: ({ ctx }) => (
         <div className="suggestion-live-stage-proto">
-          <Assignment />
+          <TeamAssignment fieldProps={ctx.subject} surface={ctx.surface} />
         </div>
       ),
     },

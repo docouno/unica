@@ -48,6 +48,7 @@ export default function InputConsumers(): ReactElement {
             searchState="loading"
           />
         </div>
+        <button type="reset">Reset picker form</button>
       </form>
       <div data-testid="date-picker">
         <DatePicker

@@ -15,6 +15,36 @@ async function mountExample(page, mount, name) {
 }
 
 export default {
+  'List keeps English punctuation with its row description in an RTL owner': async ({
+    page,
+    mount,
+  }) => {
+    await mount('binary-consumers', { direction: 'rtl' });
+    await showExample(page, 'List actions');
+    const copy = page.getByText('Check whether exports can reach cold storage.', { exact: true });
+    const positions = await copy.evaluate((element) => {
+      const text = element.firstChild;
+      const range = element.ownerDocument.createRange();
+      const end = text.textContent.length;
+      range.setStart(text, end - 2);
+      range.setEnd(text, end - 1);
+      const letter = range.getBoundingClientRect();
+      range.setStart(text, end - 1);
+      range.setEnd(text, end);
+      const period = range.getBoundingClientRect();
+      return {
+        letterEnd: letter.right,
+        periodStart: period.left,
+        direction: getComputedStyle(element.closest('li')).direction,
+      };
+    });
+    assert.equal(positions.direction, 'rtl');
+    assert.ok(
+      positions.periodStart >= positions.letterEnd - 1,
+      'Period follows the final English letter',
+    );
+  },
+
   'Folio trust and pager sync remain independently interactive': async ({ page, mount }) => {
     await mountExample(page, mount, 'Folio sign-in');
     const consentName = 'Keep this device trusted for 30 days';
@@ -119,6 +149,31 @@ export default {
       assert.deepEqual(await checkedFlags(), [false, false, false, false]);
     },
 
+  'TableScroll dismisses a row menu and keeps focus when its anchor scrolls out under zoom':
+    async ({ page, mount }) => {
+      await mountExample(page, mount, 'Build queue');
+      await page.getByTestId('Build queue').evaluate((host) => {
+        host.style.zoom = '0.5';
+      });
+      const region = page.getByRole('region', { name: 'Build queue' });
+      const trigger = region.getByRole('button', { name: 'Reporting API actions' });
+      await trigger.press('Enter');
+      await page.getByRole('menuitem', { name: 'Pin build' }).waitFor();
+      await region.evaluate((viewport) => viewport.scrollTo({ top: 0, behavior: 'instant' }));
+      await page.waitForFunction(() => {
+        const anchor = document.querySelector('button[aria-label="Reporting API actions"]');
+        return (
+          anchor.getBoundingClientRect().top >=
+          anchor.closest('[role="region"]').getBoundingClientRect().bottom
+        );
+      });
+      await page.getByRole('menu').waitFor({ state: 'hidden', timeout: 3000 });
+      assert.equal(
+        await region.evaluate((viewport) => viewport.ownerDocument.activeElement === viewport),
+        true,
+      );
+    },
+
   'Build queue selection excludes locked rows and leaves row actions independent': async ({
     page,
     mount,
@@ -146,8 +201,11 @@ export default {
   'Context menu offers document actions for selected text only when enabled': async ({
     page,
     mount,
+    origin,
   }) => {
     await mountExample(page, mount, 'Context menu');
+    await page.context().grantPermissions(['clipboard-read', 'clipboard-write'], { origin });
+    await page.evaluate(() => navigator.clipboard.writeText('Previous clipboard'));
     const paragraph = page.getByText('Select part of this sentence and right-click it.', {
       exact: true,
     });
@@ -173,7 +231,29 @@ export default {
     assert.equal(await option.isChecked(), true);
     await rightClickSelection();
     await menu.getByRole('menuitem', { name: 'Copy selected text' }).click();
-    await page.getByText('Selected text: Select part', { exact: true }).waitFor();
+    await page.getByRole('status').filter({ hasText: 'Copied: Select part' }).waitFor();
+    assert.equal(await page.evaluate(() => navigator.clipboard.readText()), 'Select part');
+
+    const finishCopy = await page.evaluateHandle(() => {
+      let complete;
+      const pending = new Promise((resolve) => {
+        complete = resolve;
+      });
+      navigator.clipboard.writeText = () => pending;
+      return complete;
+    });
+    await rightClickSelection();
+    await menu.getByRole('menuitem', { name: 'Copy selected text' }).click();
+    const card = page.getByRole('group', { name: 'Release notes', exact: true });
+    await card.getByRole('button', { name: 'Release notes actions' }).press('Enter');
+    await menu.getByRole('menuitem', { name: 'Rename document' }).press('Enter');
+    const receipt = card.getByRole('status');
+    await receipt.getByText('Rename requested for release notes.', { exact: true }).waitFor();
+    await finishCopy.evaluate(async (resolve) => {
+      resolve();
+      await new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done)));
+    });
+    assert.equal(await receipt.textContent(), 'Rename requested for release notes.');
   },
 
   'FormField keeps option names and described group feedback while List keeps its trailing Switch':

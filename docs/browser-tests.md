@@ -29,6 +29,8 @@ export default {
 
 `mount` selects a fixture by filename and accepts a `theme` preset, `surface` (`base` or `overlay`), `textScale` (100 or 120), `direction` (`ltr` or `rtl`), and Playwright `forcedColors` and `reducedMotion` values. The defaults are Soft Dark, Base, 100%, LTR, and ordinary media modes. The environment applies to the whole fixture document, including portals mounted in `document.body`.
 
+Scenarios that exercise a public workbench route receive the loopback `origin`. Open the route with `page.goto(new URL('/?item=select&tab=states', origin).href)`. For a page in another browser context, take `watchPage` from the scenario arguments and call `watchPage(await context.newPage())` before navigation to capture its uncaught errors, console errors, and HTTP failures.
+
 The helpers expose viewport hit-testing, bounding boxes with an optional tolerance, and native form submission and reset. `submitForm` captures ordered FormData entries on the native form's `submit` event and cancels navigation. Entries include repeated names, the clicked submitter, and file metadata. See the [native scenarios](../apps/playground/test/browser/suites/native.browser.mjs) for complete examples.
 
 For a hydration scenario, `renderFixture(fixture)` renders the fixture component in Node. Insert that HTML into a dedicated browser container so the scenario can inspect the parsed DOM before hydrating it. See the [form authority suite](../apps/playground/test/browser/suites/form-authority.browser.mjs) for an example.

@@ -99,6 +99,10 @@ function hasContent(node: ReactNode): boolean {
   return node !== undefined && node !== null && node !== '' && typeof node !== 'boolean';
 }
 
+function isolateText(slot: ReactNode): ReactNode {
+  return typeof slot === 'string' ? <bdi>{slot}</bdi> : slot;
+}
+
 function ActionMain({
   action,
   title,
@@ -123,12 +127,12 @@ function ActionMain({
       <span className="list-copy-proto">
         {titleId && (
           <span id={titleId} className="list-title-proto">
-            {title}
+            {isolateText(title)}
           </span>
         )}
         {descriptionId && (
           <span id={descriptionId} className="list-description-proto">
-            {description}
+            {isolateText(description)}
           </span>
         )}
         {children}
@@ -202,15 +206,17 @@ export function ListItem({
             <div className="list-main-proto">
               <span className="list-leading-proto">{leading}</span>
               <div className="list-copy-proto">
-                {hasContent(title) && <div className="list-title-proto">{title}</div>}
+                {hasContent(title) && <div className="list-title-proto">{isolateText(title)}</div>}
                 {hasContent(description) && (
-                  <div className="list-description-proto">{description}</div>
+                  <div className="list-description-proto">{isolateText(description)}</div>
                 )}
                 {children}
               </div>
             </div>
           )}
-          {hasContent(trailing) && <div className="list-trailing-proto">{trailing}</div>}
+          {hasContent(trailing) && (
+            <div className="list-trailing-proto">{isolateText(trailing)}</div>
+          )}
         </div>
       )}
     </li>

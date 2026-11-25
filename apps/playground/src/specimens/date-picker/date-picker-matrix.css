@@ -1,0 +1,7 @@
+tr[data-wb-result-row] > td:has([data-date-picker-comparison]) {
+  min-inline-size: 18rem;
+}
+
+tr[data-wb-result-row] > td:has([data-surface='overlay'] [data-date-picker-comparison]) {
+  min-inline-size: 21.5rem;
+}

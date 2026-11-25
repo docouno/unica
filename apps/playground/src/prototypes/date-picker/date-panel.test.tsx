@@ -23,6 +23,7 @@ it('places Today beside the sixth week and commits it from the same panel', () =
   const today = within(dialog).getByRole('button', { name: 'Today' });
   const trigger = screen.getByRole('button', { name: 'Close calendar' });
 
+  expect(trigger.getAttribute('aria-controls')).toBe(dialog.id);
   expect(rows).toHaveLength(7);
   expect(
     within(rows[6]!)
@@ -43,6 +44,7 @@ it('places Today beside the sixth week and commits it from the same panel', () =
     '16/09/2026',
   );
   expect(screen.queryByRole('dialog', { name: 'Select date' })).toBeNull();
+  expect(trigger.hasAttribute('aria-controls')).toBe(false);
   expect(document.activeElement).toBe(trigger);
 });
 

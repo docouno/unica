@@ -1,0 +1,23 @@
+tr[data-wb-result-row] > td:has([data-date-range-comparison]) {
+  --date-range-comparison-width: 22rem;
+  min-inline-size: calc(var(--date-range-comparison-width) + 2rem);
+}
+
+tr[data-wb-result-row] > td:has([data-surface='overlay'] [data-date-range-comparison]) {
+  min-inline-size: calc(var(--date-range-comparison-width) + 5.5rem);
+}
+
+/* Native digit widths round differently when the comparison scales to fit. */
+[data-scaled] tr[data-wb-result-row] > td:has([data-date-range-comparison]) {
+  --date-range-comparison-width: 24.5rem;
+}
+
+@media (pointer: coarse) {
+  tr[data-wb-result-row] > td:has([data-date-range-comparison]) {
+    --date-range-comparison-width: 24.5rem;
+  }
+
+  [data-scaled] tr[data-wb-result-row] > td:has([data-date-range-comparison]) {
+    --date-range-comparison-width: 27rem;
+  }
+}

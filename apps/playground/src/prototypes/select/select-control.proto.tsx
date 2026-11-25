@@ -38,26 +38,12 @@ function SelectionSummary({
       return;
     }
     const measure = (): void => {
-      const widths = [...node.querySelectorAll<HTMLElement>('[data-measure-label]')].map(
-        (item) => item.getBoundingClientRect().width,
+      const pairs = [...node.querySelectorAll<HTMLElement>('[data-measure-pair]')];
+      const available = node.getBoundingClientRect().width;
+      const lastFit = pairs.findLastIndex(
+        (pair) => pair.getBoundingClientRect().width <= available,
       );
-      const available = node.clientWidth;
-      const total = widths.at(-1) ?? 0;
-      if (total <= available) {
-        setCount(widths.length);
-        return;
-      }
-      const counts = [...node.querySelectorAll<HTMLElement>('[data-measure-count]')].map(
-        (item) => item.getBoundingClientRect().width,
-      );
-      const gap = parseFloat(getComputedStyle(node).columnGap);
-      let shown = 1;
-      for (let index = 0; index < widths.length - 1; index += 1) {
-        if ((widths[index] ?? 0) + (counts[index] ?? 0) + gap <= available) {
-          shown = index + 1;
-        }
-      }
-      setCount(shown);
+      setCount(pairs.length ? Math.max(1, lastFit + 1) : 0);
     };
     measure();
     const observer = new ResizeObserver(measure);
@@ -77,10 +63,14 @@ function SelectionSummary({
       )}
       <span className="select-summary-measure-proto" aria-hidden="true">
         {labels.map((label, index) => (
-          <span key={index}>
+          <span key={index} data-measure-pair>
             <span data-measure-label>{[...labels.slice(0, index), label].join(', ')}</span>
-            <span className="select-summary-count-proto" data-measure-count>
-              <bdi dir="ltr">+{labels.length - index - 1}</bdi>
+            <span
+              className="select-summary-count-proto"
+              data-measure-count
+              hidden={index === labels.length - 1}
+            >
+              {index < labels.length - 1 && <bdi dir="ltr">+{labels.length - index - 1}</bdi>}
             </span>
           </span>
         ))}
@@ -254,9 +244,11 @@ export function Select({
   const clearSelection = (): void => {
     if (multiple) {
       setMulti([]);
-      queueMicrotask(focusContent);
     } else {
       setSingle(null);
+    }
+    if (multiple || previewOpen) {
+      queueMicrotask(focusContent);
     }
   };
 
@@ -378,7 +370,7 @@ export function Select({
             .join(': ')}
           aria-haspopup={searchable ? 'dialog' : 'listbox'}
           aria-expanded={actualOpen}
-          aria-controls={`${controlId}-panel`}
+          aria-controls={disabled ? undefined : `${controlId}-panel`}
           aria-describedby={describedBy}
           aria-invalid={effectiveStatus === 'danger' || undefined}
           aria-busy={busy || undefined}
@@ -526,7 +518,8 @@ export function Select({
                   onFocus={() => setSearchFocused(true)}
                   onBlur={() => setSearchFocused(false)}
                   aria-label="Search options"
-                  placeholder="Search options…"
+                  dir="auto"
+                  placeholder="Search options"
                   iconLeft={SearchGlyph}
                   value={query}
                   clearable
@@ -582,7 +575,7 @@ export function Select({
               <span className="select-loading-icon-proto">
                 <Spinner size={size} tone="muted" />
               </span>
-              <span>{initialLoad ? 'Loading options…' : 'Updating options…'}</span>
+              <span dir="auto">{initialLoad ? 'Loading options…' : 'Updating options…'}</span>
             </div>
           )}
           {initialLoad ? null : failed ? (
@@ -609,8 +602,14 @@ export function Select({
               emptyState={
                 query ? (
                   <span className="select-empty-copy-proto">
-                    <strong>No matches for “{query}”</strong>
-                    <span>Try a different name or clear the search.</span>
+                    <strong>
+                      <bdi>
+                        No matches for “<bdi>{query}</bdi>”
+                      </bdi>
+                    </strong>
+                    <span>
+                      <bdi>Try a different name or clear the search.</bdi>
+                    </span>
                   </span>
                 ) : (
                   emptyState

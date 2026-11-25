@@ -501,43 +501,10 @@
   outline: 2px solid var(--focus-ring-color);
   outline-offset: 1px;
 }
-.date-study-grid-proto {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
-  gap: var(--space-24);
-  align-items: start;
-}
-.date-study-proto {
-  min-inline-size: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: start;
-  gap: var(--space-12);
-}
-.date-study-proto > .date-picker-proto {
-  inline-size: 100%;
-}
-.date-study-label-proto {
-  margin: 0;
-  color: var(--fg-secondary);
-  font: 500 var(--text-size-caption-l) / 1.5 var(--font-family-base);
-}
-.date-study-note-proto {
-  margin: 0;
-  color: var(--fg-muted);
-  font: 400 var(--text-size-caption-l) / 1.5 var(--font-family-base);
-  overflow-wrap: anywhere;
-}
 .date-study-stack-proto {
   display: grid;
   gap: var(--space-24);
   min-inline-size: 0;
-}
-.date-study-overlay-stack-proto .date-study-label-proto,
-.date-study-overlay-stack-proto .date-study-note-proto {
-  padding: var(--space-4) var(--space-8);
-  border-radius: var(--size-s-radius);
-  background: var(--bg-canvas);
 }
 .date-live-stage-proto {
   inline-size: 100%;
@@ -623,6 +590,31 @@
   border: 1px solid var(--border-subtle);
   border-radius: var(--size-m-radius);
   background: var(--bg-canvas);
+}
+.date-inline-study {
+  display: contents;
+}
+.date-narrow-study {
+  max-inline-size: 14rem;
+}
+@media (pointer: coarse) {
+  .date-narrow-study {
+    max-inline-size: 17rem;
+  }
+  /* Let the source and its calendar share the preview gutter on narrow touch screens. */
+  .date-inline-study {
+    display: flex;
+    justify-content: center;
+    inline-size: 100%;
+  }
+  .date-inline-study > :is(.date-picker-proto, .date-study-stack-proto) {
+    flex: none;
+    inline-size: min(21rem, calc(100% + var(--space-32)));
+  }
+  .date-inline-study .date-picker-panel-proto {
+    /* Reserve seven 44px targets plus the two panel borders before adding padding. */
+    padding-inline: clamp(0px, calc((100% - 310px) / 2), var(--space-12));
+  }
 }
 @media (forced-colors: active) {
   .calendar-day-proto[data-edge]:not(:disabled) {

@@ -1,0 +1,82 @@
+.table-example-card {
+  gap: var(--space-12);
+}
+.table-example-token,
+.table-example-queue :is(th, td):nth-last-child(2) {
+  white-space: nowrap;
+}
+.table-example-routes,
+.table-example-results {
+  table-layout: fixed;
+}
+.table-example-routes {
+  --route-policy-width: 9rem;
+  /* The path needs seven characters and a caret beside the policy picker and row action. */
+  min-inline-size: calc(
+    7ch + 2px + 2 * var(--table-cell-x) + var(--route-policy-width) + var(--table-control-height) +
+      2 * var(--table-control-inset-inline)
+  );
+}
+.table-example-policy-column {
+  width: var(--route-policy-width);
+}
+.table-example-actions-column {
+  width: calc(var(--table-control-height) + 2 * var(--table-control-inset-inline));
+}
+.table-example-route-notice {
+  display: block;
+  padding-inline: var(--space-16);
+}
+.table-example-results th:first-child {
+  inline-size: 65%;
+}
+.table-example-bounded {
+  max-block-size: 18rem;
+}
+.table-example-queue {
+  min-inline-size: 28rem;
+}
+.table-example-queue .table-example-choice,
+.table-example-queue .table-example-actions {
+  inline-size: 1%;
+}
+.table-example-queue .table-example-choice,
+.table-proto > thead > tr > th:is(.table-example-actions, .table-example-action-heading) {
+  padding-block: 0;
+  padding-inline: var(--space-4);
+}
+.table-example-drawer-stage {
+  position: relative;
+  isolation: isolate;
+  inline-size: 100%;
+  min-block-size: 19rem;
+  padding: var(--space-16);
+}
+.table-example-drawer .dialog-surface {
+  --dialog-width: 520px;
+}
+.table-example-relations-scroll {
+  max-block-size: 10rem;
+  margin-block: 4px;
+  margin-inline: -8px;
+}
+.table-example-relations {
+  min-inline-size: 19rem;
+}
+.table-example-relations :is(th, td):nth-child(2) {
+  inline-size: 25%;
+  white-space: nowrap;
+}
+.table-example-relations :is(th, td):nth-child(3) {
+  inline-size: 16%;
+  white-space: nowrap;
+}
+.table-example-number-placeholder {
+  margin-inline-start: auto;
+}
+.table-proto > tbody > tr > .table-example-feedback {
+  padding-block: var(--space-16);
+}
+.table-example-feedback-action {
+  margin-block-start: var(--space-8);
+}

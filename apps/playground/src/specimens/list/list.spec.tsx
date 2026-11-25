@@ -1,8 +1,19 @@
-import { List, ListItem } from '../../prototypes/list/list.proto.js';
 import { defineComponent } from '../../workbench/types.js';
+import { choice, eventProp, toggle } from '../control-props.js';
+import { DocumentList } from './document-list.js';
+import documentSource from './document-list.tsx?raw';
+import proseSource from './credential-notes.tsx?raw';
+import {
+  LiveRows,
+  OverflowExamples,
+  ProseExamples,
+  SizeExamples,
+  StateExamples,
+} from './list.examples.js';
 
-const { LiveRows, OverflowExamples, ProseExamples, SizeExamples, StateExamples } =
-  await import('../../prototypes/list/list.examples.js');
+const documents = documentSource
+  .replace('../../prototypes/', './prototypes/')
+  .replace('export function DocumentList', 'function DocumentList');
 
 export default defineComponent({
   id: 'list',
@@ -11,101 +22,110 @@ export default defineComponent({
   status: 'Proto',
   summary: 'Native lists for running text and structured rows with independent actions.',
   props: {
-    size: {
-      kind: 'enum',
-      group: 'Layout',
-      default: 'm',
-      description: 'Vertical density of list entries.',
-      choices: [{ value: 's' }, { value: 'm' }, { value: 'l' }],
-    },
-    markers: {
-      kind: 'boolean',
-      group: 'Layout',
-      default: false,
-      description: 'Keep the native list marker visible.',
-    },
-    dividers: {
-      kind: 'boolean',
-      group: 'Layout',
-      default: false,
-      description: 'Draw a rule between adjacent items.',
-    },
+    size: choice(
+      'Geometry',
+      'Vertical density of each row. This example uses M. Omit size to inherit the surrounding typography.',
+      ['s', 'm', 'l'],
+      'm',
+    ),
+    markers: toggle(
+      'Geometry',
+      'Show native list markers. This example hides them for record rows. List shows markers by default.',
+    ),
+    dividers: toggle('Geometry', 'Draw a rule between adjacent visible items.'),
     onOpen: {
-      kind: 'action',
-      group: 'Events',
-      description: 'Report the selected list command.',
-      code: 'handleOpen',
+      ...eventProp(
+        'The sample row command selects the document and reports its title. Attach onClick to ListItem.action.',
+        '(title) => console.log(title)',
+      ),
+      demo: true,
     },
   },
-  code: (
-    values,
-  ) => `<List size="${values.size}"${values.markers ? '' : ' markers={false}'}${values.dividers ? ' dividers' : ''}>
-  <ListItem title="Launch plan" action={{ onClick: handleOpen }} />
-  <ListItem title="Review notes" action={{ onClick: handleOpen }} />
-</List>`,
+  code: (values) => `${documents}
+
+export function ProjectDocuments() {
+  return <DocumentList listProps={${JSON.stringify({ size: values.size, markers: values.markers, dividers: values.dividers })}} />;
+}`,
   render: ({ values, ctx }) => (
-    <List {...ctx.subject} size={values.size} markers={values.markers} dividers={values.dividers}>
-      <ListItem
-        title="Launch plan"
-        action={{ onClick: () => ctx.action('onOpen')('Launch plan') }}
-      />
-      <ListItem
-        title="Review notes"
-        action={{ onClick: () => ctx.action('onOpen')('Review notes') }}
-      />
-    </List>
+    <DocumentList
+      subject={ctx.subject}
+      surface={ctx.surface}
+      listProps={{ size: values.size, markers: values.markers, dividers: values.dividers }}
+      onOpen={ctx.action('onOpen')}
+    />
   ),
-  matrixViews: [
+  states: [
     {
       id: 'sizes',
       title: 'Row sizes',
       rows: 'size',
-      cols: 'dividers',
-      reference: () => <SizeExamples />,
+      group: 'dividers',
+      caption:
+        'Compare S, M and L commands in each divider group. Activate a row to read its document. Row anatomy shows how icons, avatars and trailing facts align at the same sizes.',
     },
   ],
   cases: [
     {
+      id: 'anatomy',
+      title: 'Row anatomy',
+      mode: 'pinned',
+      kind: 'content',
+      caption:
+        'Compare six static records at compact, standard and spacious sizes. A reserved leading column aligns text with adjacent media, and the trailing fact wraps below when space is limited.',
+      render: SizeExamples,
+    },
+    {
       id: 'states',
       title: 'Action states',
-      caption: 'Main-area states are pinned. Use Tab to focus the Request access button.',
+      mode: 'live',
       kind: 'behavior',
-      render: () => <StateExamples />,
+      reset: true,
+      caption:
+        'Hover, press and current-link focus are pinned for comparison. Follow the links to their local details or activate Verify connection for a sample result. Tab to Request access beside the unavailable archive.',
+      render: StateExamples,
     },
     {
       id: 'overflow',
       title: 'Long labels and trailing content',
+      mode: 'live',
       kind: 'content',
-      render: () => <OverflowExamples />,
+      reset: true,
+      caption:
+        'Open the retention review for its summary or assign Platform operations with the separate trailing button. The full destination identifier wraps within the available width.',
+      render: OverflowExamples,
     },
     {
       id: 'controls',
       title: 'Independent row actions',
-      caption:
-        'The trailing slot holds the switch and menu trigger. Tab from the row link to its menu.',
+      mode: 'live',
       kind: 'behavior',
-      render: () => <LiveRows />,
+      reset: true,
+      caption:
+        'Toggle export notifications. Tab from Credential handoff to its actions to get the local link or pin the notes. Verify connection shows the sample result in its own row.',
+      render: ({ ctx }) => <LiveRows subject={ctx.subject} surface={ctx.surface} />,
     },
     {
       id: 'overlay',
       title: 'Rows on a floating surface',
       surface: 'overlay',
       overlayStage: true,
+      mode: 'live',
       kind: 'surface',
-      render: () => <LiveRows overlay />,
+      reset: true,
+      caption:
+        'Compare the same configuration list on a floating surface and a base card. Each owner keeps its own notifications, pinned notes and verification result.',
+      render: ({ ctx }) => <LiveRows subject={ctx.subject} surface={ctx.surface} />,
     },
   ],
-  usage: [
+  compositions: [
     {
       id: 'prose',
       title: 'Prose and numbering',
-      caption: 'Nested markers, continued and reversed numbering, and a markerless text list.',
-      code: `<List as="ol" start={12} aria-label="Final checks">
-  <ListItem>Run one export using the new credential.</ListItem>
-  <ListItem>Disable the old key after the export succeeds.</ListItem>
-  <ListItem>Leave a note for the next on-call maintainer.</ListItem>
-</List>`,
-      render: () => <ProseExamples />,
+      mode: 'live',
+      caption:
+        'Follow the handoff notes link within this credential guide. Compare nested bullets, checks numbered 12–14, a reversed audit sequence with an ordinal override, and a markerless list.',
+      code: proseSource.replace('../../prototypes/', './prototypes/'),
+      render: ProseExamples,
     },
   ],
 });

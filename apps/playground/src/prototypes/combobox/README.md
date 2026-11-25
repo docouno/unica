@@ -2,7 +2,7 @@
 
 ## Combobox
 
-Open `?item=combobox` in the workbench. The role matrix and the Team assignment example in Usage are interactive. Examples marked **Pinned** keep states side by side for inspection. Folio's Page Properties drawer provides the placement reference for a compact reviewer picker inside an inspector. The live field has also been checked inside the shared Drawer preview.
+Open `?item=combobox` in the workbench. The role matrix and the Team assignment example in Compositions are interactive. Examples marked **Pinned** keep states side by side for inspection. Folio's Page Properties drawer provides the placement reference for a compact reviewer picker inside an inspector. The live field has also been checked inside the shared Drawer preview.
 
 ### Purpose
 
@@ -40,9 +40,11 @@ The editable input maintains DOM focus while the popup is open. Keep the input's
 
 The live form demonstrates assignment validation and recovery without a network. Save stays beside the field and available while suggestions are open. Pinned comparisons render in flow. The live prototype exercises manual top-layer placement, focus, and local keyboard and pointer behavior. Production implementation supplies the stable-ID form carrier, reset, controlled state, validation, live announcements, cross-browser focus and IME, and scroll behavior within nested overlays. Reset should return to the initial ID and label and clear any open query and recovery history. Read-only keeps its answer for submission and disabled omits it.
 
+The assignment form submits the confirmed team's stable value in a local hidden field named `team`. Editing suppresses that value until a team is restored or selected. Saving a draft returns focus to the editor. A successful save shows the confirmed team name. The standalone Playground reports selection and query changes through callbacks.
+
 ## Autocomplete
 
-Open `?item=autocomplete` in the workbench. The role matrix, Free text and recent titles, and Insert a block are interactive. Pinned comparisons demonstrate availability, text status, plain/rich rows, response states, and wrap. The block example models the interaction used by the Rich Editor composition in Folio.
+Open `?item=autocomplete` in the workbench. Playground edits one document title. States includes the generated role matrix, Browsing, recent titles and intrinsic width, and Free text and recent titles. The Insert a block composition accepts a chosen suggestion or a typed command. Pinned comparisons demonstrate availability, text status, plain/rich rows, response states, and wrap. The block example models the interaction used by the Rich Editor composition in Folio.
 
 ### Purpose and value
 
@@ -66,4 +68,4 @@ The editable text is the current answer throughout. Suggestions are a shortcut f
 | Clear                              | Clear the text, dismiss suggestions, and return focus to the input. Clearing while busy is available.                                                                                                                                                                          |
 | Wait, no matches, or fetch failure | Keep the input editable. The panel provides quiet feedback outside the option rows. The field's spinner and list busy state indicate search progress. A mismatch or fetch failure leaves free text available. Only the application's validation can flag the field as invalid. |
 
-The popup never edits the input while the user browses. Avoid duplicate outlines on options and preserve text editing, selection, IME, screen reader focus, and Escape precedence in nested layers. The listbox communicates virtual focus using an active descendant. In this free-text mode its active row can expose selection for accessibility while the display uses the active plate and its leading edge. The production input is the native form carrier and supports string validation and reset. The local examples cover free-text submission and explicit suggestion insertion, with async presentation and other states pinned. Final React/TypeScript API, controlled authority, live announcement timing, IME and browser support are package work.
+The popup never edits the input while the user browses. Avoid duplicate outlines on options and preserve text editing, selection, IME, screen reader focus, and Escape precedence in nested layers. The listbox communicates virtual focus using an active descendant. In this free-text mode its active row can expose selection for accessibility while the display uses the active plate and its leading edge. The production input is the native form carrier and supports string validation and reset. The local examples cover free-text submission, native form reset and explicit suggestion insertion, with async presentation and other states pinned. Final React/TypeScript API, controlled authority, live announcement timing, IME and browser support are package work.

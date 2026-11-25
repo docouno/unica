@@ -1,0 +1,15 @@
+TagsInput mixed-script typography fixture
+
+File: tags-input-japanese-400.ttf (Noto Sans JP, weight 400)
+Text: 東京
+Purpose: deterministic rendering of the TagsInput mixed reading directions example.
+
+Google Fonts text subset:
+https://fonts.googleapis.com/css2?family=Noto+Sans+JP%3Awght%40400&text=%E6%9D%B1%E4%BA%AC
+
+Downloaded font, preserved without further modification:
+https://fonts.gstatic.com/l/font?kit=-F6jfjtqLzI2JPCgQBnw7HFyzSD-AsregP8VFBEj75vA0FCFFCYK0A&skey=72472b0eb8793570&v=v57
+
+License: SIL Open Font License 1.1, included as tags-input-japanese-OFL.txt.
+Upstream license:
+https://raw.githubusercontent.com/google/fonts/main/ofl/notosansjp/OFL.txt

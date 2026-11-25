@@ -79,7 +79,7 @@ A missing required answer produces one adjacent group message and directs focus 
 
 Changing filters updates selection immediately. Waiting and rejected result requests belong beside the result region, not inside a Chip. Keep selected checks visible and options operable. Do not replace a check with a spinner, change the chip width, or disable every filter while fetching. A request failure retains the user's choices and offers a retry at the surrounding result boundary. Late results must not overwrite a newer selection or steal focus.
 
-`validation` demonstrates the missing-answer outcome with explicit local validation. `feedback` is a controlled preview: Show results / Preview failure resolve a deliberately pinned waiting state; it does not send a request. These examples settle the appearance and placement of feedback, not a generic async library API.
+`validation` demonstrates the missing-answer outcome with explicit local validation. `feedback` is a controlled preview: the frame actions Show results and Preview failure resolve a deliberately pinned waiting state; it does not send a request. These examples settle the appearance and placement of feedback, not a generic async library API.
 
 ## Long labels, small containers, and RTL
 
@@ -93,17 +93,20 @@ Logical insets, icon placement, text-only compensation, and focus geometry mirro
 
 ## Live reference and consumer fit
 
-| Section        | Design question                                                                       |
-| -------------- | ------------------------------------------------------------------------------------- |
-| `anatomy`      | S/M/L, text-only stable width, icon replacement.                                      |
-| `groups`       | Named single and multiple groups, selected summary, wrapping.                         |
-| `states`       | Both selection states under pinned rest/hover/press/focus/disabled; real focus below. |
-| `fit`          | Shared text scale beside Badge, Tag, Button; short-value hit geometry.                |
-| `availability` | Policy-included selected value and whole-group disabled state.                        |
-| `overflow`     | Similar long names, email, unbroken identifier, full-name touch chooser.              |
-| `validation`   | Initial unanswered state, missing-answer feedback, focus, recovery.                   |
-| `feedback`     | Immediate selection with external waiting/failure feedback.                           |
-| `overlay`      | Actual floating material and underlay, with the same shared components.               |
+| Section            | Design question                                                                       |
+| ------------------ | ------------------------------------------------------------------------------------- |
+| `anatomy`          | S/M/L, text-only stable width, icon replacement.                                      |
+| `selection-widths` | Compare text-only and icon options at each size in the same row.                      |
+| `groups`           | Named single and multiple groups, selected summary, wrapping.                         |
+| `states`           | Both selection states under pinned rest/hover/press/focus/disabled; real focus below. |
+| `fit`              | Shared text scale beside Badge, Tag, Button; short-value hit geometry.                |
+| `availability`     | Policy-included selected value and whole-group disabled state.                        |
+| `overflow`         | Similar long names, email, unbroken identifier, full-name touch chooser.              |
+| `validation`       | Initial unanswered state, missing-answer feedback, focus, recovery.                   |
+| `feedback`         | Immediate selection with external waiting/failure feedback.                           |
+| `overlay`          | Actual floating material and underlay, with the same shared components.               |
+
+In `fit`, each size row starts with the same 12 favorite size-M results for Design systems. Apply counts the matching local inventory for the current selections. Empty size selection includes every size. The adjacent Tag marks the fixed topic.
 
 The existing `03-document-collection` composition consumes ChipGroup for its wrapping runbook facet. Its layout switch stays a connected SegmentedControl; applied query values stay in TagGroup. The row is vertically centered with adjacent filter tags and Reset, and remains quieter than New runbook. It is an integration reference, not the family's full case catalog.
 

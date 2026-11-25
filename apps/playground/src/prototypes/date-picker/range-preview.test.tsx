@@ -67,6 +67,8 @@ it('shows the range in the picker before the second date is confirmed', () => {
     />,
   );
   const input = screen.getByRole<HTMLInputElement>('textbox', { name: 'Date window' });
+  const trigger = screen.getByRole('button', { name: 'Close date range calendar' });
+  expect(trigger.getAttribute('aria-controls')).toBe(screen.getByRole('dialog').id);
   const first = day(container, 14);
   const suggested = day(container, 16);
   const blocked = day(container, 19);
@@ -93,6 +95,7 @@ it('shows the range in the picker before the second date is confirmed', () => {
 
   expect(input.value).toBe('14/09/2026 – 16/09/2026');
   expect(container.querySelector('.date-picker-panel-proto')).toBeNull();
+  expect(trigger.hasAttribute('aria-controls')).toBe(false);
 });
 
 it('replaces a filled range with two day choices in the same panel', () => {

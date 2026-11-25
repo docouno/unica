@@ -33,6 +33,12 @@ export default {
     page,
     mount,
   }) => {
+    const warnings = [];
+    page.on('console', (entry) => {
+      if (entry.type() === 'warning' && entry.text().includes('Popover requires')) {
+        warnings.push(entry.text());
+      }
+    });
     await page.setViewportSize({ width: 1440, height: 760 });
     await mount('popover-workbench');
     await openWorkbench(page, { tab: 'states', mode: 'pairwise' });
@@ -42,9 +48,11 @@ export default {
     assert.equal(await matrix.locator('.wb-artboard').count(), 1);
     assert.equal(await matrix.locator(nativePanel).count(), 0);
     assert.equal(await matrix.getByRole('button', { name: 'Page settings' }).count(), 0);
-    const preview = matrix.locator('button[data-wb-subject]').first();
-    assert.equal(await preview.getAttribute('data-unica-button-variant'), 'secondary');
-    assert.equal(await preview.getAttribute('inert'), '');
+    const previews = matrix.locator('button[data-wb-subject]');
+    const composed = previews.and(matrix.locator('[data-unica-button-variant="secondary"]'));
+    const native = previews.and(matrix.locator('button:not([data-unica-button-variant])'));
+    assert.equal(await composed.first().getAttribute('inert'), '');
+    assert.equal(await native.first().getAttribute('inert'), '');
 
     const more = matrix.getByRole('button', { name: /Show more rows/ }).first();
     await more.focus();
@@ -65,6 +73,24 @@ export default {
     );
     assert.equal(await matrix.locator(nativePanel).count(), 0);
     await assertFocused(both);
+    for (const [slice, rows] of [
+      ['sizes', 3],
+      ['placement', 12],
+    ]) {
+      await openWorkbench(page, { tab: 'states', mode: 'overview', slice });
+      const group = page.locator(`[data-wb-slice="${slice}"]`);
+      const samples = group.locator('button[data-wb-subject]');
+      await samples.first().waitFor();
+      assert.equal(await samples.count(), rows);
+      const linked = await samples.evaluateAll((buttons) =>
+        buttons.every((button) => {
+          const content = button.ownerDocument.getElementById(button.getAttribute('aria-controls'));
+          return button.inert && content?.matches('[role="dialog"][popover]:not(:popover-open)');
+        }),
+      );
+      assert.equal(linked, true);
+    }
+    assert.deepEqual(warnings, []);
   },
 
   'Popover Playground opens a real inline subject with Bounds and native FormData': async ({
@@ -106,7 +132,33 @@ export default {
     assert.equal(await field.inputValue(), 'Release notes');
     assert.equal(await trigger.getAttribute('aria-expanded'), 'true');
     await field.fill('Release checklist');
-    await dialog.getByRole('button', { name: 'Save name' }).click();
+    await field.evaluate((input) => input.setSelectionRange(7, 7));
+    await field.press('Enter');
+    await assertFocused(field);
+    assert.equal(await field.evaluate((input) => input.selectionStart), 7);
+    await field.fill('Unsaved draft');
+    const resetValues = await field.evaluate((input) => {
+      const form = input.form;
+      form.reset();
+      const values = [input.value, new FormData(form).get('name')];
+      form.requestSubmit();
+      return values;
+    });
+    assert.deepEqual(resetValues, ['Release checklist', 'Release checklist']);
+    await page.getByText('Page name: Release checklist', { exact: true }).waitFor();
+    await field.fill('Another draft');
+    await page.evaluate(() => {
+      document.addEventListener('reset', (event) => event.preventDefault(), { once: true });
+    });
+    const resetName = dialog.getByRole('button', { name: 'Reset name' });
+    await resetName.press('Enter');
+    await page.evaluate(() => new Promise((resolve) => setTimeout(resolve, 0)));
+    assert.equal(await field.inputValue(), 'Another draft');
+    await resetName.click();
+    await page.waitForFunction(
+      (node) => node.value === 'Release checklist',
+      await field.elementHandle(),
+    );
     await page.keyboard.press('Escape');
     await dialog.waitFor({ state: 'hidden' });
     await assertFocused(trigger);
@@ -129,12 +181,62 @@ export default {
     assert.equal(await page.locator(nativePanel).count(), 0);
     await page.getByRole('tab', { name: 'Events' }).click();
     const events = page.getByRole('tabpanel', { name: 'Events' });
-    assert.equal(await events.getByText('reset', { exact: true }).count(), 1);
+    assert.equal(await events.getByText('reset', { exact: true }).count(), 4);
     assert.deepEqual(await events.getByRole('listitem').last().locator('code').allTextContents(), [
       'onOpenChange',
       'true',
     ]);
   },
+
+  'Popover placements contain edge collisions and continue Tab inside the scaled RTL example':
+    async ({ page, mount }) => {
+      await page.setViewportSize({ width: 1390, height: 900 });
+      await mount('popover-workbench');
+      await openWorkbench(page, {
+        tab: 'states',
+        block: 'placements',
+        vp: '1440',
+        dir: 'rtl',
+        scale: '120',
+      });
+      await page.getByRole('group', { name: 'Family' }).getByRole('link', { name: 'All' }).click();
+      await page.getByRole('group', { name: 'Scheme' }).getByRole('link', { name: 'Both' }).click();
+      const study = page.locator('[data-wb-block="placements"]');
+      await study.getByRole('combobox', { name: 'Side' }).selectOption('top');
+      await study.getByRole('combobox', { name: 'Anchor' }).selectOption('top-start');
+      const frame = study.locator('.wb-artboard[data-theme="soft-dark"] iframe');
+      const owner = frame.contentFrame();
+      const trigger = owner.getByRole('button', { name: 'Page settings' });
+      const panel = owner.getByRole('dialog', { name: 'Page settings' });
+      const field = panel.getByRole('textbox', { name: 'Display name' });
+      const note = owner.getByRole('textbox', { name: 'Page note' });
+      assert.ok(await frame.evaluate((n) => n.getBoundingClientRect().width < n.offsetWidth * 0.9));
+      await frame.scrollIntoViewIfNeeded();
+      await trigger.press('Enter');
+      await field.waitFor();
+      const placement = await panel.evaluate((n) => {
+        const box = n.getBoundingClientRect(),
+          view = n.ownerDocument.documentElement;
+        return {
+          side: n.dataset.side,
+          inside:
+            box.left >= 0 &&
+            box.top >= 0 &&
+            box.right <= view.clientWidth &&
+            box.bottom <= view.clientHeight,
+        };
+      });
+      assert.deepEqual(placement, { side: 'bottom', inside: true });
+      await field.fill('Publication notes');
+      await field.press('Tab');
+      await panel.waitFor({ state: 'hidden' });
+      await assertFocused(note);
+      await trigger.press('Enter');
+      assert.equal(await field.inputValue(), 'Publication notes');
+      await field.press('Escape');
+      await panel.waitFor({ state: 'hidden' });
+      await trigger.and(owner.locator(':focus')).waitFor();
+    },
 
   'Popover Cases validate, preserve a failed draft, retry, and discard cancelled edits': async ({
     page,
@@ -149,12 +251,14 @@ export default {
     const text = dialog.getByRole('textbox', { name: 'Text' });
     const url = dialog.getByRole('textbox', { name: 'Web address' });
     const save = dialog.getByRole('button', { name: 'Save link' });
-    await sample.getByRole('checkbox', { name: 'Fail the next save' }).check();
+    const failNext = sample.getByRole('checkbox', { name: 'Fail the next save' });
+    await failNext.check();
     await trigger.click();
     await text.fill('Read the checklist');
     await url.fill('bad link');
     await save.click();
     await assertFocused(url);
+    assert.equal(await failNext.isChecked(), true);
     assert.equal(await url.getAttribute('aria-invalid'), 'true');
     assert.equal(await dialog.isVisible(), true);
 
@@ -162,6 +266,7 @@ export default {
     await save.click();
     await dialog.getByRole('button', { name: 'Saving…' }).waitFor();
     assert.equal(await url.getAttribute('readonly'), '');
+    assert.equal(await failNext.isChecked(), false);
     await dialog.getByRole('alert').waitFor();
     assert.equal(await text.inputValue(), 'Read the checklist');
     await dialog.getByRole('button', { name: 'Try again' }).click();
@@ -186,7 +291,8 @@ export default {
     await mount('popover-workbench');
     await openWorkbench(page, { tab: 'states', block: 'content' });
     const sample = page.locator('[data-wb-block="content"]');
-    await sample.getByRole('radio', { name: 'Load failed' }).check();
+    const control = sample.getByRole('combobox', { name: 'Activity state' });
+    await control.selectOption('error');
     await sample.getByRole('button', { name: 'Recent activity' }).click();
     const panel = sample.getByRole('dialog', { name: 'Recent activity' });
     const retry = panel.getByRole('button', { name: 'Try again' });
@@ -195,5 +301,6 @@ export default {
     await panel.getByText('Review completed').waitFor();
     assert.equal(await panel.getByRole('alert').count(), 0);
     await assertFocused(panel);
+    assert.equal(await control.inputValue(), 'ready');
   },
 };

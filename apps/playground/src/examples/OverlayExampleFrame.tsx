@@ -17,6 +17,11 @@ function applyEnvironment(
 ): void {
   const root = target.documentElement;
   const inherited = frame.ownerDocument.defaultView?.getComputedStyle(frame);
+  if (frame.closest('[data-wb-capture-route]')) {
+    root.dataset.wbFreeze = '1';
+  } else {
+    delete root.dataset.wbFreeze;
+  }
   root.dataset.theme = theme.id;
   root.style.colorScheme = theme.colorScheme;
   root.dir = inherited?.direction || 'ltr';
@@ -126,15 +131,7 @@ export function OverlayExampleFrame({
   const bounds = new URLSearchParams(parentSearch).get('bounds') === '1';
   return (
     <>
-      <iframe
-        ref={frame}
-        className="hint-example-frame"
-        title={title}
-        height={height}
-        srcDoc={source}
-        data-wb-pending={target && target === ready ? undefined : ''}
-        onLoad={(event) => load(event.currentTarget)}
-      />
+      {/* Dispose native popovers before removing their iframe document. */}
       {target &&
         createPortal(
           <UnicaProvider portalContainer={target.body}>
@@ -144,6 +141,15 @@ export function OverlayExampleFrame({
           </UnicaProvider>,
           target.body,
         )}
+      <iframe
+        ref={frame}
+        className="hint-example-frame"
+        title={title}
+        height={height}
+        srcDoc={source}
+        data-wb-pending={target && target === ready ? undefined : ''}
+        onLoad={(event) => load(event.currentTarget)}
+      />
     </>
   );
 }

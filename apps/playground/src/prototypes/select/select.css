@@ -309,10 +309,16 @@
   position: relative;
   display: inline-flex;
   align-items: center;
-  gap: var(--space-8);
   flex: 1 1 auto;
   min-inline-size: 0;
   overflow: hidden;
+}
+.select-summary-proto,
+.select-summary-measure-proto > [data-measure-pair] {
+  column-gap: var(--space-8);
+}
+.select-summary-measure-proto > [data-measure-pair] {
+  display: inline-flex;
 }
 .select-summary-labels-proto {
   display: block;
@@ -433,9 +439,6 @@
 .select-empty-copy-proto > strong {
   color: var(--fg-secondary);
   font-weight: 500;
-}
-.select-empty-action {
-  margin-block-start: var(--space-8);
 }
 .select-proto[hidden] {
   display: none;

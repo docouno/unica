@@ -1,0 +1,29 @@
+tr[data-wb-result-row] > td:has(.tags-editor-proto[data-wb-subject]) {
+  min-inline-size: 16rem;
+}
+
+.tags-examples-proto {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+  align-items: start;
+  gap: 24px;
+  inline-size: 100%;
+  min-inline-size: 0;
+}
+
+@font-face {
+  font-family: 'Tags Study Arabic';
+  src: url('/assets/alert-arabic-400.ttf') format('truetype');
+}
+@font-face {
+  font-family: 'Tags Study Hebrew';
+  src: url('/assets/tags-input-hebrew-400.ttf') format('truetype');
+}
+@font-face {
+  font-family: 'Tags Study Japanese';
+  src: url('/assets/tags-input-japanese-400.ttf') format('truetype');
+}
+.tags-mixed-script-study .tag-label-proto {
+  font-family:
+    var(--font-family-base), 'Tags Study Arabic', 'Tags Study Hebrew', 'Tags Study Japanese';
+}

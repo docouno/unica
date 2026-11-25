@@ -54,6 +54,56 @@ async function assertArtboards(page, through) {
 }
 
 export default {
+  'Overlay example iframes follow the capture URL and preserve live animation': async ({
+    page,
+    origin,
+  }) => {
+    await page.emulateMedia({ reducedMotion: 'no-preference' });
+    await page.setViewportSize({ width: 1500, height: 950 });
+    for (const item of ['hover-card', 'tooltip']) {
+      for (const freeze of ['1', '0']) {
+        const url = new URL('/', origin);
+        url.search = new URLSearchParams({
+          item,
+          tab: 'states',
+          block: 'content',
+          family: 'frost',
+          scheme: 'light',
+          freeze,
+        }).toString();
+        await page.goto(url.href, { waitUntil: 'domcontentloaded' });
+        await page
+          .locator('html[data-wb-ready="1"]')
+          .waitFor({ state: 'attached', timeout: 20000 });
+        const scope = page
+          .locator(
+            '[data-wb-block="content"] iframe[title="' +
+              (item === 'tooltip' ? 'Tooltip content example' : 'Preview content') +
+              '"]',
+          )
+          .first()
+          .contentFrame();
+        const subject = scope
+          .locator(item === 'tooltip' ? '.unica-tooltip:popover-open' : '.unica-skeleton-text-bar')
+          .first();
+        await subject.waitFor();
+        assert.equal(
+          await subject.evaluate((node) =>
+            node.ownerDocument.documentElement.hasAttribute('data-wb-freeze'),
+          ),
+          freeze === '1',
+        );
+        if (item === 'hover-card') {
+          const duration = await subject.evaluate(
+            (node) =>
+              node.ownerDocument.defaultView.getComputedStyle(node, '::after').animationDuration,
+          );
+          assert.equal(parseFloat(duration) > 0, freeze === '0');
+        }
+      }
+    }
+  },
+
   'Workbench scenes and multiple inspector previews use the physical artboard host': async ({
     page,
     mount,

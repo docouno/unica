@@ -33,6 +33,60 @@ function open(page, params) {
 }
 
 export default {
+  'Autocomplete submits the current text and respects the native reset decision': async ({
+    page,
+    mount,
+  }) => {
+    await mount('input-consumers');
+    const form = page.getByTestId('picker-form');
+    const input = form.getByRole('combobox', { name: 'Entry title' });
+    const reset = form.getByRole('button', { name: 'Reset picker form' });
+    await input.fill('Unlisted title');
+    await cancelKeyboardReset(form, reset);
+    assert.equal(await input.inputValue(), 'Unlisted title');
+    assert.equal(
+      await form.evaluate((owner) => new FormData(owner).get('title')),
+      'Unlisted title',
+    );
+
+    await input.fill('Another edit');
+    assert.equal(await input.getAttribute('aria-expanded'), 'true');
+    assert.equal(
+      await form.evaluate((owner) => {
+        owner.reset();
+        return new FormData(owner).get('title');
+      }),
+      'Draft title',
+    );
+    await form.locator('input[name="title"][aria-expanded="false"]').waitFor();
+    assert.equal(await input.inputValue(), 'Draft title');
+
+    await page.goto(
+      new URL('/?item=autocomplete&tab=playground&family=soft&scheme=light', page.url()).href,
+    );
+    const title = page.getByRole('combobox', { name: 'Document title', exact: true });
+    await title.waitFor({ timeout: 30_000 });
+    await title.fill('Incident');
+    const suggestions = page.getByRole('listbox', { name: 'Suggestions', exact: true });
+    await suggestions.getByRole('option', { name: 'Incident follow-up' }).waitFor();
+    const posted = await title.evaluate(async (editor) => {
+      const owner = editor.form;
+      owner.reset();
+      owner.ownerDocument.addEventListener('reset', (event) => event.preventDefault(), {
+        once: true,
+      });
+      owner.reset();
+      await new Promise((resolve) => setTimeout(resolve, 0));
+      return new FormData(owner).get('title');
+    });
+    assert.equal(posted, 'Release notes');
+    assert.equal(await title.getAttribute('aria-expanded'), 'false');
+    await title.press('ArrowDown');
+    assert.equal(await title.getAttribute('aria-controls'), await suggestions.getAttribute('id'));
+    assert.deepEqual(await suggestions.getByRole('option').allTextContents(), ['Release notes']);
+    await title.press('Enter');
+    assert.equal(await title.inputValue(), 'Release notes');
+  },
   'Input consumers retain picker slot order in both directions and Clear updates every form axis once':
     async ({ page, mount }) => {
       await page.setViewportSize({ width: 360, height: 760 });
@@ -247,7 +301,7 @@ export default {
     await note.focus();
     await page.keyboard.press('Shift+F10');
     assert.equal(await menu.count(), 0);
-    const card = page.locator('.context-study-live-target');
+    const card = page.getByRole('group', { name: 'Release notes', exact: true });
     await card.click({ button: 'right', position: { x: 4, y: 4 } });
     await menu.waitFor();
   },

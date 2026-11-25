@@ -1,297 +1,243 @@
 import {
-  size,
-  variant,
-  status,
+  clearable,
   disabled,
+  eventProp,
+  loading,
   readOnly,
   required,
-  clearable,
-  loading,
-  choice,
+  size,
+  status,
   toggle,
-  eventProp,
+  variant,
 } from '../control-props.js';
 import { defineComponent } from '../../workbench/types.js';
 import { DateRangePicker } from '../../prototypes/date-picker/date-picker.proto.js';
-import { DateStudy } from '../../prototypes/date-picker/date-study.proto.js';
+import { previewProps, previewText } from '../preview-code.js';
+import { withOverlaySurface } from '../shared/with-overlay-surface.js';
+import {
+  Anatomy,
+  FieldStates,
+  LivePickers,
+  Locales,
+  PairedFields,
+  RangePanels,
+} from './date-range-picker.examples.js';
+import { PeriodRecords } from './period-records.js';
+import recordsSource from './period-records.tsx?raw';
+import { PeriodDuration } from './period-duration.js';
+import durationSource from './period-duration.tsx?raw';
+import './date-range-picker-matrix.css';
+
+const samplePeriod = ['2026-09-14', '2026-09-18'] as const;
+const unavailable = ['2026-09-19'];
+const messages = {
+  neutral: '',
+  info: 'Both dates belong to the selected period.',
+  success: 'The full period is available.',
+  warning: 'Check the period with the review owner.',
+  danger: 'Choose another period.',
+};
 
 export default defineComponent({
   id: 'date-range-picker',
   title: 'DateRangePicker',
   category: 'Selection & Pickers',
   status: 'Proto',
-  summary: 'Enter a period in one field or select two days in one calendar.',
   componentName: 'DateRangePicker',
+  summary:
+    'Enter two local dates in one field or choose the endpoints of an inclusive period. The first calendar choice remains a draft until the second is accepted.',
   props: {
-    size,
     variant,
-    status,
-    disabled,
-    readOnly,
-    required,
-    clearable,
-    loading,
-    locale: choice(
-      'Content',
-      'Controls the displayed date format.',
-      ['en-GB', 'en-US', 'de-DE'],
-      'en-GB',
-    ),
+    size,
+    locale: {
+      kind: 'enum',
+      group: 'Content',
+      description: 'Locale used for both numeric endpoints and calendar labels.',
+      default: 'en-GB',
+      publicType: 'string',
+      choices: [
+        { value: 'en-GB', label: 'English (UK)' },
+        { value: 'en-US', label: 'English (US)' },
+        { value: 'de-DE', label: 'German' },
+      ],
+    },
     allowUnavailableInRange: toggle(
-      'Selection',
-      'Permit unavailable dates between eligible endpoints.',
+      'Availability',
+      'Allow unavailable dates between eligible endpoints. Both endpoints must be available.',
     ),
-    onValueChange: eventProp('Reports both endpoints of the selected period.', 'handleValueChange'),
+    clearable,
+    required,
+    readOnly: {
+      ...readOnly,
+      description: 'Inspect the calendar while keeping the accepted period.',
+    },
+    disabled,
+    status: {
+      ...status,
+      description: 'Set a fixed feedback message. Range validation takes precedence.',
+    },
+    loading,
+    onValueChange: eventProp(
+      'Receives the accepted pair of ISO dates. Clearing the period returns two empty strings.',
+      '(period) => console.log(period)',
+      '(value: readonly [string, string]) => void',
+    ),
   },
   constraints: [
     {
       kind: 'ignored',
       when: { disabled: true },
-      affects: ['status', 'loading', 'clearable'],
-      reason: 'The disabled field suppresses feedback, pending work and clear interaction.',
+      affects: ['status', 'loading'],
+      reason: 'A disabled field suppresses its status and loading indicators.',
+    },
+    {
+      kind: 'ignored',
+      when: { readOnly: true },
+      affects: ['clearable'],
+      reason: 'A read-only field retains both dates and hides the clear action.',
     },
   ],
-  render: ({ values, ctx }) => (
-    <DateRangePicker
-      {...values}
-      style={{ inlineSize: 'min(100%, 22rem)' }}
-      subjectAttributes={ctx.subject}
-      label="Release window"
-      defaultValue={['2026-09-14', '2026-09-18']}
-      unavailable={['2026-09-19']}
-      onValueChange={ctx.action('onValueChange')}
-    />
-  ),
-  code: (_values, attributes) =>
-    `<DateRangePicker
-  label="Release window"
-  defaultValue={['2026-09-14', '2026-09-18']}
-  unavailable={['2026-09-19']}${attributes}
-/>`,
-  matrixViews: [
+  render: withOverlaySurface(({ values, ctx }) => {
+    const message = !values.disabled && messages[values.status];
+    return (
+      <DateRangePicker
+        {...values}
+        subjectAttributes={ctx.subject}
+        data-date-range-comparison=""
+        style={{ inlineSize: 'min(100%, var(--date-range-comparison-width, 22rem))' }}
+        label={values.variant === 'ghost' ? 'Inline date window' : 'Date window'}
+        defaultValue={samplePeriod}
+        unavailable={unavailable}
+        message={message ? <bdi>{message}</bdi> : undefined}
+        onValueChange={ctx.action('onValueChange')}
+      />
+    );
+  }, 'border-box'),
+  code: (values) => {
+    const attrs = previewProps(values, {
+      size: 'm',
+      variant: 'default',
+      status: 'neutral',
+      locale: 'en-GB',
+      allowUnavailableInRange: false,
+      clearable: false,
+      required: false,
+      readOnly: false,
+      disabled: false,
+      loading: false,
+    });
+    const message = !values.disabled && messages[values.status];
+    return `import { DateRangePicker } from './prototypes/date-picker/date-picker.proto.js';
+import '@docouno/unica/styles.css';
+
+export function DateWindow() {
+  return <DateRangePicker label="${values.variant === 'ghost' ? 'Inline date window' : 'Date window'}" defaultValue={${JSON.stringify(samplePeriod)}} unavailable={${JSON.stringify(unavailable)}}${attrs}${message ? ` message={<bdi>${previewText(message)}</bdi>}` : ''} onValueChange={(period) => console.log(period)} />;
+}`;
+  },
+  states: [
     {
       id: 'fields',
+      title: 'Field roles and sizes',
       rows: 'size',
       cols: 'variant',
-      title: 'One field · two boundaries',
+      fixed: { clearable: true },
       caption:
-        'Default / ghost × S / M / L. A single label, one text input, and one clear action for the entire period.',
-      reference: () => (
-        <div className="date-study-grid-proto">
-          {(['s', 'm', 'l'] as const).map((size) => (
-            <DateStudy key={size} label={`${size.toUpperCase()} · complete period`}>
-              <DateRangePicker
-                size={size}
-                label="Date window"
-                defaultValue={['2026-09-14', '2026-09-23']}
-                clearable
-              />
-              <DateRangePicker
-                size={size}
-                label="Inline date window"
-                variant="ghost"
-                defaultValue={['2026-09-14', '2026-09-23']}
-                clearable
-              />
-            </DateStudy>
-          ))}
-        </div>
-      ),
+        'Each role holds both dates in a single input at S, M and L. Clear the period to remove both endpoints at once.',
     },
   ],
   cases: [
     {
-      id: 'anatomy',
-      title: 'Period & calendar',
-      overlayStage: true,
+      id: 'paired-fields',
+      title: 'Complete periods by size',
+      kind: 'content',
+      mode: 'live',
+      reset: true,
       caption:
-        'The panel is kept in flow for material review. Live anchored behavior is available in the Live section.',
-      kind: 'behavior',
-      render: () => (
-        <DateRangePicker
-          label="Date window"
-          defaultValue={['2026-09-11', '2026-09-23']}
-          defaultOpen
-          previewInline
-          clearable
-        />
-      ),
+        'Each size groups a form field with its inline counterpart. Both start on September 14–23. Clear either period to check its empty field and calendar action at that width.',
+      render: withOverlaySurface(PairedFields, 'border-box'),
+    },
+    {
+      id: 'anatomy',
+      title: 'Period and calendar',
+      surface: 'base',
+      overlayStage: true,
+      kind: 'surface',
+      mode: 'live',
+      reset: true,
+      caption:
+        'The base field starts with a complete period and its calendar in document flow. The first day anchors a replacement. Choose a second day to update both dates and close the panel.',
+      render: Anatomy,
     },
     {
       id: 'states',
-      title: 'States & correction',
-      caption:
-        'Semantic feedback is pinned for comparison; use Live for validation recovery. Both dates use one ordinary text input. Feedback explains which boundary needs attention; a draft is never silently replaced.',
+      title: 'Field states and correction',
       kind: 'behavior',
-      render: () => (
-        <div className="date-study-grid-proto">
-          <DateRangePicker label="Required date window" required description="Enter both dates." />
-          <DateRangePicker label="No date filter" description="DD/MM/YYYY – DD/MM/YYYY" clearable />
-          <DateRangePicker
-            label="Pointer editing"
-            defaultValue={['2026-09-14', '2026-09-23']}
-            clearable
-          />
-          <DateRangePicker
-            label="Keyboard editing"
-            defaultValue={['2026-09-14', '2026-09-23']}
-            clearable
-          />
-          <DateRangePicker
-            label="One date missing"
-            previewText="14/09/2026 – "
-            status="danger"
-            message="Enter an end date to complete the period."
-            clearable
-          />
-          <DateRangePicker
-            label="Reversed dates · keyboard editing"
-            previewText="23/09/2026 – 14/09/2026"
-            status="danger"
-            message="The end date must be on or after the start date."
-            clearable
-          />
-          <DateRangePicker
-            label="Period too long"
-            defaultValue={['2026-09-01', '2026-09-30']}
-            maxRangeDays={14}
-            status="danger"
-            message="Choose no more than 14 days."
-            clearable
-          />
-          <DateRangePicker
-            label="Checking dates"
-            clearable
-            defaultValue={['2026-09-14', '2026-09-23']}
-            loading
-          />
-          <DateRangePicker
-            label="Read only"
-            defaultValue={['2026-09-14', '2026-09-23']}
-            readOnly
-            clearable
-          />
-          <DateRangePicker
-            label="Disabled"
-            defaultValue={['2026-09-14', '2026-09-23']}
-            disabled
-            status="danger"
-          />
-          <DateRangePicker
-            label="Dates confirmed"
-            defaultValue={['2026-09-14', '2026-09-23']}
-            status="success"
-            message="The full period is available."
-          />
-        </div>
-      ),
+      mode: 'live',
+      reset: true,
+      caption:
+        'Try typing both dates in one input. The missing, reversed, overlong and confirmed examples pin the supplied text and feedback. The read-only field still opens for inspection.',
+      render: withOverlaySurface(FieldStates, 'border-box'),
     },
     {
       id: 'panels',
       title: 'Range panels',
+      surface: 'base',
       overlayStage: true,
+      kind: 'surface',
+      mode: 'live',
+      reset: true,
       caption:
-        'Panels are kept in flow for comparison. The first day starts a new selection. The second valid day commits the period.',
-      kind: 'behavior',
-      render: () => (
-        <div className="date-study-stack-proto">
-          <DateRangePicker
-            label="New period · choose two dates"
-            defaultOpen
-            previewInline
-            clearable
-          />
-          <DateRangePicker
-            label="Replace an existing period"
-            defaultValue={['2026-09-11', '2026-09-23']}
-            defaultOpen
-            previewInline
-            clearable
-          />
-          <DateRangePicker
-            label="Across two months"
-            defaultValue={['2026-09-25', '2026-10-07']}
-            defaultOpen
-            previewInline
-          />
-          <DateRangePicker
-            label="One-day period"
-            defaultValue={['2026-09-16', '2026-09-16']}
-            defaultOpen
-            previewInline
-          />
-          <DateRangePicker
-            label="Unavailable dates break the period"
-            defaultValue={['2026-09-07', '2026-09-11']}
-            min="2026-09-07"
-            max="2026-09-25"
-            unavailable={['2026-09-18', '2026-09-19', '2026-09-20']}
-            minRangeDays={2}
-            maxRangeDays={14}
-            defaultOpen
-            previewInline
-          />
-          <DateRangePicker
-            label="Read only · inspect the period"
-            defaultValue={['2026-09-14', '2026-09-23']}
-            readOnly
-            defaultOpen
-            previewInline
-          />
-        </div>
-      ),
+        'Compare empty, existing, cross-month, one-day, restricted and read-only periods in open panels. In the restricted field choose 2–14 days between September 7 and 25. September 18–20 break the interval.',
+      render: RangePanels,
     },
     {
       id: 'locales',
-      title: 'Locale, long labels & narrow fields',
-      kind: 'behavior',
-      render: () => (
-        <div className="date-study-grid-proto">
-          <DateRangePicker
-            label="US period"
-            locale="en-US"
-            defaultValue={['2026-09-14', '2026-09-23']}
-            clearable
-          />
-          <DateRangePicker
-            label="German period"
-            locale="de-DE"
-            defaultValue={['2026-09-14', '2026-09-23']}
-            clearable
-          />
-          <DateRangePicker
-            label="Include records modified during the following period"
-            defaultValue={['2026-09-14', '2026-09-23']}
-            clearable
-            style={{ maxWidth: '17rem' }}
-            description="The text input scrolls naturally when editing a narrow field; the calendar panel retains a full month."
-          />
-        </div>
-      ),
+      title: 'Local periods and constrained space',
+      kind: 'content',
+      mode: 'live',
+      reset: true,
+      caption:
+        'Compare US and German local dates in one input. The constrained field wraps its label and scrolls the unbroken period as you move the caret.',
+      render: withOverlaySurface(Locales, 'border-box'),
     },
     {
       id: 'live',
-      title: 'Live · select, replace, dismiss',
+      title: 'Select, replace and dismiss',
       surface: 'overlay',
-      overlayStage: true,
-      caption:
-        'Open either calendar and choose two dates. The first choice stays in the panel. The second valid choice saves the new period and closes it. Dismiss halfway through to keep the original value.',
       kind: 'behavior',
-      render: () => (
-        <div className="date-live-stage-proto">
-          <DateRangePicker
-            label="Date window"
-            description="Select an inclusive period."
-            clearable
-          />
-          <DateRangePicker
-            label="Existing period"
-            defaultValue={['2026-09-14', '2026-09-23']}
-            clearable
-            style={{ marginBlockStart: '24px' }}
-          />
-        </div>
+      mode: 'live',
+      reset: true,
+      caption:
+        'Open the empty or filled field with the calendar button or Alt+Down. The first date stays in the panel. Escape discards that draft and returns focus to the trigger. A valid second date commits both endpoints.',
+      render: LivePickers,
+    },
+  ],
+  compositions: [
+    {
+      id: 'records',
+      title: 'Filter dated records',
+      mode: 'live',
+      reset: true,
+      caption:
+        'Choose two dates to filter the records, or clear the field to show all three. The first calendar choice leaves the displayed records in place until the second day completes the period.',
+      render: withOverlaySurface(
+        ({ ctx }) => <PeriodRecords pickerProps={{ subjectAttributes: ctx.subject }} />,
+        'border-box',
       ),
+      code: recordsSource.replace('../../prototypes/', './prototypes/'),
+    },
+    {
+      id: 'duration',
+      title: 'Measure a review period',
+      mode: 'live',
+      reset: true,
+      caption:
+        'The accepted 10-day period can be replaced by 1–14 days. Dismiss after the first choice or try a longer interval to keep the previous duration. Confirm a valid period to update the count and both dates.',
+      render: withOverlaySurface(
+        ({ ctx }) => <PeriodDuration pickerProps={{ subjectAttributes: ctx.subject }} />,
+        'border-box',
+      ),
+      code: durationSource.replace('../../prototypes/', './prototypes/'),
     },
   ],
 });

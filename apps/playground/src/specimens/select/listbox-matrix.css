@@ -1,0 +1,7 @@
+tr[data-wb-result-row] > td:has([data-surface='overlay'] .choice-list-proto[data-wb-subject]) {
+  min-inline-size: 20rem;
+}
+
+tr[data-wb-result-row] > td [data-surface='overlay'] .choice-list-proto[data-wb-subject] {
+  overscroll-behavior-x: auto;
+}

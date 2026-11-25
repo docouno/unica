@@ -1,14 +1,16 @@
 import { defineComponent } from '../../workbench/types.js';
-import {
-  BudgetTable,
-  BuildQueue,
-  EditorExamples,
-  ReferenceIndex,
-  RelationsDrawer,
-  ResultExamples,
-} from '../../prototypes/table/table.examples.js';
+import { toggle } from '../control-props.js';
+import { ExampleSurface } from '../shared/example-surface.js';
+import { BuildQueue, EditorExamples, RelationsDrawer, ResultExamples } from './table.examples.js';
+import { ReferenceIndex } from './recovery-references.js';
+import referenceSource from './recovery-references.tsx?raw';
+import { RequestCounts } from './request-counts.js';
+import requestSource from './request-counts.tsx?raw';
 
 const densityNames = { s: 'Compact', m: 'Standard', l: 'Comfortable' };
+const requests = requestSource
+  .replace('../../prototypes/', './prototypes/')
+  .replace('export function RequestCounts', 'function RequestCounts');
 
 export default defineComponent({
   id: 'table',
@@ -19,8 +21,8 @@ export default defineComponent({
   props: {
     size: {
       kind: 'enum',
-      group: 'Table',
-      description: 'The vertical density of the header and body rows.',
+      group: 'Geometry',
+      description: 'Vertical density of the table header and body rows.',
       default: 'm',
       choices: [
         { value: 's', label: densityNames.s },
@@ -28,146 +30,122 @@ export default defineComponent({
         { value: 'l', label: densityNames.l },
       ],
     },
-    striped: {
-      kind: 'boolean',
-      group: 'Table',
-      description: 'Shade alternating body rows.',
-      default: false,
-    },
+    striped: toggle('Geometry', 'Shade alternating visible body rows.'),
     align: {
       kind: 'enum',
-      group: 'Request count column',
-      description: 'Use the same alignment on the column heading and its cells.',
+      group: 'Geometry',
+      description:
+        'Alignment on TableColumnHeader and TableCell. This example aligns the request counts and their heading at the logical end by default.',
       default: 'end',
       choices: [{ value: 'start' }, { value: 'center' }, { value: 'end' }],
     },
-    selected: {
-      kind: 'boolean',
-      group: 'Gateway row',
-      description: 'Pin the selected visual state on the Gateway row.',
-      default: false,
-    },
+    selected: toggle(
+      'Interaction',
+      'TableRow selection paint. This example pins the Gateway row. The Build queue study connects the paint to a working checkbox.',
+    ),
   },
   render: ({ ctx, values }) => (
-    <BudgetTable
-      size={values.size}
-      striped={values.striped}
-      amountAlign={values.align}
-      selected={values.selected}
-      subjectAttributes={ctx.subject}
-    />
+    <ExampleSurface surface={ctx.surface}>
+      <RequestCounts
+        subject={ctx.subject}
+        tableProps={{ size: values.size, striped: values.striped }}
+        amountProps={{ align: values.align }}
+        selected={values.selected}
+      />
+    </ExampleSurface>
   ),
-  code: ({ size, striped, align, selected }) => `<TableScroll aria-labelledby="budget-caption">
-  <Table${size !== 'm' ? ` size="${size}"` : ''}${striped ? ' striped' : ''}>
-    <TableCaption id="budget-caption">${densityNames[size]} ${size.toUpperCase()}</TableCaption>
-    <TableHeader>
-      <TableRow>
-        <TableColumnHeader>Service</TableColumnHeader>
-        <TableColumnHeader align="center">Region</TableColumnHeader>
-        <TableColumnHeader align="${align}">Requests</TableColumnHeader>
-      </TableRow>
-    </TableHeader>
-    <TableBody>
-      <TableRow${selected ? ' selected' : ''}>
-        <TableRowHeader>Gateway</TableRowHeader>
-        <TableCell align="center"><bdi>eu-west</bdi></TableCell>
-        <TableCell align="${align}"><bdi>24,800</bdi></TableCell>
-      </TableRow>
-      <TableRow>
-        <TableRowHeader>Object store</TableRowHeader>
-        <TableCell align="center"><bdi>us-east</bdi></TableCell>
-        <TableCell align="${align}"><bdi>1,260</bdi></TableCell>
-      </TableRow>
-    </TableBody>
-    <TableFooter>
-      <TableRow>
-        <TableRowHeader colSpan={2}>Total</TableRowHeader>
-        <TableCell align="${align}"><bdi>26,060</bdi></TableCell>
-      </TableRow>
-    </TableFooter>
-  </Table>
-</TableScroll>`,
-  matrixViews: [
+  code: ({ size, striped, align, selected }) => `${requests}
+
+export function ServiceRequests() {
+  return <RequestCounts tableProps={${JSON.stringify({ size, striped })}} amountProps={${JSON.stringify({ align })}} selected={${selected}} />;
+}`,
+  states: [
     {
       id: 'density',
       title: 'Density & alignment',
-      rows: 'size',
+      group: 'size',
+      caption:
+        'Compare the same service counts at compact, standard and comfortable densities. Region names are centered, and request counts line up with the total. Scroll the table locally if a narrow viewport cannot fit all three columns. Touch layouts can raise the minimum row height.',
     },
   ],
   cases: [
     {
       id: 'editors',
       title: 'Editable rows',
-      caption: 'Edit a route or policy, then restore that row from its actions menu.',
+      caption:
+        'Edit a route or policy at any density. Copy its path or restore the row from its actions menu. The system route keeps its read-only path and locked policy.',
       kind: 'behavior',
       mode: 'live',
-      render: ({ ctx }) => <EditorExamples subjectAttributes={ctx.subject} />,
+      reset: true,
+      render: EditorExamples,
     },
     {
       id: 'queue',
       title: 'Sort, select & scroll',
-      caption: 'Cycle a sort heading, select builds, or open the actions menu from a row.',
+      caption:
+        'Cycle Service or Time through ascending, descending and source order. Select eligible builds individually or together. The row menu can pin a build or copy its version; scroll within the queue to reach every row and action.',
       kind: 'behavior',
       mode: 'live',
-      render: () => <BuildQueue />,
+      controls: { striped: { kind: 'boolean', label: 'Stripe rows', default: true } },
+      reset: true,
+      render: ({ ctx }) => (
+        <BuildQueue
+          subject={ctx.subject}
+          surface={ctx.surface}
+          striped={ctx.story?.controls.striped === true}
+        />
+      ),
     },
     {
       id: 'results',
       title: 'Loading, empty & error',
-      caption: 'The preview control pins application-owned result states.',
+      caption:
+        'Compare three simulated branch-check responses under the same columns. Retry switches all previews from a failed request to the loading state for inspection.',
       kind: 'behavior',
-      mode: 'pinned',
-      render: () => <ResultExamples />,
+      mode: 'live',
+      controls: {
+        result: {
+          kind: 'enum',
+          label: 'Preview result',
+          default: 'empty',
+          choices: [
+            { value: 'empty', label: 'No matches' },
+            { value: 'loading', label: 'Loading' },
+            { value: 'error', label: 'Request failed' },
+          ],
+        },
+      },
+      render: ResultExamples,
     },
     {
       id: 'drawer',
       title: 'Sticky header in a drawer',
       caption:
-        'Scroll the linked documents to see the header cover moving rows against the overlay.',
+        'Scroll the linked documents under the fixed header. Close the drawer and reopen it from the same workspace.',
       overlayStage: true,
       surface: 'overlay',
-      kind: 'behavior',
+      kind: 'surface',
       mode: 'live',
-      render: () => <RelationsDrawer />,
+      reset: true,
+      render: RelationsDrawer,
     },
   ],
-  usage: [
+  compositions: [
     {
       id: 'reference',
       title: 'Reference & pagination',
       mode: 'live',
-      code: `<>
-  <TableScroll aria-labelledby="references">
-    <Table size="s">
-      <TableCaption id="references">Recovery references</TableCaption>
-      <TableHeader>
-        <TableRow>
-          <TableColumnHeader>Document</TableColumnHeader>
-          <TableColumnHeader>Kind</TableColumnHeader>
-          <TableColumnHeader align="end">Revised</TableColumnHeader>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {references.map(({ name, kind, revised }) => (
-          <TableRow key={name}>
-            <TableRowHeader>{name}</TableRowHeader>
-            <TableCell>{kind}</TableCell>
-            <TableCell align="end"><bdi>{revised}</bdi></TableCell>
-          </TableRow>
-        ))}
-      </TableBody>
-    </Table>
-  </TableScroll>
-  <Pagination
-    label="Recovery references pages"
-    format="compact"
-    page={page}
-    pageCount={2}
-    size="s"
-    onPageChange={setPage}
-  />
-</>`,
-      render: () => <ReferenceIndex />,
+      reset: true,
+      caption:
+        'Use the pagination below the table to browse six recovery documents. Open the failover runbook from its row. The standalone example includes a local excerpt and accepts a link to the full document.',
+      code: referenceSource.replaceAll('../../prototypes/', './prototypes/'),
+      render: ({ ctx }) => (
+        <div style={{ inlineSize: 'min(100%, 47rem)' }}>
+          <ExampleSurface surface={ctx.surface}>
+            <ReferenceIndex subject={ctx.subject} documentHref="?item=04-document-reader" />
+          </ExampleSurface>
+        </div>
+      ),
     },
   ],
 });
