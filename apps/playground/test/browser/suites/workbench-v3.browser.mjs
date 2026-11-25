@@ -359,6 +359,50 @@ export default {
     });
   },
 
+  'Select role comparisons show the full selected region and open their own list': async ({
+    page,
+    origin,
+  }) => {
+    await page.setViewportSize({ width: 360, height: 780 });
+    await page.goto(
+      new URL(
+        '/?item=select&tab=states&slice=roles&family=all&scheme=both&vp=auto&scale=120&dir=rtl&surface=overlay&freeze=1&raw=1',
+        origin,
+      ).href,
+    );
+    const board = page.locator('[data-wb-slice="roles"] .wb-artboard[data-theme="frost-light"]');
+    const triggers = board.locator('.select-trigger-proto');
+    await triggers.last().waitFor({ timeout: 20_000 });
+    await page.evaluate(() => document.fonts.ready);
+    assert.equal(await triggers.count(), 6);
+    for (const trigger of await triggers.all()) {
+      const summary = trigger.locator('.select-summary-labels-proto');
+      assert.equal(await summary.textContent(), 'Amsterdam');
+      assert.ok(
+        await summary.evaluate((node) => node.clientWidth === node.scrollWidth),
+        'The selected region must fit beside the trigger affordance',
+      );
+    }
+    const trigger = triggers.last();
+    await trigger.click();
+    const panel = page.locator(':popover-open');
+    assert.equal(await panel.getAttribute('id'), await trigger.getAttribute('aria-controls'));
+    const list = panel.getByRole('listbox');
+    const selected = list.getByRole('option', { name: 'Amsterdam', exact: true });
+    assert.equal(await selected.getAttribute('aria-selected'), 'true');
+    assert.equal(
+      await list.getAttribute('aria-activedescendant'),
+      await selected.getAttribute('id'),
+    );
+    await list.getByRole('option', { name: 'London', exact: true }).click();
+    await panel.waitFor({ state: 'hidden' });
+    assert.equal(await trigger.locator('.select-summary-labels-proto').textContent(), 'London');
+    assert.equal(
+      await triggers.first().locator('.select-summary-labels-proto').textContent(),
+      'Amsterdam',
+    );
+  },
+
   'Selection fields fill their Playground slot on the base surface': async ({ page, origin }) => {
     for (const [item, label] of [
       ['autocomplete', 'Document title'],

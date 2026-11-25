@@ -31,6 +31,7 @@ import { DocumentOrder } from './document-order.js';
 import orderSource from './document-order.tsx?raw';
 import { ChannelActivity } from './channel-activity.js';
 import activitySource from './channel-activity.tsx?raw';
+import './select-matrix.css';
 
 const messages = {
   neutral: '',
@@ -168,7 +169,7 @@ export function DeploymentRegion() {
     {
       id: 'roles',
       rows: 'size',
-      cols: 'variant',
+      group: 'variant',
       title: 'Default and ghost by size',
       caption:
         'Compare the same selected region in full-width default and ghost fields at each density.',
