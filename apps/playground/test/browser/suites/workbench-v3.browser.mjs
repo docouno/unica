@@ -214,13 +214,14 @@ export default {
   'Drawer backdrop keeps focus and consumes a dismissing tap above the opener': async ({
     page,
     origin,
+    watchPage,
   }) => {
     const touch = await page
       .context()
       .browser()
       .newContext({ hasTouch: true, viewport: { width: 1500, height: 950 } });
     try {
-      const canvas = await touch.newPage();
+      const canvas = watchPage(await touch.newPage());
       const route = new URL(
         '/?item=drawer&tab=playground&family=frost&scheme=dark&vp=1440',
         origin,
@@ -410,6 +411,7 @@ export default {
   'Date pickers select the touched day at the edge of an in-flow calendar on a phone': async ({
     page,
     origin,
+    watchPage,
   }) => {
     const touch = await page
       .context()
@@ -420,7 +422,7 @@ export default {
         viewport: { width: 360, height: 780 },
       });
     try {
-      const mobile = await touch.newPage();
+      const mobile = watchPage(await touch.newPage());
       const view = {
         tab: 'states',
         family: 'frost',
