@@ -14,6 +14,8 @@ import {
 } from '../../prototypes/table/table.proto.js';
 import '@docouno/unica/styles.css';
 
+const cellInset = { paddingInline: 'clamp(var(--space-4), 1.5%, var(--table-cell-x))' };
+
 const policiesByPage = [
   [
     ['Zero-Downtime PG Failover', 'Runbook', '18 Oct'],
@@ -38,9 +40,11 @@ export function ReferenceIndex({ documentHref = '', subject = {} } = {}) {
           <TableCaption id={captionId}>Recovery references</TableCaption>
           <TableHeader>
             <TableRow>
-              <TableColumnHeader>Document</TableColumnHeader>
-              <TableColumnHeader style={{ whiteSpace: 'nowrap' }}>Kind</TableColumnHeader>
-              <TableColumnHeader align="end" style={{ whiteSpace: 'nowrap' }}>
+              <TableColumnHeader style={cellInset}>Document</TableColumnHeader>
+              <TableColumnHeader style={{ ...cellInset, whiteSpace: 'nowrap' }}>
+                Kind
+              </TableColumnHeader>
+              <TableColumnHeader align="end" style={{ ...cellInset, whiteSpace: 'nowrap' }}>
                 Revised
               </TableColumnHeader>
             </TableRow>
@@ -48,15 +52,17 @@ export function ReferenceIndex({ documentHref = '', subject = {} } = {}) {
           <TableBody>
             {(policiesByPage[page - 1] ?? []).map(([name, kind, date]) => (
               <TableRow key={name}>
-                <TableRowHeader>
+                <TableRowHeader style={cellInset}>
                   {name === 'Zero-Downtime PG Failover' ? (
                     <Link href={documentHref || '#' + runbookId}>Zero-Downtime PG Failover</Link>
                   ) : (
                     <bdi>{name}</bdi>
                   )}
                 </TableRowHeader>
-                <TableCell style={{ inlineSize: '25%', whiteSpace: 'nowrap' }}>{kind}</TableCell>
-                <TableCell align="end" style={{ inlineSize: '16%' }}>
+                <TableCell style={{ ...cellInset, inlineSize: '25%', whiteSpace: 'nowrap' }}>
+                  {kind}
+                </TableCell>
+                <TableCell align="end" style={{ ...cellInset, inlineSize: '16%' }}>
                   <bdi style={{ whiteSpace: 'nowrap' }}>{date}</bdi>
                 </TableCell>
               </TableRow>

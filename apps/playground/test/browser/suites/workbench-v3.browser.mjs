@@ -473,6 +473,34 @@ export default {
     }
   },
 
+  'Table keeps document names readable on the second reference page at mobile width': async ({
+    page,
+    origin,
+  }) => {
+    await page.setViewportSize({ width: 360, height: 780 });
+    await page.goto(
+      new URL(
+        '/?item=table&tab=compositions&block=reference&family=pixel&scheme=light&surface=overlay&scale=120&dir=rtl&raw=1',
+        origin,
+      ).href,
+      { waitUntil: 'domcontentloaded' },
+    );
+    const table = page.getByRole('table', { name: 'Recovery references' });
+    await table.waitFor({ timeout: 30_000 });
+    await page.getByRole('button', { name: 'Next page', exact: true }).press('Enter');
+    await page.evaluate(() => document.fonts.ready);
+    for (const name of ['Volume snapshots', 'Restore point retention']) {
+      const lines = await table.getByText(name, { exact: true }).evaluate((label) => {
+        const text = label.firstChild;
+        const range = document.createRange();
+        range.setStart(text, text.textContent.lastIndexOf(' ') + 1);
+        range.setEnd(text, text.length);
+        return range.getClientRects().length;
+      });
+      assert.equal(lines, 1, name);
+    }
+  },
+
   'SegmentedControl keeps the submitted frequency when a native reset is canceled': async ({
     page,
     origin,
