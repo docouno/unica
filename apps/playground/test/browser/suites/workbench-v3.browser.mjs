@@ -31,7 +31,7 @@ async function checkReferenceNames(page) {
   }
 }
 
-async function assertTopicFits(editor, name) {
+async function assertLabelFits(editor, name) {
   const lines = await editor.getByText(name, { exact: true }).evaluate((label) => {
     const range = document.createRange();
     range.selectNodeContents(label);
@@ -318,6 +318,47 @@ export default {
     }
   },
 
+  'Listbox size comparisons show readable roles with independent selection': async ({
+    page,
+    origin,
+  }) => {
+    await page.goto(
+      new URL(
+        '/?item=listbox&tab=states&slice=sizes&family=frost&scheme=light&vp=360&scale=120&dir=rtl&surface=overlay&freeze=1',
+        origin,
+      ).href,
+    );
+    const lists = page.locator('[data-wb-slice="sizes"] [role="listbox"]');
+    await lists.last().waitFor({ timeout: 20_000 });
+    await page.evaluate(() => document.fonts.ready);
+    assert.equal(await lists.count(), 6);
+    for (const list of await lists.all()) {
+      for (const label of ['Viewer', 'Commenter', 'Editor', 'Administrator']) {
+        await assertLabelFits(list, label);
+      }
+      const viewer = list.getByRole('option', { name: 'Viewer', exact: true });
+      const editor = list.getByRole('option', { name: 'Editor', exact: true });
+      assert.equal(await viewer.getAttribute('aria-selected'), 'false');
+      assert.equal(await editor.getAttribute('aria-selected'), 'true');
+      await viewer.click();
+      assert.equal(await viewer.getAttribute('aria-selected'), 'true');
+      assert.equal(
+        await editor.getAttribute('aria-selected'),
+        String((await list.getAttribute('aria-multiselectable')) === 'true'),
+      );
+    }
+    const last = lists.last();
+    const region = last.locator('xpath=ancestor::*[@role="region"][1]');
+    await last.getByRole('option', { name: 'Viewer', exact: true }).hover();
+    await region.evaluate((node) => {
+      node.scrollLeft = 0;
+    });
+    await page.mouse.wheel(-100, 0);
+    await page.waitForFunction((node) => node.scrollLeft < 0, await region.elementHandle(), {
+      timeout: 5000,
+    });
+  },
+
   'Selection fields fill their Playground slot on the base surface': async ({ page, origin }) => {
     for (const [item, label] of [
       ['autocomplete', 'Document title'],
@@ -375,7 +416,7 @@ export default {
     const remove = (name) => editor.getByRole('button', { name: 'Remove ' + name, exact: true });
     await draft.waitFor({ state: 'attached', timeout: 20_000 });
     for (const name of ['Design', 'Research']) {
-      await assertTopicFits(editor, name);
+      await assertLabelFits(editor, name);
       assert.ok(await remove(name).isVisible());
     }
     assert.ok((await editor.boundingBox()).width > 240, 'Topics must span the phone field slot');
@@ -406,8 +447,8 @@ export default {
           `.tags-editor-proto[data-variant="${variant}"][data-size="${size}"]`,
         );
         await field.waitFor({ timeout: 20_000 });
-        await assertTopicFits(field, 'Design');
-        await assertTopicFits(field, 'Research');
+        await assertLabelFits(field, 'Design');
+        await assertLabelFits(field, 'Research');
       }
     }
   },
@@ -436,7 +477,7 @@ export default {
       const remove = field.getByRole('button', { name: 'Remove Research', exact: true });
       await remove.waitFor({ timeout: 20_000 });
       await mobile.evaluate(() => document.fonts.ready);
-      await assertTopicFits(field, 'Research');
+      await assertLabelFits(field, 'Research');
       await remove.tap();
       await remove.waitFor({ state: 'detached' });
       assert.ok(await field.getByRole('button', { name: 'Remove Design' }).isVisible());

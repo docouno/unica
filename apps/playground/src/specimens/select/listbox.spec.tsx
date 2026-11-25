@@ -16,6 +16,7 @@ import { RolePermissions } from './role-permissions.js';
 import permissionsSource from './role-permissions.tsx?raw';
 import { ExportColumns } from './export-columns.js';
 import columnsSource from './export-columns.tsx?raw';
+import './listbox-matrix.css';
 
 export default defineComponent({
   id: 'listbox',
@@ -86,7 +87,7 @@ export function AvailableRoles() {
       id: 'sizes',
       title: 'Density and selection mode',
       rows: 'size',
-      cols: 'multiple',
+      group: 'multiple',
       caption:
         'Editor starts selected at every size. Choose Viewer to replace Editor in a single list, or to keep both checks in a multiple list.',
     },
