@@ -1,6 +1,5 @@
-import { useState } from 'react';
-import { Badge, Card, Flex, Stack, Text } from '@docouno/unica';
-import { Select } from '../../prototypes/select/select.proto.js';
+import { useId, useState } from 'react';
+import { Badge, Card, Flex, Stack, Text, Select } from '@docouno/unica';
 import '@docouno/unica/styles.css';
 
 const channels = [
@@ -16,20 +15,26 @@ const activity = [
   { channel: 'legacy', title: 'Archive imported' },
 ];
 export function ChannelActivity({ selectProps = {} } = {}) {
+  const id = useId();
   const [selected, setSelected] = useState(['email', 'legacy']);
   const entries = activity.filter(({ channel }) => selected.includes(channel));
   return (
     <Stack gap={12} style={{ inlineSize: 'min(100%, 28rem)' }}>
-      <Select
-        {...selectProps}
-        multiple
-        searchable
-        label="Activity sources"
-        options={channels}
-        values={selected}
-        onValuesChange={(values) => setSelected([...values])}
-        placeholder="Choose sources"
-      />
+      <Stack gap={4}>
+        <Text as="label" htmlFor={id} size="body-s" weight="medium">
+          Activity sources
+        </Text>
+        <Select
+          {...selectProps}
+          multiple
+          searchable
+          id={id}
+          options={channels}
+          value={selected}
+          onValueChange={(values) => setSelected([...values])}
+          placeholder="Choose sources"
+        />
+      </Stack>
       <Card size="s" variant="subtle">
         <Stack gap={12}>
           <Text size="body-s" role="status">

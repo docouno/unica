@@ -5,6 +5,7 @@ import {
   Button,
   Divider,
   Input,
+  Select,
   Stack,
   Textarea,
   Title,
@@ -15,7 +16,6 @@ import { useId, useRef, useState } from 'react';
 import type { ReactElement } from 'react';
 import type { PreviewProps } from '../../workbench/types.js';
 import { CheckboxCard } from '../../prototypes/choice-card/choice-card.proto.js';
-import { Select } from '../../prototypes/select/select.proto.js';
 import { ToastCard } from '../../prototypes/toast/toast.proto.js';
 import { DialogStudy } from '../../prototypes/dialog/dialog.examples.js';
 import {
@@ -231,17 +231,19 @@ export function EditProject({
                       onChange={(event) => setDraft({ ...draft, owner: event.currentTarget.value })}
                     />
                   </FormField>
-                  <input type="hidden" name="access" value={draft.access} />
-                  <Select
-                    label="Default access"
-                    options={roles}
-                    value={draft.access}
-                    onValueChange={(access) => {
-                      if (access) {
-                        setDraft({ ...draft, access });
-                      }
-                    }}
-                  />
+                  <FormField htmlFor={`${formId}-access`} label="Default access">
+                    <Select
+                      id={`${formId}-access`}
+                      name="access"
+                      options={roles}
+                      value={draft.access}
+                      onValueChange={(access) => {
+                        if (access) {
+                          setDraft({ ...draft, access });
+                        }
+                      }}
+                    />
+                  </FormField>
                 </div>
               )}
               {overflow && (

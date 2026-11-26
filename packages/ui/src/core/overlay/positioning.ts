@@ -47,6 +47,7 @@ export interface AnchoredOverlay {
   readonly popover?:
     | {
         readonly measureBlockSize: (floating: HTMLElement) => number;
+        readonly preserveSide?: boolean | undefined;
         readonly isAnchorAvailable: (anchor: HTMLElement) => boolean;
         readonly onAnchorLost: () => void;
         readonly onPositioned: () => void;
@@ -229,6 +230,7 @@ interface PopoverLayout {
   readonly gap: number;
   readonly padding: number;
   readonly valid: () => boolean;
+  readonly previousSide: Side | undefined;
   readonly measureBlockSize: (floating: HTMLElement) => number;
   readonly setSize: (anchorWidth: number, availableHeight: number) => boolean;
   readonly setWidth: (availableWidth: number) => boolean;
@@ -240,6 +242,7 @@ function popoverMiddleware({
   gap,
   padding,
   valid,
+  previousSide,
   measureBlockSize,
   setSize,
   setWidth,
@@ -281,17 +284,22 @@ function popoverMiddleware({
             return { reset: { rects: true } };
           }
         }
-        const side = preferredSide(
-          requested,
-          {
-            top: -overflow.top - gap,
-            right: -overflow.right - gap,
-            bottom: -overflow.bottom - gap,
-            left: -overflow.left - gap,
-          },
-          floatingRect.width,
-          measureBlockSize(floating),
-        );
+        const room = {
+          top: -overflow.top - gap,
+          right: -overflow.right - gap,
+          bottom: -overflow.bottom - gap,
+          left: -overflow.left - gap,
+        };
+        const height = measureBlockSize(floating);
+        const keepSide = previousSide === 'top' || previousSide === 'bottom';
+        // Filtering can shrink an upward-opening panel without moving its anchor.
+        // Move the panel if the current side can no longer expose a usable slice.
+        const side =
+          keepSide &&
+          (room[previousSide] >= Math.min(height, 96) ||
+            room[oppositeSide[previousSide]] <= room[previousSide])
+            ? previousSide
+            : preferredSide(requested, room, floatingRect.width, height);
         const next: Placement = alignment ? `${side}-${alignment}` : side;
         return state.placement === next ? {} : { reset: { placement: next } };
       },
@@ -548,6 +556,7 @@ export function positionOverlay({
               gap,
               padding,
               valid,
+              previousSide: popover.preserveSide ? lastResolvedSide : undefined,
               measureBlockSize: popover.measureBlockSize,
               setSize,
               setWidth,

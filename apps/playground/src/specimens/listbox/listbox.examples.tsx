@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import type { ReactNode } from 'react';
-import { Card, Divider, Stack, Text } from '@docouno/unica';
-import { Listbox, SelectPanel } from '../../prototypes/select/select.proto.js';
-import { regionOptions, roleOptions, simpleOptions } from '../../prototypes/select/select.data.js';
-import '../../prototypes/select/select.examples.css';
+import { Card, Divider, Listbox, Stack, Text } from '@docouno/unica';
+import { ChatCircleIcon, EyeIcon } from '@phosphor-icons/react';
+import { regionLabels, regionOptions, roleOptions, simpleRoles } from './choice-catalogs.js';
+import './listbox.examples.css';
 import type { PreviewProps } from '../../workbench/types.js';
+import { ExampleSurface } from '../shared/example-surface.js';
 
 function Sample({ title, children }: { readonly title: string; readonly children: ReactNode }) {
   return (
@@ -19,13 +20,13 @@ function Sample({ title, children }: { readonly title: string; readonly children
 
 export function Density({ ctx }: PreviewProps) {
   return (
-    <div className="select-study-grid-proto">
+    <div className="picker-study-grid">
       {(['s', 'm', 'l'] as const).map((size) => (
         <Sample key={size} title={`${size.toUpperCase()} · single selection`}>
           <Listbox
             {...ctx.subject}
             size={size}
-            options={simpleOptions}
+            options={simpleRoles}
             defaultValue="editor"
             aria-label={`Role ${size}`}
           />
@@ -34,7 +35,7 @@ export function Density({ ctx }: PreviewProps) {
             size={size}
             options={[
               { value: 'plain', label: 'Without a description' },
-              { value: 'icon', label: 'With an icon', icon: roleOptions[0]?.icon },
+              { value: 'icon', label: 'With an icon', iconLeft: EyeIcon },
               {
                 value: 'description',
                 label: 'With a description',
@@ -47,7 +48,7 @@ export function Density({ ctx }: PreviewProps) {
               {
                 value: 'rich',
                 label: 'Publishing permissions',
-                icon: roleOptions[1]?.icon,
+                iconLeft: ChatCircleIcon,
                 description: 'Review and publish changes across all shared workspaces.',
               },
             ]}
@@ -62,7 +63,7 @@ export function Density({ ctx }: PreviewProps) {
 
 export function Anatomy({ ctx }: PreviewProps) {
   return (
-    <div className="select-study-grid-proto">
+    <div className="picker-study-grid">
       <Sample title="Single · rich options">
         <Listbox
           {...ctx.subject}
@@ -72,7 +73,6 @@ export function Anatomy({ ctx }: PreviewProps) {
               value: 'custom',
               label: 'Custom policy',
               description: 'Use the policy defined by your organization',
-              group: 'Administration',
             },
           ]}
           defaultValue="editor"
@@ -82,9 +82,9 @@ export function Anatomy({ ctx }: PreviewProps) {
       <Sample title="Multiple · immediate toggles">
         <Listbox
           {...ctx.subject}
-          options={simpleOptions}
+          options={simpleRoles}
           multiple
-          defaultValues={['viewer', 'editor']}
+          defaultValue={['viewer', 'editor']}
           aria-label="Multiple roles"
         />
       </Sample>
@@ -92,42 +92,37 @@ export function Anatomy({ ctx }: PreviewProps) {
   );
 }
 
-export function StatePins({ ctx }: PreviewProps) {
+export function Interactions({ ctx }: PreviewProps) {
   return (
-    <div className="select-study-grid-proto" inert>
-      {(
-        [
-          ['Available', false, undefined],
-          ['Selected', true, undefined],
-          ['Hover', false, 'hover'],
-          ['Selected + hover', true, 'hover'],
-          ['Pressed', true, 'pressed'],
-          ['Keyboard focus', false, 'focus'],
-          ['Selected + focus', true, 'focus'],
-        ] as const
-      ).map(([title, selected, preview]) => (
-        <Sample key={title} title={title}>
-          <Listbox
-            {...ctx.subject}
-            options={[{ value: 'editor', label: 'Editor' }]}
-            value={selected ? 'editor' : null}
-            previewOption="editor"
-            previewState={preview}
-            aria-label={title}
-          />
-        </Sample>
-      ))}
+    <div className="picker-study-grid">
+      <Sample title="Single selection">
+        <Listbox
+          {...ctx.subject}
+          options={simpleRoles}
+          defaultValue="editor"
+          aria-label="Single role"
+        />
+      </Sample>
+      <Sample title="Multiple selection">
+        <Listbox
+          {...ctx.subject}
+          options={simpleRoles}
+          multiple
+          defaultValue={['editor', 'viewer']}
+          aria-label="Multiple roles"
+        />
+      </Sample>
     </div>
   );
 }
 
 export function Availability({ ctx }: PreviewProps) {
   return (
-    <div className="select-study-grid-proto">
+    <div className="picker-study-grid">
       <Sample title="Read only · browse safely">
         <Listbox
           {...ctx.subject}
-          title="Workspace role"
+          aria-label="Workspace role"
           options={roleOptions}
           value="editor"
           readOnly
@@ -136,7 +131,7 @@ export function Availability({ ctx }: PreviewProps) {
       <Sample title="Disabled · selection retained">
         <Listbox
           {...ctx.subject}
-          options={simpleOptions}
+          options={simpleRoles}
           value="editor"
           disabled
           aria-label="Disabled roles"
@@ -153,10 +148,10 @@ export function Availability({ ctx }: PreviewProps) {
       <Sample title="Removed from catalog">
         <Listbox
           {...ctx.subject}
-          options={simpleOptions}
+          options={simpleRoles}
           multiple
-          defaultValues={['editor', 'maintainer']}
-          orphanLabels={{ maintainer: 'Maintainer' }}
+          defaultValue={['editor', 'maintainer']}
+          selectedLabels={{ maintainer: 'Maintainer' }}
           aria-label="Saved roles"
         />
       </Sample>
@@ -165,7 +160,7 @@ export function Availability({ ctx }: PreviewProps) {
           {...ctx.subject}
           options={[]}
           defaultValue="maintainer"
-          orphanLabels={{ maintainer: 'Maintainer' }}
+          selectedLabels={{ maintainer: 'Maintainer' }}
           aria-label="Unavailable saved role"
         />
       </Sample>
@@ -182,15 +177,15 @@ export function Availability({ ctx }: PreviewProps) {
           {...ctx.subject}
           options={[]}
           value="maintainer"
-          orphanLabels={{ maintainer: 'Maintainer' }}
+          selectedLabels={{ maintainer: 'Maintainer' }}
           readOnly
-          title="Saved role"
+          aria-label="Saved role"
         />
         <Listbox
           {...ctx.subject}
           options={[]}
           value="maintainer"
-          orphanLabels={{ maintainer: 'Maintainer' }}
+          selectedLabels={{ maintainer: 'Maintainer' }}
           disabled
           aria-label="Disabled saved role"
         />
@@ -198,7 +193,7 @@ export function Availability({ ctx }: PreviewProps) {
       <Sample title="All options disabled">
         <Listbox
           {...ctx.subject}
-          options={simpleOptions.map((option) => ({ ...option, disabled: true }))}
+          options={simpleRoles.map((option) => ({ ...option, disabled: true }))}
           value="editor"
           aria-label="Locked roles"
         />
@@ -209,7 +204,7 @@ export function Availability({ ctx }: PreviewProps) {
 
 export function Overflow({ ctx }: PreviewProps) {
   return (
-    <div className="select-study-grid-proto">
+    <div className="picker-study-grid">
       <Sample title="Long label & description">
         <Listbox
           {...ctx.subject}
@@ -237,20 +232,18 @@ export function Overflow({ ctx }: PreviewProps) {
 
 function Regions({ ctx }: Pick<PreviewProps, 'ctx'>) {
   const [values, setValues] = useState<readonly string[]>(['amsterdam', 'london']);
-  const labels = values.map(
-    (value) => regionOptions.find((option) => option.value === value)?.label,
-  );
+  const labels = values.map((value) => regionLabels[value]);
   return (
     <Stack gap={12} style={{ minInlineSize: 0 }}>
       <Card size="s" variant="subtle">
         <Listbox
           {...ctx.subject}
-          title="Available regions"
-          className="select-study-scroll-proto"
+          aria-label="Available regions"
+          className="listbox-study-scroll"
           options={regionOptions}
           multiple
-          values={values}
-          onValuesChange={setValues}
+          value={values}
+          onValueChange={setValues}
         />
       </Card>
       <Divider decorative />
@@ -263,23 +256,23 @@ function Regions({ ctx }: Pick<PreviewProps, 'ctx'>) {
 
 export function Surfaces({ ctx }: PreviewProps) {
   return (
-    <div className="select-study-grid-proto">
+    <div className="picker-study-grid">
       <Card data-surface="base" size="s" variant="subtle">
         <Listbox
           {...ctx.subject}
-          options={simpleOptions}
+          options={simpleRoles}
           defaultValue="editor"
-          title="Role on a card"
+          aria-label="Role on a card"
         />
       </Card>
-      <SelectPanel>
+      <ExampleSurface surface="overlay" sizing="border-box">
         <Listbox
           {...ctx.subject}
-          options={simpleOptions}
+          options={simpleRoles}
           defaultValue="editor"
-          title="Role in a floating panel"
+          aria-label="Role on a floating surface"
         />
-      </SelectPanel>
+      </ExampleSurface>
     </div>
   );
 }

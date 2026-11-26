@@ -1,9 +1,8 @@
 import { useId, useRef, useState } from 'react';
 import type { ReactElement } from 'react';
-import { Button, Divider, Input, Stack, Text, Textarea, Title } from '@docouno/unica';
+import { Button, Divider, Input, Select, Stack, Text, Textarea, Title } from '@docouno/unica';
 import { CheckboxCard, SwitchCard } from '../../prototypes/choice-card/choice-card.proto.js';
 import { FormField } from '../../prototypes/form-field/form-field.proto.js';
-import { Select } from '../../prototypes/select/select.proto.js';
 import { DialogStudy } from '../../prototypes/dialog/dialog.examples.js';
 import {
   Drawer,
@@ -125,17 +124,19 @@ export function DeliverySettings({
                 setOpen(false);
               }}
             >
-              <input type="hidden" name="schedule" value={draft.schedule} />
-              <Select
-                label="Delivery schedule"
-                options={schedules}
-                value={draft.schedule}
-                onValueChange={(schedule) => {
-                  if (schedule) {
-                    setDraft({ ...draft, schedule });
-                  }
-                }}
-              />
+              <FormField htmlFor={`${formId}-schedule`} label="Delivery schedule">
+                <Select
+                  id={`${formId}-schedule`}
+                  name="schedule"
+                  options={schedules}
+                  value={draft.schedule}
+                  onValueChange={(schedule) => {
+                    if (schedule) {
+                      setDraft({ ...draft, schedule });
+                    }
+                  }}
+                />
+              </FormField>
               <FormField htmlFor={`${formId}-email`} label="Send to" required>
                 <Input
                   id={`${formId}-email`}

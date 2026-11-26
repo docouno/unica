@@ -259,7 +259,11 @@ function DialogSurface({
         }
         if (event.key === 'Tab') {
           wrapPreviewTab(event);
-        } else if (event.key === 'Escape' && !event.nativeEvent.isComposing) {
+        } else if (
+          event.key === 'Escape' &&
+          !event.nativeEvent.isComposing &&
+          !event.currentTarget.querySelector('[popover="auto"]:popover-open')
+        ) {
           event.preventDefault();
           event.stopPropagation();
           onOpenChange?.(false);

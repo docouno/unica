@@ -237,7 +237,66 @@ export default function FormCarriersFixture(): JSX.Element {
         <RequiredInput />
         <button type="submit">Submit required input</button>
       </form>
+      <OrderedMultiple />
     </>
+  );
+}
+
+const orderedDefaults = ['', '__proto__'];
+const controlledOrder = ['c', '__proto__'];
+const orderedCatalog = [...orderedDefaults, 'c', 'd'].map((value) => ({ value }));
+
+function OrderedMultiple(): JSX.Element {
+  const localRef = useRef<HTMLSelectElement>(null);
+  const controlledRef = useRef<HTMLSelectElement>(null);
+  const trigger = useRef<HTMLButtonElement>(null);
+  const [changed, setChanged] = useState(false);
+  const options = changed
+    ? [{ value: '', disabled: true }, ...orderedCatalog.slice(2)]
+    : orderedCatalog;
+  const local = useFixtureSelect<readonly string[]>(localRef, {
+    defaultValue: orderedDefaults,
+    catalog: options,
+  });
+  const controlled = useFixtureSelect<readonly string[]>(controlledRef, {
+    value: controlledOrder,
+    defaultValue: ['__proto__', 'c'],
+    catalog: options,
+  });
+  return (
+    <form id="ordered-multiple">
+      <FormSelect
+        ref={localRef}
+        name="local"
+        initialValue={local.value}
+        initialOptions={options}
+        getFocusTarget={() => trigger.current}
+      />
+      <FormSelect
+        ref={controlledRef}
+        name="controlled"
+        initialValue={controlled.value}
+        initialOptions={options}
+        getFocusTarget={() => trigger.current}
+      />
+      <button ref={trigger} type="button" onClick={() => local.propose(['__proto__', ''])}>
+        Reverse default selection
+      </button>
+      <button type="button" onClick={() => local.propose(['__proto__', 'c'])}>
+        Replace first default
+      </button>
+      <button type="button" onClick={() => local.propose(['d', 'c'])}>
+        Replace both defaults
+      </button>
+      <button type="button" onClick={() => setChanged(!changed)}>
+        Change default availability
+      </button>
+      <button type="button" onClick={() => controlled.propose(['__proto__', 'c'])}>
+        Propose controlled multiple
+      </button>
+      <button type="reset">Reset ordered selection</button>
+      <output data-testid="ordered-multiple-value">{JSON.stringify(local.value)}</output>
+    </form>
   );
 }
 

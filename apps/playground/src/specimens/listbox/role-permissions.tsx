@@ -1,6 +1,5 @@
 import { useState } from 'react';
-import { Stack, Text } from '@docouno/unica';
-import { Listbox } from '../../prototypes/select/select.proto.js';
+import { Stack, Text, Listbox } from '@docouno/unica';
 import '@docouno/unica/styles.css';
 
 const roles = [
@@ -16,7 +15,7 @@ export function RolePermissions({ listProps = {} } = {}) {
     <Stack gap={12} style={{ inlineSize: 'min(100%, 24rem)' }}>
       <Listbox
         {...listProps}
-        title="Access level"
+        aria-label="Access level"
         options={roles}
         value={selected}
         onValueChange={(value) => setSelected(value ?? '')}

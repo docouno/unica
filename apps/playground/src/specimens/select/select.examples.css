@@ -1,0 +1,11 @@
+.select-study-dialog {
+  box-sizing: border-box;
+  inline-size: min(26rem, calc(100% - var(--space-32)));
+  max-block-size: calc(100% - var(--space-32));
+  padding: var(--surface-m-padding);
+  color: var(--fg-primary);
+}
+
+.select-study-dialog::backdrop {
+  background: var(--scrim-bg);
+}

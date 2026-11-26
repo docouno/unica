@@ -157,7 +157,7 @@
   inline-size: fit-content;
 }
 
-.folio-preference-row > .select-proto {
+.folio-typeface-control {
   inline-size: 224px;
   max-inline-size: 100%;
 }

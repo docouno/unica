@@ -1,6 +1,5 @@
 import { useState } from 'react';
-import { Code, Stack, Text } from '@docouno/unica';
-import { Listbox } from '../../prototypes/select/select.proto.js';
+import { Code, Stack, Text, Listbox } from '@docouno/unica';
 import '@docouno/unica/styles.css';
 
 const columns = [
@@ -19,11 +18,11 @@ export function ExportColumns({ listProps = {} } = {}) {
     <Stack gap={12} style={{ inlineSize: 'min(100%, 24rem)' }}>
       <Listbox
         {...listProps}
-        title="Export columns"
+        aria-label="Export columns"
         options={columns}
         multiple
-        values={selected}
-        onValuesChange={(values) => setSelected([...values])}
+        value={selected}
+        onValueChange={(values) => setSelected([...values])}
       />
       <Text size="body-s" role="status">
         <bdi>

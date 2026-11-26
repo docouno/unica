@@ -170,3 +170,21 @@ export function ExternalLinkGlyph(): ReactElement {
     <Glyph path="M200,64V168a8,8,0,0,1-16,0V83.31L69.66,197.66a8,8,0,0,1-11.32-11.32L172.69,72H88a8,8,0,0,1,0-16H192A8,8,0,0,1,200,64Z" />
   );
 }
+
+export function LockGlyph({ className }: GlyphProps): ReactElement {
+  return (
+    <Glyph
+      className={className}
+      path="M208,80H176V56a48,48,0,0,0-96,0V80H48A16,16,0,0,0,32,96V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V96A16,16,0,0,0,208,80ZM96,56a32,32,0,0,1,64,0V80H96ZM208,208H48V96H208V208Z"
+    />
+  );
+}
+
+export function SearchGlyph({ className }: GlyphProps): ReactElement {
+  return (
+    <Glyph
+      className={className}
+      path="M229.66,218.34l-50.07-50.06a88.11,88.11,0,1,0-11.31,11.31l50.06,50.07a8,8,0,0,0,11.32-11.32ZM40,112a72,72,0,1,1,72,72A72.08,72.08,0,0,1,40,112Z"
+    />
+  );
+}
