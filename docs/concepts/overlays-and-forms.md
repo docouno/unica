@@ -37,7 +37,7 @@ Native user interaction and focus movement defer to the browser — internal foc
 
 The native modal makes content outside its DOM subtree inert. A notification viewport can receive pointer and keyboard input by moving inside the active Unica dialog. Keep the queue, timer, and announcement state above the [Portal](../components/portal.md) so they survive the move.
 
-A document-wide viewport follows the topmost active Unica modal. A scoped viewport follows it only if the dialog belongs to the viewport's DOM scope. While a modal in another scope is active, the local queue keeps its messages and defers its viewport until the scope becomes available. When no Unica modal is active, each viewport uses its ordinary portal host.
+A document-wide viewport follows the topmost active Unica modal. A scoped viewport that contains the dialog moves into it. A viewport whose local host is already inside that dialog keeps its host and inherited theme. A queue in a separate scope waits for that scope to become available. See [Toast placement and modal scope](../components/toast.md#placement-and-modal-scope).
 
 ### Positioning Adapter & Discrete Transitions
 

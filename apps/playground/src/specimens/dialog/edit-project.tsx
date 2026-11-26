@@ -16,7 +16,7 @@ import { FormField } from '@docouno/unica';
 import { useId, useRef, useState } from 'react';
 import type { ReactElement } from 'react';
 import type { PreviewProps } from '../../workbench/types.js';
-import { ToastCard } from '../../prototypes/toast/toast.proto.js';
+import { Toast } from '@docouno/unica';
 import { DialogStudy } from '../../prototypes/dialog/dialog.examples.js';
 import {
   Modal,
@@ -336,7 +336,7 @@ export function EditProject({
       <VisuallyHidden role="status">{saved ? 'Project updated' : ''}</VisuallyHidden>
       {saved && (
         <div className="dialog-study-notice">
-          <ToastCard
+          <Toast
             status="success"
             title="Project updated"
             onDismiss={() => {

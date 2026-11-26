@@ -15,7 +15,8 @@ import {
   DrawerTitle,
   DrawerTrigger,
 } from '../prototypes/dialog/dialog.proto.js';
-import { ToastCard } from '../prototypes/toast/toast.proto.js';
+import { ToastProvider, useToast } from '@docouno/unica';
+import { FolioToastRegion } from './folio/folio.toast.js';
 import { FormField } from '@docouno/unica';
 import { Combobox } from '../prototypes/combobox/combobox.proto.js';
 import type { Suggestion } from '../prototypes/combobox/combobox.proto.js';
@@ -43,6 +44,7 @@ const reviewers = [
 ] as const satisfies readonly Suggestion[];
 
 function PropertiesScene(): ReactElement {
+  const toast = useToast();
   const formId = useId();
   const scopeId = useId();
   const visibilityId = useId();
@@ -61,7 +63,6 @@ function PropertiesScene(): ReactElement {
     reviewer: reviewers[0],
   });
   const [draft, setDraft] = useState(properties);
-  const [saved, setSaved] = useState(false);
   const changeOpen = (next: boolean): void => {
     if (next) {
       setDraft(properties);
@@ -122,7 +123,11 @@ function PropertiesScene(): ReactElement {
                 event.preventDefault();
                 setProperties(draft);
                 setOpen(false);
-                setSaved(true);
+                toast.show({
+                  status: 'success',
+                  title: 'Document properties saved',
+                  description: 'Visibility and review cadence updated for this document.',
+                });
               }}
             >
               <fieldset className="folio-fieldset">
@@ -190,17 +195,7 @@ function PropertiesScene(): ReactElement {
           </DrawerFooter>
         </DrawerContent>
       </Drawer>
-      {saved && (
-        <div className="folio-toast-dock">
-          <ToastCard
-            status="success"
-            title="Document properties saved"
-            onDismiss={() => setSaved(false)}
-          >
-            Visibility and review cadence updated for this document.
-          </ToastCard>
-        </div>
-      )}
+      <FolioToastRegion />
     </FolioScene>
   );
 }
@@ -231,5 +226,9 @@ export default defineScene({
     'title',
     'toast',
   ],
-  render: PropertiesScene,
+  render: () => (
+    <ToastProvider>
+      <PropertiesScene />
+    </ToastProvider>
+  ),
 });

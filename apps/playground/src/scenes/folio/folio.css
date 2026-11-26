@@ -423,6 +423,12 @@
   font-size: var(--text-size-body-s);
   line-height: var(--text-size-body-s-lh);
 }
+.folio-toast-scope {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
 .folio-toast-dock {
   position: absolute;
   inset-inline-end: var(--space-24);

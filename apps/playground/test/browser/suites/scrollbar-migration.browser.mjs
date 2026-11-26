@@ -36,11 +36,11 @@ async function scrollByKeyboard(page, locator, key) {
 }
 
 async function assertToastGeometry(page, gutter, overflow, forcedColors = false) {
-  const list = page.locator('.toast-list');
+  const list = page.locator('.unica-toast-list');
   const dimensions = await list.evaluate((node) => {
-    const viewport = node.closest('.toast-viewport');
-    const card = node.querySelector('.toast-card');
-    const dock = viewport.querySelector('.toast-dock');
+    const viewport = node.closest('.unica-toast-viewport');
+    const card = node.querySelector('.unica-toast');
+    const dock = viewport.querySelector('.unica-toast-dock');
     const toastRect = viewport.getBoundingClientRect();
     const cardRect = card.getBoundingClientRect();
     const listRect = node.getBoundingClientRect();
@@ -60,7 +60,7 @@ async function assertToastGeometry(page, gutter, overflow, forcedColors = false)
         getComputedStyle(viewport).direction === 'rtl'
           ? listRect.right - toastRect.right
           : toastRect.left - listRect.left,
-      dockGap: viewport.dataset.placement.startsWith('top')
+      dockGap: viewport.dataset.unicaToastPlacement.startsWith('top')
         ? listRect.top - dockRect.bottom
         : dockRect.top - listRect.bottom,
     };
@@ -185,6 +185,7 @@ export default {
       await page.setViewportSize({ width, height });
       for (const direction of ['ltr', 'rtl']) {
         await mount('scrollbar-toast', { direction, textScale, reducedMotion: 'reduce' });
+        await page.getByRole('button', { name: 'Expand 12 notifications' }).press('Enter');
         for (const placement of ['top-start', 'top-end', 'bottom-start', 'bottom-end']) {
           await page.getByLabel('Placement').selectOption(placement);
           await assertToastGeometry(page, 10, true);
@@ -205,10 +206,11 @@ export default {
 
     await page.setViewportSize({ width: 1200, height: 720 });
     await page.getByLabel('Messages').selectOption('2');
+    await page.getByRole('button', { name: 'Expand 2 notifications' }).press('Enter');
     await assertToastGeometry(page, 0, false);
 
     await page.getByRole('button', { name: 'Collapse 2 notifications' }).click();
-    const stack = page.locator('.toast-stack');
+    const stack = page.locator('.unica-toast-stack');
     assert.equal(await stack.evaluate((node) => getComputedStyle(node).overflowY), 'visible');
     assert.equal(await stack.evaluate((node) => node.classList.contains('unica-scrollbar')), false);
     await page.getByLabel('Messages').selectOption('1');
@@ -224,6 +226,7 @@ export default {
     const nativeGutter = (await nativeParts(page.getByTestId('native'))).inlineGutter;
     await page.setViewportSize({ width: 360, height: 440 });
     await mount('scrollbar-toast', { direction: 'rtl', forcedColors: 'active', textScale: 120 });
+    await page.getByRole('button', { name: 'Expand 12 notifications' }).press('Enter');
     await assertToastGeometry(page, nativeGutter, true, true);
 
     const touch = await page
@@ -239,7 +242,8 @@ export default {
       await touchPage.goto(page.url());
       await touchPage.locator('[data-browser-ready]').waitFor();
       assert.equal(await touchPage.evaluate(() => matchMedia('(pointer: coarse)').matches), true);
-      const list = touchPage.locator('.toast-list');
+      await touchPage.getByRole('button', { name: 'Expand 12 notifications' }).press('Enter');
+      const list = touchPage.locator('.unica-toast-list');
       assert.equal(
         await list.evaluate((element) => getComputedStyle(element).scrollbarWidth),
         'thin',
@@ -259,7 +263,8 @@ export default {
     await page.setViewportSize({ width: 1200, height: 720 });
     await mount('scrollbar-toast', { reducedMotion: 'reduce' });
     await page.getByLabel('Messages').selectOption('2');
-    const list = await page.locator('.toast-list').elementHandle();
+    await page.getByRole('button', { name: 'Expand 2 notifications' }).press('Enter');
+    const list = await page.locator('.unica-toast-list').elementHandle();
     await page.evaluate(() => {
       window.toastWindowErrors = [];
       window.addEventListener('error', ({ message }) => window.toastWindowErrors.push(message));
@@ -269,7 +274,7 @@ export default {
         ({ element, expectedGutter }) =>
           element.isConnected &&
           element.offsetWidth - element.clientWidth === expectedGutter &&
-          getComputedStyle(element).getPropertyValue('--toast-scrollbar-gutter') ===
+          getComputedStyle(element).getPropertyValue('--_toast-scrollbar-gutter') ===
             `${expectedGutter}px`,
         { element: list, expectedGutter: gutter },
       );
@@ -282,7 +287,7 @@ export default {
     await page.emulateMedia({ forcedColors: 'active' });
     await settle(systemGutter, true, true);
     const widerTrack = await page.addStyleTag({
-      content: '.toast-list::-webkit-scrollbar { width: 30px; }',
+      content: '.unica-toast-list::-webkit-scrollbar { width: 30px; }',
     });
     await settle(30, true, true);
     await widerTrack.evaluate((style) => style.remove());

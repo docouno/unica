@@ -1,14 +1,12 @@
-.toast-queue-study {
-  position: relative;
-  display: grid;
-  place-items: center;
+.toast-queue-frame {
   inline-size: 100%;
   min-inline-size: 0;
-  block-size: 360px;
 }
 
-.toast-queue-study[data-reading] {
-  block-size: 528px;
+.toast-queue-study {
+  display: grid;
+  place-items: center;
+  min-block-size: 100%;
 }
 
 .toast-queue-study:focus-visible {

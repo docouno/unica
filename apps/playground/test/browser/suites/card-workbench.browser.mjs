@@ -353,7 +353,7 @@ export default {
     const invites = await scene('07-invite-access-modal');
     await invites.getByRole('button', { name: /Send \d+ invites/ }).click();
     await invites
-      .locator('.toast-title')
+      .locator('.unica-toast-title')
       .filter({ hasText: /invitations prepared/ })
       .waitFor();
   },
@@ -369,7 +369,9 @@ export default {
       .first()
       .getByRole('button', { name: 'Configure' })
       .click();
-    await extensions.getByText('GitHub Enterprise configuration selected.').waitFor();
+    await extensions
+      .getByText('GitHub Enterprise configuration selected.', { exact: true })
+      .waitFor();
 
     const preferences = await scene('09-user-preferences');
     const dark = preferences
@@ -379,8 +381,14 @@ export default {
     assert.equal(await dark.isChecked(), true);
 
     const admin = await scene('10-workspace-admin');
+    const queue = admin.getByRole('region', { name: 'Notifications' });
+    await queue.getByRole('button', { name: 'Expand 2 notifications' }).click();
+    await queue.getByRole('group', { name: 'Uploading archive' }).waitFor();
+    await admin.getByRole('button', { name: 'Remove legacy-envoy-rfcs.zip' }).click();
+    await queue.waitFor({ state: 'detached' });
     await admin.getByRole('button', { name: 'Run dry-run check' }).click();
     await admin
+      .getByRole('group', { name: 'Archive import' })
       .getByText(/Dry-run check complete: \d+ staged archives passed validation/)
       .waitFor();
   },

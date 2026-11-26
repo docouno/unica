@@ -17,13 +17,16 @@ import {
   Button,
   RadioCard,
   RadioCardGroup,
+  ToastProvider,
+  useToast,
 } from '@docouno/unica';
 import {
   Breadcrumb,
   BreadcrumbLink,
   BreadcrumbPage,
 } from '../prototypes/breadcrumb/breadcrumb.proto.js';
-import { ToastViewport } from '../prototypes/toast/toast.proto.js';
+import type { ToastId } from '@docouno/unica';
+import { FolioToastRegion } from './folio/folio.toast.js';
 import {
   Dropzone,
   FileInput,
@@ -56,6 +59,15 @@ function isSchema(file: File): boolean {
   return /\.ya?ml$/i.test(file.name);
 }
 
+const initialUpload: StagedArchive = {
+  id: 'rfcs',
+  name: 'legacy-envoy-rfcs.zip',
+  megabytes: 6.4,
+  detail: 'Uploading archive…',
+  status: 'uploading',
+  progress: 65,
+};
+
 const initialArchives: readonly StagedArchive[] = [
   {
     id: 'runbooks',
@@ -64,14 +76,7 @@ const initialArchives: readonly StagedArchive[] = [
     detail: '28 docs verified',
     status: 'success',
   },
-  {
-    id: 'rfcs',
-    name: 'legacy-envoy-rfcs.zip',
-    megabytes: 6.4,
-    detail: 'Uploading archive…',
-    status: 'uploading',
-    progress: 65,
-  },
+  initialUpload,
 ];
 
 function WorkspaceAdminScene(): ReactElement {
@@ -83,9 +88,13 @@ function WorkspaceAdminScene(): ReactElement {
   const [currentStep, setCurrentStep] = useState<'source' | 'verify' | 'commit'>('verify');
   const [validation, setValidation] = useState<'checking' | 'required' | 'verified'>('checking');
   const [error, setError] = useState<ImportError | null>(null);
-  const [notice, setNotice] = useState('');
-  const [showActivityToast, setShowActivityToast] = useState(true);
-  const [showValidationToast, setShowValidationToast] = useState(true);
+  const toast = useToast();
+  const [viewport, setViewport] = useState<HTMLDivElement | null>(null);
+  const activityToast = useRef<ToastId | null>(null);
+  const validationToast = useRef<ToastId | null>(null);
+  const importToast = useRef<ToastId | null>(null);
+  const seeded = useRef(false);
+  const footer = useRef<HTMLDivElement>(null);
   const attempt = useRef(0);
   const summary = useRef<HTMLDivElement>(null);
   const summaryClose = useRef<HTMLButtonElement>(null);
@@ -110,7 +119,6 @@ function WorkspaceAdminScene(): ReactElement {
     }
   }, [error]);
 
-  const feedbackRegion = useRef<HTMLDivElement>(null);
   const sourceHeading = useRef<HTMLHeadingElement>(null);
   const verificationHeading = useRef<HTMLHeadingElement>(null);
   const commitStatus = useRef<HTMLParagraphElement>(null);
@@ -121,34 +129,112 @@ function WorkspaceAdminScene(): ReactElement {
   }, [currentStep]);
 
   useLayoutEffect(() => {
-    const region = feedbackRegion.current;
-    const scene = region?.closest<HTMLElement>('.folio-scene');
+    const scene = footer.current?.closest<HTMLElement>('.folio-scene');
     if (!scene) {
       return;
     }
-    const viewport = region?.querySelector<HTMLElement>('.toast-viewport');
-    const update = (): void =>
+    const update = (): void => {
+      const height = viewport?.getBoundingClientRect().height ?? 0;
       scene.style.setProperty(
         '--folio-toast-clearance',
-        `${viewport ? Math.ceil(viewport.getBoundingClientRect().height) + 48 : 64}px`,
+        `${height > 0 ? Math.ceil(height) + 48 : 64}px`,
       );
-    const observer = new ResizeObserver(update);
-    if (viewport) {
-      observer.observe(viewport);
-    }
+    };
     update();
-    return () => observer.disconnect();
-  }, [archives, notice, showActivityToast, showValidationToast]);
+    if (viewport) {
+      const view = viewport.ownerDocument.defaultView;
+      if (view) {
+        const observer = new view.ResizeObserver(update);
+        observer.observe(viewport);
+        return () => observer.disconnect();
+      }
+    }
+  }, [viewport]);
+
+  useLayoutEffect(() => {
+    if (seeded.current) {
+      return;
+    }
+    seeded.current = true;
+    activityToast.current = toast.show(
+      {
+        operationKey: 'upload',
+        loading: true,
+        title: 'Uploading archive',
+        description: `${initialUpload.name} · You can keep reviewing the import.`,
+      },
+      { announce: false },
+    );
+    validationToast.current = toast.show(
+      {
+        operationKey: 'initial-validation',
+        status: 'success',
+        title: '28 runbook slugs validated',
+        description: 'Zero broken cross-references in core-infra-runbooks-2026-q3.zip.',
+        persistent: true,
+      },
+      { announce: false },
+    );
+  }, [toast]);
   const readyToCommit = validation === 'verified';
   const totalSize = archives.reduce((sum, archive) => sum + archive.megabytes, 0);
-  const uploadingArchive = archives.find((archive) => archive.status === 'uploading');
+
+  function showImportNotice(description: string, finishUpload = false): void {
+    const options = {
+      title: 'Archive import',
+      description,
+      status: 'info' as const,
+    };
+    if (finishUpload && activityToast.current !== null) {
+      if (
+        toast.update(activityToast.current, {
+          title: options.title,
+          description,
+          status: options.status,
+          loading: false,
+        })
+      ) {
+        if (importToast.current !== null) {
+          toast.dismiss(importToast.current);
+        }
+        importToast.current = activityToast.current;
+        activityToast.current = null;
+        return;
+      }
+      activityToast.current = null;
+    }
+    if (importToast.current === null || !toast.update(importToast.current, options)) {
+      importToast.current = toast.show(options);
+    }
+  }
+
+  function clearActivityNotice(): void {
+    if (activityToast.current !== null) {
+      toast.dismiss(activityToast.current);
+      activityToast.current = null;
+    }
+  }
+
+  function clearValidationNotice(): void {
+    if (validationToast.current !== null) {
+      toast.dismiss(validationToast.current);
+      validationToast.current = null;
+    }
+  }
+
+  function clearImportNotice(): void {
+    if (importToast.current !== null) {
+      toast.dismiss(importToast.current);
+      importToast.current = null;
+    }
+  }
 
   function invalidateVerification(): void {
     setValidation('required');
     setCurrentStep((step) => (step === 'commit' ? 'verify' : step));
-    setShowValidationToast(false);
+    clearValidationNotice();
     if (readyToCommit) {
-      setNotice('The import inputs changed. Run another dry-run check.');
+      showImportNotice('The import inputs changed. Run another dry-run check.');
     }
   }
 
@@ -168,8 +254,11 @@ function WorkspaceAdminScene(): ReactElement {
     );
     setValidation('verified');
     setCurrentStep('verify');
-    setShowValidationToast(false);
-    setNotice(`Dry-run check complete: ${archives.length} staged archives passed validation.`);
+    clearValidationNotice();
+    showImportNotice(
+      `Dry-run check complete: ${archives.length} staged archives passed validation.`,
+      true,
+    );
   }
 
   function reportResult(source: ImportSource, message?: string): void {
@@ -233,7 +322,7 @@ function WorkspaceAdminScene(): ReactElement {
                   size="s"
                   variant="secondary"
                   tone="neutral"
-                  onClick={() => setNotice('No completed imports yet.')}
+                  onClick={() => showImportNotice('No completed imports yet.')}
                 >
                   Import history
                 </Button>
@@ -389,12 +478,15 @@ function WorkspaceAdminScene(): ReactElement {
                     detail={archive.detail}
                     onRemove={() => {
                       setArchives((current) => current.filter((file) => file.id !== archive.id));
+                      if (archive.id === initialUpload.id) {
+                        clearActivityNotice();
+                      }
                       invalidateVerification();
                     }}
                   />
                 ))}
               </FileList>
-              <div className="folio-import-footer">
+              <div className="folio-import-footer" ref={footer}>
                 <Button
                   size="s"
                   variant="ghost"
@@ -404,8 +496,9 @@ function WorkspaceAdminScene(): ReactElement {
                     setArchives([]);
                     setCurrentStep('source');
                     setValidation('required');
-                    setShowValidationToast(false);
-                    setNotice('The staged import was cleared.');
+                    clearValidationNotice();
+                    clearActivityNotice();
+                    showImportNotice('The staged import was cleared.');
                     sourceHeading.current?.focus();
                   }}
                 >
@@ -441,8 +534,8 @@ function WorkspaceAdminScene(): ReactElement {
                       disabled={!readyToCommit || currentStep !== 'verify'}
                       onClick={() => {
                         setCurrentStep('commit');
-                        setShowValidationToast(false);
-                        setNotice('');
+                        clearValidationNotice();
+                        clearImportNotice();
                       }}
                     >
                       Continue to commit
@@ -454,56 +547,7 @@ function WorkspaceAdminScene(): ReactElement {
           </div>
         </div>
       </AppShell>
-      <div className="folio-import-toast-region" ref={feedbackRegion}>
-        <ToastViewport
-          items={[
-            ...(showActivityToast && uploadingArchive
-              ? [
-                  {
-                    id: 'activity',
-                    loading: true,
-                    title: 'Uploading archive',
-                    children: `${uploadingArchive.name} · You can keep reviewing the import.`,
-                  },
-                ]
-              : []),
-            ...(showValidationToast
-              ? [
-                  {
-                    id: 'validation',
-                    status: 'success' as const,
-                    title: '28 runbook slugs validated',
-                    children: 'Zero broken cross-references in core-infra-runbooks-2026-q3.zip.',
-                  },
-                ]
-              : []),
-            ...(notice
-              ? [
-                  {
-                    id: 'import-notice',
-                    status: 'info' as const,
-                    title: 'Archive import',
-                    children: notice,
-                  },
-                ]
-              : []),
-          ]}
-          onDismiss={(id) => {
-            if (id === 'activity') {
-              setShowActivityToast(false);
-            } else if (id === 'validation') {
-              setShowValidationToast(false);
-            } else {
-              setNotice('');
-            }
-          }}
-          onDismissAll={() => {
-            setShowActivityToast(false);
-            setShowValidationToast(false);
-            setNotice('');
-          }}
-        />
-      </div>
+      <FolioToastRegion ref={setViewport} />
     </FolioScene>
   );
 }
@@ -534,5 +578,9 @@ export default defineScene({
     'title',
     'toast',
   ],
-  render: WorkspaceAdminScene,
+  render: () => (
+    <ToastProvider>
+      <WorkspaceAdminScene />
+    </ToastProvider>
+  ),
 });

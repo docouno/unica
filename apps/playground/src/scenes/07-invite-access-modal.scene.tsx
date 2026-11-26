@@ -26,7 +26,8 @@ import {
   ModalTitle,
   ModalTrigger,
 } from '../prototypes/dialog/dialog.proto.js';
-import { ToastCard } from '../prototypes/toast/toast.proto.js';
+import { ToastProvider, useToast } from '@docouno/unica';
+import { FolioToastRegion } from './folio/folio.toast.js';
 import {
   Table,
   TableBody,
@@ -101,6 +102,7 @@ const expiryOptions = [
 ] as const;
 
 function InviteScene(): ReactElement {
+  const toast = useToast();
   const formId = useId();
   const welcomeId = useId();
   const [open, setOpen] = useState(true);
@@ -109,7 +111,6 @@ function InviteScene(): ReactElement {
     'platform@example.com',
     'reviewer@example.com',
   ]);
-  const [sent, setSent] = useState<{ readonly role: string; readonly expiry: string } | null>(null);
   return (
     <FolioScene>
       <Modal open={open} onOpenChange={setOpen}>
@@ -243,7 +244,11 @@ function InviteScene(): ReactElement {
                   return;
                 }
                 setOpen(false);
-                setSent({ role: selectedRole.label, expiry: expiry.label });
+                toast.show({
+                  status: 'success',
+                  title: `${invites.length} invitations prepared`,
+                  description: `Workspace role: ${selectedRole.label}. Invite links expire in ${expiry.label}.`,
+                });
               }}
             >
               <TagsInput
@@ -319,17 +324,7 @@ function InviteScene(): ReactElement {
           </ModalFooter>
         </ModalContent>
       </Modal>
-      {sent && (
-        <div className="folio-toast-dock">
-          <ToastCard
-            status="success"
-            title={`${invites.length} invitations prepared`}
-            onDismiss={() => setSent(null)}
-          >
-            Workspace role: {sent.role}. Invite links expire in {sent.expiry}.
-          </ToastCard>
-        </div>
-      )}
+      <FolioToastRegion />
     </FolioScene>
   );
 }
@@ -361,5 +356,9 @@ export default defineScene({
     'title',
     'toast',
   ],
-  render: InviteScene,
+  render: () => (
+    <ToastProvider>
+      <InviteScene />
+    </ToastProvider>
+  ),
 });

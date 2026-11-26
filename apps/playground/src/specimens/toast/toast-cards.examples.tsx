@@ -1,18 +1,18 @@
 import { Fragment, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import type { ReactElement } from 'react';
 import { Stack, Text, VisuallyHidden } from '@docouno/unica';
-import { ToastCard } from '../../prototypes/toast/toast.proto.js';
-import type { ToastCardProps } from '../../prototypes/toast/toast.proto.js';
+import { Toast } from '@docouno/unica';
+import type { ToastProps } from '@docouno/unica';
 import type { PreviewProps } from '../../workbench/types.js';
 import './toast-cards.examples.css';
 
-const meanings: readonly ToastCardProps[] = [
+const meanings: readonly ToastProps[] = [
   { title: 'Link copied' },
   {
     status: 'info',
     title: 'A new version is available',
     children: 'Refresh when you are ready to continue.',
-    action: { label: 'Refresh' },
+    action: { label: 'Refresh', onClick: () => undefined },
   },
   {
     status: 'success',
@@ -23,13 +23,13 @@ const meanings: readonly ToastCardProps[] = [
     status: 'warning',
     title: '3 files were skipped',
     children: 'The remaining 21 files were imported.',
-    action: { label: 'Review files' },
+    action: { label: 'Review files', onClick: () => undefined },
   },
   {
     status: 'danger',
     title: 'Changes could not be saved',
     children: 'Your draft is safe on this device.',
-    action: { label: 'Retry' },
+    action: { label: 'Retry', onClick: () => undefined },
   },
   {
     loading: true,
@@ -38,16 +38,16 @@ const meanings: readonly ToastCardProps[] = [
   },
 ];
 
-const longMessages: readonly ToastCardProps[] = [
+const longMessages: readonly ToastProps[] = [
   {
     status: 'success',
     title: 'The quarterly accessibility review has been shared with your team',
-    action: { label: 'View document' },
+    action: { label: 'View document', onClick: () => undefined },
   },
   {
     status: 'danger',
     title: 'This file could not be uploaded',
-    action: { label: 'Choose a different destination' },
+    action: { label: 'Choose a different destination', onClick: () => undefined },
     children: (
       <bdi dir="ltr">
         <bdi>workspace_export_2026_11_final_accessibility_review_v12.pdf</bdi> exceeds the
@@ -58,7 +58,7 @@ const longMessages: readonly ToastCardProps[] = [
   {
     status: 'info',
     title: 'A new comment on your document',
-    action: { label: 'View comment' },
+    action: { label: 'View comment', onClick: () => undefined },
     children: (
       <>
         <bdi dir="ltr">
@@ -74,7 +74,7 @@ const longMessages: readonly ToastCardProps[] = [
   },
   {
     title: '8 documents archived',
-    action: { label: 'Restore all 8 documents' },
+    action: { label: 'Restore all 8 documents', onClick: () => undefined },
   },
 ];
 
@@ -88,12 +88,12 @@ function pinControls(root: HTMLDivElement | null): void {
 function PinnedCards({
   ctx,
   cards,
-}: PreviewProps & { readonly cards: readonly ToastCardProps[] }): ReactElement {
+}: PreviewProps & { readonly cards: readonly ToastProps[] }): ReactElement {
   return (
     <Stack className="toast-card-studies" gap={24} ref={pinControls}>
       {cards.map((card) => (
         <Fragment key={card.title}>
-          <ToastCard {...ctx.subject} {...card} onDismiss={() => undefined} />
+          <Toast {...ctx.subject} {...card} onDismiss={() => undefined} />
           {card.action && <VisuallyHidden>Example action: {card.action.label}</VisuallyHidden>}
         </Fragment>
       ))}
@@ -111,15 +111,15 @@ export function ToastOverflow(props: PreviewProps): ReactElement {
 
 interface CardStudy {
   readonly label: string;
-  readonly card: ToastCardProps;
-  readonly result?: ToastCardProps;
+  readonly card: ToastProps;
+  readonly result?: ToastProps;
   readonly pendingMessage?: string;
   readonly dismissible?: boolean;
 }
 
 const archive: CardStudy = {
   label: 'Inline when it fits',
-  card: { title: 'Document archived', action: { label: 'Undo' } },
+  card: { title: 'Document archived', action: { label: 'Undo', onClick: () => undefined } },
   result: { status: 'success', title: 'Document restored' },
 };
 
@@ -132,7 +132,7 @@ const anatomy: readonly CardStudy[] = [
       status: 'danger',
       title: 'Upload interrupted',
       children: 'Your connection was lost. The original file has not changed.',
-      action: { label: 'Retry upload' },
+      action: { label: 'Retry upload', onClick: () => undefined },
     },
     result: { status: 'success', title: 'Upload complete' },
   },
@@ -151,7 +151,7 @@ const controls: readonly CardStudy[] = [
       status: 'warning',
       title: 'Download is unavailable',
       children: 'This file is being scanned. Try again when the scan finishes.',
-      action: { label: 'Download', disabled: true },
+      action: { label: 'Download', disabled: true, onClick: () => undefined },
     },
   },
   {
@@ -160,7 +160,7 @@ const controls: readonly CardStudy[] = [
       status: 'danger',
       title: 'Changes could not be saved',
       children: 'Your draft is safe on this device.',
-      action: { label: 'Retry' },
+      action: { label: 'Retry', onClick: () => undefined },
     },
     pendingMessage: 'Retrying save.',
     result: { status: 'success', title: 'Changes saved' },
@@ -215,7 +215,7 @@ function StudyCard({
       <Text className="toast-study-label" size="caption-l" weight="medium">
         {study.label}
       </Text>
-      <ToastCard
+      <Toast
         {...ctx.subject}
         {...card}
         action={card.action && { ...card.action, pending: phase === 'pending', onClick: activate }}

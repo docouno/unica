@@ -306,9 +306,3 @@
     padding-block-end: max(var(--space-64), var(--folio-toast-clearance, 152px));
   }
 }
-
-.folio-import-toast-region {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-}

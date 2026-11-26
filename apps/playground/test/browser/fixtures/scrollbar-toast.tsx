@@ -1,25 +1,41 @@
-import { useState } from 'react';
+import { ToastProvider, ToastViewport, UnicaProvider, useToast } from '@docouno/unica';
+import type { ToastPlacement } from '@docouno/unica';
+import { useLayoutEffect, useState } from 'react';
 import type { JSX } from 'react';
-import { ToastViewport } from '../../../src/prototypes/toast/toast.proto.js';
-import type { ToastItem, ToastPlacement } from '../../../src/prototypes/toast/toast.proto.js';
-
-const messages: readonly ToastItem[] = Array.from({ length: 12 }, (_, index) => ({
-  id: String(index + 1),
-  title: `Activity update ${index + 1}`,
-  children: 'The workspace changes are ready for review.',
-  action: { label: 'Review' },
-}));
 
 const placements = ['top-start', 'top-end', 'bottom-start', 'bottom-end'] as const;
+
+function Messages({
+  count,
+  placement,
+}: {
+  readonly count: number;
+  readonly placement: ToastPlacement;
+}): JSX.Element {
+  const queue = useToast();
+  useLayoutEffect(() => {
+    for (let index = 1; index <= count; index += 1) {
+      queue.show(
+        {
+          operationKey: String(index),
+          title: `Activity update ${index}`,
+          description: 'The workspace changes are ready for review.',
+          action: { label: 'Review', onClick: () => undefined },
+        },
+        { announce: false },
+      );
+    }
+  }, [count, queue]);
+  return <ToastViewport placement={placement} />;
+}
 
 export default function ScrollbarToastFixture(): JSX.Element {
   const [placement, setPlacement] = useState<ToastPlacement>('bottom-end');
   const [count, setCount] = useState(12);
-  const [dismissed, setDismissed] = useState<readonly string[]>([]);
-  const items = messages.slice(0, count).filter(({ id }) => !dismissed.includes(id));
+  const [host, setHost] = useState<HTMLDivElement | null>(null);
 
   return (
-    <div style={{ position: 'relative', blockSize: '100dvh', overflow: 'clip' }}>
+    <div ref={setHost} style={{ position: 'relative', blockSize: '100dvh', overflow: 'clip' }}>
       <label>
         Placement
         <select
@@ -33,26 +49,17 @@ export default function ScrollbarToastFixture(): JSX.Element {
       </label>
       <label>
         Messages
-        <select
-          value={count}
-          onChange={(event) => {
-            setDismissed([]);
-            setCount(Number(event.target.value));
-          }}
-        >
+        <select value={count} onChange={(event) => setCount(Number(event.target.value))}>
           <option>12</option>
           <option>2</option>
           <option>1</option>
         </select>
       </label>
-      <ToastViewport
-        key={count}
-        items={items}
-        placement={placement}
-        initialExpanded
-        onDismiss={(id) => setDismissed((current) => [...current, id])}
-        onDismissAll={() => setDismissed(items.map(({ id }) => id))}
-      />
+      <UnicaProvider portalContainer={host}>
+        <ToastProvider key={count}>
+          <Messages count={count} placement={placement} />
+        </ToastProvider>
+      </UnicaProvider>
     </div>
   );
 }
