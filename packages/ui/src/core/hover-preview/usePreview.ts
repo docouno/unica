@@ -63,7 +63,9 @@ export function usePreview({
   const domain = useContext(PreviewDomainContext);
   const [, authority] = useStateAuthority({ value: open, defaultValue: defaultOpen ?? false });
   const controller = useRef<PreviewController | null>(null);
-  const pendingFocus = useRef<{ event: FocusEvent; target: Element } | null>(null);
+  const triggerFocus = useRef<{ event: FocusEvent; target: Element; pending: boolean } | null>(
+    null,
+  );
   const admission = useRef({ blocked: false, externalAnchor: null as HTMLElement | null });
 
   useIsoLayoutEffect(() => {
@@ -113,9 +115,12 @@ export function usePreview({
       write: authority.propose,
       notify: onOpenChange,
     });
-    const focus = pendingFocus.current;
-    if (focus && anchor) {
-      pendingFocus.current = null;
+    const focus = triggerFocus.current;
+    if (focus && (disabled || !anchor)) {
+      // A focused trigger can lose and regain an eligible hint as its label fits or clips.
+      focus.pending = true;
+    } else if (focus?.pending && anchor) {
+      focus.pending = false;
       if (
         composedContains(anchor, focus.target) &&
         getRootActiveElement(getRootNodeSafe(focus.target), document) === focus.target
@@ -131,21 +136,27 @@ export function usePreview({
         if (!isElementNode(event.target)) {
           return;
         }
-        if (controller.current && anchor && composedContains(anchor, event.target)) {
-          controller.current.focusTrigger(event.nativeEvent, event.target);
-        } else {
-          // A parent can restore focus before the anchor and carrier refs settle.
-          pendingFocus.current = { event: event.nativeEvent, target: event.target };
+        const ready =
+          !disabled && controller.current && anchor && composedContains(anchor, event.target);
+        triggerFocus.current = { event: event.nativeEvent, target: event.target, pending: !ready };
+        if (ready) {
+          controller.current?.focusTrigger(event.nativeEvent, event.target);
         }
       },
       onBlur: (event) => {
-        pendingFocus.current = null;
+        triggerFocus.current = null;
         controller.current?.blurTrigger(event.nativeEvent);
       },
       onPointerEnter: (event) => controller.current?.enterTrigger(event.nativeEvent),
       onPointerLeave: (event) => controller.current?.leaveTrigger(event.nativeEvent),
-      onClick: (event) => controller.current?.activate(event.nativeEvent),
-      onAuxClick: (event) => controller.current?.activate(event.nativeEvent),
+      onClick: (event) => {
+        triggerFocus.current = null;
+        controller.current?.activate(event.nativeEvent);
+      },
+      onAuxClick: (event) => {
+        triggerFocus.current = null;
+        controller.current?.activate(event.nativeEvent);
+      },
       onKeyUp: (event) => controller.current?.releaseActivationKey(event.nativeEvent, event.target),
     },
     carrier: {

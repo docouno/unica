@@ -1,0 +1,207 @@
+@layer unica.components {
+  .unica-chip {
+    --_chip-height: 24px;
+    --_chip-font: var(--text-size-body-s);
+    --_chip-line-height: var(--text-size-body-s-lh);
+    --_chip-padding: 8px;
+    --_chip-icon: var(--size-m-icon);
+    --_chip-gap: 4px;
+    --_chip-target: 24px;
+    --_chip-paint: max(var(--_chip-height), calc(var(--_chip-line-height) + 4px));
+    position: relative;
+    display: inline-flex;
+    flex: 0 1 auto;
+    align-items: center;
+    justify-content: center;
+    min-inline-size: var(--_chip-target);
+    min-block-size: max(var(--_chip-paint), var(--_chip-target));
+    max-inline-size: min(100%, var(--chip-max-width, 100%));
+    color: var(--_chip-fg);
+    font: 500 var(--_chip-font) / var(--_chip-line-height) var(--font-family-base);
+    vertical-align: middle;
+    cursor: pointer;
+  }
+  .unica-chip[data-unica-chip-size='s'] {
+    --_chip-height: 20px;
+    --_chip-font: var(--text-size-caption-l);
+    --_chip-line-height: var(--text-size-caption-l-lh);
+    --_chip-padding: 6px;
+    --_chip-icon: var(--size-s-icon);
+  }
+  .unica-chip[data-unica-chip-size='l'] {
+    --_chip-height: 28px;
+    --_chip-font: var(--text-size-body-m);
+    --_chip-line-height: var(--text-size-body-m-lh);
+    --_chip-padding: 10px;
+    --_chip-icon: var(--size-l-icon);
+  }
+  .unica-chip[hidden] {
+    display: none;
+  }
+  .unica-chip-native {
+    position: absolute;
+    z-index: 1;
+    inset: 0;
+    inline-size: 100%;
+    block-size: 100%;
+    margin: 0;
+    opacity: 0;
+    cursor: inherit;
+  }
+  .unica-chip-face {
+    display: inline-flex;
+    flex: 1;
+    align-items: center;
+    justify-content: center;
+    gap: var(--_chip-gap);
+    min-inline-size: 0;
+    min-block-size: var(--_chip-paint);
+    padding-inline: var(--_chip-padding);
+    border: var(--_pill-border-width) solid var(--_chip-border);
+    border-radius: var(--radius-full);
+    --_chip-face-bg: var(--_chip-bg);
+    --_chip-face-fg: var(--_chip-fg);
+    background: color-mix(
+      in oklab,
+      var(--_chip-face-bg),
+      var(--_chip-face-fg) var(--_chip-state-mix, 0%)
+    );
+    color: var(--_chip-face-fg);
+    transition:
+      background-color var(--_btn-state-duration) ease,
+      border-color var(--_btn-state-duration) ease;
+  }
+  /* Reserve the selected width, while centering text-only resting labels. */
+  .unica-chip[data-unica-chip-iconless]:not(:has(.unica-chip-native:checked)) .unica-chip-face {
+    padding-inline: calc(var(--_chip-padding) + (var(--_chip-icon) + var(--_chip-gap)) / 2);
+  }
+  .unica-chip-leading {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    inline-size: var(--_chip-icon);
+    block-size: var(--_chip-icon);
+    font-size: var(--_chip-icon);
+  }
+  .unica-chip-check {
+    display: none;
+  }
+  .unica-chip[data-unica-chip-iconless]:not(:has(.unica-chip-native:checked)) .unica-chip-leading {
+    display: none;
+  }
+  .unica-chip-native:checked ~ .unica-chip-face {
+    border-color: var(--_chip-selected-border);
+    --_chip-face-bg: var(--_chip-selected-bg);
+    --_chip-face-fg: var(--_chip-selected-fg);
+  }
+  .unica-chip-native:checked ~ .unica-chip-face .unica-chip-option-icon {
+    display: none;
+  }
+  .unica-chip-native:checked ~ .unica-chip-face .unica-chip-check {
+    display: block;
+  }
+  .unica-chip-label {
+    min-inline-size: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  @media (hover: hover) {
+    .unica-chip-native:hover:not(:disabled) ~ .unica-chip-face {
+      --_chip-state-mix: 8%;
+    }
+  }
+  .unica-chip-native:active:not(:disabled) ~ .unica-chip-face {
+    --_chip-state-mix: 14%;
+  }
+  .unica-chip-native:focus-visible ~ .unica-chip-face {
+    outline: 2px solid var(--_chip-focus-ring, var(--focus-ring-color));
+    outline-offset: 2px;
+  }
+  .unica-chip:has(.unica-chip-native:disabled) {
+    cursor: default;
+  }
+  .unica-chip-native:disabled ~ .unica-chip-face {
+    color: color-mix(in oklab, var(--_chip-fg) 58%, var(--_chip-bg));
+  }
+  .unica-chip-native:disabled:checked ~ .unica-chip-face {
+    color: color-mix(in oklab, var(--_chip-selected-fg) 62%, var(--_chip-bg));
+  }
+  .unica-chip-group {
+    min-inline-size: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+  }
+  .unica-chip-group-label {
+    margin: 0;
+    padding: 0;
+    color: var(--fg-primary);
+    font: 500 var(--text-size-body-s) / var(--text-size-body-s-lh) var(--font-family-base);
+  }
+  .unica-chip-group-description,
+  .unica-chip-group-message {
+    margin: var(--space-4) 0 0;
+    color: var(--fg-secondary);
+    font: 400 var(--text-size-caption-l) / var(--text-size-caption-l-lh) var(--font-family-base);
+  }
+  .unica-chip-group-options {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-8);
+    min-inline-size: 0;
+  }
+  .unica-chip-group-label + .unica-chip-group-options,
+  .unica-chip-group-description + .unica-chip-group-options {
+    margin-block-start: var(--space-12);
+  }
+  .unica-chip-group-message {
+    margin-block-start: var(--space-8);
+  }
+  .unica-chip-group[aria-invalid='true'] .unica-chip-group-message {
+    color: var(--status-danger-soft-fg);
+  }
+  .unica-chip-group:focus-visible {
+    outline: 2px solid var(--focus-ring-color);
+    outline-offset: 2px;
+  }
+  @media (pointer: coarse) {
+    .unica-chip {
+      --_chip-target: 44px;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .unica-chip-face {
+      transition: none;
+    }
+  }
+  @media (forced-colors: active) {
+    .unica-chip {
+      --_chip-bg: Canvas;
+      --_chip-fg: ButtonText;
+      --_chip-border: ButtonText;
+      --_chip-selected-bg: Highlight;
+      --_chip-selected-fg: HighlightText;
+      --_chip-selected-border: Highlight;
+      --_chip-focus-ring: Highlight;
+    }
+    .unica-chip-face {
+      forced-color-adjust: none;
+      border-width: 1px;
+      background: var(--_chip-face-bg);
+    }
+    .unica-chip-native:disabled ~ .unica-chip-face,
+    .unica-chip-native:disabled:checked ~ .unica-chip-face {
+      border-color: GrayText;
+      background: Canvas;
+      color: GrayText;
+    }
+    .unica-chip-group:focus-visible {
+      outline-color: Highlight;
+    }
+    .unica-chip-group[aria-invalid='true'] .unica-chip-group-message {
+      color: CanvasText;
+    }
+  }
+}

@@ -15,8 +15,7 @@ import { Button, IconButton } from '@docouno/unica';
 import { DatePicker, DateRangePicker } from '../prototypes/date-picker/date-picker.proto.js';
 import { dateLabel, dateObject } from '../prototypes/date-picker/date-utils.proto.js';
 import type { DateRange } from '../prototypes/date-picker/date-utils.proto.js';
-import { ChipGroup } from '../prototypes/chip/chip.proto.js';
-import { Checkbox, Progress, Switch } from '@docouno/unica';
+import { Checkbox, ChipGroup, Progress, Switch } from '@docouno/unica';
 import { ContextMenu } from '../prototypes/menu/context-menu.proto.js';
 import type { MenuEntry } from '../prototypes/menu/menu.entries.js';
 import { Pagination } from '../prototypes/pagination/pagination.proto.js';
@@ -392,8 +391,7 @@ function CollectionScene(): ReactElement {
             </div>
             <div className="folio-row folio-wrap">
               <ChipGroup
-                className="folio-collection-facets"
-                label="Runbook filter"
+                aria-label="Runbook filter"
                 size="s"
                 value={tab}
                 onValueChange={changeTab}
@@ -655,6 +653,7 @@ export default defineScene({
     'card',
     'checkbox',
     'chip',
+    'chip-group',
     'context-menu',
     'date-picker',
     'date-range-picker',

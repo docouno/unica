@@ -1,7 +1,7 @@
 import { FolderIcon } from '@phosphor-icons/react';
-import { Chip } from '../../prototypes/chip/chip.proto.js';
+import { Chip } from '@docouno/unica';
 import { defineComponent } from '../../workbench/types.js';
-import { size, disabled, choice, toggle, eventProp } from '../control-props.js';
+import { size, disabled, required, toggle, eventProp } from '../control-props.js';
 import { previewProps } from '../preview-code.js';
 import { withOverlaySurface } from '../shared/with-overlay-surface.js';
 import {
@@ -21,22 +21,13 @@ export default defineComponent({
   id: 'chip',
   title: 'Chip',
   category: 'Selection & Pickers',
-  status: 'Proto',
+  status: 'UI',
   summary: 'Compact, wrapping choices. A check marks each selected option.',
   componentName: 'Chip',
-  form: 'wrap',
   props: {
     size,
     disabled,
-    type: {
-      ...choice(
-        'Interaction',
-        'Preview a native checkbox or radio. The standalone copy uses a checkbox. Single and multiple choice shows radio groups.',
-        ['checkbox', 'radio'],
-        'checkbox',
-      ),
-      demo: true,
-    },
+    required,
     defaultChecked: toggle('Interaction', 'Start with the option selected.'),
     iconLeft: {
       kind: 'slot',
@@ -49,12 +40,25 @@ export default defineComponent({
         { value: 'folder', label: 'Folder', code: 'FolderIcon' },
       ],
     },
+    onCheckedChange: eventProp(
+      'Receives a proposed checked value. The controlled owner decides whether to accept it.',
+      '(checked) => console.log(checked)',
+      '(checked: boolean) => void',
+    ),
     onChange: eventProp(
       'Receives the native input’s React change event. The event log shows its checked value.',
       '(event) => console.log(event.currentTarget.checked)',
       'ChangeEventHandler<HTMLInputElement>',
     ),
   },
+  constraints: [
+    {
+      kind: 'ignored',
+      when: { disabled: true },
+      affects: ['required'],
+      reason: 'An unavailable checkbox is excluded from validation and submission.',
+    },
+  ],
   render: withOverlaySurface(({ values, ctx }) => {
     const { iconLeft, ...control } = values;
     return (
@@ -66,6 +70,7 @@ export default defineComponent({
         value="collections"
         style={{ justifySelf: 'center', alignSelf: 'center' }}
         iconLeft={iconLeft === 'folder' ? FolderIcon : undefined}
+        onCheckedChange={ctx.action('onCheckedChange')}
         onChange={(event) => ctx.action('onChange')(event.currentTarget.checked)}
       >
         Collections
@@ -73,19 +78,24 @@ export default defineComponent({
     );
   }, 'border-box'),
   code: (values) => {
-    const { iconLeft, size, disabled, defaultChecked } = values;
+    const { iconLeft, size, disabled, required, defaultChecked } = values;
     const attrs = previewProps(
-      { size, disabled, defaultChecked },
-      { size: 'm', disabled: false, defaultChecked: false },
+      { size, disabled, required, defaultChecked },
+      { size: 'm', disabled: false, required: false, defaultChecked: false },
     );
-    return `import { Chip } from './prototypes/chip/chip.proto.js';
+    return `import { Chip } from '@docouno/unica';
 ${iconLeft === 'folder' ? "import { FolderIcon } from '@phosphor-icons/react';\n" : ''}import '@docouno/unica/styles.css';
 
 export function CollectionFilter() {
   return (
-    <form onSubmit={(event) => event.preventDefault()}>
-      <Chip name="formats" value="collections"${attrs}${iconLeft === 'folder' ? ' iconLeft={FolderIcon}' : ''} onChange={(event) => console.log(event.currentTarget.checked)}>Collections</Chip>
-    </form>
+    <Chip
+      name="formats"
+      value="collections"${attrs}${iconLeft === 'folder' ? ' iconLeft={FolderIcon}' : ''}
+      onCheckedChange={(checked) => console.log(checked)}
+      onChange={(event) => console.log(event.currentTarget.checked)}
+    >
+      Collections
+    </Chip>
   );
 }`;
   },
@@ -117,6 +127,10 @@ export function CollectionFilter() {
       kind: 'behavior',
       mode: 'live',
       reset: true,
+      actions: [
+        { id: 'all', label: 'Select all available topics' },
+        { id: 'clear', label: 'Clear topics' },
+      ],
       caption:
         'Arrow keys select a format. Tab visits individual topics and Space toggles them. Select all or clear the available topics together.',
       render: withOverlaySurface(Groups, 'border-box'),
@@ -128,7 +142,7 @@ export function CollectionFilter() {
       mode: 'live',
       reset: true,
       caption:
-        'The first rows pin rest, hover, press, focus and disabled choices with and without a check. The three outlines compare keyboard focus at each size. Tab to the live choices to try focus and activation.',
+        'Hover, hold the pointer down, and Tab to each size to compare the real input states. Unavailable choices stay visible and retain their check when selected.',
       render: withOverlaySurface(Interaction, 'border-box'),
     },
     {
@@ -171,9 +185,10 @@ export function CollectionFilter() {
       actions: [
         { id: 'show', label: 'Show results' },
         { id: 'fail', label: 'Preview failure' },
+        { id: 'stale', label: 'Finish previous update' },
       ],
       caption:
-        'Change a topic to preview waiting feedback. Preview failure keeps the selected topics available. Show results confirms the current count after waiting or a failure.',
+        'Change a topic to preview waiting feedback. Preview failure keeps the selected topics available. Finish previous update leaves the current request in place. Show results confirms the current count.',
       render: withOverlaySurface(ResultFeedback, 'border-box'),
     },
     {
@@ -198,7 +213,7 @@ export function CollectionFilter() {
       caption:
         'Compare the independent control heights at each density. All three rows start with 12 favorite Design systems results in size M. Change Favorites or the size chips, then Apply to update that row’s count. Clearing all sizes includes every size.',
       render: withOverlaySurface(({ ctx }) => <FilterFit chipProps={ctx.subject} />, 'border-box'),
-      code: fitSource.replaceAll('../../prototypes/', './prototypes/'),
+      code: fitSource,
     },
   ],
 });

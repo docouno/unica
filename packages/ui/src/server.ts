@@ -36,6 +36,8 @@ export type {
   CheckboxGroupProps,
   CheckboxIndicatorProps,
   CheckboxProps,
+  ChipGroupProps,
+  ChipProps,
   CodeProps,
   CodeStatus,
   ContainerProps,
