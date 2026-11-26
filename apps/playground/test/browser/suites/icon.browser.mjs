@@ -280,11 +280,18 @@ export default {
     await size(branch.locator('.app-shell-nav-caret'), 12);
     await size(branch.locator('.app-shell-nav-icon'), 16);
     await size(chrome.getByRole('button', { name: /Trash/ }).locator('svg'), 16);
-    const direction = (label) =>
-      chrome
-        .getByRole('menuitem', { name: label })
-        .locator('svg.menu-branch-proto')
+    const direction = async (label) => {
+      await chrome.getByRole('button', { name: `${label} actions` }).click();
+      const row = chrome.getByRole('menuitem', { name: label });
+      await row.click();
+      await chrome.getByRole('menu', { name: label, exact: true }).waitFor();
+      const value = await row
+        .locator('svg.unica-menu-chevron')
         .evaluate((node) => node.getScreenCTM().a);
+      await page.keyboard.press('Escape');
+      await page.keyboard.press('Escape');
+      return value;
+    };
     assert.ok((await direction('Default side')) < 0);
     assert.ok((await direction('Flipped side')) > 0);
     assert.equal(

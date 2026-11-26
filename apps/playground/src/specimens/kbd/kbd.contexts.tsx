@@ -1,7 +1,7 @@
 import { useId, useState } from 'react';
 import { Box, Button, Card, Flex, Input, Kbd, Stack, Text, Title, Tooltip } from '@docouno/unica';
 import { ExampleSurface } from '../shared/example-surface.js';
-import { MenuPreview } from '../../prototypes/menu/menu.proto.js';
+import { Menu, MenuContent, MenuItem, MenuSeparator, MenuTrigger } from '@docouno/unica';
 import type { PreviewProps } from '../../workbench/types.js';
 
 const documents = ['Release notes', 'Design review', 'Support handbook'];
@@ -103,22 +103,27 @@ export function OverlayContext({ ctx }: PreviewProps) {
           Document title
         </Text>
       </Flex>
-      <MenuPreview
-        label="Document commands"
-        ref={(menu) => {
-          // MenuPreview renders its own Kbd for each shortcut.
-          const shortcuts = menu?.querySelectorAll('kbd');
-          for (const [attribute, value] of Object.entries(ctx.subject)) {
-            shortcuts?.forEach((key) => key.setAttribute(attribute, value));
-          }
-        }}
-        items={[
-          { id: 'find', label: 'Find in document', shortcut: '⌘F' },
-          { id: 'palette', label: 'Command palette', shortcut: '⇧⌘P', preview: 'hover' },
-          { id: 'separator', type: 'separator' },
-          { id: 'compare', label: 'Compare revisions', shortcut: '⌘D', disabled: true },
-        ]}
-      />
+      <Menu>
+        <MenuTrigger asChild>
+          <Button size="s" variant="secondary">
+            Document commands
+          </Button>
+        </MenuTrigger>
+        <MenuContent
+          ref={(menu) => {
+            for (const [attribute, value] of Object.entries(ctx.subject)) {
+              menu?.querySelectorAll('kbd').forEach((key) => key.setAttribute(attribute, value));
+            }
+          }}
+        >
+          <MenuItem shortcut="⌘F">Find in document</MenuItem>
+          <MenuItem shortcut="⇧⌘P">Command palette</MenuItem>
+          <MenuSeparator />
+          <MenuItem shortcut="⌘D" disabled>
+            Compare revisions
+          </MenuItem>
+        </MenuContent>
+      </Menu>
     </Stack>
   );
 }

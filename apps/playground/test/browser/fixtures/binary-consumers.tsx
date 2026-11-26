@@ -4,7 +4,8 @@ import { componentCompositions } from '../../../src/workbench/schema.js';
 import type { SceneDefinition } from '../../../src/workbench/types.js';
 
 const ContextMenuExample = lazy(async () => {
-  const { default: contextMenu } = await import('../../../src/specimens/menu/context-menu.spec.js');
+  const { default: contextMenu } =
+    await import('../../../src/specimens/context-menu/context-menu.spec.js');
   const example = componentCompositions(contextMenu).find(({ id }) => id === 'native');
   if (!example) {
     throw new Error('Missing native context menu example');

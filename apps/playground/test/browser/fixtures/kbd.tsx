@@ -6,7 +6,7 @@ import '@fontsource-variable/inter';
 import '@fontsource-variable/jetbrains-mono';
 import { Button } from '@docouno/unica';
 import { Autocomplete } from '../../../src/prototypes/combobox/combobox.proto.js';
-import { MenuRows, MenuSurface } from '../../../src/prototypes/menu/menu.proto.js';
+import { Menu, MenuContent, MenuItem, MenuTrigger } from '@docouno/unica';
 import KbdSsrFixture from './kbd-ssr.js';
 
 const typeSizes = ['caption-l', 'body-s', 'body-m', 'body-l', 'heading-m'] as const;
@@ -215,15 +215,18 @@ export default function KbdFixture() {
           Duplicate selection
         </Button>
       </Tooltip>
-      <MenuSurface data-testid="shortcut-menu" style={{ inlineSize: 400 }}>
-        <MenuRows
-          role="menu"
-          items={[
-            { id: 'long', label: 'Open help', shortcut: longMenuShortcut },
-            { id: 'disabled', label: 'Locked command', shortcut: '⌘D', disabled: true },
-          ]}
-        />
-      </MenuSurface>
+      <Menu>
+        <MenuTrigger>Show shortcuts</MenuTrigger>
+        <MenuContent
+          data-testid="shortcut-menu"
+          style={{ inlineSize: 400, minInlineSize: 0, maxInlineSize: 400 }}
+        >
+          <MenuItem shortcut={longMenuShortcut}>Open help</MenuItem>
+          <MenuItem shortcut="⌘D" disabled>
+            Locked command
+          </MenuItem>
+        </MenuContent>
+      </Menu>
       <Autocomplete
         label="Insert a block"
         browsable

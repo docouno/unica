@@ -53,7 +53,8 @@ export default {
       new URL('/?item=pagination&tab=states&family=frost&scheme=light', origin).href,
       { waitUntil: 'commit' },
     );
-    await page.getByRole('button', { name: 'Inspector', exact: true }).click({ timeout: 20_000 });
+    await page.locator('html[data-wb-ready="1"]').waitFor({ state: 'attached', timeout: 20_000 });
+    await page.getByRole('button', { name: 'Inspector', exact: true }).click();
     await page
       .getByRole('navigation', { name: 'State sections' })
       .getByRole('button', { name: /Addressable pages/ })

@@ -11,7 +11,7 @@ import {
 } from '@docouno/unica';
 import type { JSX } from 'react';
 import { CodeBlock } from '../../../src/prototypes/code-block/code-block.proto.js';
-import { MenuRows, MenuSurface } from '../../../src/prototypes/menu/menu.proto.js';
+import { Menu, MenuContent, MenuItem, MenuTrigger } from '@docouno/unica';
 import {
   Table,
   TableBody,
@@ -42,14 +42,14 @@ export default function ScrollbarOwnersFixture(): JSX.Element {
           <PopoverFooter data-testid="popover-footer">End of reference</PopoverFooter>
         </PopoverContent>
       </Popover>
-      <MenuSurface aria-label="Documents">
-        <MenuRows
-          items={rows.map((label) => ({ id: label, label }))}
-          role="menu"
-          aria-label="Documents"
-          style={{ maxBlockSize: 140 }}
-        />
-      </MenuSurface>
+      <Menu>
+        <MenuTrigger>Documents</MenuTrigger>
+        <MenuContent style={{ maxBlockSize: 140 }}>
+          {rows.map((label) => (
+            <MenuItem key={label}>{label}</MenuItem>
+          ))}
+        </MenuContent>
+      </Menu>
       <div
         data-testid="nested-compact"
         className="unica-scrollbar unica-scrollbar--compact"

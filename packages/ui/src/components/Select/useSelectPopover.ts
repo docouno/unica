@@ -203,7 +203,7 @@ export function useSelectPopover(options: Options): SelectPopover {
           measureBlockSize: measureContent,
           preserveSide: true,
           isAnchorAvailable: isVisibleTrigger,
-          onAnchorLost: () => dismiss(false),
+          onUnavailable: () => dismiss(false),
           onPositioned: () => node.setAttribute('data-unica-select-positioned', ''),
         },
       }),

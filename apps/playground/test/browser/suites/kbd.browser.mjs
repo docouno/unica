@@ -299,11 +299,14 @@ export default {
     await mount('kbd', { theme: 'frost-dark' });
     const neutral = page.getByTestId('material-base').locator('kbd').first();
     const disabledMenu = page.getByRole('menuitem', { name: 'Locked command' }).locator('kbd');
+    const shortcuts = page.getByRole('button', { name: 'Show shortcuts' });
     const action = page.getByRole('button', { name: 'Run command' });
     const disabledAction = action.locator('kbd');
     for (const reducedMotion of ['no-preference', 'reduce']) {
       await page.emulateMedia({ forcedColors: 'active', reducedMotion });
       await page.getByLabel('Action state').selectOption('disabled');
+      await shortcuts.click();
+      await disabledMenu.waitFor();
       const { canvas, ink, disabled } = await page.evaluate(() => {
         const probe = document.createElement('span');
         probe.style.cssText =
@@ -335,6 +338,7 @@ export default {
           assert.deepEqual(await motion(cap), ['none', '0s', 0]);
         }
       }
+      await page.keyboard.press('Escape');
     }
   },
 
@@ -418,6 +422,7 @@ export default {
     await tooltip.waitFor({ state: 'hidden' });
     await assertFocused(source);
 
+    await page.getByRole('button', { name: 'Show shortcuts' }).click();
     const menu = page.getByTestId('shortcut-menu');
     const row = menu.getByRole('menuitem', { name: 'Open help' });
     const cap = row.locator('kbd');

@@ -23,8 +23,7 @@ import {
 } from '@phosphor-icons/react';
 import { AsidePanel } from '../prototypes/app-shell/app-shell.proto.js';
 import { List, ListItem } from '../prototypes/list/list.proto.js';
-import { Menu } from '../prototypes/menu/menu.live.js';
-import type { MenuEntry } from '../prototypes/menu/menu.entries.js';
+import { Menu, MenuContent, MenuItem, MenuSeparator, MenuTrigger } from '@docouno/unica';
 import { IconButton } from '@docouno/unica';
 import { TeamPreview } from '../examples/hover-card-content.js';
 import { Tabs, TabsContent, TabsList, TabsTab } from '../prototypes/tabs/tabs.proto.js';
@@ -46,36 +45,6 @@ import {
 function ReaderScene(): ReactElement {
   const [tab, setTab] = useState('details');
   const [notice, setNotice] = useState('');
-  const items: readonly MenuEntry[] = [
-    {
-      id: 'copy',
-      label: 'Copy document link',
-      icon: CopyIcon,
-      shortcut: '⌘L',
-      run: () => setNotice('Document link selected for copying.'),
-    },
-    {
-      id: 'compare',
-      label: 'Compare revisions',
-      icon: GitDiffIcon,
-      shortcut: '⌘D',
-      run: () => setTab('history'),
-    },
-    {
-      id: 'export',
-      label: 'Export Markdown',
-      icon: DownloadSimpleIcon,
-      run: () => setNotice('Markdown export selected for this revision.'),
-    },
-    { id: 'separator', type: 'separator' },
-    {
-      id: 'trash',
-      label: 'Move to trash',
-      icon: TrashIcon,
-      tone: 'danger',
-      run: () => setNotice('Move to trash requires workspace confirmation.'),
-    },
-  ];
   const revisions = (
     <InspectorSection title="Recent revisions">
       <List size="s" markers={false} dividers aria-label="Recent revisions">
@@ -118,20 +87,37 @@ function ReaderScene(): ReactElement {
           <DocumentActions
             onCopy={() => setNotice('Document link selected for copying.')}
             menu={
-              <Menu
-                label="Document actions"
-                size="s"
-                align="end"
-                items={items}
-                trigger={(props) => (
-                  <IconButton
-                    {...props}
-                    size="s"
-                    icon={DotsThreeIcon}
-                    aria-label="Document actions"
-                  />
-                )}
-              />
+              <Menu size="s">
+                <MenuTrigger asChild>
+                  <IconButton size="s" icon={DotsThreeIcon} aria-label="Document actions" />
+                </MenuTrigger>
+                <MenuContent align="end">
+                  <MenuItem
+                    icon={CopyIcon}
+                    shortcut="⌘L"
+                    onClick={() => setNotice('Document link selected for copying.')}
+                  >
+                    Copy document link
+                  </MenuItem>
+                  <MenuItem icon={GitDiffIcon} shortcut="⌘D" onClick={() => setTab('history')}>
+                    Compare revisions
+                  </MenuItem>
+                  <MenuItem
+                    icon={DownloadSimpleIcon}
+                    onClick={() => setNotice('Markdown export selected for this revision.')}
+                  >
+                    Export Markdown
+                  </MenuItem>
+                  <MenuSeparator />
+                  <MenuItem
+                    icon={TrashIcon}
+                    tone="danger"
+                    onClick={() => setNotice('Move to trash requires workspace confirmation.')}
+                  >
+                    Move to trash
+                  </MenuItem>
+                </MenuContent>
+              </Menu>
             }
             onEdit={() => setNotice('The current verified revision is ready to edit.')}
           />

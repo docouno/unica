@@ -2,13 +2,24 @@ import { useId, useRef, useState } from 'react';
 import { CopyIcon, DotsThreeIcon, FileTextIcon, PencilSimpleIcon } from '@phosphor-icons/react';
 import { Card, Flex, Icon, IconButton, Input, Link, Stack, Text } from '@docouno/unica';
 import { FormField } from '@docouno/unica';
-import { ContextMenu } from '../../prototypes/menu/context-menu.proto.js';
+import {
+  ContextMenu,
+  ContextMenuTrigger,
+  MenuContent,
+  MenuItem,
+  MenuTrigger,
+} from '@docouno/unica';
 import '@docouno/unica/styles.css';
+import type { MenuContentProps } from '@docouno/unica';
 
 export function ReleaseNotesActions({
   allowSelection = false,
-  menuProps = {},
+  contentProps = {},
   targetProps = {},
+}: {
+  readonly allowSelection?: boolean | undefined;
+  readonly contentProps?: MenuContentProps | undefined;
+  readonly targetProps?: Readonly<Record<`data-${string}`, string>> | undefined;
 } = {}) {
   const noteId = useId();
   const [selection, setSelection] = useState('');
@@ -32,44 +43,14 @@ export function ReleaseNotesActions({
   };
   return (
     <ContextMenu
-      {...menuProps}
-      label="Release notes actions"
       size="s"
-      align="end"
       shouldOpen={({ native, source, selection }) =>
         !native || Boolean(allowSelection && selection && source.closest('[data-document-excerpt]'))
       }
       onInvoke={(context) => setSelection(context.selection)}
-      items={[
-        {
-          id: 'copy',
-          label: 'Copy selected text',
-          icon: CopyIcon,
-          disabled: !selection,
-          run: copySelection,
-        },
-        {
-          id: 'rename',
-          label: 'Rename document',
-          icon: PencilSimpleIcon,
-          run: () => {
-            latestAction.current++;
-            setReceipt('Rename requested for release notes.');
-          },
-        },
-      ]}
-      trigger={(bindings) => (
-        <IconButton
-          {...bindings}
-          size="s"
-          variant="ghost"
-          icon={DotsThreeIcon}
-          aria-label="Release notes actions"
-        />
-      )}
-      target={(bindings, trigger, panel) => (
+    >
+      <ContextMenuTrigger>
         <Card
-          {...bindings}
           {...targetProps}
           size="s"
           data-surface="base"
@@ -100,7 +81,14 @@ export function ReleaseNotesActions({
               >
                 React 19 release notes
               </Text>
-              {trigger}
+              <MenuTrigger asChild>
+                <IconButton
+                  size="s"
+                  variant="ghost"
+                  icon={DotsThreeIcon}
+                  aria-label="Release notes actions"
+                />
+              </MenuTrigger>
             </Flex>
             <Text data-document-excerpt="" size="body-s" color="secondary" dir="auto">
               Select part of this sentence and right-click it.
@@ -121,9 +109,22 @@ export function ReleaseNotesActions({
           >
             {receipt}
           </Text>
-          {panel}
+          <MenuContent align="end" {...contentProps}>
+            <MenuItem icon={CopyIcon} disabled={!selection} onClick={copySelection}>
+              Copy selected text
+            </MenuItem>
+            <MenuItem
+              icon={PencilSimpleIcon}
+              onClick={() => {
+                latestAction.current++;
+                setReceipt('Rename requested for release notes.');
+              }}
+            >
+              Rename document
+            </MenuItem>
+          </MenuContent>
         </Card>
-      )}
-    />
+      </ContextMenuTrigger>
+    </ContextMenu>
   );
 }

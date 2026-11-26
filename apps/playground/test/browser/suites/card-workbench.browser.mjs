@@ -287,6 +287,8 @@ export default {
 
     await tile.click({ button: 'right', position: { x: 12, y: 12 } });
     await menu.waitFor();
+    const scroll = menu.locator('.unica-menu-scroll');
+    assert.equal(await scroll.evaluate((node) => node.scrollWidth - node.clientWidth), 0);
     await page.keyboard.press('Escape');
     await menu.waitFor({ state: 'hidden' });
 
@@ -298,10 +300,10 @@ export default {
     await tile.evaluate((node) => {
       let openings = 0;
       new MutationObserver(() => {
-        if (node.hasAttribute('data-context-open')) {
+        if (node.hasAttribute('data-unica-context-menu-anchor')) {
           node.dataset.testOpenings = String(++openings);
         }
-      }).observe(node, { attributes: true, attributeFilter: ['data-context-open'] });
+      }).observe(node, { attributes: true, attributeFilter: ['data-unica-context-menu-anchor'] });
     });
 
     await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints });
@@ -316,6 +318,7 @@ export default {
 
     await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints });
     await menu.waitFor();
+    await page.waitForTimeout(900);
     await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
     assert.equal(await menu.isVisible(), true);
     assert.equal(await tile.getAttribute('data-test-openings'), '1');
