@@ -1,0 +1,324 @@
+@layer unica.components {
+  /* Compact paint, independent rectangular targets, and no physical press travel. */
+  .unica-tag,
+  .unica-tag-disclosure {
+    --_tag-height: 26px;
+    --_tag-font: var(--text-size-body-s);
+    --_tag-line-height: var(--text-size-body-s-lh);
+    --_tag-padding: 10px;
+    --_tag-target: 24px;
+    --_tag-visual: 20px;
+    --_tag-cross: 14px;
+    --_tag-icon-size: var(--size-m-icon);
+    --_tag-icon-optical-inset: 4px;
+    --_tag-state-duration: var(--_btn-state-duration);
+    --_tag-painted-height: max(var(--_tag-height), calc(var(--_tag-line-height) + 4px));
+    --_tag-target-size: max(var(--_tag-target), var(--_tag-painted-height));
+    --_tag-icon-inset: calc(
+      (var(--_tag-painted-height) - var(--_tag-icon-size) + var(--_tag-icon-optical-inset)) / 2
+    );
+    --_tag-remove-inset: calc((var(--_tag-painted-height) - var(--_tag-visual)) / 2);
+    --_tag-end-reserve: calc(var(--_tag-target-size) - var(--_tag-painted-height));
+    position: relative;
+    display: inline-flex;
+    flex: 0 1 auto;
+    align-items: center;
+    min-inline-size: 0;
+    min-block-size: max(var(--_tag-painted-height), var(--_tag-target));
+    max-inline-size: 100%;
+    border: 0;
+    background: transparent;
+    color: var(--_mark-fg);
+    font-family: var(--font-family-base);
+    font-size: var(--_tag-font);
+    font-weight: 500;
+    line-height: var(--_tag-line-height);
+    vertical-align: middle;
+  }
+
+  :is(.unica-tag, .unica-tag-disclosure)[data-unica-tag-size='s'] {
+    --_tag-height: 22px;
+    --_tag-font: var(--text-size-caption-l);
+    --_tag-line-height: var(--text-size-caption-l-lh);
+    --_tag-padding: 8px;
+    --_tag-visual: 16px;
+    --_tag-cross: 12px;
+    --_tag-icon-size: var(--size-s-icon);
+  }
+
+  :is(.unica-tag, .unica-tag-disclosure)[data-unica-tag-size='l'] {
+    --_tag-height: 30px;
+    --_tag-font: var(--text-size-body-m);
+    --_tag-line-height: var(--text-size-body-m-lh);
+    --_tag-padding: 12px;
+    --_tag-target: 28px;
+    --_tag-visual: 24px;
+    --_tag-cross: 16px;
+    --_tag-icon-size: var(--size-l-icon);
+    --_tag-icon-optical-inset: 6px;
+  }
+
+  .unica-tag {
+    --_tag-leading-width: var(--_tag-padding);
+    --_tag-trailing-width: var(--_tag-target-size);
+    --_tag-fixed-width: calc(var(--_tag-leading-width) + var(--_tag-trailing-width));
+    inline-size: max-content;
+    min-inline-size: var(--_tag-fixed-width);
+    padding-inline-start: var(--_tag-padding);
+  }
+
+  .unica-tag:has(> .unica-tag-icon) {
+    --_tag-leading-width: calc(var(--_tag-icon-inset) + var(--_tag-icon-size) + var(--space-4));
+    padding-inline-start: 0;
+  }
+
+  .unica-tag::before,
+  .unica-tag-disclosure::before {
+    position: absolute;
+    inset-inline: 0;
+    inset-block-start: 50%;
+    block-size: var(--_tag-painted-height);
+    border: var(--_pill-border-width) solid var(--_mark-border);
+    border-radius: var(--radius-full);
+    background: var(--_mark-bg);
+    content: '';
+    pointer-events: none;
+    transform: translateY(-50%);
+  }
+
+  .unica-tag::before {
+    /* End the capsule around the plate, independently of its larger hit target. */
+    inset-inline-end: var(--_tag-end-reserve);
+  }
+
+  .unica-tag-icon,
+  .unica-tag-label,
+  .unica-tag-remove,
+  .unica-tag-disclosure > bdi {
+    position: relative;
+  }
+
+  .unica-tag-icon {
+    /* Preserve the outer optical inset and give the label one explicit icon gap. */
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    block-size: var(--_tag-painted-height);
+    margin-inline-end: var(--space-4);
+    padding-inline-start: var(--_tag-icon-inset);
+  }
+
+  .unica-tag-label {
+    min-inline-size: 0;
+    /* Cap the flexible part so the containing block can still constrain the whole tag. */
+    max-inline-size: max(0px, calc(var(--tag-max-width) - var(--_tag-fixed-width)));
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  .unica-tag-remove {
+    display: inline-grid;
+    flex: none;
+    align-items: center;
+    justify-items: start;
+    inline-size: var(--_tag-target-size);
+    block-size: var(--_tag-target-size);
+    padding: 0;
+    /* Keep the plate beside the label; reserve extra touch area at the trailing end. */
+    padding-inline-start: var(--_tag-remove-inset);
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .unica-tag-remove-plate {
+    display: inline-grid;
+    place-items: center;
+    inline-size: var(--_tag-visual);
+    block-size: var(--_tag-visual);
+    border-radius: var(--radius-full);
+    font-size: var(--_tag-cross);
+    transition: background-color var(--_tag-state-duration) ease;
+  }
+
+  @media (hover: hover) {
+    .unica-tag-remove:hover:not(:disabled, [aria-disabled='true']) > .unica-tag-remove-plate {
+      background: color-mix(in oklab, currentColor 12%, transparent);
+    }
+  }
+
+  .unica-tag-remove:active:not(:disabled, [aria-disabled='true']) > .unica-tag-remove-plate {
+    background: color-mix(in oklab, currentColor 20%, transparent);
+  }
+
+  .unica-tag-remove:focus-visible {
+    outline: none;
+  }
+
+  .unica-tag-remove:focus-visible > .unica-tag-remove-plate {
+    outline: 2px solid var(--focus-ring-color);
+    outline-offset: -2px;
+  }
+
+  /* The value remains readable when its removal is unavailable. */
+  .unica-tag:has(.unica-tag-remove:disabled) .unica-tag-remove-plate {
+    opacity: 0.38;
+  }
+
+  .unica-tag-remove:disabled,
+  .unica-tag-disclosure:disabled {
+    cursor: not-allowed;
+  }
+
+  .unica-tag-remove[aria-disabled='true'] {
+    cursor: progress;
+  }
+
+  .unica-tag-group {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--tag-group-gap, var(--space-8));
+    min-inline-size: 0;
+  }
+
+  .unica-tag-disclosure {
+    justify-content: center;
+    min-inline-size: var(--_tag-target-size);
+    padding-block: calc((var(--_tag-target-size) - var(--_tag-line-height)) / 2);
+    padding-inline: var(--_tag-padding);
+    color: var(--fg-secondary);
+    cursor: pointer;
+    font-variant-numeric: tabular-nums;
+    overflow-wrap: anywhere;
+  }
+
+  .unica-tag-disclosure::before {
+    inset-block: calc((var(--_tag-target-size) - var(--_tag-painted-height)) / 2);
+    block-size: auto;
+    border: 1px solid var(--border-default);
+    background: transparent;
+    transform: none;
+    transition:
+      background-color var(--_tag-state-duration) ease,
+      border-color var(--_tag-state-duration) ease;
+  }
+
+  @media (hover: hover) {
+    .unica-tag-disclosure:hover:not(:disabled)::before {
+      border-color: var(--border-strong);
+      background: var(--neutral-soft-bg);
+    }
+  }
+
+  .unica-tag-disclosure:active:not(:disabled)::before {
+    border-color: var(--border-strong);
+    background: var(--neutral-soft-bg);
+  }
+
+  .unica-tag-disclosure:focus-visible {
+    outline: none;
+  }
+
+  .unica-tag-disclosure:focus-visible::before {
+    outline: 2px solid var(--focus-ring-color);
+    outline-offset: 2px;
+  }
+
+  .unica-tag-group:focus-visible {
+    outline: 2px solid var(--focus-ring-color);
+    outline-offset: 4px;
+  }
+
+  .unica-tag-empty {
+    color: var(--fg-muted);
+    font: 400 var(--text-size-body-s) / var(--text-size-body-s-lh) var(--font-family-base);
+  }
+
+  .unica-tag:not(:has(> .unica-tag-remove)) {
+    --_tag-end-reserve: 0px;
+    --_tag-trailing-width: var(--_tag-padding);
+    padding-inline-end: var(--_tag-padding);
+  }
+
+  [data-unica-tag-layout='field'] > .unica-tag {
+    --_tag-field-radius: var(--tag-field-radius, var(--radius-xs));
+    align-items: flex-start;
+    max-inline-size: 100%;
+  }
+
+  [data-unica-tag-layout='field'] > .unica-tag::before {
+    inset-block: calc((var(--_tag-target-size) - var(--_tag-painted-height)) / 2);
+    block-size: auto;
+    border-radius: var(--_tag-field-radius);
+    transform: none;
+  }
+
+  [data-unica-tag-layout='field'] > .unica-tag > .unica-tag-icon {
+    block-size: var(--_tag-target-size);
+  }
+
+  [data-unica-tag-layout='field'] > .unica-tag > .unica-tag-label {
+    max-inline-size: none;
+    padding-block: calc((var(--_tag-target-size) - var(--_tag-line-height)) / 2);
+    overflow: visible;
+    overflow-wrap: anywhere;
+    white-space: pre-wrap;
+    text-overflow: clip;
+    user-select: text;
+  }
+
+  [data-unica-tag-layout='field'] > .unica-tag .unica-tag-remove-plate {
+    border-radius: min(
+      var(--_tag-field-radius),
+      max(var(--radius-xs), calc(var(--_tag-field-radius) - var(--_tag-remove-inset)))
+    );
+  }
+
+  /* A real 44px row and target on touch; no overlap with the next tag or row. */
+  @media (pointer: coarse) {
+    .unica-tag[data-unica-tag-size],
+    .unica-tag-disclosure[data-unica-tag-size] {
+      --_tag-target: 44px;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .unica-tag-remove-plate,
+    .unica-tag-disclosure::before {
+      transition: none;
+    }
+  }
+
+  :is(.unica-tag, .unica-tag-group, .unica-tag-disclosure)[hidden]:not([hidden='until-found' i]) {
+    display: none;
+  }
+
+  @media (forced-colors: active) {
+    .unica-tag,
+    .unica-tag-disclosure {
+      color: ButtonText;
+    }
+    .unica-tag::before,
+    .unica-tag-disclosure::before {
+      border: 1px solid ButtonText;
+      background: Canvas;
+    }
+    .unica-tag-remove:disabled,
+    .unica-tag-disclosure:disabled {
+      color: GrayText;
+    }
+    .unica-tag:has(.unica-tag-remove:disabled) .unica-tag-remove-plate {
+      opacity: 1;
+    }
+    .unica-tag-remove:focus-visible > .unica-tag-remove-plate,
+    .unica-tag-disclosure:focus-visible::before,
+    .unica-tag-group:focus-visible {
+      outline-color: Highlight;
+    }
+  }
+}

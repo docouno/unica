@@ -32,7 +32,7 @@
   font-display: swap;
   unicode-range: U+0600-06FF;
 }
-.tag-demo-constrained :is(.tag-label-proto, [role='tooltip']),
+.tag-demo-constrained :is([data-unica-tag-part='label'], [role='tooltip']),
 .tag-demo-readout [lang='ar'],
 .tag-demo-full-values [lang='ar'] {
   font-family: 'Tag Arabic fixture', var(--font-family-base);

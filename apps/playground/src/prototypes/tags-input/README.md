@@ -1,6 +1,6 @@
 # TagsInput — design reference
 
-Status: approved Wave 1 design reference. Open `/?item=tags-input`. This is a reusable playground prototype; its props and DOM are not the final package API. The Invite & Access scene and Tag's control-fit examples consume this same field.
+Status: approved Wave 1 design reference. Open `/?item=tags-input`. This reusable playground prototype uses the packaged Tag. The Invite & Access scene uses the same field.
 
 ## Purpose and boundaries
 
@@ -36,7 +36,7 @@ The draft grows to four visible line boxes, then scrolls vertically. Its real te
 
 The native textarea, initially `rows={1}`, remains mounted during editing, layout transitions, adding, rejection, and mode changes. The preview measures its content height and also responds to inherited typography changes and font loading. Returning to a narrower typeface removes any unused text rows, keeping Add beside the actual last line. Production may use any robust auto-height mechanism that preserves this result on supported browsers.
 
-Standalone Tag retains its capsule. The `shape` case compares the same live values outside and inside the field in S/M/L. This is automatic composite geometry, with no decorative shape prop and no change to the standalone Tag/Chip design. The rounded field shell remains 6/8/10px in Soft/Frost; tokens are deliberately less rounded than their enclosing field.
+Standalone Tag retains its capsule. The `shape` case compares the same live values outside and inside the field in S/M/L. The editor supplies `data-unica-tag-layout="field"` and its inset radius through `--tag-field-radius`. The rounded field shell remains 6/8/10px in Soft/Frost. Its tokens have smaller corner radii.
 
 ## Roles, materials, and states
 

@@ -18,11 +18,16 @@ import {
 import { mergeRefs } from '../mergeRefs.js';
 import { useIsoLayoutEffect } from '../useIsoLayoutEffect.js';
 import { findNavigable, isNavigable, recoverRovingKey } from './navigation.js';
+import type { CollectionItem } from './navigation.js';
 import { useCollectionNavigation } from './useCollectionNavigation.js';
 import type { CollectionNavigationOptions } from './useCollectionNavigation.js';
 
 export interface RovingFocusOptions extends Omit<CollectionNavigationOptions, 'activeKey'> {
   readonly recoveryKey?: string | null | undefined;
+  readonly resolveRecoveryKey?:
+    ((missingKey: string, previous: readonly CollectionItem[]) => string | null) | undefined;
+  readonly onRecoveryFallback?:
+    ((document: Document, canRecover: () => boolean) => void) | undefined;
   readonly onNavigate?: ((key: string) => void) | undefined;
   readonly focusOptions?: FocusOptions | undefined;
 }
@@ -41,6 +46,7 @@ export interface RovingItemProps<T extends HTMLElement> {
 export interface RovingFocus<T extends HTMLElement> {
   tabStop: string | null;
   focusedKey: string | null;
+  getItemKey: (target: EventTarget | null) => string | null;
   getItemProps: (key: string, userProps?: RovingItemUserProps<T>) => RovingItemProps<T>;
   onKeyDown: (event: KeyboardEvent<HTMLElement>) => void;
   onBlur: (event: FocusEvent<HTMLElement>) => void;
@@ -202,13 +208,24 @@ export function useRovingFocus<T extends HTMLElement>(options: RovingFocusOption
       return;
     }
 
-    const target = lost ? recoverRovingKey(items, before, origin.key, recoveryKey) : origin.key;
-    if (
-      target !== null &&
-      !origin.blurredWhileLive &&
-      canRecoverFocus(origin.root, doc, origin.node)
-    ) {
-      maps.nodes.get(target)?.focus(options.focusOptions);
+    const canRecover = (): boolean =>
+      !origin.blurredWhileLive && canRecoverFocus(origin.root, doc, origin.node);
+    if (canRecover()) {
+      const target = lost
+        ? options.resolveRecoveryKey
+          ? options.resolveRecoveryKey(origin.key, before)
+          : recoverRovingKey(items, before, origin.key, recoveryKey)
+        : origin.key;
+      const node = target === null ? undefined : maps.nodes.get(target);
+      node?.focus(options.focusOptions);
+      if (
+        lost &&
+        options.onRecoveryFallback &&
+        (!node || !acceptedFocus(node, getRootNodeSafe(node), doc)) &&
+        canRecover()
+      ) {
+        options.onRecoveryFallback(doc, canRecover);
+      }
     }
     if (
       focused.current === origin &&
@@ -316,23 +333,28 @@ export function useRovingFocus<T extends HTMLElement>(options: RovingFocusOption
     [getBaseFocus, getBaseRef, maps, tabStop],
   );
 
+  const getItemKey = useCallback(
+    (target: EventTarget | null): string | null => {
+      const key = isElementNode(target) ? maps.nodeKeys.get(target) : undefined;
+      return key !== undefined && maps.nodes.get(key) === target ? key : null;
+    },
+    [maps],
+  );
+
   const onKeyDown = useCallback(
     (event: KeyboardEvent<HTMLElement>): void => {
-      const target = isElementNode(event.target) ? event.target : null;
-      const isContainer = target === event.currentTarget;
-      const targetKey = target ? maps.nodeKeys.get(target) : undefined;
-      const isRegisteredItem = targetKey !== undefined && maps.nodes.get(targetKey) === target;
-      if (!isContainer && !isRegisteredItem) {
+      const targetKey = getItemKey(event.target);
+      if (event.target !== event.currentTarget && targetKey === null) {
         return;
       }
 
       let activeKey: string | null = focused.current?.key ?? null;
-      if (activeKey === null && isRegisteredItem && targetKey !== undefined) {
+      if (activeKey === null && targetKey !== null) {
         activeKey = findNavigable(optionsRef.current.items, targetKey)?.key ?? null;
       }
       navigateKeyDown(event, activeKey);
     },
-    [maps, navigateKeyDown],
+    [getItemKey, navigateKeyDown],
   );
 
   const onBlur = useCallback(
@@ -388,6 +410,7 @@ export function useRovingFocus<T extends HTMLElement>(options: RovingFocusOption
   return {
     tabStop,
     focusedKey: current?.key ?? null,
+    getItemKey,
     getItemProps,
     onKeyDown,
     onBlur,

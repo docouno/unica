@@ -31,6 +31,9 @@ const EXTERNAL_CSS_HOOKS = new Set([
   '--kbd-fg',
   '--kbd-forced-fg',
   '--kbd-shadow',
+  '--tag-field-radius',
+  '--tag-group-gap',
+  '--tag-max-width',
 ]);
 
 const SERVER_RUNTIME_EXPORTS = ['THEME_PRESETS', 'defineGlyph', 'getUnicaRootProps'] as const;

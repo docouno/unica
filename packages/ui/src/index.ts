@@ -198,6 +198,15 @@ export type {
   SwitchIndicatorProps,
   SwitchProps,
 } from './components/Switch/index.js';
+export { Tag, TagGroup } from './components/Tag/index.js';
+export type {
+  TagGroupItem,
+  TagGroupMessages,
+  TagGroupProps,
+  TagProps,
+  TagSize,
+  TagStatus,
+} from './components/Tag/index.js';
 export { Text } from './components/Text/index.js';
 export type {
   TextAlign,

@@ -40,6 +40,7 @@ export interface PreviewOptions {
   readonly padding: number;
   readonly external: boolean;
   readonly disabled: boolean;
+  readonly focusOnAriaDisabled?: boolean | undefined;
   readonly controlled: boolean;
   readonly open: boolean;
   readonly admission: { blocked: boolean };
@@ -241,7 +242,8 @@ export class PreviewController implements PreviewOwner {
     if (
       this.origin === 'pointer' ||
       !isElementNode(target) ||
-      matchesSafe(target, ':disabled, [aria-disabled="true"]') ||
+      matchesSafe(target, ':disabled') ||
+      (!this.options?.focusOnAriaDisabled && matchesSafe(target, '[aria-disabled="true"]')) ||
       (this.origin !== 'keyboard' && !matchesSafe(target, ':focus-visible')) ||
       !this.available()
     ) {

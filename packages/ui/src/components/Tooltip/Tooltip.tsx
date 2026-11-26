@@ -28,7 +28,16 @@ export function TooltipProvider({ children, delay }: TooltipProviderProps): Reac
 }
 
 /** Show a short visual hint with optional supplemental accessible text. */
-export function Tooltip({
+export function Tooltip(props: TooltipProps): ReactElement {
+  return <TooltipView {...props} focusOnAriaDisabled={false} />;
+}
+
+type TooltipViewProps = TooltipProps & {
+  readonly focusOnAriaDisabled?: boolean | undefined;
+};
+
+/** Render the shared tooltip, with an internal focus policy for composite triggers. */
+export function TooltipView({
   label,
   shortcut,
   describe = false,
@@ -46,8 +55,9 @@ export function Tooltip({
   className,
   onPointerEnter,
   onPointerLeave,
+  focusOnAriaDisabled,
   ...surfaceProps
-}: TooltipProps): ReactElement {
+}: TooltipViewProps): ReactElement {
   const id = useId();
   const fallbackId = `${id}-fallback`;
   const scope = useMemo(() => ({ id, fallbackId }), [id, fallbackId]);
@@ -65,6 +75,7 @@ export function Tooltip({
     carrierNode,
     avoid,
     disabled: disabled || !hasLabel,
+    focusOnAriaDisabled,
     side,
     align,
     padding: nonnegative(collisionPadding, 16),

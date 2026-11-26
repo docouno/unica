@@ -1,8 +1,7 @@
 import { useState } from 'react';
-import { Badge, Button, Flex, Stack, Text } from '@docouno/unica';
+import { Badge, Button, Flex, Stack, Tag, Text } from '@docouno/unica';
 import { StarIcon } from '@phosphor-icons/react';
 import { Chip } from '../../prototypes/chip/chip.proto.js';
-import { Tag } from '../../prototypes/tag/tag.proto.js';
 import '@docouno/unica/styles.css';
 
 const stock = {

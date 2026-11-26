@@ -17,6 +17,7 @@
     var(--tags-radius),
     max(var(--radius-xs), calc(var(--tags-radius) - var(--tags-padding-y) - 1px))
   );
+  --tag-field-radius: var(--tags-token-radius);
   --tags-gap: 6px;
   --tags-row: 28px;
   --tags-editor-inset: 6px;
@@ -59,35 +60,6 @@
   --tags-row: 34px;
   --tags-padding-y: 6px;
   --tags-editor-inset: 10px;
-}
-
-/* Field tokens share the shell's geometry; standalone Tag retains its own shape. */
-.tags-editor-proto > .tag-proto {
-  align-items: flex-start;
-}
-.tags-editor-proto > .tag-proto::before {
-  inset-block: calc((var(--tag-target-size) - var(--tag-painted-height)) / 2);
-  block-size: auto;
-  border-radius: var(--tags-token-radius);
-  transform: none;
-}
-.tags-editor-proto > .tag-proto .tag-label-proto {
-  padding-block: calc((var(--tag-target-size) - var(--tag-line-height)) / 2);
-  overflow: visible;
-  overflow-wrap: anywhere;
-  white-space: pre-wrap;
-  text-overflow: clip;
-  user-select: text;
-}
-.tags-editor-proto > .tag-proto .tag-remove-proto {
-  flex: none;
-}
-
-.tags-editor-proto > .tag-proto .tag-remove-visual-proto {
-  border-radius: min(
-    var(--tags-token-radius),
-    max(var(--radius-xs), calc(var(--tags-token-radius) - var(--tag-remove-inset)))
-  );
 }
 
 .tags-field-proto[data-size='s'] .ff-label {
