@@ -1,0 +1,210 @@
+@layer unica.components {
+  :is(.unica-collapsible, .unica-accordion) {
+    --_disclosure-height: var(--size-m-height);
+    --_disclosure-icon: var(--size-m-icon);
+    --_disclosure-radius: var(--size-m-radius);
+    --_disclosure-gap: var(--size-m-gap);
+    --_disclosure-inset: var(--space-12);
+    --_disclosure-row-pad: var(--size-m-padding-y);
+    --_disclosure-label-size: var(--text-size-body-s);
+    --_disclosure-label-line: var(--text-size-body-s-lh);
+    --_disclosure-start: var(--_disclosure-label-inset);
+    --_disclosure-target: var(--_disclosure-height);
+    --_disclosure-block-pad: max(
+      var(--_disclosure-row-pad),
+      calc((var(--_disclosure-target) - var(--_disclosure-label-line)) / 2)
+    );
+    --_disclosure-label-inset: calc(
+      var(--_disclosure-inset) + var(--_disclosure-icon) + var(--_disclosure-gap)
+    );
+
+    min-inline-size: 0;
+    color: var(--fg-primary);
+    font-family: var(--font-family-base);
+  }
+
+  :is(.unica-collapsible, .unica-accordion)[data-unica-disclosure-size='s'] {
+    --_disclosure-height: var(--size-s-height);
+    --_disclosure-icon: var(--size-s-icon);
+    --_disclosure-radius: var(--size-s-radius);
+    --_disclosure-gap: var(--size-s-gap);
+    --_disclosure-inset: var(--space-8);
+    --_disclosure-row-pad: var(--size-s-padding-y);
+    --_disclosure-label-size: var(--text-size-body-xs);
+    --_disclosure-label-line: var(--text-size-body-xs-lh);
+  }
+
+  :is(.unica-collapsible, .unica-accordion)[data-unica-disclosure-size='l'] {
+    --_disclosure-height: var(--size-l-height);
+    --_disclosure-icon: var(--size-l-icon);
+    --_disclosure-radius: var(--size-l-radius);
+    --_disclosure-gap: var(--size-l-gap);
+    --_disclosure-inset: var(--space-16);
+    --_disclosure-row-pad: var(--size-l-padding-y);
+    --_disclosure-label-size: var(--text-size-body-m);
+    --_disclosure-label-line: var(--text-size-body-m-lh);
+  }
+
+  .unica-disclosure-trigger {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: start;
+    gap: var(--_disclosure-gap);
+    inline-size: 100%;
+    min-block-size: var(--_disclosure-target);
+    /* Reserve the system contour while keeping the label inset and row height. */
+    padding: calc(var(--_disclosure-block-pad) - 1px) calc(var(--_disclosure-inset) - 1px);
+    border: 1px solid transparent;
+    border-radius: var(--_disclosure-radius);
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    font-size: var(--_disclosure-label-size);
+    font-weight: 600;
+    line-height: var(--_disclosure-label-line);
+    text-align: start;
+    cursor: pointer;
+    transition: background-color var(--_btn-state-duration);
+  }
+
+  .unica-disclosure-trigger[hidden]:not([hidden='until-found' i]) {
+    display: none;
+  }
+
+  @media (hover: hover) {
+    .unica-disclosure-trigger:hover:not(:disabled) {
+      background: var(--_btn-ghost-neutral-bg-hover);
+    }
+  }
+
+  .unica-disclosure-trigger:active:not(:disabled) {
+    background: color-mix(in oklab, var(--_btn-ghost-neutral-bg-hover) 94%, var(--fg-primary));
+  }
+
+  .unica-disclosure-trigger:disabled {
+    color: var(--fg-disabled);
+    cursor: default;
+  }
+
+  .unica-disclosure-trigger[data-unica-disclosure-indicator='end'] {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .unica-accordion-item {
+    --_disclosure-start: var(--_disclosure-inset);
+  }
+
+  .unica-accordion-action {
+    min-block-size: calc(var(--_disclosure-label-line) + 2 * var(--_disclosure-block-pad));
+  }
+
+  .unica-accordion:has(> .unica-accordion-item > .unica-accordion-header > .unica-accordion-action)
+    > .unica-accordion-item {
+    --_disclosure-start: var(--_disclosure-label-inset);
+
+    & > .unica-accordion-header > .unica-accordion-heading > .unica-disclosure-trigger {
+      grid-template-columns: auto minmax(0, 1fr);
+
+      & > .unica-disclosure-caret {
+        grid-area: 1 / 1;
+      }
+    }
+  }
+
+  .unica-disclosure-label {
+    overflow-wrap: anywhere;
+  }
+
+  .unica-disclosure-caret {
+    --_disclosure-caret-angle: 0deg;
+
+    inline-size: var(--_disclosure-icon);
+    block-size: var(--_disclosure-icon);
+    margin-block-start: calc((var(--_disclosure-label-line) - var(--_disclosure-icon)) / 2);
+    color: var(--fg-muted);
+    transform: rotate(var(--_disclosure-caret-angle));
+    transition: transform var(--_disclosure-duration) cubic-bezier(0.2, 0, 0, 1);
+  }
+
+  .unica-disclosure-trigger[aria-expanded='false'] .unica-disclosure-caret {
+    --_disclosure-caret-angle: calc(-90deg * var(--_dir-mirror, 1));
+  }
+
+  .unica-disclosure-trigger[aria-expanded='true']:not(:disabled) .unica-disclosure-caret {
+    color: var(--fg-secondary);
+  }
+
+  .unica-disclosure-trigger:focus-visible {
+    outline: 2px solid var(--focus-ring-color);
+    outline-offset: -2px;
+  }
+
+  .unica-disclosure-trigger:disabled .unica-disclosure-caret {
+    color: inherit;
+  }
+
+  .unica-disclosure-panel {
+    min-inline-size: 0;
+  }
+
+  .unica-disclosure-panel[data-unica-disclosure-moving] {
+    overflow: clip;
+  }
+
+  .unica-disclosure-body {
+    display: flow-root;
+    min-inline-size: 0;
+    color: var(--fg-secondary);
+    font-size: var(--_disclosure-label-size);
+    line-height: var(--_disclosure-label-line);
+    overflow-wrap: anywhere;
+  }
+
+  .unica-disclosure-body[data-unica-disclosure-padded]:not(:empty) {
+    padding-block: var(--space-4) var(--_disclosure-inset);
+    padding-inline: var(--_disclosure-start) var(--_disclosure-inset);
+  }
+
+  .unica-disclosure-body > :first-child {
+    margin-block-start: 0;
+  }
+
+  .unica-disclosure-body > :last-child {
+    margin-block-end: 0;
+  }
+
+  @media (any-pointer: coarse) {
+    :is(.unica-collapsible, .unica-accordion) {
+      --_disclosure-target: max(44px, var(--_disclosure-height));
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .unica-disclosure-caret,
+    .unica-disclosure-trigger {
+      transition: none;
+    }
+  }
+
+  @media (forced-colors: active) {
+    .unica-disclosure-trigger {
+      border-color: ButtonText;
+      color: ButtonText;
+    }
+
+    .unica-disclosure-trigger:disabled {
+      border-color: GrayText;
+      color: GrayText;
+    }
+
+    .unica-disclosure-caret,
+    .unica-disclosure-trigger[aria-expanded='true']:not(:disabled) .unica-disclosure-caret {
+      color: inherit;
+    }
+
+    .unica-disclosure-trigger:focus-visible {
+      outline-color: Highlight;
+      outline-offset: -3px;
+    }
+  }
+}

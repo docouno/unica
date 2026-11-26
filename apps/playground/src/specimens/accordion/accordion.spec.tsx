@@ -1,10 +1,5 @@
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from '../../prototypes/disclosure/disclosure.proto.js';
-import '../../prototypes/disclosure/disclosure.examples.css';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@docouno/unica';
+import '../shared/disclosure.examples.css';
 import { defineComponent } from '../../workbench/types.js';
 import { withOverlaySurface } from '../shared/with-overlay-surface.js';
 import { HeaderActions } from './accordion-actions.examples.js';
@@ -22,9 +17,48 @@ export default defineComponent({
   title: 'Accordion',
   componentName: 'Accordion',
   category: 'Surfaces & Structure',
-  status: 'Proto',
+  status: 'UI',
   summary: 'Group related section headings and reveal their contents in place.',
   props: {
+    headingLevel: {
+      kind: 'slot',
+      publicType: '2 | 3 | 4 | 5 | 6',
+      group: 'Structure',
+      default: '3',
+      description: 'Set the native heading level for every section.',
+      choices: [
+        { value: '2', code: '2' },
+        { value: '3', code: '3' },
+        { value: '4', code: '4' },
+        { value: '5', code: '5' },
+        { value: '6', code: '6' },
+      ],
+    },
+    value: {
+      kind: 'slot',
+      publicType: 'readonly string[]',
+      group: 'Interaction',
+      default: 'omitted',
+      description: 'Hold the group at a controlled value. The example logs rejected proposals.',
+      choices: [
+        { value: 'omitted', label: 'Uncontrolled', omit: true },
+        { value: 'closed', label: 'All closed', code: '[]' },
+        { value: 'fee', label: 'First open', code: "['fee']" },
+        { value: 'both', label: 'Both open', code: "['fee', 'tax']" },
+      ],
+    },
+    lazyMount: {
+      kind: 'boolean',
+      group: 'Interaction',
+      default: false,
+      description: 'Mount each section body on its first open.',
+    },
+    unmountOnExit: {
+      kind: 'boolean',
+      group: 'Interaction',
+      default: false,
+      description: 'Remove each section body after its closing transition.',
+    },
     size: {
       kind: 'enum',
       group: 'Geometry',
@@ -66,6 +100,18 @@ export default defineComponent({
     },
   },
   constraints: [
+    ...(['closed', 'fee', 'both'] as const).map((value) => ({
+      kind: 'precedence' as const,
+      when: { value },
+      affects: ['defaultValue'],
+      reason: 'The controlled value determines the expanded sections.',
+    })),
+    {
+      kind: 'precedence',
+      when: { unmountOnExit: true },
+      affects: ['lazyMount'],
+      reason: 'Unmount on exit also waits for the first open before mounting.',
+    },
     {
       kind: 'precedence',
       when: { exclusive: true },
@@ -80,9 +126,12 @@ export default defineComponent({
       data-matrix={ctx.tab === 'states' || undefined}
     >
       <Accordion
-        key={values.defaultValue}
+        key={`${values.value}-${values.defaultValue}`}
         {...ctx.subject}
-        headingLevel={3}
+        headingLevel={Number(values.headingLevel) as 2 | 3 | 4 | 5 | 6}
+        value={values.value === 'omitted' ? undefined : initialSections[values.value]}
+        lazyMount={values.lazyMount}
+        unmountOnExit={values.unmountOnExit}
         size={values.size}
         exclusive={values.exclusive}
         dividers={values.dividers}
@@ -106,9 +155,9 @@ export default defineComponent({
   )),
   code: (
     values,
-  ) => `import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from './prototypes/disclosure/disclosure.proto.js';
+  ) => `import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@docouno/unica';
 
-<Accordion headingLevel={3}${values.size === 'm' ? '' : ` size="${values.size}"`}${values.exclusive ? ' exclusive' : ''}${values.dividers ? '' : ' dividers={false}'}${values.defaultValue === 'closed' ? '' : ` defaultValue={${JSON.stringify(initialSections[values.defaultValue])}}`} onValueChange={(expanded) => console.log(expanded)}>
+<Accordion headingLevel={${values.headingLevel}}${values.size === 'm' ? '' : ` size="${values.size}"`}${values.exclusive ? ' exclusive' : ''}${values.dividers ? '' : ' dividers={false}'}${values.value === 'omitted' ? '' : ` value={${JSON.stringify(initialSections[values.value])}}`}${values.defaultValue === 'closed' ? '' : ` defaultValue={${JSON.stringify(initialSections[values.defaultValue])}}`}${values.lazyMount ? ' lazyMount' : ''}${values.unmountOnExit ? ' unmountOnExit' : ''} onValueChange={(expanded) => console.log(expanded)}>
   <AccordionItem value="fee">
     <AccordionTrigger>Fee</AccordionTrigger>
     <AccordionContent><bdi>£15</bdi></AccordionContent>
@@ -181,7 +230,7 @@ export default defineComponent({
       mode: 'live',
       caption:
         'Copy a link from a closed section, fold a reviewed file, or favorite a query while leaving its disclosure state intact.',
-      code: actionsSource.replaceAll('../../prototypes/', './prototypes/'),
+      code: actionsSource,
       render: withOverlaySurface(
         ({ ctx }) => <HeaderActions accordionProps={ctx.subject} />,
         'border-box',

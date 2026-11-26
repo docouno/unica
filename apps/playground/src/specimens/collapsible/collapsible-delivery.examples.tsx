@@ -1,11 +1,15 @@
 import { useId } from 'react';
-import { Button, Card, Input, Stack, Text } from '@docouno/unica';
 import {
+  Button,
+  Card,
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
-} from '../../prototypes/disclosure/disclosure.proto.js';
-import { FormField } from '@docouno/unica';
+  FormField,
+  Input,
+  Stack,
+  Text,
+} from '@docouno/unica';
 
 export function DeliveryDetails({ collapsibleProps = {} } = {}) {
   const replyId = useId();

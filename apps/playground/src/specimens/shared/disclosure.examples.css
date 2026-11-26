@@ -44,5 +44,5 @@
 
 .disclosure-study-reason {
   margin: 0;
-  padding-inline: var(--disclosure-start) var(--disclosure-inset);
+  padding-inline: calc(var(--space-12) + var(--size-m-icon) + var(--size-m-gap)) var(--space-12);
 }

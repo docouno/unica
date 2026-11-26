@@ -1,11 +1,12 @@
-import { Text, Title } from '@docouno/unica';
-import type { ReactElement } from 'react';
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
-} from '../../prototypes/disclosure/disclosure.proto.js';
+  Text,
+  Title,
+} from '@docouno/unica';
+import type { ReactElement } from 'react';
 import type { PreviewProps } from '../../workbench/types.js';
 
 function AccessGroup({

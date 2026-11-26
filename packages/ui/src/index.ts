@@ -23,6 +23,18 @@ export type {
 } from './core/glyph.js';
 
 export {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from './components/Accordion/index.js';
+export type {
+  AccordionContentProps,
+  AccordionItemProps,
+  AccordionProps,
+  AccordionTriggerProps,
+} from './components/Accordion/index.js';
+export {
   Alert,
   AlertActions,
   AlertClose,
@@ -121,6 +133,16 @@ export type {
 } from './components/ChoiceCard/index.js';
 export { Code } from './components/Code/index.js';
 export type { CodeProps, CodeStatus } from './components/Code/index.js';
+export {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from './components/Collapsible/index.js';
+export type {
+  CollapsibleContentProps,
+  CollapsibleProps,
+  CollapsibleTriggerProps,
+} from './components/Collapsible/index.js';
 export { Divider } from './components/Divider/index.js';
 export type { DividerProps } from './components/Divider/index.js';
 export {

@@ -1,15 +1,19 @@
-import { Card, Checkbox, Text, Title } from '@docouno/unica';
-import { useId } from 'react';
-import type { ReactElement } from 'react';
 import {
+  Card,
+  Checkbox,
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
-} from '../../prototypes/disclosure/disclosure.proto.js';
+  Input,
+  Text,
+  Title,
+} from '@docouno/unica';
+import { useId, useState } from 'react';
+import type { ReactElement } from 'react';
 import { Table, TableScroll } from '../../prototypes/table/table.proto.js';
 import type { PreviewProps } from '../../workbench/types.js';
 import { ExampleSurface } from '../shared/example-surface.js';
-import '../../prototypes/disclosure/disclosure.examples.css';
+import '../shared/disclosure.examples.css';
 
 export function TriggerStates({ ctx }: PreviewProps): ReactElement {
   return (
@@ -139,6 +143,32 @@ export function OnOverlay({ ctx }: PreviewProps): ReactElement {
           </CollapsibleContent>
         </Collapsible>
       </ExampleSurface>
+    </div>
+  );
+}
+
+export function DraftLifecycle({ ctx }: PreviewProps): ReactElement {
+  const [open, setOpen] = useState(false);
+  const mount = ctx.story?.controls.mount;
+  return (
+    <div className="disclosure-study-narrow" data-example-disclosure="">
+      <Collapsible
+        {...ctx.subject}
+        open={open}
+        lazyMount={mount === 'lazy'}
+        unmountOnExit={mount === 'discard'}
+        onOpenChange={(next) => {
+          ctx.action('onOpenChange')(next);
+          if (ctx.story?.controls.accept !== false) {
+            setOpen(next);
+          }
+        }}
+      >
+        <CollapsibleTrigger>Delivery notes</CollapsibleTrigger>
+        <CollapsibleContent>
+          <Input aria-label="Delivery note" defaultValue="Notify the review queue" />
+        </CollapsibleContent>
+      </Collapsible>
     </div>
   );
 }
