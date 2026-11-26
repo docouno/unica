@@ -302,7 +302,10 @@ const scenarios = {
       ['family', 'scheme', 'vp', 'scale', 'dir'].map((key) => params.get(key)),
       ['all', 'dark', '360', '120', 'rtl'],
     );
-    await page.locator('[data-wb-scene] .folio-content-collection').first().waitFor();
+    await page
+      .locator('[data-wb-scene] .folio-content-collection')
+      .first()
+      .waitFor({ timeout: 20_000 });
     assert.equal(await page.locator('iframe[title="Folio page properties"]').count(), 0);
   },
 };
