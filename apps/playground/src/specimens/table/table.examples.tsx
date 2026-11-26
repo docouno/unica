@@ -4,17 +4,23 @@ import {
   AlertDescription,
   AlertTitle,
   Badge,
+  Button,
   Card,
   Checkbox,
+  Empty,
+  EmptyDescription,
+  EmptyMedia,
+  EmptyTitle,
+  Flex,
+  IconButton,
   Input,
   Select,
   SelectContent,
   SelectTrigger,
-  Stack,
-  Flex,
-  VisuallyHidden,
   SkeletonText,
+  Stack,
   Text,
+  VisuallyHidden,
 } from '@docouno/unica';
 import { useId, useRef, useState } from 'react';
 import type { PreviewProps, Surface } from '../../workbench/types.js';
@@ -28,7 +34,6 @@ import {
   PushPinIcon,
   ArrowCounterClockwiseIcon,
 } from '@phosphor-icons/react';
-import { Button, IconButton } from '@docouno/unica';
 import {
   Drawer,
   DrawerBody,
@@ -37,12 +42,6 @@ import {
   DrawerTitle,
   DrawerTrigger,
 } from '../../prototypes/dialog/dialog.proto.js';
-import {
-  Empty,
-  EmptyDescription,
-  EmptyMedia,
-  EmptyTitle,
-} from '../../prototypes/empty/empty.proto.js';
 import { ContextMenu } from '../../prototypes/menu/context-menu.proto.js';
 import { Menu } from '../../prototypes/menu/menu.live.js';
 import {
