@@ -53,7 +53,11 @@ export default {
     await page.goto(
       new URL('/?item=pagination&tab=states&family=frost&scheme=light', page.url()).href,
     );
-    await page.locator('[data-wb-block="links"]').scrollIntoViewIfNeeded();
+    await page.getByRole('button', { name: 'Inspector', exact: true }).click();
+    await page
+      .getByRole('navigation', { name: 'State sections' })
+      .getByRole('button', { name: /Addressable pages/ })
+      .click();
     const source = archive(page, 'frost-light');
     const next = source.getByRole('link', { name: 'Next page' });
     const destination = new URL(await next.getAttribute('href'), page.url()).href;
