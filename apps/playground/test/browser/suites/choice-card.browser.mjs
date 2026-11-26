@@ -189,6 +189,10 @@ export default {
       await terms.press('Enter');
       assert.deepEqual(await readLog(form, 'entry-log'), { terms: 1, changes: 0 });
       await available.press('End');
+      await form
+        .getByTestId('entry-log')
+        .filter({ hasText: '"changes":1' })
+        .waitFor({ state: 'attached' });
       assert.deepEqual(await entries(form), [['radio-entry', 'b']]);
       assert.deepEqual(await readLog(form, 'entry-log'), { terms: 1, changes: 1 });
     }
