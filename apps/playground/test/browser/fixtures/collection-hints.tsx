@@ -1,9 +1,8 @@
 import { useState } from 'react';
 import type { CSSProperties, ReactElement } from 'react';
-import { Tag, TooltipProvider } from '@docouno/unica';
+import { Chip, ChipGroup, Tag, TooltipProvider } from '@docouno/unica';
 import { DocumentTabs } from '../../../src/prototypes/app-shell/app-shell.proto.js';
 import { TreeView } from '../../../src/prototypes/app-shell/navigation.proto.js';
-import { Chip, ChipGroup } from '../../../src/prototypes/chip/chip.proto.js';
 import { SearchGlyph } from '../../../src/prototypes/control-glyphs.js';
 import { Tabs, TabsList, TabsTab } from '../../../src/prototypes/tabs/tabs.proto.js';
 

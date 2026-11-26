@@ -97,8 +97,8 @@ export default {
     await assertFocused(alpha);
     await assertHint(page, `${common}, alpha`);
     await page.keyboard.press('ArrowRight');
-    await assertFocused(beta);
     await assertHint(page, `${common}, beta`);
+    await assertFocused(beta);
     assert.deepEqual(await entries(), [['collection', 'beta']]);
     assert.equal(await changes.textContent(), 'beta');
 
@@ -106,8 +106,8 @@ export default {
     await assertHint(page, `${common}, beta`);
     assert.equal(await changes.textContent(), 'beta');
     await page.keyboard.press('Home');
-    await assertFocused(alpha);
     await assertHint(page, `${common}, alpha`);
+    await assertFocused(alpha);
     assert.deepEqual(await entries(), [['collection', 'alpha']]);
     assert.equal(await changes.textContent(), 'beta,alpha');
     await page.keyboard.press('Space');

@@ -84,6 +84,8 @@ export type {
   CheckboxIndicatorProps,
   CheckboxProps,
 } from './components/Checkbox/index.js';
+export { Chip, ChipGroup } from './components/Chip/index.js';
+export type { ChipGroupProps, ChipProps } from './components/Chip/index.js';
 export { Code } from './components/Code/index.js';
 export type { CodeProps, CodeStatus } from './components/Code/index.js';
 export { Divider } from './components/Divider/index.js';

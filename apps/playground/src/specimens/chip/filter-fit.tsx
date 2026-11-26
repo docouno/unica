@@ -1,7 +1,6 @@
 import { useState } from 'react';
-import { Badge, Button, Flex, Stack, Tag, Text } from '@docouno/unica';
+import { Badge, Button, Chip, ChipGroup, Flex, Stack, Tag, Text } from '@docouno/unica';
 import { StarIcon } from '@phosphor-icons/react';
-import { Chip } from '../../prototypes/chip/chip.proto.js';
 import '@docouno/unica/styles.css';
 
 const stock = {
@@ -12,7 +11,9 @@ const stock = {
   XL: { total: 8, favorites: 4 },
 };
 
-function SizeFilters({ density = 'm', chipProps = {} }) {
+const sizes = Object.keys(stock).map((label) => ({ value: label, label }));
+
+function SizeFilters({ density = 'm', chipProps = {}, groupProps = {} }) {
   const size = density === 's' || density === 'l' ? density : 'm';
   const [count, setCount] = useState(stock.M.favorites);
   return (
@@ -51,23 +52,25 @@ function SizeFilters({ density = 'm', chipProps = {} }) {
             Apply
           </Button>
         </Flex>
-        <Flex gap={8} wrap="wrap" align="center" role="group" aria-label="Sizes">
-          {Object.keys(stock).map((label) => (
-            <Chip key={label} size={size} name="size" value={label} defaultChecked={label === 'M'}>
-              {label}
-            </Chip>
-          ))}
-        </Flex>
+        <ChipGroup
+          {...groupProps}
+          aria-label="Sizes"
+          multiple
+          size={size}
+          name="size"
+          items={sizes}
+          defaultValue={['M']}
+        />
       </Stack>
     </form>
   );
 }
 
-export function FilterFit({ chipProps = {} } = {}) {
+export function FilterFit({ chipProps = {}, groupProps = {} } = {}) {
   return (
     <Stack gap={24} style={{ minInlineSize: 0 }}>
       {['s', 'm', 'l'].map((size) => (
-        <SizeFilters key={size} density={size} chipProps={chipProps} />
+        <SizeFilters key={size} density={size} chipProps={chipProps} groupProps={groupProps} />
       ))}
     </Stack>
   );

@@ -4,11 +4,6 @@
   align-items: center;
   gap: var(--space-16);
 }
-.chip-demo-state-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
-  gap: var(--space-24);
-}
 .chip-demo-capped {
   min-inline-size: 0;
   --chip-max-width: 240px;

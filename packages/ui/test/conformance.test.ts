@@ -25,6 +25,7 @@ const EXTERNAL_CSS_HOOKS = new Set([
   '--overlay-available-height',
   '--overlay-available-width',
   '--badge-max-width',
+  '--chip-max-width',
   '--element-radius',
   '--kbd-bg',
   '--kbd-border',

@@ -15,7 +15,7 @@ Components never mix these three axes:
 ### Validation Status & Slots
 
 - **Framed fields and `FormField`:** `FieldStatus = 'neutral' | 'info' | 'success' | 'warning' | 'danger'` (default `'neutral'`). Reserve `info` and `success` for asynchronous verification outcomes (such as slug availability or token checks), `warning` for non-blocking advisories, and `danger` for blocking validation failures.
-- **Discrete and range controls** (`Checkbox`, `Radio`, `CheckboxCard`, `RadioCard`, `Slider`, `RangeSlider`, `SegmentedControl`, `ChipGroup`, `Dropzone`): `ControlStatus = 'neutral' | 'danger'`.
+- **Discrete and range controls** (`Checkbox`, `Radio`, `CheckboxCard`, `RadioCard`, `Slider`, `RangeSlider`, `SegmentedControl`, [`ChipGroup`](../components/chip.md), `Dropzone`): `ControlStatus = 'neutral' | 'danger'`.
 - **Immediate switches** (`Switch`, `SwitchCard`): **zero `status` prop**. A switch performs an immediate toggle; failed persistence belongs in application feedback.
 - **Validation status** sets `aria-invalid="true"` on an available control or group with `status="danger"`. Read-only values can still show this state and explain why a locked value needs attention.
 - **Unified supporting slots:** `description` holds persistent instructions and `message` holds validation/status feedback. Controls do not introduce `invalid`, `error`, `errorMessage`, `initialError`, or `issue`.

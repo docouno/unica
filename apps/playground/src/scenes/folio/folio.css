@@ -654,18 +654,6 @@
   }
 }
 
-.folio-collection-facets > .chip-group-label-proto {
-  position: absolute;
-  inline-size: 1px;
-  block-size: 1px;
-  overflow: hidden;
-  clip-path: inset(50%);
-  white-space: nowrap;
-}
-.folio-collection-facets > .chip-group-options-proto {
-  margin-block-start: 0;
-}
-
 .folio-content-collection .table-proto :is(th, td).folio-runbook-menu-cell {
   inline-size: 1%;
 }
