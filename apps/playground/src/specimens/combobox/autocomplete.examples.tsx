@@ -259,11 +259,9 @@ export function FreeTitle({ ctx }: PreviewProps): ReactElement {
         required
         placeholder="Enter a title"
         description={<bdi>Choose a recent title or write your own.</bdi>}
+        editorAction={<Button type="submit">Save title</Button>}
         onTextChange={() => setSaved('')}
       />
-      <Button type="submit" className="suggestion-save-proto">
-        Save title
-      </Button>
       {saved && (
         <Text size="caption-l" color="secondary" role="status" className="suggestion-saved-proto">
           <bdi dir="ltr">

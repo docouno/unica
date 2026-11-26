@@ -62,7 +62,6 @@ ul:has(> [data-wb-result-row] [data-file-intake-sample]) {
 .file-demo-arabic
   :is(
     .file-input-name-proto,
-    .ff-label,
     .file-item-name-proto,
     .file-item-detail-proto,
     p[dir='auto'],

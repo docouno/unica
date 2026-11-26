@@ -8,6 +8,7 @@ import {
   Button,
   Card,
   CheckboxCard,
+  FormField,
   Input,
   Select,
   Text,
@@ -26,7 +27,6 @@ import {
   ModalTrigger,
 } from '../prototypes/dialog/dialog.proto.js';
 import { ToastCard } from '../prototypes/toast/toast.proto.js';
-import { FormField } from '../prototypes/form-field/form-field.proto.js';
 import {
   Table,
   TableBody,
@@ -256,10 +256,9 @@ function InviteScene(): ReactElement {
               <FormField
                 size="s"
                 label="External contractor"
-                htmlFor={`${formId}-contractor`}
+                controlId={`${formId}-contractor`}
                 status="danger"
                 message="External domains require SAML guest approval."
-                messageId={`${formId}-contractor-message`}
                 feedbackIcon={false}
               >
                 <Input
@@ -267,7 +266,6 @@ function InviteScene(): ReactElement {
                   size="s"
                   status="danger"
                   defaultValue="contractor@external.example"
-                  aria-describedby={`${formId}-contractor-message`}
                 />
               </FormField>
               <fieldset className="folio-fieldset">
@@ -281,7 +279,7 @@ function InviteScene(): ReactElement {
                   <CheckboxCard label="Incident digest" description="Weekly reliability summary" />
                 </div>
               </fieldset>
-              <FormField label="Welcome note" htmlFor={welcomeId}>
+              <FormField label="Welcome note" controlId={welcomeId}>
                 <Textarea
                   id={welcomeId}
                   size="s"
@@ -290,7 +288,7 @@ function InviteScene(): ReactElement {
                 />
               </FormField>
               <div className="folio-grid-2">
-                <FormField size="s" label="Default workspace role" htmlFor={`${formId}-role`}>
+                <FormField size="s" label="Default workspace role" controlId={`${formId}-role`}>
                   <Select
                     id={`${formId}-role`}
                     name="role"
@@ -301,7 +299,7 @@ function InviteScene(): ReactElement {
                     searchable
                   />
                 </FormField>
-                <FormField size="s" label="Invite link expiry" htmlFor={`${formId}-expiry`}>
+                <FormField size="s" label="Invite link expiry" controlId={`${formId}-expiry`}>
                   <Select
                     id={`${formId}-expiry`}
                     name="expiry"

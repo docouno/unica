@@ -1,4 +1,4 @@
-import { FormField } from '../form-field/form-field.proto.js';
+import { FormField } from '@docouno/unica';
 import { useId, useState } from 'react';
 import type { ReactElement, ReactNode } from 'react';
 import { Button, Input, Text } from '@docouno/unica';
@@ -111,7 +111,7 @@ export function NumberAnatomy({ ctx }: PreviewProps): ReactElement {
             className="number-size-comparison-proto"
             onSubmit={(event) => event.preventDefault()}
           >
-            <FormField htmlFor={`${id}-reference-${size}`} label="Reference" size={size}>
+            <FormField controlId={`${id}-reference-${size}`} label="Reference" size={size}>
               <Input id={`${id}-reference-${size}`} size={size} defaultValue="Document" />
             </FormField>
             <NumberInput
@@ -350,7 +350,7 @@ function AvailabilityColumn({
           status="danger"
           loading
           disabled
-          message={<bdi>Unavailable while scheduled snapshots are off.</bdi>}
+          description={<bdi>Unavailable while scheduled snapshots are off.</bdi>}
         />
       </div>
     </Example>

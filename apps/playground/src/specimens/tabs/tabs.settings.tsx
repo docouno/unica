@@ -2,7 +2,7 @@ import { Card, Input, Text } from '@docouno/unica';
 import { FileTextIcon, UsersIcon } from '@phosphor-icons/react';
 import { useId } from 'react';
 import type { ReactElement } from 'react';
-import { FormField } from '../../prototypes/form-field/form-field.proto.js';
+import { FormField } from '@docouno/unica';
 import { Tabs, TabsContent, TabsList, TabsTab } from '../../prototypes/tabs/tabs.proto.js';
 import type { PreviewProps } from '../../workbench/types.js';
 
@@ -32,7 +32,7 @@ export function ManualExample({ ctx }: PreviewProps): ReactElement {
         </TabsList>
         <div className="tabs-example-panels">
           <TabsContent value="overview" tabIndex={-1}>
-            <FormField htmlFor={`${heading}-report`} label="Report name">
+            <FormField controlId={`${heading}-report`} label="Report name">
               <Input id={`${heading}-report`} defaultValue="Weekly summary" />
             </FormField>
           </TabsContent>

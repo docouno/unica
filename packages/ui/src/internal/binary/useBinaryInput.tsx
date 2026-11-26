@@ -5,6 +5,12 @@ import { dataFlag } from '../../core/cx.js';
 import { warnOnce } from '../../core/devWarning.js';
 import { getDefaultView, isInertElement, matchesSafe } from '../../core/dom.js';
 import { FormInput, writeInputChecked } from '../../core/forms/carriers.js';
+import {
+  fieldControlId,
+  fieldDescription,
+  idRefs,
+  useFormField,
+} from '../../core/forms/field-context.js';
 import { useFormValue } from '../../core/forms/useFormValue.js';
 import { mergeRefs } from '../../core/mergeRefs.js';
 import { useIsoLayoutEffect } from '../../core/useIsoLayoutEffect.js';
@@ -20,6 +26,7 @@ interface BinaryInputOptions extends Omit<ToggleProps, 'className' | 'style' | '
   readonly status?: BinaryStatus | undefined;
   readonly indeterminate?: boolean | undefined;
   readonly loading?: boolean | undefined;
+  readonly retainLocalLabel?: boolean | undefined;
 }
 
 export function hasBinaryContent(value: unknown): boolean {
@@ -96,6 +103,7 @@ export function useBinaryInput<Host extends HTMLElement>({
   status,
   indeterminate = false,
   loading = false,
+  retainLocalLabel = false,
   id,
   ref,
   name,
@@ -113,8 +121,10 @@ export function useBinaryInput<Host extends HTMLElement>({
   onKeyDown,
   ...attrs
 }: BinaryInputOptions): BinaryInputState<Host> {
+  const scope = useFormField();
+  const field = scope?.target === 'control' ? scope : null;
   const generated = useId();
-  const inputId = id ?? generated;
+  const inputId = fieldControlId(field, id) ?? generated;
   const row = useRef<Host>(null);
   const input = useRef<HTMLInputElement>(null);
   const radio = useRef<StandaloneRadio | null>(null);
@@ -135,16 +145,22 @@ export function useBinaryInput<Host extends HTMLElement>({
   const isSwitch = kind === 'switch';
   const managed = group?.managed === true;
   const standaloneRadio = isRadio && !group;
-  const effectiveSize = size ?? group?.size ?? 'm';
-  const effectiveStatus = status ?? group?.status ?? 'neutral';
-  const unavailable = Boolean(disabled || group?.disabled);
-  const locked = Boolean(readOnly || group?.readOnly);
+  const effectiveSize = size ?? field?.size ?? group?.size ?? 'm';
+  const fieldStatus =
+    !isSwitch && field ? (field.status === 'danger' ? 'danger' : 'neutral') : undefined;
+  const effectiveStatus = status ?? fieldStatus ?? group?.status ?? 'neutral';
+  const unavailable = Boolean((disabled ?? field?.disabled) || group?.disabled);
+  const locked = Boolean((readOnly ?? (!isRadio && field?.readOnly)) || group?.readOnly);
   const busy = isSwitch && loading;
-  const hasLabel = hasBinaryContent(label);
+  const hasFieldLabel = field?.labelId !== undefined;
+  const hasLabel = (!hasFieldLabel || retainLocalLabel) && hasBinaryContent(label);
   const hasDescription = hasBinaryContent(description);
   const descriptionId = hasDescription ? `${generated}-description` : undefined;
   const labelId = hasLabel ? `${generated}-label` : undefined;
   const invalid = effectiveStatus === 'danger' || attrs['aria-invalid'];
+  const describedBy = field
+    ? idRefs(attrs['aria-describedby'], descriptionId)
+    : joinDescriptionIds(attrs['aria-describedby'], descriptionId);
   const inputName =
     group && (isRadio || (group.sharedOwner && group.name !== undefined))
       ? group.name
@@ -221,6 +237,8 @@ export function useBinaryInput<Host extends HTMLElement>({
 
   const availability = {
     invalid,
+    describedBy,
+    field,
     busy,
     ariaBusy: attrs['aria-busy'],
     ariaDisabled: attrs['aria-disabled'],
@@ -256,10 +274,14 @@ export function useBinaryInput<Host extends HTMLElement>({
   }
 
   function syncAvailability(element: HTMLInputElement): void {
-    const { invalid, busy, ariaBusy, ariaDisabled } = current.current.availability;
+    const { invalid, busy, ariaBusy, ariaDisabled, describedBy, field } =
+      current.current.availability;
     const disabled = element.matches(':disabled');
     const pending = busy && !disabled;
     setAria(element, 'aria-invalid', disabled ? undefined : invalid);
+    if (field) {
+      setAria(element, 'aria-describedby', fieldDescription(field, describedBy, disabled));
+    }
     setAria(element, 'aria-busy', pending || ariaBusy);
     setAria(element, 'aria-disabled', pending || ariaDisabled);
   }
@@ -386,7 +408,7 @@ export function useBinaryInput<Host extends HTMLElement>({
       controlled={managed || (standaloneRadio ? checked !== undefined : local.controlled)}
       defaultChecked={resetSelection}
       disabled={unavailable}
-      required={required || (isRadio && group?.required)}
+      required={(required ?? (!isSwitch && field?.required)) || (isRadio && group?.required)}
       tabIndex={tabIndex}
       data-unica-binary-mixed={dataFlag(indeterminate)}
       data-unica-binary-keyed={dataFlag(value !== undefined)}
@@ -395,9 +417,10 @@ export function useBinaryInput<Host extends HTMLElement>({
       aria-readonly={(!isRadio && locked) || attrs['aria-readonly']}
       aria-invalid={unavailable ? undefined : invalid}
       aria-labelledby={
-        attrs['aria-labelledby'] ?? (attrs['aria-label'] === undefined ? labelId : undefined)
+        attrs['aria-labelledby'] ??
+        (attrs['aria-label'] === undefined && !hasFieldLabel ? labelId : undefined)
       }
-      aria-describedby={joinDescriptionIds(attrs['aria-describedby'], descriptionId)}
+      aria-describedby={fieldDescription(field, describedBy, unavailable)}
       onClick={(event) => {
         onClick?.(event);
         if (blocked(event.currentTarget)) {

@@ -2,6 +2,8 @@
 
 `Input` renders a single native HTML input for one line of text. Import `Input` and the types `InputProps`, `ControlSize`, `FieldVariant`, and `FieldStatus` from `@docouno/unica`. Load `@docouno/unica/styles.css` with your application styles.
 
+Use [FormField](form-field.md) for labeled form layouts. It provides the control ID and shared description, and acts as the default for size, status, disabled, read-only, and required.
+
 ```tsx
 import { Input } from '@docouno/unica';
 

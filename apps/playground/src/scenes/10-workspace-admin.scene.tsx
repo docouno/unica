@@ -524,6 +524,7 @@ export default defineScene({
     'card',
     'dropzone',
     'file-input',
+    'form-field',
     'icon',
     'indicator',
     'progress',

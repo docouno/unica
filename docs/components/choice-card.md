@@ -36,6 +36,8 @@ The active theme supplies the plate and selection colors through the `--choice-c
 
 A compound option uses explicit IDs for its accessible name and description. The same links work in server HTML.
 
+[FormField](form-field.md) can name a single card's input or an entire card group. A single card keeps its visible title and allows an explicit ARIA name. Secondary controls keep their own field association.
+
 ```tsx
 import { useId } from 'react';
 import {

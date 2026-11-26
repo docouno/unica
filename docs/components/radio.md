@@ -2,6 +2,8 @@
 
 Use `RadioGroup` and `Radio` for a single answer from a visible set of choices. Each option uses an actual `<input type="radio">` with a stable focus target and native form submission.
 
+Use [FormField](form-field.md) to label a standalone option or share instructions and a validation message across a RadioGroup.
+
 ```tsx
 import { Radio, RadioGroup } from '@docouno/unica';
 import '@docouno/unica/styles.css';

@@ -12,17 +12,14 @@ import type { ControlSize, FieldStatus, FieldVariant } from '@docouno/unica';
 import { useId, useRef, useState } from 'react';
 import type { ReactElement, ReactNode } from 'react';
 import type { PreviewProps, PreviewContext } from '../../workbench/types.js';
-import {
-  FormField,
-  FormFieldDescription,
-  FormFieldFeedback,
-  FormFieldLabel,
-} from './form-field.proto.js';
+import { FormField, FormFieldDescription, FormFieldFeedback, FormFieldLabel } from '@docouno/unica';
 import {
   specimenBlockPage,
   focusLinkedFragment,
   followStudyFragment,
-} from '../../specimens/shared/specimen-fragment.js';
+} from '../shared/specimen-fragment.js';
+import { FieldBinding } from '../../field-binding.js';
+import { joinIds } from '../../field-support.js';
 import './form-field.examples.css';
 
 interface TextFieldProps {
@@ -58,39 +55,20 @@ function TextField({
   disabled,
   ...input
 }: TextFieldProps): ReactElement {
-  const id = useId();
-  const feedback =
-    !disabled && ((message !== undefined && message !== null) || status !== 'neutral');
   return (
     <FormField
       {...subject}
       size={size}
       orientation={orientation}
-      htmlFor={id}
       label={label}
       description={description}
-      message={typeof message === 'string' ? <bdi>{message}</bdi> : message}
-      descriptionId={description ? `${id}-description` : undefined}
-      messageId={feedback ? `${id}-message` : undefined}
+      message={typeof message === 'string' && message ? <bdi>{message}</bdi> : message}
       status={status}
       required={required}
       optional={optional}
       disabled={disabled}
-      feedbackIcon={false}
     >
-      <Input
-        {...input}
-        id={id}
-        size={size}
-        status={status}
-        required={required}
-        disabled={disabled}
-        aria-describedby={
-          [description ? `${id}-description` : '', feedback ? `${id}-message` : '']
-            .filter(Boolean)
-            .join(' ') || undefined
-        }
-      />
+      <Input {...input} />
     </FormField>
   );
 }
@@ -160,7 +138,7 @@ export function Anatomy({ ctx }: PreviewProps): ReactElement {
       <FormField
         {...ctx.subject}
         label="Access code"
-        htmlFor={password}
+        controlId={password}
         required
         labelAction={
           <Button
@@ -192,47 +170,32 @@ export function Anatomy({ ctx }: PreviewProps): ReactElement {
             </p>
           </>
         }
-        descriptionId={`${password}-description`}
         message={<bdi>This code has expired. Ask the sender for a new invitation.</bdi>}
-        messageId={`${password}-message`}
         status="danger"
-        feedbackIcon={false}
       >
-        <Input
-          id={password}
-          required
-          defaultValue="AC24-OLD"
-          status="danger"
-          aria-describedby={`${password}-description ${password}-message`}
-        />
+        <Input id={password} required defaultValue="AC24-OLD" status="danger" />
       </FormField>
       <FormField
         {...ctx.subject}
         label="Short introduction"
         orientation="horizontal"
         labelAlign="text"
-        htmlFor={about}
+        controlId={about}
         optional="(optional)"
         description={<bdi>A sentence or two helps collaborators recognize you.</bdi>}
-        descriptionId={`${about}-description`}
       >
-        <Textarea
-          id={about}
-          rows={3}
-          placeholder="What are you working on?"
-          aria-describedby={`${about}-description`}
-        />
+        <Textarea id={about} rows={3} placeholder="What are you working on?" />
       </FormField>
       <div className="ff-example-parts">
-        <FormFieldLabel {...ctx.subject} htmlFor={custom}>
-          Public reference <span className="ff-optional">(optional)</span>
+        <FormFieldLabel {...ctx.subject} htmlFor={custom} optional="(optional)">
+          Public reference
         </FormFieldLabel>
         <Input
           id={custom}
           defaultValue="DS-024"
           aria-describedby={`${custom}-description ${custom}-message`}
         />
-        <div className="ff-support">
+        <div className="ff-example-support">
           <FormFieldDescription id={`${custom}-description`}>
             <bdi>Use the short code assigned to the project.</bdi>
           </FormFieldDescription>
@@ -246,7 +209,6 @@ export function Anatomy({ ctx }: PreviewProps): ReactElement {
 }
 
 export function Feedback({ ctx }: PreviewProps): ReactElement {
-  const id = useId();
   const messages: Record<FieldStatus, string> = {
     neutral: 'You can change this later.',
     info: 'Only people with the link can find this space.',
@@ -273,11 +235,9 @@ export function Feedback({ ctx }: PreviewProps): ReactElement {
             {...ctx.subject}
             label="Publishing checks"
             target="group"
-            labelId={`${id}-${status}-label`}
+
             description={<bdi>Checks run before each publication.</bdi>}
-            descriptionId={`${id}-${status}-description`}
             status={status}
-            messageId={`${id}-${status}-message`}
             message={
               <bdi>
                 {
@@ -292,12 +252,7 @@ export function Feedback({ ctx }: PreviewProps): ReactElement {
               </bdi>
             }
           >
-            <CheckboxGroup
-              aria-labelledby={`${id}-${status}-label`}
-              aria-describedby={`${id}-${status}-description ${id}-${status}-message`}
-              aria-invalid={status === 'danger' || undefined}
-              status={status === 'danger' ? 'danger' : 'neutral'}
-            >
+            <CheckboxGroup>
               <Checkbox label="Check shared links" defaultChecked={status === 'success'} />
             </CheckboxGroup>
           </FormField>
@@ -428,14 +383,11 @@ export function LiveValidation({ ctx }: PreviewProps): ReactElement {
         <FormField
           {...ctx.subject}
           label="Delivery email"
-          htmlFor={`${id}-email`}
+          controlId={`${id}-email`}
           required
           description={<bdi>Use an address you can receive messages at.</bdi>}
-          descriptionId={`${id}-email-description`}
           message={errors.email ? <bdi>{errors.email}</bdi> : undefined}
-          messageId={errors.email ? `${id}-email-message` : undefined}
           status={errors.email ? 'danger' : 'neutral'}
-          feedbackIcon={false}
           reserveMessage={reserve}
         >
           <Input
@@ -446,8 +398,6 @@ export function LiveValidation({ ctx }: PreviewProps): ReactElement {
             dir="ltr"
             required
             placeholder="name@example.com"
-            status={errors.email ? 'danger' : 'neutral'}
-            aria-describedby={`${id}-email-description${errors.email ? ` ${id}-email-message` : ''}`}
             onChange={() => {
               setErrors((current) => ({ ...current, email: '' }));
               setSaved(false);
@@ -461,10 +411,8 @@ export function LiveValidation({ ctx }: PreviewProps): ReactElement {
           labelId={`${id}-channels-label`}
           required
           description={<bdi>Choose at least one. You can use both.</bdi>}
-          descriptionId={`${id}-channels-description`}
           status={errors.channels ? 'danger' : 'neutral'}
           message={errors.channels ? <bdi>Select at least one delivery method.</bdi> : undefined}
-          messageId={errors.channels ? `${id}-channels-message` : undefined}
           reserveMessage={reserve}
         >
           <div ref={groupRef}>
@@ -475,10 +423,6 @@ export function LiveValidation({ ctx }: PreviewProps): ReactElement {
                 setErrors((current) => ({ ...current, channels: false }));
                 setSaved(false);
               }}
-              status={errors.channels ? 'danger' : 'neutral'}
-              aria-labelledby={`${id}-channels-label`}
-              aria-invalid={errors.channels || undefined}
-              aria-describedby={`${id}-channels-description${errors.channels ? ` ${id}-channels-message` : ''}`}
             >
               <Checkbox value="email" label="Email digest" />
               <Checkbox value="in-app" label="In-app notifications" />
@@ -506,13 +450,14 @@ export function Overflow({ ctx }: PreviewProps): ReactElement {
   const [start, setStart] = useState('09:00');
   const [end, setEnd] = useState('08:30');
   const invalidEnd = Boolean(start && end && end <= start);
+  const groupIssue = Boolean(ctx.story?.controls.groupIssue && start && end && !invalidEnd);
   const [help, setHelp] = useState(false);
   return (
     <div className="ff-example-stack">
       <FormField
         {...ctx.subject}
         label="Invitation access code"
-        htmlFor={`${id}-code`}
+        controlId={`${id}-code`}
         labelAction={
           <Button
             size="s"
@@ -535,13 +480,8 @@ export function Overflow({ ctx }: PreviewProps): ReactElement {
             </p>
           </>
         }
-        descriptionId={`${id}-code-description`}
       >
-        <Input
-          id={`${id}-code`}
-          defaultValue="AC24-LIVE"
-          aria-describedby={`${id}-code-description`}
-        />
+        <Input id={`${id}-code`} defaultValue="AC24-LIVE" />
       </FormField>
       <TextField
         subject={ctx.subject}
@@ -593,6 +533,7 @@ export function Overflow({ ctx }: PreviewProps): ReactElement {
         orientation="horizontal"
         target="group"
         label="Review window"
+        feedbackIcon={groupIssue}
         labelAlign="start"
         labelId={`${id}-label`}
         description={
@@ -601,39 +542,47 @@ export function Overflow({ ctx }: PreviewProps): ReactElement {
             than the start.
           </bdi>
         }
-        descriptionId={`${id}-description`}
-        status={invalidEnd ? 'danger' : 'neutral'}
-        message={invalidEnd ? <bdi>Choose an end time later than {start}.</bdi> : undefined}
-        messageId={invalidEnd ? `${id}-message` : undefined}
-        feedbackIcon={false}
+        status={invalidEnd || groupIssue ? 'danger' : 'neutral'}
+        message={
+          groupIssue ? (
+            <bdi>This window overlaps another review.</bdi>
+          ) : invalidEnd ? (
+            <bdi>Choose an end time later than {start}.</bdi>
+          ) : undefined
+        }
       >
-        <div
-          className="ff-example-pair"
-          role="group"
-          aria-labelledby={`${id}-label`}
-          aria-describedby={`${id}-description`}
-        >
-          <FormField {...ctx.subject} label="Start" htmlFor={`${id}-start`}>
-            <input
-              className="ff-example-time"
-              id={`${id}-start`}
-              type="time"
-              value={start}
-              onChange={(e) => setStart(e.currentTarget.value)}
-            />
-          </FormField>
-          <FormField {...ctx.subject} label="End" htmlFor={`${id}-end`}>
-            <input
-              className="ff-example-time"
-              id={`${id}-end`}
-              type="time"
-              value={end}
-              onChange={(e) => setEnd(e.currentTarget.value)}
-              aria-invalid={invalidEnd || undefined}
-              aria-describedby={invalidEnd ? `${id}-message` : undefined}
-            />
-          </FormField>
-        </div>
+        <FieldBinding>
+          {(field) => (
+            <div
+              className="ff-example-pair"
+              role="group"
+              aria-labelledby={field?.labelId}
+              aria-describedby={joinIds(field?.descriptionId, groupIssue && field?.messageId)}
+              aria-invalid={groupIssue || undefined}
+            >
+              <FormField {...ctx.subject} label="Start" controlId={`${id}-start`}>
+                <input
+                  className="ff-example-time"
+                  id={`${id}-start`}
+                  type="time"
+                  value={start}
+                  onChange={(e) => setStart(e.currentTarget.value)}
+                />
+              </FormField>
+              <FormField {...ctx.subject} label="End" controlId={`${id}-end`}>
+                <input
+                  className="ff-example-time"
+                  id={`${id}-end`}
+                  type="time"
+                  value={end}
+                  onChange={(e) => setEnd(e.currentTarget.value)}
+                  aria-invalid={invalidEnd || undefined}
+                  aria-describedby={invalidEnd ? field?.messageId : undefined}
+                />
+              </FormField>
+            </div>
+          )}
+        </FieldBinding>
       </FormField>
       <div className="ff-example-narrow">
         <TextField
@@ -647,18 +596,16 @@ export function Overflow({ ctx }: PreviewProps): ReactElement {
       <FormField
         {...ctx.subject}
         label="Source identifier"
-        htmlFor={`${id}-long`}
+        controlId={`${id}-long`}
         description={
           <bdi>
             references/design-system/component-specifications/field-layout-and-validation-guidelines-without-any-short-name
           </bdi>
         }
-        descriptionId={`${id}-long-description`}
       >
         <Input
           id={`${id}-long`}
           defaultValue="references/design-system/component-specifications/form-field"
-          aria-describedby={`${id}-long-description`}
         />
       </FormField>
     </div>
@@ -694,9 +641,8 @@ export function Overlay({ ctx }: PreviewProps): ReactElement {
         label="Available to"
         labelId={`${id}-label`}
         description={<bdi>Choose who can discover shared updates.</bdi>}
-        descriptionId={`${id}-description`}
       >
-        <CheckboxGroup aria-labelledby={`${id}-label`} aria-describedby={`${id}-description`}>
+        <CheckboxGroup>
           <Checkbox label="Workspace members" defaultChecked />
           <Checkbox label="Invited guests" />
         </CheckboxGroup>

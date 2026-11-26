@@ -1,7 +1,7 @@
 import { useId, useRef, useState } from 'react';
 import { CopyIcon, DotsThreeIcon, FileTextIcon, PencilSimpleIcon } from '@phosphor-icons/react';
 import { Card, Flex, Icon, IconButton, Input, Link, Stack, Text } from '@docouno/unica';
-import { FormField } from '../../prototypes/form-field/form-field.proto.js';
+import { FormField } from '@docouno/unica';
 import { ContextMenu } from '../../prototypes/menu/context-menu.proto.js';
 import '@docouno/unica/styles.css';
 
@@ -105,7 +105,7 @@ export function ReleaseNotesActions({
             <Text data-document-excerpt="" size="body-s" color="secondary" dir="auto">
               Select part of this sentence and right-click it.
             </Text>
-            <FormField htmlFor={noteId} label="Revision note" size="s">
+            <FormField controlId={noteId} label="Revision note" size="s">
               <div data-native-context-region="">
                 <Input id={noteId} size="s" defaultValue="Fixes in this release" />
               </div>

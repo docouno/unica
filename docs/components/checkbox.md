@@ -2,6 +2,8 @@
 
 Use `Checkbox` for an independent selection, a consent flag, or an aggregate selection such as “Select all.” Use `CheckboxGroup` to label related options, manage their selected keys, or require a minimum selection.
 
+Use [FormField](form-field.md) to label a single checkbox or to share instructions and a validation message across a CheckboxGroup.
+
 ```tsx
 import { Checkbox, CheckboxGroup } from '@docouno/unica';
 import '@docouno/unica/styles.css';

@@ -4,6 +4,13 @@ import { composeEventHandlers } from '../../core/composeEventHandlers.js';
 import { cx, dataFlag } from '../../core/cx.js';
 import { warnOnce } from '../../core/devWarning.js';
 import { getDeepActiveElement, getDocumentBody, isElementNode } from '../../core/dom.js';
+import {
+  fieldControlId,
+  fieldDescription,
+  FormFieldContext,
+  idRefs,
+  useFormField,
+} from '../../core/forms/field-context.js';
 import { useNativeComposition } from '../../core/forms/useNativeComposition.js';
 import { mergeRefs } from '../../core/mergeRefs.js';
 import { focusElement } from '../../core/overlay/dom.js';
@@ -97,12 +104,12 @@ export function Select(props: SelectProps): JSX.Element {
     open,
     defaultOpen,
     onOpenChange,
-    disabled,
-    readOnly,
-    required,
-    size = 'm',
+    disabled: disabledProp,
+    readOnly: readOnlyProp,
+    required: requiredProp,
+    size: sizeProp,
     variant = 'default',
-    status = 'neutral',
+    status: statusProp,
     width = 'full',
     iconLeft,
     placeholder,
@@ -113,6 +120,13 @@ export function Select(props: SelectProps): JSX.Element {
     errorState,
     ...attributes
   } = props;
+  const scope = useFormField();
+  const field = scope?.target === 'control' ? scope : null;
+  const disabled = disabledProp ?? field?.disabled;
+  const readOnly = readOnlyProp ?? field?.readOnly;
+  const required = requiredProp ?? field?.required;
+  const size = sizeProp ?? field?.size ?? 'm';
+  const status = statusProp ?? field?.status ?? 'neutral';
   const native = omitSelectionProps(attributes);
   const id = useId();
   const parts = useMemo(() => readParts(children), [children]);
@@ -128,7 +142,7 @@ export function Select(props: SelectProps): JSX.Element {
   } = parts.content ?? {};
   const triggerProps = combineTrigger(native, triggerPart);
   const {
-    id: triggerId = id,
+    id: authoredId,
     'aria-label': label,
     'aria-labelledby': labelledBy,
     'aria-describedby': describedBy,
@@ -139,10 +153,11 @@ export function Select(props: SelectProps): JSX.Element {
     className: triggerClassName,
     ...buttonProps
   } = triggerProps;
+  const triggerId = fieldControlId(field, authoredId) ?? id;
   const fieldName =
     labelledBy?.trim() || label?.trim()
       ? { 'aria-labelledby': labelledBy, 'aria-label': label }
-      : { 'aria-labelledby': triggerId };
+      : { 'aria-labelledby': field?.labelId ?? triggerId };
   const panelName =
     panelLabelledBy?.trim() || panelLabel?.trim()
       ? { 'aria-labelledby': panelLabelledBy, 'aria-label': panelLabel }
@@ -171,7 +186,7 @@ export function Select(props: SelectProps): JSX.Element {
   );
   const hasError = errorState !== null && errorState !== undefined && errorState !== false;
   const selection = usePickerSelection({
-    props,
+    props: { ...props, disabled, readOnly, required },
     catalog,
     getFocusTarget: () => trigger.current,
     busy: loading,
@@ -300,6 +315,10 @@ export function Select(props: SelectProps): JSX.Element {
   ]
     .filter(Boolean)
     .join('. ');
+  const internalDescription = feedback ? feedbackId : undefined;
+  const description = field
+    ? fieldDescription(field, idRefs(describedBy, internalDescription), unavailable)
+    : [describedBy, internalDescription].filter(Boolean).join(' ') || undefined;
 
   return (
     <div
@@ -326,9 +345,7 @@ export function Select(props: SelectProps): JSX.Element {
         tabIndex={undefined}
         aria-label={label}
         aria-labelledby={labelledBy}
-        aria-describedby={
-          [describedBy, feedback ? feedbackId : undefined].filter(Boolean).join(' ') || undefined
-        }
+        aria-describedby={description}
         aria-haspopup={dialogMode ? 'dialog' : 'listbox'}
         aria-expanded={popover.open}
         aria-controls={popover.open ? (dialogMode ? panelId : listId) : undefined}
@@ -339,6 +356,9 @@ export function Select(props: SelectProps): JSX.Element {
         data-unica-select-size={size}
         data-unica-select-variant={variant}
         data-unica-select-status={currentStatus}
+        data-unica-form-field-glyph={
+          StatusGlyph && field?.status === status ? field.controlId : undefined
+        }
         data-unica-select-open={dataFlag(popover.open)}
         onPointerDown={(event) => {
           onPointerDown?.(event);
@@ -398,157 +418,159 @@ export function Select(props: SelectProps): JSX.Element {
           {feedback}
         </span>
       )}
-      <div
-        {...panelProps}
-        ref={panelRef}
-        id={panelId}
-        className={cx('unica-overlay-surface', 'unica-select-content', panelClassName)}
-        dangerouslySetInnerHTML={undefined}
-        role={dialogMode ? 'dialog' : 'presentation'}
-        popover="auto"
-        tabIndex={-1}
-        data-surface="overlay"
-        aria-modal={undefined}
-        {...(dialogMode ? panelName : undefined)}
-        onFocusCapture={(event) => {
-          if (isElementNode(event.target)) {
-            lastPanelFocus.current = event.target;
-          }
-          onPanelFocusCapture?.(event);
-        }}
-      >
-        {!pending && (hasSearch || displayMeta) && (
-          <div className="unica-select-header">
-            {displayMeta && (
-              <div className="unica-select-meta">
-                <span dir="auto">
-                  {readOnly
-                    ? messages.readOnly
-                    : selection.multiple
-                      ? messages.selectedCount(selection.selected.size)
-                      : messages.selectedValue}
-                </span>
-                {displayClear && (
-                  <Button
-                    className="unica-select-clear"
-                    variant="ghost"
-                    tone="neutral"
-                    size="s"
-                    disabled={!selected || busy || failed || unavailable}
-                    data-unica-select-empty={dataFlag(!selected)}
-                    onClick={(event) => {
-                      if (selection.clear(event.currentTarget)) {
-                        if (selection.multiple) {
-                          focusPanel(searchFocus ? 'direct' : popover.modality.current);
-                        } else {
-                          popover.close();
-                        }
-                      }
-                    }}
-                  >
-                    {messages.clearSelection}
-                  </Button>
-                )}
-              </div>
-            )}
-            {hasSearch && (
-              <Input
-                ref={search}
-                size={size}
-                dir="auto"
-                placeholder={messages.searchLabel}
-                aria-label={messages.searchLabel}
-                aria-controls={hasList ? listId : undefined}
-                aria-activedescendant={searchFocus ? navigation.activeId : undefined}
-                iconLeft={SearchGlyph}
-                disabled={failed || unavailable}
-                clearable
-                clearLabel={messages.clearSearch}
-                value={query}
-                onChange={(event) => setQuery(event.currentTarget.value)}
-                onCompositionStart={(event) => composition.start(event.currentTarget)}
-                onCompositionEnd={(event) => composition.finish(event.currentTarget, () => {})}
-                onKeyDown={handleSearchKey}
-                onFocus={() => setSearchFocus(true)}
-                onBlur={() => setSearchFocus(false)}
-              />
-            )}
-          </div>
-        )}
-        {busy && (
-          <div
-            className="unica-select-loading"
-            role="status"
-            data-unica-select-initial={dataFlag(pending)}
-          >
-            <Spinner size={size} tone="muted" />
-            <span dir="auto">{pending ? messages.loading : messages.updating}</span>
-          </div>
-        )}
-        {failed && (
-          <div
-            className="unica-select-recovery unica-scrollbar unica-scrollbar--compact"
-            ref={recovery}
-            tabIndex={-1}
-          >
-            {errorState}
-          </div>
-        )}
-        {hasList && (
-          <>
-            <div
-              {...fieldName}
-              aria-busy={busy || undefined}
-              aria-readonly={Boolean(readOnly || busy) || undefined}
-              aria-required={!readOnly && required ? true : undefined}
-              aria-multiselectable={selection.multiple || undefined}
-              aria-activedescendant={listFocus ? navigation.activeId : undefined}
-              ref={list}
-              id={listId}
-              tabIndex={hasSearch ? -1 : 0}
-              role="listbox"
-              className="unica-listbox unica-scrollbar unica-scrollbar--compact unica-select-list"
-              data-unica-listbox-external-focus={dataFlag(searchFocus)}
-              data-unica-listbox-empty-active={dataFlag(!navigation.activeId)}
-              onFocus={() => setListFocus(true)}
-              onBlur={() => setListFocus(false)}
-              onKeyDown={navigation.onKeyDown}
-            >
-              <PickerRows
-                entries={entries}
-                selection={selection}
-                navigation={navigation}
-                size={size}
-                keepFocus={searchFocus}
-                onChoose={(row, host) => {
-                  if (!searchFocus && list.current) {
-                    focusElement(list.current, list.current.ownerDocument);
-                  }
-                  navigation.activate(row.value);
-                  choose(row, host);
-                }}
-              />
-            </div>
-            {!hasOptions && (
-              <div className="unica-listbox-empty" role="status">
-                {query.trim() ? (
-                  <span className="unica-select-empty-copy" dir="auto">
-                    <strong>{messages.noMatches(query)}</strong>
-                    <span>{messages.noMatchesHint}</span>
+      <FormFieldContext value={null}>
+        <div
+          {...panelProps}
+          ref={panelRef}
+          id={panelId}
+          className={cx('unica-overlay-surface', 'unica-select-content', panelClassName)}
+          dangerouslySetInnerHTML={undefined}
+          role={dialogMode ? 'dialog' : 'presentation'}
+          popover="auto"
+          tabIndex={-1}
+          data-surface="overlay"
+          aria-modal={undefined}
+          {...(dialogMode ? panelName : undefined)}
+          onFocusCapture={(event) => {
+            if (isElementNode(event.target)) {
+              lastPanelFocus.current = event.target;
+            }
+            onPanelFocusCapture?.(event);
+          }}
+        >
+          {!pending && (hasSearch || displayMeta) && (
+            <div className="unica-select-header">
+              {displayMeta && (
+                <div className="unica-select-meta">
+                  <span dir="auto">
+                    {readOnly
+                      ? messages.readOnly
+                      : selection.multiple
+                        ? messages.selectedCount(selection.selected.size)
+                        : messages.selectedValue}
                   </span>
-                ) : (
-                  (emptyState ?? messages.empty)
-                )}
+                  {displayClear && (
+                    <Button
+                      className="unica-select-clear"
+                      variant="ghost"
+                      tone="neutral"
+                      size="s"
+                      disabled={!selected || busy || failed || unavailable}
+                      data-unica-select-empty={dataFlag(!selected)}
+                      onClick={(event) => {
+                        if (selection.clear(event.currentTarget)) {
+                          if (selection.multiple) {
+                            focusPanel(searchFocus ? 'direct' : popover.modality.current);
+                          } else {
+                            popover.close();
+                          }
+                        }
+                      }}
+                    >
+                      {messages.clearSelection}
+                    </Button>
+                  )}
+                </div>
+              )}
+              {hasSearch && (
+                <Input
+                  ref={search}
+                  size={size}
+                  dir="auto"
+                  placeholder={messages.searchLabel}
+                  aria-label={messages.searchLabel}
+                  aria-controls={hasList ? listId : undefined}
+                  aria-activedescendant={searchFocus ? navigation.activeId : undefined}
+                  iconLeft={SearchGlyph}
+                  disabled={failed || unavailable}
+                  clearable
+                  clearLabel={messages.clearSearch}
+                  value={query}
+                  onChange={(event) => setQuery(event.currentTarget.value)}
+                  onCompositionStart={(event) => composition.start(event.currentTarget)}
+                  onCompositionEnd={(event) => composition.finish(event.currentTarget, () => {})}
+                  onKeyDown={handleSearchKey}
+                  onFocus={() => setSearchFocus(true)}
+                  onBlur={() => setSearchFocus(false)}
+                />
+              )}
+            </div>
+          )}
+          {busy && (
+            <div
+              className="unica-select-loading"
+              role="status"
+              data-unica-select-initial={dataFlag(pending)}
+            >
+              <Spinner size={size} tone="muted" />
+              <span dir="auto">{pending ? messages.loading : messages.updating}</span>
+            </div>
+          )}
+          {failed && (
+            <div
+              className="unica-select-recovery unica-scrollbar unica-scrollbar--compact"
+              ref={recovery}
+              tabIndex={-1}
+            >
+              {errorState}
+            </div>
+          )}
+          {hasList && (
+            <>
+              <div
+                {...fieldName}
+                aria-busy={busy || undefined}
+                aria-readonly={Boolean(readOnly || busy) || undefined}
+                aria-required={!readOnly && required ? true : undefined}
+                aria-multiselectable={selection.multiple || undefined}
+                aria-activedescendant={listFocus ? navigation.activeId : undefined}
+                ref={list}
+                id={listId}
+                tabIndex={hasSearch ? -1 : 0}
+                role="listbox"
+                className="unica-listbox unica-scrollbar unica-scrollbar--compact unica-select-list"
+                data-unica-listbox-external-focus={dataFlag(searchFocus)}
+                data-unica-listbox-empty-active={dataFlag(!navigation.activeId)}
+                onFocus={() => setListFocus(true)}
+                onBlur={() => setListFocus(false)}
+                onKeyDown={navigation.onKeyDown}
+              >
+                <PickerRows
+                  entries={entries}
+                  selection={selection}
+                  navigation={navigation}
+                  size={size}
+                  keepFocus={searchFocus}
+                  onChoose={(row, host) => {
+                    if (!searchFocus && list.current) {
+                      focusElement(list.current, list.current.ownerDocument);
+                    }
+                    navigation.activate(row.value);
+                    choose(row, host);
+                  }}
+                />
               </div>
-            )}
-          </>
-        )}
-        {selection.multiple && (
-          <span className="unica-visually-hidden" aria-live="polite" aria-atomic="true">
-            {popover.open && messages.selectionAnnouncement(selection.labels)}
-          </span>
-        )}
-      </div>
+              {!hasOptions && (
+                <div className="unica-listbox-empty" role="status">
+                  {query.trim() ? (
+                    <span className="unica-select-empty-copy" dir="auto">
+                      <strong>{messages.noMatches(query)}</strong>
+                      <span>{messages.noMatchesHint}</span>
+                    </span>
+                  ) : (
+                    (emptyState ?? messages.empty)
+                  )}
+                </div>
+              )}
+            </>
+          )}
+          {selection.multiple && (
+            <span className="unica-visually-hidden" aria-live="polite" aria-atomic="true">
+              {popover.open && messages.selectionAnnouncement(selection.labels)}
+            </span>
+          )}
+        </div>
+      </FormFieldContext>
       {selection.carrier}
     </div>
   );

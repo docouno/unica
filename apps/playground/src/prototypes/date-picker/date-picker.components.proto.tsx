@@ -3,7 +3,7 @@ import type { HTMLAttributes, ReactElement, ReactNode, RefObject } from 'react';
 import { CalendarBlankIcon, XIcon } from '@phosphor-icons/react';
 import { Input } from '@docouno/unica';
 import type { ControlSize, FieldStatus, FieldVariant } from '@docouno/unica';
-import { FormField } from '../form-field/form-field.proto.js';
+import { FormField } from '@docouno/unica';
 import { Calendar } from './calendar.proto.js';
 import type { CalendarFeedback } from './calendar.proto.js';
 import {
@@ -303,18 +303,6 @@ export function DatePicker({
       : '';
   const fieldStatus = error ? 'danger' : status;
   const feedback = error || message;
-  const describedBy =
-    [
-      ...new Set(
-        [
-          props['aria-describedby'],
-          description ? `${id}-description` : undefined,
-          feedback ? `${id}-message` : undefined,
-        ]
-          .flatMap((part) => part?.trim().split(/\s+/) ?? [])
-          .filter(Boolean),
-      ),
-    ].join(' ') || undefined;
 
   return (
     <div
@@ -326,15 +314,14 @@ export function DatePicker({
     >
       <FormField
         size={size}
-        htmlFor={id}
+        controlId={id}
         label={label}
         required={required}
         description={description}
-        descriptionId={`${id}-description`}
         message={typeof feedback === 'string' && feedback ? <bdi>{feedback}</bdi> : feedback || ''}
-        messageId={`${id}-message`}
         status={disabled ? 'neutral' : fieldStatus}
-        feedbackIcon={false}
+        className={previewInline ? 'date-inline-field-proto' : undefined}
+        disabled={disabled}
       >
         <div
           {...subjectAttributes}
@@ -350,7 +337,7 @@ export function DatePicker({
             className="date-editor-proto"
             id={id}
             status={fieldStatus}
-            aria-describedby={describedBy}
+            aria-describedby={props['aria-describedby']}
             onCompositionStart={() => {
               composing.current = true;
             }}
@@ -605,18 +592,6 @@ export function DateRangePicker({
   };
   const fieldStatus = error ? 'danger' : status;
   const feedback = error || message;
-  const describedBy =
-    [
-      ...new Set(
-        [
-          props['aria-describedby'],
-          description ? `${id}-description` : undefined,
-          feedback ? `${id}-message` : undefined,
-        ]
-          .flatMap((part) => part?.trim().split(/\s+/) ?? [])
-          .filter(Boolean),
-      ),
-    ].join(' ') || undefined;
 
   return (
     <div
@@ -628,15 +603,14 @@ export function DateRangePicker({
     >
       <FormField
         size={size}
-        htmlFor={id}
+        controlId={id}
         label={label}
         required={required}
         description={description}
-        descriptionId={`${id}-description`}
         message={typeof feedback === 'string' && feedback ? <bdi>{feedback}</bdi> : feedback || ''}
-        messageId={`${id}-message`}
         status={disabled ? 'neutral' : fieldStatus}
-        feedbackIcon={false}
+        className={previewInline ? 'date-inline-field-proto' : undefined}
+        disabled={disabled}
       >
         <div
           {...subjectAttributes}
@@ -652,7 +626,7 @@ export function DateRangePicker({
             className="date-editor-proto"
             id={id}
             status={fieldStatus}
-            aria-describedby={describedBy}
+            aria-describedby={props['aria-describedby']}
             onCompositionStart={() => {
               composing.current = true;
             }}

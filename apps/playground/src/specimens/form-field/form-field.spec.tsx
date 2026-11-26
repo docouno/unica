@@ -1,5 +1,4 @@
-import { Input } from '@docouno/unica';
-import { FormField } from '../../prototypes/form-field/form-field.proto.js';
+import { Button, Checkbox, CheckboxGroup, FormField, Input, Stack } from '@docouno/unica';
 import {
   Anatomy,
   Availability,
@@ -8,7 +7,7 @@ import {
   LiveValidation,
   Overflow,
   Overlay,
-} from '../../prototypes/form-field/form-field.examples.js';
+} from './form-field.examples.js';
 import { size, status, disabled, required, choice, toggle, eventProp } from '../control-props.js';
 import { defineComponent } from '../../workbench/types.js';
 import { withOverlaySurface } from '../shared/with-overlay-surface.js';
@@ -16,11 +15,32 @@ import { previewProps, previewText } from '../preview-code.js';
 import { Groups } from './field-groups.js';
 import groupsSource from './field-groups.tsx?raw';
 
+const content = (description: string, initial = '') => ({
+  kind: 'string' as const,
+  group: 'Content',
+  publicType: 'ReactNode',
+  default: initial,
+  description,
+});
+
+const axes = {
+  size: 'm',
+  target: 'control',
+  status: 'neutral',
+  disabled: false,
+  readOnly: false,
+  required: false,
+  orientation: 'vertical',
+  labelAlign: 'control',
+  reserveMessage: false,
+  feedbackIcon: true,
+};
+
 export default defineComponent({
   id: 'form-field',
   title: 'FormField',
   category: 'Forms',
-  status: 'Proto',
+  status: 'UI',
   summary:
     'Connect a control or group to its label, persistent instructions, and validation feedback.',
   componentName: 'FormField',
@@ -30,13 +50,31 @@ export default defineComponent({
     status,
     disabled,
     required,
-    label: {
+    target: choice(
+      'Structure',
+      'Bind a single editor or a group of options.',
+      ['control', 'group'],
+      'control',
+    ),
+    readOnly: toggle('State', 'Keep the value available for inspection while locking edits.'),
+    label: content('Visible field name.', 'Workspace'),
+    optional: content('Supplementary text for a field that is optional.'),
+    description: content('Persistent instructions.', 'Visible to members.'),
+    message: content('Feedback associated with the current status.'),
+    statusLabel: content('Override the default feedback copy for a non-neutral status.'),
+    counter: content('An application-supplied count or limit.'),
+    labelAction: content('Button text for an independent action beside the label.'),
+    controlId: {
       kind: 'string',
-      group: 'Content',
-      publicType: 'ReactNode',
-      default: 'Workspace',
-      description:
-        'Visible name of the nested input. An empty label uses an accessible name in this example.',
+      group: 'Structure',
+      default: '',
+      description: 'Explicit ID for the native control.',
+    },
+    labelId: {
+      kind: 'string',
+      group: 'Structure',
+      default: '',
+      description: 'Explicit ID for the label or group heading.',
     },
     orientation: choice(
       'Geometry',
@@ -44,89 +82,175 @@ export default defineComponent({
       ['vertical', 'horizontal'],
       'vertical',
     ),
+    labelAlign: choice(
+      'Geometry',
+      'Align the first label line to a control, a text row, or the top of a group.',
+      ['control', 'text', 'start'],
+      'control',
+    ),
     reserveMessage: toggle(
       'Geometry',
       'Reserve one line for feedback so nearby controls stay in place.',
     ),
+    feedbackIcon: {
+      ...toggle('Content', 'Allow the feedback row to present a glyph.'),
+      default: true,
+    },
     onChange: {
       ...eventProp(
-        'Receives the nested Input change event. The event log displays its new value.',
+        'Logs edits from the nested Input or choices from the CheckboxGroup.',
         '(event) => console.log(event.currentTarget.value)',
         'ChangeEventHandler<HTMLInputElement>',
       ),
       demo: true,
     },
+    onLabelAction: {
+      ...eventProp(
+        'Logs activation of the example label action.',
+        '() => console.log("Label action")',
+        '() => void',
+      ),
+      demo: true,
+    },
   },
-  render: withOverlaySurface(({ values: { label, ...layout }, ctx }) => {
-    const showFeedback = layout.status !== 'neutral' && !layout.disabled;
+  constraints: [
+    {
+      kind: 'ignored',
+      when: { target: 'group' },
+      affects: ['controlId'],
+      reason: 'Each editor in a group keeps its own ID.',
+    },
+    {
+      kind: 'ignored',
+      when: { orientation: 'vertical' },
+      affects: ['labelAlign'],
+      reason: 'First-line alignment applies to horizontal layouts.',
+    },
+    {
+      kind: 'ignored',
+      when: { disabled: true },
+      affects: ['status', 'message', 'statusLabel', 'feedbackIcon'],
+      reason: 'Disabling the field suppresses its validation feedback.',
+    },
+    {
+      kind: 'precedence',
+      when: { required: true },
+      affects: ['optional'],
+      reason: 'The required marker takes priority over optional copy.',
+    },
+  ],
+  render: withOverlaySurface(({ values, ctx }) => {
+    const { label, labelAction, controlId, labelId, message, ...layout } = values;
+    const group = layout.target === 'group';
     const name = label.trim() ? label : '';
     return (
       <FormField
         {...layout}
         {...ctx.subject}
-        data-form-field-sample=""
+        data-form-field-sample={layout.orientation}
         label={name ? <bdi>{name}</bdi> : undefined}
-        htmlFor={ctx.id}
-        description={<bdi>Visible to members.</bdi>}
-        descriptionId={`${ctx.id}-description`}
-        messageId={showFeedback ? `${ctx.id}-message` : undefined}
-        feedbackIcon={false}
-        message={
-          layout.status === 'danger' ? (
-            <bdi>Use a name that identifies the workspace.</bdi>
+        labelAction={
+          labelAction ? (
+            <Button
+              size="s"
+              type="button"
+              variant="ghost"
+              onClick={() => ctx.action('onLabelAction')()}
+            >
+              {labelAction}
+            </Button>
           ) : undefined
         }
+        controlId={!group && controlId ? `${ctx.id}-${controlId}` : undefined}
+        labelId={labelId ? `${ctx.id}-${labelId}` : undefined}
+        message={
+          message ||
+          (layout.status === 'danger' && !layout.statusLabel
+            ? group
+              ? 'Choose at least one access method.'
+              : 'Use a name that identifies the workspace.'
+            : undefined)
+        }
       >
-        <Input
-          id={ctx.id}
-          name="workspace"
-          defaultValue="Folio"
-          size={layout.size}
-          disabled={layout.disabled}
-          required={layout.required}
-          status={layout.status}
-          aria-label={name ? undefined : 'Workspace'}
-          aria-describedby={`${ctx.id}-description${showFeedback ? ` ${ctx.id}-message` : ''}`}
-          onChange={(event) => ctx.action('onChange')(event.currentTarget.value)}
-        />
+        {group ? (
+          <CheckboxGroup
+            name="access"
+            aria-label={name ? undefined : 'Workspace access'}
+            onValueChange={(value) => ctx.action('onChange')(value)}
+          >
+            <Checkbox value="internal" label="Workspace members" />
+            <Checkbox value="external" label="Invited guests" />
+          </CheckboxGroup>
+        ) : (
+          <Input
+            name="workspace"
+            defaultValue="Folio"
+            aria-label={name ? undefined : 'Workspace'}
+            onChange={(event) => ctx.action('onChange')(event.currentTarget.value)}
+          />
+        )}
       </FormField>
     );
   }, 'border-box'),
-  code: ({ label, ...values }) => {
-    const field = previewProps(values, {
-      size: 'm',
-      status: 'neutral',
-      disabled: false,
-      required: false,
-      orientation: 'vertical',
-      reserveMessage: false,
-    });
-    const control = previewProps(
-      {
-        size: values.size,
-        status: values.status,
-        disabled: values.disabled,
-        required: values.required,
-      },
-      { size: 'm', status: 'neutral', disabled: false, required: false },
-    );
-    const message =
-      values.status === 'danger'
-        ? ' message={<bdi>Use a name that identifies the workspace.</bdi>}'
+  code: ({
+    label,
+    description,
+    optional,
+    message,
+    statusLabel,
+    counter,
+    labelAction,
+    controlId,
+    labelId,
+    ...values
+  }) => {
+    const group = values.target === 'group';
+    const fallback =
+      values.status === 'danger' && !statusLabel
+        ? group
+          ? 'Choose at least one access method.'
+          : 'Use a name that identifies the workspace.'
         : '';
-    const feedback = values.status !== 'neutral' && !values.disabled;
-    const name = label.trim() ? ` label={<bdi>${previewText(label)}</bdi>}` : '';
-    return `import { useId } from 'react';
-import { Input } from '@docouno/unica';
-import { FormField } from './prototypes/form-field/form-field.proto.js';
+    const field = previewProps(
+      {
+        ...values,
+        controlId: group ? '' : controlId,
+        labelId,
+        label: label.trim() ? label : '',
+        description,
+        optional,
+        message: message || fallback,
+        statusLabel,
+        counter,
+      },
+      {
+        ...axes,
+        controlId: '',
+        labelId: '',
+        label: '',
+        description: '',
+        optional: '',
+        message: '',
+        statusLabel: '',
+        counter: '',
+      },
+    );
+    const action = labelAction
+      ? ` labelAction={<Button size="s" type="button" variant="ghost" onClick={() => console.log("Label action")}>${previewText(labelAction)}</Button>}`
+      : '';
+    const editor = group
+      ? `<CheckboxGroup name="access"${label.trim() ? '' : ' aria-label="Workspace access"'}>
+        <Checkbox value="internal" label="Workspace members" />
+        <Checkbox value="external" label="Invited guests" />
+      </CheckboxGroup>`
+      : `<Input name="workspace" defaultValue="Folio"${label.trim() ? '' : ' aria-label="Workspace"'} />`;
+    return `import { ${labelAction ? 'Button, ' : ''}${group ? 'Checkbox, CheckboxGroup, FormField' : 'FormField, Input'} } from '@docouno/unica';
 import '@docouno/unica/styles.css';
 
 export function WorkspaceField() {
-  const id = useId();
-  const descriptionId = id + '-description';${feedback ? "\n  const messageId = id + '-message';" : ''}
   return (
-    <FormField htmlFor={id}${name}${field} description={<bdi>Visible to members.</bdi>} descriptionId={descriptionId}${feedback ? ' messageId={messageId}' : ''} feedbackIcon={false}${message}>
-      <Input id={id} name="workspace" defaultValue="Folio"${control}${name ? '' : ' aria-label="Workspace"'} aria-describedby={${feedback ? "descriptionId + ' ' + messageId" : 'descriptionId'}} onChange={(event) => console.log(event.currentTarget.value)} />
+    <FormField${field}${action}>
+      ${editor}
     </FormField>
   );
 }`;
@@ -199,8 +323,11 @@ export function WorkspaceField() {
       kind: 'content',
       mode: 'live',
       reset: true,
+      controls: {
+        groupIssue: { kind: 'boolean', label: 'Show overlapping review', default: false },
+      },
       caption:
-        'Open the long label action and follow the address guidelines. Edit either time boundary to check their order. Narrow fields stack their labels while a structured URL keeps its writing direction.',
+        'Open the label action and follow the address guidelines. Correct the end time, then toggle overlap to address the error to the group. Narrow labels stack while a URL keeps its writing direction.',
       render: withOverlaySurface(Overflow, 'border-box'),
     },
     {
@@ -219,12 +346,58 @@ export function WorkspaceField() {
   ],
   compositions: [
     {
+      id: 'delivery-access',
+      title: 'Require at least one delivery method',
+      mode: 'live',
+      reset: true,
+      caption:
+        'Submit with no selection to check the shared rule, then choose one option and try again.',
+      render: withOverlaySurface(
+        ({ ctx }) => (
+          <form {...ctx.form} onSubmit={(event) => event.preventDefault()}>
+            <Stack gap={12} align="start">
+              <FormField
+                {...ctx.subject}
+                target="group"
+                label="Send updates"
+                required
+                description="Choose one or both."
+              >
+                <CheckboxGroup name="delivery" requiredMessage="Choose a delivery method.">
+                  <Checkbox value="email" label="Email digest" />
+                  <Checkbox value="in-app" label="In-app notifications" />
+                </CheckboxGroup>
+              </FormField>
+              <Button type="submit">Save</Button>
+            </Stack>
+          </form>
+        ),
+        'border-box',
+      ),
+      code: `import { Checkbox, CheckboxGroup, FormField } from '@docouno/unica';
+import '@docouno/unica/styles.css';
+
+export function DeliverySettings() {
+  return (
+    <form>
+      <FormField target="group" label="Send updates" required description="Choose one or both.">
+        <CheckboxGroup name="delivery" requiredMessage="Choose a delivery method.">
+          <Checkbox value="email" label="Email digest" />
+          <Checkbox value="in-app" label="In-app notifications" />
+        </CheckboxGroup>
+      </FormField>
+      <button type="submit">Save</button>
+    </form>
+  );
+}`,
+    },
+    {
       id: 'groups',
       title: 'Label binary groups and choice cards',
       mode: 'live',
       reset: true,
       caption:
-        'Each heading names its group. Choose a delivery method to clear its error, change the default access with the arrow keys, and toggle notifications and searchable sources independently.',
+        'Choose a delivery method to clear its error, change default access with the arrow keys, and toggle notifications or searchable sources.',
       render: withOverlaySurface(
         ({ ctx }) => (
           <div className="ff-example-stack">
@@ -233,7 +406,7 @@ export function WorkspaceField() {
         ),
         'border-box',
       ),
-      code: groupsSource.replaceAll('../../prototypes/', './prototypes/'),
+      code: groupsSource,
     },
   ],
 });

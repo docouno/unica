@@ -1,15 +1,10 @@
 import { useMemo } from 'react';
 import type { JSX } from 'react';
+import { idRefs } from '../../core/forms/field-context.js';
 import { createScale } from './scale.js';
 import { SliderControl } from './SliderControl.js';
 import type { RangeSliderProps, RangeSliderValue } from './types.js';
 import './slider.css';
-
-function idRefs(first?: string, second?: string): string | undefined {
-  return (
-    Array.from(new Set(`${first ?? ''} ${second ?? ''}`.trim().split(/\s+/))).join(' ') || undefined
-  );
-}
 
 function snapshot(value: RangeSliderValue): RangeSliderValue {
   if (!Array.isArray(value) || value.length !== 2) {

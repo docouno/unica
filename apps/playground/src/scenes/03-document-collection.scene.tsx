@@ -657,6 +657,7 @@ export default defineScene({
     'context-menu',
     'date-picker',
     'date-range-picker',
+    'form-field',
     'icon',
     'indicator',
     'input',

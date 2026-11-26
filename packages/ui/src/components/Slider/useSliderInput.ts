@@ -2,6 +2,7 @@ import { useInsertionEffect, useRef, useState } from 'react';
 import type { KeyboardEvent, PointerEvent, RefObject } from 'react';
 import { flushSync } from 'react-dom';
 import { getComposedParentElement, isInertElement } from '../../core/dom.js';
+import { observeControlPath } from '../../core/forms/observeControlPath.js';
 import type { FormValueState } from '../../core/forms/useFormValue.js';
 import { subscribeFocusOrigin } from '../../core/focus-origin.js';
 import { useIsoLayoutEffect } from '../../core/useIsoLayoutEffect.js';
@@ -650,21 +651,7 @@ export function useSliderInput(
         first!.focus({ preventScroll: true });
       }
     }
-    const view = node.ownerDocument.defaultView;
-    const observer = view ? new view.MutationObserver(updateDisabled) : undefined;
-    for (
-      let ancestor = first.parentElement;
-      ancestor;
-      ancestor = getComposedParentElement(ancestor) as HTMLElement | null
-    ) {
-      if (ancestor.localName === 'fieldset') {
-        observer?.observe(ancestor, {
-          attributes: true,
-          attributeFilter: ['disabled'],
-          childList: true,
-        });
-      }
-    }
+    const stopObserving = observeControlPath(first, updateDisabled);
     const detachInputs = ([0, 1] as const).map((thumb) => {
       const input = inputs[thumb].current;
       if (!input) {
@@ -702,7 +689,7 @@ export function useSliderInput(
     resetRef.current = abort;
     return () => {
       abort();
-      observer?.disconnect();
+      stopObserving();
       first.removeEventListener('click', onClick);
       for (const detach of detachInputs) {
         detach?.();

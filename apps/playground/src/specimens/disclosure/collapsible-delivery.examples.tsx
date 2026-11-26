@@ -5,7 +5,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from '../../prototypes/disclosure/disclosure.proto.js';
-import { FormField } from '../../prototypes/form-field/form-field.proto.js';
+import { FormField } from '@docouno/unica';
 
 export function DeliveryDetails({ collapsibleProps = {} } = {}) {
   const replyId = useId();
@@ -22,7 +22,7 @@ export function DeliveryDetails({ collapsibleProps = {} } = {}) {
         </CollapsibleTrigger>
         <CollapsibleContent padded={false}>
           <Stack gap={8} style={{ paddingBlockStart: 'var(--space-12)', maxInlineSize: '23rem' }}>
-            <FormField htmlFor={replyId} label="Reply-to address" size="s">
+            <FormField controlId={replyId} label="Reply-to address" size="s">
               <Input
                 id={replyId}
                 type="email"

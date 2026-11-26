@@ -3,7 +3,7 @@ import type { ReactNode } from 'react';
 import { ListIcon, SquaresFourIcon, SunIcon, MoonIcon, DesktopIcon } from '@phosphor-icons/react';
 import { Button, Flex, Title, SegmentedControl, Stack, Text } from '@docouno/unica';
 import type { SegmentedControlOption } from '@docouno/unica';
-import { FormField } from '../../prototypes/form-field/form-field.proto.js';
+import { FormField } from '@docouno/unica';
 import type { PreviewProps } from '../../workbench/types.js';
 import { ExampleSurface } from '../shared/example-surface.js';
 import { periods, layouts, glyphLayouts } from './segmented-control.options.js';
@@ -245,10 +245,8 @@ export function FieldExample({ ctx }: PreviewProps) {
           labelId={`${id}-label`}
           required
           description={<bdi>How often should we send a digest?</bdi>}
-          descriptionId={`${id}-help`}
           status={error ? 'danger' : 'neutral'}
           message={error ? <bdi>Choose a delivery frequency.</bdi> : undefined}
-          messageId={error ? `${id}-error` : undefined}
         >
           <SegmentedControl
             {...ctx.subject}
@@ -257,7 +255,6 @@ export function FieldExample({ ctx }: PreviewProps) {
             required
             status={error ? 'danger' : 'neutral'}
             aria-labelledby={`${id}-label`}
-            aria-describedby={error ? `${id}-help ${id}-error` : `${id}-help`}
             onInvalid={() => report({ error: true })}
             onValueChange={() => report({})}
             items={frequencies}

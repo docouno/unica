@@ -44,15 +44,17 @@ export function TeamAssignment({ fieldProps = {}, surface = 'overlay' } = {}) {
         status={invalid ? 'danger' : 'neutral'}
         description={<bdi>This team receives incident notifications.</bdi>}
         message={invalid ? <bdi>Choose a team from the list before saving.</bdi> : undefined}
+        editorAction={
+          <Button type="submit" aria-label="Save assignment">
+            Save
+          </Button>
+        }
         onSelectionChange={(selection) => setTeamId(selection?.value ?? '')}
         onQueryChange={() => {
           setAttempted(false);
           setSaved('');
         }}
       />
-      <Button type="submit" aria-label="Save assignment" className="suggestion-save-proto">
-        Save
-      </Button>
       {saved && (
         <Text
           as="p"

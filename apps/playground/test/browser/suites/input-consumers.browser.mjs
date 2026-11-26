@@ -216,11 +216,27 @@ export default {
         { size: 's', height: 30, action: 28 },
         { size: 'l', height: 48, action: 44 },
       ]);
-      assert.equal(await numbers.locator('.ff-support').count(), 1);
-      assert.equal(await numbers.locator('.ff-feedback-slot').count(), 0);
-      const disabledFeedback = page.getByTestId('disabled-date').locator('.ff-feedback');
-      assert.equal(await disabledFeedback.getAttribute('data-status'), 'neutral');
-      assert.equal(await disabledFeedback.textContent(), 'Date entry is unavailable.');
+      const compact = numbers.getByRole('spinbutton', { name: 'Compact count' });
+      const touch = numbers.getByRole('spinbutton', { name: 'Touch count' });
+      assert.equal(await compact.getAttribute('aria-describedby'), null);
+      assert.equal(
+        await touch.evaluate(
+          (control) =>
+            document.getElementById(control.getAttribute('aria-describedby'))?.textContent,
+        ),
+        'Use whole numbers.',
+      );
+      const disabledDate = page.getByTestId('disabled-date');
+      assert.equal(await disabledDate.getByText('Date entry is unavailable.').isVisible(), true);
+      const disabledEditor = disabledDate.getByRole('textbox', { name: 'Disabled date' });
+      assert.equal(await disabledEditor.getAttribute('aria-invalid'), null);
+      assert.equal(
+        await disabledEditor.evaluate(
+          (control) =>
+            document.getElementById(control.getAttribute('aria-describedby'))?.textContent,
+        ),
+        'Date entry is unavailable.',
+      );
     },
   'Input Workbench presents native forms, time editing and native context menu boundaries': async ({
     page,
@@ -275,10 +291,29 @@ export default {
     assert.equal(await group.getAttribute('aria-invalid'), null);
     assert.equal(await start.getAttribute('aria-invalid'), null);
     assert.equal(await end.getAttribute('aria-invalid'), 'true');
+    const groupDescription = () =>
+      group.evaluate(
+        (node) =>
+          node
+            .getAttribute('aria-describedby')
+            ?.split(' ')
+            .map((id) => node.ownerDocument.getElementById(id)?.textContent.trim()) ?? [],
+      );
+    const [instructions] = await groupDescription();
+    assert.match(instructions, /^Use local time\./u);
     await start.fill('07:45');
     assert.equal(await start.inputValue(), '07:45');
     assert.equal(await end.inputValue(), '08:30');
     assert.equal(await end.getAttribute('aria-invalid'), null);
+    const overlap = page.getByRole('checkbox', { name: 'Show overlapping review' });
+    await overlap.check();
+    assert.equal(await group.getAttribute('aria-invalid'), 'true');
+    assert.deepEqual(await groupDescription(), [
+      instructions,
+      'This window overlaps another review.',
+    ]);
+    assert.equal(await end.getAttribute('aria-describedby'), null);
+    await overlap.uncheck();
     await start.fill('11:45');
     assert.equal(await end.getAttribute('aria-invalid'), 'true');
     assert.equal(
@@ -521,7 +556,10 @@ export default {
       const art = page.locator('.wb-artboard').first();
       const field = art.getByRole('spinbutton', { name: 'Seat quota' });
       await field.waitFor();
-      assert.ok(await field.evaluate((input) => input.closest('.ff-proto').clientWidth > 140));
+      const numberField = art.locator('.number-field-proto').filter({
+        has: page.getByRole('spinbutton', { name: 'Seat quota' }),
+      });
+      assert.ok(await numberField.evaluate((node) => node.clientWidth > 140));
       const increase = art.getByRole('button', { name: 'Increase value' });
       await field.fill('100');
       assert.equal(await increase.isDisabled(), true);

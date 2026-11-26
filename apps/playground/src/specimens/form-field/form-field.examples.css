@@ -1,8 +1,8 @@
 /* The horizontal sample must cross the field's 30rem container threshold. */
-td:has([data-form-field-sample][data-orientation='horizontal']) {
+td:has([data-form-field-sample='horizontal']) {
   min-inline-size: 36rem;
 }
-td:has([data-form-field-sample][data-orientation='vertical']) {
+td:has([data-form-field-sample='vertical']) {
   min-inline-size: 12rem;
 }
 [data-form-field-sample] {
@@ -29,6 +29,10 @@ td:has([data-form-field-sample][data-orientation='vertical']) {
 .ff-example-parts {
   display: grid;
   gap: 8px;
+}
+.ff-example-support {
+  display: grid;
+  gap: 4px;
 }
 .ff-example-fallbacks {
   display: grid;

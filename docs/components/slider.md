@@ -2,6 +2,8 @@
 
 Use [`Slider`](#single-value) to select one number and [`RangeSlider`](#two-bounds) to select the lower and upper bounds of an interval. Both use a linear decimal scale. They support pointer, keyboard, and native range input, with separate callbacks for a proposed edit and a completed action.
 
+Use [FormField](form-field.md) to label a single Slider through its native input or give a RangeSlider a shared heading and instructions.
+
 ```tsx
 import "@docouno/unica/styles.css";
 import { RangeSlider, Slider } from "@docouno/unica";

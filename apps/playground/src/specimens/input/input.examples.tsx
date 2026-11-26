@@ -8,7 +8,7 @@ import {
 } from '@phosphor-icons/react';
 import { Input, Text } from '@docouno/unica';
 import type { FieldStatus, InputProps } from '@docouno/unica';
-import { FormField } from '../../prototypes/form-field/form-field.proto.js';
+import { FormField } from '@docouno/unica';
 import type { PreviewProps, PreviewContext } from '../../workbench/types.js';
 import { useStoryAction } from '../../workbench/storyFrameState.js';
 import './input.examples.css';
@@ -46,7 +46,7 @@ export function InputRoles({ ctx }: PreviewProps): ReactElement {
     <div className="input-study-stack">
       <div className="input-study-grid">
         <Sample title="Default form field">
-          <FormField htmlFor={`${id}-name`} label="Collection name">
+          <FormField controlId={`${id}-name`} label="Collection name">
             <MeasuredInput subject={ctx.subject} id={`${id}-name`} defaultValue="Research notes" />
           </FormField>
         </Sample>
@@ -78,7 +78,7 @@ export function InputAnatomy({ ctx }: PreviewProps): ReactElement {
   const id = useId();
   return (
     <div className="input-study-grid">
-      <FormField htmlFor={`${id}-mail`} label="Work email">
+      <FormField controlId={`${id}-mail`} label="Work email">
         <MeasuredInput
           subject={ctx.subject}
           id={`${id}-mail`}
@@ -88,7 +88,7 @@ export function InputAnatomy({ ctx }: PreviewProps): ReactElement {
           defaultValue="team@example.com"
         />
       </FormField>
-      <FormField htmlFor={`${id}-ref`} label="Reference">
+      <FormField controlId={`${id}-ref`} label="Reference">
         <MeasuredInput
           subject={ctx.subject}
           id={`${id}-ref`}
@@ -97,15 +97,13 @@ export function InputAnatomy({ ctx }: PreviewProps): ReactElement {
         />
       </FormField>
       <FormField
-        htmlFor={`${id}-addr`}
+        controlId={`${id}-addr`}
         label="Public address"
-        descriptionId={`${id}-host`}
         description={<bdi>The address starts with https:// and ends in .example.</bdi>}
       >
         <MeasuredInput
           subject={ctx.subject}
           id={`${id}-addr`}
-          aria-describedby={`${id}-host`}
           iconLeft={LinkSimpleIcon}
           dir="ltr"
           prefix="https://"
@@ -115,12 +113,10 @@ export function InputAnatomy({ ctx }: PreviewProps): ReactElement {
         />
       </FormField>
       <FormField
-        htmlFor={`${id}-draft`}
+        controlId={`${id}-draft`}
         label="Reference file"
-        descriptionId={`${id}-extension`}
         description={<bdi>The filename ends in .md.</bdi>}
         status="warning"
-        messageId={`${id}-warning`}
         message={<bdi>The last check found a moved file.</bdi>}
         feedbackIcon={false}
       >
@@ -128,7 +124,6 @@ export function InputAnatomy({ ctx }: PreviewProps): ReactElement {
           subject={ctx.subject}
           id={`${id}-draft`}
           dir="ltr"
-          aria-describedby={`${id}-extension ${id}-warning`}
           iconRight={ArrowUpRightIcon}
           suffix=".md"
           defaultValue="release-notes"
@@ -146,7 +141,7 @@ export function InputInteraction({ ctx }: PreviewProps): ReactElement {
   return (
     <div className="input-study-stack">
       <div className="input-study-grid">
-        <FormField htmlFor={`${id}-default`} label="Search collections">
+        <FormField controlId={`${id}-default`} label="Search collections">
           <MeasuredInput
             subject={ctx.subject}
             id={`${id}-default`}
@@ -156,7 +151,7 @@ export function InputInteraction({ ctx }: PreviewProps): ReactElement {
             clearable
           />
         </FormField>
-        <FormField htmlFor={`${id}-ghost`} label="Collection name">
+        <FormField controlId={`${id}-ghost`} label="Collection name">
           <MeasuredInput
             subject={ctx.subject}
             id={`${id}-ghost`}
@@ -209,17 +204,15 @@ export function InputFeedback({ ctx }: PreviewProps): ReactElement {
             return (
               <FormField
                 key={variant}
-                htmlFor={fieldId}
+                controlId={fieldId}
                 label={variant === 'default' ? 'Workspace address' : 'Inline address'}
                 status={status}
                 message={<bdi>{messages[status]}</bdi>}
-                messageId={`${fieldId}-message`}
                 feedbackIcon={false}
               >
                 <MeasuredInput
                   subject={ctx.subject}
                   id={fieldId}
-                  aria-describedby={`${fieldId}-message`}
                   variant={variant}
                   status={status}
                   defaultValue="north-studio"
@@ -389,9 +382,8 @@ export function InputOverflow({ ctx }: PreviewProps): ReactElement {
   return (
     <div className="input-study-grid">
       <FormField
-        htmlFor={`${id}-affixes`}
+        controlId={`${id}-affixes`}
         label="Long affixes"
-        descriptionId={`${id}-hint`}
         description={
           <bdi>
             The archive adds https://archive.example/ before the name and /published/overview after
@@ -402,7 +394,6 @@ export function InputOverflow({ ctx }: PreviewProps): ReactElement {
         <MeasuredInput
           subject={ctx.subject}
           id={`${id}-affixes`}
-          aria-describedby={`${id}-hint`}
           dir="ltr"
           prefix="https://archive.example/"
           suffix="/published/overview"
@@ -411,15 +402,13 @@ export function InputOverflow({ ctx }: PreviewProps): ReactElement {
         />
       </FormField>
       <FormField
-        htmlFor={`${id}-url`}
+        controlId={`${id}-url`}
         label="Reference URL · LTR value"
-        descriptionId={`${id}-directions`}
         description={<bdi>Paste the full address of the reference.</bdi>}
       >
         <MeasuredInput
           subject={ctx.subject}
           id={`${id}-url`}
-          aria-describedby={`${id}-directions`}
           type="url"
           dir="ltr"
           defaultValue="https://example.com/research/collections/releases"
@@ -467,7 +456,7 @@ export function InputSurfaces({ ctx }: PreviewProps): ReactElement {
         defaultValue="Research notes"
         placeholder="Name this collection"
       />
-      <FormField htmlFor={id} label="Empty inline name">
+      <FormField controlId={id} label="Empty inline name">
         <MeasuredInput
           subject={ctx.subject}
           id={id}

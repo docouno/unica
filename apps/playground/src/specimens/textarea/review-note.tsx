@@ -1,5 +1,5 @@
-import { useId, useRef, useState } from 'react';
-import { Button, Flex, Stack, Text, Textarea, VisuallyHidden } from '@docouno/unica';
+import { useRef, useState } from 'react';
+import { Button, Flex, FormField, Stack, Text, Textarea, VisuallyHidden } from '@docouno/unica';
 import '@docouno/unica/styles.css';
 
 const opening = 'A little context helps the next person pick up where you left off.';
@@ -32,7 +32,6 @@ export function ReviewNote({
   label = 'Review note',
   busy = false,
 } = {}) {
-  const id = useId();
   const lastLoad = useRef(0);
   const announcementRevision = useRef(0);
   const lastSave = useRef(0);
@@ -120,24 +119,29 @@ export function ReviewNote({
       }}
     >
       <Stack gap={12}>
-        <Stack gap={8}>
-          <Text as="label" htmlFor={id} size="body-s" weight="medium">
-            {label}
-            <Text as="span" color="danger" aria-hidden="true">
-              {' '}
-              *
+        <FormField
+          label={label}
+          required
+          status={status}
+          description={
+            <bdi>
+              Save up to 160 characters. You can paste a longer draft and shorten it before saving.
+            </bdi>
+          }
+          message={<bdi>{hint}</bdi>}
+          counter={
+            <Text size="caption-l" color={invalid ? 'danger' : 'secondary'}>
+              <bdi>{count} / 160 characters</bdi>
             </Text>
-          </Text>
+          }
+        >
           <Textarea
             {...fieldProps}
             dir="auto"
-            id={id}
             name="note"
             autosize
             minRows={3}
             maxRows={6}
-            required
-            aria-describedby={[id + '-help', id + '-message', id + '-count'].join(' ')}
             ref={(field) => {
               if (field && lastLoad.current !== loadedDraft.sequence) {
                 lastLoad.current = loadedDraft.sequence;
@@ -154,31 +158,13 @@ export function ReviewNote({
               event.currentTarget.focus();
             }}
             defaultValue={opening}
-            status={status}
             onInput={(event) => {
               const field = event.currentTarget;
               field.setCustomValidity(inspectNote(field.value).error);
               editDraft(field.value);
             }}
           />
-          <Text id={id + '-help'} size="caption-l" color="secondary">
-            <bdi>
-              Save up to 160 characters. You can paste a longer draft and shorten it before saving.
-            </bdi>
-          </Text>
-          <Flex wrap="wrap" align="baseline" justify="space-between" gap={8}>
-            <Text
-              id={id + '-message'}
-              size="caption-l"
-              color={status === 'neutral' ? 'secondary' : status}
-            >
-              <bdi>{hint}</bdi>
-            </Text>
-            <Text id={id + '-count'} size="caption-l" color={invalid ? 'danger' : 'secondary'}>
-              <bdi>{count} / 160 characters</bdi>
-            </Text>
-          </Flex>
-        </Stack>
+        </FormField>
         <Flex gap={8} wrap="wrap">
           <Button
             type="button"

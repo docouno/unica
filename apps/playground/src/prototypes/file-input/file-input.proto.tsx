@@ -1,3 +1,5 @@
+import { FieldBinding } from '../../field-binding.js';
+import { fieldSupport } from '../../field-support.js';
 import { CloseGlyph, FileGlyph, fieldStatusGlyphs } from '../control-glyphs.js';
 import { useEffect, useId, useRef, useState } from 'react';
 import type {
@@ -9,7 +11,7 @@ import type {
 } from 'react';
 import { Icon, Progress, Spinner } from '@docouno/unica';
 import { Button, IconButton } from '@docouno/unica';
-import { FormField } from '../form-field/form-field.proto.js';
+import { FormField } from '@docouno/unica';
 import { useControlFocus } from '../control-focus.js';
 import type { ControlSize, FieldStatus, FieldVariant } from '@docouno/unica';
 import { formatFileSize } from './file-input.utils.js';
@@ -103,20 +105,6 @@ export function FileInput({
   const labelId = `${inputId}-label`;
   const actionId = `${inputId}-action`;
   const selectionId = `${inputId}-selection`;
-  const fieldName =
-    props['aria-labelledby'] ?? (label && !props['aria-label'] ? labelId : undefined);
-  const describedBy =
-    [
-      props['aria-describedby'],
-      isRequired && `${inputId}-required`,
-      (currentName || readOnly) && selectionId,
-      busy && `${inputId}-checking`,
-      readOnly && `${inputId}-readonly`,
-      description && `${triggerId}-description`,
-      feedback && `${triggerId}-message`,
-    ]
-      .filter(Boolean)
-      .join(' ') || undefined;
   useEffect(() => {
     const input = focusScope.current?.querySelector('input');
     if (!input || !props.name || fileName !== undefined) {
@@ -159,169 +147,192 @@ export function FileInput({
   }
   return (
     <FormField
-      label={label && <span id={labelId}>{label}</span>}
+      label={label}
+      labelId={labelId}
+      target={readOnly ? 'group' : 'control'}
+      size={size}
+      disabled={disabled}
       description={description}
       message={feedback ?? ''}
       status={effectiveStatus}
       required={isRequired}
-      htmlFor={triggerId}
-      descriptionId={description ? `${triggerId}-description` : undefined}
-      messageId={feedback ? `${triggerId}-message` : undefined}
+      controlId={triggerId}
       hidden={hidden}
     >
-      <span
-        ref={focusScope}
-        data-preview-focus-scope=""
-        data-native-context-region=""
-        data-wb-subject={subject}
-        className={`file-input-proto ${className}`}
-        style={style}
-        data-size={size}
-        data-readonly={readOnly || undefined}
-        data-disabled={disabled || undefined}
-        data-dragging={activeDrop || undefined}
-        tabIndex={readOnly && !disabled ? 0 : undefined}
-        role={readOnly ? 'group' : undefined}
-        aria-labelledby={readOnly ? fieldName : undefined}
-        aria-label={readOnly && !fieldName ? (props['aria-label'] ?? 'File attachment') : undefined}
-        aria-describedby={readOnly ? describedBy : undefined}
-        onDragOver={(event) => {
-          if (isFileDrag(event)) {
-            event.preventDefault();
-            event.dataTransfer.dropEffect = blocked ? 'none' : 'copy';
-            if (!blocked) {
-              setDragging(true);
-            }
-          }
-        }}
-        onDragLeave={(event) => {
-          if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
-            setDragging(false);
-          }
-        }}
-        onDrop={(event) => {
-          if (isFileDrag(event)) {
-            event.preventDefault();
-            setDragging(false);
-            const files = event.dataTransfer.files;
-            if (blocked || !files.length) {
-              return;
-            }
-            const input = event.currentTarget.querySelector('input');
-            if (fileName === undefined && input?.name) {
-              if (!multiple && files.length > 1) {
-                setRejectedDrops((count) => count + 1);
-                return;
+      <FieldBinding>
+        {(field) => {
+          const fieldName =
+            props['aria-labelledby'] ?? (props['aria-label'] ? undefined : field?.labelId);
+          const describedBy = fieldSupport(
+            field,
+            disabled,
+            props['aria-describedby'],
+            isRequired && `${inputId}-required`,
+            Boolean(currentName || readOnly) && selectionId,
+            busy && `${inputId}-checking`,
+            Boolean(readOnly) && `${inputId}-readonly`,
+          );
+          return (
+            <span
+              ref={focusScope}
+              data-preview-focus-scope=""
+              data-native-context-region=""
+              data-wb-subject={subject}
+              className={`file-input-proto ${className}`}
+              style={style}
+              data-size={size}
+              data-readonly={readOnly || undefined}
+              data-disabled={disabled || undefined}
+              data-dragging={activeDrop || undefined}
+              tabIndex={readOnly && !disabled ? 0 : undefined}
+              role={readOnly ? 'group' : undefined}
+              aria-labelledby={readOnly ? fieldName : undefined}
+              aria-label={
+                readOnly && !fieldName ? (props['aria-label'] ?? 'File attachment') : undefined
               }
-              input.files = files;
-            }
-            receive(Array.from(files));
-          }
-        }}
-      >
-        {!readOnly && (
-          <Button
-            ref={trigger}
-            id={triggerId}
-            className="file-input-picker-proto"
-            size={size}
-            variant={variant === 'ghost' ? 'ghost' : 'secondary'}
-            tone="neutral"
-            disabled={disabled}
-            loading={busy}
-            aria-labelledby={fieldName ? `${actionId} ${fieldName}` : undefined}
-            aria-label={
-              fieldName ? undefined : [chooseLabel, props['aria-label']].filter(Boolean).join(' · ')
-            }
-            aria-describedby={describedBy}
-            aria-invalid={effectiveStatus === 'danger' || undefined}
-            onClick={() => focusScope.current?.querySelector('input')?.click()}
-          >
-            <span className="file-input-prompt-proto">
-              <span id={actionId} className="file-input-action-proto">
-                {chooseLabel}
-              </span>
-              {activeDrop && (
-                <span aria-hidden="true">{multiple ? 'Drop files' : 'Drop file'}</span>
+              aria-describedby={readOnly ? describedBy : undefined}
+              onDragOver={(event) => {
+                if (isFileDrag(event)) {
+                  event.preventDefault();
+                  event.dataTransfer.dropEffect = blocked ? 'none' : 'copy';
+                  if (!blocked) {
+                    setDragging(true);
+                  }
+                }
+              }}
+              onDragLeave={(event) => {
+                if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
+                  setDragging(false);
+                }
+              }}
+              onDrop={(event) => {
+                if (isFileDrag(event)) {
+                  event.preventDefault();
+                  setDragging(false);
+                  const files = event.dataTransfer.files;
+                  if (blocked || !files.length) {
+                    return;
+                  }
+                  const input = event.currentTarget.querySelector('input');
+                  if (fileName === undefined && input?.name) {
+                    if (!multiple && files.length > 1) {
+                      setRejectedDrops((count) => count + 1);
+                      return;
+                    }
+                    input.files = files;
+                  }
+                  receive(Array.from(files));
+                }
+              }}
+            >
+              {!readOnly && (
+                <Button
+                  ref={trigger}
+                  id={triggerId}
+                  className="file-input-picker-proto"
+                  size={size}
+                  variant={variant === 'ghost' ? 'ghost' : 'secondary'}
+                  tone="neutral"
+                  disabled={disabled}
+                  loading={busy}
+                  aria-labelledby={fieldName ? `${actionId} ${fieldName}` : undefined}
+                  aria-label={
+                    fieldName
+                      ? undefined
+                      : [chooseLabel, props['aria-label']].filter(Boolean).join(' · ')
+                  }
+                  aria-describedby={describedBy}
+                  aria-invalid={effectiveStatus === 'danger' || undefined}
+                  onClick={() => focusScope.current?.querySelector('input')?.click()}
+                >
+                  <span className="file-input-prompt-proto">
+                    <span id={actionId} className="file-input-action-proto">
+                      {chooseLabel}
+                    </span>
+                    {activeDrop && (
+                      <span aria-hidden="true">{multiple ? 'Drop files' : 'Drop file'}</span>
+                    )}
+                  </span>
+                </Button>
               )}
-            </span>
-          </Button>
-        )}
-        {(currentName || readOnly) && (
-          <span className="file-input-selection-proto">
-            <span id={selectionId} className="file-input-copy-proto">
-              <bdi className="file-input-name-proto">{currentName || placeholder}</bdi>
-              {currentName && detail && (
-                <span className="file-input-detail-proto" dir="auto">
-                  {detail}
+              {(currentName || readOnly) && (
+                <span className="file-input-selection-proto">
+                  <span id={selectionId} className="file-input-copy-proto">
+                    <bdi className="file-input-name-proto">{currentName || placeholder}</bdi>
+                    {currentName && detail && (
+                      <span className="file-input-detail-proto" dir="auto">
+                        {detail}
+                      </span>
+                    )}
+                  </span>
+                  {!multiple && clearable && !readOnly && !disabled && (
+                    <IconButton
+                      className="file-input-clear-proto"
+                      icon={CloseGlyph}
+                      size="s"
+                      variant="ghost"
+                      aria-label={`Remove ${currentName}`}
+                      disabled={busy}
+                      onClick={() => {
+                        setLocalName('');
+                        setLocalDetail('');
+                        setRejectedDrops(0);
+                        const native = focusScope.current?.querySelector('input');
+                        if (native) {
+                          native.value = '';
+                        }
+                        onClear?.();
+                        onFilesChange?.([]);
+                        trigger.current?.focus();
+                      }}
+                    />
+                  )}
                 </span>
               )}
-            </span>
-            {!multiple && clearable && !readOnly && !disabled && (
-              <IconButton
-                className="file-input-clear-proto"
-                icon={CloseGlyph}
-                size="s"
-                variant="ghost"
-                aria-label={`Remove ${currentName}`}
-                disabled={busy}
-                onClick={() => {
-                  setLocalName('');
-                  setLocalDetail('');
-                  setRejectedDrops(0);
-                  const native = focusScope.current?.querySelector('input');
-                  if (native) {
-                    native.value = '';
+              {busy && (
+                <span id={`${inputId}-checking`} className="file-input-note-proto">
+                  Checking…
+                </span>
+              )}
+              {readOnly && (
+                <span id={`${inputId}-readonly`} className="file-input-note-proto">
+                  Read only
+                </span>
+              )}
+              {isRequired && (
+                <span id={`${inputId}-required`} hidden>
+                  Required
+                </span>
+              )}
+              <input
+                {...props}
+                id={inputId}
+                type="file"
+                multiple={multiple}
+                hidden
+                tabIndex={-1}
+                aria-hidden="true"
+                disabled={disabled || readOnly}
+                required={isRequired}
+                onClick={(event) => {
+                  if (blocked) {
+                    event.preventDefault();
                   }
-                  onClear?.();
-                  onFilesChange?.([]);
-                  trigger.current?.focus();
+                  props.onClick?.(event);
+                }}
+                onChange={(event) => {
+                  receive(Array.from(event.currentTarget.files ?? []));
+                  onChange?.(event);
+                  // Application-owned intake can accept the same disk file on a later attempt.
+                  if (fileName !== undefined && !event.currentTarget.name) {
+                    event.currentTarget.value = '';
+                  }
                 }}
               />
-            )}
-          </span>
-        )}
-        {busy && (
-          <span id={`${inputId}-checking`} className="file-input-note-proto">
-            Checking…
-          </span>
-        )}
-        {readOnly && (
-          <span id={`${inputId}-readonly`} className="file-input-note-proto">
-            Read only
-          </span>
-        )}
-        {isRequired && (
-          <span id={`${inputId}-required`} hidden>
-            Required
-          </span>
-        )}
-        <input
-          {...props}
-          id={inputId}
-          type="file"
-          multiple={multiple}
-          hidden
-          tabIndex={-1}
-          aria-hidden="true"
-          disabled={disabled || readOnly}
-          required={isRequired}
-          onClick={(event) => {
-            if (blocked) {
-              event.preventDefault();
-            }
-            props.onClick?.(event);
-          }}
-          onChange={(event) => {
-            receive(Array.from(event.currentTarget.files ?? []));
-            onChange?.(event);
-            // Application-owned intake can accept the same disk file on a later attempt.
-            if (fileName !== undefined && !event.currentTarget.name) {
-              event.currentTarget.value = '';
-            }
-          }}
-        />
-      </span>
+            </span>
+          );
+        }}
+      </FieldBinding>
     </FormField>
   );
 }

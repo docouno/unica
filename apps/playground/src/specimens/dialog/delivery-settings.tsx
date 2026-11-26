@@ -4,6 +4,7 @@ import {
   Button,
   CheckboxCard,
   Divider,
+  FormField,
   Input,
   Select,
   Stack,
@@ -11,7 +12,6 @@ import {
   Textarea,
   Title,
 } from '@docouno/unica';
-import { FormField } from '../../prototypes/form-field/form-field.proto.js';
 import { DialogStudy } from '../../prototypes/dialog/dialog.examples.js';
 import {
   Drawer,
@@ -133,7 +133,7 @@ export function DeliverySettings({
                 setOpen(false);
               }}
             >
-              <FormField htmlFor={`${formId}-schedule`} label="Delivery schedule">
+              <FormField controlId={`${formId}-schedule`} label="Delivery schedule">
                 <Select
                   id={`${formId}-schedule`}
                   name="schedule"
@@ -146,7 +146,7 @@ export function DeliverySettings({
                   }}
                 />
               </FormField>
-              <FormField htmlFor={`${formId}-email`} label="Send to" required>
+              <FormField controlId={`${formId}-email`} label="Send to" required>
                 <Input
                   id={`${formId}-email`}
                   ref={emailRef}
@@ -190,7 +190,7 @@ export function DeliverySettings({
                     <Title as="h3" size="body-m" weight="semibold">
                       Additional instructions
                     </Title>
-                    <FormField label="Digest note" htmlFor={noteId}>
+                    <FormField label="Digest note" controlId={noteId}>
                       <Textarea
                         id={noteId}
                         name="note"

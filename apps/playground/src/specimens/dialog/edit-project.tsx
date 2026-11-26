@@ -12,7 +12,7 @@ import {
   VisuallyHidden,
   CheckboxCard,
 } from '@docouno/unica';
-import { FormField } from '../../prototypes/form-field/form-field.proto.js';
+import { FormField } from '@docouno/unica';
 import { useId, useRef, useState } from 'react';
 import type { ReactElement } from 'react';
 import type { PreviewProps } from '../../workbench/types.js';
@@ -178,14 +178,13 @@ export function EditProject({
               )}
               <Stack gap={12}>
                 <FormField
-                  htmlFor={`${formId}-project`}
+                  controlId={`${formId}-project`}
                   label="Project name"
                   required
                   status={status === 'invalid' ? 'danger' : 'neutral'}
                   message={
                     status === 'invalid' ? <bdi>A project already uses this name.</bdi> : undefined
                   }
-                  messageId={`${formId}-project-message`}
                   feedbackIcon={false}
                 >
                   <Input
@@ -202,12 +201,9 @@ export function EditProject({
                     }}
                     required
                     status={status === 'invalid' ? 'danger' : undefined}
-                    aria-describedby={
-                      status === 'invalid' ? `${formId}-project-message` : undefined
-                    }
                   />
                 </FormField>
-                <FormField label="Description" htmlFor={descriptionId}>
+                <FormField label="Description" controlId={descriptionId}>
                   <Textarea
                     id={descriptionId}
                     name="description"
@@ -222,7 +218,7 @@ export function EditProject({
               </Stack>
               {!guarded && (
                 <div className="dialog-study-fields">
-                  <FormField htmlFor={`${formId}-owner`} label="Owner">
+                  <FormField controlId={`${formId}-owner`} label="Owner">
                     <Input
                       id={`${formId}-owner`}
                       name="owner"
@@ -231,9 +227,8 @@ export function EditProject({
                       onChange={(event) => setDraft({ ...draft, owner: event.currentTarget.value })}
                     />
                   </FormField>
-                  <FormField htmlFor={`${formId}-access`} label="Default access">
+                  <FormField controlId={`${formId}-access`} label="Default access">
                     <Select
-                      id={`${formId}-access`}
                       name="access"
                       options={roles}
                       value={draft.access}
@@ -272,7 +267,7 @@ export function EditProject({
                     <Title as="h3" size="body-m" weight="semibold">
                       Review
                     </Title>
-                    <FormField htmlFor={`${formId}-review-owner`} label="Review owner">
+                    <FormField controlId={`${formId}-review-owner`} label="Review owner">
                       <Input
                         id={`${formId}-review-owner`}
                         name="reviewOwner"
@@ -283,7 +278,7 @@ export function EditProject({
                         }
                       />
                     </FormField>
-                    <FormField label="Review instructions" htmlFor={instructionsId}>
+                    <FormField label="Review instructions" controlId={instructionsId}>
                       <Textarea
                         id={instructionsId}
                         rows={3}
