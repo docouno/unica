@@ -119,7 +119,7 @@
 .table-proto[data-striped] > tbody > tr:where(:nth-child(even of :not([hidden]))) {
   background: color-mix(in srgb, var(--fg-primary) 3.5%, transparent);
 }
-.table-proto > tbody > tr[data-context-open='point']:not([data-selected]) {
+.table-proto > tbody > tr[data-unica-context-menu-anchor='point']:not([data-selected]) {
   background: color-mix(in srgb, var(--fg-primary) 7%, transparent);
 }
 .table-proto > tbody > tr[data-selected] {
@@ -248,7 +248,7 @@
     background: Canvas;
   }
   .table-proto > tbody > tr[data-selected],
-  .table-proto > tbody > tr[data-context-open='point'] {
+  .table-proto > tbody > tr[data-unica-context-menu-anchor='point'] {
     outline: 1px solid Highlight;
     outline-offset: -1px;
   }

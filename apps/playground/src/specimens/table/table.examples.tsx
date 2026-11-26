@@ -7,6 +7,8 @@ import {
   Button,
   Card,
   Checkbox,
+  ContextMenu,
+  ContextMenuTrigger,
   Empty,
   EmptyDescription,
   EmptyMedia,
@@ -14,6 +16,10 @@ import {
   Flex,
   IconButton,
   Input,
+  Menu,
+  MenuContent,
+  MenuItem,
+  MenuTrigger,
   Select,
   SelectContent,
   SelectTrigger,
@@ -42,8 +48,6 @@ import {
   DrawerTitle,
   DrawerTrigger,
 } from '../../prototypes/dialog/dialog.proto.js';
-import { ContextMenu } from '../../prototypes/menu/context-menu.proto.js';
-import { Menu } from '../../prototypes/menu/menu.live.js';
 import {
   Table,
   TableBody,
@@ -147,41 +151,33 @@ function RouteRow({
         </Select>
       </TableCell>
       <TableCell control="action" align="center">
-        <Menu
-          label={`Actions for ${route.id}`}
-          align="end"
-          size="s"
-          items={[
-            {
-              id: 'copy',
-              label: 'Copy path',
-              icon: CopyIcon,
-              disabled: path.length === 0,
-              run: () => onCopy(path),
-            },
-            {
-              id: 'reset',
-              label: 'Restore defaults',
-              icon: ArrowCounterClockwiseIcon,
-              disabled: route.locked || (path === route.path && policy === route.policy),
-              run: () => {
-                setPath(route.path);
-                setPolicy(route.policy);
-                onNotice(`Defaults restored for ${route.id}.`);
-              },
-            },
-          ]}
-          trigger={(props) => (
+        <Menu size="s">
+          <MenuTrigger asChild>
             <IconButton
-              {...props}
               className="table-cell-action-proto"
               aria-label={`Actions for ${route.id}`}
               icon={DotsThreeIcon}
               size={size}
               variant="ghost"
             />
-          )}
-        />
+          </MenuTrigger>
+          <MenuContent align="end">
+            <MenuItem icon={CopyIcon} disabled={path.length === 0} onClick={() => onCopy(path)}>
+              Copy path
+            </MenuItem>
+            <MenuItem
+              icon={ArrowCounterClockwiseIcon}
+              disabled={route.locked || (path === route.path && policy === route.policy)}
+              onClick={() => {
+                setPath(route.path);
+                setPolicy(route.policy);
+                onNotice(`Defaults restored for ${route.id}.`);
+              }}
+            >
+              Restore defaults
+            </MenuItem>
+          </MenuContent>
+        </Menu>
       </TableCell>
     </TableRow>
   );
@@ -346,42 +342,9 @@ export function BuildQueue({
               const isPinned = pinned.includes(build.name);
               const isSelected = selected.includes(build.name);
               return (
-                <ContextMenu<HTMLTableRowElement>
-                  key={build.name}
-                  label={`${build.name} actions`}
-                  items={[
-                    {
-                      id: 'pin',
-                      label: isPinned ? 'Unpin build' : 'Pin build',
-                      icon: PushPinIcon,
-                      run: () => {
-                        setPinned((current) =>
-                          isPinned
-                            ? current.filter((name) => name !== build.name)
-                            : [...current, build.name],
-                        );
-                        report(`${build.name} ${isPinned ? 'unpinned' : 'pinned'}.`);
-                      },
-                    },
-                    {
-                      id: 'copy',
-                      label: 'Copy version',
-                      icon: CopyIcon,
-                      run: () => copy(build.version),
-                    },
-                  ]}
-                  trigger={(props) => (
-                    <IconButton
-                      {...props}
-                      className="table-cell-action-proto"
-                      aria-label={`${build.name} actions`}
-                      icon={DotsThreeIcon}
-                      size="m"
-                      variant="ghost"
-                    />
-                  )}
-                  target={(bindings, trigger, panel) => (
-                    <TableRow {...bindings} selected={isSelected}>
+                <ContextMenu key={build.name}>
+                  <ContextMenuTrigger>
+                    <TableRow selected={isSelected}>
                       <TableCell align="center" className="table-example-choice">
                         <Checkbox
                           size="s"
@@ -424,12 +387,37 @@ export function BuildQueue({
                         <bdi>{build.duration.toFixed(1)}</bdi>
                       </TableCell>
                       <TableCell align="center" control="action" className="table-example-actions">
-                        {trigger}
-                        {panel}
+                        <MenuTrigger asChild>
+                          <IconButton
+                            className="table-cell-action-proto"
+                            aria-label={`${build.name} actions`}
+                            icon={DotsThreeIcon}
+                            size="m"
+                            variant="ghost"
+                          />
+                        </MenuTrigger>
+                        <MenuContent>
+                          <MenuItem
+                            icon={PushPinIcon}
+                            onClick={() => {
+                              setPinned((current) =>
+                                isPinned
+                                  ? current.filter((name) => name !== build.name)
+                                  : [...current, build.name],
+                              );
+                              report(`${build.name} ${isPinned ? 'unpinned' : 'pinned'}.`);
+                            }}
+                          >
+                            {isPinned ? 'Unpin build' : 'Pin build'}
+                          </MenuItem>
+                          <MenuItem icon={CopyIcon} onClick={() => copy(build.version)}>
+                            Copy version
+                          </MenuItem>
+                        </MenuContent>
                       </TableCell>
                     </TableRow>
-                  )}
-                />
+                  </ContextMenuTrigger>
+                </ContextMenu>
               );
             })}
           </TableBody>

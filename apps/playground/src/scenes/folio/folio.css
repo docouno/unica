@@ -673,7 +673,7 @@
 
   .folio-content-collection
     .table-proto
-    tr[data-context-open='point']:not([data-selected])
+    tr[data-unica-context-menu-anchor='point']:not([data-selected])
     > .folio-runbook-menu-cell {
     background-image: linear-gradient(
       color-mix(in srgb, var(--fg-primary) 7%, transparent),
@@ -686,7 +686,7 @@
   }
 }
 
-.folio-runbook-menu-card[data-context-open='point'] {
+.folio-runbook-menu-card[data-unica-context-menu-anchor='point'] {
   border-color: var(--border-strong);
 }
 

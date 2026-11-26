@@ -598,7 +598,7 @@ export class PopoverController {
       popover: {
         measureBlockSize: measurePanelBlockSize,
         isAnchorAvailable: canUseTrigger,
-        onAnchorLost: () => this.finalDismiss(opening, 'lost'),
+        onUnavailable: () => this.finalDismiss(opening, 'lost'),
         onPositioned: () => opening.onPositioned?.(),
       },
     });

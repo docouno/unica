@@ -55,7 +55,8 @@ Follow [WCAG 1.4.11: Non-text Contrast](https://www.w3.org/WAI/WCAG22/Understand
 | `CheckboxGroup`, `SwitchGroup`, multiple [ChipGroup](../components/chip.md) | Each available input has its own Tab stop | `Space` toggles. `Switch` also toggles on `Enter`. |
 | [Listbox](../components/listbox.md) | One list Tab stop with `aria-activedescendant` | Up, Down, Home, End, and label typeahead browse enabled choices. Enter or Space commits. |
 | [Select](../components/select.md) | Top-layer popup with list or search focus | Up and Down browse options. Enter commits. Space commits from the list and types in search. Escape closes the panel and returns focus to the available trigger. |
-| `Menu`, `DatePicker` | Top-layer popup + managed option focus | `ArrowDown` / `ArrowUp`, typeahead, `Enter` / `Space` to commit, `Escape` to dismiss and return focus. |
+| [Menu](../components/menu.md), [ContextMenu](../components/context-menu.md) | Top-layer popup with managed item focus | Up and Down Arrow wrap, Home and End go to the edges, and text searches item labels. Enter and Space activate. Logical horizontal arrows open and leave branches. Escape dismisses one level. Tab continues from the caller. |
+| `DatePicker` | Top-layer popup + managed option focus | `ArrowDown` / `ArrowUp`, typeahead, `Enter` / `Space` to commit, `Escape` to dismiss and return focus. |
 | `Combobox`, `Autocomplete` | Input focus + `aria-activedescendant` | Typing edits the input. `ArrowDown` / `ArrowUp` move the active option, and `Enter` can accept it while focus stays in the field. |
 | `Modal`, `Drawer` | Native `<dialog>` `showModal()` containment | `Tab` / `Shift+Tab` cycle inside dialog; `Escape` fires cancellable `cancel` and restores trigger focus. |
 

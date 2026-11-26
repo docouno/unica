@@ -231,6 +231,46 @@ export type {
   ListboxSection,
   PickerMessages,
 } from './components/Listbox/index.js';
+export {
+  ContextMenu,
+  ContextMenuTrigger,
+  Menu,
+  MenuCheckboxItem,
+  MenuContent,
+  MenuGroup,
+  MenuItem,
+  MenuLabel,
+  MenuRadioGroup,
+  MenuRadioItem,
+  MenuSeparator,
+  MenuSub,
+  MenuSubContent,
+  MenuSubTrigger,
+  MenuTrigger,
+} from './components/Menu/index.js';
+export type {
+  ContextMenuInvocation,
+  ContextMenuProps,
+  ContextMenuTriggerProps,
+  MenuAlign,
+  MenuButtonItemProps,
+  MenuCheckboxItemProps,
+  MenuContentProps,
+  MenuGroupProps,
+  MenuItemProps,
+  MenuLabelProps,
+  MenuLinkItemProps,
+  MenuProps,
+  MenuRadioGroupProps,
+  MenuRadioItemProps,
+  MenuSeparatorProps,
+  MenuSize,
+  MenuSubContentProps,
+  MenuSubProps,
+  MenuSubTriggerProps,
+  MenuTone,
+  MenuTriggerProps,
+} from './components/Menu/index.js';
 export { NumberInput } from './components/NumberInput/index.js';
 export type { NumberInputProps } from './components/NumberInput/index.js';
 export {

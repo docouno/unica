@@ -1,0 +1,21 @@
+.context-study-target {
+  min-inline-size: 0;
+  inline-size: 100%;
+}
+
+.context-study-target[data-unica-context-menu-anchor='point'] {
+  border-color: var(--border-strong);
+}
+
+.context-study-live {
+  display: grid;
+  position: relative;
+  justify-items: start;
+  align-content: start;
+  min-block-size: 414px;
+  min-inline-size: 0;
+  inline-size: 100%;
+  gap: var(--space-12);
+  padding-block-start: var(--space-64);
+  padding-inline: min(8%, var(--space-32));
+}

@@ -1,7 +1,7 @@
 import { Card, CardMedia, Link } from '@docouno/unica';
 import { useRef, useState } from 'react';
 import { folioSceneHref } from './folio/folio.routes.js';
-import type { ComponentProps, ReactElement } from 'react';
+import type { ReactElement } from 'react';
 import {
   CopyIcon,
   DotsThreeIcon,
@@ -16,8 +16,13 @@ import { DatePicker, DateRangePicker } from '../prototypes/date-picker/date-pick
 import { dateLabel, dateObject } from '../prototypes/date-picker/date-utils.proto.js';
 import type { DateRange } from '../prototypes/date-picker/date-utils.proto.js';
 import { Checkbox, ChipGroup, Progress, Switch } from '@docouno/unica';
-import { ContextMenu } from '../prototypes/menu/context-menu.proto.js';
-import type { MenuEntry } from '../prototypes/menu/menu.entries.js';
+import {
+  ContextMenu,
+  ContextMenuTrigger,
+  MenuContent,
+  MenuItem,
+  MenuTrigger,
+} from '@docouno/unica';
 import { Pagination } from '../prototypes/pagination/pagination.proto.js';
 import { SegmentedControl, Select } from '@docouno/unica';
 import {
@@ -161,53 +166,50 @@ function modifiedLabel(range: DateRange): string {
   }).formatRange(dateObject(range[0]), dateObject(range[1]));
 }
 
-function RunbookMenu<T extends HTMLElement>({
+function RunbookMenu({
   title,
   onAction,
   target,
 }: {
   readonly title: string;
   readonly onAction: (message: string) => void;
-  readonly target: ComponentProps<typeof ContextMenu<T>>['target'];
+  readonly target: (actions: ReactElement) => ReactElement;
 }): ReactElement {
-  const items: readonly MenuEntry[] = [
-    {
-      id: 'rename',
-      label: 'Rename',
-      icon: PencilSimpleIcon,
-      run: () => onAction(`Rename requested for ${title}.`),
-    },
-    {
-      id: 'copy',
-      label: 'Copy runbook link',
-      icon: CopyIcon,
-      run: () => onAction(`Link selected for ${title}.`),
-    },
-    {
-      id: 'export',
-      label: 'Export Markdown',
-      icon: DownloadSimpleIcon,
-      run: () => onAction(`Markdown export requested for ${title}.`),
-    },
-  ];
   return (
-    <ContextMenu<T>
-      label={`${title} actions`}
-      items={items}
-      size="s"
-      align="end"
-      trigger={(props) => (
-        <IconButton
-          {...props}
-          size="s"
-          variant="ghost"
-          icon={DotsThreeIcon}
-          className="folio-runbook-menu-button table-cell-action-proto"
-          aria-label={`Actions for ${title}`}
-        />
-      )}
-      target={target}
-    />
+    <ContextMenu size="s">
+      <ContextMenuTrigger>
+        {target(
+          <>
+            <MenuTrigger asChild>
+              <IconButton
+                size="s"
+                variant="ghost"
+                icon={DotsThreeIcon}
+                className="folio-runbook-menu-button table-cell-action-proto"
+                aria-label={`Actions for ${title}`}
+              />
+            </MenuTrigger>
+            <MenuContent align="end" aria-label={`${title} actions`}>
+              <MenuItem
+                icon={PencilSimpleIcon}
+                onClick={() => onAction(`Rename requested for ${title}.`)}
+              >
+                Rename
+              </MenuItem>
+              <MenuItem icon={CopyIcon} onClick={() => onAction(`Link selected for ${title}.`)}>
+                Copy runbook link
+              </MenuItem>
+              <MenuItem
+                icon={DownloadSimpleIcon}
+                onClick={() => onAction(`Markdown export requested for ${title}.`)}
+              >
+                Export Markdown
+              </MenuItem>
+            </MenuContent>
+          </>,
+        )}
+      </ContextMenuTrigger>
+    </ContextMenu>
   );
 }
 
@@ -527,12 +529,12 @@ function CollectionScene(): ReactElement {
                   </TableHeader>
                   <TableBody>
                     {visibleRows.map((row) => (
-                      <RunbookMenu<HTMLTableRowElement>
+                      <RunbookMenu
                         key={row.title}
                         title={row.title}
                         onAction={setNotice}
-                        target={(bindings, trigger, panel) => (
-                          <TableRow {...bindings} selected={selected.includes(row.title)}>
+                        target={(actions) => (
+                          <TableRow selected={selected.includes(row.title)}>
                             <TableCell align="center">
                               <Checkbox
                                 size="s"
@@ -564,8 +566,7 @@ function CollectionScene(): ReactElement {
                               control="action"
                               className="folio-runbook-menu-cell"
                             >
-                              {trigger}
-                              {panel}
+                              {actions}
                             </TableCell>
                           </TableRow>
                         )}
@@ -577,15 +578,15 @@ function CollectionScene(): ReactElement {
             ) : (
               <div className="folio-grid-2">
                 {visibleRows.map((row) => (
-                  <RunbookMenu<HTMLDivElement>
+                  <RunbookMenu
                     key={row.title}
                     title={row.title}
                     onAction={setNotice}
-                    target={(bindings, trigger, panel) => (
-                      <Card {...bindings} className="folio-runbook-menu-card">
+                    target={(actions) => (
+                      <Card className="folio-runbook-menu-card">
                         <div className="folio-row folio-between">
                           <DocumentName>{row.title}</DocumentName>
-                          {trigger}
+                          {actions}
                         </div>
                         <Badge size="s" status="neutral">
                           {row.tier}
@@ -597,7 +598,6 @@ function CollectionScene(): ReactElement {
                           {row.verifiedOn ? `Verified ${dateLabel(row.verifiedOn)}` : 'Unverified'}
                         </Text>
                         <Person initials={row.initials} name={row.owner} />
-                        {panel}
                       </Card>
                     )}
                   />

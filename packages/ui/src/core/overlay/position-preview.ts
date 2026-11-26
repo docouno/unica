@@ -13,7 +13,7 @@ interface Edges {
 }
 
 interface PreviewLayout {
-  readonly anchor: HTMLElement;
+  readonly anchor: Element;
   readonly floating: HTMLElement;
   readonly avoid: HTMLElement | null | undefined;
   readonly placement: Placement;
@@ -128,7 +128,7 @@ function cssPixels(value: string | undefined): number {
   return Number.parseFloat(value ?? '') || 0;
 }
 
-function getAvoidEdges(anchor: HTMLElement, avoid: HTMLElement, reference: Rect): Edges | null {
+function getAvoidEdges(anchor: Element, avoid: HTMLElement, reference: Rect): Edges | null {
   if (!isConnectedNode(avoid) || ownerDocumentOf(avoid) !== ownerDocumentOf(anchor)) {
     return null;
   }

@@ -7,6 +7,13 @@ import {
   Input,
   Link,
   Listbox,
+  Menu,
+  MenuContent,
+  MenuItem,
+  MenuSub,
+  MenuSubContent,
+  MenuSubTrigger,
+  MenuTrigger,
   Select,
   Switch,
   UnicaProvider,
@@ -24,7 +31,6 @@ import {
 } from '../../../src/prototypes/app-shell/app-shell.proto.js';
 import { FileItem, FileList } from '../../../src/prototypes/file-input/file-input.proto.js';
 import { Combobox } from '../../../src/prototypes/combobox/combobox.proto.js';
-import { MenuRows, MenuSurface } from '../../../src/prototypes/menu/menu.proto.js';
 import {
   Drawer,
   DrawerContent,
@@ -229,17 +235,24 @@ export default function IconFixture() {
       <section data-testid="chrome">
         <WorkspaceNavigation />
         <WorkspaceTrash />
-        <MenuSurface>
-          <MenuRows
-            items={[{ type: 'branch', id: 'submenu', label: 'Default side', items: [] }]}
-            activeBranch="submenu"
-          />
-          <MenuRows
-            items={[{ type: 'branch', id: 'submenu', label: 'Flipped side', items: [] }]}
-            activeBranch="submenu"
-            flipped
-          />
-        </MenuSurface>
+        {(['Default side', 'Flipped side'] as const).map((label) => {
+          const flipped = label === 'Flipped side';
+          return (
+            <Menu key={label}>
+              <MenuTrigger style={{ position: 'fixed', top: 40, left: flipped ? 18 : 610 }}>
+                {label} actions
+              </MenuTrigger>
+              <MenuContent align={flipped ? 'end' : 'start'}>
+                <MenuSub>
+                  <MenuSubTrigger>{label}</MenuSubTrigger>
+                  <MenuSubContent>
+                    <MenuItem>Export PDF</MenuItem>
+                  </MenuSubContent>
+                </MenuSub>
+              </MenuContent>
+            </Menu>
+          );
+        })}
         <UnicaProvider iconAdapter={replacement}>
           <Select options={[]} aria-label="Invalid selection" size="l" status="danger" />
           <Combobox options={[]} label="Lookup" searchState="error" previewOpen />

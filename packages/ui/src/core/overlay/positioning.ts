@@ -14,6 +14,7 @@ import type {
   Placement,
   Side as PhysicalSide,
   SideObject,
+  VirtualElement,
 } from '@floating-ui/dom';
 import { getComputedStyleSafe, isRTL, reportErrorSafe } from '../dom.js';
 import { createFrameJob } from '../frame-scheduler.js';
@@ -37,8 +38,9 @@ import {
 export type Side = 'top' | 'bottom' | 'start' | 'end';
 export type Align = 'start' | 'center' | 'end';
 
-export interface AnchoredOverlay {
-  readonly anchor: HTMLElement;
+export interface AnchoredOverlay<T extends Element = HTMLElement> {
+  readonly anchor: T;
+  readonly reference?: VirtualElement | undefined;
   readonly floating: HTMLElement;
   readonly side: Side;
   readonly align: Align;
@@ -48,8 +50,12 @@ export interface AnchoredOverlay {
     | {
         readonly measureBlockSize: (floating: HTMLElement) => number;
         readonly preserveSide?: boolean | undefined;
-        readonly isAnchorAvailable: (anchor: HTMLElement) => boolean;
-        readonly onAnchorLost: () => void;
+        readonly fixedSide?: boolean | undefined;
+        readonly point?: boolean | undefined;
+        readonly lockSide?: (() => boolean) | undefined;
+        readonly isAnchorAvailable: (anchor: T) => boolean;
+        readonly isFloatingAvailable?: ((floating: HTMLElement) => boolean) | undefined;
+        readonly onUnavailable: () => void;
         readonly onPositioned: () => void;
       }
     | undefined;
@@ -90,27 +96,27 @@ function intersectsViewport(rect: DOMRectReadOnly, view: Window): boolean {
   );
 }
 
-export interface AnchorVisibility {
-  readonly observe: (anchor: HTMLElement) => void;
-  readonly unobserve: (anchor: HTMLElement) => void;
+export interface AnchorVisibility<T extends Element = HTMLElement> {
+  readonly observe: (anchor: T) => void;
+  readonly unobserve: (anchor: T) => void;
   readonly dispose: () => void;
 }
 
-export function anchorIntersectsViewport(anchor: HTMLElement): boolean {
+export function anchorIntersectsViewport(anchor: Element): boolean {
   const view = liveViewOf(anchor.ownerDocument);
   return view !== null && intersectsViewport(anchor.getBoundingClientRect(), view);
 }
 
 /** Catch scroll and paint clips before admission and keep the same sample for focus return. */
-export function watchVisibleAnchors(
+export function watchVisibleAnchors<T extends Element>(
   document: Document,
-  candidates: readonly HTMLElement[],
-  onSample: (visible: ReadonlySet<HTMLElement>) => void,
-): AnchorVisibility {
+  candidates: readonly T[],
+  onSample: (visible: ReadonlySet<T>) => void,
+): AnchorVisibility<T> {
   const view = liveViewOf(document);
-  const observed = new Set<HTMLElement>();
-  const pending = new Set<HTMLElement>();
-  const visible = new Set<HTMLElement>();
+  const observed = new Set<T>();
+  const pending = new Set<T>();
+  const visible = new Set<T>();
   let active = true;
   const notify = (): void => {
     if (active && pending.size === 0) {
@@ -122,7 +128,7 @@ export function watchVisibleAnchors(
       ? new view.IntersectionObserver(
           (entries) => {
             for (const { target, intersectionRect } of entries) {
-              const anchor = target as HTMLElement;
+              const anchor = target as T;
               if (!observed.has(anchor)) {
                 continue;
               }
@@ -140,7 +146,7 @@ export function watchVisibleAnchors(
         )
       : undefined;
 
-  const observe = (anchor: HTMLElement): void => {
+  const observe = (anchor: T): void => {
     if (observed.has(anchor) || anchor.ownerDocument !== document) {
       return;
     }
@@ -205,6 +211,21 @@ function viewportPadding(floating: HTMLElement, padding: number): Padding {
   };
 }
 
+/** Safe horizontal limits in the same coordinates as getBoundingClientRect(). */
+export function overlayInlineBounds(
+  floating: HTMLElement,
+  padding: number,
+): { left: number; right: number } {
+  const view = floating.ownerDocument.defaultView;
+  const viewport = view?.visualViewport;
+  const inset = viewportPadding(floating, padding) as SideObject;
+  const left = viewport?.offsetLeft ?? 0;
+  return {
+    left: left + inset.left,
+    right: left + (viewport?.width ?? view?.innerWidth ?? 0) - inset.right,
+  };
+}
+
 function preferredSide(
   requested: PhysicalSide,
   room: SideObject,
@@ -231,6 +252,11 @@ interface PopoverLayout {
   readonly padding: number;
   readonly valid: () => boolean;
   readonly previousSide: Side | undefined;
+  readonly fixedSide: boolean;
+  readonly lockSide: (() => boolean) | undefined;
+  readonly point: boolean;
+  readonly rtl: boolean;
+  readonly virtualReference: boolean;
   readonly measureBlockSize: (floating: HTMLElement) => number;
   readonly setSize: (anchorWidth: number, availableHeight: number) => boolean;
   readonly setWidth: (availableWidth: number) => boolean;
@@ -243,6 +269,11 @@ function popoverMiddleware({
   padding,
   valid,
   previousSide,
+  fixedSide,
+  lockSide,
+  point,
+  rtl,
+  virtualReference,
   measureBlockSize,
   setSize,
   setWidth,
@@ -254,8 +285,8 @@ function popoverMiddleware({
   const clippingPadding = viewportPadding(floating, padding);
   const fitMainAxis = shift({ padding: clippingPadding, mainAxis: false, crossAxis: true });
   return [
-    hide({ strategy: 'referenceHidden' }),
-    offset(gap),
+    ...(virtualReference ? [] : [hide({ strategy: 'referenceHidden' })]),
+    offset(point ? { mainAxis: gap, alignmentAxis: gap } : gap),
     {
       name: 'viewportSide',
       async fn(state) {
@@ -294,13 +325,33 @@ function popoverMiddleware({
         const keepSide = previousSide === 'top' || previousSide === 'bottom';
         // Filtering can shrink an upward-opening panel without moving its anchor.
         // Move the panel if the current side can no longer expose a usable slice.
-        const side =
-          keepSide &&
-          (room[previousSide] >= Math.min(height, 96) ||
-            room[oppositeSide[previousSide]] <= room[previousSide])
+        const side = fixedSide
+          ? requested
+          : keepSide &&
+              (lockSide?.() ||
+                room[previousSide] >= Math.min(height, 96) ||
+                room[oppositeSide[previousSide]] <= room[previousSide])
             ? previousSide
             : preferredSide(requested, room, floatingRect.width, height);
-        const next: Placement = alignment ? `${side}-${alignment}` : side;
+        let resolvedAlignment = alignment;
+        if (point && alignment) {
+          const startRoom = rtl ? room.left : room.right;
+          const endRoom = rtl ? room.right : room.left;
+          if (
+            alignment === 'start' &&
+            startRoom < floatingRect.width &&
+            endRoom >= floatingRect.width
+          ) {
+            resolvedAlignment = 'end';
+          } else if (
+            alignment === 'end' &&
+            endRoom < floatingRect.width &&
+            startRoom >= floatingRect.width
+          ) {
+            resolvedAlignment = 'start';
+          }
+        }
+        const next: Placement = resolvedAlignment ? `${side}-${resolvedAlignment}` : side;
         return state.placement === next ? {} : { reset: { placement: next } };
       },
     },
@@ -314,7 +365,7 @@ function popoverMiddleware({
       },
     }),
     // Keep the gap unless a cut-off anchor puts it beyond the padded viewport.
-    { ...fitMainAxis, name: 'fitMainAxis' },
+    ...(fixedSide ? [] : [{ ...fitMainAxis, name: 'fitMainAxis' }]),
   ];
 }
 
@@ -383,8 +434,9 @@ function initializeGeometry(
 }
 
 /** Bind an already open, in-place popover to its anchor. */
-export function positionOverlay({
+export function positionOverlay<T extends Element>({
   anchor,
+  reference,
   floating,
   side,
   align,
@@ -392,7 +444,7 @@ export function positionOverlay({
   padding = 0,
   popover,
   preview,
-}: AnchoredOverlay): () => void {
+}: AnchoredOverlay<T>): () => void {
   const previous = updates.get(floating);
   const document = ownerDocumentOf(anchor);
   const view = liveViewOf(document);
@@ -474,7 +526,7 @@ export function positionOverlay({
     }
     return anchorChanged;
   };
-  const onUnavailable = popover?.onAnchorLost ?? preview?.onUnavailable;
+  const onUnavailable = popover?.onUnavailable ?? preview?.onUnavailable;
   const reportUnavailable = (): void => {
     if (active && onUnavailable && !unavailable) {
       unavailable = true;
@@ -511,7 +563,12 @@ export function positionOverlay({
       }
     }
     const computed = getComputedStyleSafe(anchor);
-    if (popover && (!anchorIsVisible(computed) || !popover.isAnchorAvailable(anchor))) {
+    if (
+      popover &&
+      (!anchorIsVisible(computed) ||
+        !popover.isAnchorAvailable(anchor) ||
+        popover.isFloatingAvailable?.(floating) === false)
+    ) {
       reportUnavailable();
       return;
     }
@@ -529,7 +586,7 @@ export function positionOverlay({
           : side;
     const placement: Placement = align === 'center' ? physical : `${physical}-${align}`;
 
-    void computePosition(anchor, floating, {
+    void computePosition(reference ?? anchor, floating, {
       placement,
       strategy: 'fixed',
       // A local direction override on the floating surface must not flip the anchor's alignment.
@@ -557,6 +614,11 @@ export function positionOverlay({
               padding,
               valid,
               previousSide: popover.preserveSide ? lastResolvedSide : undefined,
+              fixedSide: popover.fixedSide ?? false,
+              lockSide: popover.lockSide,
+              point: popover.point ?? false,
+              rtl,
+              virtualReference: reference !== undefined,
               measureBlockSize: popover.measureBlockSize,
               setSize,
               setWidth,
@@ -710,7 +772,11 @@ export function positionOverlay({
             return;
           }
           const computed = getComputedStyleSafe(anchor);
-          if (!anchorIsConnected() || !anchorIsVisible(computed)) {
+          if (
+            !anchorIsConnected() ||
+            !anchorIsVisible(computed) ||
+            popover.isFloatingAvailable?.(floating) === false
+          ) {
             return reportUnavailable;
           }
           const next = Array.from(composedAncestors(anchor));
@@ -755,7 +821,10 @@ export function positionOverlay({
   }
   const avoid = preview?.avoid;
   const stopAvoid =
-    avoid && avoid !== anchor && ownerDocumentOf(avoid) === document && isConnectedNode(avoid)
+    avoid &&
+    !Object.is(avoid, anchor) &&
+    ownerDocumentOf(avoid) === document &&
+    isConnectedNode(avoid)
       ? autoUpdate(avoid, null, refresh)
       : undefined;
   const cleanup = (retainGeometry = false): void => {
