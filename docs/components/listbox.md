@@ -71,6 +71,8 @@ An application with its own list controller can render `ListboxOption` and `List
 
 Rows wrap long labels and descriptions. The check stays visible for selected rows, including in forced colors. Row minimum heights are 30, 40, and 48px, with a 44px minimum on coarse pointers.
 
+A 2px gap separates adjacent rows so their hover and active backgrounds stay distinct. When the list overflows, it uses a [compact native scrollbar](scrollbar.md#native-geometry-and-density) on both base and overlay surfaces.
+
 ## Native forms
 
 - An empty single or multiple selection omits its entry. An explicitly selected empty-string key submits `''`. Use `FormData.getAll(name)` for multiple selections, which submit in selection order.

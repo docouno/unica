@@ -486,7 +486,11 @@ export function Select(props: SelectProps): JSX.Element {
           </div>
         )}
         {failed && (
-          <div className="unica-select-recovery" ref={recovery} tabIndex={-1}>
+          <div
+            className="unica-select-recovery unica-scrollbar unica-scrollbar--compact"
+            ref={recovery}
+            tabIndex={-1}
+          >
             {errorState}
           </div>
         )}
@@ -503,7 +507,7 @@ export function Select(props: SelectProps): JSX.Element {
               id={listId}
               tabIndex={hasSearch ? -1 : 0}
               role="listbox"
-              className="unica-listbox unica-scrollbar unica-select-list"
+              className="unica-listbox unica-scrollbar unica-scrollbar--compact unica-select-list"
               data-unica-listbox-external-focus={dataFlag(searchFocus)}
               data-unica-listbox-empty-active={dataFlag(!navigation.activeId)}
               onFocus={() => setListFocus(true)}

@@ -155,6 +155,41 @@ export default {
     await assertActive(choices, alpha);
   },
 
+  'Pickers separate active and hovered rows and use compact scrollbars': async ({
+    page,
+    mount,
+  }) => {
+    await mount('pickers', { theme: 'pixel-dark' });
+    const owner = form(page, 'Ordered answers');
+    const standalone = list(owner, 'Controlled role');
+    const gutter = (choices) => choices.evaluate((node) => node.offsetWidth - node.clientWidth);
+    assert.equal(await gutter(standalone), 0);
+    await standalone.focus();
+
+    async function checkRows(choices, focusOwner) {
+      await choices.evaluate((node) => {
+        node.style.maxBlockSize = '160px';
+      });
+      const active = option(choices, 'Alpha');
+      const hovered = option(choices, 'Beta');
+      await hovered.hover();
+      await assertActive(focusOwner, active);
+      const first = await getBox(active);
+      const second = await getBox(hovered);
+      assert.equal(second.y - first.y - first.height, 2);
+      assert.equal(await gutter(choices), 10);
+    }
+
+    await checkRows(standalone, standalone);
+
+    await button(owner, 'Ordered roles').press('ArrowDown');
+    const panel = popup(owner);
+    const choices = list(panel, 'Ordered roles');
+    const search = textbox(panel, 'Search options');
+    await assertFocused(search);
+    await checkRows(choices, search);
+  },
+
   'Picker validation delegates native focus and honors disabled fieldsets, legend and form reassociation':
     async ({ page, mount }) => {
       await mount('pickers');
@@ -442,6 +477,12 @@ export default {
       await assertFocused(retry);
       assert.equal(await search.isDisabled(), true);
       assert.equal(await search.inputValue(), 'Beta');
+      const recoveryGutter = await retry.evaluate((node) => {
+        node.parentElement.style.minBlockSize = '100vh';
+        const viewport = node.closest('.unica-select-recovery');
+        return viewport.offsetWidth - viewport.clientWidth;
+      });
+      assert.equal(recoveryGutter, 10);
       await retry.click();
       await assertFocused(search);
       assert.equal(await search.inputValue(), 'Beta');

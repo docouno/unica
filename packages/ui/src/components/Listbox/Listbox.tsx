@@ -72,7 +72,7 @@ export function Listbox(props: ListboxProps): JSX.Element {
         aria-multiselectable={selection.multiple || undefined}
         aria-activedescendant={focused ? navigation.activeId : undefined}
         data-unica-listbox-empty-active={dataFlag(!navigation.activeId)}
-        className={cx('unica-listbox', 'unica-scrollbar', className)}
+        className={cx('unica-listbox unica-scrollbar unica-scrollbar--compact', className)}
         onFocus={composeEventHandlers(onFocus, (event) => {
           if (
             event.target === event.currentTarget &&

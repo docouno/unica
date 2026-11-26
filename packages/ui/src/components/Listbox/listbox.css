@@ -59,6 +59,11 @@
     -webkit-tap-highlight-color: transparent;
   }
 
+  .unica-listbox-option + .unica-listbox-option,
+  .unica-listbox-group + .unica-listbox-option {
+    margin-block-start: var(--space-2);
+  }
+
   .unica-listbox-option[data-unica-listbox-reserve-icon] {
     grid-template-columns: var(--_option-icon) minmax(0, 1fr) var(--_option-icon);
   }

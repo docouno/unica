@@ -88,7 +88,9 @@ Pass `messages` to localize fixed copy and generated text. `PickerMessages` incl
 
 ## Placement and forms
 
-The browser puts the in-place panel in its top layer, including inside `<dialog>`. The panel starts below the trigger at logical start, with an 8px gap and 16px viewport clearance. It is at least as wide as the trigger or 264px, within the available width. The panel can flip for space and keeps its side when filtering while there is room. Long lists scroll beneath their header and search. The active theme supplies the overlay material. Reduced motion retains a static activity glyph and forced colors retain the selection and focus cues.
+The browser puts the in-place panel in its top layer, including inside `<dialog>`. The panel starts below the trigger at logical start, with an 8px gap and 16px viewport clearance. It is at least as wide as the trigger or 264px, within the available width. The panel can flip for space and keeps its side when filtering while there is room. The active theme supplies the overlay material. Reduced motion retains a static activity glyph and forced colors retain the selection and focus cues.
+
+The option list keeps the same 2px gap between rows as Listbox. It scrolls beneath its header and search with a compact native scrollbar. Overflowing recovery content uses the same scrollbar. [Listbox row spacing](listbox.md#keyboard-and-availability)
 
 Select follows the Listbox form contract. Its permanent native control submits committed keys, including while the panel is closed or filtered. A multiple answer submits repeated entries in selection order and native reset restores the default order. An empty answer omits entries, while a selected empty-string key is a real answer. Interactive validation delegates focus to the trigger. A completed reset closes the panel and clears the query while an external reset button can keep its focus. The search query never becomes a form value.
 
