@@ -12,6 +12,7 @@
 
   .unica-checkbox-indicator:where(
       .unica-binary-native:checked + *,
+      .unica-choice-card:has(> .unica-binary-native:checked) .unica-choice-card-marker,
       [data-unica-checkbox-checked]:not(.unica-binary-native + *)
     )
     > .unica-checkbox-check {

@@ -59,7 +59,7 @@ For Select, use the trigger's field ID to associate the label and `aria-describe
 
 ### 2. Option Group (`target="group"`)
 
-Use `target="group"` for `CheckboxGroup` and `RadioGroup`:
+Use `target="group"` for `CheckboxGroup`, `RadioGroup`, and their [choice-card groups](../components/choice-card.md):
 
 - `FormField` renders a non-interactive group heading (`labelId`), shared `description` (`descriptionId`), and shared `message` (`messageId`).
 - The nested group container receives `role="group"` or `role="radiogroup"`, `aria-labelledby={labelId}`, `aria-describedby` (`author → descriptionId → messageId`), and `aria-invalid="true"` when `status === 'danger' && !disabled`.

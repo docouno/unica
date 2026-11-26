@@ -14,13 +14,15 @@ import {
   Progress,
   Text,
   Title,
+  Button,
+  RadioCard,
+  RadioCardGroup,
 } from '@docouno/unica';
 import {
   Breadcrumb,
   BreadcrumbLink,
   BreadcrumbPage,
 } from '../prototypes/breadcrumb/breadcrumb.proto.js';
-import { Button } from '@docouno/unica';
 import { ToastViewport } from '../prototypes/toast/toast.proto.js';
 import {
   Dropzone,
@@ -29,7 +31,6 @@ import {
   FileList,
 } from '../prototypes/file-input/file-input.proto.js';
 import type { FileItemStatus } from '../prototypes/file-input/file-input.proto.js';
-import { RadioCard } from '../prototypes/choice-card/choice-card.proto.js';
 import { Stepper, StepperStep } from '../prototypes/stepper/stepper.proto.js';
 import { FolioRail, FolioScene, PageIntro } from './folio/folio.shared.js';
 import './folio/folio.settings.css';
@@ -76,6 +77,7 @@ const initialArchives: readonly StagedArchive[] = [
 function WorkspaceAdminScene(): ReactElement {
   const [schema, setSchema] = useState('folio-adr-schema-v3.yaml');
   const [schemaSize, setSchemaSize] = useState('18.4 KB');
+  const policyLabelId = useId();
   const [policy, setPolicy] = useState('revision');
   const [archives, setArchives] = useState<readonly StagedArchive[]>(initialArchives);
   const [currentStep, setCurrentStep] = useState<'source' | 'verify' | 'commit'>('verify');
@@ -84,7 +86,6 @@ function WorkspaceAdminScene(): ReactElement {
   const [notice, setNotice] = useState('');
   const [showActivityToast, setShowActivityToast] = useState(true);
   const [showValidationToast, setShowValidationToast] = useState(true);
-  const policyName = useId();
   const attempt = useRef(0);
   const summary = useRef<HTMLDivElement>(null);
   const summaryClose = useRef<HTMLButtonElement>(null);
@@ -323,36 +324,30 @@ function WorkspaceAdminScene(): ReactElement {
                 }}
                 description="Optional YAML mapping for custom status and service tags."
               />
-              <div
-                className="folio-import-policy"
-                role="group"
-                aria-label="Duplicate document slug handling"
-              >
-                <Text size="body-s" weight="medium">
+              <div className="folio-import-policy">
+                <Text id={policyLabelId} size="body-s" weight="medium">
                   Duplicate document slug handling
                 </Text>
-                <div className="folio-grid-2">
+                <RadioCardGroup
+                  className="folio-grid-2"
+                  aria-labelledby={policyLabelId}
+                  value={policy}
+                  onValueChange={(next) => {
+                    setPolicy(next);
+                    invalidateVerification();
+                  }}
+                >
                   <RadioCard
-                    name={policyName}
-                    checked={policy === 'revision'}
-                    onChange={() => {
-                      setPolicy('revision');
-                      invalidateVerification();
-                    }}
+                    value="revision"
                     label="Create draft revision on slug match"
                     description="Preserves existing verified runbook until reviewed."
                   />
                   <RadioCard
-                    name={policyName}
-                    checked={policy === 'skip'}
-                    onChange={() => {
-                      setPolicy('skip');
-                      invalidateVerification();
-                    }}
+                    value="skip"
                     label="Skip duplicate document slugs"
                     description="Imports only net-new architecture records."
                   />
-                </div>
+                </RadioCardGroup>
               </div>
             </Card>
             <Card ref={archivesCard} className="folio-import-card">

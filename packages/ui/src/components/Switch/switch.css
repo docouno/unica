@@ -61,6 +61,7 @@
 
   .unica-switch-indicator:where(
     .unica-binary-native:checked + *,
+    .unica-choice-card:has(> .unica-binary-native:checked) .unica-choice-card-marker,
     [data-unica-switch-checked]:not(.unica-binary-native + *)
   ) {
     background: var(--_switch-selected-fill);
@@ -69,6 +70,7 @@
 
   .unica-switch-indicator:where(
       .unica-binary-native:checked + *,
+      .unica-choice-card:has(> .unica-binary-native:checked) .unica-choice-card-marker,
       [data-unica-switch-checked]:not(.unica-binary-native + *)
     )
     > .unica-switch-thumb {
@@ -105,17 +107,29 @@
     animation: unica-switch-spin 800ms linear infinite;
   }
 
-  .unica-switch-indicator:where(.unica-binary-native:disabled + *, [data-unica-switch-disabled]) {
+  .unica-switch-indicator:where(
+    .unica-binary-native:disabled + *,
+    .unica-choice-card:has(> .unica-binary-native:disabled) .unica-choice-card-marker,
+    [data-unica-switch-disabled]
+  ) {
     background: var(--bg-surface-subtle);
     border-color: var(--border-default);
   }
 
-  .unica-switch-indicator:where(.unica-binary-native:disabled + *, [data-unica-switch-disabled])
+  .unica-switch-indicator:where(
+      .unica-binary-native:disabled + *,
+      .unica-choice-card:has(> .unica-binary-native:disabled) .unica-choice-card-marker,
+      [data-unica-switch-disabled]
+    )
     > .unica-switch-thumb {
     background: var(--fg-disabled);
   }
 
-  .unica-switch-indicator:where(.unica-binary-native:disabled + *, [data-unica-switch-disabled])
+  .unica-switch-indicator:where(
+      .unica-binary-native:disabled + *,
+      .unica-choice-card:has(> .unica-binary-native:disabled) .unica-choice-card-marker,
+      [data-unica-switch-disabled]
+    )
     .unica-switch-thumb-icon,
   .unica-switch-indicator[hidden] {
     display: none;
@@ -153,6 +167,7 @@
 
     .unica-switch-indicator:where(
         .unica-binary-native:checked + *,
+        .unica-choice-card:has(> .unica-binary-native:checked) .unica-choice-card-marker,
         [data-unica-switch-checked]:not(.unica-binary-native + *)
       )
       > .unica-switch-thumb {
@@ -160,12 +175,20 @@
       color: Highlight;
     }
 
-    .unica-switch-indicator:where(.unica-binary-native:disabled + *, [data-unica-switch-disabled]) {
+    .unica-switch-indicator:where(
+      .unica-binary-native:disabled + *,
+      .unica-choice-card:has(> .unica-binary-native:disabled) .unica-choice-card-marker,
+      [data-unica-switch-disabled]
+    ) {
       background: Canvas;
       border-color: GrayText;
     }
 
-    .unica-switch-indicator:where(.unica-binary-native:disabled + *, [data-unica-switch-disabled])
+    .unica-switch-indicator:where(
+        .unica-binary-native:disabled + *,
+        .unica-choice-card:has(> .unica-binary-native:disabled) .unica-choice-card-marker,
+        [data-unica-switch-disabled]
+      )
       > .unica-switch-thumb {
       background: GrayText;
     }

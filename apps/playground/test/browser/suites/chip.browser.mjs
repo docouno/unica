@@ -75,6 +75,10 @@ export default {
       assert.deepEqual(await formData(page), untouched);
       await command(page, 'accept');
       await radio(page, 'Alpha').click();
+      await page
+        .getByTestId('chip-log')
+        .filter({ hasText: 'single:a:' })
+        .waitFor({ state: 'attached' });
       const accepted = [['facet', 'a'], ...untouched];
       assert.deepEqual(await formData(page), accepted);
       assert.equal(

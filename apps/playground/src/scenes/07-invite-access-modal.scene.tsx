@@ -3,7 +3,17 @@ import { folioSceneHref } from './folio/folio.routes.js';
 import type { ReactElement } from 'react';
 import { PlusIcon } from '@phosphor-icons/react';
 import { AsidePanel, WorkspaceNavigation } from '../prototypes/app-shell/app-shell.proto.js';
-import { Badge, Button, Card, Input, Select, Text, Textarea, Title } from '@docouno/unica';
+import {
+  Badge,
+  Button,
+  Card,
+  CheckboxCard,
+  Input,
+  Select,
+  Text,
+  Textarea,
+  Title,
+} from '@docouno/unica';
 import {
   Modal,
   ModalBody,
@@ -17,7 +27,6 @@ import {
 } from '../prototypes/dialog/dialog.proto.js';
 import { ToastCard } from '../prototypes/toast/toast.proto.js';
 import { FormField } from '../prototypes/form-field/form-field.proto.js';
-import { CheckboxCard } from '../prototypes/choice-card/choice-card.proto.js';
 import {
   Table,
   TableBody,

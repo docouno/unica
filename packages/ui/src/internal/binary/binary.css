@@ -131,6 +131,7 @@
   /* Attached indicators follow checkedness on the input, including writes before React commits. */
   .unica-binary-indicator:where(
     .unica-binary-native:checked + *,
+    .unica-choice-card:has(> .unica-binary-native:checked) .unica-choice-card-marker,
     .unica-binary-native[type='checkbox']:indeterminate + *,
     [data-unica-checkbox-indeterminate],
     :not(.unica-binary-native + *):is([data-unica-checkbox-checked], [data-unica-radio-checked])
@@ -173,6 +174,7 @@
 
   .unica-binary-indicator:where(
     .unica-binary-native:disabled + *,
+    .unica-choice-card:has(> .unica-binary-native:disabled) .unica-choice-card-marker,
     [data-unica-checkbox-disabled],
     [data-unica-radio-disabled]
   ) {
@@ -209,6 +211,7 @@
 
     .unica-binary-indicator:where(
       .unica-binary-native:disabled + *,
+      .unica-choice-card:has(> .unica-binary-native:disabled) .unica-choice-card-marker,
       [data-unica-checkbox-disabled],
       [data-unica-radio-disabled]
     ) {

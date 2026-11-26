@@ -158,6 +158,8 @@ function useBinaryGroup<T extends GroupValue>(
         kind,
         sharedOwner,
         keyed: managed,
+        disabled,
+        ariaDisabled: attrs['aria-disabled'],
         form,
         tabIndex: attrs.tabIndex,
         required,
@@ -226,7 +228,7 @@ function useBinaryGroup<T extends GroupValue>(
       ref: rootRef,
       className: cx('unica-binary-group', className),
       'data-unica-binary-orientation': orientation,
-      'aria-disabled': disabled || attrs['aria-disabled'],
+      'aria-disabled': disabled ? undefined : attrs['aria-disabled'],
       'aria-invalid': disabled ? undefined : status === 'danger' || attrs['aria-invalid'],
       ...(isRadio && {
         'aria-readonly': readOnly || attrs['aria-readonly'],

@@ -10,12 +10,12 @@ import {
   Textarea,
   Title,
   VisuallyHidden,
+  CheckboxCard,
 } from '@docouno/unica';
 import { FormField } from '../../prototypes/form-field/form-field.proto.js';
 import { useId, useRef, useState } from 'react';
 import type { ReactElement } from 'react';
 import type { PreviewProps } from '../../workbench/types.js';
-import { CheckboxCard } from '../../prototypes/choice-card/choice-card.proto.js';
 import { ToastCard } from '../../prototypes/toast/toast.proto.js';
 import { DialogStudy } from '../../prototypes/dialog/dialog.examples.js';
 import {
@@ -256,18 +256,14 @@ export function EditProject({
                       label="Include in search"
                       name="searchable"
                       checked={draft.searchable}
-                      onChange={(event) =>
-                        setDraft({ ...draft, searchable: event.currentTarget.checked })
-                      }
+                      onCheckedChange={(next) => setDraft({ ...draft, searchable: next })}
                       description={<bdi>People with access can find this project in search.</bdi>}
                     />
                     <CheckboxCard
                       label="Notify reviewers on publication"
                       name="notify"
                       checked={draft.notify}
-                      onChange={(event) =>
-                        setDraft({ ...draft, notify: event.currentTarget.checked })
-                      }
+                      onCheckedChange={(next) => setDraft({ ...draft, notify: next })}
                       description={<bdi>Send a notification when changes go live.</bdi>}
                     />
                   </Stack>

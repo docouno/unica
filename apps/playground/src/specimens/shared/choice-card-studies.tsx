@@ -1,17 +1,25 @@
-import { Badge, Button, Flex, Icon, Link, Stack, Text } from '@docouno/unica';
 import { useStoryAction } from '../../workbench/storyFrameState.js';
 import type { PreviewContext, PreviewProps } from '../../workbench/types.js';
 import {
   focusLinkedFragment,
   followStudyFragment,
   specimenBlockPage,
-} from '../../specimens/shared/specimen-fragment.js';
-import { useId, useState } from 'react';
+} from './specimen-fragment.js';
+import { useId, useRef, useState } from 'react';
 import type { ReactElement, ReactNode } from 'react';
 import { LockSimpleIcon, WarningCircleIcon } from '@phosphor-icons/react';
 import {
+  Badge,
+  Button,
+  Flex,
+  Icon,
+  Link,
+  Stack,
+  Text,
   CheckboxCard,
+  CheckboxCardGroup,
   RadioCard,
+  RadioCardGroup,
   SwitchCard,
   ChoiceCardContent,
   ChoiceCardLabel,
@@ -19,16 +27,91 @@ import {
   CheckboxCardIndicator,
   RadioCardIndicator,
   SwitchCardIndicator,
-} from './choice-card.proto.js';
-import './choice-card.examples.css';
+} from '@docouno/unica';
+import type { CheckboxCardProps, RadioCardGroupProps, SwitchCardProps } from '@docouno/unica';
+import './choice-card-studies.css';
 
-export type CardKind = 'checkbox' | 'radio' | 'switch';
+type CardKind = 'checkbox' | 'radio' | 'switch';
 interface StudyProps<Kind extends CardKind = CardKind> {
   readonly kind: Kind;
   readonly ctx: PreviewContext;
 }
 
-const cards = { checkbox: CheckboxCard, radio: RadioCard, switch: SwitchCard };
+function StudyGroup({
+  kind,
+  name,
+  defaultValue,
+  children,
+  required,
+  status,
+  readOnly,
+  ...aria
+}: Pick<
+  RadioCardGroupProps,
+  | 'name'
+  | 'defaultValue'
+  | 'children'
+  | 'required'
+  | 'status'
+  | 'readOnly'
+  | 'aria-label'
+  | 'aria-labelledby'
+  | 'aria-describedby'
+> & { readonly kind: CardKind }): ReactElement {
+  const className = 'choice-study-grid';
+  if (kind === 'radio') {
+    return (
+      <RadioCardGroup {...aria} {...{ className, name, defaultValue, required, status, readOnly }}>
+        {children}
+      </RadioCardGroup>
+    );
+  }
+  if (kind === 'checkbox') {
+    return (
+      <CheckboxCardGroup {...aria} {...{ className, name, required, status, readOnly }}>
+        {children}
+      </CheckboxCardGroup>
+    );
+  }
+  return (
+    <div {...aria} className={className} role="group">
+      {children}
+    </div>
+  );
+}
+
+type StudyCardProps = CheckboxCardProps &
+  Pick<SwitchCardProps, 'loading'> & {
+    readonly kind: CardKind;
+    readonly ctx: PreviewContext;
+  };
+
+function StudyCard({
+  kind,
+  ctx,
+  value,
+  name,
+  defaultChecked,
+  readOnly,
+  loading,
+  ...props
+}: StudyCardProps): ReactElement {
+  const generated = useId();
+  const card =
+    kind === 'radio' ? (
+      <RadioCard {...props} value={value ?? generated} />
+    ) : kind === 'switch' ? (
+      <SwitchCard {...props} {...{ value, name, defaultChecked, readOnly, loading }} />
+    ) : (
+      <CheckboxCard {...props} {...{ value, name, defaultChecked, readOnly }} />
+    );
+  return (
+    <div {...ctx.subject} className="choice-study-subject">
+      {card}
+    </div>
+  );
+}
+
 const indicators = {
   checkbox: CheckboxCardIndicator,
   radio: RadioCardIndicator,
@@ -66,7 +149,6 @@ export function Study({
   );
 }
 export function Sizes({ kind, ctx }: StudyProps): ReactElement {
-  const Card = cards[kind];
   const name = useId();
   return (
     <Stack gap={24}>
@@ -75,21 +157,19 @@ export function Sizes({ kind, ctx }: StudyProps): ReactElement {
           key={size}
           title={`${size.toUpperCase()} · ${size === 's' ? '12px inset · compact' : size === 'm' ? '16px inset · default' : '24px inset · spacious'}`}
         >
-          <div
-            className="choice-study-grid"
-            role={kind === 'radio' ? 'radiogroup' : 'group'}
-            aria-label={`${size} choices`}
-          >
-            <Card
-              {...ctx.subject}
+          <StudyGroup kind={kind} aria-label={`${size} choices`} defaultValue="invited">
+            <StudyCard
+              kind={kind}
+              ctx={ctx}
               size={size}
               name={`${name}-${size}`}
               value={kind === 'radio' ? 'workspace' : undefined}
               label={copy[kind].label}
               description={<bdi>{copy[kind].description}</bdi>}
             />
-            <Card
-              {...ctx.subject}
+            <StudyCard
+              kind={kind}
+              ctx={ctx}
               size={size}
               name={`${name}-${size}`}
               value={kind === 'radio' ? 'invited' : undefined}
@@ -103,7 +183,7 @@ export function Sizes({ kind, ctx }: StudyProps): ReactElement {
               }
               defaultChecked
             />
-          </div>
+          </StudyGroup>
         </Study>
       ))}
     </Stack>
@@ -111,7 +191,6 @@ export function Sizes({ kind, ctx }: StudyProps): ReactElement {
 }
 
 export function Anatomy({ kind, ctx }: StudyProps): ReactElement {
-  const Card = cards[kind];
   const Indicator = indicators[kind];
   const id = useId();
   const terms = `${kind}-card-terms-${ctx.theme.id}`;
@@ -119,13 +198,14 @@ export function Anatomy({ kind, ctx }: StudyProps): ReactElement {
   const [details, setDetails] = useState(false);
   return (
     <Stack gap={24}>
-      <div
-        className="choice-study-grid"
-        role={kind === 'radio' ? 'radiogroup' : undefined}
+      <StudyGroup
+        kind={kind}
         aria-label={kind === 'radio' ? 'History plan' : undefined}
+        defaultValue="standard"
       >
-        <Card
-          {...ctx.subject}
+        <StudyCard
+          kind={kind}
+          ctx={ctx}
           indicatorPlacement="start"
           label={
             kind === 'radio' ? 'Standard' : kind === 'switch' ? 'Daily digest' : 'Offline access'
@@ -169,8 +249,9 @@ export function Anatomy({ kind, ctx }: StudyProps): ReactElement {
             </>
           }
         />
-        <Card
-          {...ctx.subject}
+        <StudyCard
+          kind={kind}
+          ctx={ctx}
           name={`${id}-plan`}
           value={kind === 'radio' ? 'advanced' : undefined}
           indicatorPlacement="end"
@@ -207,7 +288,7 @@ export function Anatomy({ kind, ctx }: StudyProps): ReactElement {
             </>
           }
         />
-      </div>
+      </StudyGroup>
       <Text
         as="div"
         size="body-s"
@@ -239,10 +320,11 @@ export function Anatomy({ kind, ctx }: StudyProps): ReactElement {
             : 'Terms: included features follow the workspace retention policy.'}
         </bdi>
       </Text>
-      <div className="choice-study-grid">
+      <StudyGroup kind={kind} aria-label="Access scope" defaultValue="manual">
         <Study title="Label only">
-          <Card
-            {...ctx.subject}
+          <StudyCard
+            kind={kind}
+            ctx={ctx}
             label={
               kind === 'switch'
                 ? 'Email notifications'
@@ -253,9 +335,12 @@ export function Anatomy({ kind, ctx }: StudyProps): ReactElement {
           />
         </Study>
         <Study title="Manually placed indicator">
-          <Card
-            {...ctx.subject}
+          <StudyCard
+            kind={kind}
+            ctx={ctx}
             id={`${id}-manual`}
+            value="manual"
+            aria-labelledby={`${id}-manual-label`}
             aria-describedby={`${id}-manual-description`}
             indicatorPlacement="none"
             name={`${id}-manual`}
@@ -263,111 +348,58 @@ export function Anatomy({ kind, ctx }: StudyProps): ReactElement {
           >
             <ChoiceCardContent>
               <Flex align="start" justify="space-between" gap={12}>
-                <ChoiceCardLabel>{copy[kind].label}</ChoiceCardLabel>
+                <ChoiceCardLabel id={`${id}-manual-label`}>{copy[kind].label}</ChoiceCardLabel>
                 <Indicator />
               </Flex>
-              <ChoiceCardDescription>
+              <ChoiceCardDescription id={`${id}-manual-description`}>
                 <bdi>{copy[kind].description}</bdi>
               </ChoiceCardDescription>
             </ChoiceCardContent>
-          </Card>
+          </StudyCard>
         </Study>
-      </div>
+      </StudyGroup>
     </Stack>
   );
 }
 
 export function Interaction({ kind, ctx }: StudyProps): ReactElement {
-  const Card = cards[kind];
-  const id = useId();
   return (
-    <Stack gap={24}>
-      {(['rest', 'hover', 'active', 'focus'] as const).map((state) => (
-        <Study
-          key={state}
-          title={
-            state === 'active'
-              ? 'Held press'
-              : state === 'focus'
-                ? 'Keyboard focus'
-                : state === 'hover'
-                  ? 'Hover'
-                  : 'Rest'
-          }
-        >
-          <div
-            className="choice-study-grid"
-            role={kind === 'radio' ? 'radiogroup' : undefined}
-            aria-label={kind === 'radio' ? `${state} access level` : undefined}
-          >
-            <Card
-              {...ctx.subject}
-              name={`${id}-${state}`}
-              label={kind === 'switch' ? 'Daily digest' : 'Standard access'}
-              description={
-                <bdi>
-                  {kind === 'switch'
-                    ? 'Receive changes from followed pages.'
-                    : 'Access includes shared pages and comments.'}
-                </bdi>
-              }
-              previewState={state}
-            />
-            <Card
-              {...ctx.subject}
-              name={`${id}-${state}`}
-              label={kind === 'switch' ? 'Daily digest' : 'Extended access'}
-              description={
-                <bdi>
-                  {kind === 'switch'
-                    ? 'Receive changes from followed pages.'
-                    : 'Access also includes archived workspaces.'}
-                </bdi>
-              }
-              defaultChecked
-              previewState={state}
-            />
-          </div>
-        </Study>
-      ))}
-      <Study title="Focus with hover and press">
-        <div className="choice-study-grid">
-          <Card
-            {...ctx.subject}
-            label="Hovered selection"
-            defaultChecked
-            previewState="hover"
-            previewFocus
-          />
-          <Card
-            {...ctx.subject}
-            label="Pressed selection"
-            defaultChecked
-            previewState="active"
-            previewFocus
-          />
-        </div>
-      </Study>
-    </Stack>
+    <StudyGroup kind={kind} aria-label="Access and feedback" defaultValue="extended">
+      <StudyCard
+        kind={kind}
+        ctx={ctx}
+        value="standard"
+        label={kind === 'switch' ? 'Daily digest' : 'Standard access'}
+        description={<bdi>Access includes shared pages and comments.</bdi>}
+      />
+      <StudyCard
+        kind={kind}
+        ctx={ctx}
+        value="extended"
+        label={kind === 'switch' ? 'Weekly summary' : 'Extended access'}
+        description={<bdi>Access also includes archived workspaces.</bdi>}
+        defaultChecked
+      />
+    </StudyGroup>
   );
 }
 
 export function Availability({ kind, ctx }: StudyProps): ReactElement {
-  const Card = cards[kind];
   const id = useId();
   const target = `${kind}-card-availability-help-${ctx.theme.id}`;
   const page = specimenBlockPage(`${kind}-card`, 'states', 'availability', ctx.theme.id);
   return (
     <Stack gap={24}>
       <Study title="Read-only policy">
-        <div
-          className="choice-study-grid"
-          role={kind === 'radio' ? 'radiogroup' : 'group'}
+        <StudyGroup
+          kind={kind}
           aria-label="Organization policy"
-          aria-readonly={kind === 'radio' ? true : undefined}
+          defaultValue="policy"
+          readOnly={kind === 'radio'}
         >
-          <Card
-            {...ctx.subject}
+          <StudyCard
+            kind={kind}
+            ctx={ctx}
             name={`${id}-policy`}
             label={kind === 'radio' ? 'Workspace members' : 'External sharing'}
             description={
@@ -385,9 +417,11 @@ export function Availability({ kind, ctx }: StudyProps): ReactElement {
             }
             readOnly
           />
-          <Card
-            {...ctx.subject}
+          <StudyCard
+            kind={kind}
+            ctx={ctx}
             name={`${id}-policy`}
+            value="policy"
             label={kind === 'radio' ? 'Invited people' : 'Activity history'}
             description={
               <bdi>
@@ -410,16 +444,13 @@ export function Availability({ kind, ctx }: StudyProps): ReactElement {
             defaultChecked
             readOnly
           />
-        </div>
+        </StudyGroup>
       </Study>
       <Study title="Unavailable options">
-        <div
-          className="choice-study-grid"
-          role={kind === 'radio' ? 'radiogroup' : 'group'}
-          aria-label="Availability of access policies"
-        >
-          <Card
-            {...ctx.subject}
+        <StudyGroup kind={kind} aria-label="Availability of access policies" defaultValue="legacy">
+          <StudyCard
+            kind={kind}
+            ctx={ctx}
             name={`${id}-disabled`}
             label={kind === 'radio' ? 'Public link' : 'External guests'}
             description={
@@ -436,9 +467,11 @@ export function Availability({ kind, ctx }: StudyProps): ReactElement {
             }
             disabled
           />
-          <Card
-            {...ctx.subject}
+          <StudyCard
+            kind={kind}
+            ctx={ctx}
             name={`${id}-disabled`}
+            value="legacy"
             label={kind === 'radio' ? 'Legacy team access' : 'Legacy archive'}
             description={
               <bdi>This selected option is no longer available. Choose an alternative.</bdi>
@@ -447,14 +480,15 @@ export function Availability({ kind, ctx }: StudyProps): ReactElement {
             disabled
           />
           {kind === 'radio' && (
-            <RadioCard
-              {...ctx.subject}
-              name={`${id}-disabled`}
+            <StudyCard
+              kind="radio"
+              ctx={ctx}
+              value="invited"
               label="Invited people"
               description={<bdi>Choose this available policy to replace legacy access.</bdi>}
             />
           )}
-        </div>
+        </StudyGroup>
       </Study>
       <Text
         as="p"
@@ -475,8 +509,8 @@ export function Availability({ kind, ctx }: StudyProps): ReactElement {
 }
 
 export function Validation({ kind, ctx }: StudyProps<'checkbox' | 'radio'>): ReactElement {
-  const Card = cards[kind];
   const id = useId();
+  const formRef = useRef<HTMLFormElement>(null);
   const options =
     kind === 'radio'
       ? [
@@ -491,22 +525,32 @@ export function Validation({ kind, ctx }: StudyProps<'checkbox' | 'radio'>): Rea
   const [attempted, setAttempted] = useState(false);
   const [confirmed, setConfirmed] = useState('');
   const invalid = attempted && !hasSelection;
+  useStoryAction(ctx, (action) => {
+    if (action === 'check-selection') {
+      formRef.current?.requestSubmit();
+    }
+  });
   return (
     <Stack gap={24}>
       <form
+        ref={formRef}
         className="choice-study-field"
+        onInvalid={(event) => {
+          if (ctx.comparing) {
+            // A shared action validates every artboard. Keep the frame toolbar in view.
+            event.preventDefault();
+          }
+          setAttempted(true);
+          setConfirmed('');
+        }}
         onSubmit={(event) => {
           event.preventDefault();
           const data = new FormData(event.currentTarget).getAll(id);
-          setAttempted(true);
           const labels = options
             .filter((option) => data.includes(option.value))
             .map((option) => option.label);
           setHasSelection(labels.length > 0);
-          setConfirmed(labels.length ? `Confirmed: ${labels.join(', ')}.` : '');
-          if (!data.length) {
-            event.currentTarget.querySelector('input')?.focus();
-          }
+          setConfirmed(`Confirmed: ${labels.join(', ')}.`);
         }}
       >
         <Text
@@ -523,17 +567,18 @@ export function Validation({ kind, ctx }: StudyProps<'checkbox' | 'radio'>): Rea
             {kind === 'radio' ? 'Choose one option to continue.' : 'Choose at least one format.'}
           </bdi>
         </Text>
-        <div
-          className="choice-study-grid"
-          role={kind === 'radio' ? 'radiogroup' : 'group'}
+        <StudyGroup
+          kind={kind}
+          name={id}
           aria-labelledby={`${id}-title`}
-          aria-required={kind === 'radio' ? true : undefined}
-          aria-invalid={kind === 'radio' && invalid ? true : undefined}
+          required
+          status={invalid ? 'danger' : 'neutral'}
           aria-describedby={`${id}-help${invalid ? ` ${id}-error` : ''}`}
         >
           {options.map(({ value, label }, index) => (
-            <Card
-              {...ctx.subject}
+            <StudyCard
+              kind={kind}
+              ctx={ctx}
               key={value}
               name={id}
               value={value}
@@ -554,11 +599,9 @@ export function Validation({ kind, ctx }: StudyProps<'checkbox' | 'radio'>): Rea
                       : 'A compact format for everyday work.'}
                 </bdi>
               }
-              status={invalid ? 'danger' : 'neutral'}
-              aria-describedby={invalid ? `${id}-error` : undefined}
             />
           ))}
-        </div>
+        </StudyGroup>
         <Text
           as="div"
           size="body-s"
@@ -578,28 +621,27 @@ export function Validation({ kind, ctx }: StudyProps<'checkbox' | 'radio'>): Rea
           )}
           {confirmed && <bdi>{confirmed}</bdi>}
         </Text>
-        <Button size="s" variant="secondary" tone="neutral" type="submit">
-          Check selection
-        </Button>
       </form>
-      <Study title="Selected + invalid + focus / disabled overrides invalid">
-        <div className="choice-study-grid">
-          <Card
-            {...ctx.subject}
+      <Study title="Selected with an error / unavailable option">
+        <StudyGroup kind={kind} aria-label="Retention conflicts" defaultValue="conflict">
+          <StudyCard
+            kind={kind}
+            ctx={ctx}
+            value="conflict"
             label="Selected option needs attention"
             description={<bdi>This choice conflicts with the current retention policy.</bdi>}
             status="danger"
             defaultChecked
-            previewFocus
           />
-          <Card
-            {...ctx.subject}
+          <StudyCard
+            kind={kind}
+            ctx={ctx}
             label="Unavailable option"
             description={<bdi>Enable the workspace archive first.</bdi>}
             status="danger"
             disabled
           />
-        </div>
+        </StudyGroup>
       </Study>
     </Stack>
   );
@@ -609,7 +651,6 @@ export function Overflow({ kind, ctx }: StudyProps): ReactElement {
   const id = useId();
   const target = `${kind}-card-guidance-${ctx.theme.id}`;
   const page = specimenBlockPage(`${kind}-card`, 'states', 'overflow', ctx.theme.id);
-  const Card = cards[kind];
   return (
     <Stack gap={24}>
       {kind === 'radio' && (
@@ -623,14 +664,15 @@ export function Overflow({ kind, ctx }: StudyProps): ReactElement {
           <bdi>Which retention policy should apply?</bdi>
         </Text>
       )}
-      <div
-        className="choice-study-grid"
-        role={kind === 'radio' ? 'radiogroup' : 'group'}
+      <StudyGroup
+        kind={kind}
+        defaultValue="release-snapshots"
         aria-labelledby={kind === 'radio' ? `${id}-question` : undefined}
         aria-label={kind === 'radio' ? undefined : 'Long content studies'}
       >
-        <Card
-          {...ctx.subject}
+        <StudyCard
+          kind={kind}
+          ctx={ctx}
           name={id}
           value={kind === 'radio' ? 'full-history' : undefined}
           label={
@@ -661,8 +703,9 @@ export function Overflow({ kind, ctx }: StudyProps): ReactElement {
             </Link>
           }
         />
-        <Card
-          {...ctx.subject}
+        <StudyCard
+          kind={kind}
+          ctx={ctx}
           name={id}
           value={kind === 'radio' ? 'release-snapshots' : undefined}
           label={
@@ -689,7 +732,7 @@ export function Overflow({ kind, ctx }: StudyProps): ReactElement {
           defaultChecked
           indicatorPlacement="end"
         />
-      </div>
+      </StudyGroup>
       <Text
         as="p"
         size="body-s"
@@ -710,7 +753,6 @@ export function Overflow({ kind, ctx }: StudyProps): ReactElement {
 }
 
 export function Overlay({ kind, ctx }: StudyProps): ReactElement {
-  const Card = cards[kind];
   const id = useId();
   return (
     <div
@@ -746,14 +788,12 @@ export function Overlay({ kind, ctx }: StudyProps): ReactElement {
             </bdi>
           </Text>
         </div>
-        <div
-          className="choice-study-grid"
-          role={kind === 'radio' ? 'radiogroup' : 'group'}
-          aria-labelledby={`${id}-question`}
-        >
-          <Card
-            {...ctx.subject}
+        <StudyGroup kind={kind} aria-labelledby={`${id}-question`} defaultValue="primary">
+          <StudyCard
+            kind={kind}
+            ctx={ctx}
             name={id}
+            value="primary"
             label={
               kind === 'radio'
                 ? 'Workspace members'
@@ -772,8 +812,9 @@ export function Overlay({ kind, ctx }: StudyProps): ReactElement {
             }
             defaultChecked
           />
-          <Card
-            {...ctx.subject}
+          <StudyCard
+            kind={kind}
+            ctx={ctx}
             name={id}
             label={
               kind === 'radio'
@@ -792,10 +833,11 @@ export function Overlay({ kind, ctx }: StudyProps): ReactElement {
               </bdi>
             }
           />
-        </div>
+        </StudyGroup>
         {kind !== 'radio' && (
-          <Card
-            {...ctx.subject}
+          <StudyCard
+            kind={kind}
+            ctx={ctx}
             label="Policy controlled"
             description={
               <bdi>Managed by your organization. Ask an administrator to change it.</bdi>
@@ -816,15 +858,17 @@ export function SwitchPending({ ctx }: PreviewProps): ReactElement {
       {(['s', 'm', 'l'] as const).map((size) => (
         <Study key={size} title={`${size.toUpperCase()} · pending change`}>
           <div className="choice-study-grid">
-            <SwitchCard
-              {...ctx.subject}
+            <StudyCard
+              kind="switch"
+              ctx={ctx}
               size={size}
               label="Email notifications"
               description={<bdi>Turning notifications on…</bdi>}
               loading
             />
-            <SwitchCard
-              {...ctx.subject}
+            <StudyCard
+              kind="switch"
+              ctx={ctx}
               size={size}
               label="Email notifications"
               description={<bdi>Turning notifications off…</bdi>}
@@ -836,16 +880,18 @@ export function SwitchPending({ ctx }: PreviewProps): ReactElement {
       ))}
       <Study title="Managed and unavailable settings">
         <div className="choice-study-grid">
-          <SwitchCard
-            {...ctx.subject}
+          <StudyCard
+            kind="switch"
+            ctx={ctx}
             label="Organization policy"
             description={<bdi>Synchronizing the managed setting…</bdi>}
             defaultChecked
             readOnly
             loading
           />
-          <SwitchCard
-            {...ctx.subject}
+          <StudyCard
+            kind="switch"
+            ctx={ctx}
             label="Unavailable integration"
             description={<bdi>Reconnect the integration to change this setting.</bdi>}
             defaultChecked
@@ -891,15 +937,16 @@ export function SwitchRequest({ ctx }: PreviewProps): ReactElement {
           : '';
   return (
     <Stack gap={12} style={{ inlineSize: 'min(100%, 28rem)' }}>
-      <SwitchCard
-        {...ctx.subject}
+      <StudyCard
+        kind="switch"
+        ctx={ctx}
         label="Review reminders"
         description={<bdi>Notify the page owner seven days before a review is due.</bdi>}
         checked={enabled}
         loading={requested !== null}
         aria-describedby={id}
-        onChange={(event) => {
-          setRequested(event.currentTarget.checked);
+        onCheckedChange={(next) => {
+          setRequested(next);
           setResult('idle');
         }}
         secondary={

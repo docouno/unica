@@ -13,7 +13,7 @@ interface InputCallbacks {
 
 interface InputBinding extends InputCallbacks {
   readonly input: HTMLInputElement;
-  readonly row: HTMLLabelElement;
+  readonly row: HTMLElement;
   root: Node;
   form: HTMLFormElement | null;
   name: string;
@@ -54,7 +54,7 @@ function createRootBindings(root: Node): RootBindings {
     const label = event.target.closest<HTMLLabelElement>('label');
     const input = label?.control;
     const binding = input && inputs.get(input as HTMLInputElement);
-    return binding && binding.row !== label ? (label ?? undefined) : undefined;
+    return binding && label && !binding.row.contains(label) ? (label ?? undefined) : undefined;
   }
 
   function updateHover(next: InputBinding | undefined): void {
@@ -217,7 +217,7 @@ function syncRoot(binding: InputBinding): boolean {
 
 export function bindBinaryInput(
   input: HTMLInputElement,
-  row: HTMLLabelElement,
+  row: HTMLElement,
   callbacks: InputCallbacks,
 ): () => void {
   const binding: InputBinding = {

@@ -48,12 +48,19 @@ const scenes: readonly SceneDefinition[] = Object.values(sceneModules).sort((a, 
   a.id.localeCompare(b.id),
 );
 
+const sharedDocs: Readonly<Record<string, string>> = {
+  'checkbox-card': 'choice-card',
+  'radio-card': 'choice-card',
+  'switch-card': 'choice-card',
+};
+
 function resolveUnicaDocs(component: ComponentDefinition): ComponentDocsSource | undefined {
   const family = familyByComponentId.get(component.id);
   const candidates = family && family !== component.id ? [component.id, family] : [component.id];
 
   if (component.status === 'UI') {
-    for (const slug of candidates) {
+    const shared = sharedDocs[component.id];
+    for (const slug of shared ? [...candidates, shared] : candidates) {
       const key = `../../../docs/components/${slug}.md`;
       const loader = uiDocsModules[key];
       if (loader) {
@@ -88,6 +95,9 @@ function resolveUnicaDocLink(
     return undefined;
   }
   const uiDoc = /^(?:\.\/)?([a-z0-9-]+)\.md$/.exec(clean);
+  if (uiDoc?.[1] === 'choice-card' || /(?:^|\/)docs\/components\/choice-card\.md$/.test(clean)) {
+    return { item: 'checkbox-card', tab: 'usage' };
+  }
   if (uiDoc?.[1] && componentIds.has(uiDoc[1])) {
     return { item: uiDoc[1], tab: 'usage' };
   }
