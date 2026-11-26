@@ -1,0 +1,204 @@
+@layer unica.components {
+  .unica-empty {
+    --_empty-medallion-size: 56px;
+    --_empty-glyph-size: 32px;
+    --_empty-media-size: 120px;
+    --_empty-media-gap: 18px;
+    --_empty-copy-gap: var(--space-8);
+    --_empty-action-gap: var(--space-24);
+    --_empty-description-width: 38ch;
+
+    flex-direction: column;
+    align-items: center;
+    min-inline-size: 0;
+    color: var(--fg-primary);
+    font-family: var(--font-family-base);
+    text-align: center;
+    overflow-wrap: anywhere;
+  }
+
+  .unica-empty:where(:not([hidden], [popover]:not(:popover-open))),
+  .unica-empty-actions:where(:not([hidden], [popover]:not(:popover-open))) {
+    display: flex;
+  }
+
+  .unica-empty[data-unica-empty-size='s'] {
+    --_empty-medallion-size: 40px;
+    --_empty-glyph-size: 24px;
+    --_empty-media-size: 80px;
+    --_empty-media-gap: var(--space-12);
+    --_empty-copy-gap: 6px;
+    --_empty-action-gap: var(--space-16);
+    --_empty-description-width: 34ch;
+  }
+
+  .unica-empty[data-unica-empty-size='l'] {
+    --_empty-medallion-size: 72px;
+    --_empty-glyph-size: 40px;
+    --_empty-media-size: 160px;
+    --_empty-media-gap: var(--space-24);
+    --_empty-copy-gap: 10px;
+    --_empty-action-gap: var(--space-32);
+    --_empty-description-width: 42ch;
+  }
+
+  .unica-empty[data-unica-empty-align='start'] {
+    align-items: flex-start;
+    text-align: start;
+  }
+
+  .unica-empty
+    > .unica-empty-media:where(
+      :not([hidden], [popover], [data-unica-empty-media='medallion']:empty)
+    )
+    ~ :is(.unica-empty-title, .unica-empty-description):where(:not([popover])) {
+    margin-block-start: var(--_empty-media-gap);
+  }
+
+  .unica-empty
+    > .unica-empty-title:where(:not([hidden], [popover]))
+    ~ .unica-empty-description:where(:not([popover])) {
+    margin-block-start: var(--_empty-copy-gap);
+  }
+
+  .unica-empty
+    > :is(.unica-empty-media, .unica-empty-title, .unica-empty-description):where(
+      :not([hidden], [popover], [data-unica-empty-media='medallion']:empty)
+    )
+    ~ .unica-empty-actions:where(:not([popover])) {
+    margin-block-start: var(--_empty-action-gap);
+  }
+
+  .unica-empty-title[data-unica-title-size] {
+    max-inline-size: min(100%, 28ch);
+    color: var(--fg-primary);
+    letter-spacing: normal;
+  }
+
+  .unica-empty-title:focus-visible {
+    border-radius: var(--radius-xs);
+    outline: 2px solid var(--focus-ring-color);
+    outline-offset: 3px;
+  }
+
+  .unica-empty-description {
+    max-inline-size: min(100%, var(--_empty-description-width, 38ch));
+    color: color-mix(in oklab, var(--fg-subtle) 80%, var(--fg-muted));
+    text-wrap: pretty;
+  }
+
+  .unica-empty[data-unica-empty-align='center'] > .unica-empty-description {
+    text-wrap: balance;
+  }
+
+  .unica-empty-media[data-unica-empty-media='medallion'] {
+    --_empty-media-signal: var(--fg-subtle);
+
+    place-items: center;
+    inline-size: var(--_empty-medallion-size, 56px);
+    max-inline-size: 100%;
+    aspect-ratio: 1;
+    border: var(--_pill-border-width) solid var(--card-border);
+    border-radius: var(--radius-full);
+    background: color-mix(in srgb, var(--_empty-media-signal) 6%, transparent);
+    color: color-mix(in oklab, var(--_empty-media-signal) 76%, var(--fg-subtle));
+    font-size: var(--_empty-glyph-size, 32px);
+  }
+
+  .unica-empty-media[data-unica-empty-media='medallion']:where(
+      :not([hidden], [popover]:not(:popover-open))
+    ) {
+    display: grid;
+  }
+
+  .unica-empty-media[data-unica-empty-color='accent'] {
+    --_empty-media-signal: var(--accent-soft-fg);
+  }
+
+  .unica-empty-media[data-unica-empty-color='info'] {
+    --_empty-media-signal: var(--status-info-soft-fg);
+  }
+
+  .unica-empty-media[data-unica-empty-color='success'] {
+    --_empty-media-signal: var(--status-success-soft-fg);
+  }
+
+  .unica-empty-media[data-unica-empty-color='warning'] {
+    --_empty-media-signal: var(--status-warning-soft-fg);
+  }
+
+  .unica-empty-media[data-unica-empty-color='danger'] {
+    --_empty-media-signal: var(--status-danger-soft-fg);
+  }
+
+  .unica-empty-media[data-unica-empty-media='illustration'] {
+    max-inline-size: min(100%, var(--_empty-media-size, 120px));
+  }
+
+  /* An SVG with only a ratio needs an available inline size to resolve its auto dimensions. */
+  .unica-empty-media[data-unica-empty-media='illustration']:has(> svg[viewBox]) {
+    inline-size: var(--_empty-media-size, 120px);
+  }
+
+  .unica-empty-media[data-unica-empty-media='illustration'] > :is(img, svg) {
+    inline-size: auto;
+    block-size: auto;
+    max-inline-size: 100%;
+    max-block-size: var(--_empty-media-size, 120px);
+    object-fit: contain;
+  }
+
+  .unica-empty-media[data-unica-empty-media='illustration']
+    > :is(img, svg):where(:not([hidden], [popover]:not(:popover-open))) {
+    display: block;
+  }
+
+  .unica-empty[data-unica-empty-align='center']
+    > .unica-empty-media[data-unica-empty-media='illustration']
+    > svg {
+    margin-inline: auto;
+  }
+
+  .unica-empty-actions {
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-8);
+    min-inline-size: 0;
+    max-inline-size: 100%;
+  }
+
+  .unica-empty[data-unica-empty-align='start'] > .unica-empty-actions {
+    justify-content: flex-start;
+  }
+
+  .unica-empty-actions > * {
+    min-inline-size: 0;
+    max-inline-size: 100%;
+  }
+
+  :is(.unica-empty, .unica-empty-media, .unica-empty-actions)[hidden]:not([hidden='until-found' i]),
+  .unica-empty-media[data-unica-empty-media='medallion']:empty,
+  .unica-empty-media > :is(img, svg)[hidden]:not([hidden='until-found' i]) {
+    display: none;
+  }
+
+  @media (prefers-contrast: more) {
+    .unica-empty-description {
+      color: var(--fg-secondary);
+    }
+  }
+
+  @media (forced-colors: active) {
+    .unica-empty-media[data-unica-empty-media='medallion'] {
+      forced-color-adjust: none;
+      border: 1px solid GrayText;
+      background: Canvas;
+      color: CanvasText;
+    }
+
+    .unica-empty-title:focus-visible {
+      outline-color: Highlight;
+    }
+  }
+}

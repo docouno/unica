@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { assertFocused } from '../helpers.mjs';
+import { assertFocused, textContrast } from '../helpers.mjs';
 
 const presets = [
   'soft-dark',
@@ -131,59 +131,6 @@ function assertEmptySlotMatches(empty, omitted) {
     near(empty[key].top - empty.body.top, omitted[key].top - omitted.body.top, `${key} top`);
   }
   near(empty.figureHeight, omitted.figureHeight, 'figure height');
-}
-
-async function captionContrast(page) {
-  const caption = page.getByTestId('surface-quote').locator('figcaption');
-  const foreground = await caption.evaluate((node) => {
-    const color = getComputedStyle(node).color;
-    let opacity = 1;
-    for (let parent = node; parent; parent = parent.parentElement) {
-      opacity *= +getComputedStyle(parent).opacity;
-    }
-    if (!node.checkVisibility({ checkOpacity: true, checkVisibilityCSS: true })) {
-      throw new Error('The reference caption is hidden');
-    }
-    node.style.color = 'transparent';
-    return { color, opacity };
-  });
-  const png = await caption.screenshot({ animations: 'disabled' });
-  return page.evaluate(
-    async ({ png, color, opacity }) => {
-      const bitmap = await createImageBitmap(
-        await (await fetch(`data:image/png;base64,${png}`)).blob(),
-      );
-      const canvas = new OffscreenCanvas(bitmap.width, bitmap.height);
-      const ctx = canvas.getContext('2d', { willReadFrequently: true });
-      ctx.drawImage(bitmap, 0, 0);
-      const { data: backdrop } = ctx.getImageData(0, 0, bitmap.width, bitmap.height);
-      ctx.clearRect(0, 0, 1, 1);
-      ctx.fillStyle = color;
-      ctx.fillRect(0, 0, 1, 1);
-      const [r, g, b, alpha] = ctx.getImageData(0, 0, 1, 1).data;
-      const blend = (opacity * alpha) / 255;
-      const weights = [0.2126, 0.7152, 0.0722];
-      const luminance = (rgb) =>
-        rgb.reduce((sum, value, axis) => {
-          const s = value / 255;
-          return sum + weights[axis] * (s <= 0.04045 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4);
-        }, 0);
-      let weakest = Infinity;
-      for (let index = 0; index < backdrop.length; index += 4) {
-        const bg = backdrop.subarray(index, index + 3);
-        const text = [r, g, b].map((channel, axis) => channel * blend + bg[axis] * (1 - blend));
-        const backgroundLight = luminance(bg);
-        const textLight = luminance(text);
-        weakest = Math.min(
-          weakest,
-          (Math.max(backgroundLight, textLight) + 0.05) /
-            (Math.min(backgroundLight, textLight) + 0.05),
-        );
-      }
-      return weakest;
-    },
-    { png: png.toString('base64'), ...foreground },
-  );
 }
 
 const scenarios = {
@@ -516,7 +463,7 @@ for (const theme of presets) {
       const { rail } = await quoteGeometry(page.getByTestId('both'));
       assert.equal(rail.style, theme.startsWith('pixel-') ? 'double' : 'solid');
       assert.equal(rail.width, theme.startsWith('frost-') ? '2px' : '3px');
-      const contrast = await captionContrast(page);
+      const contrast = await textContrast(page.getByTestId('surface-quote').locator('figcaption'));
       assert.ok(contrast >= 4.5, `${theme} ${surface} caption contrast ${contrast.toFixed(2)}:1`);
     }
   };
