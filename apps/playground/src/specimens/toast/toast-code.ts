@@ -25,8 +25,7 @@ export function toastCode(values: ToastValues): string {
   const keyHandler = `onKeyDown={(event) => {
     if (event.repeat && (event.key === 'Enter' || event.key === ' ')) event.preventDefault();
   }}`;
-  return `import { Button } from '@docouno/unica';
-import { ToastCard } from './prototypes/toast/toast.proto.js';
+  return `import { Button, Toast } from '@docouno/unica';
 ${ownerSource}
 export function SavedChange() {
   const { id, phase, change } = useToastExample();
@@ -38,10 +37,9 @@ export function SavedChange() {
     );
   }${undo ? "\n  const reverted = phase === 'reverted';" : ''}
   return (
-    <ToastCard
+    <Toast
       id={id}
-      ${content}
-      ${keyHandler}
+      ${content}${values.dismissLabel.trim() ? ' dismissLabel=' + previewText(values.dismissLabel) : ''}
       onDismiss={() => change('dismissed')}
     />
   );

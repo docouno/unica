@@ -2,7 +2,7 @@ import { useState } from 'react';
 import type { ReactElement } from 'react';
 import { ArrowRightIcon, FileTextIcon, PushPinIcon } from '@phosphor-icons/react';
 import { Avatar, Button } from '@docouno/unica';
-import { ToastCard } from '../prototypes/toast/toast.proto.js';
+import { Toast } from '@docouno/unica';
 import {
   Alert,
   AlertDescription,
@@ -278,7 +278,7 @@ function OverviewScene(): ReactElement {
       </FolioWorkspace>
       {toast && (
         <div className="folio-toast-dock">
-          <ToastCard
+          <Toast
             status="success"
             title={created ? 'New document ready' : 'Synced 3 runbooks'}
             onDismiss={() => setToast(false)}
@@ -287,7 +287,7 @@ function OverviewScene(): ReactElement {
             {created
               ? 'Your draft is ready in Architecture.'
               : 'Core Infrastructure repository indexed 2m ago.'}
-          </ToastCard>
+          </Toast>
         </div>
       )}
     </FolioScene>

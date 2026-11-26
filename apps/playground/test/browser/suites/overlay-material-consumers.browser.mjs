@@ -191,7 +191,16 @@ const scenarios = {
     );
     await dialog.getByRole('button', { name: 'Send 2 invites' }).click();
     await dialog.waitFor({ state: 'hidden' });
-    await page.getByText('Workspace role: Viewer. Invite links expire in 14 days.').waitFor();
+    const notifications = page.getByRole('region', { name: 'Notifications', exact: true });
+    const receipt = 'Workspace role: Viewer. Invite links expire in 14 days.';
+    await notifications
+      .getByRole('status')
+      .filter({ hasText: receipt })
+      .waitFor({ state: 'attached' });
+    await notifications
+      .getByRole('group', { name: '2 invitations prepared', exact: true })
+      .getByText(receipt, { exact: true })
+      .waitFor();
   },
 };
 

@@ -17,6 +17,7 @@ import {
   Select,
   Slider,
   Text,
+  Toast,
 } from '@docouno/unica';
 import { useId, useRef, useState } from 'react';
 import type { ReactElement } from 'react';
@@ -30,7 +31,6 @@ import {
   StickyActionBar,
 } from '../prototypes/app-shell/app-shell.proto.js';
 import { Breadcrumb, BreadcrumbPage } from '../prototypes/breadcrumb/breadcrumb.proto.js';
-import { ToastCard } from '../prototypes/toast/toast.proto.js';
 import {
   Table,
   TableBody,
@@ -417,9 +417,9 @@ function PreferencesScene(): ReactElement {
               </TableScroll>
             </section>
             {notice && (
-              <ToastCard status="success" title="Preferences saved" onDismiss={() => setNotice('')}>
+              <Toast status="success" title="Preferences saved" onDismiss={() => setNotice('')}>
                 {notice}
-              </ToastCard>
+              </Toast>
             )}
             <StickyActionBar
               className="folio-preferences-actions"
