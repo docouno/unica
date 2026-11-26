@@ -1,4 +1,8 @@
 import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
   Badge,
   Button,
   Card,
@@ -26,12 +30,6 @@ import {
   StickyActionBar,
 } from '../prototypes/app-shell/app-shell.proto.js';
 import { Breadcrumb, BreadcrumbPage } from '../prototypes/breadcrumb/breadcrumb.proto.js';
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from '../prototypes/disclosure/disclosure.proto.js';
 import { ToastCard } from '../prototypes/toast/toast.proto.js';
 import {
   Table,

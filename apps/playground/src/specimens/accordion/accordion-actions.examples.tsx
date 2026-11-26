@@ -1,6 +1,10 @@
 import { useEffect, useState } from 'react';
 import { StarIcon } from '@phosphor-icons/react';
 import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
   Button,
   Card,
   Checkbox,
@@ -12,13 +16,6 @@ import {
   Title,
   defineGlyph,
 } from '@docouno/unica';
-import { CodeBlock } from '../../prototypes/code-block/code-block.proto.js';
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from '../../prototypes/disclosure/disclosure.proto.js';
 
 const previewUrl = 'https://preview.example.com/releases/2.4';
 
@@ -142,7 +139,23 @@ function FileReview({ accordionProps = {} } = {}) {
               <Code plate={false}>{name}</Code>
             </AccordionTrigger>
             <AccordionContent>
-              <CodeBlock aria-label={`Changes to ${name}`}>{diff}</CodeBlock>
+              <pre
+                role="group"
+                aria-label={`Changes to ${name}`}
+                dir="ltr"
+                style={{
+                  margin: 0,
+                  padding: 'var(--space-12)',
+                  border: '1px solid var(--border-subtle)',
+                  borderRadius: 'var(--size-s-radius)',
+                  background: 'var(--bg-surface)',
+                  fontFamily: 'var(--font-family-mono)',
+                  whiteSpace: 'pre-wrap',
+                  overflowWrap: 'anywhere',
+                }}
+              >
+                <code>{diff}</code>
+              </pre>
             </AccordionContent>
           </AccordionItem>
         ))}

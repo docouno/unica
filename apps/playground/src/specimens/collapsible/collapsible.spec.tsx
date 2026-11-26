@@ -1,15 +1,12 @@
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from '../../prototypes/disclosure/disclosure.proto.js';
-import '../../prototypes/disclosure/disclosure.examples.css';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@docouno/unica';
+import '../shared/disclosure.examples.css';
 import { defineComponent } from '../../workbench/types.js';
 import { withOverlaySurface } from '../shared/with-overlay-surface.js';
 import { DeliveryDetails } from './collapsible-delivery.examples.js';
 import deliverySource from './collapsible-delivery.examples.tsx?raw';
 import {
   Availability,
+  DraftLifecycle,
   FlushContent,
   OnOverlay,
   TriggerStates,
@@ -21,9 +18,45 @@ export default defineComponent({
   title: 'Collapsible',
   componentName: 'Collapsible',
   category: 'Surfaces & Structure',
-  status: 'Proto',
+  status: 'UI',
   summary: 'Reveal one section inline with a disclosure row or an existing button.',
   props: {
+    open: {
+      kind: 'slot',
+      publicType: 'boolean',
+      group: 'Interaction',
+      default: 'omitted',
+      description:
+        'Choose a controlled state. The example logs proposals while holding this state.',
+      choices: [
+        { value: 'omitted', label: 'Uncontrolled', omit: true },
+        { value: 'closed', code: 'false' },
+        { value: 'open', code: 'true' },
+      ],
+    },
+    contentId: {
+      kind: 'enum',
+      group: 'Accessibility',
+      default: 'generated',
+      publicType: 'string',
+      choices: [
+        { value: 'generated', label: 'Generated', omit: true },
+        { value: 'tax-details', label: 'Custom ID' },
+      ],
+      description: 'Set the panel ID or generate a unique ID.',
+    },
+    lazyMount: {
+      kind: 'boolean',
+      group: 'Interaction',
+      default: false,
+      description: 'Mount the body on its first open.',
+    },
+    unmountOnExit: {
+      kind: 'boolean',
+      group: 'Interaction',
+      default: false,
+      description: 'Remove the body after its closing transition.',
+    },
     size: {
       kind: 'enum',
       group: 'Geometry',
@@ -52,10 +85,24 @@ export default defineComponent({
       code: '(open) => console.log(open)',
     },
   },
+  constraints: [
+    ...(['closed', 'open'] as const).map((open) => ({
+      kind: 'precedence' as const,
+      when: { open },
+      affects: ['defaultOpen'],
+      reason: 'The controlled open prop determines whether the section is expanded.',
+    })),
+    {
+      kind: 'precedence',
+      when: { unmountOnExit: true },
+      affects: ['lazyMount'],
+      reason: 'Unmount on exit also waits for the first open before mounting.',
+    },
+  ],
   code: (
     _values,
     attributes,
-  ) => `import { Collapsible, CollapsibleContent, CollapsibleTrigger } from './prototypes/disclosure/disclosure.proto.js';
+  ) => `import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@docouno/unica';
 
 <Collapsible${attributes}>
   <CollapsibleTrigger>Tax</CollapsibleTrigger>
@@ -72,7 +119,11 @@ export default defineComponent({
     >
       <Collapsible
         {...ctx.subject}
-        key={String(values.defaultOpen)}
+        key={`${values.open}-${values.defaultOpen}`}
+        open={values.open === 'omitted' ? undefined : values.open === 'open'}
+        contentId={ctx.comparing || values.contentId === 'generated' ? undefined : values.contentId}
+        lazyMount={values.lazyMount}
+        unmountOnExit={values.unmountOnExit}
         size={values.size}
         disabled={values.disabled}
         defaultOpen={values.defaultOpen}
@@ -132,6 +183,29 @@ export default defineComponent({
       render: withOverlaySurface(FlushContent, 'border-box'),
     },
     {
+      id: 'draft-lifecycle',
+      title: 'Draft lifecycle',
+      kind: 'behavior',
+      mode: 'live',
+      reset: true,
+      controls: {
+        mount: {
+          kind: 'enum',
+          label: 'Mount policy',
+          default: 'keep',
+          choices: [
+            { value: 'keep', label: 'Keep mounted' },
+            { value: 'lazy', label: 'On first open' },
+            { value: 'discard', label: 'Unmount on exit' },
+          ],
+        },
+        accept: { kind: 'boolean', label: 'Accept open changes', default: true },
+      },
+      caption:
+        'Open the section, edit the draft, then close and reopen it. Turn off acceptance to keep the current expanded state.',
+      render: withOverlaySurface(DraftLifecycle, 'border-box'),
+    },
+    {
       id: 'overlay',
       title: 'On a floating surface',
       surface: 'overlay',
@@ -150,7 +224,7 @@ export default defineComponent({
       mode: 'live',
       caption:
         'Edit the reply-to address and use Close details. Focus returns to Delivery details, and reopening restores the draft.',
-      code: deliverySource.replaceAll('../../prototypes/', './prototypes/'),
+      code: deliverySource,
       render: withOverlaySurface(
         ({ ctx }) => (
           <div data-example-disclosure="" style={{ inlineSize: 'min(100%, 34rem)' }}>

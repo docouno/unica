@@ -1,5 +1,8 @@
 import {
   Badge,
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
   HoverCard,
   HoverCardContent,
   HoverCardTrigger,
@@ -19,11 +22,6 @@ import {
   TrashIcon,
 } from '@phosphor-icons/react';
 import { AsidePanel } from '../prototypes/app-shell/app-shell.proto.js';
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from '../prototypes/disclosure/disclosure.proto.js';
 import { List, ListItem } from '../prototypes/list/list.proto.js';
 import { Menu } from '../prototypes/menu/menu.live.js';
 import type { MenuEntry } from '../prototypes/menu/menu.entries.js';

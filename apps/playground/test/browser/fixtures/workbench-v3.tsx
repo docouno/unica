@@ -5,7 +5,8 @@ import avatarGroupSpec from '../../../src/specimens/avatar/avatar-group.spec.js'
 import avatarSpec from '../../../src/specimens/avatar/avatar.spec.js';
 import blockquoteSpec from '../../../src/specimens/blockquote/blockquote.spec.js';
 import buttonSpec from '../../../src/specimens/button/button.spec.js';
-import accordionSpec from '../../../src/specimens/disclosure/accordion.spec.js';
+import accordionSpec from '../../../src/specimens/accordion/accordion.spec.js';
+import collapsibleSpec from '../../../src/specimens/collapsible/collapsible.spec.js';
 import containerSpec from '../../../src/specimens/layout/container.spec.js';
 import linkSpec from '../../../src/specimens/link/link.spec.js';
 import progressSpec from '../../../src/specimens/progress/progress.spec.js';
@@ -39,6 +40,7 @@ const config: WorkbenchConfig = {
     avatarGroupSpec,
     blockquoteSpec,
     accordionSpec,
+    collapsibleSpec,
     containerSpec,
     linkSpec,
     tagSpec,

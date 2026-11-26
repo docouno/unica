@@ -1,6 +1,10 @@
 export { THEME_PRESETS, getUnicaRootProps } from './core/themes.js';
 export { defineGlyph } from './core/glyph.js';
 export type {
+  AccordionContentProps,
+  AccordionItemProps,
+  AccordionProps,
+  AccordionTriggerProps,
   AlertActionsProps,
   AlertCloseProps,
   AlertDescriptionProps,
@@ -57,6 +61,9 @@ export type {
   SwitchCardProps,
   CodeProps,
   CodeStatus,
+  CollapsibleContentProps,
+  CollapsibleProps,
+  CollapsibleTriggerProps,
   ContainerProps,
   ControlSize,
   DividerProps,

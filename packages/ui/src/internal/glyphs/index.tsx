@@ -7,6 +7,7 @@ interface GlyphProps {
 interface CaretGlyphProps extends GlyphProps {
   // The owning control resolves logical start and end against its reading direction.
   readonly direction: 'up' | 'down' | 'left' | 'right';
+  readonly weight?: 'regular' | 'bold';
 }
 
 const caretRotation: Record<CaretGlyphProps['direction'], number> = {
@@ -74,11 +75,19 @@ export function IncreaseGlyph({ className }: GlyphProps): ReactElement {
   );
 }
 
-export function CaretGlyph({ className, direction }: CaretGlyphProps): ReactElement {
+export function CaretGlyph({
+  className,
+  direction,
+  weight = 'regular',
+}: CaretGlyphProps): ReactElement {
   return (
     <Glyph
       className={className}
-      path="M213.66,101.66l-80,80a8,8,0,0,1-11.32,0l-80-80A8,8,0,0,1,53.66,90.34L128,164.69l74.34-74.35a8,8,0,0,1,11.32,11.32Z"
+      path={
+        weight === 'bold'
+          ? 'M216.49,104.49l-80,80a12,12,0,0,1-17,0l-80-80a12,12,0,0,1,17-17L128,159l71.51-71.52a12,12,0,0,1,17,17Z'
+          : 'M213.66,101.66l-80,80a8,8,0,0,1-11.32,0l-80-80A8,8,0,0,1,53.66,90.34L128,164.69l74.34-74.35a8,8,0,0,1,11.32,11.32Z'
+      }
       transform={`rotate(${caretRotation[direction]} 128 128)`}
     />
   );

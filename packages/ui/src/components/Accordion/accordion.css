@@ -1,0 +1,43 @@
+@layer unica.components {
+  .unica-accordion-item {
+    min-inline-size: 0;
+  }
+
+  .unica-accordion[data-unica-accordion-dividers]
+    > .unica-accordion-item:not([hidden])
+    ~ .unica-accordion-item:not([hidden]) {
+    padding-block-start: var(--space-4);
+    border-block-start: 1px solid var(--_disclosure-divider-color);
+  }
+
+  .unica-accordion[data-unica-accordion-dividers]
+    > .unica-accordion-item:not([hidden]):has(~ .unica-accordion-item:not([hidden])) {
+    padding-block-end: var(--space-4);
+  }
+
+  .unica-accordion-header {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-8);
+  }
+
+  .unica-accordion-heading {
+    flex: 1;
+    min-inline-size: 0;
+    margin: 0;
+  }
+
+  .unica-accordion-action {
+    flex: none;
+    display: grid;
+    align-items: center;
+  }
+
+  @media (forced-colors: active) {
+    .unica-accordion[data-unica-accordion-dividers]
+      > .unica-accordion-item:not([hidden])
+      ~ .unica-accordion-item:not([hidden]) {
+      border-color: GrayText;
+    }
+  }
+}

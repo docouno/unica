@@ -1686,7 +1686,7 @@ export default {
       freeze: '1',
     });
     const board = page.locator('[data-wb-block="actions"] .wb-artboard');
-    const roots = board.locator('.accordion-proto[data-wb-subject]');
+    const roots = board.locator('[data-wb-subject]');
     await roots.first().waitFor();
     assert.equal(await roots.count(), 3);
     const before = await roots.first().evaluate((el) => [el.offsetWidth, el.offsetHeight]);
@@ -1707,7 +1707,7 @@ export default {
     });
     assert.ok(gapBelowUrl >= 0, 'The complete URL fits above the expiration note');
     await page.waitForFunction(([width, height]) => {
-      const accordion = document.querySelector('[data-wb-block="actions"] .accordion-proto');
+      const accordion = document.querySelector('[data-wb-block="actions"] [data-wb-subject]');
       if (!accordion || accordion.offsetWidth !== width || accordion.offsetHeight <= height) {
         return false;
       }
@@ -1716,6 +1716,75 @@ export default {
         (label) => label.textContent === dimensions,
       );
     }, before);
+  },
+
+  'Shipped disclosure compositions retain independent actions, drafts and the named diff': async ({
+    page,
+    mount,
+  }) => {
+    await mount('workbench-v3', { reducedMotion: 'reduce' });
+    await navigate(page, {
+      item: 'accordion',
+      tab: 'compositions',
+      block: 'actions',
+      family: 'frost',
+      scheme: 'light',
+      surface: 'overlay',
+      vp: '360',
+      scale: '120',
+      dir: 'rtl',
+    });
+    const actions = page.locator('[data-wb-block="actions"] .wb-artboard');
+    await page.context().grantPermissions(['clipboard-read', 'clipboard-write']);
+    const preview = actions.getByRole('button', { name: 'Preview link', exact: true });
+    await actions.getByRole('button', { name: 'Copy link', exact: true }).press('Enter');
+    await actions.getByRole('button', { name: 'Copied', exact: true }).waitFor();
+    assert.equal(await preview.getAttribute('aria-expanded'), 'false');
+    assert.equal(
+      await page.evaluate(() => navigator.clipboard.readText()),
+      'https://preview.example.com/releases/2.4',
+    );
+    const file = actions.getByRole('button', { name: 'pricing.ts', exact: true });
+    const changes = actions.getByRole('group', { name: 'Changes to pricing.ts' });
+    await changes.waitFor();
+    assert.equal(
+      await changes.evaluate(
+        (node) => node.tagName === 'PRE' && getComputedStyle(node).direction === 'ltr',
+      ),
+      true,
+    );
+    const reviewed = actions.getByRole('checkbox', { name: 'Reviewed pricing.ts', exact: true });
+    await reviewed.press('Space');
+    await changes.waitFor({ state: 'hidden' });
+    assert.equal(await file.getAttribute('aria-expanded'), 'false');
+    await file.press('Enter');
+    assert.match(await changes.textContent(), /round\(net \+ tax\)/);
+    assert.equal(await reviewed.isChecked(), true);
+    const favorite = actions.getByRole('button', { name: 'Favorite Open incidents', exact: true });
+    await favorite.press('Space');
+    assert.equal(await favorite.getAttribute('aria-pressed'), 'true');
+    assert.equal(
+      await actions
+        .getByRole('button', { name: 'Open incidents', exact: true })
+        .getAttribute('aria-expanded'),
+      'false',
+    );
+
+    await navigate(page, {
+      item: 'collapsible',
+      tab: 'compositions',
+      block: 'custom',
+      family: 'soft',
+      scheme: 'dark',
+    });
+    const delivery = page.locator('[data-wb-block="custom"] .wb-artboard');
+    const trigger = delivery.getByRole('button', { name: 'Delivery details', exact: true });
+    const draft = delivery.getByRole('textbox', { name: 'Reply-to address', exact: true });
+    await draft.fill('next@example.com');
+    await delivery.getByRole('button', { name: 'Close details', exact: true }).press('Enter');
+    await assertFocused(trigger);
+    await trigger.press('Space');
+    assert.equal(await draft.inputValue(), 'next@example.com');
   },
 
   'Overlay disclosures stay under the pointer when their content opens': async ({
