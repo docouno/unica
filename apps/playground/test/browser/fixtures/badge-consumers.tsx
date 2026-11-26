@@ -1,6 +1,6 @@
 import { Alert, Tag } from '@docouno/unica';
 import { useState } from 'react';
-import { Tabs, TabsContent, TabsList, TabsTab } from '../../../src/prototypes/tabs/tabs.proto.js';
+import { Tabs, TabsPanel, TabsList, TabsTrigger } from '@docouno/unica';
 
 export default function BadgeConsumersFixture() {
   const [showTabs, setShowTabs] = useState(false);
@@ -18,17 +18,17 @@ export default function BadgeConsumersFixture() {
       {showTabs && (
         <Tabs defaultValue="updates" style={{ width: 240 }}>
           <TabsList aria-label="Document sections">
-            <TabsTab value="updates" count={0} countLabel="0 updates">
+            <TabsTrigger value="updates" count={0} countLabel="0 updates">
               Updates
-            </TabsTab>
-            <TabsTab value="notifications">Notifications</TabsTab>
-            <TabsTab value="review" count="99+" countLabel="104 pending reviews">
+            </TabsTrigger>
+            <TabsTrigger value="notifications">Notifications</TabsTrigger>
+            <TabsTrigger value="review" count="99+" countLabel="104 pending reviews">
               Review
-            </TabsTab>
+            </TabsTrigger>
           </TabsList>
-          <TabsContent value="updates">Latest updates</TabsContent>
-          <TabsContent value="notifications">Latest notifications</TabsContent>
-          <TabsContent value="review">Pending reviews</TabsContent>
+          <TabsPanel value="updates">Latest updates</TabsPanel>
+          <TabsPanel value="notifications">Latest notifications</TabsPanel>
+          <TabsPanel value="review">Pending reviews</TabsPanel>
         </Tabs>
       )}
     </>

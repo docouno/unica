@@ -90,11 +90,11 @@ export default {
       await size(listboxSizes.getByRole('option', { name: 'Medium' }).locator('svg:visible'), 16);
       await size(listboxSizes.getByRole('option', { name: 'Large' }).locator('svg:visible'), 20);
       const tabs = page.getByRole('tablist');
-      const label = (text) => tabs.locator('.tab-label-proto').getByText(text, { exact: true });
+      const label = (text) => tabs.locator('.unica-tabs-label').getByText(text, { exact: true });
       const withIcon = await getBox(label('With icon'));
       const plain = await getBox(label('Without icon'));
       assert.ok(Math.abs(withIcon.x + withIcon.width - plain.x - plain.width) < 0.1);
-      assert.equal(await tabs.locator('.tab-count-proto').textContent(), '12');
+      assert.equal(await tabs.locator('.unica-tabs-count').textContent(), '12');
       assert.equal(await tabs.getByRole('tab', { name: 'Icon only' }).locator('svg').count(), 1);
     }
   },

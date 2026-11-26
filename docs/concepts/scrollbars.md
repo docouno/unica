@@ -23,7 +23,7 @@ HoverCard reading areas and Menu lists inset the native scroll owner 4px inside 
 
 Modal and Drawer inset the scrolling body 4px from the inline boundaries and the adjacent header and footer. The body compensates for this inset in its inline padding. The compact recipe follows the scroll owner when a short window switches to whole-panel scrolling.
 
-Horizontal panel tabs keep the inline scroll owner and use in-row chevrons at overflowing edges. The strip has a single visual row with the selection rule and chevrons. Soft and Frost fade the tabs into the clear area beside a chevron. Pixel clips the row at the straight edge of that area. See the [Tabs design reference](../../apps/playground/src/prototypes/tabs/README.md#distribution-and-overflow). The open-document strip also hides its horizontal scrollbar and keeps the native scroll viewport. Its all-documents button opens a list of every open document.
+Horizontal panel tabs keep the inline scroll owner and use in-row chevrons at overflowing edges. The strip has a single visual row with the selection rule and chevrons. Soft and Frost fade the tabs into the clear area beside a chevron. Pixel clips the row at the straight edge of that area. See the [Tabs](../components/tabs.md#distribution-and-overflow). The open-document strip also hides its horizontal scrollbar and keeps the native scroll viewport. Its all-documents button opens a list of every open document.
 
 Authored scrollbar parts use the default arrow cursor. Content cursors and native resize cursors remain independent. Track clicks and thumb dragging stay native.
 

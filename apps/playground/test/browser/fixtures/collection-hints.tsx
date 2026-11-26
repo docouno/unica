@@ -4,7 +4,7 @@ import { Chip, ChipGroup, Tag, TooltipProvider } from '@docouno/unica';
 import { DocumentTabs } from '../../../src/prototypes/app-shell/app-shell.proto.js';
 import { TreeView } from '../../../src/prototypes/app-shell/navigation.proto.js';
 import { SearchGlyph } from '../../../src/prototypes/control-glyphs.js';
-import { Tabs, TabsList, TabsTab } from '../../../src/prototypes/tabs/tabs.proto.js';
+import { Tabs, TabsList, TabsPanel, TabsTrigger } from '@docouno/unica';
 
 const folder = 'Operations documentation archive and reference materials';
 const leaf = 'Platform release verification logs and review checklist';
@@ -63,10 +63,13 @@ export default function CollectionHintsFixture(): ReactElement {
         <div data-testid="tabs-width" style={{ inlineSize: 320 }}>
           <Tabs defaultValue="plain">
             <TabsList aria-label="Views" distribution="equal">
-              <TabsTab value="plain">Notes</TabsTab>
-              <TabsTab value="planning">{planningLabel}</TabsTab>
-              <TabsTab value="search" aria-label="Search" iconLeft={SearchGlyph} />
+              <TabsTrigger value="plain">Notes</TabsTrigger>
+              <TabsTrigger value="planning">{planningLabel}</TabsTrigger>
+              <TabsTrigger value="search" aria-label="Search" iconLeft={SearchGlyph} />
             </TabsList>
+            <TabsPanel value="plain">Notes view</TabsPanel>
+            <TabsPanel value="planning">Planning view</TabsPanel>
+            <TabsPanel value="search">Search view</TabsPanel>
           </Tabs>
           <button
             type="button"

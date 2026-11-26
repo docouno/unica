@@ -18,6 +18,10 @@ import {
   PopoverTitle,
   PopoverTrigger,
   Spinner,
+  Tabs,
+  TabsList,
+  TabsPanel,
+  TabsTrigger,
   Text,
   Title,
   Input,
@@ -40,7 +44,6 @@ import { Subbar } from '../prototypes/app-shell/app-shell.proto.js';
 import { Button, IconButton, Listbox } from '@docouno/unica';
 import { ToastProvider, useToast } from '@docouno/unica';
 import { FolioToastRegion } from './folio/folio.toast.js';
-import { Tabs, TabsContent, TabsList, TabsTab } from '../prototypes/tabs/tabs.proto.js';
 import {
   Breadcrumb,
   BreadcrumbLink,
@@ -145,11 +148,11 @@ function EditorScene(): ReactElement {
           }
         >
           <TabsList aria-label="Editor views" className="folio-editor-mode-tabs">
-            <TabsTab value="write">Write</TabsTab>
-            <TabsTab value="diff" count={42} countLabel="42 changed lines">
+            <TabsTrigger value="write">Write</TabsTrigger>
+            <TabsTrigger value="diff" count={42} countLabel="42 changed lines">
               Diff
-            </TabsTab>
-            <TabsTab value="split">Split</TabsTab>
+            </TabsTrigger>
+            <TabsTrigger value="split">Split</TabsTrigger>
           </TabsList>
           {editing && (
             <>
@@ -223,7 +226,7 @@ function EditorScene(): ReactElement {
             </Text>
           </div>
           <Divider decorative={false} />
-          <TabsContent value="diff" className="folio-stack">
+          <TabsPanel value="diff" className="folio-stack">
             <Title as="h2" size="body-m">
               Draft comparison
             </Title>
@@ -242,8 +245,8 @@ function EditorScene(): ReactElement {
                 </bdi>
               </ins>
             </Text>
-          </TabsContent>
-          <TabsContent value="split" className="folio-stack">
+          </TabsPanel>
+          <TabsPanel value="split" className="folio-stack">
             <Title as="h2" size="body-m">
               Compare revisions
             </Title>
@@ -267,8 +270,8 @@ function EditorScene(): ReactElement {
                 </Text>
               </section>
             </div>
-          </TabsContent>
-          <TabsContent value="write" className="folio-stack">
+          </TabsPanel>
+          <TabsPanel value="write" className="folio-stack">
             <section className="folio-stack">
               <Title as="h2" size="body-m">
                 1. Context & cross-region failover contract
@@ -357,7 +360,7 @@ function EditorScene(): ReactElement {
                 )}
               </section>
             )}
-          </TabsContent>
+          </TabsPanel>
         </article>
         <PopoverContent>
           <PopoverHeader>

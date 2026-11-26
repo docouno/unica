@@ -1,5 +1,5 @@
 import type { CSSProperties } from 'react';
-import type { TabsListProps } from '../../prototypes/tabs/tabs.proto.js';
+import type { TabsListProps } from '@docouno/unica';
 import type { ComponentValues, PropSchema } from '../../workbench/types.js';
 import { previewProps } from '../preview-code.js';
 
@@ -28,8 +28,7 @@ export const tabsProps = {
     kind: 'slot',
     group: 'Geometry',
     label: 'TabsList distribution',
-    publicType:
-      "'content' | 'equal' | Partial<Record<'mobile' | 'tablet' | 'desktop' | 'wide', 'content' | 'equal'>>",
+    publicType: 'Responsive<TabsDistribution>',
     default: 'content',
     description:
       'TabsList sizes horizontal tabs to their content or gives them equal widths. The responsive example uses equal widths below 768px and content widths from 768px of list space.',
@@ -56,17 +55,25 @@ export const tabsProps = {
     publicType: 'string',
     default: 'overview',
     description:
-      'Choose the initial selection for the example owner. Each tab set accepts subsequent changes independently.',
+      'Set the controlled example’s selection. Each preview accepts subsequent tab changes independently.',
     choices: [
       { value: 'overview', label: 'Info' },
       { value: 'review', label: 'Q&A' },
     ],
   },
+  mountStrategy: {
+    kind: 'enum',
+    group: 'Interaction',
+    default: 'eager',
+    description:
+      'Mount all panels, retain panels after their first visit, or reset their content on exit.',
+    choices: [{ value: 'eager' }, { value: 'lazy' }, { value: 'unmount' }],
+  },
   onValueChange: {
     kind: 'action',
     group: 'Interaction',
     publicType: '(value: string) => void',
-    description: 'Receive the value of the newly selected tab.',
+    description: 'Receive a proposed value when the user activates another tab.',
     code: 'setView',
   },
   count: {
@@ -76,7 +83,7 @@ export const tabsProps = {
     publicType: 'number | string',
     default: 'none',
     description:
-      'The Q&A tab shows how many questions await review. TabsTab accepts a number or a display string. Zero stays visible and countLabel gives the exact quantity when the badge reads 99+.',
+      'The Q&A tab shows how many questions await review. TabsTrigger accepts a number or a display string. Zero stays visible and countLabel gives the exact quantity when the badge reads 99+.',
     choices: [
       { value: 'none', label: 'No badge', omit: true },
       { value: '0', label: '0 questions', code: '0' },
@@ -116,10 +123,10 @@ export function panelLayout(orientation: TabsValues['orientation']): CSSProperti
 }
 
 export function tabsCode(values: TabsValues): string {
-  const { size, orientation, activationMode } = values;
+  const { size, orientation, activationMode, mountStrategy } = values;
   const root = previewProps(
-    { size, orientation, activationMode },
-    { size: 'm', orientation: 'horizontal', activationMode: 'automatic' },
+    { size, orientation, activationMode, mountStrategy },
+    { size: 'm', orientation: 'horizontal', activationMode: 'automatic', mountStrategy: 'eager' },
   );
   const distribution =
     values.distribution === 'content'
@@ -127,24 +134,23 @@ export function tabsCode(values: TabsValues): string {
       : ` distribution={${JSON.stringify(distributions[values.distribution])}}`;
   const review = reviewCounts[values.count];
   return `import '@docouno/unica/styles.css';
-import { Text } from '@docouno/unica';
+import { Tabs, TabsList, TabsPanel, TabsTrigger, Text } from '@docouno/unica';
 import { useState } from 'react';
-import { Tabs, TabsContent, TabsList, TabsTab } from './prototypes/tabs/tabs.proto.js';
 
 export function ProjectViews() {
   const [view, setView] = useState(${JSON.stringify(values.value)});
   return (
     <Tabs value={view} onValueChange={setView}${root} style={${JSON.stringify(panelLayout(orientation))}}>
       <TabsList aria-label="Project views"${distribution}>
-        <TabsTab value="overview">Info</TabsTab>
-        <TabsTab value="review"${previewProps(review.props)}>Q&A</TabsTab>
+        <TabsTrigger value="overview">Info</TabsTrigger>
+        <TabsTrigger value="review"${previewProps(review.props)}>Q&A</TabsTrigger>
       </TabsList>
-      <TabsContent value="overview">
+      <TabsPanel value="overview">
         <Text size="body-s" color="secondary"><bdi>${overviewPanel}</bdi></Text>
-      </TabsContent>
-      <TabsContent value="review">
+      </TabsPanel>
+      <TabsPanel value="review">
         <Text size="body-s" color="secondary"><bdi>${review.panel}</bdi></Text>
-      </TabsContent>
+      </TabsPanel>
     </Tabs>
   );
 }`;

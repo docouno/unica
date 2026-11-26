@@ -26,7 +26,7 @@ import { List, ListItem } from '../prototypes/list/list.proto.js';
 import { Menu, MenuContent, MenuItem, MenuSeparator, MenuTrigger } from '@docouno/unica';
 import { IconButton } from '@docouno/unica';
 import { TeamPreview } from '../examples/hover-card-content.js';
-import { Tabs, TabsContent, TabsList, TabsTab } from '../prototypes/tabs/tabs.proto.js';
+import { Tabs, TabsPanel, TabsList, TabsTrigger } from '@docouno/unica';
 import {
   Breadcrumb,
   BreadcrumbLink,
@@ -130,15 +130,15 @@ function ReaderScene(): ReactElement {
               width={320}
               headerContent={
                 <TabsList aria-label="Document inspector panels">
-                  <TabsTab value="details">Details</TabsTab>
-                  <TabsTab value="history" count={3} countLabel="3 revisions">
+                  <TabsTrigger value="details">Details</TabsTrigger>
+                  <TabsTrigger value="history" count={3} countLabel="3 revisions">
                     History
-                  </TabsTab>
-                  <TabsTab value="links">Links</TabsTab>
+                  </TabsTrigger>
+                  <TabsTrigger value="links">Links</TabsTrigger>
                 </TabsList>
               }
             >
-              <TabsContent value="details">
+              <TabsPanel value="details">
                 <InspectorSection title="Properties">
                   <dl className="folio-inspector-properties">
                     <div>
@@ -196,15 +196,15 @@ function ReaderScene(): ReactElement {
                   </Collapsible>
                 </InspectorSection>
                 {revisions}
-              </TabsContent>
-              <TabsContent value="history">{revisions}</TabsContent>
-              <TabsContent value="links">
+              </TabsPanel>
+              <TabsPanel value="history">{revisions}</TabsPanel>
+              <TabsPanel value="links">
                 <InspectorSection title="Linked documents">
                   <Text size="body-s">ADR-014 Traffic Draining</Text>
                   <Text size="body-s">Core Networking Charter</Text>
                   <Text size="body-s">Database Reliability Playbook</Text>
                 </InspectorSection>
-              </TabsContent>
+              </TabsPanel>
             </AsidePanel>
           </Tabs>
         }

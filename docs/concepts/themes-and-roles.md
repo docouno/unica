@@ -172,7 +172,7 @@ Tabs use primary ink and a single 2px accent rule. Horizontally the rule is inse
 
 In an overflowing horizontal list, `--_tabs-overflow-fade` sets the fade depth beside an available scroll chevron. Soft and Frost use 12px. Pixel sets it to 0px and sets `--_tabs-overflow-mask` to `none`, leaving a straight cut at the edge of the chevron's clear area. Forced colors and increased contrast use the same straight edge.
 
-Selection and panel changes are immediate. `--_tabs-feedback-duration` applies to the neutral peer hover and held press only. Pixel uses 0ms and reduced motion removes interpolation in every preset. See the [Tabs design reference](../../apps/playground/src/prototypes/tabs/README.md).
+Selection and panel changes are immediate. `--_tabs-feedback-duration` applies to the neutral peer hover and held press only. Pixel uses 0ms and reduced motion removes interpolation in every preset. See the [Tabs](../components/tabs.md).
 
 ## Contextual Surface Adaptation (`base` vs `overlay`)
 

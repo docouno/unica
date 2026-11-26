@@ -1,7 +1,7 @@
 import { Text } from '@docouno/unica';
 import { useState } from 'react';
 import type { ReactElement } from 'react';
-import { Tabs, TabsContent, TabsList, TabsTab } from '../../prototypes/tabs/tabs.proto.js';
+import { Tabs, TabsPanel, TabsList, TabsTrigger } from '@docouno/unica';
 import type { PreviewProps } from '../../workbench/types.js';
 import { distributions, overviewPanel, panelLayout, reviewCounts } from './tabs-code.js';
 import type { TabsValues } from './tabs-code.js';
@@ -10,44 +10,47 @@ interface PlaygroundProps extends PreviewProps {
   readonly values: TabsValues;
 }
 
-function ProjectViews({ values, ctx }: PlaygroundProps): ReactElement {
-  const [view, setView] = useState<string>(values.value);
+export function TabsPlayground({ values, ctx }: PlaygroundProps): ReactElement {
+  const [selection, setSelection] = useState<{ input: string; value: string }>({
+    input: values.value,
+    value: values.value,
+  });
+  if (selection.input !== values.value) {
+    setSelection({ input: values.value, value: values.value });
+  }
   const review = reviewCounts[values.count];
 
   return (
     <Tabs
       {...ctx.subject}
       data-tabs-playground=""
-      value={view}
+      value={selection.value}
       onValueChange={(next) => {
-        setView(next);
+        setSelection({ input: values.value, value: next });
         ctx.action('onValueChange')(next);
       }}
       size={values.size}
       orientation={values.orientation}
       activationMode={values.activationMode}
+      mountStrategy={values.mountStrategy}
       style={panelLayout(values.orientation)}
     >
       <TabsList aria-label="Project views" distribution={distributions[values.distribution]}>
-        <TabsTab value="overview">Info</TabsTab>
-        <TabsTab value="review" {...review.props}>
+        <TabsTrigger value="overview">Info</TabsTrigger>
+        <TabsTrigger value="review" {...review.props}>
           Q&A
-        </TabsTab>
+        </TabsTrigger>
       </TabsList>
-      <TabsContent value="overview">
+      <TabsPanel value="overview">
         <Text size="body-s" color="secondary">
           <bdi>{overviewPanel}</bdi>
         </Text>
-      </TabsContent>
-      <TabsContent value="review">
+      </TabsPanel>
+      <TabsPanel value="review">
         <Text size="body-s" color="secondary">
           <bdi>{review.panel}</bdi>
         </Text>
-      </TabsContent>
+      </TabsPanel>
     </Tabs>
   );
-}
-
-export function TabsPlayground(props: PlaygroundProps): ReactElement {
-  return <ProjectViews key={props.values.value} {...props} />;
 }

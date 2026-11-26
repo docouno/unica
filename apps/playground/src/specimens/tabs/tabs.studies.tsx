@@ -8,22 +8,32 @@ import {
   GearSixIcon,
   ListBulletsIcon,
 } from '@phosphor-icons/react';
-import { Tabs, TabsContent, TabsList, TabsTab } from '../../prototypes/tabs/tabs.proto.js';
-import type { TabsListProps, TabsProps, TabsTabProps } from '../../prototypes/tabs/tabs.proto.js';
+import { Tabs, TabsPanel, TabsList, TabsTrigger } from '@docouno/unica';
+import type { GlyphSource, TabsListProps, TabsProps } from '@docouno/unica';
 import type { PreviewContext, PreviewProps } from '../../workbench/types.js';
 
 interface ExampleTab {
   readonly value: string;
-  readonly label?: string;
-  readonly tab?: Omit<TabsTabProps, 'value' | 'children'>;
+  readonly tab?: {
+    readonly iconLeft?: GlyphSource;
+    readonly count?: number | string;
+    readonly countLabel?: string;
+    readonly disabled?: boolean;
+  };
   readonly panelTitle?: string;
   readonly summary: string;
 }
 
+type TabExample = ExampleTab &
+  (
+    | { readonly label: string }
+    | { readonly label?: undefined; readonly icon: GlyphSource; readonly name: string }
+  );
+
 interface ExampleProps extends Pick<TabsProps, 'size' | 'orientation' | 'className'> {
   readonly subject: PreviewContext['subject'];
   readonly label: string;
-  readonly items: readonly [ExampleTab, ...ExampleTab[]];
+  readonly items: readonly [TabExample, ...TabExample[]];
   readonly selected?: string;
   readonly distribution?: TabsListProps['distribution'];
   readonly fluid?: boolean;
@@ -58,16 +68,29 @@ function Example({
         defaultValue={selected}
         className={`tabs-example-layout ${className}`}
       >
-        <TabsList aria-labelledby={heading} distribution={distribution}>
-          {items.map((item) => (
-            <TabsTab key={item.value} value={item.value} {...item.tab}>
-              {item.label}
-            </TabsTab>
-          ))}
+        <TabsList
+          aria-labelledby={heading}
+          distribution={distribution}
+          className="tabs-example-list"
+        >
+          {items.map((item) =>
+            item.label !== undefined ? (
+              <TabsTrigger key={item.value} value={item.value} {...item.tab}>
+                {item.label}
+              </TabsTrigger>
+            ) : (
+              <TabsTrigger
+                key={item.value}
+                value={item.value}
+                iconLeft={item.icon}
+                aria-label={item.name}
+              />
+            ),
+          )}
         </TabsList>
         <div className="tabs-example-panels">
           {items.map((item) => (
-            <TabsContent key={item.value} value={item.value} className="tabs-example-panel">
+            <TabsPanel key={item.value} value={item.value} className="tabs-example-panel">
               {item.panelTitle && (
                 <Title as="h4" size="body-m" weight="semibold">
                   <bdi>{item.panelTitle}</bdi>
@@ -76,7 +99,7 @@ function Example({
               <Text size="body-s" color="secondary">
                 <bdi>{item.summary}</bdi>
               </Text>
-            </TabsContent>
+            </TabsPanel>
           ))}
         </div>
       </Tabs>
@@ -110,7 +133,8 @@ const slots = [
   },
   {
     value: 'settings',
-    tab: { 'aria-label': 'Settings', iconLeft: GearSixIcon },
+    name: 'Settings',
+    icon: GearSixIcon,
     panelTitle: 'Settings',
     summary: 'Workspace defaults and preferences.',
   },
@@ -194,7 +218,6 @@ export function VerticalExamples({ ctx }: PreviewProps): ReactElement {
 }
 
 export function InteractionExamples({ ctx }: PreviewProps): ReactElement {
-  const pinned = ctx.story?.controls.pinPointer !== false;
   return (
     <Example
       subject={ctx.subject}
@@ -206,13 +229,11 @@ export function InteractionExamples({ ctx }: PreviewProps): ReactElement {
         {
           value: 'files',
           label: 'Files',
-          tab: pinned ? { previewState: 'hover' } : {},
           summary: 'Two source files are attached.',
         },
         {
           value: 'history',
           label: 'History',
-          tab: pinned ? { previewState: 'press' } : {},
           summary: 'The last revision was saved today.',
         },
         {

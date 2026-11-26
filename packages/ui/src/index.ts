@@ -402,6 +402,19 @@ export type {
   SwitchIndicatorProps,
   SwitchProps,
 } from './components/Switch/index.js';
+export { Tabs, TabsList, TabsPanel, TabsTrigger } from './components/Tabs/index.js';
+export type {
+  TabsActivationMode,
+  TabsDistribution,
+  TabsListMessages,
+  TabsListProps,
+  TabsMountStrategy,
+  TabsOrientation,
+  TabsPanelProps,
+  TabsProps,
+  TabsSize,
+  TabsTriggerProps,
+} from './components/Tabs/index.js';
 export { Tag, TagGroup } from './components/Tag/index.js';
 export type {
   TagGroupItem,

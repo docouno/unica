@@ -12,13 +12,13 @@ import {
   SlotExamples,
   VerticalExamples,
 } from './tabs.studies.js';
-import '../../prototypes/tabs/tabs.examples.css';
+import './tabs.examples.css';
 
 export default defineComponent({
   id: 'tabs',
   title: 'Tabs',
   category: 'Navigation',
-  status: 'Proto',
+  status: 'UI',
   componentName: 'Tabs',
   summary: 'Switch between peer panels within one view.',
   props: tabsProps,
@@ -66,12 +66,9 @@ export default defineComponent({
       title: 'Selection and feedback',
       kind: 'behavior',
       mode: 'live',
-      controls: {
-        pinPointer: { kind: 'boolean', label: 'Pin hover and press', default: true },
-      },
       reset: true,
       caption:
-        'Compare the selected tab with its available and disabled peers. The pinned pointer states show hover and press together. Turn them off to inspect pointer and keyboard feedback directly.',
+        'Hover or hold an available tab to compare pointer feedback. Use the arrow keys to see keyboard focus and selection, including how navigation skips Audit.',
       render: withOverlaySurface(InteractionExamples, 'border-box'),
     },
     {
@@ -122,9 +119,17 @@ export default defineComponent({
       title: 'Manual activation',
       kind: 'behavior',
       mode: 'live',
+      controls: {
+        mountStrategy: {
+          kind: 'enum',
+          label: 'Panel mounting',
+          default: 'eager',
+          choices: [{ value: 'eager' }, { value: 'lazy' }, { value: 'unmount' }],
+        },
+      },
       reset: true,
       caption:
-        'Edit the report name and use the arrow keys to focus Recipients. Enter or Space switches panels. Return to Overview to find the draft.',
+        'Edit the report name and use the arrow keys to focus Recipients. Enter or Space switches panels. Return to Overview to compare draft retention across mounting strategies.',
       render: (preview) => (
         <div style={{ inlineSize: 'min(100%, 24rem)' }}>
           <ExampleSurface surface={preview.ctx.surface} sizing="border-box">
@@ -160,7 +165,7 @@ export default defineComponent({
           </ExampleSurface>
         </div>
       ),
-      code: documentViewsSource.replace('../../prototypes/', './prototypes/'),
+      code: documentViewsSource,
     },
   ],
 });

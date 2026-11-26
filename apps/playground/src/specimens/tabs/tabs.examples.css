@@ -51,7 +51,7 @@
     gap: var(--space-8);
   }
 
-  .tabs-example-side-wide > .tabs-list-frame-proto {
+  .tabs-example-side-wide > .tabs-example-list {
     inline-size: min(100%, var(--tabs-example-rail));
   }
 }
