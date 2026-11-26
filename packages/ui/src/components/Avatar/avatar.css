@@ -1,0 +1,253 @@
+@layer unica.components {
+  :is(.unica-avatar, .unica-avatar-group) {
+    --_avatar-frame: 40px;
+    --_avatar-font: var(--text-size-body-s);
+    --_avatar-icon: 20px;
+    font-family: var(--font-family-base);
+    font-weight: 600;
+    line-height: 1;
+    letter-spacing: normal;
+    text-indent: 0;
+    text-transform: none;
+    vertical-align: middle;
+    flex: none;
+  }
+
+  :is(.unica-avatar, .unica-avatar-group):where(:not([hidden])) {
+    display: inline-flex;
+  }
+
+  :is(.unica-avatar, .unica-avatar-group)[hidden='until-found' i] {
+    /* Blockify an inline root while preserving the UA's hidden behavior in older engines. */
+    position: absolute;
+  }
+
+  :is(.unica-avatar, .unica-avatar-group)[hidden]:not([hidden='until-found' i]) {
+    display: none;
+  }
+
+  .unica-avatar[data-unica-avatar-size='2xs'] {
+    --_avatar-frame: 20px;
+    --_avatar-font: var(--text-size-caption-s);
+    --_avatar-icon: 12px;
+  }
+
+  :is(.unica-avatar, .unica-avatar-group)[data-unica-avatar-size='xs'] {
+    --_avatar-frame: 24px;
+    --_avatar-font: var(--text-size-caption-s);
+    --_avatar-icon: 14px;
+  }
+
+  :is(.unica-avatar, .unica-avatar-group)[data-unica-avatar-size='s'] {
+    --_avatar-frame: 32px;
+    --_avatar-font: var(--text-size-caption-m);
+    --_avatar-icon: 18px;
+  }
+
+  :is(.unica-avatar, .unica-avatar-group)[data-unica-avatar-size='l'] {
+    --_avatar-frame: 48px;
+    --_avatar-font: var(--text-size-body-m);
+    --_avatar-icon: 24px;
+  }
+
+  .unica-avatar,
+  .unica-avatar-group-overflow {
+    position: relative;
+    align-items: center;
+    justify-content: center;
+    block-size: var(--_avatar-frame);
+    box-sizing: border-box;
+    border-radius: var(--radius-full);
+    background: var(--neutral-soft-bg);
+    color: var(--neutral-soft-fg);
+  }
+
+  .unica-avatar {
+    inline-size: var(--_avatar-frame);
+    overflow: hidden;
+    font-size: var(--_avatar-font);
+    user-select: none;
+  }
+
+  .unica-avatar::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border: var(--_pill-border-width) solid var(--neutral-border);
+    border-radius: inherit;
+    pointer-events: none;
+  }
+
+  .unica-avatar:has(> [data-unica-avatar-image-ready])::after {
+    border: 1px solid color-mix(in srgb, var(--fg-primary) 16%, transparent);
+  }
+
+  .unica-avatar-fallback {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    inline-size: 100%;
+    block-size: 100%;
+    overflow: hidden;
+    white-space: nowrap;
+  }
+
+  /* A cap-height strut centers letter bodies while accents and descenders keep their shape. */
+  .unica-avatar-initials {
+    display: block;
+    line-height: 0;
+  }
+
+  .unica-avatar-initials::before {
+    content: '';
+    display: inline-block;
+    block-size: 0.73em;
+    block-size: 1cap;
+  }
+
+  .unica-avatar-fallback > svg {
+    font-size: var(--_avatar-icon);
+  }
+
+  .unica-avatar-image {
+    position: absolute;
+    inset: 0;
+    display: block;
+    inline-size: 100%;
+    block-size: 100%;
+    object-fit: cover;
+    visibility: hidden;
+  }
+
+  .unica-avatar-image[data-unica-avatar-image-ready] {
+    visibility: visible;
+  }
+
+  .unica-avatar:has(> [data-unica-avatar-image-ready]) > .unica-avatar-fallback {
+    visibility: hidden;
+  }
+
+  .unica-avatar-group {
+    --_avatar-group-overlap: 6px;
+    --_avatar-group-font: var(--text-size-caption-l);
+    --_avatar-group-gap: 2px;
+    /* Give larger letters more space while retaining the same fixed frames. */
+    --_avatar-group-offset: calc(
+      var(--_avatar-group-gap) -
+        (
+          max(0px, var(--_avatar-group-overlap) - (var(--font-scale, 1) - 1) * 10px) +
+            var(--_avatar-group-gap)
+        ) *
+        var(--_avatar-group-overlap-factor)
+    );
+    --_avatar-group-step: calc(var(--_avatar-frame) + var(--_avatar-group-offset));
+    --_avatar-group-cutout-gap: calc(
+      var(--_avatar-group-gap) * var(--_avatar-group-overlap-factor)
+    );
+    --_avatar-group-cutout-radius: calc(var(--_avatar-frame) / 2 + var(--_avatar-group-cutout-gap));
+    --_avatar-group-round-mask: color-mix(
+      in srgb,
+      black calc(100% * var(--radius-factor)),
+      transparent
+    );
+    --_avatar-group-sharp-mask: color-mix(
+      in srgb,
+      black calc(100% * (1 - var(--radius-factor))),
+      transparent
+    );
+    align-items: center;
+    inline-size: max-content;
+    max-inline-size: 100%;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .unica-avatar-group[data-unica-avatar-size='xs'],
+  .unica-avatar-group[data-unica-avatar-size='s'] {
+    --_avatar-group-overlap: 4px;
+    --_avatar-group-font: var(--text-size-caption-s);
+  }
+
+  .unica-avatar-group[data-unica-avatar-size='l'] {
+    --_avatar-group-overlap: 8px;
+    --_avatar-group-font: var(--text-size-body-s);
+  }
+
+  .unica-avatar-group > li {
+    position: relative;
+    display: flex;
+    flex: none;
+  }
+
+  .unica-avatar-group > li + li {
+    margin-inline-start: var(--_avatar-group-offset);
+  }
+
+  .unica-avatar-group-anchor {
+    display: inline-flex;
+    flex: none;
+    border-radius: var(--radius-full);
+    cursor: default;
+  }
+
+  .unica-avatar-group:has(> li > .unica-avatar-group-anchor:focus-visible) {
+    border-radius: var(--radius-full);
+    outline: 2px solid var(--focus-ring-color);
+    outline-offset: 2px;
+  }
+
+  .unica-avatar-group-anchor:focus-visible {
+    outline: none;
+  }
+
+  .unica-avatar-group-member > .unica-avatar,
+  .unica-avatar-group-anchor > .unica-avatar,
+  .unica-avatar-group-overflow {
+    font-size: var(--_avatar-group-font);
+  }
+
+  .unica-avatar-group-member:not(:last-child) > .unica-avatar,
+  .unica-avatar-group-member:not(:last-child) > .unica-avatar-group-anchor > .unica-avatar {
+    /* Match the next member or counter's leading edge in both corner geometries. */
+    mask-image:
+      radial-gradient(
+        circle var(--_avatar-group-cutout-radius) at
+          calc(50% + var(--_avatar-group-step) * var(--_dir-mirror, 1)) 50%,
+        transparent calc(100% - 0.5px),
+        var(--_avatar-group-round-mask) calc(100% + 0.5px)
+      ),
+      linear-gradient(
+        calc(90deg * var(--_dir-mirror, 1)),
+        var(--_avatar-group-sharp-mask)
+          calc(var(--_avatar-group-step) - var(--_avatar-group-cutout-gap)),
+        transparent 0
+      );
+  }
+
+  .unica-avatar-group-overflow {
+    min-inline-size: var(--_avatar-frame);
+    padding-inline: 5px;
+    border: var(--_pill-border-width) solid var(--neutral-border);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  @media (forced-colors: active) {
+    .unica-avatar,
+    .unica-avatar-group-overflow {
+      background: Canvas;
+      color: CanvasText;
+    }
+
+    .unica-avatar::after,
+    .unica-avatar:has(> [data-unica-avatar-image-ready])::after,
+    .unica-avatar-group-overflow {
+      border: 1px solid CanvasText;
+    }
+
+    .unica-avatar-group:has(> li > .unica-avatar-group-anchor:focus-visible) {
+      outline-color: Highlight;
+    }
+  }
+}

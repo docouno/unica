@@ -38,6 +38,8 @@ export type {
   AlertStatus,
   AlertTitleProps,
 } from './components/Alert/index.js';
+export { Avatar, AvatarGroup } from './components/Avatar/index.js';
+export type { AvatarGroupProps, AvatarProps, AvatarSize } from './components/Avatar/index.js';
 export { Badge } from './components/Badge/index.js';
 export type { BadgeProps, BadgeStatus } from './components/Badge/index.js';
 export { Blockquote } from './components/Blockquote/index.js';

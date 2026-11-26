@@ -1,4 +1,6 @@
 import {
+  Avatar,
+  AvatarGroup,
   Alert,
   AlertDescription,
   AlertTitle,
@@ -28,7 +30,6 @@ import {
 } from '../../prototypes/app-shell/app-shell.proto.js';
 import type { DocumentTab } from '../../prototypes/app-shell/document-tabs.proto.js';
 import type { LeftRailProps, RailDestination } from '../../prototypes/app-shell/app-shell.proto.js';
-import { Avatar, AvatarGroup } from '../../prototypes/avatar/avatar.proto.js';
 import { Button, IconButton } from '@docouno/unica';
 import { CodeBlock } from '../../prototypes/code-block/code-block.proto.js';
 import { List, ListItem } from '../../prototypes/list/list.proto.js';

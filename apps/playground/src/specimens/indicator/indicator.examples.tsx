@@ -1,8 +1,18 @@
 import type { ReactElement, ReactNode } from 'react';
 import { BellIcon, EnvelopeSimpleIcon, GearIcon, TrayIcon } from '@phosphor-icons/react';
-import { Badge, Box, Button, Flex, Icon, IconButton, Indicator, Stack, Text } from '@docouno/unica';
+import {
+  Avatar,
+  Badge,
+  Box,
+  Button,
+  Flex,
+  Icon,
+  IconButton,
+  Indicator,
+  Stack,
+  Text,
+} from '@docouno/unica';
 import type { IndicatorProps } from '@docouno/unica';
-import { Avatar } from '../../prototypes/avatar/avatar.proto.js';
 import type { PreviewProps } from '../../workbench/types.js';
 import './indicator.examples.css';
 

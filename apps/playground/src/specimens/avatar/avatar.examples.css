@@ -6,7 +6,7 @@
   src: url('/assets/avatar-cjk.ttf') format('truetype');
   unicode-range: U+674E, U+96F7;
 }
-.avatar-proto.avatar-example-cjk {
+.avatar-example-cjk {
   font-family: 'Avatar CJK fixture', var(--font-family-base);
 }
 

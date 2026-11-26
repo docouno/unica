@@ -470,6 +470,7 @@ export default defineScene({
   uses: [
     'app-shell',
     'avatar',
+    'avatar-group',
     'badge',
     'blockquote',
     'breadcrumb',

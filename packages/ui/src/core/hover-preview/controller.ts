@@ -74,7 +74,7 @@ export class PreviewController implements PreviewOwner {
   private committedCommand: CommittedCommand | undefined;
   private hoverTrigger = false;
   private hoverSurface = false;
-  private triggerFocused = false;
+  private triggerFocusIntent: number | undefined;
   private selectPointer: number | undefined;
   private selected = false;
   private origin: FocusOrigin | null = null;
@@ -119,6 +119,9 @@ export class PreviewController implements PreviewOwner {
         } else if (this.visible || this.unposition) {
           // A queued native report can arrive after the owner has committed false and
           // started a fresh open. It belongs to the previous positioned binding.
+          if (reason === 'lost' && this.restoreMovedTooltip(true)) {
+            return;
+          }
           this.lose(reason === 'lost' && !this.available() ? 'unavailable' : 'native');
         }
       },
@@ -145,7 +148,7 @@ export class PreviewController implements PreviewOwner {
       this.unsubscribeFocus = undefined;
       this.origin = null;
       this.hoverTrigger = false;
-      this.triggerFocused = false;
+      this.triggerFocusIntent = undefined;
       this.handle.setTrigger(options.anchor);
       if (options.anchor && !options.external) {
         this.unsubscribeFocus = subscribeFocusOrigin(options.anchor, (origin) => {
@@ -187,6 +190,9 @@ export class PreviewController implements PreviewOwner {
       return;
     }
     if (this.visible || this.opening !== undefined) {
+      if (!anchorChanged && this.restoreMovedTooltip(false)) {
+        return;
+      }
       if (
         anchorChanged ||
         options.avoid !== previous?.avoid ||
@@ -249,9 +255,8 @@ export class PreviewController implements PreviewOwner {
     ) {
       return;
     }
-    this.triggerFocused = true;
+    this.triggerFocusIntent = this.registry.intent();
     this.cancelClose();
-    this.registry.intent();
     this.request(true, 'focus', event);
   }
 
@@ -264,7 +269,7 @@ export class PreviewController implements PreviewOwner {
     ) {
       return;
     }
-    this.triggerFocused = false;
+    this.triggerFocusIntent = undefined;
     this.leave(event);
   }
 
@@ -442,6 +447,9 @@ export class PreviewController implements PreviewOwner {
       return;
     }
     const attempt = command ?? this.registry.intent();
+    if (this.triggerFocusIntent !== undefined) {
+      this.triggerFocusIntent = attempt;
+    }
     this.opening = attempt;
     this.handle.setOpen(true);
     const finish = (): void => {
@@ -520,6 +528,47 @@ export class PreviewController implements PreviewOwner {
     this.syncObservation();
   }
 
+  private restoreMovedTooltip(defer: boolean): boolean {
+    const anchor = this.options?.anchor;
+    const intent = this.triggerFocusIntent;
+    const lost = defer ? !this.handle.isOpen() : this.handle.hasLostNativeOpen();
+    if (!this.visible || this.family !== 'tooltip' || !anchor || intent === undefined || !lost) {
+      return false;
+    }
+    const retainsFocusIntent = (): boolean =>
+      this.options?.anchor === anchor &&
+      this.options?.controlled === false &&
+      !this.committedCommand &&
+      this.triggerFocusIntent === intent &&
+      this.registry.isCurrent(intent) &&
+      matchesSafe(anchor, ':focus');
+    if (!retainsFocusIntent() || !this.available()) {
+      return false;
+    }
+    const binding = this.unposition;
+    const restore = (): void => {
+      if (this.disposed || this.unposition !== binding || this.handle.isOpen()) {
+        return;
+      }
+      const available = this.available();
+      if (!available || !retainsFocusIntent()) {
+        this.lose(available ? 'native' : 'unavailable');
+        return;
+      }
+      this.hide();
+      this.handle.update({ passive: false });
+      this.show();
+    };
+    // Restore in the commit when the browser already dropped the carrier. A late
+    // resize report waits a frame and keeps the original focus intent cancellable.
+    if (defer) {
+      this.view.requestAnimationFrame(restore);
+    } else {
+      restore();
+    }
+    return true;
+  }
+
   private lose(reason: 'replacement' | 'unavailable' | 'native'): void {
     const options = this.options;
     if (!options || (!this.visible && this.opening === undefined)) {
@@ -587,7 +636,7 @@ export class PreviewController implements PreviewOwner {
       (!this.visible && this.opening === undefined) ||
       this.hoverTrigger ||
       this.hoverSurface ||
-      this.triggerFocused ||
+      this.triggerFocusIntent !== undefined ||
       this.selected ||
       this.selectPointer !== undefined ||
       this.closeTimer !== undefined

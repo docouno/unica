@@ -1,7 +1,6 @@
-import { Card, Skeleton, SkeletonText, Text } from '@docouno/unica';
+import { Avatar, Card, Skeleton, SkeletonText, Text } from '@docouno/unica';
 import { useState } from 'react';
 import type { CSSProperties, ReactElement } from 'react';
-import { Avatar } from '../../../src/prototypes/avatar/avatar.proto.js';
 
 function SurfaceSamples(): ReactElement {
   const swatch: CSSProperties = { inlineSize: 48, blockSize: 16, background: 'var(--fg-muted)' };

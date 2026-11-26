@@ -1,6 +1,5 @@
-import { Card, CardMedia, Skeleton, SkeletonText, Text, Title } from '@docouno/unica';
+import { Avatar, Card, CardMedia, Skeleton, SkeletonText, Text, Title } from '@docouno/unica';
 import type { ReactElement } from 'react';
-import { Avatar } from '../../prototypes/avatar/avatar.proto.js';
 import type { PreviewContext, PreviewProps } from '../../workbench/types.js';
 import { SkeletonCase } from './skeleton.examples.js';
 
