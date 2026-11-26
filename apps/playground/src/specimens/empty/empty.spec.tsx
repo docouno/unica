@@ -8,11 +8,8 @@ import {
   EmptyOverlay,
   EmptyPlacement,
   EmptyUnavailable,
-} from '../../prototypes/empty/empty.examples.js';
-import {
-  EmptySearchExample,
-  EmptyRecoveryExample,
-} from '../../prototypes/empty/empty.behavior.examples.js';
+} from './empty.examples.js';
+import { EmptySearchExample, EmptyRecoveryExample } from './empty.behavior.examples.js';
 import { withOverlaySurface } from '../shared/with-overlay-surface.js';
 import { emptyCode } from './empty-code.js';
 import { EmptyPlayground } from './empty-playground.js';
@@ -37,22 +34,85 @@ const props = {
   },
   heading: {
     kind: 'string',
-    group: 'Content',
+    label: 'EmptyTitle.children',
+    publicType: 'ReactNode',
+    group: 'Heading',
     default: 'No saved pages',
     demo: true,
-    description:
-      'Text supplied to EmptyTitle. An empty heading leaves the surrounding slots in place.',
+    description: 'A short heading. Blank content omits the heading.',
   },
-  media: {
-    kind: 'slot',
-    group: 'Content',
-    default: 'icon',
-    demo: true,
-    description: 'Place a decorative document glyph in EmptyMedia or omit the slot.',
+  as: {
+    kind: 'enum',
+    label: 'EmptyTitle.as',
+    group: 'EmptyTitle',
+    default: 'h3',
     choices: [
-      { value: 'none', label: 'No media' },
-      { value: 'icon', label: 'Document icon' },
+      { value: 'h1' },
+      { value: 'h2' },
+      { value: 'h3' },
+      { value: 'h4' },
+      { value: 'h5' },
+      { value: 'h6' },
     ],
+    description: 'Choose the native heading level to fit the page outline.',
+  },
+  icon: {
+    kind: 'slot',
+    label: 'EmptyMedia.icon',
+    publicType: 'GlyphSource',
+    group: 'EmptyMedia',
+    default: 'document',
+    description: 'Supply a decorative glyph for the medallion.',
+    choices: [
+      { value: 'none', label: 'No icon' },
+      { value: 'document', label: 'Document icon' },
+    ],
+  },
+  color: {
+    kind: 'enum',
+    label: 'EmptyMedia.color',
+    group: 'EmptyMedia',
+    default: 'muted',
+    description: 'Choose a semantic foreground for the medallion.',
+    choices: [
+      { value: 'muted' },
+      { value: 'accent' },
+      { value: 'info' },
+      { value: 'success' },
+      { value: 'warning' },
+      { value: 'danger' },
+    ],
+  },
+  children: {
+    kind: 'slot',
+    label: 'EmptyMedia.children',
+    publicType: 'ReactNode',
+    group: 'EmptyMedia',
+    default: 'none',
+    description: 'Pass a custom illustration to take the place of the medallion.',
+    choices: [
+      { value: 'none', label: 'No illustration' },
+      { value: 'landscape', label: 'Landscape illustration' },
+    ],
+  },
+  description: {
+    kind: 'string',
+    label: 'EmptyDescription.children',
+    publicType: 'ReactNode',
+    group: 'Content',
+    default: 'Save a page to keep it close at hand.',
+    demo: true,
+    description: 'Explain why the region is empty or what someone can do next.',
+  },
+  actionLabel: {
+    kind: 'string',
+    label: 'EmptyActions.children',
+    publicType: 'ReactNode',
+    group: 'Content',
+    default: 'Browse pages',
+    demo: true,
+    description:
+      'Supply a button or link with a clear label. Clear the example label to omit the action.',
   },
   onBrowse: {
     kind: 'action',
@@ -69,17 +129,38 @@ export default defineComponent({
   id: 'empty',
   title: 'Empty',
   category: 'Feedback & Status',
-  status: 'Proto',
+  status: 'UI',
   summary: 'Explain why a resolved view is empty and offer a next step when one is available.',
   componentName: 'Empty',
   props,
+  constraints: [
+    {
+      kind: 'precedence',
+      when: { children: 'landscape' },
+      affects: [{ key: 'icon', value: 'document' }],
+      reason: 'An illustration replaces the icon and medallion.',
+    },
+    {
+      kind: 'ignored',
+      when: { icon: 'none' },
+      affects: ['color'],
+      reason: 'The color applies to the medallion around an icon.',
+    },
+    {
+      kind: 'ignored',
+      when: { children: 'landscape', icon: 'document' },
+      affects: ['color'],
+      reason: 'The color applies to the medallion around an icon.',
+    },
+  ],
   code: emptyCode,
   render: withOverlaySurface(EmptyPlayground, 'border-box'),
   states: [
     {
       id: 'sizes',
       rows: 'size',
-      cols: 'media',
+      cols: 'icon',
+      fixed: { children: 'none' },
       title: 'Size and optional media',
       caption: 'Compare the three scales with a document glyph and with the media slot omitted.',
     },
@@ -187,7 +268,7 @@ export default defineComponent({
       reset: true,
       caption:
         'Both pages link back to the workspace. Reload page recovers the failed view and moves keyboard focus to its content.',
-      code: routesSource.replaceAll('../../prototypes/', './prototypes/'),
+      code: routesSource,
       render: withOverlaySurface(
         ({ ctx }) => (
           <EmptyRoutes

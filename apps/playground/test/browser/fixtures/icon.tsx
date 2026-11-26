@@ -1,9 +1,19 @@
 import {
   Avatar,
+  Button,
+  Empty,
+  EmptyMedia,
   Icon,
   Input,
   Link,
   Listbox,
+  Menu,
+  MenuContent,
+  MenuItem,
+  MenuSub,
+  MenuSubContent,
+  MenuSubTrigger,
+  MenuTrigger,
   Select,
   Switch,
   UnicaProvider,
@@ -22,16 +32,6 @@ import {
 import { FileItem, FileList } from '../../../src/prototypes/file-input/file-input.proto.js';
 import { Combobox } from '../../../src/prototypes/combobox/combobox.proto.js';
 import {
-  Menu,
-  MenuContent,
-  MenuItem,
-  MenuSub,
-  MenuSubContent,
-  MenuSubTrigger,
-  MenuTrigger,
-} from '@docouno/unica';
-import { Button } from '@docouno/unica';
-import {
   Drawer,
   DrawerContent,
   DrawerHeader,
@@ -43,7 +43,6 @@ import {
   ModalTitle,
   ModalTrigger,
 } from '../../../src/prototypes/dialog/dialog.proto.js';
-import { Empty, EmptyMedia } from '../../../src/prototypes/empty/empty.proto.js';
 import { Tabs, TabsList, TabsTab } from '../../../src/prototypes/tabs/tabs.proto.js';
 
 function ProjectSvg({ children, ...props }: ComponentPropsWithRef<'svg'>) {

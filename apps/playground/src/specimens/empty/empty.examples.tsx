@@ -10,12 +10,21 @@ import {
   PlusIcon,
   TrayIcon,
 } from '@phosphor-icons/react';
-import { Button, Card, CardTitle, VisuallyHidden } from '@docouno/unica';
+import {
+  Button,
+  Card,
+  CardTitle,
+  Empty,
+  EmptyActions,
+  EmptyDescription,
+  EmptyMedia,
+  EmptyTitle,
+  VisuallyHidden,
+} from '@docouno/unica';
 import type { ButtonProps } from '@docouno/unica';
-import { ExampleSurface } from '../../specimens/shared/example-surface.js';
+import { ExampleSurface } from '../shared/example-surface.js';
 import type { PreviewProps } from '../../workbench/types.js';
-import { Table } from '../table/table.proto.js';
-import { Empty, EmptyActions, EmptyDescription, EmptyMedia, EmptyTitle } from './empty.proto.js';
+import { Table } from '../../prototypes/table/table.proto.js';
 import './empty.examples.css';
 
 function ActionPreview({
