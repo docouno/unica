@@ -53,6 +53,7 @@ export default {
     await page.goto(
       new URL('/?item=pagination&tab=states&family=frost&scheme=light', page.url()).href,
     );
+    await page.locator('html[data-wb-ready="1"]').waitFor({ state: 'attached', timeout: 20_000 });
     await page.getByRole('button', { name: 'Inspector', exact: true }).click();
     await page
       .getByRole('navigation', { name: 'State sections' })
