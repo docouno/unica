@@ -35,7 +35,7 @@ Choose one channel based on scope and lifecycle:
 
 ## Strict `<FormField>` Ownership & Three Canonical Compositions
 
-Data-entry controls expose their editor attributes and can be composed with [FormField](../components/form-field.md) for the visible label, instructions, and message. A standalone inline field accepts a native label, `aria-label`, or `aria-labelledby`.
+Data-entry controls expose their editor attributes and can be composed with [FormField](../components/form-field.md) for the visible label, instructions, and message. A standalone inline field such as [NumberInput](../components/number-input.md) accepts a native label, `aria-label`, or `aria-labelledby`.
 
 1. **Single editor.** Use the default `target="control"`. The visible native label and editor ID match in server-rendered HTML. An explicit ID belongs on `controlId`. The editor combines author descriptions with the field's instructions, message, and optional count. Its supported props can override inherited state.
 2. **Choice group.** Use `target="group"` with CheckboxGroup, RadioGroup, or another named group. Shared feedback describes the group rule. Individual options keep their names, local descriptions, and option status. A required CheckboxGroup validates that at least one available option is checked.

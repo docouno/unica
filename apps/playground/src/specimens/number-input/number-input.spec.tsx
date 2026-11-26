@@ -4,7 +4,7 @@ import { OptionalBudget } from './optional-budget.js';
 import budgetSource from './optional-budget.tsx?raw';
 import { PortionEstimate } from './portion-estimate.js';
 import portionSource from './portion-estimate.tsx?raw';
-import { NumberInput } from '../../prototypes/number-input/number-input.proto.js';
+import { NumberField } from './number-field.js';
 import {
   size,
   variant,
@@ -27,7 +27,7 @@ import {
   NumberOverflow,
   NumberRoles,
   NumberSurfaces,
-} from '../../prototypes/number-input/number-input.examples.js';
+} from './number-input.examples.js';
 
 const messages = {
   neutral: '',
@@ -37,11 +37,24 @@ const messages = {
   danger: 'This quota needs approval.',
 };
 
+function numericProp(description: string, initial: string, publicType = 'number') {
+  return { kind: 'string' as const, group: 'Value', default: initial, description, publicType };
+}
+
+function textProp(description: string, initial = '') {
+  return { kind: 'string' as const, group: 'Content', default: initial, description };
+}
+
+function readNumber(text: string): number | undefined {
+  const value = Number(text);
+  return text.trim() && Number.isFinite(value) ? value : undefined;
+}
+
 export default defineComponent({
   id: 'number-input',
   title: 'NumberInput',
   category: 'Forms',
-  status: 'Proto',
+  status: 'UI',
   summary:
     'A centered quantity between full-height decrease and increase actions. Keep the entered number and explain corrections clearly.',
   componentName: 'NumberInput',
@@ -55,16 +68,43 @@ export default defineComponent({
     },
     width,
     disabled,
-    readOnly,
+    readOnly: {
+      ...readOnly,
+      description:
+        'Keep the value available for selection and submission while blocking typing and steps.',
+    },
     required,
     loading,
-    suffix: {
-      kind: 'string',
-      group: 'Content',
-      default: '',
-      description:
-        'Unit shown after the number. The example also includes it in the accessible description.',
+    value: {
+      kind: 'slot',
+      group: 'Value',
+      default: 'uncontrolled',
+      publicType: "number | ''",
+      description: 'The owner supplies a committed value and can decline edits.',
+      choices: [
+        { value: 'uncontrolled', code: 'undefined' },
+        { value: 'fixed', label: 'Owner holds 25', code: '25' },
+        { value: 'empty', label: 'Owner holds empty', code: "''" },
+      ],
     },
+    defaultValue: numericProp(
+      'Initial value and native reset baseline. Omit it to start empty.',
+      '25',
+      "number | ''",
+    ),
+    min: numericProp('Lower bound and explicit step base.', '0'),
+    max: numericProp('Upper bound.', '100'),
+    step: numericProp(
+      "Positive step size or 'any' for unrestricted decimals. Defaults to 1.",
+      '1',
+      "number | 'any'",
+    ),
+    prefix: textProp('Decorative text before the number.'),
+    suffix: textProp(
+      'Decorative text after the number. Name the unit in the label or description.',
+    ),
+    decrementLabel: textProp('Accessible name of the decrease action.', 'Decrease value'),
+    incrementLabel: textProp('Accessible name of the increase action.', 'Increase value'),
     onValueChange: eventProp(
       'Receives the number after an edit or step, or an empty string when cleared.',
       '(value) => console.log(value)',
@@ -78,24 +118,36 @@ export default defineComponent({
       affects: ['status', 'loading'],
       reason: 'A disabled field suppresses feedback and pending visuals.',
     },
+    ...(['fixed', 'empty'] as const).map((value) => ({
+      kind: 'precedence' as const,
+      when: { value },
+      affects: ['defaultValue'],
+      reason: 'The controlled owner holds the value, even when an edit is proposed.',
+    })),
   ],
   render: withOverlaySurface(({ values, ctx }) => {
-    const message = !values.disabled && messages[values.status];
+    const { value, defaultValue, min, max, step, ...props } = values;
+    const controlledValue = value === 'fixed' ? 25 : value === 'empty' ? '' : undefined;
+    const initialValue = readNumber(defaultValue) ?? '';
+    const message = !props.disabled && messages[props.status];
     return (
       <form {...ctx.form} className="number-playground-form">
-        <NumberInput
-          {...values}
-          {...ctx.subject}
+        <NumberField
+          {...props}
+          subject={ctx.subject}
+          key={`${value}:${initialValue}`}
           id={ctx.id}
           name="quota"
           label="Seat quota"
-          defaultValue={25}
-          min={0}
-          max={100}
+          value={controlledValue}
+          defaultValue={initialValue}
+          min={readNumber(min)}
+          max={readNumber(max)}
+          step={step === 'any' ? 'any' : readNumber(step)}
           description={
-            values.suffix.trim() ? (
+            props.suffix.trim() ? (
               <bdi>
-                Unit: <bdi>{values.suffix}</bdi>
+                Unit: <bdi>{props.suffix}</bdi>
               </bdi>
             ) : undefined
           }
@@ -105,27 +157,61 @@ export default defineComponent({
       </form>
     );
   }, 'border-box'),
-  code: (values) => {
-    const attrs = previewProps(values, {
-      size: 'm',
-      variant: 'default',
-      status: 'neutral',
-      width: 'full',
-      disabled: false,
-      readOnly: false,
-      required: false,
-      loading: false,
-      suffix: '',
-    });
-    const message = !values.disabled && messages[values.status];
-    const unit = values.suffix.trim()
-      ? ` description={<bdi>Unit: <bdi>${previewText(values.suffix)}</bdi></bdi>}`
-      : '';
-    return `import { NumberInput } from './prototypes/number-input/number-input.proto.js';
+  code: ({ value, defaultValue, min, max, step, ...props }) => {
+    const initial =
+      value === 'uncontrolled'
+        ? { defaultValue: readNumber(defaultValue) ?? '' }
+        : { value: value === 'fixed' ? 25 : '' };
+    const lower = readNumber(min);
+    const upper = readNumber(max);
+    const spacing = step === 'any' ? 'any' : readNumber(step);
+    const attrs = previewProps(
+      {
+        ...initial,
+        ...(lower !== undefined && { min: lower }),
+        ...(upper !== undefined && { max: upper }),
+        ...(spacing !== undefined && spacing !== 1 && { step: spacing }),
+        ...props,
+      },
+      {
+        size: 'm',
+        variant: 'default',
+        status: 'neutral',
+        width: 'full',
+        disabled: false,
+        readOnly: false,
+        required: false,
+        loading: false,
+        prefix: '',
+        suffix: '',
+        decrementLabel: 'Decrease value',
+        incrementLabel: 'Increase value',
+      },
+    );
+    const message = !props.disabled && messages[props.status];
+    const unit = props.suffix.trim();
+    return `import { useId } from 'react';
+import { NumberInput, Stack, Text } from '@docouno/unica';
 import '@docouno/unica/styles.css';
 
 export function SeatQuota() {
-  return <NumberInput label="Seat quota" name="quota" defaultValue={25} min={0} max={100}${attrs}${unit}${message ? ` message={<bdi>${previewText(message)}</bdi>}` : ''} onValueChange={(value) => console.log(value)} />;
+  const id = useId();
+  return (
+    <Stack gap={8}>
+      <Text as="label" htmlFor={id} size="body-s">Seat quota</Text>
+      <NumberInput id={id} name="quota"${attrs}${unit || message ? ` aria-describedby={${[unit && "id + '-unit'", message && "id + '-message'"].filter(Boolean).join(" + ' ' + ")}}` : ''} onValueChange={(next) => console.log(next)} />
+${
+  unit
+    ? `      <Text id={id + '-unit'} size="caption-l">Unit: <bdi>${previewText(unit)}</bdi></Text>
+`
+    : ''
+}${
+      message
+        ? `      <Text id={id + '-message'} size="caption-l"><bdi>${previewText(message)}</bdi></Text>
+`
+        : ''
+    }    </Stack>
+  );
 }`;
   },
   states: [
@@ -162,7 +248,7 @@ export function SeatQuota() {
       id: 'interaction',
       title: 'Pointer, keyboard and held actions',
       caption:
-        'Both columns pin pointer, press, and keyboard appearances. In the live field, use the arrow keys or hold either action to step repeatedly.',
+        'Tab into either field to show the keyboard outline. Click to compare pointer focus, then hold either action to step repeatedly.',
       kind: 'behavior',
       mode: 'live',
       reset: true,
@@ -172,7 +258,7 @@ export function SeatQuota() {
       id: 'feedback',
       title: 'Validation and feedback',
       caption:
-        'Compare five pinned tones in each role and the focus outline over a feedback edge. One glyph and its explanation identify each non-neutral status.',
+        'Compare five feedback tones in each role. Tab into a feedback field to inspect its outline. One glyph and its explanation identify each non-neutral status.',
       kind: 'behavior',
       mode: 'pinned',
       render: withOverlaySurface(NumberFeedback, 'border-box'),
@@ -226,7 +312,7 @@ export function SeatQuota() {
       id: 'surfaces',
       title: 'Quantities on base and overlay',
       caption:
-        'Compare an ordinary interval, an inline percentage and a focused error on each material.',
+        'Compare an ordinary interval, an inline percentage and a validation error on each material. Tab into the last field to inspect focus.',
       kind: 'surface',
       mode: 'pinned',
       compareSurfaces: true,
@@ -249,7 +335,7 @@ export function SeatQuota() {
         ),
         'border-box',
       ),
-      code: portionSource.replace('../../prototypes/', './prototypes/'),
+      code: portionSource,
     },
     {
       id: 'optional-budget',
@@ -266,7 +352,7 @@ export function SeatQuota() {
         ),
         'border-box',
       ),
-      code: budgetSource.replace('../../prototypes/', './prototypes/'),
+      code: budgetSource,
     },
   ],
 });

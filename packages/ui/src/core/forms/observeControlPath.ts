@@ -12,9 +12,11 @@ export function observeControlPath(
   element: HTMLElement,
   onChange: () => void,
   ancestorAttributes: readonly string[] = [],
+  controlAttributes: readonly string[] = [],
 ): () => void {
   const inheritedAttributes = [...ancestorAttributes];
   const availabilityAttributes = ['disabled', ...inheritedAttributes];
+  const ownAttributes = [...availabilityAttributes, ...controlAttributes];
   let path: Node[] = [];
   let observer: MutationObserver | undefined;
   let connection: ResizeObserver | undefined;
@@ -52,9 +54,12 @@ export function observeControlPath(
     }
     // Changes to direct children can change the first legend or move the path.
     for (const node of path) {
-      const affectsAvailability =
-        node === element || (isElementNode(node) && getLocalName(node) === 'fieldset');
-      const attributeFilter = affectsAvailability ? availabilityAttributes : inheritedAttributes;
+      const attributeFilter =
+        node === element
+          ? ownAttributes
+          : isElementNode(node) && getLocalName(node) === 'fieldset'
+            ? availabilityAttributes
+            : inheritedAttributes;
       observer.observe(
         node,
         attributeFilter.length && isElementNode(node)

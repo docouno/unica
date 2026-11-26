@@ -1,0 +1,350 @@
+@layer unica.components {
+  .unica-number-input {
+    --_height: var(--size-m-height);
+    --_radius: var(--size-m-radius);
+    --_gap: var(--size-m-gap);
+    --_font: var(--text-size-body-s);
+    --_edge: var(--control-border);
+    --_focus: var(--focus-ring-color);
+    --_status: var(--fg-secondary);
+    --_icon-size: var(--size-m-icon);
+    --_action-width: 34px;
+    --_input-content-width: 8ch;
+    position: relative;
+    box-sizing: border-box;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--_gap);
+    inline-size: 100%;
+    min-inline-size: 0;
+    min-block-size: var(--_height);
+    padding-inline: 0;
+    border: 1px solid var(--_edge);
+    border-radius: var(--_radius);
+    background: var(--control-bg);
+    color: var(--fg-primary);
+    font-family: var(--font-family-base);
+    font-size: var(--_font);
+    line-height: 1.4;
+    cursor: text;
+  }
+
+  .unica-number-input[data-unica-number-input-size='s'] {
+    --_height: var(--size-s-height);
+    --_radius: var(--size-s-radius);
+    --_gap: var(--size-s-gap);
+    --_font: var(--size-s-control-font);
+    --_icon-size: var(--size-s-icon);
+    --_action-width: 28px;
+  }
+
+  .unica-number-input[data-unica-number-input-size='l'] {
+    --_height: var(--size-l-height);
+    --_radius: var(--size-l-radius);
+    --_gap: var(--size-l-gap);
+    --_font: var(--text-size-body-m);
+    --_icon-size: var(--size-l-icon);
+    --_action-width: 44px;
+  }
+
+  .unica-number-input[data-unica-number-input-variant='ghost'] {
+    border-color: transparent;
+    background: transparent;
+  }
+
+  /* Keep the baseline straight without changing the full focus contour's radius. */
+  .unica-number-input[data-unica-number-input-variant='ghost']::after {
+    position: absolute;
+    inset-inline: -1px;
+    inset-block-end: -1px;
+    border-block-end: 1px solid var(--_edge);
+    content: '';
+    pointer-events: none;
+  }
+
+  .unica-number-input[data-unica-number-input-status='neutral']:where(
+      :hover:not(:has(.unica-number-input-native:disabled, .unica-number-input-native[readonly]))
+    ) {
+    --_edge: var(--control-border-hover);
+  }
+
+  .unica-number-input[data-unica-number-input-status='neutral']:where(
+      :has(.unica-number-input-native:focus:not([readonly]))
+    ) {
+    --_edge: var(--control-border-focus);
+  }
+
+  .unica-number-input[data-unica-number-input-status='info'] {
+    --_edge: var(--status-info-border);
+    --_focus: var(--status-info-signal);
+    --_status: var(--status-info-soft-fg);
+  }
+
+  .unica-number-input[data-unica-number-input-status='success'] {
+    --_edge: var(--status-success-border);
+    --_focus: var(--status-success-signal);
+    --_status: var(--status-success-soft-fg);
+  }
+
+  .unica-number-input[data-unica-number-input-status='warning'] {
+    --_edge: var(--status-warning-border);
+    --_focus: var(--status-warning-signal);
+    --_status: var(--status-warning-soft-fg);
+  }
+
+  .unica-number-input[data-unica-number-input-status='danger'] {
+    --_edge: var(--status-danger-border);
+    --_focus: var(--status-danger-signal);
+    --_status: var(--status-danger-soft-fg);
+  }
+
+  .unica-number-input-native {
+    box-sizing: border-box;
+    appearance: textfield;
+    flex: 0 1 auto;
+    min-inline-size: 3ch;
+    max-inline-size: 100%;
+    block-size: calc(var(--_height) - 2px);
+    padding: var(--space-4) 0;
+    margin: 0;
+    border: 0;
+    outline: 0;
+    border-radius: 0;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    font-variant-numeric: tabular-nums;
+    text-align: center;
+    text-overflow: clip;
+  }
+
+  .unica-number-input-native::placeholder {
+    color: var(--fg-muted);
+    opacity: 1;
+  }
+
+  .unica-number-input-native::selection {
+    background: var(--accent-soft-bg);
+    color: var(--accent-soft-fg);
+  }
+
+  .unica-number-input-affix {
+    flex: 0 1 auto;
+    min-inline-size: 0;
+    max-inline-size: 5ch;
+    overflow: hidden;
+    color: var(--fg-secondary);
+    unicode-bidi: isolate;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .unica-number-input:has(.unica-number-input-native:disabled) {
+    --_edge: var(--border-subtle);
+    background: var(--bg-surface-subtle);
+    color: var(--fg-disabled);
+    cursor: not-allowed;
+    outline: none;
+  }
+
+  .unica-number-input[data-unica-number-input-variant='ghost']:has(
+      .unica-number-input-native:disabled
+    ) {
+    border-color: transparent;
+    background: transparent;
+  }
+
+  .unica-number-input:has(.unica-number-input-native:disabled) .unica-number-input-affix,
+  .unica-number-input-native:disabled::placeholder {
+    color: var(--fg-disabled);
+  }
+
+  .unica-number-input-native:disabled {
+    cursor: not-allowed;
+    -webkit-text-fill-color: var(--fg-disabled);
+    opacity: 1;
+  }
+
+  .unica-number-input:has(
+    .unica-number-input-native:focus:not([data-unica-number-input-focus='pointer'])
+  ) {
+    outline: 2px solid var(--_focus);
+    outline-offset: 2px;
+  }
+
+  .unica-number-input[hidden] {
+    display: none;
+  }
+
+  .unica-number-input[data-unica-number-input-width='auto'] {
+    inline-size: fit-content;
+    max-inline-size: 100%;
+  }
+  .unica-number-input .unica-number-input-native::-webkit-inner-spin-button,
+  .unica-number-input .unica-number-input-native::-webkit-outer-spin-button {
+    display: none;
+    appearance: none;
+    margin: 0;
+  }
+  .unica-number-input-body {
+    --_feedback-space: calc(var(--_icon-size) + var(--_gap));
+    position: relative;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    flex: 1 1 auto;
+    align-self: stretch;
+    align-items: center;
+    justify-items: center;
+    box-sizing: content-box;
+    inline-size: max-content;
+    min-inline-size: 0;
+  }
+  /* Share one grid cell: an intrinsic floor without forcing a narrow value to stretch. */
+  .unica-number-input-body::before {
+    grid-area: 1 / 1;
+    inline-size: var(--_input-content-width);
+    max-inline-size: 100%;
+    content: '';
+  }
+  .unica-number-input-body:has(.unica-number-input-feedback) {
+    padding-inline: var(--_feedback-space);
+  }
+  .unica-number-input-body:has(.unica-number-input-status):has(.unica-number-input-spinner) {
+    --_feedback-space: calc(var(--_icon-size) * 2 + var(--space-4) + var(--_gap));
+  }
+  .unica-number-input-value {
+    grid-area: 1 / 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-4);
+    min-inline-size: 0;
+    max-inline-size: 100%;
+  }
+  .unica-number-input-feedback {
+    position: absolute;
+    inset-inline-end: 0;
+    inset-block-start: 50%;
+    transform: translateY(-50%);
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    gap: var(--space-4);
+  }
+  .unica-number-input-feedback .unica-number-input-status {
+    color: var(--_status);
+  }
+  .unica-number-input-feedback .unica-number-input-spinner {
+    color: var(--fg-muted);
+  }
+  .unica-number-input:has(.unica-number-input-native:disabled) .unica-number-input-feedback {
+    display: none;
+  }
+
+  .unica-number-input-glyph {
+    display: block;
+    flex: none;
+    inline-size: var(--_icon-size);
+    block-size: var(--_icon-size);
+  }
+
+  .unica-number-input-action {
+    display: grid;
+    align-self: stretch;
+    flex: none;
+    place-items: center;
+    box-sizing: border-box;
+    inline-size: var(--_action-width);
+    min-block-size: calc(var(--_height) - 2px);
+    padding: 0;
+    margin: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    color: var(--fg-secondary);
+    cursor: pointer;
+    touch-action: manipulation;
+  }
+  .unica-number-input-action[data-unica-number-input-action='decrement'] {
+    border-start-start-radius: max(0px, calc(var(--_radius) - 1px));
+    border-end-start-radius: max(0px, calc(var(--_radius) - 1px));
+  }
+  .unica-number-input-action[data-unica-number-input-action='increment'] {
+    border-start-end-radius: max(0px, calc(var(--_radius) - 1px));
+    border-end-end-radius: max(0px, calc(var(--_radius) - 1px));
+  }
+  .unica-number-input[data-unica-number-input-variant='ghost'] .unica-number-input-action {
+    border-radius: 0;
+    border-start-start-radius: max(0px, calc(var(--_radius) - 3px));
+    border-start-end-radius: max(0px, calc(var(--_radius) - 3px));
+  }
+  .unica-number-input-action:enabled:hover {
+    background: var(--neutral-soft-bg);
+    color: var(--fg-primary);
+  }
+
+  .unica-number-input-action:enabled:active {
+    background: color-mix(in srgb, var(--neutral-soft-bg), var(--fg-primary) 8%);
+    color: var(--fg-primary);
+  }
+
+  .unica-number-input-action:focus-visible {
+    outline: 2px solid var(--focus-ring-color);
+    outline-offset: -3px;
+  }
+  .unica-number-input-action:disabled {
+    color: var(--fg-disabled);
+    cursor: default;
+  }
+  .unica-number-input:has(.unica-number-input-native:disabled) .unica-number-input-action {
+    cursor: not-allowed;
+  }
+
+  /* The field stays still in every material. Only the activated segment changes tone. */
+  @media (forced-colors: active) {
+    .unica-number-input.unica-number-input {
+      --_edge: ButtonText;
+      background: Canvas;
+      color: CanvasText;
+      /* Preserve the transparent Ghost border, which keeps both roles the same size. */
+      forced-color-adjust: none;
+    }
+    .unica-number-input[data-unica-number-input-variant='ghost'] {
+      background: transparent;
+    }
+    .unica-number-input.unica-number-input:has(.unica-number-input-native:disabled) {
+      --_edge: GrayText;
+      color: GrayText;
+    }
+    .unica-number-input-native {
+      forced-color-adjust: auto;
+    }
+    .unica-number-input-affix {
+      color: inherit;
+    }
+    .unica-number-input:has(.unica-number-input-native:disabled) .unica-number-input-affix {
+      color: GrayText;
+    }
+    .unica-number-input:has(.unica-number-input-native:focus) {
+      outline: 2px solid Highlight;
+      outline-offset: 2px;
+    }
+    .unica-number-input-native:disabled {
+      -webkit-text-fill-color: GrayText;
+    }
+    .unica-number-input-action {
+      color: ButtonText;
+    }
+    .unica-number-input-action:disabled {
+      color: GrayText;
+    }
+    .unica-number-input-action:enabled:is(:hover, :active) {
+      forced-color-adjust: none;
+      background: Highlight;
+      color: HighlightText;
+    }
+    .unica-number-input-feedback :is(.unica-number-input-status, .unica-number-input-spinner) {
+      color: CanvasText;
+    }
+  }
+}

@@ -205,9 +205,9 @@ export default {
       assert.equal(await list.getAttribute('id'), await editor.getAttribute('aria-controls'));
 
       const numbers = page.getByTestId('number-fields');
-      const geometry = await numbers.locator('.number-input-proto').evaluateAll((fields) =>
+      const geometry = await numbers.locator('.unica-number-input').evaluateAll((fields) =>
         fields.map((field) => ({
-          size: field.dataset.size,
+          size: field.dataset.unicaNumberInputSize,
           height: field.getBoundingClientRect().height,
           action: field.querySelector('button').getBoundingClientRect().width,
         })),
@@ -556,10 +556,13 @@ export default {
       const art = page.locator('.wb-artboard').first();
       const field = art.getByRole('spinbutton', { name: 'Seat quota' });
       await field.waitFor();
-      const numberField = art.locator('.number-field-proto').filter({
-        has: page.getByRole('spinbutton', { name: 'Seat quota' }),
+      const dimensions = await field.evaluate((input) => {
+        const shell = input.closest('.unica-number-input');
+        const subject = shell.closest('[data-wb-subject]');
+        return [subject.getBoundingClientRect().toJSON(), shell.getBoundingClientRect().toJSON()];
       });
-      assert.ok(await numberField.evaluate((node) => node.clientWidth > 140));
+      assert.deepEqual(dimensions[0], dimensions[1]);
+      assert.ok(dimensions[1].width > 140);
       const increase = art.getByRole('button', { name: 'Increase value' });
       await field.fill('100');
       assert.equal(await increase.isDisabled(), true);
@@ -570,12 +573,85 @@ export default {
       assert.equal(await field.inputValue(), '100');
       assert.equal(await increase.isDisabled(), true);
       await field.evaluate((input) => input.form.reset());
-      await art.locator('[data-action="increment"]:enabled').waitFor();
+      await art.locator('[data-unica-number-input-action="increment"]:enabled').waitFor();
       assert.equal(await field.inputValue(), '25');
       await field.press('ArrowUp');
       assert.deepEqual(await field.evaluate((input) => [...new FormData(input.form)]), [
         ['quota', '26'],
       ]);
     }
+  },
+  'NumberInput Workbench invalidates capacity and recipe feedback on unfinished native input':
+    async ({ page, mount }) => {
+      await mount('input-workbench');
+      await open(page, { item: 'number-input', tab: 'states', block: 'live' });
+      const art = page.locator('[data-wb-block="live"] .wb-artboard').first();
+      const worker = art.getByRole('spinbutton', { name: 'Worker limit' });
+      const check = page.getByRole('button', { name: 'Check limit', exact: true });
+      const confirm = page.getByRole('button', { name: 'Confirm capacity', exact: true });
+      await check.click();
+      await art.getByText('Checking available capacity…', { exact: true }).waitFor();
+      await worker.press('End');
+      await worker.press('e');
+      assert.equal(await worker.evaluate((node) => node.validity.badInput), true);
+      assert.equal(await art.getByText('Checking available capacity…', { exact: true }).count(), 0);
+      await confirm.click();
+      assert.equal(await art.getByText(/Capacity confirmed for/).count(), 0);
+      await art.getByText('Finish entering the number.', { exact: true }).waitFor();
+
+      await open(page, { item: 'number-input', tab: 'compositions', block: 'portion-estimate' });
+      const recipe = page.locator('.wb-artboard').first();
+      const portions = recipe.getByRole('spinbutton', { name: 'Portions' });
+      await recipe.getByText('Dry rice: 160 g.').waitFor();
+      await portions.press('End');
+      await portions.press('e');
+      assert.equal(await portions.evaluate((node) => node.validity.badInput), true);
+      await recipe
+        .getByText('Enter 0.5 to 12 portions in half portions for an estimate.')
+        .waitFor();
+      await portions.fill('2.5');
+      await recipe.getByText('Dry rice: 200 g.').waitFor();
+
+      await open(page, { item: 'number-input', tab: 'compositions', block: 'optional-budget' });
+      const budget = page.locator('.wb-artboard').first();
+      const amount = budget.getByRole('spinbutton', { name: 'Spending limit in US dollars' });
+      const save = budget.getByRole('button', { name: 'Save limit' });
+      await save.click();
+      await budget.getByText('Saved with no spending limit.').waitFor();
+      await amount.fill('0');
+      await save.click();
+      await budget.getByText('Saved spending limit: 0 USD.').waitFor();
+    },
+
+  'NumberInput keeps the Slider pairing’s exact-entry acceptance and blur policy': async ({
+    page,
+    mount,
+  }) => {
+    await mount('input-workbench');
+    await open(page, { item: 'slider', tab: 'compositions', block: 'exact' });
+    const art = page.locator('.wb-artboard').first();
+    const input = art.getByRole('spinbutton', { name: 'Exact image quality percentage' });
+    const slider = art.getByRole('slider', { name: 'Image quality' });
+    await input.fill('125');
+    assert.equal(await slider.inputValue(), '60');
+    await input.press('Tab');
+    assert.equal(await input.inputValue(), '60');
+
+    await input.press('End');
+    await input.press('e');
+    assert.equal(await input.evaluate((node) => node.validity.badInput), true);
+    assert.equal(await slider.inputValue(), '60');
+    await input.press('Tab');
+    assert.equal(await input.inputValue(), '60');
+    assert.equal(await input.evaluate((node) => node.validity.badInput), false);
+
+    await input.press('ControlOrMeta+a');
+    await input.press('1');
+    await input.press('2');
+    await input.press('5');
+    assert.equal(await slider.inputValue(), '12');
+    assert.equal(await input.inputValue(), '125');
+    await input.press('Tab');
+    assert.equal(await input.inputValue(), '12');
   },
 };

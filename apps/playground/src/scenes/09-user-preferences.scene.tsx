@@ -1,12 +1,16 @@
 import {
+  Badge,
+  Button,
   Card,
   Checkbox,
   Kbd,
   KbdGroup,
+  NumberInput,
   Radio,
   RadioGroup,
   RangeSlider,
   SegmentedControl,
+  Select,
   Slider,
   Text,
 } from '@docouno/unica';
@@ -21,9 +25,7 @@ import {
   SettingsNavigation,
   StickyActionBar,
 } from '../prototypes/app-shell/app-shell.proto.js';
-import { Badge } from '@docouno/unica';
 import { Breadcrumb, BreadcrumbPage } from '../prototypes/breadcrumb/breadcrumb.proto.js';
-import { Button, Select } from '@docouno/unica';
 import {
   Accordion,
   AccordionContent,
@@ -31,7 +33,6 @@ import {
   AccordionTrigger,
 } from '../prototypes/disclosure/disclosure.proto.js';
 import { ToastCard } from '../prototypes/toast/toast.proto.js';
-import { NumberInput } from '../prototypes/number-input/number-input.proto.js';
 import {
   Table,
   TableBody,
@@ -79,6 +80,7 @@ function PreferencesScene(): ReactElement {
   const [notice, setNotice] = useState('');
   const measureName = useId();
   const scaleId = useId();
+  const autosaveId = useId();
   const contextId = useId();
   const stage = useRef<HTMLDivElement>(null);
   const lastEdited = useRef<HTMLElement>(null);
@@ -256,21 +258,26 @@ function PreferencesScene(): ReactElement {
                       formatValue={(value) => `${value}%`}
                     />
                   </div>
-                  <NumberInput
-                    size="s"
-                    label="Autosave interval"
-                    aria-label="Autosave interval in seconds"
-                    suffix="s"
-                    min={5}
-                    max={120}
-                    step={5}
-                    value={preferences.autosave}
-                    onValueChange={(value) => {
-                      if (value !== '') {
-                        update('autosave', value);
-                      }
-                    }}
-                  />
+                  <div className="folio-stack" style={{ gap: '8px' }}>
+                    <Text as="label" size="caption-l" weight="medium" htmlFor={autosaveId}>
+                      Autosave interval
+                    </Text>
+                    <NumberInput
+                      id={autosaveId}
+                      size="s"
+                      aria-label="Autosave interval in seconds"
+                      suffix="s"
+                      min={5}
+                      max={120}
+                      step={5}
+                      value={preferences.autosave}
+                      onValueChange={(value) => {
+                        if (value !== '') {
+                          update('autosave', value);
+                        }
+                      }}
+                    />
+                  </div>
                 </div>
               </section>
               <section className="folio-preference-row">
@@ -475,7 +482,6 @@ export default defineScene({
     'button',
     'card',
     'checkbox',
-    'form-field',
     'icon',
     'kbd',
     'kbd-group',

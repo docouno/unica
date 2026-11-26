@@ -1,13 +1,12 @@
-import type { ReactElement } from 'react';
+import { FormField, NumberInput, Select } from '@docouno/unica';
 import { useState } from 'react';
-import { FormField, Select } from '@docouno/unica';
-import { FileInput } from '../../../src/prototypes/file-input/file-input.proto.js';
+import type { ReactElement } from 'react';
 import { Autocomplete, Combobox } from '../../../src/prototypes/combobox/combobox.proto.js';
 import {
   DatePicker,
   DateRangePicker,
 } from '../../../src/prototypes/date-picker/date-picker.proto.js';
-import { NumberInput } from '../../../src/prototypes/number-input/number-input.proto.js';
+import { FileInput } from '../../../src/prototypes/file-input/file-input.proto.js';
 
 const choices = [
   { value: 'notes', label: 'Research notes' },
@@ -99,13 +98,10 @@ export default function InputConsumers(): ReactElement {
         />
       </div>
       <div data-testid="number-fields">
-        <NumberInput label="Compact count" size="s" defaultValue={3} />
-        <NumberInput
-          label="Touch count"
-          size="l"
-          defaultValue={3}
-          description="Use whole numbers."
-        />
+        <NumberInput aria-label="Compact count" size="s" defaultValue={3} />
+        <FormField label="Touch count" size="l" description="Use whole numbers.">
+          <NumberInput defaultValue={3} />
+        </FormField>
       </div>
       <div data-testid="disabled-date">
         <DatePicker

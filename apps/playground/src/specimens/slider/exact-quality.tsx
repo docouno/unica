@@ -1,12 +1,12 @@
 import { useId, useState } from 'react';
-import { Flex, Slider, Stack, Text } from '@docouno/unica';
-import { NumberInput } from '../../prototypes/number-input/number-input.proto.js';
+import { Flex, NumberInput, Slider, Stack, Text } from '@docouno/unica';
 import '@docouno/unica/styles.css';
 
 export function ImageQuality({ sliderProps = {} } = {}) {
   const id = useId();
   const [quality, setQuality] = useState(60);
   const [entry, setEntry] = useState('60');
+  const [editorVersion, setEditorVersion] = useState(0);
   return (
     <Stack gap={8}>
       <Flex gap={16} wrap="wrap" align="start">
@@ -42,6 +42,7 @@ export function ImageQuality({ sliderProps = {} } = {}) {
             Exact image quality percentage
           </Text>
           <NumberInput
+            key={editorVersion}
             id={id + '-exact'}
             aria-describedby={id + '-help'}
             min={0}
@@ -54,7 +55,13 @@ export function ImageQuality({ sliderProps = {} } = {}) {
                 setQuality(Math.round(next));
               }
             }}
-            onBlur={() => setEntry(String(quality))}
+            onBlur={(event) => {
+              setEntry(String(quality));
+              if (event.currentTarget.validity.badInput) {
+                // A native unfinished draft survives a numerically unchanged prop.
+                setEditorVersion((version) => version + 1);
+              }
+            }}
           />
         </Stack>
       </Flex>

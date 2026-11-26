@@ -1,45 +1,16 @@
+import { decimal, floorDivide, power, units } from '../../core/decimal.js';
+import type { Decimal } from '../../core/decimal.js';
 import type { SliderMark } from './types.js';
-
-interface Decimal {
-  readonly coefficient: bigint;
-  readonly exponent: number;
-}
 
 const minimumNormal = 2.2250738585072014e-308;
 const coefficientLimit = 10n ** 15n;
-
-function power(exponent: number): bigint {
-  return 10n ** BigInt(exponent);
-}
 
 export function serializeValue(value: number): string {
   return String(value);
 }
 
-function decimal(value: number): Decimal {
-  const [significand = '0', magnitude = '0'] = serializeValue(value).split('e');
-  const [whole = '0', fraction = ''] = significand.split('.');
-  const digits = whole + fraction;
-  const coefficient = digits.replace(/0+$/, '');
-  return coefficient
-    ? {
-        coefficient: BigInt(coefficient),
-        exponent: Number(magnitude) - fraction.length + digits.length - coefficient.length,
-      }
-    : { coefficient: 0n, exponent: 0 };
-}
-
 function absolute(value: bigint): bigint {
   return value < 0n ? -value : value;
-}
-
-function units(value: Decimal, exponent: number): bigint {
-  return value.coefficient === 0n ? 0n : value.coefficient * power(value.exponent - exponent);
-}
-
-function floorDivide(value: bigint, divisor: bigint): bigint {
-  const quotient = value / divisor;
-  return value % divisor < 0n ? quotient - 1n : quotient;
 }
 
 function normalOrZero(value: number): boolean {

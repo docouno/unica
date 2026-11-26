@@ -192,6 +192,8 @@ export type {
   ListboxSection,
   PickerMessages,
 } from './components/Listbox/index.js';
+export { NumberInput } from './components/NumberInput/index.js';
+export type { NumberInputProps } from './components/NumberInput/index.js';
 export {
   Popover,
   PopoverBody,
