@@ -1,9 +1,8 @@
 import { CalendarBlankIcon, LockSimpleIcon, UsersIcon } from '@phosphor-icons/react';
-import { Button, Stack, Text, Title } from '@docouno/unica';
+import { Button, Stack, TagGroup, Text, Title } from '@docouno/unica';
+import type { TagGroupItem, TagSize } from '@docouno/unica';
 import { useLayoutEffect, useRef, useState } from 'react';
 import type { ReactElement } from 'react';
-import { TagGroup } from '../../prototypes/tag/tag.proto.js';
-import type { TagGroupItem, TagSize } from '../../prototypes/tag/tag.proto.js';
 import { useStoryAction } from '../../workbench/storyFrameState.js';
 import type { PreviewProps } from '../../workbench/types.js';
 import { ExampleSurface } from '../shared/example-surface.js';
@@ -37,7 +36,7 @@ function Collection({
       </Text>
       <TagGroup
         {...ctx.subject}
-        label={name}
+        aria-label={name}
         items={items}
         size={size}
         disabled={locked}
@@ -68,7 +67,7 @@ export function Locked({ ctx }: PreviewProps): ReactElement {
   return <Collection ctx={ctx} size="m" locked />;
 }
 
-const appliedLabels: readonly TagGroupItem[] = [
+const appliedLabels = [
   {
     id: 'date',
     label: 'This month',
@@ -77,15 +76,16 @@ const appliedLabels: readonly TagGroupItem[] = [
   },
   { id: 'team', label: 'Platform team', removeLabel: 'Remove Platform team', iconLeft: UsersIcon },
   { id: 'review', label: 'Needs review', removeLabel: 'Remove Needs review' },
-];
+] as const satisfies readonly TagGroupItem[];
+type AppliedLabel = (typeof appliedLabels)[number];
 interface AppliedLabels {
-  readonly items: readonly TagGroupItem[];
-  readonly pending?: TagGroupItem;
+  readonly items: readonly AppliedLabel[];
+  readonly pending?: AppliedLabel;
   readonly rejection?: string;
   readonly removed?: string;
 }
 
-function removeLabel(items: readonly TagGroupItem[], removed: TagGroupItem): AppliedLabels {
+function removeLabel(items: readonly AppliedLabel[], removed: AppliedLabel): AppliedLabels {
   return { items: items.filter((item) => item.id !== removed.id), removed: removed.label };
 }
 
@@ -127,17 +127,17 @@ export function RemovalFlow({ ctx }: PreviewProps): ReactElement {
       <TagGroup
         {...ctx.subject}
         ref={group}
-        label="Applied labels"
+        aria-label="Applied labels"
         items={
           state.pending
             ? state.items.map((item) => ({
                 ...item,
-                pending: item.id === state.pending?.id,
+                loading: item.id === state.pending?.id,
                 disabled: item.id !== state.pending?.id,
               }))
             : state.items
         }
-        emptyMessage="No labels applied"
+        messages={{ empty: 'No labels applied' }}
         emptyFocusRef={reapply}
         onRemove={(id) =>
           setState((current) => {
@@ -205,7 +205,7 @@ export function OverlayLabels({ ctx }: PreviewProps): ReactElement {
         <TagGroup
           {...ctx.subject}
           items={items}
-          label="Assigned groups"
+          aria-label="Assigned groups"
           onRemove={(id) => setItems((current) => current.filter((item) => item.id !== id))}
         />
         <Text size="body-s" color="secondary">
@@ -213,5 +213,26 @@ export function OverlayLabels({ ctx }: PreviewProps): ReactElement {
         </Text>
       </ExampleSurface>
     </div>
+  );
+}
+
+export function ControlledDisclosure({ ctx }: PreviewProps): ReactElement {
+  const [items, setItems] = useState(mixedLabels);
+  const [expanded, setExpanded] = useState(false);
+  const accept = ctx.story?.controls.accept !== false;
+  return (
+    <TagGroup
+      {...ctx.subject}
+      aria-label="Reference labels"
+      items={items}
+      maxVisible={3}
+      expanded={expanded}
+      onExpandedChange={(next) => {
+        if (accept) {
+          setExpanded(next);
+        }
+      }}
+      onRemove={(id) => setItems((current) => current.filter((item) => item.id !== id))}
+    />
   );
 }

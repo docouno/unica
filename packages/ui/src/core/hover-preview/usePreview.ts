@@ -27,6 +27,7 @@ interface PreviewProps extends PreviewOpenProps {
   readonly align: Align;
   readonly padding: number;
   readonly disabled: boolean;
+  readonly focusOnAriaDisabled?: boolean | undefined;
 }
 
 export interface PreviewBindings {
@@ -54,6 +55,7 @@ export function usePreview({
   align,
   padding,
   disabled,
+  focusOnAriaDisabled,
   open,
   defaultOpen,
   onOpenChange,
@@ -84,6 +86,10 @@ export function usePreview({
     ) {
       controller.current.dispose();
       controller.current = null;
+      if (!carrier && !external && open === undefined) {
+        // A remounted carrier must acquire new hover or focus intent.
+        authority.propose(false);
+      }
     }
     if (!carrier || !document || !view) {
       return;
@@ -99,6 +105,7 @@ export function usePreview({
       padding,
       external,
       disabled,
+      focusOnAriaDisabled,
       controlled: open !== undefined,
       open: authority.read(),
       admission: admission.current,

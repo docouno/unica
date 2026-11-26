@@ -337,6 +337,7 @@ export default defineScene({
     'modal',
     'select',
     'table',
+    'tag',
     'tags-input',
     'text',
     'textarea',

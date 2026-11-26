@@ -4,24 +4,19 @@ import { withOverlaySurface } from '../shared/with-overlay-surface.js';
 import { tagCode } from './tag-code.js';
 import { FitExample } from './tag-fit.examples.js';
 import fitSource from './tag-fit.examples.tsx?raw';
-import { Groups, Locked, OverlayLabels, RemovalFlow } from './tag-groups.examples.js';
+import { tagGroupCases } from './tag-group-cases.js';
 import { TagPlayground } from './tag-playground.js';
-import { Anatomy, LongLabels, Palette, RemovalStates } from './tag.examples.js';
-import '../../prototypes/tag/tag.examples.css';
+import { referenceProp, tagSize } from './tag-props.js';
+import { Anatomy, EmbeddedTag, LongLabels, Palette, RemovalStates } from './tag.examples.js';
+import './tag.examples.css';
 
 const props = {
-  size: {
-    kind: 'enum',
-    group: 'Geometry',
-    default: 'm',
-    description:
-      'Set the label, leading glyph and remove plate size. The hit target can extend beyond the painted capsule.',
-    choices: [{ value: 's' }, { value: 'm' }, { value: 'l' }],
-  },
+  size: tagSize,
   status: {
     kind: 'enum',
     group: 'Role',
     default: 'neutral',
+    publicType: 'TagStatus',
     description:
       'Identify the meaning of the assigned value. All statuses use the same removal action.',
     choices: [
@@ -44,14 +39,52 @@ const props = {
       { value: 'tag', label: 'Tag icon', code: 'TagIcon' },
     ],
   },
-  label: {
+  removeIcon: {
+    kind: 'slot',
+    group: 'Content',
+    default: 'none',
+    publicType: 'GlyphSource',
+    description: 'Replace the default close glyph. The button still performs removal.',
+    choices: [
+      { value: 'none', label: 'Default close glyph' },
+      { value: 'minus', label: 'Minus icon', code: 'MinusIcon' },
+    ],
+  },
+  children: {
     kind: 'string',
+    label: 'label',
     group: 'Content',
     default: 'Documentation',
     examples: ['Documentation', 'API'],
-    demo: true,
+    publicType: 'string | ReactNode',
     description:
-      'The example supplies this text as children and includes it in the required removeLabel. Blank text uses “Label”.',
+      'Required visible label. Rich phrasing content requires textValue. This example uses “Label” when the input is blank.',
+  },
+  textValue: {
+    kind: 'string',
+    group: 'Content',
+    default: '',
+    publicType: 'string',
+    description: 'Full plain-text value for a clipped label. Required with rich phrasing content.',
+  },
+  removeLabel: {
+    kind: 'string',
+    group: 'Accessibility',
+    default: '',
+    publicType: 'string',
+    description:
+      'Required accessible name for the remove button. With a blank input, the example uses “Remove” followed by the visible label.',
+  },
+  removeTabIndex: {
+    kind: 'enum',
+    group: 'Accessibility',
+    default: '0',
+    publicType: '0 | -1',
+    choices: [
+      { value: '0', label: 'Sequential focus (0)' },
+      { value: '-1', label: 'Programmatic focus (-1)' },
+    ],
+    description: 'Set -1 when a containing widget coordinates the remove button’s focus.',
   },
   disabled: {
     kind: 'boolean',
@@ -59,13 +92,15 @@ const props = {
     default: false,
     description: 'Keep the label visible and disable its native remove button.',
   },
-  pending: {
+  loading: {
     kind: 'boolean',
     group: 'Availability',
     default: false,
     description:
-      'Show a Spinner in the remove plate while a request is pending. An enabled button retains its keyboard focus.',
+      'Show a spinner while removal is pending. The button retains focus and ignores further requests.',
   },
+  ref: referenceProp('Ref<HTMLSpanElement>', 'Receive the passive Tag root.'),
+  removeRef: referenceProp('Ref<HTMLButtonElement>', 'Receive the native remove button.'),
   onRemove: {
     kind: 'action',
     group: 'Interaction',
@@ -79,13 +114,20 @@ export type TagValues = ComponentValues<typeof props>;
 
 export default defineComponent({
   id: 'tag',
-  title: 'Tag & TagGroup',
+  title: 'Tag',
   category: 'Feedback & Status',
-  status: 'Proto',
-  summary:
-    'Removable assigned values and wrapping groups with keyboard navigation and optional disclosure.',
+  status: 'UI',
+  summary: 'Assigned values with a dedicated remove action and a clipped-label hint.',
   componentName: 'Tag',
   props,
+  constraints: [
+    {
+      kind: 'precedence',
+      when: { disabled: true },
+      affects: [{ key: 'loading', value: true }],
+      reason: 'Native disabled state takes priority over loading and shows the remove glyph.',
+    },
+  ],
   render: withOverlaySurface(TagPlayground, 'border-box'),
   code: tagCode,
   states: [
@@ -94,8 +136,16 @@ export default defineComponent({
       title: 'Status at each size',
       rows: 'status',
       cols: 'size',
-      fixed: { label: 'API' },
+      fixed: { children: 'API' },
       caption: 'Compare all six status colors on the same assigned value at each size.',
+    },
+    {
+      id: 'availability',
+      title: 'Disabled and loading',
+      rows: 'disabled',
+      cols: 'loading',
+      fixed: { children: 'Research', iconLeft: 'tag' },
+      caption: 'Compare the spinner, native disabled button and their precedence.',
     },
   ],
   cases: [
@@ -123,31 +173,14 @@ export default defineComponent({
       id: 'states',
       title: 'Remove button feedback',
       kind: 'behavior',
-      mode: 'pinned',
+      mode: 'live',
+      reset: true,
       caption:
-        'Compare rest, hover, press, focus, disabled and pending with and without a leading glyph. The pinned controls keep their values.',
+        'Hover, press or Tab to the available remove buttons. Compare their feedback with loading and disabled, with and without a leading glyph.',
       render: withOverlaySurface(RemovalStates, 'border-box'),
     },
-    {
-      id: 'groups',
-      title: 'Wrapping and disclosure',
-      kind: 'behavior',
-      mode: 'live',
-      reset: true,
-      caption:
-        'Reveal the remaining values and move between actions with the arrow keys. Locked values stay in the group.',
-      render: withOverlaySurface(Groups, 'border-box'),
-    },
-    {
-      id: 'locked',
-      title: 'Locked values',
-      kind: 'behavior',
-      mode: 'live',
-      reset: true,
-      caption:
-        'All values are required. Expand or collapse the list to read them while removal is unavailable.',
-      render: withOverlaySurface(Locked, 'border-box'),
-    },
+    tagGroupCases.groups,
+    tagGroupCases.locked,
     {
       id: 'overflow',
       title: 'Reading long values',
@@ -159,32 +192,17 @@ export default defineComponent({
       render: withOverlaySurface(LongLabels, 'border-box'),
     },
     {
-      id: 'removal',
-      title: 'Removal outcomes',
-      kind: 'behavior',
-      mode: 'live',
-      controls: { deferred: { kind: 'boolean', label: 'Wait for confirmation', default: false } },
-      actions: [
-        { id: 'confirm', label: 'Confirm removal' },
-        { id: 'reject', label: 'Reject removal' },
-      ],
-      reset: true,
-      caption:
-        'Remove a label immediately or hold its request to compare confirmation and rejection. After the last removal, reapply the labels from the empty list.',
-      render: withOverlaySurface(RemovalFlow, 'border-box'),
-    },
-    {
-      id: 'overlay',
-      title: 'Assigned groups on a floating surface',
-      surface: 'overlay',
-      overlayStage: true,
-      kind: 'surface',
+      id: 'embedded',
+      title: 'Embedded in a field',
+      kind: 'content',
       mode: 'live',
       reset: true,
       caption:
-        'Remove an optional group and inspect the remaining labels on the panel. Workspace policy stays assigned.',
-      render: OverlayLabels,
+        'The standalone value clips. In the TagsInput prototype the same value wraps, stays selectable and shares the field’s corner geometry.',
+      render: withOverlaySurface(EmbeddedTag, 'border-box'),
     },
+    tagGroupCases.removal,
+    tagGroupCases.overlay,
   ],
   compositions: [
     {
@@ -193,8 +211,8 @@ export default defineComponent({
       mode: 'live',
       reset: true,
       caption:
-        'Compare the same assigned values at three sizes. Add a value or remove it from a field and follow the change across the three rows.',
-      code: fitSource.replaceAll('../../prototypes/', './prototypes/'),
+        'Add or remove a label to compare the same collection beside Input, Button and Badge at three sizes.',
+      code: fitSource,
       render: withOverlaySurface(({ ctx }) => <FitExample tagProps={ctx.subject} />, 'border-box'),
     },
   ],

@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import { Buffer } from 'node:buffer';
+import { assertFocused } from '../helpers.mjs';
 
 async function navigate(page, params) {
   await page.evaluate((nextParams) => {
@@ -31,10 +32,14 @@ async function checkReferenceNames(page) {
   }
 }
 
-async function assertLabelFits(editor, name) {
-  const lines = await editor.getByText(name, { exact: true }).evaluate((label) => {
+function tagLabelByText(scope, text) {
+  return scope.locator('[data-unica-tag-part="label"]').getByText(text, { exact: true });
+}
+
+async function assertLabelFits(label, name) {
+  const lines = await label.evaluate((node) => {
     const range = document.createRange();
-    range.selectNodeContents(label);
+    range.selectNodeContents(node);
     return range.getClientRects().length;
   });
   assert.equal(lines, 1, name + ' must fit on one line');
@@ -355,7 +360,7 @@ export default {
     assert.equal(await lists.count(), 6);
     for (const list of await lists.all()) {
       for (const label of ['Viewer', 'Commenter', 'Editor', 'Administrator']) {
-        await assertLabelFits(list, label);
+        await assertLabelFits(list.getByText(label, { exact: true }), label);
       }
       const viewer = list.getByRole('option', { name: 'Viewer', exact: true });
       const editor = list.getByRole('option', { name: 'Editor', exact: true });
@@ -579,7 +584,7 @@ export default {
     const remove = (name) => editor.getByRole('button', { name: 'Remove ' + name, exact: true });
     await draft.waitFor({ state: 'attached', timeout: 20_000 });
     for (const name of ['Design', 'Research']) {
-      await assertLabelFits(editor, name);
+      await assertLabelFits(tagLabelByText(editor, name), name);
       assert.ok(await remove(name).isVisible());
     }
     assert.ok((await editor.boundingBox()).width > 240, 'Topics must span the phone field slot');
@@ -590,6 +595,22 @@ export default {
     await remove('Design').waitFor({ state: 'detached' });
     assert.ok(await remove('Research').isVisible());
     assert.ok(await remove('Maps').isVisible());
+    await assertFocused(draft);
+
+    await page.keyboard.press('Backspace');
+    await assertFocused(remove('Maps'));
+    assert.ok(await remove('Maps').isVisible());
+    await page.keyboard.press('ArrowRight');
+    await assertFocused(remove('Research'));
+    await page.keyboard.press('Escape');
+    await assertFocused(draft);
+    await page.keyboard.press('Backspace');
+    await page.keyboard.press('Backspace');
+    await remove('Maps').waitFor({ state: 'detached' });
+    await remove('Research').and(page.locator(':focus')).waitFor();
+    await page.keyboard.press('Delete');
+    await remove('Research').waitFor({ state: 'detached' });
+    await assertFocused(draft);
   },
 
   'TagsInput keeps each size and variant readable on the narrow overlay': async ({
@@ -610,8 +631,9 @@ export default {
           `.tags-editor-proto[data-variant="${variant}"][data-size="${size}"]`,
         );
         await field.waitFor({ timeout: 20_000 });
-        await assertLabelFits(field, 'Design');
-        await assertLabelFits(field, 'Research');
+        for (const name of ['Design', 'Research']) {
+          await assertLabelFits(tagLabelByText(field, name), name);
+        }
       }
     }
   },
@@ -640,7 +662,7 @@ export default {
       const remove = field.getByRole('button', { name: 'Remove Research', exact: true });
       await remove.waitFor({ timeout: 20_000 });
       await mobile.evaluate(() => document.fonts.ready);
-      await assertLabelFits(field, 'Research');
+      await assertLabelFits(tagLabelByText(field, 'Research'), 'Research');
       await remove.tap();
       await remove.waitFor({ state: 'detached' });
       assert.ok(await field.getByRole('button', { name: 'Remove Design' }).isVisible());
@@ -657,10 +679,10 @@ export default {
     await page.goto(route.href, { waitUntil: 'domcontentloaded' });
     const board = page.locator('section[data-wb-block="overflow"] .wb-artboard').first();
     const words = ['العمارة', 'עברית', '東京'];
-    await board.getByText(words[2], { exact: true }).waitFor({ timeout: 20_000 });
+    await tagLabelByText(board, words[2]).waitFor({ timeout: 20_000 });
     await page.evaluate(() => document.fonts.ready);
     for (const word of words) {
-      const missing = await board.getByText(word, { exact: true }).evaluate((label) => {
+      const missing = await tagLabelByText(board, word).evaluate((label) => {
         const canvas = document.createElement('canvas');
         const context = canvas.getContext('2d');
         const style = getComputedStyle(label);
@@ -677,6 +699,75 @@ export default {
       });
       assert.deepEqual(missing, [], 'Every character in ' + word + ' has a glyph');
     }
+  },
+
+  'TagsInput preserves wrapped selection and availability with the packaged Tag': async ({
+    page,
+    origin,
+  }) => {
+    await page.setViewportSize({ width: 360, height: 780 });
+    await page.goto(
+      new URL(
+        '/?item=tags-input&tab=states&block=overflow&family=frost&scheme=light&surface=overlay&scale=120&dir=rtl',
+        origin,
+      ).href,
+      { waitUntil: 'domcontentloaded' },
+    );
+    const board = page.locator('[data-wb-block="overflow"] .wb-artboard').first();
+    const address = 'digital-collections-and-research-coordination@example.org';
+    const removeName = { name: 'Remove ' + address, exact: true };
+    const fields = board.locator('[data-unica-tag-layout="field"]').filter({
+      has: page.getByRole('button', removeName),
+    });
+    const label = (field) => tagLabelByText(field, address);
+    const editable = fields.first();
+    const locked = fields.last();
+    await label(editable).waitFor({ timeout: 20_000 });
+    await page.evaluate(() => document.fonts.ready);
+    assert.equal(await fields.count(), 2);
+    assert.ok(await locked.getByRole('textbox').isDisabled());
+    assert.ok(await locked.getByRole('button', removeName).isDisabled());
+    for (const field of [editable, locked]) {
+      const metrics = await label(field).evaluate((element) => {
+        const range = document.createRange();
+        range.selectNodeContents(element);
+        const text = range.getBoundingClientRect();
+        const labelPart = element.closest('[data-unica-tag-part="label"]');
+        const remove = labelPart.parentElement
+          .querySelector('[data-unica-tag-part="remove"]')
+          .getBoundingClientRect();
+        return {
+          lines: range.getClientRects().length,
+          selectable: getComputedStyle(labelPart).userSelect === 'text',
+          disjoint: text.right <= remove.left + 1 || remove.right <= text.left + 1,
+        };
+      });
+      assert.ok(metrics.lines > 1, 'The whole long value wraps onto multiple lines');
+      assert.ok(metrics.selectable && metrics.disjoint);
+    }
+    await label(editable).dblclick();
+    const selected = await page.evaluate(() => getSelection().toString());
+    assert.ok(selected && address.includes(selected));
+    assert.ok(await editable.getByRole('button', removeName).isVisible());
+
+    await navigate(page, {
+      item: 'tags-input',
+      tab: 'states',
+      block: 'availability',
+      family: 'frost',
+      scheme: 'light',
+    });
+    const readOnly = page.getByRole('textbox', { name: 'Allowed domains', exact: true });
+    await readOnly.waitFor();
+    assert.equal(await readOnly.getAttribute('readonly'), '');
+    assert.equal(
+      await readOnly.inputValue(),
+      'research.example.org\ndigital-collections.example.org\narchive.example.org',
+    );
+    assert.equal(
+      await page.getByRole('button', { name: 'Remove research.example.org', exact: true }).count(),
+      0,
+    );
   },
 
   'TagsInput keeps the draft text beside Add when the matrix scales down': async ({
@@ -1296,7 +1387,7 @@ export default {
     assert.equal(await boards.nth(1).locator('[data-wb-subject]').count(), 0);
     await page.keyboard.press('Space');
     assert.equal(await remove.evaluate((button) => button.matches(':focus')), true);
-    assert.equal(await boards.nth(1).locator('.tag-proto[data-wb-subject]').count(), 1);
+    assert.equal(await boards.nth(1).locator('[data-unica-tag-size][data-wb-subject]').count(), 1);
     assert.equal(
       await boards.nth(0).getByRole('button', { name: 'Remove Documentation' }).count(),
       1,
@@ -1347,6 +1438,104 @@ export default {
     await page.keyboard.press('Enter');
     const first = groups.nth(1).getByRole('button', { name: 'Remove This month' });
     assert.equal(await first.evaluate((button) => button.matches(':focus')), true);
+  },
+
+  'Folio filter names follow current dates and Reset ignores a held removal key': async ({
+    page,
+    origin,
+  }) => {
+    await page.setViewportSize({ width: 1500, height: 950 });
+    await page.goto(
+      new URL('/?item=03-document-collection&family=soft&scheme=light&vp=1440', origin).href,
+      { waitUntil: 'domcontentloaded' },
+    );
+    const scene = page.locator('[data-wb-scene]');
+    const group = scene.getByRole('toolbar', { name: 'Applied document filters', exact: true });
+    const remove = (name) => group.getByRole('button', { name, exact: true });
+    const oldWindow = remove('Remove modified date filter: 14 – 17 Sept 2026');
+    const newWindow = remove('Remove modified date filter: 15 – 21 Sept 2026');
+    const oldBaseline = remove('Remove verification date filter: Verified since 11 Sept 2026');
+    const newBaseline = remove('Remove verification date filter: Verified since 14 Sept 2026');
+    const scope = remove('Remove scope: prod filter');
+    const reset = scene.getByRole('link', { name: 'Reset', exact: true });
+
+    await oldWindow.waitFor({ timeout: 20_000 });
+    await scene
+      .getByRole('textbox', { name: 'Last modified', exact: true })
+      .fill('15/09/2026 – 21/09/2026');
+    await newWindow.waitFor();
+    assert.equal(await oldWindow.count(), 0);
+    const verification = scene.getByRole('textbox', { name: 'Verified on or after', exact: true });
+    await verification.fill('11/09/2026');
+    await oldBaseline.waitFor();
+    await verification.fill('14/09/2026');
+    await newBaseline.waitFor();
+    assert.equal(await oldBaseline.count(), 0);
+
+    await newBaseline.click();
+    await newWindow.click();
+    assert.equal(await group.getByRole('button').count(), 1);
+    await scope.focus();
+    await page.keyboard.down('Enter');
+    await assertFocused(reset);
+    await group.getByText('No filters applied', { exact: true }).waitFor();
+    assert.equal(await group.getByRole('button').count(), 0);
+    await page.keyboard.down('Enter');
+    assert.equal(await group.getByRole('button').count(), 0);
+    await page.keyboard.up('Enter');
+    assert.equal(await group.getByRole('button').count(), 0);
+    await page.keyboard.press('Enter');
+    await scope.waitFor();
+    assert.equal(await group.getByRole('button').count(), 1);
+
+    await scope.click();
+    await group.getByText('No filters applied', { exact: true }).waitFor();
+    await reset.click();
+    await scope.waitFor();
+    assert.equal(await group.getByRole('button').count(), 1);
+  },
+
+  'Invite recipients retain keyboard navigation and stay inside the active form': async ({
+    page,
+    origin,
+  }) => {
+    await page.setViewportSize({ width: 900, height: 950 });
+    await page.goto(
+      new URL(
+        '/?item=07-invite-access-modal&family=frost&scheme=dark&vp=360&dir=rtl&scale=120',
+        origin,
+      ).href,
+      { waitUntil: 'domcontentloaded' },
+    );
+    const dialog = page.getByRole('dialog', { name: 'Invite members to Platform Eng' });
+    const draft = dialog.getByRole('textbox', { name: 'Invite by work email', exact: true });
+    const reviewer = dialog.getByRole('button', {
+      name: 'Remove reviewer@example.com',
+      exact: true,
+    });
+    const platform = dialog.getByRole('button', {
+      name: 'Remove platform@example.com',
+      exact: true,
+    });
+    await reviewer.waitFor({ timeout: 20_000 });
+    await draft.press('Backspace');
+    await assertFocused(reviewer);
+    assert.ok(
+      await dialog.getByRole('button', { name: 'Send 2 invites', exact: true }).isVisible(),
+    );
+    await page.keyboard.press('Tab');
+    await assertFocused(dialog.getByRole('textbox', { name: 'External contractor', exact: true }));
+    await draft.press('Backspace');
+    await page.keyboard.press('Enter');
+    await reviewer.waitFor({ state: 'detached' });
+    await platform.and(page.locator(':focus')).waitFor();
+    assert.ok(
+      await dialog.getByRole('button', { name: 'Send 1 invites', exact: true }).isVisible(),
+    );
+    await page.keyboard.press('Backspace');
+    await platform.waitFor({ state: 'detached' });
+    await assertFocused(draft);
+    assert.ok(await dialog.isVisible());
   },
 
   'Toast exports retain independent identities after an earlier notification is dismissed': async ({

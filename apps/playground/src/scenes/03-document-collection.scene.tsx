@@ -32,9 +32,8 @@ import {
   TableRowHeader,
   TableScroll,
 } from '../prototypes/table/table.proto.js';
-import { TagGroup } from '../prototypes/tag/tag.proto.js';
-import type { TagGroupItem } from '../prototypes/tag/tag.proto.js';
-import { Text, Title } from '@docouno/unica';
+import { TagGroup, Text, Title } from '@docouno/unica';
+import type { TagGroupItem } from '@docouno/unica';
 import {
   Breadcrumb,
   BreadcrumbLink,
@@ -232,17 +231,19 @@ function CollectionScene(): ReactElement {
   }
   const hasWindow = Boolean(dateWindow[0] && dateWindow[1]);
   if (hasWindow) {
+    const label = modifiedLabel(dateWindow);
     filters.push({
       id: 'date',
-      label: modifiedLabel(dateWindow),
-      removeLabel: 'Remove modified date filter',
+      label,
+      removeLabel: `Remove modified date filter: ${label}`,
     });
   }
   if (verificationBaseline) {
+    const label = `Verified since ${dateLabel(verificationBaseline)}`;
     filters.push({
       id: 'verification',
-      label: `Verified since ${dateLabel(verificationBaseline)}`,
-      removeLabel: 'Remove verification date filter',
+      label,
+      removeLabel: `Remove verification date filter: ${label}`,
     });
   }
   const filteredRows = rows
@@ -406,7 +407,7 @@ function CollectionScene(): ReactElement {
               />
               <TagGroup
                 size="s"
-                label="Applied document filters"
+                aria-label="Applied document filters"
                 items={filters}
                 onRemove={(id) => {
                   if (id === 'scope') {
@@ -419,12 +420,17 @@ function CollectionScene(): ReactElement {
                     setPage(1);
                   }
                 }}
-                emptyMessage="No filters applied"
+                messages={{ empty: 'No filters applied' }}
                 emptyFocusRef={resetRef}
               />
               <Link
                 ref={resetRef}
                 href="#reset"
+                onKeyDown={(event) => {
+                  if (event.repeat && event.key === 'Enter') {
+                    event.preventDefault();
+                  }
+                }}
                 onClick={(event) => {
                   event.preventDefault();
                   setScope(true);
@@ -663,7 +669,7 @@ export default defineScene({
     'select',
     'switch',
     'table',
-    'tag',
+    'tag-group',
     'text',
     'title',
   ],

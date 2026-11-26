@@ -1,6 +1,5 @@
-import { Alert } from '@docouno/unica';
+import { Alert, Tag } from '@docouno/unica';
 import { useState } from 'react';
-import { Tag } from '../../../src/prototypes/tag/tag.proto.js';
 import { Tabs, TabsContent, TabsList, TabsTab } from '../../../src/prototypes/tabs/tabs.proto.js';
 
 export default function BadgeConsumersFixture() {

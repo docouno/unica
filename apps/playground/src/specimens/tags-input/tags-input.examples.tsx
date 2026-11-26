@@ -1,9 +1,8 @@
 import { useId, useRef, useState } from 'react';
 import type { ReactElement, ReactNode } from 'react';
-import { Button, Card, Input, Stack, Text } from '@docouno/unica';
+import { Button, Card, Input, Stack, TagGroup, Text } from '@docouno/unica';
 import type { ControlSize } from '@docouno/unica';
 import { FormField } from '../../prototypes/form-field/form-field.proto.js';
-import { TagGroup } from '../../prototypes/tag/tag.proto.js';
 import { TagsInput } from '../../prototypes/tags-input/tags-input.proto.js';
 import type { PreviewProps } from '../../workbench/types.js';
 import { ExampleSurface } from '../shared/example-surface.js';
@@ -75,10 +74,10 @@ function ShapeComparison({
       <TagGroup
         size={size}
         items={values.map((value) => ({ id: value, label: value, removeLabel: `Remove ${value}` }))}
-        label={`Standalone subjects ${size}`}
-        onRemove={(value) => setValues(values.filter((item) => item !== value))}
+        aria-label={`Standalone subjects ${size}`}
+        onRemove={(value) => setValues((current) => current.filter((item) => item !== value))}
         emptyFocusRef={editor}
-        emptyMessage="No subjects"
+        messages={{ empty: 'No subjects' }}
       />
       <TagsInput
         {...ctx.subject}
@@ -148,7 +147,6 @@ export function TagsInteraction({ ctx }: PreviewProps): ReactElement {
     ['Field hover', 'hover', ''],
     ['Pointer editing', 'pointer-focus', 'Field notes'],
     ['Editor · keyboard focus', 'keyboard-focus', 'Field notes'],
-    ['Tag · first Backspace', 'tag-focus', ''],
     ['Add · hover', 'add-hover', 'Field notes'],
     ['Add · press', 'add-active', 'Field notes'],
     ['Add · keyboard focus', 'add-focus', 'Field notes'],

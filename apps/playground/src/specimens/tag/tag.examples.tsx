@@ -1,5 +1,5 @@
-import { Button, Divider, Flex, Stack, Text } from '@docouno/unica';
-import type { BadgeStatus } from '@docouno/unica';
+import { Button, Flex, Stack, Tag, Text } from '@docouno/unica';
+import type { TagProps, TagStatus } from '@docouno/unica';
 import {
   CheckCircleIcon,
   EnvelopeIcon,
@@ -12,8 +12,7 @@ import {
 } from '@phosphor-icons/react';
 import { useId, useLayoutEffect, useRef, useState } from 'react';
 import type { KeyboardEvent, ReactElement } from 'react';
-import { Tag } from '../../prototypes/tag/tag.proto.js';
-import type { TagProps } from '../../prototypes/tag/tag.proto.js';
+import { TagsInput } from '../../prototypes/tags-input/tags-input.proto.js';
 import type { PreviewProps } from '../../workbench/types.js';
 
 const sizes = ['s', 'm', 'l'] as const;
@@ -34,8 +33,12 @@ function useRemovedTags() {
   return { removed, toggle };
 }
 
-interface SampleProps extends Omit<TagProps, 'children' | 'onRemove' | 'removeLabel'> {
+interface SampleProps extends Omit<
+  TagProps,
+  'children' | 'onRemove' | 'removeLabel' | 'textValue'
+> {
   readonly label: string;
+  readonly language?: string;
   readonly removed: boolean;
   readonly onToggle: () => void;
 }
@@ -46,7 +49,7 @@ function preventRepeatedEnter(event: KeyboardEvent<HTMLElement>): void {
   }
 }
 
-function SampleTag({ label, removed, onToggle, ...props }: SampleProps): ReactElement {
+function SampleTag({ label, language, removed, onToggle, ...props }: SampleProps): ReactElement {
   const button = useRef<HTMLButtonElement>(null);
   const moveFocus = useRef(false);
   useLayoutEffect(() => {
@@ -64,6 +67,9 @@ function SampleTag({ label, removed, onToggle, ...props }: SampleProps): ReactEl
     moveFocus.current = button.current?.matches(':focus') ?? false;
     onToggle();
   }
+  const content = language
+    ? { children: <bdi lang={language}>{label}</bdi>, textValue: label }
+    : { children: label };
   return removed ? (
     <Button
       type="button"
@@ -80,13 +86,11 @@ function SampleTag({ label, removed, onToggle, ...props }: SampleProps): ReactEl
   ) : (
     <Tag
       {...props}
+      {...content}
       removeRef={button}
       removeLabel={`Remove ${label}`}
       onRemove={toggle}
-      onKeyDown={preventRepeatedEnter}
-    >
-      {label}
-    </Tag>
+    />
   );
 }
 
@@ -134,7 +138,7 @@ const meanings = [
   { status: 'warning', label: 'Needs review', iconLeft: WarningIcon },
   { status: 'danger', label: 'Invalid address', iconLeft: WarningCircleIcon },
 ] satisfies readonly {
-  status: BadgeStatus;
+  status: TagStatus;
   label: string;
   iconLeft: NonNullable<TagProps['iconLeft']>;
 }[];
@@ -163,67 +167,38 @@ export function Palette({ ctx }: PreviewProps): ReactElement {
 }
 
 const states = [
-  { name: 'Rest', props: {} },
-  { name: 'Hover ×', props: { previewState: 'hover' } },
-  { name: 'Press ×', props: { previewState: 'active' } },
-  { name: 'Keyboard', props: { previewState: 'focus' } },
+  { name: 'Available', props: {} },
   { name: 'Unavailable', props: { disabled: true } },
-  { name: 'Removing', props: { pending: true } },
+  { name: 'Removing', props: { loading: true } },
+  { name: 'Unavailable while removing', props: { disabled: true, loading: true } },
 ] as const;
-const keepValue = (): void => undefined;
 
 export function RemovalStates({ ctx }: PreviewProps): ReactElement {
+  const { removed, toggle } = useRemovedTags();
   return (
-    <Stack gap={24}>
-      <div className="tag-demo-state-grid">
-        {states.map(({ name, props }) => (
-          <Stack key={name} align="start" gap={8}>
-            <Text size="caption-l" color="muted">
-              {name}
-            </Text>
-            <Tag
-              {...ctx.subject}
-              {...props}
-              inert
-              onRemove={keepValue}
-              removeLabel="Remove Research"
-            >
-              Research
-            </Tag>
-            <Tag
-              {...ctx.subject}
-              {...props}
-              inert
-              iconLeft={FolderIcon}
-              onRemove={keepValue}
-              removeLabel="Remove Design"
-            >
-              Design
-            </Tag>
-          </Stack>
-        ))}
-      </div>
-      <Stack gap={16}>
-        <Divider />
-        <Flex align="center" wrap="wrap" gap={8}>
-          {sizes.map((size) => (
-            <Tag
-              {...ctx.subject}
-              key={size}
-              inert
-              size={size}
-              status="accent"
-              previewState="focus"
-              iconLeft={FolderIcon}
-              onRemove={keepValue}
-              removeLabel={`Remove Design, ${size} preview`}
-            >
-              Design
-            </Tag>
-          ))}
-        </Flex>
-      </Stack>
-    </Stack>
+    <div className="tag-demo-state-grid">
+      {states.map(({ name, props }) => (
+        <Stack key={name} align="start" gap={8}>
+          <Text size="caption-l" color="muted">
+            {name}
+          </Text>
+          {anatomy.slice(0, 2).map(({ label, iconLeft }) => {
+            const key = `${name}-${label}`;
+            return (
+              <SampleTag
+                {...ctx.subject}
+                {...props}
+                key={key}
+                label={label}
+                iconLeft={iconLeft}
+                removed={removed.includes(key)}
+                onToggle={() => toggle(key)}
+              />
+            );
+          })}
+        </Stack>
+      ))}
+    </div>
   );
 }
 
@@ -245,12 +220,13 @@ export function LongLabels({ ctx }: PreviewProps): ReactElement {
   return (
     <Stack gap={24} data-example-disclosure="">
       <Flex wrap="wrap" align="center" gap={8} className="tag-demo-constrained">
-        {longValues.map(({ label, iconLeft }) => (
+        {longValues.map(({ label, iconLeft, lang }) => (
           <SampleTag
             {...ctx.subject}
             key={label}
             label={label}
             iconLeft={iconLeft}
+            language={lang}
             removed={removed.includes(label)}
             onToggle={() => toggle(label)}
             onFocus={() => setInspected(label)}
@@ -290,6 +266,27 @@ export function LongLabels({ ctx }: PreviewProps): ReactElement {
         ))}
         {active.length === 0 && <li>No assigned labels</li>}
       </ul>
+    </Stack>
+  );
+}
+
+export function EmbeddedTag({ ctx }: PreviewProps): ReactElement {
+  const label = 'Internationalization and content accessibility for local workspaces';
+  const [values, setValues] = useState<readonly string[]>([label]);
+  return (
+    <Stack gap={16} style={{ inlineSize: 'min(100%, 30rem)' }}>
+      <Flex className="tag-demo-constrained">
+        {values.includes(label) && (
+          <Tag
+            {...ctx.subject}
+            removeLabel={`Remove ${label}`}
+            onRemove={() => setValues((current) => current.filter((value) => value !== label))}
+          >
+            {label}
+          </Tag>
+        )}
+      </Flex>
+      <TagsInput label="Assigned values" values={values} onValuesChange={setValues} />
     </Stack>
   );
 }

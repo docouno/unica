@@ -131,14 +131,17 @@ export default {
     mount,
   }) => {
     await mount('collection-hints');
-    const remove = page.getByRole('button', { name: 'Remove release verification' });
+    const remove = page.getByRole('button', {
+      name: 'Remove Release verification workflow',
+      exact: true,
+    });
     await pressKeys(page, 'Tab', 'Tab', 'Tab', 'Tab');
     await assertFocused(remove);
     await assertHint(page, 'Release verification workflow');
     await page.keyboard.press('Tab');
     await assertFocused(page.getByRole('button', { name: 'After tag' }));
     await page.locator(openHint).waitFor({ state: 'detached' });
-    await page.locator('.tag-label-proto').hover();
+    await page.locator('[data-unica-tag-part="label"]').hover();
     await assertHint(page, 'Release verification workflow');
     await page.locator(openHint).click();
     assert.equal(await page.getByTestId('removals').textContent(), '0');

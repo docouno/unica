@@ -1,25 +1,26 @@
-import { useId, useLayoutEffect, useRef, useState } from 'react';
+import { useLayoutEffect, useRef, useState } from 'react';
 
 export function useTagRemoval() {
-  const id = useId();
+  const action = useRef<HTMLButtonElement>(null);
   const [removed, setRemoved] = useState(false);
   const transferFocus = useRef(false);
 
   function toggle() {
-    transferFocus.current = document.getElementById(id)?.contains(document.activeElement) ?? false;
+    transferFocus.current = action.current?.matches(':focus') ?? false;
     setRemoved((previous) => !previous);
   }
 
   useLayoutEffect(() => {
-    if (transferFocus.current) {
-      transferFocus.current = false;
-      const owner = document.getElementById(id);
-      if (owner && document.activeElement === document.body) {
-        const button = owner.querySelector('button');
-        (button && !button.disabled ? button : owner).focus();
-      }
+    const target = action.current;
+    if (
+      transferFocus.current &&
+      target &&
+      target.ownerDocument.activeElement === target.ownerDocument.body
+    ) {
+      target.focus();
     }
-  }, [id, removed]);
+    transferFocus.current = false;
+  }, [removed]);
 
-  return { id, removed, toggle };
+  return { action, removed, toggle };
 }

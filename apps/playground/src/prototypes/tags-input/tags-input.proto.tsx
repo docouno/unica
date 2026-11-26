@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
 import type { ComponentPropsWithRef, ReactElement, ReactNode } from 'react';
-import { FormField } from '../form-field/form-field.proto.js';
+import { Tag } from '@docouno/unica';
 import type { ControlSize, FieldStatus, FieldVariant } from '@docouno/unica';
 import { useControlFocus } from '../control-focus.js';
-import { Tag } from '../tag/tag.proto.js';
+import { FormField } from '../form-field/form-field.proto.js';
 import './tags-input.css';
 
 export interface TagsInputProps extends Omit<
@@ -29,7 +29,6 @@ export interface TagsInputProps extends Omit<
     | 'hover'
     | 'pointer-focus'
     | 'keyboard-focus'
-    | 'tag-focus'
     | 'add-hover'
     | 'add-active'
     | 'add-focus'
@@ -295,6 +294,7 @@ export function TagsInput({
           data-preview-focus-scope=""
           data-native-context-region=""
           data-wb-subject={subject}
+          data-unica-tag-layout="field"
           className="tags-editor-proto"
           data-size={size}
           data-variant={variant}
@@ -303,7 +303,9 @@ export function TagsInput({
           data-disabled={disabled || undefined}
           data-readonly={readOnly || undefined}
           onClick={(event) => {
-            if (!(event.target as Element).closest('button, textarea, .tag-label-proto')) {
+            if (
+              !(event.target as Element).closest('button, textarea, [data-unica-tag-part="label"]')
+            ) {
               focusEditor();
             }
           }}
@@ -314,6 +316,7 @@ export function TagsInput({
                 key={tag}
                 size={size}
                 disabled={disabled}
+                textValue={tag}
                 removeLabel={`Remove ${tag}`}
                 removeTabIndex={-1}
                 removeRef={(node) => {
@@ -323,9 +326,6 @@ export function TagsInput({
                     removeButtons.current.delete(tag);
                   }
                 }}
-                {...(previewState === 'tag-focus' && index === tags.length - 1
-                  ? { previewState: 'focus' as const }
-                  : {})}
                 onRemove={() => remove(tag, shell.current?.dataset.focusOrigin === 'keyboard')}
                 onKeyDown={(event) => {
                   if (event.repeat && (event.key === 'Enter' || event.key === ' ')) {

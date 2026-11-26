@@ -1,7 +1,6 @@
-import { Button } from '@docouno/unica';
-import { TagIcon } from '@phosphor-icons/react';
+import { Button, Tag } from '@docouno/unica';
+import { MinusIcon, TagIcon } from '@phosphor-icons/react';
 import type { KeyboardEvent, ReactElement } from 'react';
-import { Tag } from '../../prototypes/tag/tag.proto.js';
 import type { PreviewProps } from '../../workbench/types.js';
 import { tagLabel } from './tag-code.js';
 import type { TagValues } from './tag.spec.js';
@@ -17,12 +16,12 @@ export function TagPlayground({
   ctx,
   values,
 }: PreviewProps & { readonly values: TagValues }): ReactElement {
-  const { id, removed, toggle } = useTagRemoval();
-  const label = tagLabel(values.label);
+  const { action, removed, toggle } = useTagRemoval();
+  const label = tagLabel(values.children);
   if (removed) {
     return (
       <Button
-        id={id}
+        ref={action}
         type="button"
         size="s"
         variant="secondary"
@@ -37,15 +36,16 @@ export function TagPlayground({
   return (
     <Tag
       {...ctx.subject}
-      id={id}
+      removeRef={action}
       size={values.size}
       status={values.status}
       {...(values.iconLeft === 'tag' ? { iconLeft: TagIcon } : {})}
       disabled={values.disabled}
-      pending={values.pending}
-      tabIndex={values.disabled ? -1 : undefined}
-      removeLabel={`Remove ${label}`}
-      onKeyDown={preventRepeatedActivation}
+      loading={values.loading}
+      textValue={values.textValue.trim() || undefined}
+      removeIcon={values.removeIcon === 'minus' ? MinusIcon : undefined}
+      removeTabIndex={values.removeTabIndex === '-1' ? -1 : 0}
+      removeLabel={values.removeLabel.trim() || `Remove ${label}`}
       onRemove={() => {
         toggle();
         ctx.action('onRemove')(label);

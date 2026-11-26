@@ -23,7 +23,7 @@ tr[data-wb-result-row] > td:has(.tags-editor-proto[data-wb-subject]) {
   font-family: 'Tags Study Japanese';
   src: url('/assets/tags-input-japanese-400.ttf') format('truetype');
 }
-.tags-mixed-script-study .tag-label-proto {
+.tags-mixed-script-study [data-unica-tag-part='label'] {
   font-family:
     var(--font-family-base), 'Tags Study Arabic', 'Tags Study Hebrew', 'Tags Study Japanese';
 }

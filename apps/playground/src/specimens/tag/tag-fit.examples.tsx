@@ -1,9 +1,16 @@
 import { useId, useState } from 'react';
+import {
+  Badge,
+  Button,
+  Flex,
+  Input,
+  Stack,
+  Tag,
+  Text,
+  Title,
+  VisuallyHidden,
+} from '@docouno/unica';
 import { FolderIcon } from '@phosphor-icons/react';
-import { Badge, Button, Flex, Grid, Input, Stack, Title, VisuallyHidden } from '@docouno/unica';
-import { FormField } from '../../prototypes/form-field/form-field.proto.js';
-import { Tag } from '../../prototypes/tag/tag.proto.js';
-import { TagsInput } from '../../prototypes/tags-input/tags-input.proto.js';
 
 const sizes = Object.freeze({ Small: 's', Medium: 'm', Large: 'l' });
 
@@ -28,82 +35,64 @@ export function FitExample({ tagProps = {} } = {}) {
       {Object.entries(sizes).map(([name, size]) => {
         const heading = `${id}-${size}`;
         const input = `${heading}-new`;
-        const tag = `${heading}-research`;
         return (
-          <Stack key={size} role="group" aria-labelledby={heading} gap={12}>
-            <Title as="h3" size="body-m" id={heading}>
-              {name}
-            </Title>
-            <Grid
-              gap={12}
-              style={{
-                gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 15rem), 1fr))',
-                alignItems: 'start',
-              }}
-            >
-              <FormField htmlFor={input} label="Label to add" size={size}>
+          <form
+            key={size}
+            aria-labelledby={heading}
+            onSubmit={(event) => {
+              event.preventDefault();
+              event.currentTarget.ownerDocument.getElementById(input)?.focus();
+              addLabel();
+            }}
+          >
+            <Stack gap={12}>
+              <Title as="h3" size="body-m" id={heading}>
+                {name}
+              </Title>
+              <label htmlFor={input}>
+                <Text as="span" size="body-s">
+                  Label to add
+                </Text>
+              </label>
+              <Flex align="center" gap={8} wrap="wrap">
                 <Input
                   id={input}
                   size={size}
-                  width="full"
                   value={draft}
                   onChange={(event) => setDraft(event.target.value)}
-                  onKeyDown={(event) => {
-                    if (event.key === 'Enter' && !event.nativeEvent.isComposing) {
-                      event.preventDefault();
-                      addLabel();
-                    }
-                  }}
                 />
-              </FormField>
-              <TagsInput
-                size={size}
-                label="Assigned values"
-                values={values}
-                onValuesChange={(next) => {
-                  setValues([...next]);
-                  setAnnouncement('');
-                }}
-                placeholder="Add value"
-              />
-            </Grid>
-            <Flex align="center" gap={8} wrap="wrap">
-              <Badge size={size}>Verified</Badge>
-              {values.includes('Research') && (
-                <Tag
-                  {...tagProps}
-                  id={tag}
+                <Button
+                  type="submit"
                   size={size}
-                  iconLeft={FolderIcon}
-                  removeLabel="Remove Research"
-                  onRemove={() => {
-                    if (document.getElementById(tag)?.contains(document.activeElement)) {
-                      document.getElementById(input)?.focus();
-                    }
-                    setValues((current) => current.filter((value) => value !== 'Research'));
-                    setAnnouncement('Removed Research.');
-                  }}
+                  variant="secondary"
+                  tone="neutral"
+                  disabled={!canAdd}
                 >
-                  Research
-                </Tag>
-              )}
-              <Button
-                type="button"
-                size={size}
-                variant="secondary"
-                tone="neutral"
-                disabled={!canAdd}
-                onClick={(event) => {
-                  if (event.currentTarget === document.activeElement) {
-                    document.getElementById(input)?.focus();
-                  }
-                  addLabel();
-                }}
-              >
-                Add label
-              </Button>
-            </Flex>
-          </Stack>
+                  Add label
+                </Button>
+              </Flex>
+              <Flex align="center" gap={8} wrap="wrap">
+                <Badge size={size}>Verified</Badge>
+                {values.map((value) => (
+                  <Tag
+                    {...tagProps}
+                    key={value}
+                    size={size}
+                    iconLeft={FolderIcon}
+                    removeLabel={`Remove ${value}`}
+                    onRemove={() => {
+                      const field = document.getElementById(input);
+                      field?.focus();
+                      setValues((current) => current.filter((item) => item !== value));
+                      setAnnouncement(`Removed ${value}.`);
+                    }}
+                  >
+                    {value}
+                  </Tag>
+                ))}
+              </Flex>
+            </Stack>
+          </form>
         );
       })}
       <VisuallyHidden role="status">{announcement}</VisuallyHidden>
