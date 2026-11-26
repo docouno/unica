@@ -531,9 +531,6 @@
 .folio-members-content {
   padding-inline: 88px;
 }
-.folio-scene-frame {
-  max-block-size: 100svh;
-}
 .folio-overlay-workspace {
   block-size: 100%;
   overflow: auto;

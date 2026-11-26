@@ -3,6 +3,16 @@ import { assertFocused, getBox } from '../helpers.mjs';
 
 const openSurface = '[popover]:popover-open.unica-overlay-surface[data-surface="overlay"]';
 
+async function assertInWorkbenchViewport(page, locator) {
+  const viewport = page.viewportSize();
+  assert.ok(viewport);
+  const { x, y, width, height } = await getBox(locator);
+  assert.ok(
+    x >= -1 && y >= -1 && x + width <= viewport.width + 1 && y + height <= viewport.height + 1,
+    `${locator} at ${x}, ${y}, ${width} × ${height} must fit the Workbench viewport`,
+  );
+}
+
 async function assertOptionNames(page) {
   const accessibility = await page.context().newCDPSession(page);
   try {
@@ -153,7 +163,7 @@ const scenarios = {
   },
 
   'Folio invite submits the role and expiry chosen inside its dialog': async ({ page, origin }) => {
-    await page.setViewportSize({ width: 2200, height: 1200 });
+    await page.setViewportSize({ width: 2200, height: 900 });
     await page.goto(
       new URL('/?item=07-invite-access-modal&family=frost&scheme=dark&vp=1440', origin).href,
     );
@@ -164,6 +174,7 @@ const scenarios = {
     });
     const role = dialog.getByRole('button', { name: 'Default workspace role', exact: true });
     await role.waitFor({ timeout: 20_000 });
+    await assertInWorkbenchViewport(page, invites.owner());
     assert.equal(await dialog.evaluate((node) => node.matches(':modal')), true);
     assert.equal(await dialog.evaluate((node) => node.offsetWidth), 548);
     await role.press('ArrowDown');
@@ -197,6 +208,7 @@ const scenarios = {
       await submit.evaluate((node) => node.form?.closest(':modal') === node.closest(':modal')),
       true,
     );
+    await assertInWorkbenchViewport(page, submit);
     await submit.click();
     await dialog.waitFor({ state: 'hidden' });
     await assertFocused(invites.getByRole('button', { name: 'Invite member' }));
@@ -206,10 +218,9 @@ const scenarios = {
       .getByRole('status')
       .filter({ hasText: receipt })
       .waitFor({ state: 'attached' });
-    await notifications
-      .getByRole('group', { name: '2 invitations prepared', exact: true })
-      .getByText(receipt, { exact: true })
-      .waitFor();
+    const toast = notifications.getByRole('group', { name: '2 invitations prepared', exact: true });
+    await toast.getByText(receipt, { exact: true }).waitFor();
+    await assertInWorkbenchViewport(page, toast);
   },
 
   'Folio properties keeps pickers and scene links in the correct document at 360px': async ({
@@ -231,6 +242,7 @@ const scenarios = {
     const panel = (scope) => scope.getByRole('dialog', { name: 'Document properties & review' });
     const drawer = panel(properties);
     await drawer.waitFor({ timeout: 20_000 });
+    await assertInWorkbenchViewport(page, frame('soft-dark').owner());
     await properties.owner().evaluate((node) => node.scrollIntoView({ block: 'center' }));
     assert.deepEqual(
       await drawer.evaluate((node) => ({
@@ -294,12 +306,15 @@ const scenarios = {
     );
     assert.equal(await peer.evaluate((node) => node.matches(':modal')), true);
 
-    await drawer.getByRole('button', { name: 'Save properties' }).click();
+    const submit = drawer.getByRole('button', { name: 'Save properties' });
+    await assertInWorkbenchViewport(page, submit);
+    await submit.click();
     await drawer.waitFor({ state: 'hidden' });
-    await properties
+    const toast = properties
       .getByRole('region', { name: 'Notifications', exact: true })
-      .getByRole('group', { name: 'Document properties saved', exact: true })
-      .waitFor();
+      .getByRole('group', { name: 'Document properties saved', exact: true });
+    await toast.waitFor();
+    await assertInWorkbenchViewport(page, toast);
     await properties.getByRole('button', { name: 'Properties', exact: true }).click();
     assert.equal(await date.inputValue(), '20/01/2027');
     assert.equal(await reviewer.inputValue(), 'Edge reliability');

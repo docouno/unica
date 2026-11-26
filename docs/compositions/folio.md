@@ -77,6 +77,8 @@ Use `make visual item=02-workspace-overview` for a six-preset capture or `make v
 
 ## Product Scene Matrix (`01`–`10` × `6` Presets)
 
+The properties and invitation scenes use a native dialog in each artboard's own document. Their frames account for the Workbench toolbar and artboard heading when fitting vertically. This keeps the dialog actions and notification receipts within reach in the preview.
+
 | Scene ID | Product Scene & `AppShell` Topology | Connected Families & Overlay Calibration |
 | --- | --- | --- |
 | `01-sign-in` | **Sign In & SSO** (`Standalone`) | Ambient auth stage (`--folio-auth-stage-aura` in `Frost`; matte stage in `Soft`; `--motif-canvas-grid` coordinate matrix in `Pixel`), `Card`, `Title`, `Text`, `SegmentedControl`, SSO secondary `Button`s, labeled `Divider`, `FormField` + `Input`, `Link`, `Checkbox`, primary `Button`, `Badge` |

@@ -63,6 +63,59 @@ function mirrorThemeOverrides(target: Document, frame: HTMLIFrameElement): () =>
   };
 }
 
+function fitFrameToViewport(frame: HTMLIFrameElement): () => void {
+  const document = frame.ownerDocument;
+  const view = document.defaultView;
+  if (!view) {
+    return () => undefined;
+  }
+  const gallery = frame.closest('.wb-artboards');
+  const canvas = frame.closest('.wb-canvas');
+  const viewport = view.visualViewport;
+  const property = '--hint-example-visible-height';
+  let request: number | undefined;
+
+  const measure = (): void => {
+    // Give comparison rows the same viewport without resizing frames as the page scrolls.
+    const first =
+      gallery?.querySelector<HTMLIFrameElement>('iframe[data-overlay-frame-fit]') ?? frame;
+    const top = first.getBoundingClientRect().top + view.scrollY + (canvas?.scrollTop ?? 0);
+    const height = viewport?.height ?? view.innerHeight;
+    const remaining = height - Math.max(0, top);
+    const width = frame.getBoundingClientRect().width;
+    const scale = width > 0 && frame.offsetWidth > 0 ? width / frame.offsetWidth : 1;
+    const value = `${Math.max(1, Math.floor((remaining > 0 ? remaining : height) / scale))}px`;
+    if (frame.style.getPropertyValue(property) !== value) {
+      frame.style.setProperty(property, value);
+    }
+  };
+
+  const schedule = (): void => {
+    if (request === undefined) {
+      request = view.requestAnimationFrame(() => {
+        request = undefined;
+        measure();
+      });
+    }
+  };
+
+  measure();
+  const observer = new view.ResizeObserver(schedule);
+  observer.observe(document.documentElement);
+  observer.observe(frame);
+  view.addEventListener('resize', schedule);
+  viewport?.addEventListener('resize', schedule);
+  return () => {
+    observer.disconnect();
+    view.removeEventListener('resize', schedule);
+    viewport?.removeEventListener('resize', schedule);
+    if (request !== undefined) {
+      view.cancelAnimationFrame(request);
+    }
+    frame.style.removeProperty(property);
+  };
+}
+
 function FrameContent({
   children,
   surface,
@@ -114,6 +167,7 @@ export function OverlayExampleFrame({
   height,
   modal = false,
   scopePortals = false,
+  fitViewport = false,
   linksToParent = false,
   className,
   children,
@@ -123,6 +177,7 @@ export function OverlayExampleFrame({
   readonly height: number;
   readonly modal?: boolean;
   readonly scopePortals?: boolean;
+  readonly fitViewport?: boolean;
   readonly linksToParent?: boolean;
   readonly className?: string;
   readonly children: ReactNode;
@@ -131,6 +186,12 @@ export function OverlayExampleFrame({
   const installed = useRef<Document>(null);
   const [target, setTarget] = useState<Document | null>(null);
   const [ready, setReady] = useState<Document | null>(null);
+
+  useLayoutEffect(() => {
+    if (fitViewport && frame.current) {
+      return fitFrameToViewport(frame.current);
+    }
+  }, [fitViewport]);
 
   useLayoutEffect(() => {
     if (frame.current && target) {
@@ -214,6 +275,7 @@ export function OverlayExampleFrame({
         height={height}
         srcDoc={source(linksToParent)}
         data-overlay-frame-contained={scopePortals ? '' : undefined}
+        data-overlay-frame-fit={fitViewport ? '' : undefined}
         data-wb-pending={target && target === ready ? undefined : ''}
         onLoad={(event) => load(event.currentTarget)}
       />

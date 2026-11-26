@@ -357,6 +357,7 @@ function InviteScene({ ctx }: { readonly ctx?: SceneContext }): ReactElement {
       height={workspaceHeight}
       className="folio-scene-frame"
       modal
+      fitViewport
       linksToParent
     >
       {workspace}
