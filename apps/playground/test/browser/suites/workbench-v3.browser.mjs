@@ -127,47 +127,29 @@ export default {
   },
 
   'Two Escape keys return from an inline submenu to its own trigger': async ({ page, origin }) => {
-    await page.setViewportSize({ width: 1500, height: 950 });
+    await page.setViewportSize({ width: 360, height: 950 });
     const route = new URL(
-      '/?item=menu&tab=states&block=live&family=soft&scheme=both&vp=768',
+      '/?item=menu&tab=states&block=submenu&family=soft&scheme=both&vp=360',
       origin,
     );
     await page.goto(route.href, { waitUntil: 'domcontentloaded' });
-    const board = page.locator('[data-wb-block="live"] .wb-artboard').first();
-    const trigger = board.getByRole('button', { name: 'View options' });
+    const board = page.locator('[data-wb-block="submenu"] .wb-artboard').first();
+    const trigger = board.getByRole('button', { name: 'File actions' });
+    const focused = page.locator(':focus');
     await trigger.waitFor({ timeout: 20_000 });
     await trigger.press('ArrowDown');
-    await board.getByRole('menuitemcheckbox', { name: 'Preview' }).press('End');
-    await board.getByRole('menuitem', { name: 'Sort by' }).press('ArrowRight');
-    const child = board.getByRole('menu', { name: 'Sort by' });
-    const firstChoice = child.getByRole('menuitemradio', { name: 'Last modified' });
-    await page.waitForFunction(
-      (row) => row === document.activeElement,
-      await firstChoice.elementHandle(),
-    );
+    const branch = board.getByRole('menuitem', { name: 'Export as' });
+    await branch.press('ArrowRight');
+    const child = board.getByRole('menu', { name: 'Export as' });
+    await child.getByRole('menuitem', { name: 'CSV', exact: true }).and(focused).waitFor();
     assert.equal(await board.getByRole('menu').count(), 1);
 
-    // Capture which row owns focus when the parent list replaces the child.
-    const transition = await child.evaluateHandle((panel) => {
-      const state = { focused: false };
-      const observer = new MutationObserver(() => {
-        const parentRow = panel.querySelector('[role="menuitem"][aria-haspopup="menu"]');
-        if (parentRow) {
-          observer.disconnect();
-          state.focused = parentRow === document.activeElement;
-        }
-      });
-      observer.observe(panel, { childList: true, subtree: true });
-      return state;
-    });
     await page.keyboard.press('Escape');
+    await branch.and(focused).waitFor();
+    assert.equal(await board.getByRole('menu').count(), 1);
     await page.keyboard.press('Escape');
-    assert.ok(
-      await transition.evaluate((state) => state.focused),
-      'Restoring the parent list lost focus',
-    );
     await board.getByRole('menu').waitFor({ state: 'hidden' });
-    assert.ok(await trigger.evaluate((button) => button === document.activeElement));
+    await trigger.and(focused).waitFor();
   },
 
   'Escape dismisses a hovered frame preview while the catalog keeps keyboard focus': async ({
@@ -1202,7 +1184,9 @@ export default {
         vp: '1280',
         bounds: '1',
       });
-      const menu = page.getByRole('group', { name: 'Document commands' }).first();
+      await page.getByRole('button', { name: 'Document commands' }).first().click();
+      const menu = page.getByRole('menu', { name: 'Document commands' });
+      await menu.waitFor();
       const positions = await menu.evaluate(async (group) => {
         await document.fonts.ready;
         await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
@@ -1241,6 +1225,7 @@ export default {
         });
       });
       assert.deepEqual(positions, [true, true, true], family + ' at ' + width);
+      await page.keyboard.press('Escape');
     }
   },
 
@@ -1252,6 +1237,7 @@ export default {
     await page.goto(
       `${origin}/?item=badge&tab=states&block=surfaces&family=all&scheme=both&surface=base&vp=1280&bounds=1`,
     );
+    await page.locator('html[data-wb-ready="1"]').waitFor({ state: 'attached', timeout: 20_000 });
     const board = page.locator('.wb-story-frame .wb-artboard').first();
     await board.locator('[data-wb-bounds-label]').last().waitFor();
     const measurements = await board.evaluate(async (root) => {
@@ -1283,6 +1269,7 @@ export default {
     await page.goto(
       `${origin}/?item=date-picker&tab=states&block=states&family=soft&scheme=dark&vp=1280&bounds=1`,
     );
+    await page.locator('html[data-wb-ready="1"]').waitFor({ state: 'attached', timeout: 20_000 });
     const board = page.locator('.wb-story-frame .wb-artboard');
     await board.locator('[data-wb-bounds-label]').last().waitFor();
     const hint = board.getByText('DD/MM/YYYY · you can also paste an ISO date', { exact: true });

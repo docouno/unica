@@ -2,7 +2,7 @@ import type { ReactElement } from 'react';
 import input from '../../../src/specimens/input/input.spec.js';
 import numberInput from '../../../src/specimens/number-input/number-input.spec.js';
 import formField from '../../../src/specimens/form-field/form-field.spec.js';
-import contextMenu from '../../../src/specimens/menu/context-menu.spec.js';
+import contextMenu from '../../../src/specimens/context-menu/context-menu.spec.js';
 import slider from '../../../src/specimens/slider/slider.spec.js';
 import rangeSlider from '../../../src/specimens/slider/range-slider.spec.js';
 import { WorkbenchApp } from '../../../src/workbench/WorkbenchApp.js';

@@ -6,10 +6,18 @@ import {
   PencilSimpleIcon,
 } from '@phosphor-icons/react';
 import { Badge, Card, Flex, Icon, IconButton, Stack, Text } from '@docouno/unica';
-import { Menu } from '../../prototypes/menu/menu.live.js';
+import { Menu, MenuContent, MenuItem, MenuTrigger } from '@docouno/unica';
 import '@docouno/unica/styles.css';
 
-export function DocumentToolbar({ menuProps = {}, triggerProps = {} } = {}) {
+import type { MenuContentProps } from '@docouno/unica';
+
+export function DocumentToolbar({
+  contentProps,
+  triggerProps,
+}: {
+  readonly contentProps?: MenuContentProps | undefined;
+  readonly triggerProps?: Readonly<Record<`data-${string}`, string>> | undefined;
+} = {}) {
   const [receipt, setReceipt] = useState('');
   return (
     <Card size="s" data-surface="base" style={{ inlineSize: 'min(24rem, 100%)' }}>
@@ -22,32 +30,25 @@ export function DocumentToolbar({ menuProps = {}, triggerProps = {} } = {}) {
             </Text>
             <Badge size="s">Published</Badge>
           </Stack>
-          <Menu
-            {...menuProps}
-            label="Document actions"
-            items={[
-              {
-                id: 'rename',
-                label: 'Rename document',
-                icon: PencilSimpleIcon,
-                run: () => setReceipt('Rename requested for Release checklist.'),
-              },
-              {
-                id: 'export',
-                label: 'Export PDF',
-                icon: DownloadSimpleIcon,
-                run: () => setReceipt('PDF export requested for Release checklist.'),
-              },
-            ]}
-            trigger={(bindings) => (
-              <IconButton
-                {...bindings}
-                {...triggerProps}
-                icon={DotsThreeIcon}
-                aria-label="Document actions"
-              />
-            )}
-          />
+          <Menu>
+            <MenuTrigger {...triggerProps} asChild>
+              <IconButton icon={DotsThreeIcon} aria-label="Document actions" />
+            </MenuTrigger>
+            <MenuContent {...contentProps}>
+              <MenuItem
+                icon={PencilSimpleIcon}
+                onClick={() => setReceipt('Rename requested for Release checklist.')}
+              >
+                Rename document
+              </MenuItem>
+              <MenuItem
+                icon={DownloadSimpleIcon}
+                onClick={() => setReceipt('PDF export requested for Release checklist.')}
+              >
+                Export PDF
+              </MenuItem>
+            </MenuContent>
+          </Menu>
         </Flex>
         <Text role="status" size="caption-l" color="secondary" dir="auto">
           {receipt}

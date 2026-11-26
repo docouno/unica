@@ -21,7 +21,7 @@ import {
   Text,
   Title,
 } from '@docouno/unica';
-import { Menu } from '../../prototypes/menu/menu.live.js';
+import { Menu, MenuContent, MenuItem, MenuTrigger } from '@docouno/unica';
 import { List, ListItem } from '../../prototypes/list/list.proto.js';
 import type { PreviewContext, PreviewProps, Surface } from '../../workbench/types.js';
 import { ExampleSurface } from '../shared/example-surface.js';
@@ -185,36 +185,29 @@ export function LiveRows({
           leading={<FileTextIcon aria-hidden="true" />}
           action={{ href: `#${handoff}` }}
           trailing={
-            <Menu
-              size="s"
-              label="Credential handoff actions"
-              items={[
-                {
-                  id: 'link',
-                  label: 'Show note link',
-                  run: () => {
+            <Menu size="s">
+              <MenuTrigger asChild>
+                <IconButton size="s" icon={DotsThreeIcon} aria-label="Credential handoff actions" />
+              </MenuTrigger>
+              <MenuContent>
+                <MenuItem
+                  onClick={() => {
                     setShowLink(true);
                     setMessage('Handoff link ready.');
-                  },
-                },
-                {
-                  id: 'pin',
-                  label: pinned ? 'Unpin notes' : 'Pin notes',
-                  run: () => {
+                  }}
+                >
+                  Show note link
+                </MenuItem>
+                <MenuItem
+                  onClick={() => {
                     setPinned(!pinned);
                     setMessage(pinned ? 'Handoff notes unpinned.' : 'Handoff notes pinned.');
-                  },
-                },
-              ]}
-              trigger={(props) => (
-                <IconButton
-                  {...props}
-                  size="s"
-                  icon={DotsThreeIcon}
-                  aria-label="Credential handoff actions"
-                />
-              )}
-            />
+                  }}
+                >
+                  {pinned ? 'Unpin notes' : 'Pin notes'}
+                </MenuItem>
+              </MenuContent>
+            </Menu>
           }
         />
         <ListItem

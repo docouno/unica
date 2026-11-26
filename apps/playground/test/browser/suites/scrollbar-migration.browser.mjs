@@ -107,7 +107,6 @@ export default {
       });
       for (const scroller of [
         page.getByTestId('nested-compact'),
-        page.getByRole('menu', { name: 'Documents' }),
         page.getByRole('textbox', { name: 'Document list' }),
         panel,
       ]) {
@@ -128,6 +127,12 @@ export default {
       await scrollByKeyboard(page, panel, 'PageDown');
       assert.deepEqual([await header.boundingBox(), await footer.boundingBox()], before);
       await page.getByRole('button', { name: 'Close popover' }).click();
+      await page.getByRole('button', { name: 'Documents' }).click();
+      const menu = page.getByRole('menu', { name: 'Documents' });
+      await menu.waitFor();
+      assert.equal((await nativeParts(menu.locator('.unica-menu-scroll'))).inlineGutter, 10);
+      await page.keyboard.press('End');
+      await page.keyboard.press('Escape');
     }
     const code = page.getByRole('region', { name: 'Query log' });
     await code.scrollIntoViewIfNeeded();

@@ -122,7 +122,7 @@ export default defineComponent({
       kind: 'surface',
       mode: 'live',
       caption:
-        'Focus or hover the formatting button to reveal its tooltip. The static menu shows a highlighted command and an unavailable command with their shortcuts.',
+        'Focus or hover the formatting button to reveal its tooltip. Open Document commands to see active and unavailable commands with their shortcuts.',
       render: OverlayContext,
       reset: true,
     },

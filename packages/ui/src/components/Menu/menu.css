@@ -1,0 +1,405 @@
+@layer unica.components {
+  .unica-menu {
+    --_menu-width: 15rem;
+    --_menu-row-height: var(--size-m-height);
+    --_menu-icon-size: var(--size-m-icon);
+    --_menu-row-gap: var(--space-8);
+    --_menu-row-pad: 10px;
+    --_menu-row-radius: max(0px, calc(var(--surface-s-radius) - var(--space-4) - 1px));
+    --_menu-label-size: var(--text-size-body-s);
+    --_menu-label-lh: var(--text-size-body-s-lh);
+    --_menu-highlight: color-mix(in srgb, var(--fg-primary) 10%, transparent);
+    --_menu-pressed: color-mix(in srgb, var(--fg-primary) 17%, transparent);
+    --_menu-disabled-ink: color-mix(in srgb, var(--fg-disabled) 72%, var(--fg-primary));
+
+    min-inline-size: 0;
+    margin: 0;
+    padding: 0;
+    color: var(--fg-primary);
+    font-family: var(--font-family-base);
+    box-sizing: border-box;
+    --_overlay-safe-area: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px)
+      env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px);
+  }
+
+  .unica-menu[data-unica-menu-size='s'] {
+    --_menu-width: 13.5rem;
+    --_menu-row-height: var(--size-s-height);
+    --_menu-icon-size: var(--size-s-icon);
+    --_menu-row-gap: var(--size-s-gap);
+    --_menu-row-pad: var(--space-8);
+    --_menu-label-size: var(--text-size-body-xs);
+    --_menu-label-lh: var(--text-size-body-xs-lh);
+  }
+
+  .unica-menu[data-unica-menu-size='l'] {
+    --_menu-width: 17rem;
+    --_menu-row-height: var(--size-l-height);
+    --_menu-icon-size: var(--size-l-icon);
+    --_menu-row-gap: var(--size-l-gap);
+    --_menu-row-pad: var(--space-12);
+    --_menu-label-size: var(--text-size-body-m);
+    --_menu-label-lh: var(--text-size-body-m-lh);
+  }
+
+  .unica-menu-scroll {
+    min-inline-size: 0;
+    min-block-size: 0;
+    margin: var(--space-4);
+    /* The last row's spacing supplies part of the bottom inset. */
+    margin-block-end: calc(var(--space-4) - var(--space-2));
+    overflow: hidden auto;
+    overscroll-behavior: contain;
+    border-radius: var(--_menu-row-radius);
+  }
+
+  .unica-menu .unica-menu-row {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: var(--_menu-row-gap);
+    width: 100%;
+    min-inline-size: 0;
+    min-block-size: var(--_menu-row-height);
+    box-sizing: border-box;
+    margin-block-end: var(--space-2);
+    padding: var(--space-4) var(--_menu-row-pad);
+    border: 0;
+    border-radius: var(--_menu-row-radius);
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    font-weight: 500;
+    font-size: var(--_menu-label-size);
+    line-height: var(--_menu-label-lh);
+    text-decoration: none;
+    text-align: start;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .unica-menu-row:is(button, a) {
+    cursor: pointer;
+  }
+
+  .unica-menu-row .unica-menu-copy {
+    display: grid;
+    gap: var(--space-2);
+    flex: 1 1 auto;
+    min-inline-size: 0;
+  }
+
+  .unica-menu-label,
+  .unica-menu-description,
+  .unica-menu-group-label {
+    overflow-wrap: anywhere;
+  }
+
+  .unica-menu-description,
+  .unica-menu-group-label {
+    color: var(--fg-secondary);
+    font-size: var(--text-size-caption-l);
+    line-height: var(--text-size-caption-l-lh);
+  }
+
+  .unica-menu-description {
+    font-weight: 400;
+  }
+
+  .unica-menu-group-label {
+    padding: var(--space-4) var(--_menu-row-pad);
+    font-weight: 600;
+  }
+
+  .unica-menu-mark,
+  .unica-menu-icon {
+    display: flex;
+    flex: 0 0 var(--_menu-icon-size);
+    justify-content: center;
+  }
+
+  .unica-menu-mark {
+    align-items: center;
+    color: var(--accent-soft-fg);
+  }
+
+  .unica-menu-dot {
+    border: 3px solid currentColor;
+    border-radius: var(--radius-circular);
+  }
+
+  .unica-menu-icon {
+    color: var(--fg-secondary);
+  }
+
+  .unica-menu-scroll {
+    --_menu-mark-display: none;
+    --_menu-icon-display: none;
+  }
+
+  .unica-menu-scroll[data-unica-menu-marks] {
+    --_menu-mark-display: flex;
+  }
+
+  .unica-menu-scroll[data-unica-menu-icons] {
+    --_menu-icon-display: flex;
+  }
+
+  .unica-menu-mark {
+    display: var(--_menu-mark-display);
+  }
+
+  .unica-menu-icon {
+    display: var(--_menu-icon-display);
+  }
+
+  .unica-menu-glyph {
+    font-size: var(--_menu-icon-size);
+  }
+
+  .unica-menu-chevron {
+    flex: none;
+    font-size: var(--size-s-icon);
+  }
+
+  .unica-menu-chevron:dir(rtl) {
+    --_menu-direction: -1;
+  }
+
+  .unica-menu-row[data-unica-menu-flipped] .unica-menu-chevron,
+  .unica-menu-back .unica-menu-chevron {
+    --_menu-chevron-side: -1;
+  }
+
+  .unica-menu-chevron {
+    transform: scaleX(calc(var(--_menu-direction, 1) * var(--_menu-chevron-side, 1)));
+  }
+
+  .unica-menu-row[data-unica-menu-has-shortcut] {
+    flex-wrap: wrap;
+    row-gap: var(--space-2);
+  }
+
+  .unica-menu-row[data-unica-menu-has-shortcut] .unica-menu-copy {
+    flex-basis: min(7.5em, 45%);
+  }
+
+  .unica-menu-shortcut {
+    display: flex;
+    flex: none;
+    margin-inline-start: auto;
+    inline-size: max-content;
+  }
+
+  .unica-menu-shortcut[data-unica-menu-overflow] {
+    position: absolute;
+    inset-inline-end: 0;
+    inline-size: max-content;
+    block-size: 0;
+    overflow: hidden;
+    visibility: hidden;
+  }
+
+  .unica-menu-row[data-unica-menu-tone='danger'] {
+    color: var(--status-danger-soft-fg);
+  }
+
+  .unica-menu-row[data-unica-menu-tone='danger'] .unica-menu-icon {
+    color: inherit;
+  }
+
+  .unica-menu-row[aria-disabled='true'] {
+    color: var(--_menu-disabled-ink);
+    cursor: default;
+  }
+
+  .unica-menu-row[aria-disabled='true']
+    :is(.unica-menu-icon, .unica-menu-mark, .unica-menu-chevron, .unica-menu-description) {
+    color: inherit;
+  }
+
+  .unica-menu-row[aria-disabled='true'] .unica-menu-shortcut {
+    opacity: 0.65;
+  }
+
+  button.unica-menu-row[aria-disabled='true'] .unica-menu-shortcut {
+    --kbd-fg: var(--fg-disabled);
+    --kbd-bg: transparent;
+    --kbd-border: var(--border-subtle);
+    --kbd-shadow: none;
+  }
+
+  .unica-menu-row[data-unica-menu-expanded]:not([aria-disabled='true']) {
+    background: var(--_menu-highlight);
+  }
+
+  @media (hover: hover) {
+    .unica-menu-row:is(button, a):hover:not([aria-disabled='true']) {
+      background: var(--_menu-highlight);
+    }
+  }
+
+  .unica-menu-row:active:not([aria-disabled='true']) {
+    background: var(--_menu-pressed);
+  }
+
+  .unica-menu-row:focus-visible {
+    outline: 2px solid var(--focus-ring-color);
+    outline-offset: -2px;
+  }
+
+  .unica-menu .unica-menu-separator {
+    inline-size: auto;
+    margin: var(--space-4) var(--_menu-row-pad);
+  }
+
+  .unica-menu:is(:popover-open, [data-unica-menu-measure]) {
+    position: fixed;
+    inset: auto;
+    display: flex;
+    flex-direction: column;
+    inline-size: var(--_menu-locked-width, max-content);
+    min-inline-size: min(var(--_menu-width), var(--overlay-available-width, calc(100vw - 32px)));
+    max-inline-size: min(22rem, var(--overlay-available-width, calc(100vw - 32px)));
+    max-block-size: var(--overlay-available-height, calc(100dvh - 32px));
+    overflow: visible;
+  }
+
+  /* Consumer display styles apply only while the controller exposes the carrier. */
+  .unica-menu-carrier-frame {
+    display: contents;
+  }
+
+  .unica-menu-carrier-frame:has(
+    > .unica-menu:is([hidden], [popover]:not(:popover-open, [data-unica-menu-measure]))
+  ) {
+    display: none;
+  }
+
+  .unica-menu-row-frame:not([hidden]) {
+    display: contents;
+  }
+
+  .unica-menu-row-frame[hidden] {
+    display: none;
+  }
+
+  .unica-menu[data-unica-menu-inline]:not([data-unica-menu-measure]),
+  .unica-menu-level[data-unica-menu-inactive],
+  .unica-menu-level[data-unica-menu-inactive] > .unica-menu-scroll,
+  .unica-menu-group:not([role], [hidden]) {
+    display: contents;
+  }
+
+  .unica-menu-level {
+    display: flex;
+    flex-direction: column;
+    min-block-size: 0;
+    min-inline-size: 0;
+  }
+
+  .unica-menu[data-unica-menu-measure],
+  .unica-menu:popover-open:not([data-unica-menu-positioned]) {
+    visibility: hidden;
+    pointer-events: none;
+  }
+
+  .unica-menu[data-unica-menu-measure] {
+    inline-size: max-content;
+    min-inline-size: var(--_menu-width);
+    max-inline-size: 22rem;
+    max-block-size: none;
+  }
+
+  .unica-menu[popover]:focus {
+    outline: none;
+  }
+
+  .unica-menu :is(.unica-menu-row, .unica-menu-group-label, .unica-menu-separator)[hidden] {
+    display: none;
+  }
+
+  .unica-menu .unica-menu-back {
+    display: flex;
+    align-items: center;
+    gap: var(--space-8);
+    flex: none;
+    min-block-size: var(--_menu-row-height);
+    margin: var(--space-4) var(--space-4) 0;
+    padding: var(--space-4) var(--_menu-row-pad);
+    border: 0;
+    border-block-end: 1px solid var(--border-subtle);
+    border-start-start-radius: var(--_menu-row-radius);
+    border-start-end-radius: var(--_menu-row-radius);
+    background: none;
+    color: var(--fg-secondary);
+    font: inherit;
+    font-size: var(--_menu-label-size);
+    font-weight: 600;
+    line-height: var(--_menu-label-lh);
+    text-align: start;
+    cursor: pointer;
+  }
+
+  .unica-menu-back-title {
+    margin-inline-start: auto;
+    min-inline-size: 0;
+    font-weight: 400;
+    text-align: end;
+    overflow-wrap: anywhere;
+  }
+
+  button.unica-menu-back:hover {
+    background: var(--_menu-highlight);
+  }
+
+  .unica-menu-back:focus-visible {
+    outline: 2px solid var(--focus-ring-color);
+    outline-offset: -2px;
+  }
+
+  @media (pointer: coarse) {
+    .unica-menu :is(.unica-menu-row, .unica-menu-back),
+    .unica-menu-trigger {
+      min-block-size: max(44px, var(--_menu-row-height, 0px));
+    }
+
+    .unica-menu-trigger {
+      min-inline-size: 44px;
+    }
+  }
+
+  @media (forced-colors: active) {
+    .unica-menu {
+      color: CanvasText;
+    }
+
+    .unica-menu :is(.unica-menu-separator, .unica-menu-back) {
+      border-color: GrayText;
+    }
+
+    .unica-menu
+      .unica-menu-row:is([data-unica-menu-expanded], :active, :hover):not([aria-disabled='true']) {
+      forced-color-adjust: none;
+      background: Highlight;
+      color: HighlightText;
+    }
+
+    .unica-menu .unica-menu-row[aria-disabled='true'] {
+      color: GrayText;
+    }
+
+    .unica-menu-row[aria-disabled='true'] .unica-menu-shortcut {
+      --kbd-forced-fg: GrayText;
+      opacity: 1;
+    }
+
+    .unica-menu :is(.unica-menu-row, .unica-menu-back):focus-visible {
+      outline-color: LinkText;
+    }
+
+    .unica-menu
+      :is(.unica-menu-icon, .unica-menu-chevron, .unica-menu-description, .unica-menu-mark) {
+      color: inherit;
+    }
+  }
+}
