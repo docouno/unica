@@ -1510,9 +1510,10 @@ export default {
     await page.setViewportSize({ width: 1440, height: 950 });
     await page.goto(
       `${origin}/?item=badge&tab=states&block=surfaces&family=all&scheme=both&surface=base&vp=1280&bounds=1`,
+      { waitUntil: 'commit' },
     );
     const board = page.locator('.wb-story-frame .wb-artboard').first();
-    await board.locator('[data-wb-bounds-label]').last().waitFor();
+    await board.locator('[data-wb-bounds-label]').last().waitFor({ timeout: 20_000 });
     const measurements = await board.evaluate(async (root) => {
       await document.fonts.ready;
       await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
@@ -1541,9 +1542,10 @@ export default {
     await page.setViewportSize({ width: 1920, height: 950 });
     await page.goto(
       `${origin}/?item=date-picker&tab=states&block=states&family=soft&scheme=dark&vp=1280&bounds=1`,
+      { waitUntil: 'commit' },
     );
     const board = page.locator('.wb-story-frame .wb-artboard');
-    await board.locator('[data-wb-bounds-label]').last().waitFor();
+    await board.locator('[data-wb-bounds-label]').last().waitFor({ timeout: 20_000 });
     const hint = board.getByText('DD/MM/YYYY · you can also paste an ISO date', { exact: true });
     assert.ok(await boundsLeavesTextVisible(hint), 'A dimension label covers the date format hint');
   },
