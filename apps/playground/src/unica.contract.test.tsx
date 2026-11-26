@@ -50,7 +50,7 @@ async function collectFiles(dirPath: string, exts: readonly string[]): Promise<s
   return results;
 }
 
-const pairedPrototypes = new Set([
+const pairedFamilies = new Set([
   'checkbox-card',
   'date-range-picker',
   'dropzone',
@@ -69,7 +69,7 @@ it.each(unicaWorkbench.components)('$id declares states, cases and compositions'
     expect(Object.keys(slice), slice.id).not.toContain('reference');
   }
   const compositions = component.compositions ?? [];
-  expect(compositions.length).toBeGreaterThanOrEqual(pairedPrototypes.has(component.id) ? 2 : 1);
+  expect(compositions.length).toBeGreaterThanOrEqual(pairedFamilies.has(component.id) ? 2 : 1);
   for (const block of [...(component.cases ?? []), ...compositions]) {
     expect(['live', 'pinned'], block.id).toContain(block.mode);
   }
@@ -403,7 +403,7 @@ it('configures the 4-tab Workbench architecture and resolves relative documentat
   expect(unicaWorkbench.docs?.resolve).toBeDefined();
 
   const ids = unicaWorkbench.components.map(({ id }) => id);
-  expect(ids).toEqual(expect.arrayContaining([...pairedPrototypes]));
+  expect(ids).toEqual(expect.arrayContaining([...pairedFamilies]));
   expect(unicaWorkbench.docs?.exportedNames).toEqual(new Set(Object.keys(UnicaPackage)));
 
   // Relative docs/components/*.md links from prototype READMEs resolve cleanly to Usage routes, while external URLs are never hijacked.

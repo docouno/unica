@@ -1,6 +1,5 @@
-import { useState } from 'react';
-import { Card, Flex, Stack, Text } from '@docouno/unica';
-import { Select } from '../../prototypes/select/select.proto.js';
+import { useId, useState } from 'react';
+import { Card, Flex, Stack, Text, Select } from '@docouno/unica';
 import '@docouno/unica/styles.css';
 
 const orders = [
@@ -14,6 +13,7 @@ const documents = [
 ];
 
 export function DocumentOrder({ selectProps = {} } = {}) {
+  const id = useId();
   const [order, setOrder] = useState('title');
   const sorted = [...documents];
   if (order === 'title') {
@@ -23,15 +23,20 @@ export function DocumentOrder({ selectProps = {} } = {}) {
   }
   return (
     <Stack gap={12} style={{ inlineSize: 'min(100%, 28rem)' }}>
-      <Select
-        {...selectProps}
-        label="Document order"
-        options={orders}
-        value={order || null}
-        onValueChange={(next) => setOrder(next ?? '')}
-        clearable
-        placeholder="Original order"
-      />
+      <Stack gap={4}>
+        <Text as="label" htmlFor={id} size="body-s" weight="medium">
+          Document order
+        </Text>
+        <Select
+          {...selectProps}
+          id={id}
+          options={orders}
+          value={order || null}
+          onValueChange={(next) => setOrder(next ?? '')}
+          clearable
+          placeholder="Original order"
+        />
+      </Stack>
       <Card size="s" variant="subtle">
         <Stack role="list" aria-label="Documents" gap={12}>
           {sorted.map(({ title, updated }) => (

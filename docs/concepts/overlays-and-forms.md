@@ -10,7 +10,8 @@ Normal document flow uses only two stacking tokens (`--z-content: 0` and `--z-st
 | --- | --- | --- |
 | `Modal`, `Drawer` | `<dialog>` via `showModal()` | Browser-enforced background `inert`, focus containment inside the active dialog, native `cancel` / `Escape` coordination, and shared document scroll lock. |
 | [Popover](../components/popover.md) | `popover="auto"` | Named non-modal dialog with outside-press and Escape dismissal, free tab navigation, and focus restoration to the invoking trigger when it owned focus. |
-| `Menu`, `ContextMenu`, `Select`, `DatePicker`, `DateRangePicker` | `popover="auto"` (or `manual` when nested composite focus owns dismissal) | Native top-layer promotion, `Escape` and outside-press light dismissal, and deterministic focus restoration to the invoking trigger. |
+| [Select](../components/select.md) | In-place `popover="auto"` | Anchored listbox or non-modal dialog with Escape and outside-press dismissal. Escape returns focus to the available trigger. Tab and outside press preserve the user's next destination. |
+| `Menu`, `ContextMenu`, `DatePicker`, `DateRangePicker` | `popover="auto"` (or `manual` when nested composite focus owns dismissal) | Native top-layer promotion, `Escape` and outside-press light dismissal, and deterministic focus restoration to the invoking trigger. |
 | `Combobox`, `Autocomplete` | `popover="manual"` | Trigger retains primary focus with `aria-activedescendant` while the anchored panel floats in the top layer. |
 | [`Tooltip`](../components/tooltip.md), [`HoverCard`](../components/hover-card.md) | `popover="manual"` | One visible preview per document. Hover and keyboard focus open it. Escape dismisses the current preview before its parent overlay. |
 | `Toast` (`ToastViewport`) | `popover="manual"` | Persistent non-modal top-layer host; outside clicks on workspace content or modal scrims never dismiss active notifications. |
@@ -47,12 +48,14 @@ Anchored panels pair native `popover` promotion with a lightweight positioning a
 
 ## Native `<form>` Participation
 
-Every Unica data-entry control (`Input`, `Textarea`, `NumberInput`, `Checkbox`, `Radio`, `Switch`, `Select`, `Combobox`, `Autocomplete`, `DatePicker`, `DateRangePicker`, `Slider`, `RangeSlider`, `SegmentedControl`, `TagsInput`, `FileInput`, and `*Card` choices) behaves as a native `<form>` participant:
+Every Unica data-entry control (`Input`, `Textarea`, `NumberInput`, `Checkbox`, `Radio`, `Switch`, `Listbox`, `Select`, `Combobox`, `Autocomplete`, `DatePicker`, `DateRangePicker`, `Slider`, `RangeSlider`, `SegmentedControl`, `TagsInput`, `FileInput`, and `*Card` choices) behaves as a native `<form>` participant:
 
 1. **`FormData` & constraint validation**
    Controls use a native `<input>`, `<textarea>`, or `<select>` with the applicable `name`, `form`, and constraint attributes. A composite keeps its visually hidden native control mounted when its popup closes or its visible options change. A single-choice control with no selected value omits its entry. A native binary input contributes a value only when it is checked, enabled, and named. An explicitly selected empty string contributes an empty value. Repeated binary entries follow document order. Composite `select` carriers retain accepted selections even when options are absent from the visible catalog. A `select multiple` carrier submits repeated entries in committed order.
 
    [Slider and RangeSlider](../components/slider.md) use focusable native range inputs. A RangeSlider updates both sets of thumb bounds and values together. A native reset restores the pair in time for synchronous form reads.
+
+   Listbox and Select keep one native carrier per field. A multiple selection submits in the committed selection order. A completed native reset restores the default order in time for a synchronous form read. [Listbox](../components/listbox.md#native-forms) · [Select](../components/select.md#placement-and-forms)
 
    `checkValidity()` leaves focus in place. During interactive validation, the browser chooses the first invalid control in form order. A binary input receives focus directly and paints a visible ring on its indicator. A composite that delegates focus sends it from its hidden control to the visible field or trigger. The application owns any persistent error copy.
 
@@ -77,8 +80,8 @@ Actions such as `Button` and `IconButton` use `type="button"` by default. Set `t
     saveInvite({ email: String(data.get('email')), role: String(data.get('role')) });
   }}
 >
-  <Input name="email" type="email" defaultValue="" required />
-  <Select name="role" defaultValue="editor" options={ROLE_OPTIONS} />
+  <Input aria-label="Email address" name="email" type="email" defaultValue="" required />
+  <Select aria-label="Role" name="role" defaultValue="editor" options={ROLE_OPTIONS} required />
   <Button type="reset" variant="secondary" tone="neutral">Reset</Button>
   <Button type="submit" variant="primary" tone="accent">Invite</Button>
 </form>

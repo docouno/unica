@@ -1,0 +1,294 @@
+@layer unica.components {
+  .unica-select {
+    display: grid;
+    min-inline-size: 0;
+    inline-size: 100%;
+  }
+  .unica-select[data-unica-select-width='auto'] {
+    inline-size: fit-content;
+    max-inline-size: 100%;
+  }
+  .unica-select-trigger {
+    --_select-trigger-height: var(--size-m-height);
+    --_select-trigger-radius: var(--size-m-radius);
+    --_select-trigger-padding: var(--size-m-padding-x);
+    --_select-trigger-gap: var(--size-m-gap);
+    --_select-trigger-font: var(--text-size-body-s);
+    --_select-trigger-edge: var(--control-border);
+    --_select-trigger-focus: var(--focus-ring-color);
+    --_select-trigger-status: var(--fg-secondary);
+    --_select-trigger-icon-size: var(--size-m-icon);
+    position: relative;
+    box-sizing: border-box;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--_select-trigger-gap);
+    inline-size: 100%;
+    min-inline-size: 0;
+    block-size: var(--_select-trigger-height);
+    min-block-size: var(--_select-trigger-height);
+    padding-block: 0;
+    padding-inline: var(--_select-trigger-padding);
+    border: 1px solid var(--_select-trigger-edge);
+    border-radius: var(--_select-trigger-radius);
+    background: var(--control-bg);
+    color: var(--fg-primary);
+    font-family: var(--font-family-base);
+    font-size: var(--_select-trigger-font);
+    line-height: 1.4;
+    text-align: start;
+    cursor: pointer;
+  }
+
+  .unica-select-trigger[data-unica-select-size='s'] {
+    --_select-trigger-height: var(--size-s-height);
+    --_select-trigger-radius: var(--size-s-radius);
+    --_select-trigger-padding: var(--size-s-padding-x);
+    --_select-trigger-gap: var(--size-s-gap);
+    --_select-trigger-font: var(--size-s-control-font);
+    --_select-trigger-icon-size: var(--size-s-icon);
+  }
+
+  .unica-select-trigger[data-unica-select-size='l'] {
+    --_select-trigger-height: var(--size-l-height);
+    --_select-trigger-radius: var(--size-l-radius);
+    --_select-trigger-padding: var(--size-l-padding-x);
+    --_select-trigger-gap: var(--size-l-gap);
+    --_select-trigger-font: var(--text-size-body-m);
+    --_select-trigger-icon-size: var(--size-l-icon);
+  }
+
+  .unica-select-trigger[data-unica-select-variant='ghost'] {
+    border-color: transparent;
+    background: transparent;
+  }
+  .unica-select-trigger[data-unica-select-status='info'] {
+    --_select-trigger-edge: var(--status-info-border);
+    --_select-trigger-focus: var(--status-info-signal);
+    --_select-trigger-status: var(--status-info-soft-fg);
+  }
+
+  .unica-select-trigger[data-unica-select-status='success'] {
+    --_select-trigger-edge: var(--status-success-border);
+    --_select-trigger-focus: var(--status-success-signal);
+    --_select-trigger-status: var(--status-success-soft-fg);
+  }
+
+  .unica-select-trigger[data-unica-select-status='warning'] {
+    --_select-trigger-edge: var(--status-warning-border);
+    --_select-trigger-focus: var(--status-warning-signal);
+    --_select-trigger-status: var(--status-warning-soft-fg);
+  }
+
+  .unica-select-trigger[data-unica-select-status='danger'] {
+    --_select-trigger-edge: var(--status-danger-border);
+    --_select-trigger-focus: var(--status-danger-signal);
+    --_select-trigger-status: var(--status-danger-soft-fg);
+  }
+
+  .unica-select-trigger[data-unica-select-variant='ghost']:not(:disabled):is(
+      :hover,
+      [data-unica-select-open],
+      :focus-visible
+    ) {
+    background: var(--neutral-soft-bg);
+  }
+  .unica-select-trigger[data-unica-select-status='neutral']:not(:disabled):hover {
+    --_select-trigger-edge: var(--control-border-hover);
+  }
+  .unica-select-trigger[data-unica-select-status='neutral'][data-unica-select-open]:not(:disabled) {
+    --_select-trigger-edge: var(--control-border-focus);
+  }
+  .unica-select-trigger:not([data-unica-select-open]):focus-visible {
+    outline: 2px solid var(--_select-trigger-focus);
+    outline-offset: 2px;
+  }
+  .unica-select-trigger[data-unica-select-open] {
+    outline: none;
+  }
+  .unica-select-trigger:not(:disabled):active {
+    background: color-mix(in oklab, var(--control-bg) 92%, var(--fg-primary) 4%);
+  }
+  .unica-select-trigger:disabled {
+    border-color: var(--border-subtle);
+    background: var(--bg-surface-subtle);
+    color: var(--fg-disabled);
+    cursor: not-allowed;
+  }
+  .unica-select-trigger[data-unica-select-variant='ghost']:disabled {
+    background: transparent;
+    border-color: transparent;
+  }
+  .unica-select-trigger:disabled :is(svg, .unica-select-summary) {
+    color: var(--fg-disabled);
+  }
+  .unica-select-summary {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    flex: 1 1 auto;
+    min-inline-size: 0;
+    overflow: hidden;
+  }
+  .unica-select-summary {
+    column-gap: var(--space-8);
+  }
+  .unica-select-labels {
+    display: block;
+    min-inline-size: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .unica-select-summary[data-unica-select-empty] {
+    color: var(--fg-muted);
+  }
+  .unica-select-count {
+    flex: none;
+    padding-inline-start: var(--space-8);
+    border-inline-start: 1px solid var(--border-subtle);
+    color: var(--fg-secondary);
+    font-size: 0.9em;
+    font-variant-numeric: tabular-nums;
+  }
+  .unica-select-measure {
+    position: absolute;
+    visibility: hidden;
+    pointer-events: none;
+    inline-size: max-content;
+    inset-inline-start: 0;
+    white-space: pre;
+  }
+  .unica-select-chrome,
+  .unica-select-status {
+    flex: none;
+    inline-size: var(--_select-trigger-icon-size);
+    block-size: var(--_select-trigger-icon-size);
+    color: var(--fg-muted);
+  }
+
+  .unica-select-status {
+    color: var(--_select-trigger-status);
+  }
+
+  .unica-select-content {
+    box-sizing: border-box;
+    position: fixed;
+    inset: auto;
+    margin: 0;
+    flex-direction: column;
+    inline-size: min(
+      max(var(--anchor-width, 0px), 264px),
+      var(--overlay-available-width, calc(100vw - 32px))
+    );
+    max-block-size: var(--overlay-available-height, calc(100dvh - 32px));
+    min-inline-size: 0;
+    padding: var(--space-4);
+    color: var(--fg-primary);
+    font-family: var(--font-family-base);
+    text-align: start;
+    overflow: hidden;
+    opacity: 0;
+  }
+
+  .unica-select-content:popover-open {
+    display: flex;
+  }
+  .unica-select-content[data-unica-select-positioned] {
+    opacity: 1;
+  }
+  .unica-select-content:focus-visible,
+  .unica-select-recovery:focus-visible {
+    outline: 2px solid var(--focus-ring-color);
+    outline-offset: -2px;
+  }
+  .unica-select-list {
+    flex: 1 1 auto;
+    max-block-size: 22rem;
+  }
+
+  .unica-select-header {
+    flex: none;
+    display: grid;
+    gap: var(--space-8);
+    padding: var(--space-4) var(--space-4) var(--space-8);
+  }
+  .unica-select-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-4) var(--space-12);
+    min-block-size: var(--size-s-height);
+    padding-inline: var(--space-4);
+    color: var(--fg-muted);
+    font-size: var(--text-size-caption-l);
+    font-variant-numeric: tabular-nums;
+    line-height: 1.5;
+  }
+  .unica-select-clear {
+    margin-inline-end: calc(-1 * var(--space-4));
+  }
+  .unica-select-clear[data-unica-select-empty] {
+    visibility: hidden;
+  }
+  .unica-select-loading {
+    box-sizing: border-box;
+    display: flex;
+    align-items: start;
+    gap: var(--space-8);
+    flex: none;
+    padding: var(--space-12) var(--space-16);
+    color: var(--fg-muted);
+    font-size: var(--text-size-body-s);
+    line-height: 1.5;
+  }
+  .unica-select-loading[data-unica-select-initial] {
+    padding-block: var(--space-24);
+  }
+  .unica-select-empty-copy {
+    display: grid;
+    gap: var(--space-4);
+    justify-items: start;
+  }
+  .unica-select-empty-copy > strong {
+    color: var(--fg-secondary);
+    font-weight: 500;
+  }
+
+  .unica-select[hidden] {
+    display: none;
+  }
+  .unica-select-recovery {
+    box-sizing: border-box;
+    min-block-size: 0;
+    overflow: auto;
+    padding: var(--space-24) var(--space-16);
+    font-size: var(--text-size-body-s);
+    line-height: 1.5;
+    color: var(--fg-muted);
+  }
+  @media (pointer: coarse) {
+    .unica-select-clear {
+      min-block-size: 44px;
+    }
+  }
+  @media (forced-colors: active) {
+    .unica-select-trigger,
+    .unica-select-trigger[data-unica-select-variant='ghost'] {
+      background: ButtonFace;
+      color: ButtonText;
+      border-color: ButtonText;
+    }
+    .unica-select-trigger:disabled,
+    .unica-select-trigger[data-unica-select-variant='ghost']:disabled {
+      color: GrayText;
+      border-color: GrayText;
+    }
+    .unica-select-trigger:not([data-unica-select-open]):focus-visible,
+    .unica-select-content:focus-visible,
+    .unica-select-recovery:focus-visible {
+      outline-color: Highlight;
+    }
+  }
+}

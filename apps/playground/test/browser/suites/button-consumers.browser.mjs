@@ -324,7 +324,10 @@ export default {
     }
   },
 
-  'Table inline picker and row menu share hover and open paint': async ({ page, mount }) => {
+  'Table inline picker and row menu keep their layout, focus and action ownership': async ({
+    page,
+    mount,
+  }) => {
     await page.setViewportSize({ width: 1440, height: 900 });
     await mount('button-consumers', { reducedMotion: 'reduce' });
     const board = await open(page, {
@@ -334,12 +337,34 @@ export default {
       family: 'frost',
     });
     const table = board.getByRole('table', { name: 'Route policies M', exact: true });
-    const picker = table.getByRole('button', { name: 'Policy for queue: Inherit', exact: true });
+    const picker = table.getByRole('button', { name: 'Policy for queue', exact: true });
     const menu = table.getByRole('button', { name: 'Actions for queue', exact: true });
     await picker.waitFor();
     await page.evaluate(() => document.fonts.ready);
 
-    const paint = [];
+    for (const [density, expectedHeight] of [
+      ['S', 25],
+      ['M', 33],
+      ['L', 41],
+    ]) {
+      const size = board.getByRole('table', { name: `Route policies ${density}`, exact: true });
+      const fields = size.getByRole('button', { name: /^Policy for / });
+      assert.deepEqual(
+        await fields.evaluateAll((nodes) =>
+          nodes.map((node) => node.getBoundingClientRect().height),
+        ),
+        [expectedHeight, expectedHeight, expectedHeight],
+      );
+      assert.equal(
+        await size.getByRole('button', { name: 'Policy for system' }).isDisabled(),
+        true,
+      );
+      assert.equal(
+        await size.getByRole('textbox', { name: 'Path for system' }).getAttribute('readonly'),
+        '',
+      );
+    }
+
     for (const trigger of [picker, menu]) {
       await page.mouse.move(0, 0);
       const rest = await platePixel(trigger);
@@ -352,16 +377,31 @@ export default {
       await pressKeys(page, 'Enter');
       await trigger.and(page.locator('[aria-expanded="true"]')).waitFor();
       const expanded = await platePixel(trigger);
+      assert.notDeepEqual(expanded, rest);
       await trigger.hover();
       const expandedHover = await platePixel(trigger);
+      if (trigger === picker) {
+        assertSamePaint(expandedHover, expanded);
+      } else {
+        assert.notDeepEqual(expandedHover, rest);
+      }
       await pressKeys(page, 'Escape');
       await trigger.and(page.locator('[aria-expanded="false"]')).waitFor();
-      paint.push([hover, expanded, expandedHover]);
+      await assertFocused(trigger);
     }
 
-    for (const [index, pixel] of paint[0].entries()) {
-      assertSamePaint(pixel, paint[1][index]);
-    }
+    const before = await getBox(table);
+    assert.equal(await picker.getAttribute('title'), 'Inherit');
+    await picker.press('Enter');
+    await table.getByRole('listbox').getByRole('option', { name: 'Allow', exact: true }).click();
+    await assertFocused(picker);
+    assert.equal(await picker.getAttribute('title'), 'Allow');
+    assert.equal(await menu.getAttribute('aria-expanded'), 'false');
+    assert.equal((await getBox(table)).height, before.height);
+
+    await menu.click();
+    await table.getByRole('menuitem', { name: 'Restore defaults' }).click();
+    assert.equal(await picker.getAttribute('title'), 'Inherit');
   },
 
   'Disclosure keeps its system contour and distinct inset focus in forced colors': async ({

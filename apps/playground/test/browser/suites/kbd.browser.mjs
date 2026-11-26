@@ -455,7 +455,7 @@ export default {
         }, width);
         // Read both boxes atomically while the anchored panel is free to reposition.
         const { captionBox, capBox, measuredWidth } = await option.evaluate((node) => {
-          const caption = node.querySelector('.choice-option-copy-proto');
+          const caption = node.querySelector('.suggestion-option-copy-proto');
           const cap = node.querySelector('kbd');
           const panel = node.closest('.suggestion-panel-proto');
           return {

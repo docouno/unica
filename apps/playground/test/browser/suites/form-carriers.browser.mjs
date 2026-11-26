@@ -139,6 +139,65 @@ const suite = {
       ['multiple', 'a'],
     ]);
   },
+  'multiple carrier restores committed and default orders within the native reset stack': async ({
+    page,
+    mount,
+  }) => {
+    await mount('form-carriers');
+    const form = page.locator('#ordered-multiple');
+    const initial = ['', '__proto__'];
+    const resetValue = page
+      .getByTestId('ordered-multiple-value')
+      .filter({ hasText: JSON.stringify(initial) });
+    const reverse = ['__proto__', ''];
+    const partial = ['__proto__', 'c'];
+    const disjoint = ['d', 'c'];
+    const controlled = ['c', '__proto__'];
+
+    await button(page, 'Propose controlled multiple').click();
+    await button(page, 'Reverse default selection').click();
+    assert.deepEqual(
+      await form.evaluate((node) => {
+        const snapshot = () => {
+          const data = new FormData(node);
+          return [data.getAll('local'), data.getAll('controlled')];
+        };
+        const before = snapshot();
+        node.addEventListener('reset', (event) => event.preventDefault(), { once: true });
+        node.reset();
+        const canceled = snapshot();
+        node.reset();
+        const reset = snapshot();
+        node.reset();
+        return [before, canceled, reset, snapshot()];
+      }),
+      [
+        [reverse, controlled],
+        [reverse, controlled],
+        [initial, controlled],
+        [initial, controlled],
+      ],
+    );
+    await resetValue.waitFor();
+
+    const commitAndReset = () =>
+      form.evaluate((node) => {
+        const current = new FormData(node).getAll('local');
+        node.reset();
+        return [current, new FormData(node).getAll('local')];
+      });
+    await button(page, 'Replace first default').click();
+    await button(page, 'Change default availability').click();
+    assert.deepEqual(await commitAndReset(), [partial, initial]);
+    await button(page, 'Replace both defaults').click();
+    assert.deepEqual(await commitAndReset(), [disjoint, initial]);
+
+    await button(page, 'Reverse default selection').click();
+    await button(page, 'Reset ordered selection').click();
+    await assertFocused(button(page, 'Reset ordered selection'));
+    await resetValue.waitFor();
+    assert.deepEqual(await form.evaluate((node) => new FormData(node).getAll('local')), initial);
+  },
   'a hidden native input retains its constraints, skips Tab order, and delegates reporting focus':
     async ({ page, mount }) => {
       await mount('form-carriers');

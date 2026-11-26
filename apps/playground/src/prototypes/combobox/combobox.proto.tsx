@@ -6,18 +6,20 @@ import {
   fieldStatusGlyphs,
 } from '../control-glyphs.js';
 import { useId, useLayoutEffect, useRef, useState } from 'react';
-import type { KeyboardEvent, MouseEvent, ReactElement, ReactNode, RefObject } from 'react';
-import { Icon, Input, Kbd, Spinner } from '@docouno/unica';
-import type { GlyphSource, InputProps } from '@docouno/unica';
+import type { KeyboardEvent, ReactElement, ReactNode, RefObject } from 'react';
+import { Icon, Input, Kbd, ListboxGroup, ListboxOption, Spinner } from '@docouno/unica';
+import type { ControlSize, GlyphSource, InputProps } from '@docouno/unica';
 import { CloseGlyph } from '../control-glyphs.js';
 import { FormField } from '../form-field/form-field.proto.js';
-import { ListboxGroup, ListboxOption } from '../select/listbox.proto.js';
-import type { SelectOption } from '../select/listbox.proto.js';
-import { SelectPanel } from '../select/select-control.proto.js';
-import '../select/select.css';
 import './combobox.css';
 
-export interface Suggestion extends SelectOption {
+export interface Suggestion {
+  readonly value: string;
+  readonly label: string;
+  readonly description?: string | undefined;
+  readonly group?: string | undefined;
+  readonly disabled?: boolean | undefined;
+  readonly icon?: GlyphSource | undefined;
   readonly insertText?: string;
   readonly shortcut?: string;
 }
@@ -216,6 +218,8 @@ interface SuggestionRowsProps {
   readonly selected?: string | undefined;
   readonly active?: string | undefined;
   readonly kind: 'catalog' | 'text';
+  readonly size: ControlSize;
+  readonly hideCatalogIcons: boolean;
   readonly busy: boolean;
   readonly id: string;
   readonly onActivate: (value: string | undefined) => void;
@@ -227,20 +231,23 @@ function SuggestionRows({
   selected,
   active,
   kind,
+  size,
+  hideCatalogIcons,
   busy,
   id,
   onActivate,
   onPick,
 }: SuggestionRowsProps): ReactElement {
   const options = [...groups.values()].flat();
-  const hasIcons = options.some((option) => option.icon);
+  const hasIcons = !hideCatalogIcons && options.some((option) => option.icon);
   const hasShortcuts = kind === 'text' && options.some((option) => option.shortcut);
   const renderOption = (option: Suggestion): ReactElement => {
     const current = option.value === active;
+    const idForOption = optionId(id, option.value);
     const optionProps = {
-      id: optionId(id, option.value),
+      id: idForOption,
+      'data-active': current || undefined,
       onMouseMove: () => onActivate(option.disabled ? undefined : option.value),
-      onMouseDown: (event: MouseEvent) => event.preventDefault(),
       onClick: () => {
         if (!option.disabled) {
           onPick(option);
@@ -250,7 +257,14 @@ function SuggestionRows({
     return kind === 'catalog' ? (
       <ListboxOption
         {...optionProps}
-        option={option}
+        className="suggestion-catalog-option-proto"
+        value={option.value}
+        label={option.label}
+        description={option.description}
+        disabled={option.disabled}
+        iconLeft={hasIcons ? option.icon : undefined}
+        reserveIconSpace={hasIcons}
+        size={size}
         selected={option.value === selected}
         active={current}
         key={option.value}
@@ -259,21 +273,28 @@ function SuggestionRows({
       <div
         {...optionProps}
         role="option"
+        aria-labelledby={`${idForOption}-label`}
+        aria-describedby={option.description ? `${idForOption}-description` : undefined}
         aria-selected={current}
         aria-disabled={option.disabled || undefined}
-        className="choice-option-proto suggestion-text-option-proto"
-        data-active={current || undefined}
+        className="suggestion-text-option-proto"
         key={option.value}
       >
         {option.icon && (
-          <span className="choice-option-icon-proto" aria-hidden="true">
+          <span className="suggestion-option-icon-proto" aria-hidden="true">
             <Icon usage="slot" icon={option.icon} />
           </span>
         )}
-        <span className="choice-option-copy-proto">
-          <span dir="auto">{option.label}</span>
+        <span className="suggestion-option-copy-proto">
+          <span id={`${idForOption}-label`} dir="auto">
+            {option.label}
+          </span>
           {option.description && (
-            <span className="choice-option-description-proto" dir="auto">
+            <span
+              id={`${idForOption}-description`}
+              className="suggestion-option-description-proto"
+              dir="auto"
+            >
               {option.description}
             </span>
           )}
@@ -288,10 +309,14 @@ function SuggestionRows({
       role="listbox"
       aria-label={kind === 'catalog' ? 'Matching options' : 'Suggestions'}
       aria-busy={busy || undefined}
-      className="choice-list-proto suggestion-list-proto"
-      data-external-focus=""
+      className="suggestion-list-proto"
       data-icons={hasIcons || undefined}
       data-shortcuts={hasShortcuts || undefined}
+      onMouseDown={(event) => {
+        if (event.target instanceof Element && event.target.closest('[role="option"]')) {
+          event.preventDefault();
+        }
+      }}
       onMouseMove={(event) => {
         if (event.target instanceof Element && !event.target.closest('[role="option"]')) {
           onActivate(undefined);
@@ -376,6 +401,7 @@ function SuggestionField({
     initialSelection !== undefined && initialText !== undefined,
   );
   const [requested, setRequested] = useState<string>();
+  const [compactCatalog, setCompactCatalog] = useState(false);
   const catalog = kind === 'catalog';
   const confirmed = editing ? undefined : selection;
   const replacement = catalog && editing && selection !== undefined;
@@ -401,6 +427,32 @@ function SuggestionField({
     input,
     row,
   } = useSuggestionPlacement(open && !previewOpen && !unavailable, close);
+  useLayoutEffect(() => {
+    const panel = popup.current;
+    const view = panel?.ownerDocument.defaultView;
+    if (!shown || !catalog || !panel || !view) {
+      return;
+    }
+    const measure = (width: number): void => {
+      const rem = Number.parseFloat(
+        view.getComputedStyle(panel.ownerDocument.documentElement).fontSize,
+      );
+      setCompactCatalog(width <= 15 * rem);
+    };
+    const style = view.getComputedStyle(panel);
+    measure(
+      panel.clientWidth -
+        Number.parseFloat(style.paddingInlineStart) -
+        Number.parseFloat(style.paddingInlineEnd),
+    );
+    const observer = new ResizeObserver(([entry]) => {
+      if (entry) {
+        measure(entry.contentRect.width);
+      }
+    });
+    observer.observe(panel);
+    return () => observer.disconnect();
+  }, [catalog, popup, shown]);
   const focusInput = (): void => input.current?.focus({ preventScroll: true });
   const pendingResets = useRef<Event[]>([]);
   useLayoutEffect(() => {
@@ -623,18 +675,15 @@ function SuggestionField({
   const recoveryCopy = fieldProps.status === 'danger' ? undefined : 'Choose a result to confirm.';
   const browsingCopy = unconfirmed && recoveryCopy && enabled.length > 0;
   const panel = shown && (
-    <SelectPanel
+    <div
+      role="presentation"
+      data-surface="overlay"
       data-wb-subject={subject}
       ref={popup}
       popover={previewOpen ? undefined : 'manual'}
-      className={
-        previewOpen
-          ? 'suggestion-panel-proto suggestion-pinned-proto'
-          : 'suggestion-panel-proto suggestion-native-proto'
-      }
-      data-kind={kind}
+      className={`unica-overlay-surface suggestion-panel-proto ${previewOpen ? 'suggestion-pinned-proto' : 'suggestion-native-proto'}`}
     >
-      <div className="choice-list-frame-proto suggestion-frame-proto" data-size={size}>
+      <div className="suggestion-frame-proto" data-size={size}>
         {(browsingCopy || replacement) && (
           <div className="suggestion-panel-recovery-proto">
             {browsingCopy && (
@@ -654,6 +703,8 @@ function SuggestionField({
             selected={confirmed?.value}
             active={active?.value}
             kind={kind}
+            size={size}
+            hideCatalogIcons={catalog && compactCatalog}
             busy={pending}
             onActivate={(value) => {
               if (value === undefined && keyboardNavigation.current) {
@@ -666,7 +717,7 @@ function SuggestionField({
           />
         </div>
       </div>
-    </SelectPanel>
+    </div>
   );
 
   const describedBy =

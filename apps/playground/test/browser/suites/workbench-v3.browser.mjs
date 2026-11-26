@@ -397,12 +397,14 @@ export default {
       ).href,
     );
     const board = page.locator('[data-wb-slice="roles"] .wb-artboard[data-theme="frost-light"]');
-    const triggers = board.locator('.select-trigger-proto');
+    const triggers = board.getByRole('button', { name: 'Deployment region', exact: true });
     await triggers.last().waitFor({ timeout: 20_000 });
     await page.evaluate(() => document.fonts.ready);
     assert.equal(await triggers.count(), 6);
     for (const trigger of await triggers.all()) {
-      const summary = trigger.locator('.select-summary-labels-proto');
+      const summary = trigger
+        .locator('[aria-hidden="true"]')
+        .getByText('Amsterdam', { exact: true });
       assert.equal(await summary.textContent(), 'Amsterdam');
       assert.ok(
         await summary.evaluate((node) => node.clientWidth === node.scrollWidth),
@@ -412,8 +414,9 @@ export default {
     const trigger = triggers.last();
     await trigger.click();
     const panel = page.locator(':popover-open');
-    assert.equal(await panel.getAttribute('id'), await trigger.getAttribute('aria-controls'));
     const list = panel.getByRole('listbox');
+    await list.waitFor();
+    assert.equal(await list.getAttribute('id'), await trigger.getAttribute('aria-controls'));
     const selected = list.getByRole('option', { name: 'Amsterdam', exact: true });
     assert.equal(await selected.getAttribute('aria-selected'), 'true');
     assert.equal(
@@ -422,11 +425,8 @@ export default {
     );
     await list.getByRole('option', { name: 'London', exact: true }).click();
     await panel.waitFor({ state: 'hidden' });
-    assert.equal(await trigger.locator('.select-summary-labels-proto').textContent(), 'London');
-    assert.equal(
-      await triggers.first().locator('.select-summary-labels-proto').textContent(),
-      'Amsterdam',
-    );
+    assert.equal(await trigger.getAttribute('title'), 'London');
+    assert.equal(await triggers.first().getAttribute('title'), 'Amsterdam');
   },
 
   'Picker comparisons leave room for their initial text and actions': async ({
@@ -809,10 +809,10 @@ export default {
       origin,
     );
     await page.goto(route.href, { waitUntil: 'domcontentloaded' });
-    const field = page.getByRole('button', { name: /^Filter regions: Amsterdam/ }).first();
+    const field = page.getByRole('button', { name: 'Filter regions', exact: true }).first();
     await field.waitFor({ timeout: 20_000 });
     await page.evaluate(() => document.fonts.ready);
-    assert.match(await field.getAttribute('aria-label'), /Frankfurt.*London.*Stockholm/);
+    assert.match(await field.getAttribute('title'), /Frankfurt.*London.*Stockholm/);
     assert.equal(
       await field.getByText('Amsterdam', { exact: true }).filter({ visible: true }).count(),
       1,
@@ -831,13 +831,15 @@ export default {
     await page.goto(route.href, { waitUntil: 'domcontentloaded' });
     const frame = page.locator('section[data-wb-block="loading"]');
     const boards = frame.locator('.wb-artboard');
-    const retry = boards.getByRole('button', { name: 'Try again' });
-    await retry.first().waitFor({ timeout: 20_000 });
-    assert.equal(await retry.count(), 2);
-    const fields = boards.getByRole('button', { name: 'Available regions: London' });
+    const fields = boards.getByRole('button', { name: 'Available regions', exact: true });
+    await fields.last().waitFor({ timeout: 20_000 });
     assert.equal(await fields.count(), 2);
-    await retry.first().press('Enter');
-    assert.equal(await retry.count(), 0, 'Retry recovers the catalog in both themes');
+    await fields.first().click();
+    const retry = boards.getByRole('button', { name: 'Try again' });
+    await retry.waitFor();
+    assert.equal(await fields.first().getAttribute('title'), 'London');
+    await retry.press('Enter');
+    await retry.waitFor({ state: 'hidden' });
     assert.equal(await frame.getByRole('combobox').inputValue(), 'ready');
     assert.equal(await fields.count(), 2);
     const list = boards.first().locator('[role="listbox"]:focus');
@@ -848,6 +850,13 @@ export default {
     await list.press('ArrowDown');
     assert.notEqual(await list.getAttribute('aria-activedescendant'), selectedId);
     assert.equal(await selected.count(), 1, 'Browsing another row keeps London selected');
+    await list.press('Escape');
+    await fields.last().click();
+    await boards
+      .last()
+      .getByRole('option', { name: 'London', selected: true, exact: true })
+      .waitFor();
+    assert.equal(await retry.count(), 0, 'Retry recovers the catalog in both themes');
   },
 
   'Date pickers select the touched day at the edge of an in-flow calendar on a phone': async ({

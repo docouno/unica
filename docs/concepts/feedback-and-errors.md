@@ -35,7 +35,9 @@ Choose one channel based on scope and lifecycle:
 
 ## Strict `<FormField>` Ownership & Three Canonical Compositions
 
-Data-entry controls (`Input`, `Textarea`, `NumberInput`, `Select`, `Combobox`, `Autocomplete`, `DatePicker`, `DateRangePicker`, `TagsInput`, `FileInput`, `Slider`, `RangeSlider`) **do not** expose shorthand `label`, `description`, or `message` props. Standalone inline fields (for example inside table cells or toolbars) accept native `<label htmlFor>`, `aria-label`, or `aria-labelledby`. Use a native label, description, and message with the shipped [Input](../components/input.md). The FormField design defines three compositions for labeled form layouts:
+Data-entry controls (`Input`, `Textarea`, `NumberInput`, `Select`, `Combobox`, `Autocomplete`, `DatePicker`, `DateRangePicker`, `TagsInput`, `FileInput`, `Slider`, `RangeSlider`) **do not** expose shorthand `label`, `description`, or `message` props. Standalone inline fields (for example inside table cells or toolbars) accept native `<label htmlFor>`, `aria-label`, or `aria-labelledby`. Use a native label, description, and message with the shipped [Input](../components/input.md).
+
+For Select, use the trigger's field ID to associate the label and `aria-describedby` to associate help or error text. A validation status colors the trigger. For a failed catalog request, place the explanation and recovery action in the panel through `errorState`. [Select](../components/select.md)
 
 ### 1. Single Control (`target="control"`)
 
