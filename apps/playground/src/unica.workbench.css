@@ -33,7 +33,7 @@
 }
 
 /* Full product scenes own the canvas edge and their internal gutters. */
-.wb-artboard:has(> .folio-scene) {
+.wb-artboard:has(> .folio-scene, .folio-scene-frame) {
   padding: 0;
 }
 

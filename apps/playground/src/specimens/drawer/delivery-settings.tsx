@@ -11,9 +11,6 @@ import {
   Text,
   Textarea,
   Title,
-} from '@docouno/unica';
-import { DialogStudy } from '../../prototypes/dialog/dialog.examples.js';
-import {
   Drawer,
   DrawerBody,
   DrawerClose,
@@ -23,14 +20,9 @@ import {
   DrawerHeader,
   DrawerTitle,
   DrawerTrigger,
-  Modal,
-  ModalClose,
-  ModalContent,
-  ModalDescription,
-  ModalFooter,
-  ModalHeader,
-  ModalTitle,
-} from '../../prototypes/dialog/dialog.proto.js';
+} from '@docouno/unica';
+import { activeDialogControl } from '../shared/dialog-controls.js';
+import { DialogStudy, DiscardChanges } from '../shared/dialog-study.js';
 import type { PreviewProps } from '../../workbench/types.js';
 
 const adaptiveSide = { wide: 'end', narrow: 'bottom' } as const;
@@ -46,7 +38,8 @@ export function DeliverySettings({
 }: PreviewProps & { readonly long?: boolean }): ReactElement {
   const formId = useId();
   const noteId = useId();
-  const keepRef = useRef<HTMLButtonElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const dialogRef = useRef<HTMLDialogElement>(null);
   const emailRef = useRef<HTMLInputElement>(null);
   const returnRef = useRef<HTMLElement>(null);
   const [open, setOpen] = useState(true);
@@ -69,29 +62,36 @@ export function DeliverySettings({
   );
 
   const requestOpen = (next: boolean): void => {
-    if (next || !dirty) {
-      if (next) {
-        setDraft(delivery);
-      }
+    if (next) {
+      setDraft(delivery);
       setSaved(false);
-      setOpen(next);
+      setOpen(true);
       return;
     }
-    const focused = document.activeElement;
-    returnRef.current =
-      focused instanceof HTMLElement &&
-      focused.closest('.dialog-surface')?.contains(emailRef.current)
-        ? focused
-        : emailRef.current;
-    setConfirm(true);
+
+    const dialog = dialogRef.current;
+    if (dirty && dialog?.isConnected && dialog.matches(':modal')) {
+      returnRef.current = activeDialogControl(dialog) ?? emailRef.current;
+      setConfirm(true);
+      return;
+    }
+
+    setConfirm(false);
+    setOpen(false);
   };
 
   return (
-    <DialogStudy height={height === 'keyboard' ? 250 : height === 'short' ? 365 : long ? 490 : 535}>
+    <DialogStudy
+      ctx={ctx}
+      title="Delivery settings example"
+      height={height === 'keyboard' ? 250 : height === 'short' ? 365 : long ? 490 : 535}
+    >
       <Drawer open={open} onOpenChange={requestOpen}>
-        <div className="dialog-drawer-launch" inert={open}>
-          <DrawerTrigger {...(!open ? ctx.subject : {})} variant="secondary" tone="neutral">
-            Edit delivery settings
+        <div className="dialog-study-launch" data-open={open || undefined}>
+          <DrawerTrigger {...(!open ? ctx.subject : {})} ref={triggerRef} asChild>
+            <Button variant="secondary" tone="neutral">
+              Edit delivery settings
+            </Button>
           </DrawerTrigger>
           {saved && (
             <Text
@@ -107,23 +107,27 @@ export function DeliverySettings({
           )}
         </div>
         <DrawerContent
+          returnFocus={triggerRef}
           {...ctx.subject}
           side={long ? 'end' : mode === 'adaptive' ? adaptiveSide : 'bottom'}
           swipeToClose={mode !== 'no-swipe'}
           width="m"
-          described
-          inactive={confirm}
+          ref={dialogRef}
         >
-          <DrawerHeader closeLabel="Close delivery settings">
-            <DrawerTitle>
-              {long ? 'Delivery and notification preferences' : 'Delivery settings'}
-            </DrawerTitle>
-            <DrawerDescription>
-              Choose what arrives in the project’s review digest.
-            </DrawerDescription>
+          <DrawerHeader>
+            <div>
+              <DrawerTitle>
+                {long ? 'Delivery and notification preferences' : 'Delivery settings'}
+              </DrawerTitle>
+              <DrawerDescription>
+                Choose what arrives in the project’s review digest.
+              </DrawerDescription>
+            </div>
+            <DrawerClose aria-label="Close delivery settings" />
           </DrawerHeader>
           <DrawerBody>
             <form
+              {...ctx.form}
               className="dialog-study-form"
               id={formId}
               onSubmit={(event) => {
@@ -207,43 +211,28 @@ export function DeliverySettings({
             </form>
           </DrawerBody>
           <DrawerFooter>
-            <DrawerClose>Cancel</DrawerClose>
+            <DrawerClose asChild>
+              <Button variant="secondary" tone="neutral">
+                Cancel
+              </Button>
+            </DrawerClose>
             <Button form={formId} type="submit">
               Save settings
             </Button>
           </DrawerFooter>
+          <DiscardChanges
+            open={confirm}
+            onOpenChange={setConfirm}
+            returnFocus={returnRef}
+            onDiscard={() => {
+              setConfirm(false);
+              setOpen(false);
+            }}
+          >
+            Your edits to delivery settings will be lost.
+          </DiscardChanges>
         </DrawerContent>
       </Drawer>
-      <Modal open={confirm} onOpenChange={setConfirm}>
-        <ModalContent
-          {...ctx.subject}
-          role="alertdialog"
-          size="s"
-          width="s"
-          described
-          className="dialog-discard-confirmation"
-          initialFocus={keepRef}
-          returnFocus={returnRef}
-        >
-          <ModalHeader closeLabel={false}>
-            <ModalTitle>Discard unsaved changes?</ModalTitle>
-            <ModalDescription>Your edits to delivery settings will be lost.</ModalDescription>
-          </ModalHeader>
-          <ModalFooter>
-            <ModalClose ref={keepRef}>Keep editing</ModalClose>
-            <Button
-              tone="danger"
-              onClick={() => {
-                returnRef.current = null;
-                setConfirm(false);
-                setOpen(false);
-              }}
-            >
-              Discard changes
-            </Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
     </DialogStudy>
   );
 }

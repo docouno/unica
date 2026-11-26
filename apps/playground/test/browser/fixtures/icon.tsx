@@ -1,9 +1,22 @@
 import {
   Avatar,
+  Button,
+  Drawer,
+  DrawerClose,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
   Icon,
   Input,
   Link,
   Listbox,
+  Modal,
+  ModalClose,
+  ModalContent,
+  ModalHeader,
+  ModalTitle,
+  ModalTrigger,
   Select,
   Switch,
   UnicaProvider,
@@ -22,19 +35,6 @@ import {
 import { FileItem, FileList } from '../../../src/prototypes/file-input/file-input.proto.js';
 import { Combobox } from '../../../src/prototypes/combobox/combobox.proto.js';
 import { MenuRows, MenuSurface } from '../../../src/prototypes/menu/menu.proto.js';
-import { Button } from '@docouno/unica';
-import {
-  Drawer,
-  DrawerContent,
-  DrawerHeader,
-  DrawerTitle,
-  DrawerTrigger,
-  Modal,
-  ModalContent,
-  ModalHeader,
-  ModalTitle,
-  ModalTrigger,
-} from '../../../src/prototypes/dialog/dialog.proto.js';
 import { Empty, EmptyMedia } from '../../../src/prototypes/empty/empty.proto.js';
 import { Tabs, TabsList, TabsTab } from '../../../src/prototypes/tabs/tabs.proto.js';
 
@@ -203,6 +203,7 @@ export default function IconFixture() {
             <ModalContent>
               <ModalHeader>
                 <ModalTitle>Example modal</ModalTitle>
+                <ModalClose />
               </ModalHeader>
             </ModalContent>
           </Modal>
@@ -211,6 +212,7 @@ export default function IconFixture() {
             <DrawerContent side="end">
               <DrawerHeader>
                 <DrawerTitle>Example drawer</DrawerTitle>
+                <DrawerClose />
               </DrawerHeader>
             </DrawerContent>
           </Drawer>

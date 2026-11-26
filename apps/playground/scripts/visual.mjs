@@ -110,7 +110,8 @@ try {
 
   async function waitForReady() {
     try {
-      await page.waitForSelector('html[data-wb-ready="1"]', { timeout: 8000 });
+      // Native overlay matrices wait for styles and fonts in each artboard document.
+      await page.waitForSelector('html[data-wb-ready="1"]', { timeout: 30_000 });
     } catch (error) {
       if (errors.length > 0) {
         throw new Error(`Runtime errors:\n${errors.join('\n')}`, { cause: error });

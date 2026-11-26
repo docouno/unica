@@ -615,8 +615,7 @@
 }
 
 .app-shell-panel:modal {
-  --dialog-enter-x: calc(-20px * var(--_dir-mirror, 1));
-  --dialog-enter-y: 0px;
+  --shell-sheet-enter-x: calc(-20px * var(--_dir-mirror, 1));
   --sheet-edge: var(--_if-ltr, var(--shell-sheet-left, 0px))
     var(--_if-rtl, var(--shell-sheet-right, 0px));
   --sheet-opposite: var(--_if-ltr, var(--shell-sheet-right, 0px))
@@ -641,7 +640,7 @@
   backdrop-filter: var(--_overlay-backdrop);
   box-shadow: var(--_if-ltr, var(--_overlay-shadow-drawer-right, var(--_overlay-shadow-drawer)))
     var(--_if-rtl, var(--_overlay-shadow-drawer));
-  animation: dialog-surface-enter 200ms cubic-bezier(0.2, 0.7, 0.25, 1);
+  animation: app-shell-sheet-enter 200ms cubic-bezier(0.2, 0.7, 0.25, 1);
 }
 
 .app-shell-sheet {
@@ -672,7 +671,7 @@
 }
 
 .app-shell-panel-end:modal {
-  --dialog-enter-x: calc(20px * var(--_dir-mirror, 1));
+  --shell-sheet-enter-x: calc(20px * var(--_dir-mirror, 1));
   box-shadow: var(--_if-ltr, var(--_overlay-shadow-drawer))
     var(--_if-rtl, var(--_overlay-shadow-drawer-right, var(--_overlay-shadow-drawer)));
   inset-inline: auto var(--sheet-opposite);
@@ -683,7 +682,20 @@
 
 .app-shell-panel:modal::backdrop {
   background: var(--scrim-bg);
-  animation: dialog-scrim-enter 150ms ease-out;
+  animation: app-shell-scrim-enter 150ms ease-out;
+}
+
+@keyframes app-shell-sheet-enter {
+  from {
+    opacity: 0.65;
+    translate: var(--shell-sheet-enter-x) 0;
+  }
+}
+
+@keyframes app-shell-scrim-enter {
+  from {
+    opacity: 0;
+  }
 }
 
 .app-shell-panel:modal > .app-shell-sheet-preview {

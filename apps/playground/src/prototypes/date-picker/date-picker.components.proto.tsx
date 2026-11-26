@@ -97,12 +97,16 @@ function useDatePanel(
     const button = trigger.current;
     const anchor = field.current;
     const boundary = picker.current;
+    const document = element?.ownerDocument;
+    const view = document?.defaultView;
     if (
       !open ||
       !element ||
       !button ||
       !anchor ||
       !boundary ||
+      !document ||
+      !view ||
       typeof element.showPopover !== 'function'
     ) {
       return;
@@ -111,13 +115,13 @@ function useDatePanel(
     const position = (): void => {
       const bounds = anchor.getBoundingClientRect();
       const size = element.getBoundingClientRect();
-      const viewport = window.visualViewport;
-      const width = viewport?.width ?? window.innerWidth;
-      const height = viewport?.height ?? window.innerHeight;
+      const viewport = view.visualViewport;
+      const width = viewport?.width ?? view.innerWidth;
+      const height = viewport?.height ?? view.innerHeight;
       const topOffset = viewport?.offsetTop ?? 0;
       const leftOffset = viewport?.offsetLeft ?? 0;
       const start =
-        getComputedStyle(anchor).direction === 'rtl' ? bounds.right - size.width : bounds.left;
+        view.getComputedStyle(anchor).direction === 'rtl' ? bounds.right - size.width : bounds.left;
       element.style.left = `${Math.max(leftOffset + 8, Math.min(start, leftOffset + width - size.width - 8))}px`;
       const above = Math.max(0, bounds.top - topOffset - 16);
       const below = Math.max(0, height + topOffset - bounds.bottom - 16);
@@ -129,15 +133,16 @@ function useDatePanel(
       element.style.top = `${useBelow ? bounds.bottom + 8 : Math.max(topOffset + 8, bounds.top - actualHeight - 8)}px`;
     };
     position();
-    const observer = new ResizeObserver(position);
+    const observer = new view.ResizeObserver(position);
     observer.observe(element);
     observer.observe(anchor);
-    window.addEventListener('resize', position);
-    window.visualViewport?.addEventListener('resize', position);
-    window.visualViewport?.addEventListener('scroll', position);
-    window.addEventListener('scroll', position, true);
+    view.addEventListener('resize', position);
+    view.visualViewport?.addEventListener('resize', position);
+    view.visualViewport?.addEventListener('scroll', position);
+    view.addEventListener('scroll', position, true);
     const outside = (event: PointerEvent): void => {
-      if (!element.contains(event.target as Node) && !boundary.contains(event.target as Node)) {
+      const target = event.target;
+      if (target instanceof view.Node && !element.contains(target) && !boundary.contains(target)) {
         onClose();
       }
     };
@@ -157,10 +162,10 @@ function useDatePanel(
     boundary.addEventListener('keydown', escape);
     return () => {
       observer.disconnect();
-      window.removeEventListener('resize', position);
-      window.visualViewport?.removeEventListener('resize', position);
-      window.visualViewport?.removeEventListener('scroll', position);
-      window.removeEventListener('scroll', position, true);
+      view.removeEventListener('resize', position);
+      view.visualViewport?.removeEventListener('resize', position);
+      view.visualViewport?.removeEventListener('scroll', position);
+      view.removeEventListener('scroll', position, true);
       document.removeEventListener('pointerdown', outside);
       boundary.removeEventListener('keydown', escape);
       if (element.matches(':popover-open')) {
@@ -169,6 +174,12 @@ function useDatePanel(
     };
   }, [open, onClose]);
   return { panel, trigger, field, picker, issueTooltip };
+}
+
+function focusActiveDay(anchor: HTMLElement | null, panel: RefObject<HTMLDivElement | null>): void {
+  anchor?.ownerDocument.defaultView?.requestAnimationFrame(() => {
+    panel.current?.querySelector<HTMLButtonElement>('.calendar-day-proto[tabindex="0"]')?.focus();
+  });
 }
 
 function useDraftText(
@@ -386,11 +397,7 @@ export function DatePicker({
               if (event.altKey && event.key === 'ArrowDown') {
                 event.preventDefault();
                 setOpen(true);
-                requestAnimationFrame(() =>
-                  panel.current
-                    ?.querySelector<HTMLButtonElement>('.calendar-day-proto[tabindex="0"]')
-                    ?.focus(),
-                );
+                focusActiveDay(event.currentTarget, panel);
               }
             }}
           />
@@ -432,11 +439,7 @@ export function DatePicker({
                 }
                 setOpen(true);
                 if (event.detail === 0) {
-                  requestAnimationFrame(() =>
-                    panel.current
-                      ?.querySelector<HTMLButtonElement>('.calendar-day-proto[tabindex="0"]')
-                      ?.focus(),
-                  );
+                  focusActiveDay(event.currentTarget, panel);
                 }
               }}
             >
@@ -534,10 +537,6 @@ export function DateRangePicker({
   const [calendarFeedback, setCalendarFeedback] = useState<CalendarFeedback>({ message: '' });
   const [open, setOpen] = useState(defaultOpen);
   const viewDate = defaultViewDate(current[0] || today, min, max);
-  const focusCalendar = (): number =>
-    requestAnimationFrame(() =>
-      panel.current?.querySelector<HTMLButtonElement>('.calendar-day-proto[tabindex="0"]')?.focus(),
-    );
   const close = useCallback((): void => {
     setOpen(false);
     setCalendarFeedback({ message: '' });
@@ -546,6 +545,7 @@ export function DateRangePicker({
     open && !disabled && !previewInline,
     close,
   );
+  const focusCalendar = (): void => focusActiveDay(trigger.current, panel);
   const update = (next: DateRange): void => {
     setLocalValue(next);
     onValueChange?.(next);

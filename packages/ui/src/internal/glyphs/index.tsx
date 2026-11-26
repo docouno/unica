@@ -2,6 +2,7 @@ import type { ReactElement } from 'react';
 
 interface GlyphProps {
   readonly className?: string | undefined;
+  readonly 'data-unica-icon-size'?: string | undefined;
 }
 
 interface CaretGlyphProps extends GlyphProps {
@@ -19,6 +20,7 @@ const caretRotation: Record<CaretGlyphProps['direction'], number> = {
 
 export function Glyph({
   className,
+  'data-unica-icon-size': iconSize,
   path,
   transform,
 }: GlyphProps & { readonly path: string; readonly transform?: string }): ReactElement {
@@ -26,6 +28,7 @@ export function Glyph({
     <svg
       aria-hidden="true"
       className={className}
+      data-unica-icon-size={iconSize}
       fill="currentColor"
       focusable="false"
       height="1em"
@@ -93,10 +96,10 @@ export function CaretGlyph({
   );
 }
 
-export function CloseGlyph({ className }: GlyphProps): ReactElement {
+export function CloseGlyph(props: GlyphProps): ReactElement {
   return (
     <Glyph
-      className={className}
+      {...props}
       path="M205.66,194.34a8,8,0,0,1-11.32,11.32L128,139.31,61.66,205.66a8,8,0,0,1-11.32-11.32L116.69,128,50.34,61.66A8,8,0,0,1,61.66,50.34L128,116.69l66.34-66.35a8,8,0,0,1,11.32,11.32L139.31,128Z"
     />
   );

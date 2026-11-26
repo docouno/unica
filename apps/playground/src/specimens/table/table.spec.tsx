@@ -122,7 +122,6 @@ export function ServiceRequests() {
       title: 'Sticky header in a drawer',
       caption:
         'Scroll the linked documents under the fixed header. Close the drawer and reopen it from the same workspace.',
-      overlayStage: true,
       surface: 'overlay',
       kind: 'surface',
       mode: 'live',

@@ -1,0 +1,71 @@
+.dialog-study {
+  position: relative;
+  display: grid;
+  place-items: center;
+  block-size: 100%;
+  min-inline-size: 0;
+}
+
+.dialog-study-form,
+.dialog-study-fields {
+  display: grid;
+  gap: var(--space-16);
+  min-inline-size: 0;
+}
+
+.dialog-study-fields {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-12);
+}
+
+.dialog-study-editor {
+  container: dialog-study-editor / inline-size;
+}
+
+@container dialog-study-editor (max-width: 410px) {
+  .dialog-study-fields {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 420px) {
+  .dialog-discard-confirmation {
+    max-inline-size: calc(
+      100% - max(20px, env(safe-area-inset-left)) - max(20px, env(safe-area-inset-right))
+    );
+  }
+}
+
+.dialog-study-notice {
+  position: absolute;
+  inset-inline: var(--space-12);
+  inset-block-end: var(--space-12);
+  display: flex;
+  justify-content: end;
+}
+
+.dialog-study-notice--modal {
+  position: fixed;
+  inset-inline-end: max(var(--space-12), env(safe-area-inset-right));
+  inset-inline-start: max(var(--space-12), env(safe-area-inset-left));
+  inset-block-end: max(var(--space-12), env(safe-area-inset-bottom));
+  pointer-events: none;
+}
+
+.dialog-study-notice--modal > * {
+  pointer-events: auto;
+}
+
+.dialog-study-launch {
+  display: grid;
+  justify-items: center;
+  gap: var(--space-8);
+}
+
+.dialog-study-launch[data-open] {
+  opacity: 0;
+}
+
+html[data-wb-freeze='1'] [data-dialog-study-pinned] [data-dialog-study-title]:focus-visible {
+  outline: none;
+}

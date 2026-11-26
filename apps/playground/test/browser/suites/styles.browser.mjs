@@ -80,7 +80,8 @@ scenarios['Slider, Drawer and AppShell honor nested explicit direction without n
     const files = [
       'packages/ui/src/styles.css',
       'packages/ui/src/components/Slider/slider.css',
-      'apps/playground/src/prototypes/dialog/dialog.css',
+      'packages/ui/src/internal/dialog/dialog.css',
+      'packages/ui/src/components/Drawer/drawer.css',
       'apps/playground/src/prototypes/app-shell/app-shell.css',
     ];
     const css = await Promise.all(
@@ -99,11 +100,15 @@ scenarios['Slider, Drawer and AppShell honor nested explicit direction without n
     );
     await page.setContent(`<html lang="en" dir="rtl"><body><main data-theme="pixel-light">
       <div class="unica-slider" data-unica-slider-orientation="horizontal" style="width:300px"><div class="unica-slider-scale"><div class="unica-slider-hit"><span class="unica-slider-thumb-wrap" style="--_slider-position:.5"><input type="range" class="unica-slider-native" aria-label="Value"><span class="unica-slider-thumb"></span></span></div></div></div>
-      <div class="dialog-layer" data-dialog-side="start"><div class="dialog-placement"><div class="dialog-surface"></div></div></div>
+      <dialog class="unica-dialog" data-unica-dialog="drawer" data-unica-dialog-side="start" data-unica-dialog-size="m" data-unica-dialog-width="m" data-surface="overlay"><div class="unica-dialog-surface"><h2 class="unica-dialog-title">Drawer</h2></div></dialog>
       <dialog class="app-shell-panel app-shell-panel-start" style="--shell-sheet-left:11px;--shell-sheet-right:27px"></dialog>
       </main></body></html>`);
     await page.addStyleTag({ content: css.join('\n') });
-    await page.locator('dialog').evaluate((el) => el.showModal());
+    await page.locator('dialog').evaluateAll((elements) => {
+      for (const element of elements) {
+        element.showModal();
+      }
+    });
     for (const [dir, sign, inset] of [
       ['rtl', -1, 27],
       ['ltr', 1, 11],
@@ -117,8 +122,8 @@ scenarios['Slider, Drawer and AppShell honor nested explicit direction without n
         const thumb = main.querySelector('.unica-slider-thumb-wrap');
         const box = thumb.getBoundingClientRect();
         const track = thumb.parentElement.getBoundingClientRect();
-        const shell = getComputedStyle(main.querySelector('dialog'));
-        const surface = getComputedStyle(main.querySelector('.dialog-surface'));
+        const shell = getComputedStyle(main.querySelector('.app-shell-panel'));
+        const surface = getComputedStyle(main.querySelector('.unica-dialog-surface'));
         return {
           offset: box.x + box.width / 2 - track.x - track.width / 2,
           inset: parseFloat(shell.insetInlineStart),

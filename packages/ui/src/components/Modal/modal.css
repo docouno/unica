@@ -1,0 +1,21 @@
+@layer unica.components {
+  .unica-dialog[data-unica-dialog='modal'] {
+    --_dialog-enter: unica-dialog-enter 160ms cubic-bezier(0.2, 0.7, 0.25, 1);
+    --_dialog-shadow: var(--_overlay-shadow-modal);
+  }
+
+  .unica-dialog[data-unica-dialog='modal'][data-unica-dialog-narrow] {
+    --_dialog-margin-x: var(--space-12);
+  }
+
+  .unica-dialog
+    .unica-dialog[data-unica-dialog='modal'][data-unica-dialog-compact][role='alertdialog'] {
+    --_dialog-margin-x: calc(var(--space-12) + var(--space-8));
+  }
+
+  @keyframes unica-dialog-enter {
+    from {
+      opacity: 0.65;
+    }
+  }
+}

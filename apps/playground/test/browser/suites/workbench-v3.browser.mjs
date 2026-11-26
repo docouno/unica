@@ -94,13 +94,30 @@ export default {
     await page.goto(
       new URL('/?item=modal&tab=states&block=guard&family=frost&scheme=both', origin).href,
     );
-    const boards = page.locator('[data-wb-block="guard"] .wb-artboard');
-    const owner = boards.first();
+    const frames = page.locator('[data-wb-block="guard"] iframe[title="Project editor example"]');
+    const owner = frames.first().contentFrame();
     const name = owner.getByRole('textbox', { name: /^Project name/ });
-    const peer = boards.last().getByRole('textbox', { name: /^Project name/ });
+    const peer = frames
+      .last()
+      .contentFrame()
+      .getByRole('textbox', { name: /^Project name/ });
     await name.waitFor({ timeout: 20_000 });
     const peerValue = await peer.inputValue();
+    await name.click();
     await name.press('End');
+    await name.evaluate((node) => {
+      const records = [];
+      for (const type of ['compositionstart', 'compositionend', 'keydown', 'keyup', 'cancel']) {
+        node.ownerDocument.addEventListener(
+          type,
+          (event) => {
+            records.push([event.type, event.key, event.isComposing, event.keyCode]);
+            node.dataset.imeTrace = JSON.stringify(records);
+          },
+          true,
+        );
+      }
+    });
     const session = await page.context().newCDPSession(page);
     try {
       await session.send('Input.imeSetComposition', {
@@ -109,18 +126,37 @@ export default {
         selectionEnd: 2,
       });
       await page.keyboard.press('Escape');
-      assert.equal(await owner.getByRole('alertdialog').count(), 0);
+      assert.equal(
+        await owner.getByRole('alertdialog').count(),
+        0,
+        await name.getAttribute('data-ime-trace'),
+      );
       assert.ok(await name.evaluate((input) => input === document.activeElement));
 
       await session.send('Input.insertText', { text: '東京' });
       const accepted = await name.inputValue();
       assert.ok(accepted.endsWith('東京'));
+      await name.evaluate((input) => input.setSelectionRange(2, 5));
       await page.keyboard.press('Escape');
       const confirmation = owner.getByRole('alertdialog', { name: 'Discard unsaved changes?' });
+      await confirmation.waitFor();
+      assert.ok(await confirmation.evaluate((node) => node.matches(':modal')));
+      assert.equal(await owner.locator('dialog:modal').count(), 2);
+      assert.equal(await frames.last().contentFrame().locator('dialog:modal').count(), 1);
       await confirmation.getByRole('button', { name: 'Keep editing' }).press('Enter');
       assert.ok(await name.evaluate((input) => input === document.activeElement));
       assert.equal(await name.inputValue(), accepted);
+      assert.deepEqual(
+        await name.evaluate((input) => [input.selectionStart, input.selectionEnd]),
+        [2, 5],
+      );
       assert.equal(await peer.inputValue(), peerValue);
+      await page.keyboard.press('Escape');
+      await confirmation.getByRole('button', { name: 'Discard changes' }).click();
+      await owner.locator('dialog:modal').first().waitFor({ state: 'detached' });
+      assert.equal(await owner.locator('dialog:modal').count(), 0);
+      await owner.getByRole('button', { name: 'Edit project' }).click();
+      assert.equal(await name.inputValue(), peerValue);
     } finally {
       await session.detach();
     }
@@ -216,6 +252,199 @@ export default {
     await card.waitFor({ state: 'hidden' });
   },
 
+  'Modal artboards preserve native layers, scoped theme overrides and measured bounds': async ({
+    page,
+    origin,
+  }) => {
+    await page.setViewportSize({ width: 1500, height: 950 });
+    const route = new URL(
+      '/?item=modal&tab=states&block=guard&family=pixel&scheme=both&vp=360&scale=120&dir=rtl&bounds=1&freeze=1',
+      origin,
+    );
+    await page.goto(route.href);
+    const scope = page.locator('[data-wb-block="guard"]');
+    const cell = (theme) =>
+      scope.locator(`.wb-artboard[data-theme="${theme}"] iframe[title="Project editor example"]`);
+    const dark = cell('pixel-dark').contentFrame();
+    const light = cell('pixel-light').contentFrame();
+    const panel = dark.locator('dialog:modal[data-wb-subject]');
+    const peer = light.locator('dialog:modal[data-wb-subject]');
+    const bounds = dark.locator('[data-wb-bounds-label]');
+    await bounds.waitFor({ timeout: 20_000 });
+    await peer.waitFor();
+    const carrier = await panel.elementHandle();
+    const nativeFrame = await carrier.ownerFrame();
+    const readBackdrop = (node) => getComputedStyle(node, '::backdrop').backgroundColor;
+    const peerBackdrop = await peer.evaluate(readBackdrop);
+    assert.equal(await panel.evaluate(readBackdrop), 'rgba(10, 6, 16, 0.6)');
+    assert.equal(await dark.locator('.hint-example-scrim').count(), 0);
+    assert.equal(await dark.locator('[data-unica-underlay]').count(), 1);
+    const geometry = await panel.evaluate((node) => {
+      const { width, height } = node.getBoundingClientRect();
+      return {
+        width: window.innerWidth,
+        dir: document.documentElement.dir,
+        scale: getComputedStyle(node).getPropertyValue('--font-scale').trim(),
+        container: getComputedStyle(node.parentElement).containerName,
+        label: `${Math.round(width)} × ${Math.round(height)} px`,
+      };
+    });
+    assert.deepEqual(geometry, {
+      width: 360,
+      dir: 'rtl',
+      scale: '1.2',
+      container: 'artboard',
+      label: await bounds.textContent(),
+    });
+
+    await page.getByRole('button', { name: 'Theme', exact: true }).click();
+    const editor = page.getByRole('region', { name: 'Theme editor' });
+    await editor.getByRole('combobox', { name: 'Theme preset' }).selectOption('pixel-dark');
+    await editor.getByRole('searchbox', { name: 'Filter tokens' }).fill('Modal Scrim');
+    await editor
+      .getByRole('textbox', { name: 'Modal Scrim', exact: true })
+      .fill('rgb(180 10 20 / 0.45)');
+    await nativeFrame.waitForFunction(
+      (node) => getComputedStyle(node, '::backdrop').backgroundColor === 'rgba(180, 10, 20, 0.45)',
+      carrier,
+    );
+    assert.ok(await panel.evaluate((node, original) => node === original, carrier));
+    assert.equal(await peer.evaluate(readBackdrop), peerBackdrop);
+
+    route.searchParams.delete('bounds');
+    await navigate(page, Object.fromEntries(route.searchParams));
+    await bounds.waitFor({ state: 'detached' });
+    assert.equal(await panel.evaluate(readBackdrop), 'rgba(180, 10, 20, 0.45)');
+    route.searchParams.set('raw', '1');
+    await page.goto(route.href);
+    await page.locator('html[data-wb-ready="1"]').waitFor({ state: 'attached', timeout: 20_000 });
+    const rawPanel = page
+      .locator('.wb-artboard[data-theme="pixel-dark"] iframe[title="Project editor example"]')
+      .contentFrame()
+      .locator('dialog:modal');
+    assert.equal(await rawPanel.evaluate(readBackdrop), 'rgba(10, 6, 16, 0.6)');
+  },
+
+  'Drawer Playground uses the selected 360px native viewport on Base and Overlay': async ({
+    page,
+    origin,
+  }) => {
+    await page.setViewportSize({ width: 1500, height: 950 });
+    for (const surface of ['base', 'overlay']) {
+      const route = new URL(
+        `/?item=drawer&tab=playground&family=pixel&scheme=light&vp=360&surface=${surface}`,
+        origin,
+      );
+      await page.goto(route.href);
+      const iframe = page.locator('iframe[title="Activity details example"]');
+      await iframe.contentFrame().getByRole('button', { name: 'View activity details' }).waitFor({
+        timeout: 20_000,
+      });
+      const sizes = await iframe.evaluate((node) => ({
+        board: node.closest('.wb-artboard').clientWidth,
+        frame: node.contentWindow.innerWidth,
+        visual: node.contentWindow.visualViewport.width,
+      }));
+      assert.deepEqual(sizes, { board: 360, frame: 360, visual: 360 }, surface);
+    }
+  },
+
+  'Modal and Drawer States keep their selected native viewport inside the matrix': async ({
+    page,
+    origin,
+  }) => {
+    await page.setViewportSize({ width: 1560, height: 950 });
+    for (const [item, mode, viewport] of [
+      ['drawer', 'mode=pairwise', 360],
+      ['drawer', 'slice=dimensions', 768],
+      ['modal', 'slice=dimensions', 768],
+    ]) {
+      const route = new URL(
+        `/?item=${item}&tab=states&${mode}&family=pixel&scheme=light&vp=${viewport}&scale=120&dir=rtl&raw=1`,
+        origin,
+      );
+      await page.goto(route.href, { waitUntil: 'domcontentloaded' });
+      const iframe = page.locator('.wb-matrix-artboard iframe').first();
+      await iframe.contentFrame().locator('dialog:modal').waitFor({ timeout: 20_000 });
+      const measured = await iframe.evaluate((node) => {
+        const frame = node.getBoundingClientRect();
+        const board = node.closest('.wb-cell').getBoundingClientRect();
+        return {
+          width: node.contentWindow.innerWidth,
+          visual: node.contentWindow.visualViewport.width,
+          visible: board.left <= frame.left + 1 && board.right >= frame.right - 1,
+        };
+      });
+      assert.deepEqual(
+        measured,
+        { width: viewport, visual: viewport, visible: true },
+        route.search,
+      );
+    }
+  },
+
+  'Touch launches the project editor at its title and its overlay notice returns focus': async ({
+    page,
+    origin,
+    watchPage,
+  }) => {
+    const touch = await page
+      .context()
+      .browser()
+      .newContext({
+        hasTouch: true,
+        viewport: { width: 1500, height: 950 },
+      });
+    try {
+      const canvas = watchPage(await touch.newPage());
+      await canvas.goto(
+        new URL('/?item=modal&tab=states&block=editor&family=frost&scheme=dark&vp=360', origin)
+          .href,
+      );
+      const frame = canvas
+        .locator('[data-wb-block="editor"] iframe[title="Project editor example"]')
+        .contentFrame();
+      const panel = frame.getByRole('dialog', { name: 'Edit project' });
+      await panel.getByRole('button', { name: 'Cancel' }).tap();
+      const opener = frame.getByRole('button', { name: 'Edit project' });
+      await opener.evaluate((node) => {
+        node.ownerDocument.addEventListener('focusin', (event) => {
+          if (event.target.closest('dialog:modal')) {
+            node.dataset.firstModalFocus ??= event.target.tagName;
+          }
+        });
+      });
+      await opener.tap();
+      assert.equal(
+        await panel.evaluate((node) => node.ownerDocument.activeElement.textContent),
+        'Edit project',
+      );
+      assert.equal(
+        await frame.locator('[data-first-modal-focus]').getAttribute('data-first-modal-focus'),
+        'H2',
+      );
+
+      await canvas.goto(
+        new URL(
+          '/?item=modal&tab=compositions&block=details&family=frost&scheme=dark&vp=360',
+          origin,
+        ).href,
+      );
+      const details = canvas.locator('iframe[title="Export details example"]').contentFrame();
+      const dialog = details.getByRole('dialog', { name: 'Export details' });
+      await dialog.getByRole('button', { name: 'Dismiss' }).tap();
+      assert.ok(
+        await dialog.getByRole('heading').evaluate((node) => node === document.activeElement),
+      );
+      assert.equal(await dialog.getByText('Export ready', { exact: true }).count(), 0);
+      await dialog.getByRole('button', { name: 'Close export details' }).tap();
+      await dialog.waitFor({ state: 'hidden' });
+      await assertFocused(details.getByRole('button', { name: 'View export details' }));
+    } finally {
+      await touch.close();
+    }
+  },
+
   'Drawer scrolls the whole panel when the keyboard leaves too little room': async ({
     page,
     origin,
@@ -226,18 +455,21 @@ export default {
       origin,
     );
     await page.goto(route.href, { waitUntil: 'domcontentloaded' });
-    const frame = page.locator('section[data-wb-block="overflow"]');
-    const setting = frame.getByRole('combobox', { name: 'Available height' }).first();
+    const story = page.locator('section[data-wb-block="overflow"]');
+    const setting = story.getByRole('combobox', { name: 'Available height' }).first();
     await setting.waitFor({ timeout: 20_000 });
-    const panel = frame.locator('.wb-artboard').first().getByRole('dialog');
+    const iframe = story.locator('iframe[title="Delivery settings example"]').first();
+    const panel = iframe.contentFrame().getByRole('dialog');
+    const surface = panel.locator('.unica-dialog-surface');
     const note = panel.getByRole('textbox', { name: 'Digest note' });
     await note.press('End');
+    const frame = await (await iframe.elementHandle()).contentFrame();
     await setting.selectOption('keyboard');
-    await page.waitForFunction(
+    await frame.waitForFunction(
       (node) => node.tabIndex === 0 && node.scrollHeight > node.clientHeight,
-      await panel.elementHandle(),
+      await surface.elementHandle(),
     );
-    await page.waitForFunction(
+    await frame.waitForFunction(
       (node) => {
         const panelRect = node.closest('[role="dialog"]').getBoundingClientRect();
         const editorRect = node.getBoundingClientRect();
@@ -249,9 +481,9 @@ export default {
       },
       await note.elementHandle(),
     );
-    await panel.press('End');
+    await surface.press('End');
     const save = panel.getByRole('button', { name: 'Save settings' });
-    await page.waitForFunction(
+    await frame.waitForFunction(
       (button) => {
         const panelRect = button.closest('[role="dialog"]').getBoundingClientRect();
         const actionRect = button.getBoundingClientRect();
@@ -259,27 +491,47 @@ export default {
       },
       await save.elementHandle(),
     );
+    await save.press('Escape');
+    await panel.waitFor({ state: 'hidden' });
+    await assertFocused(
+      iframe.contentFrame().getByRole('button', { name: 'Edit delivery settings' }),
+    );
   },
 
   'Drawer handle follows the pointer in a scaled artboard': async ({ page, origin }) => {
     await page.setViewportSize({ width: 1500, height: 950 });
     const route = new URL('/?item=drawer&tab=states&block=sheet&vp=768&scale=120&dir=rtl', origin);
     await page.goto(route.href, { waitUntil: 'domcontentloaded' });
-    const board = page.locator('section[data-wb-block="sheet"] .wb-artboard').first();
-    const panel = board.getByRole('dialog');
-    const grip = panel.locator('.dialog-handle');
+    const iframe = page
+      .locator('section[data-wb-block="sheet"] iframe[title="Delivery settings example"]')
+      .first();
+    const frame = iframe.contentFrame();
+    const panel = frame.getByRole('dialog');
+    const surface = panel.locator('.unica-dialog-surface');
+    const grip = panel.locator('.unica-drawer-grip');
     await grip.waitFor({ timeout: 20_000 });
     await grip.scrollIntoViewIfNeeded();
-    const gripBox = await grip.boundingBox();
-    const before = await panel.boundingBox();
-    const x = gripBox.x + gripBox.width / 2;
-    const y = gripBox.y + gripBox.height / 2;
+    await surface.evaluate((node) =>
+      Promise.all(node.getAnimations().map((motion) => motion.finished)),
+    );
+    const localGrip = await grip.evaluate((node) => node.getBoundingClientRect().toJSON());
+    const embedding = await iframe.evaluate((node) => ({
+      ...node.getBoundingClientRect().toJSON(),
+      scale: node.getBoundingClientRect().width / node.offsetWidth,
+    }));
+    const before = await surface.evaluate((node) => node.getBoundingClientRect().y);
+    const x = embedding.x + (localGrip.x + localGrip.width / 2) * embedding.scale;
+    const y = embedding.y + (localGrip.y + localGrip.height / 2) * embedding.scale;
     await page.mouse.move(x, y);
     await page.mouse.down();
     try {
       await page.mouse.move(x, y + 12, { steps: 4 });
-      const after = await panel.boundingBox();
-      assert.ok(Math.abs(after.y - before.y - 12) <= 1, 'The sheet must follow a 12px drag');
+      const after = await surface.evaluate((node) => node.getBoundingClientRect().y);
+      const displacement = (after - before) * embedding.scale;
+      assert.ok(
+        Math.abs(displacement - 12) <= 1,
+        `The sheet moved ${displacement}px for a 12px drag`,
+      );
     } finally {
       await page.mouse.up();
     }
@@ -302,9 +554,12 @@ export default {
         origin,
       );
       await canvas.goto(route.href, { waitUntil: 'domcontentloaded' });
-      const board = canvas.locator('.wb-artboard').first();
-      const opener = board.getByRole('button', { name: 'View activity details', exact: true });
-      const panel = board.getByRole('dialog', { name: 'Release notes', exact: true });
+      const frame = canvas
+        .locator('iframe[title="Activity details example"]')
+        .first()
+        .contentFrame();
+      const opener = frame.getByRole('button', { name: 'View activity details', exact: true });
+      const panel = frame.getByRole('dialog', { name: 'Release notes', exact: true });
       await opener.waitFor({ timeout: 20_000 });
       const trigger = await opener.elementHandle();
       for (const dismissible of [false, true]) {
@@ -321,14 +576,17 @@ export default {
           'QA approved version 3.',
         );
         await panel.getByText('QA approved version 3.', { exact: true }).waitFor();
-        await board.locator('.dialog-scrim').scrollIntoViewIfNeeded();
-        const point = await trigger.evaluate((button) => {
+        const hitsBackdrop = await trigger.evaluate((button) => {
           const box = button.getBoundingClientRect();
           const x = box.x + box.width / 2;
           const y = box.y + box.height / 2;
-          return { x, y, scrim: document.elementFromPoint(x, y)?.matches('.dialog-scrim') };
+          const dialog = document.querySelector('dialog:modal');
+          const rect = dialog.getBoundingClientRect();
+          return document.elementFromPoint(x, y) === dialog && (x < rect.left || x > rect.right);
         });
-        assert.ok(point.scrim, 'The backdrop must cover the opener at the tested point');
+        assert.ok(hitsBackdrop, 'The native backdrop must cover the opener at the tested point');
+        const box = await trigger.boundingBox();
+        const point = { x: box.x + box.width / 2, y: box.y + box.height / 2 };
         if (dismissible) {
           await canvas.touchscreen.tap(point.x, point.y);
         } else {
@@ -336,7 +594,8 @@ export default {
           assert.ok(await panel.evaluate((node) => node.contains(document.activeElement)));
           await canvas.keyboard.press('Escape');
         }
-        await panel.waitFor({ state: 'detached' });
+        await panel.waitFor({ state: 'hidden' });
+        assert.equal(await frame.locator('dialog:modal').count(), 0);
         assert.ok(await trigger.evaluate((node) => node === document.activeElement));
       }
     } finally {
@@ -1519,7 +1778,8 @@ export default {
       ).href,
       { waitUntil: 'domcontentloaded' },
     );
-    const dialog = page.getByRole('dialog', { name: 'Invite members to Platform Eng' });
+    const invites = page.frameLocator('iframe[title="Folio invitations"]');
+    const dialog = invites.getByRole('dialog', { name: 'Invite members to Platform Eng' });
     const draft = dialog.getByRole('textbox', { name: 'Invite by work email', exact: true });
     const reviewer = dialog.getByRole('button', {
       name: 'Remove reviewer@example.com',
@@ -1540,7 +1800,7 @@ export default {
     await draft.press('Backspace');
     await page.keyboard.press('Enter');
     await reviewer.waitFor({ state: 'detached' });
-    await platform.and(page.locator(':focus')).waitFor();
+    await invites.locator('button[aria-label="Remove platform@example.com"]:focus').waitFor();
     assert.ok(
       await dialog.getByRole('button', { name: 'Send 1 invites', exact: true }).isVisible(),
     );

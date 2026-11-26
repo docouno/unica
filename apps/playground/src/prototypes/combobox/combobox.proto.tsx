@@ -103,17 +103,18 @@ function useSuggestionPlacement(
   useLayoutEffect(() => {
     const node = panel.current;
     const anchor = row.current;
-    if (!open || !node || !anchor) {
+    const view = node?.ownerDocument.defaultView;
+    if (!open || !node || !anchor || !view) {
       return;
     }
     let above: boolean | undefined;
     const position = (): void => {
       const box = anchor.getBoundingClientRect();
-      const viewport = window.visualViewport;
+      const viewport = view.visualViewport;
       const top = (viewport?.offsetTop ?? 0) + 16;
       const left = (viewport?.offsetLeft ?? 0) + 16;
-      const bottom = (viewport?.offsetTop ?? 0) + (viewport?.height ?? window.innerHeight) - 16;
-      const right = (viewport?.offsetLeft ?? 0) + (viewport?.width ?? window.innerWidth) - 16;
+      const bottom = (viewport?.offsetTop ?? 0) + (viewport?.height ?? view.innerHeight) - 16;
+      const right = (viewport?.offsetLeft ?? 0) + (viewport?.width ?? view.innerWidth) - 16;
       if (box.bottom < top || box.top > bottom || box.right < left || box.left > right) {
         closeRef.current();
         return;
@@ -134,7 +135,7 @@ function useSuggestionPlacement(
         above = !above;
       }
       node.style.maxHeight = `${Math.max(0, above ? before : after)}px`;
-      const rtl = getComputedStyle(anchor).direction === 'rtl';
+      const rtl = view.getComputedStyle(anchor).direction === 'rtl';
       const inlineStart = rtl ? box.right - width : box.left;
       node.style.left = `${Math.max(left, Math.min(inlineStart, right - width))}px`;
       node.style.top = `${above ? box.top - node.getBoundingClientRect().height - 8 : box.bottom + 8}px`;
@@ -144,33 +145,33 @@ function useSuggestionPlacement(
       }
     };
     const onScroll = (event: Event): void => {
-      if (!(event.target instanceof Node) || !node.contains(event.target)) {
+      if (!(event.target instanceof view.Node) || !node.contains(event.target)) {
         position();
       }
     };
 
     node.showPopover();
     position();
-    const visibility = new IntersectionObserver(([entry]) => {
+    const visibility = new view.IntersectionObserver(([entry]) => {
       if (entry && !entry.isIntersecting) {
         closeRef.current();
       }
     });
     visibility.observe(anchor);
-    const observer = new ResizeObserver(position);
+    const observer = new view.ResizeObserver(position);
     observer.observe(anchor);
     observer.observe(node);
-    window.addEventListener('resize', position);
-    window.addEventListener('scroll', onScroll, true);
-    window.visualViewport?.addEventListener('resize', position);
-    window.visualViewport?.addEventListener('scroll', position);
+    view.addEventListener('resize', position);
+    view.addEventListener('scroll', onScroll, true);
+    view.visualViewport?.addEventListener('resize', position);
+    view.visualViewport?.addEventListener('scroll', position);
     return () => {
       visibility.disconnect();
       observer.disconnect();
-      window.removeEventListener('resize', position);
-      window.removeEventListener('scroll', onScroll, true);
-      window.visualViewport?.removeEventListener('resize', position);
-      window.visualViewport?.removeEventListener('scroll', position);
+      view.removeEventListener('resize', position);
+      view.removeEventListener('scroll', onScroll, true);
+      view.visualViewport?.removeEventListener('resize', position);
+      view.visualViewport?.removeEventListener('scroll', position);
       node.hidePopover();
       node.style.visibility = '';
     };
@@ -313,12 +314,22 @@ function SuggestionRows({
       data-icons={hasIcons || undefined}
       data-shortcuts={hasShortcuts || undefined}
       onMouseDown={(event) => {
-        if (event.target instanceof Element && event.target.closest('[role="option"]')) {
+        const ElementConstructor = event.currentTarget.ownerDocument.defaultView?.Element;
+        if (
+          ElementConstructor &&
+          event.target instanceof ElementConstructor &&
+          event.target.closest('[role="option"]')
+        ) {
           event.preventDefault();
         }
       }}
       onMouseMove={(event) => {
-        if (event.target instanceof Element && !event.target.closest('[role="option"]')) {
+        const ElementConstructor = event.currentTarget.ownerDocument.defaultView?.Element;
+        if (
+          ElementConstructor &&
+          event.target instanceof ElementConstructor &&
+          !event.target.closest('[role="option"]')
+        ) {
           onActivate(undefined);
         }
       }}
@@ -446,7 +457,7 @@ function SuggestionField({
         Number.parseFloat(style.paddingInlineStart) -
         Number.parseFloat(style.paddingInlineEnd),
     );
-    const observer = new ResizeObserver(([entry]) => {
+    const observer = new view.ResizeObserver(([entry]) => {
       if (entry) {
         measure(entry.contentRect.width);
       }
@@ -548,11 +559,14 @@ function SuggestionField({
   };
 
   useLayoutEffect(() => {
-    if (!open || previewOpen) {
+    const boundary = root.current;
+    const document = boundary?.ownerDocument;
+    const view = document?.defaultView;
+    if (!open || previewOpen || !boundary || !document || !view) {
       return;
     }
     const dismiss = (event: PointerEvent): void => {
-      if (event.target instanceof Node && !root.current?.contains(event.target)) {
+      if (event.target instanceof view.Node && !boundary.contains(event.target)) {
         close();
       }
     };

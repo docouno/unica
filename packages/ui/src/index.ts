@@ -146,6 +146,32 @@ export type {
 export { Divider } from './components/Divider/index.js';
 export type { DividerProps } from './components/Divider/index.js';
 export {
+  Drawer,
+  DrawerBody,
+  DrawerClose,
+  DrawerContent,
+  DrawerDescription,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+} from './components/Drawer/index.js';
+export type {
+  DrawerBodyProps,
+  DrawerCloseProps,
+  DrawerContentProps,
+  DrawerDescriptionProps,
+  DrawerFooterProps,
+  DrawerHeaderProps,
+  DrawerProps,
+  DrawerResponsiveSide,
+  DrawerSide,
+  DrawerSize,
+  DrawerTitleProps,
+  DrawerTriggerProps,
+  DrawerWidth,
+} from './components/Drawer/index.js';
+export {
   FormField,
   FormFieldContext,
   FormFieldDescription,
@@ -216,6 +242,30 @@ export type {
 } from './components/Listbox/index.js';
 export { NumberInput } from './components/NumberInput/index.js';
 export type { NumberInputProps } from './components/NumberInput/index.js';
+export {
+  Modal,
+  ModalBody,
+  ModalClose,
+  ModalContent,
+  ModalDescription,
+  ModalFooter,
+  ModalHeader,
+  ModalTitle,
+  ModalTrigger,
+} from './components/Modal/index.js';
+export type {
+  ModalBodyProps,
+  ModalCloseProps,
+  ModalContentProps,
+  ModalDescriptionProps,
+  ModalFooterProps,
+  ModalHeaderProps,
+  ModalProps,
+  ModalSize,
+  ModalTitleProps,
+  ModalTriggerProps,
+  ModalWidth,
+} from './components/Modal/index.js';
 export {
   Popover,
   PopoverBody,

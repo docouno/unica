@@ -359,16 +359,24 @@ export default {
     page,
     mount,
   }) => {
-    await page.setViewportSize({ width: 1440, height: 960 });
+    await page.setViewportSize({ width: 2000, height: 1320 });
     await mount('textarea');
     await openWorkbench(page, { item: '06-page-properties-drawer', vp: '1280' });
-    const drawer = page.getByRole('dialog', { name: 'Document properties & review' });
+    const properties = page.frameLocator('iframe[title="Folio page properties"]');
+    const drawer = properties.getByRole('dialog', { name: 'Document properties & review' });
     const scope = drawer.getByRole('textbox', { name: 'Verification scope' });
+    const trigger = button(properties, 'Properties');
     await scope.fill('Check standby lag and publish a handoff.');
+    assert.equal(await drawer.evaluate((dialog) => dialog.matches(':modal')), true);
+    assert.equal(await drawer.evaluate((dialog) => dialog.offsetWidth), 520);
     await button(drawer, 'Save properties').click();
     await drawer.waitFor({ state: 'hidden' });
-    await button(page, 'Properties').click();
+    await assertFocused(trigger);
+    await trigger.click();
     assert.equal(await scope.inputValue(), 'Check standby lag and publish a handoff.');
+    await button(drawer, 'Cancel').click();
+    await drawer.waitFor({ state: 'hidden' });
+    await assertFocused(trigger);
 
     await openWorkbench(page, {
       item: '07-invite-access-modal',
@@ -378,7 +386,8 @@ export default {
       dir: 'rtl',
       scale: '120',
     });
-    const modal = page.getByRole('dialog', { name: 'Invite members to Platform Eng' });
+    const invites = page.frameLocator('iframe[title="Folio invitations"]');
+    const modal = invites.getByRole('dialog', { name: 'Invite members to Platform Eng' });
     const welcome = modal.getByRole('textbox', { name: 'Welcome note' });
     await welcome.fill('Welcome to the project.');
     await assertFocused(welcome);

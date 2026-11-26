@@ -153,16 +153,19 @@ const scenarios = {
   },
 
   'Folio invite submits the role and expiry chosen inside its dialog': async ({ page, origin }) => {
-    await page.setViewportSize({ width: 1440, height: 1000 });
+    await page.setViewportSize({ width: 2200, height: 1200 });
     await page.goto(
       new URL('/?item=07-invite-access-modal&family=frost&scheme=dark&vp=1440', origin).href,
     );
-    const dialog = page.getByRole('dialog', {
+    const invites = page.frameLocator('iframe[title="Folio invitations"]');
+    const dialog = invites.getByRole('dialog', {
       name: 'Invite members to Platform Eng',
       exact: true,
     });
     const role = dialog.getByRole('button', { name: 'Default workspace role', exact: true });
     await role.waitFor({ timeout: 20_000 });
+    assert.equal(await dialog.evaluate((node) => node.matches(':modal')), true);
+    assert.equal(await dialog.evaluate((node) => node.offsetWidth), 548);
     await role.press('ArrowDown');
     const popup = dialog.getByRole('dialog', { name: 'Default workspace role', exact: true });
     const search = popup.getByRole('textbox', { name: 'Search options' });
@@ -189,9 +192,118 @@ const scenarios = {
       }),
       [['viewer'], ['14']],
     );
-    await dialog.getByRole('button', { name: 'Send 2 invites' }).click();
+    const submit = dialog.getByRole('button', { name: 'Send 2 invites' });
+    assert.equal(
+      await submit.evaluate((node) => node.form?.closest(':modal') === node.closest(':modal')),
+      true,
+    );
+    await submit.click();
     await dialog.waitFor({ state: 'hidden' });
-    await page.getByText('Workspace role: Viewer. Invite links expire in 14 days.').waitFor();
+    await assertFocused(invites.getByRole('button', { name: 'Invite member' }));
+    await invites.getByText('Workspace role: Viewer. Invite links expire in 14 days.').waitFor();
+  },
+
+  'Folio properties keeps pickers and scene links in the correct document at 360px': async ({
+    page,
+    origin,
+  }) => {
+    await page.setViewportSize({ width: 1200, height: 650 });
+    await page.goto(
+      new URL(
+        '/?item=06-page-properties-drawer&family=all&scheme=dark&vp=360&scale=120&dir=rtl',
+        origin,
+      ).href,
+    );
+    const frame = (id) =>
+      page
+        .locator(`[data-wb-scene][data-theme="${id}"] iframe[title="Folio page properties"]`)
+        .contentFrame();
+    const properties = frame('frost-dark');
+    const panel = (scope) => scope.getByRole('dialog', { name: 'Document properties & review' });
+    const drawer = panel(properties);
+    await drawer.waitFor({ timeout: 20_000 });
+    await properties.owner().evaluate((node) => node.scrollIntoView({ block: 'center' }));
+    assert.deepEqual(
+      await drawer.evaluate((node) => ({
+        modal: node.matches(':modal'),
+        side: node.dataset.unicaDialogSide,
+        width: node.ownerDocument.defaultView.innerWidth,
+      })),
+      { modal: true, side: 'bottom', width: 360 },
+    );
+    const assertInFrame = async (locator) => {
+      assert.equal(
+        await locator.evaluate((node) => {
+          const box = node.getBoundingClientRect();
+          const view = node.ownerDocument.defaultView;
+          return (
+            box.left >= 0 &&
+            box.top >= 0 &&
+            box.right <= view.innerWidth &&
+            box.bottom <= view.innerHeight
+          );
+        }),
+        true,
+      );
+    };
+    const date = drawer.getByRole('textbox', { name: 'Next verification date' });
+    const calendarToggle = drawer.getByRole('button', { name: 'Select date' });
+    const calendar = drawer.getByRole('dialog', { name: 'Select date' });
+    await calendarToggle.click();
+    await assertInFrame(calendar);
+    await calendar.locator('button[data-date="2027-01-20"]').click();
+    assert.equal(await date.inputValue(), '20/01/2027');
+    await calendar.waitFor({ state: 'hidden' });
+
+    await calendarToggle.click();
+    const scope = drawer.getByRole('textbox', { name: 'Verification scope' });
+    await scope.click();
+    await assertFocused(scope);
+    await calendar.waitFor({ state: 'hidden' });
+    const body = drawer.locator('.unica-dialog-body');
+    assert.ok(
+      await body.evaluate((node) => {
+        node.scrollTop = node.scrollHeight;
+        return node.scrollTop;
+      }),
+    );
+
+    const reviewer = drawer.getByRole('combobox', { name: 'Backup reviewer' });
+    await reviewer.fill('edge');
+    const choices = drawer.locator('.suggestion-native-proto:popover-open');
+    await assertInFrame(choices);
+    await choices.getByRole('option', { name: 'Edge reliability' }).click();
+    assert.equal(await reviewer.inputValue(), 'Edge reliability');
+    const peer = panel(frame('pixel-dark'));
+    assert.equal(
+      await peer.getByRole('textbox', { name: 'Next verification date' }).inputValue(),
+      '15/01/2027',
+    );
+    assert.equal(
+      await peer.getByRole('combobox', { name: 'Backup reviewer' }).inputValue(),
+      'Core networking',
+    );
+    assert.equal(await peer.evaluate((node) => node.matches(':modal')), true);
+
+    await drawer.getByRole('button', { name: 'Save properties' }).click();
+    await drawer.waitFor({ state: 'hidden' });
+    await properties.getByRole('button', { name: 'Properties', exact: true }).click();
+    assert.equal(await date.inputValue(), '20/01/2027');
+    assert.equal(await reviewer.inputValue(), 'Edge reliability');
+    await drawer.getByRole('button', { name: 'Cancel' }).click();
+    await drawer.waitFor({ state: 'hidden' });
+
+    await Promise.all([
+      page.waitForURL((url) => url.searchParams.get('item') === '03-document-collection'),
+      properties.getByRole('link', { name: 'Runbooks', exact: true }).click(),
+    ]);
+    const params = new URL(page.url()).searchParams;
+    assert.deepEqual(
+      ['family', 'scheme', 'vp', 'scale', 'dir'].map((key) => params.get(key)),
+      ['all', 'dark', '360', '120', 'rtl'],
+    );
+    await page.locator('[data-wb-scene] .folio-content-collection').first().waitFor();
+    assert.equal(await page.locator('iframe[title="Folio page properties"]').count(), 0);
   },
 };
 

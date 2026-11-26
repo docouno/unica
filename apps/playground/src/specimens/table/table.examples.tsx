@@ -4,8 +4,17 @@ import {
   AlertDescription,
   AlertTitle,
   Badge,
+  Button,
   Card,
   Checkbox,
+  Drawer,
+  DrawerBody,
+  DrawerClose,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+  IconButton,
   Input,
   Select,
   SelectContent,
@@ -17,6 +26,7 @@ import {
   Text,
 } from '@docouno/unica';
 import { useId, useRef, useState } from 'react';
+import { OverlayExampleFrame } from '../../examples/OverlayExampleFrame.js';
 import type { PreviewProps, Surface } from '../../workbench/types.js';
 import { ExampleSurface } from '../shared/example-surface.js';
 import type { ReactElement } from 'react';
@@ -28,15 +38,6 @@ import {
   PushPinIcon,
   ArrowCounterClockwiseIcon,
 } from '@phosphor-icons/react';
-import { Button, IconButton } from '@docouno/unica';
-import {
-  Drawer,
-  DrawerBody,
-  DrawerContent,
-  DrawerHeader,
-  DrawerTitle,
-  DrawerTrigger,
-} from '../../prototypes/dialog/dialog.proto.js';
 import {
   Empty,
   EmptyDescription,
@@ -474,62 +475,64 @@ const relations = [
 
 export function RelationsDrawer({ ctx }: PreviewProps): ReactElement {
   const [open, setOpen] = useState(true);
+  const trigger = useRef<HTMLButtonElement>(null);
   const titleId = useId();
   return (
-    <div className="table-example-drawer-stage">
-      <Drawer open={open} onOpenChange={setOpen}>
-        <DrawerTrigger
-          hidden={open}
-          {...(!open ? ctx.subject : {})}
-          variant="secondary"
-          tone="neutral"
-        >
-          Show relations
-        </DrawerTrigger>
-        <DrawerContent
-          className="table-example-drawer"
-          side={{ narrow: 'bottom', wide: 'end' }}
-          swipeToClose={false}
-        >
-          <DrawerHeader closeLabel="Close document relations">
-            <DrawerTitle>Document relations</DrawerTitle>
-          </DrawerHeader>
-          <DrawerBody>
-            <TableScroll className="table-example-relations-scroll" aria-labelledby={titleId}>
-              <Table
-                {...ctx.subject}
-                size="s"
-                stickyHeader
-                striped
-                className="table-example-relations"
-              >
-                <TableCaption id={titleId} className="unica-visually-hidden">
-                  Linked documents
-                </TableCaption>
-                <TableHeader>
-                  <TableRow>
-                    <TableColumnHeader>Document</TableColumnHeader>
-                    <TableColumnHeader>Kind</TableColumnHeader>
-                    <TableColumnHeader align="end">Revised</TableColumnHeader>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {relations.map(([name, kind, date]) => (
-                    <TableRow key={name}>
-                      <TableRowHeader>{name}</TableRowHeader>
-                      <TableCell>{kind}</TableCell>
-                      <TableCell align="end">
-                        <bdi className="table-example-token">{date}</bdi>
-                      </TableCell>
+    <OverlayExampleFrame ctx={ctx} title="Document relations example" height={304} modal>
+      <div className="table-example-drawer-stage">
+        <Drawer open={open} onOpenChange={setOpen}>
+          <DrawerTrigger asChild hidden={open} {...(!open ? ctx.subject : {})}>
+            <Button ref={trigger} variant="secondary" tone="neutral">
+              Show relations
+            </Button>
+          </DrawerTrigger>
+          <DrawerContent
+            className="table-example-drawer"
+            returnFocus={trigger}
+            side={{ narrow: 'bottom', wide: 'end' }}
+            swipeToClose={false}
+          >
+            <DrawerHeader>
+              <DrawerTitle>Document relations</DrawerTitle>
+              <DrawerClose aria-label="Close document relations" />
+            </DrawerHeader>
+            <DrawerBody>
+              <TableScroll className="table-example-relations-scroll" aria-labelledby={titleId}>
+                <Table
+                  {...ctx.subject}
+                  size="s"
+                  stickyHeader
+                  striped
+                  className="table-example-relations"
+                >
+                  <TableCaption id={titleId} className="unica-visually-hidden">
+                    Linked documents
+                  </TableCaption>
+                  <TableHeader>
+                    <TableRow>
+                      <TableColumnHeader>Document</TableColumnHeader>
+                      <TableColumnHeader>Kind</TableColumnHeader>
+                      <TableColumnHeader align="end">Revised</TableColumnHeader>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TableScroll>
-          </DrawerBody>
-        </DrawerContent>
-      </Drawer>
-    </div>
+                  </TableHeader>
+                  <TableBody>
+                    {relations.map(([name, kind, date]) => (
+                      <TableRow key={name}>
+                        <TableRowHeader>{name}</TableRowHeader>
+                        <TableCell>{kind}</TableCell>
+                        <TableCell align="end">
+                          <bdi className="table-example-token">{date}</bdi>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableScroll>
+            </DrawerBody>
+          </DrawerContent>
+        </Drawer>
+      </div>
+    </OverlayExampleFrame>
   );
 }
 

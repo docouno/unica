@@ -11,14 +11,7 @@ import {
   Title,
   VisuallyHidden,
   CheckboxCard,
-} from '@docouno/unica';
-import { FormField } from '@docouno/unica';
-import { useId, useRef, useState } from 'react';
-import type { ReactElement } from 'react';
-import type { PreviewProps } from '../../workbench/types.js';
-import { ToastCard } from '../../prototypes/toast/toast.proto.js';
-import { DialogStudy } from '../../prototypes/dialog/dialog.examples.js';
-import {
+  FormField,
   Modal,
   ModalBody,
   ModalClose,
@@ -28,8 +21,14 @@ import {
   ModalHeader,
   ModalTitle,
   ModalTrigger,
-} from '../../prototypes/dialog/dialog.proto.js';
-import type { DialogSize } from '../../prototypes/dialog/dialog.proto.js';
+} from '@docouno/unica';
+import type { ModalContentProps } from '@docouno/unica';
+import { useId, useRef, useState } from 'react';
+import type { ReactElement } from 'react';
+import type { PreviewProps } from '../../workbench/types.js';
+import { ToastCard } from '../../prototypes/toast/toast.proto.js';
+import { activeDialogControl } from '../shared/dialog-controls.js';
+import { DialogStudy, DiscardChanges } from '../shared/dialog-study.js';
 
 const initialProject = {
   name: 'Editorial archive',
@@ -60,46 +59,43 @@ export function EditProject({
   const descriptionId = useId();
   const instructionsId = useId();
   const nameRef = useRef<HTMLInputElement>(null);
-  const touchLaunch = useRef(false);
-  const cancelRef = useRef<HTMLButtonElement>(null);
+  const dialogRef = useRef<HTMLDialogElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
   const lastField = useRef<HTMLElement>(null);
   const [open, setOpen] = useState(true);
   const [project, setProject] = useState(initialProject);
   const [draft, setDraft] = useState(project);
   const dirty = draft.name !== project.name || draft.description !== project.description;
-  const [focusOnOpen, setFocusOnOpen] = useState(false);
   const [confirm, setConfirm] = useState(false);
   const controls = ctx.story?.controls;
-  const size = (controls?.size ?? 'm') as DialogSize;
-  const width = (controls?.width ?? 'm') as DialogSize;
+  const size = (controls?.size ?? 'm') as ModalContentProps['size'];
+  const width = (controls?.width ?? 'm') as ModalContentProps['width'];
   const height = controls?.height ?? 'roomy';
   const status = controls?.status ?? 'ready';
   const [saved, setSaved] = useState(false);
-  const requestClose = (): void => {
-    if (guarded && dirty) {
-      const focused = document.activeElement;
-      lastField.current =
-        focused instanceof HTMLElement &&
-        focused.closest('.dialog-surface')?.contains(nameRef.current)
-          ? focused
-          : nameRef.current;
-      setConfirm(true);
-    } else {
-      setOpen(false);
-    }
-  };
   const changeOpen = (nextOpen: boolean): void => {
     if (nextOpen) {
       setDraft(project);
-      setFocusOnOpen(!touchLaunch.current && !overflow);
       setSaved(false);
       setOpen(true);
-    } else {
-      requestClose();
+      return;
     }
+
+    const dialog = dialogRef.current;
+    if (guarded && dirty && dialog?.isConnected && dialog.matches(':modal')) {
+      lastField.current = activeDialogControl(dialog) ?? nameRef.current;
+      setConfirm(true);
+      return;
+    }
+
+    setConfirm(false);
+    setOpen(false);
   };
+
   return (
     <DialogStudy
+      ctx={ctx}
+      title="Project editor example"
       height={
         height === 'keyboard'
           ? 245
@@ -113,42 +109,38 @@ export function EditProject({
       }
     >
       <Modal open={open} onOpenChange={changeOpen}>
-        <div className="dialog-drawer-launch" inert={open}>
-          <ModalTrigger
-            {...(!open ? ctx.subject : {})}
-            id={formId + '-trigger'}
-            variant="secondary"
-            tone="neutral"
-            onPointerDown={(event) => {
-              touchLaunch.current = event.pointerType === 'touch';
-            }}
-            onKeyDown={() => {
-              touchLaunch.current = false;
-            }}
-          >
-            Edit project
+        <div className="dialog-study-launch" data-open={open || undefined}>
+          <ModalTrigger {...(!open ? ctx.subject : {})} asChild>
+            <Button ref={triggerRef} variant="secondary" tone="neutral">
+              Edit project
+            </Button>
           </ModalTrigger>
         </div>
         <ModalContent
           {...ctx.subject}
+          className="dialog-study-editor"
+          ref={dialogRef}
           size={size}
           width={width}
-          described
-          inactive={confirm}
-          initialFocus={focusOnOpen ? nameRef : undefined}
+          initialFocus={overflow ? undefined : nameRef}
+          returnFocus={triggerRef}
         >
-          <ModalHeader closeLabel="Close project editor">
-            <ModalTitle>
-              {overflow ? 'Project access and publishing settings' : 'Edit project'}
-            </ModalTitle>
-            <ModalDescription>
-              {guarded
-                ? 'Edit the name and description shown in the project directory.'
-                : 'Update the information teammates see in the project directory.'}
-            </ModalDescription>
+          <ModalHeader>
+            <div>
+              <ModalTitle>
+                {overflow ? 'Project access and publishing settings' : 'Edit project'}
+              </ModalTitle>
+              <ModalDescription>
+                {guarded
+                  ? 'Edit the name and description shown in the project directory.'
+                  : 'Update the information teammates see in the project directory.'}
+              </ModalDescription>
+            </div>
+            <ModalClose aria-label="Close project editor" />
           </ModalHeader>
           <ModalBody>
             <form
+              {...ctx.form}
               className="dialog-study-form"
               id={formId}
               onSubmit={(event) => {
@@ -229,6 +221,7 @@ export function EditProject({
                   </FormField>
                   <FormField controlId={`${formId}-access`} label="Default access">
                     <Select
+                      id={`${formId}-access`}
                       name="access"
                       options={roles}
                       value={draft.access}
@@ -296,41 +289,26 @@ export function EditProject({
             </form>
           </ModalBody>
           <ModalFooter>
-            <ModalClose>Cancel</ModalClose>
+            <ModalClose asChild>
+              <Button variant="secondary" tone="neutral">
+                Cancel
+              </Button>
+            </ModalClose>
             <Button form={formId} type="submit" loading={status === 'pending'}>
               {status === 'failed' ? 'Try again' : 'Save changes'}
             </Button>
           </ModalFooter>
-        </ModalContent>
-      </Modal>
-      <Modal open={confirm} onOpenChange={setConfirm}>
-        <ModalContent
-          {...ctx.subject}
-          role="alertdialog"
-          width="s"
-          size="s"
-          described
-          className="dialog-discard-confirmation"
-          initialFocus={cancelRef}
-          returnFocus={lastField}
-        >
-          <ModalHeader closeLabel={false}>
-            <ModalTitle>Discard unsaved changes?</ModalTitle>
-            <ModalDescription>Your changes to this project will be lost.</ModalDescription>
-          </ModalHeader>
-          <ModalFooter>
-            <ModalClose ref={cancelRef}>Keep editing</ModalClose>
-            <Button
-              tone="danger"
-              onClick={() => {
-                lastField.current = null;
-                setConfirm(false);
-                setOpen(false);
-              }}
-            >
-              Discard changes
-            </Button>
-          </ModalFooter>
+          <DiscardChanges
+            open={confirm}
+            onOpenChange={setConfirm}
+            returnFocus={lastField}
+            onDiscard={() => {
+              setConfirm(false);
+              setOpen(false);
+            }}
+          >
+            Your changes to this project will be lost.
+          </DiscardChanges>
         </ModalContent>
       </Modal>
       <VisuallyHidden role="status">{saved ? 'Project updated' : ''}</VisuallyHidden>
@@ -341,7 +319,7 @@ export function EditProject({
             title="Project updated"
             onDismiss={() => {
               setSaved(false);
-              document.getElementById(formId + '-trigger')?.focus({ preventScroll: true });
+              triggerRef.current?.focus({ preventScroll: true });
             }}
           />
         </div>

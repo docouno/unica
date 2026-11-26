@@ -41,7 +41,7 @@ function nativeLayer(subject: Element, scope: HTMLElement): Element | undefined 
 }
 
 function createLayer(host: Element, inTopLayer: boolean): HTMLDivElement {
-  const layer = document.createElement('div');
+  const layer = host.ownerDocument.createElement('div');
   layer.className = layerClass;
   layer.toggleAttribute('data-wb-native-layer', inTopLayer);
   layer.setAttribute('aria-hidden', 'true');
@@ -65,12 +65,17 @@ function occupiedRect(element: Element, rect: DOMRect, style: CSSStyleDeclaratio
 
   // Badges and tightly set inline text can paint outside the measured border box.
   // A text range includes descendants of clipping boxes, even when their text is invisible.
+  const document = element.ownerDocument;
+  const view = document.defaultView;
+  if (!view) {
+    return rect;
+  }
   const range = document.createRange();
   let { left, right, top, bottom } = rect;
   for (const child of element.childNodes) {
     range.selectNode(child);
     const contents =
-      child instanceof Element && !getComputedStyle(child).overflow.includes('visible')
+      child instanceof view.Element && !view.getComputedStyle(child).overflow.includes('visible')
         ? child.getBoundingClientRect()
         : range.getBoundingClientRect();
     if (!contents.width || !contents.height) {
@@ -95,6 +100,7 @@ function addOutline(
   rect: DOMRect,
   naturalSize: NaturalSize,
 ): HTMLSpanElement {
+  const document = layer.ownerDocument;
   const outline = document.createElement('div');
   outline.className = 'wb-bounds-outline';
   outline.style.left = `${(rect.left - layerRect.left) / scale}px`;
@@ -374,6 +380,13 @@ export function useSubjectBounds(
       return;
     }
     const scope = root;
+    const document = scope.ownerDocument;
+    const window = document.defaultView;
+    if (!window) {
+      return;
+    }
+    const { Element, HTMLElement, MutationObserver, ResizeObserver } = window;
+    const styleOf = window.getComputedStyle.bind(window);
 
     const sizes = new WeakMap<Element, NaturalSize>();
     const observed = new Set<Element>();
@@ -396,7 +409,7 @@ export function useSubjectBounds(
               if (!box || box.inlineSize === 0 || box.blockSize === 0 || !observed.has(target)) {
                 continue;
               }
-              const isVertical = /^(vertical|sideways)/.test(getComputedStyle(target).writingMode);
+              const isVertical = /^(vertical|sideways)/.test(styleOf(target).writingMode);
               sizes.set(target, {
                 width: isVertical ? box.blockSize : box.inlineSize,
                 height: isVertical ? box.inlineSize : box.blockSize,
@@ -416,8 +429,7 @@ export function useSubjectBounds(
       );
       const samples: MeasuredSubject[] = [];
       const nextNativeHosts = new Set<Element>();
-      const artboardScale =
-        Number(getComputedStyle(scope).getPropertyValue('--wb-viewport-scale')) || 1;
+      const artboardScale = Number(styleOf(scope).getPropertyValue('--wb-viewport-scale')) || 1;
       for (const subject of observed) {
         if (subjects.has(subject)) {
           continue;
@@ -432,7 +444,7 @@ export function useSubjectBounds(
           observed.add(subject);
         }
         const rect = subject.getBoundingClientRect();
-        const style = getComputedStyle(subject);
+        const style = styleOf(subject);
         if (rect.width === 0 || rect.height === 0 || style.visibility !== 'visible') {
           continue;
         }

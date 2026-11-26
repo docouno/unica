@@ -141,30 +141,7 @@
 }
 
 .shell-study-confirm {
-  --dialog-enter-x: 0px;
-  --dialog-enter-y: 0px;
-  --dialog-duration: 160ms;
-  position: fixed;
-  inset: 0;
-  inline-size: min(440px, 100cqi, calc(100% - 32px));
-  block-size: fit-content;
-  max-block-size: calc(100% - 32px);
-  margin: auto;
-  padding: var(--space-24);
-  overflow: auto;
-}
-
-.shell-study-confirm:not([open]) {
-  display: none;
-}
-
-.shell-study-confirm[open] {
-  display: grid;
-  gap: var(--space-16);
-}
-
-.shell-study-confirm::backdrop {
-  background: var(--scrim-bg);
+  max-inline-size: 440px;
 }
 
 .shell-study-save-previews {
@@ -236,7 +213,6 @@
   }
 
   .shell-study-mobile-sheet,
-  .shell-study-confirm,
   .shell-study-layout-guide {
     border-color: CanvasText;
   }

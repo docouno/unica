@@ -266,8 +266,13 @@ export function Calendar({
         : null,
     );
   }, [feedbackDate, feedbackIssue, gridKey, persistentIssue, showIssueTooltip, view]);
-  useEffect(() => () => window.clearTimeout(hoverExit.current), []);
-  const stopHoverExit = (): void => window.clearTimeout(hoverExit.current);
+  useEffect(() => {
+    const view = root.current?.ownerDocument.defaultView;
+    return () => view?.clearTimeout(hoverExit.current);
+  }, []);
+  const stopHoverExit = (): void => {
+    root.current?.ownerDocument.defaultView?.clearTimeout(hoverExit.current);
+  };
   const clearInspection = (): void => {
     const focused = root.current?.querySelector<HTMLElement>('.calendar-day-proto:focus-visible');
     setHovered(focused?.dataset.date ?? '');
@@ -275,7 +280,7 @@ export function Calendar({
   const leaveInspection = (): void => {
     stopHoverExit();
     if (showIssueTooltip && !persistentIssue) {
-      hoverExit.current = window.setTimeout(clearInspection, 160);
+      hoverExit.current = root.current?.ownerDocument.defaultView?.setTimeout(clearInspection, 160);
     } else {
       clearInspection();
     }
@@ -350,7 +355,7 @@ export function Calendar({
     }
     setView(next);
     setHovered('');
-    requestAnimationFrame(() => {
+    root.current?.ownerDocument.defaultView?.requestAnimationFrame(() => {
       const calendar = root.current;
       const selector = returnTo
         ? `.calendar-title-button-proto[data-period="${returnTo}"]`
@@ -369,7 +374,7 @@ export function Calendar({
       setYearStart(next);
       const atBoundary = offset < 0 ? next <= minYear : next + 11 >= maxYear;
       if (atBoundary) {
-        requestAnimationFrame(() => {
+        root.current?.ownerDocument.defaultView?.requestAnimationFrame(() => {
           const years = root.current?.querySelectorAll<HTMLButtonElement>(
             '.calendar-period-proto:not(:disabled)',
           );
@@ -390,12 +395,13 @@ export function Calendar({
     if (day < visibleStart || day >= visibleEnd) {
       setViewMonth(`${day.slice(0, 7)}-01`);
     }
-    requestAnimationFrame(() =>
+    root.current?.ownerDocument.defaultView?.requestAnimationFrame(() =>
       root.current?.querySelector<HTMLButtonElement>(`[data-date="${day}"]`)?.focus(),
     );
   };
   const keyDay = (event: KeyboardEvent<HTMLButtonElement>, day: string): void => {
-    const rtl = getComputedStyle(event.currentTarget).direction === 'rtl';
+    const target = event.currentTarget;
+    const rtl = target.ownerDocument.defaultView?.getComputedStyle(target).direction === 'rtl';
     const weekday = (dateObject(day).getUTCDay() - weekStartsOn + 7) % 7;
     let next = '';
     if (event.key === 'ArrowRight') {

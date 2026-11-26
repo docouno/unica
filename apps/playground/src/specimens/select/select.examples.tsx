@@ -1,7 +1,22 @@
-import { useRef, useState } from 'react';
+import { useId, useState } from 'react';
 import type { ReactNode } from 'react';
 import { GlobeHemisphereWestIcon } from '@phosphor-icons/react';
-import { Button, Divider, Flex, Listbox, Select, Stack, Text, Title } from '@docouno/unica';
+import {
+  Button,
+  Divider,
+  Listbox,
+  Modal,
+  ModalBody,
+  ModalClose,
+  ModalContent,
+  ModalFooter,
+  ModalHeader,
+  ModalTitle,
+  ModalTrigger,
+  Select,
+  Stack,
+  Text,
+} from '@docouno/unica';
 import {
   regionLabels,
   regionOptions,
@@ -12,7 +27,6 @@ import { SelectFieldExample } from './select-field-example.js';
 import type { PreviewProps, Surface } from '../../workbench/types.js';
 import { ExampleSurface } from '../shared/example-surface.js';
 import '../listbox/listbox.examples.css';
-import './select.examples.css';
 
 function Sample({
   title,
@@ -500,71 +514,62 @@ export function Summary({ ctx }: PreviewProps) {
 }
 
 export function ModalSelect({ ctx }: PreviewProps) {
-  const dialog = useRef<HTMLDialogElement>(null);
-  const form = useRef<HTMLFormElement>(null);
-  const headingId = `${ctx.id}-modal-heading`;
+  const formId = useId();
+  const [open, setOpen] = useState(false);
   const [saved, setSaved] = useState('viewer');
 
   return (
     <Stack gap={12}>
-      <Button
-        type="button"
-        variant="secondary"
-        tone="neutral"
-        aria-haspopup="dialog"
-        onClick={() => dialog.current?.showModal()}
-      >
-        Edit review access
-      </Button>
-      <dialog
-        ref={dialog}
-        data-surface="overlay"
-        className="unica-overlay-surface select-study-dialog"
-        aria-labelledby={headingId}
-        onClose={() => form.current?.reset()}
-      >
-        <form
-          ref={form}
-          onSubmit={(event) => {
-            event.preventDefault();
-            const role = new FormData(event.currentTarget).get('role');
-            if (typeof role === 'string') {
-              setSaved(role);
-              dialog.current?.close();
-            }
-          }}
-        >
-          <Stack gap={16}>
-            <Title as="h2" id={headingId} size="body-m">
-              Review access
-            </Title>
-            <SelectFieldExample
-              {...ctx.subject}
-              key={saved}
-              label="Reviewer role"
-              name="role"
-              options={simpleRoles}
-              defaultValue={saved}
-              required
-              searchable
-            />
-            <Flex gap={8} wrap="wrap" justify="end">
-              <Button type="reset" variant="ghost" tone="neutral">
-                Reset
-              </Button>
-              <Button
-                type="button"
-                variant="secondary"
-                tone="neutral"
-                onClick={() => dialog.current?.close()}
-              >
+      <Modal open={open} onOpenChange={setOpen}>
+        <ModalTrigger asChild>
+          <Button variant="secondary" tone="neutral">
+            Edit review access
+          </Button>
+        </ModalTrigger>
+        <ModalContent style={{ maxInlineSize: '26rem' }}>
+          <ModalHeader>
+            <ModalTitle>Review access</ModalTitle>
+            <ModalClose />
+          </ModalHeader>
+          <ModalBody>
+            <form
+              {...ctx.form}
+              id={formId}
+              onSubmit={(event) => {
+                event.preventDefault();
+                const role = new FormData(event.currentTarget).get('role');
+                if (typeof role === 'string') {
+                  setSaved(role);
+                  setOpen(false);
+                }
+              }}
+            >
+              <SelectFieldExample
+                {...ctx.subject}
+                label="Reviewer role"
+                name="role"
+                options={simpleRoles}
+                defaultValue={saved}
+                required
+                searchable
+              />
+            </form>
+          </ModalBody>
+          <ModalFooter>
+            <Button type="reset" form={formId} variant="ghost" tone="neutral">
+              Reset
+            </Button>
+            <ModalClose asChild>
+              <Button variant="secondary" tone="neutral">
                 Cancel
               </Button>
-              <Button type="submit">Save access</Button>
-            </Flex>
-          </Stack>
-        </form>
-      </dialog>
+            </ModalClose>
+            <Button type="submit" form={formId}>
+              Save access
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
       <Text size="body-s" role="status">
         <bdi>Saved access: {simpleRoles.find(({ value }) => value === saved)?.label}</bdi>
       </Text>
