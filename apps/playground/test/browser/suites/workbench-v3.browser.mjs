@@ -549,9 +549,12 @@ export default {
       const board = page.locator('.wb-artboard').first();
       const field =
         item === 'select'
-          ? board.getByRole('button', { name: 'Deployment region: Amsterdam' })
+          ? board.getByRole('button', { name: label, exact: true })
           : board.getByRole('combobox');
       await field.waitFor({ state: 'attached', timeout: 20_000 });
+      if (item === 'select') {
+        assert.equal(await field.getAttribute('title'), 'Amsterdam');
+      }
       const subject = board.locator('[data-wb-subject]:visible');
       const box = await subject.boundingBox();
       assert.ok(box && box.width > 240, label + ' must span the phone field slot');

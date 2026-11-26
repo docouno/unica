@@ -1,3 +1,8 @@
+.select-specimen {
+  inline-size: 100%;
+  min-inline-size: 0;
+}
+
 tr[data-wb-result-row] > td:has([data-surface='overlay'] .select-specimen) {
   min-inline-size: 16.5rem;
 }
