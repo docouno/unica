@@ -1,12 +1,12 @@
-import { Flex } from '@docouno/unica';
 import {
+  Flex,
   CheckboxCard,
-  CheckboxCardContent,
-  CheckboxCardLabel,
-  CheckboxCardDescription,
+  ChoiceCardContent,
+  ChoiceCardLabel,
+  ChoiceCardDescription,
   CheckboxCardIndicator,
-} from '../../prototypes/choice-card/choice-card.proto.js';
-import { size, disabled, readOnly, choice } from '../control-props.js';
+} from '@docouno/unica';
+import { size, disabled, readOnly, choice, eventProp, required, toggle } from '../control-props.js';
 import { defineComponent } from '../../workbench/types.js';
 import { previewProps } from '../preview-code.js';
 import { withOverlaySurface } from '../shared/with-overlay-surface.js';
@@ -18,7 +18,7 @@ import {
   Overlay,
   Sizes,
   Validation,
-} from '../../prototypes/choice-card/choice-card.examples.js';
+} from '../shared/choice-card-studies.js';
 import { ExportFormats } from './export-formats.js';
 import exportSource from './export-formats.tsx?raw';
 import { RetentionOption } from './retention-option.js';
@@ -26,20 +26,20 @@ import retentionSource from './retention-option.tsx?raw';
 
 const label = 'Archive completed exports';
 const help = 'Keep generated files together for 30 days.';
-const proto = './prototypes/choice-card/choice-card.proto.js';
 
 export default defineComponent({
   id: 'checkbox-card',
   title: 'CheckboxCard',
   category: 'Forms',
-  status: 'Proto',
+  status: 'UI',
   summary: 'Independent options with descriptions, metadata, and secondary actions.',
   componentName: 'CheckboxCard',
-  form: 'owned',
   props: {
     size,
     disabled,
     readOnly,
+    defaultChecked: toggle('Interaction', 'Start with this choice selected.'),
+    required,
     status: choice(
       'Semantics',
       'Validation feedback for the option.',
@@ -52,14 +52,11 @@ export default defineComponent({
       ['start', 'end', 'none'],
       'start',
     ),
-    onChange: {
-      kind: 'action',
-      group: 'Interaction',
-      publicType: 'ChangeEventHandler<HTMLInputElement>',
-      description:
-        'Receives the native input’s React change event. The event log shows its checked value.',
-      code: '(event) => console.log(event.currentTarget.checked)',
-    },
+    onCheckedChange: eventProp(
+      'Receives the proposed checked value.',
+      '(next) => console.log(next)',
+      '(next: boolean) => void',
+    ),
   },
   constraints: [
     {
@@ -69,69 +66,74 @@ export default defineComponent({
       reason: 'Disabled choices suppress invalid styling and semantics.',
     },
   ],
-  render: withOverlaySurface(
-    ({ values, ctx }) => (
-      <form {...ctx.form} data-choice-card-sample="">
-        <CheckboxCard
-          {...values}
-          {...ctx.subject}
-          id={ctx.id}
-          name="archive"
-          value="exports"
-          label={label}
-          description={<bdi>{help}</bdi>}
-          onChange={(event) => ctx.action('onChange')(event.currentTarget.checked)}
-        >
-          {values.indicatorPlacement === 'none' ? (
-            <CheckboxCardContent>
-              <Flex align="start" justify="space-between" gap={12}>
-                <CheckboxCardLabel>{label}</CheckboxCardLabel>
-                <CheckboxCardIndicator />
-              </Flex>
-              <CheckboxCardDescription>
-                <bdi>{help}</bdi>
-              </CheckboxCardDescription>
-            </CheckboxCardContent>
-          ) : undefined}
+  render: withOverlaySurface(({ values, ctx }) => {
+    const { defaultChecked, ...options } = values;
+    const titleId = ctx.id + '-title';
+    const descriptionId = ctx.id + '-description';
+    const common = {
+      ...options,
+      id: ctx.id,
+      name: 'archive',
+      value: 'exports',
+      defaultChecked,
+      onCheckedChange: (next: boolean) => ctx.action('onCheckedChange')(next),
+    };
+    const card =
+      options.indicatorPlacement === 'none' ? (
+        <CheckboxCard {...common} aria-labelledby={titleId} aria-describedby={descriptionId}>
+          <ChoiceCardContent>
+            <Flex align="start" justify="space-between" gap={12}>
+              <ChoiceCardLabel id={titleId}>{label}</ChoiceCardLabel>
+              <CheckboxCardIndicator />
+            </Flex>
+            <ChoiceCardDescription id={descriptionId}>
+              <bdi>{help}</bdi>
+            </ChoiceCardDescription>
+          </ChoiceCardContent>
         </CheckboxCard>
-      </form>
-    ),
-    'border-box',
-  ),
+      ) : (
+        <CheckboxCard {...common} label={label} description={<bdi>{help}</bdi>} />
+      );
+    return (
+      <div {...ctx.subject} data-choice-card-sample="" key={String(defaultChecked)}>
+        {card}
+      </div>
+    );
+  }, 'border-box'),
   code: (values) => {
     const attributes = previewProps(values, {
       size: 'm',
       disabled: false,
       readOnly: false,
+      defaultChecked: false,
+      required: false,
       status: 'neutral',
       indicatorPlacement: 'start',
     });
-    if (values.indicatorPlacement === 'none') {
-      return `import { useId } from 'react';
-import { Flex } from '@docouno/unica';
-import { CheckboxCard, CheckboxCardContent, CheckboxCardLabel, CheckboxCardDescription, CheckboxCardIndicator } from '${proto}';
+    const manual = values.indicatorPlacement === 'none';
+    const describedBy = manual ? ' aria-describedby={id + "-description"}' : '';
+    const slots = manual
+      ? ` aria-labelledby={id + "-title"}`
+      : ` label="${label}" description={<bdi>${help}</bdi>}`;
+    const content = manual
+      ? `>
+          <ChoiceCardContent>
+            <Flex align="start" justify="space-between" gap={12}>
+              <ChoiceCardLabel id={id + "-title"}>${label}</ChoiceCardLabel>
+              <CheckboxCardIndicator />
+            </Flex>
+            <ChoiceCardDescription id={id + "-description"}><bdi>${help}</bdi></ChoiceCardDescription>
+          </ChoiceCardContent>
+        </CheckboxCard>`
+      : ' />';
+    const snippet = `<CheckboxCard name="archive" value="exports"${slots}${describedBy}${attributes} onCheckedChange={(next) => console.log(next)}${content}`;
+    return `${manual ? "import { useId } from 'react';\n" : ''}import { CheckboxCard${manual ? ', Flex, ChoiceCardContent, ChoiceCardLabel, ChoiceCardDescription, CheckboxCardIndicator' : ''} } from '@docouno/unica';
 import '@docouno/unica/styles.css';
 
 export function ArchiveOption() {
-  const id = useId();
-  return (
-    <CheckboxCard id={id} aria-describedby={id + '-description'} name="archive" value="exports"${attributes} onChange={(event) => console.log(event.currentTarget.checked)}>
-      <CheckboxCardContent>
-        <Flex align="start" justify="space-between" gap={12}>
-          <CheckboxCardLabel>${label}</CheckboxCardLabel>
-          <CheckboxCardIndicator />
-        </Flex>
-        <CheckboxCardDescription><bdi>${help}</bdi></CheckboxCardDescription>
-      </CheckboxCardContent>
-    </CheckboxCard>
+  ${manual ? 'const id = useId();\n  ' : ''}return (
+    ${snippet}
   );
-}`;
-    }
-    return `import { CheckboxCard } from '${proto}';
-import '@docouno/unica/styles.css';
-
-export function ArchiveOption() {
-  return <CheckboxCard name="archive" value="exports" label="${label}" description={<bdi>${help}</bdi>}${attributes} onChange={(event) => console.log(event.currentTarget.checked)} />;
 }`;
   },
   states: [
@@ -168,10 +170,10 @@ export function ArchiveOption() {
       id: 'states',
       title: 'Pointer and keyboard feedback',
       kind: 'behavior',
-      mode: 'pinned',
+      mode: 'live',
       reset: true,
       caption:
-        'Hover, held press, and keyboard contours are pinned for comparison. Activate a card to change its native checked state.',
+        'Hover or hold the primary target to see the edge change. Tab to a choice for its outer focus ring.',
       render: withOverlaySurface(
         ({ ctx }) => <Interaction kind="checkbox" ctx={ctx} />,
         'border-box',
@@ -194,9 +196,10 @@ export function ArchiveOption() {
       title: 'Validate an export selection',
       kind: 'behavior',
       mode: 'live',
+      actions: [{ id: 'check-selection', label: 'Check selection' }],
       reset: true,
       caption:
-        'Check an empty selection, choose a format, and check again. The pinned pair shows how selection and keyboard focus coexist with an error.',
+        'Check an empty selection, choose a format, and check again. Tab to the selected card in the second example to see the error edge and focus ring together.',
       render: withOverlaySurface(
         ({ ctx }) => <Validation kind="checkbox" ctx={ctx} />,
         'border-box',
@@ -233,10 +236,10 @@ export function ArchiveOption() {
       caption:
         'Select either or both formats. Each card submits its own value under the same name.',
       render: withOverlaySurface(
-        ({ ctx }) => <ExportFormats cardProps={ctx.subject} />,
+        ({ ctx }) => <ExportFormats subjectProps={ctx.subject} />,
         'border-box',
       ),
-      code: exportSource.replace('../../prototypes/', './prototypes/'),
+      code: exportSource,
     },
     {
       id: 'retention',
@@ -248,12 +251,12 @@ export function ArchiveOption() {
       render: withOverlaySurface(
         ({ ctx }) => (
           <div data-example-disclosure="">
-            <RetentionOption cardProps={ctx.subject} />
+            <RetentionOption subjectProps={ctx.subject} />
           </div>
         ),
         'border-box',
       ),
-      code: retentionSource.replace('../../prototypes/', './prototypes/'),
+      code: retentionSource,
     },
   ],
 });

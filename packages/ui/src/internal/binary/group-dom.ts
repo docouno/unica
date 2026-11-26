@@ -18,6 +18,8 @@ export interface BinaryGroupDomConfig {
   readonly root: HTMLDivElement;
   readonly kind: 'checkbox' | 'radio' | 'switch';
   readonly sharedOwner: boolean;
+  readonly disabled: boolean;
+  readonly ariaDisabled: boolean | 'true' | 'false' | undefined;
   readonly keyed?: boolean | undefined;
   readonly form: string | undefined;
   readonly required: boolean;
@@ -62,7 +64,8 @@ interface Scope {
 }
 
 interface RadioEntry {
-  readonly root: HTMLDivElement;
+  readonly element: HTMLElement;
+  readonly proxy: boolean;
   authoredTabIndex: number | undefined;
   target: HTMLInputElement;
 }
@@ -111,6 +114,34 @@ function isOptionFocusable(input: HTMLInputElement): boolean {
     }
   }
   return true;
+}
+
+const secondarySlot = '[data-unica-choice-card-secondary]';
+const secondaryActions = [
+  'a[href]',
+  'button',
+  'input',
+  'select',
+  'textarea',
+  'summary',
+  '[contenteditable="true"]',
+  '[tabindex]',
+  '[role="link"]',
+  '[role="button"]',
+].join(', ');
+
+function hasEnabledSecondary(root: HTMLElement): boolean {
+  // Group semantics reflect independent actions inside the group. The browser
+  // already handles a hidden or inert ancestor and an unrelated modal dialog.
+  return Array.from(root.querySelectorAll(secondarySlot)).some((slot) =>
+    Array.from(slot.querySelectorAll<HTMLElement>(secondaryActions)).some((action) => {
+      const unavailable = action.closest('[aria-disabled="true"], [hidden], [inert]');
+      return (
+        (!unavailable || unavailable === root || !root.contains(unavailable)) &&
+        !matchesSafe(action, ':disabled')
+      );
+    }),
+  );
 }
 
 function isWebKit(input: HTMLElement): boolean {
@@ -219,7 +250,7 @@ export function createBinaryGroupDom(): BinaryGroupDom {
   function forwardFocus(): void {
     const entry = radioEntry;
     if (entry && isOptionFocusable(entry.target)) {
-      entry.root.tabIndex = -1;
+      entry.element.tabIndex = -1;
       entry.target.focus();
     }
   }
@@ -230,11 +261,13 @@ export function createBinaryGroupDom(): BinaryGroupDom {
       return;
     }
     radioEntry = undefined;
-    entry.root.removeEventListener('focus', forwardFocus);
-    if (entry.authoredTabIndex !== undefined) {
-      entry.root.tabIndex = entry.authoredTabIndex;
+    entry.element.removeEventListener('focus', forwardFocus);
+    if (entry.proxy) {
+      entry.element.remove();
+    } else if (entry.authoredTabIndex !== undefined) {
+      entry.element.tabIndex = entry.authoredTabIndex;
     } else {
-      entry.root.removeAttribute('tabindex');
+      entry.element.removeAttribute('tabindex');
     }
   }
 
@@ -261,10 +294,20 @@ export function createBinaryGroupDom(): BinaryGroupDom {
     }
 
     const { root, tabIndex } = config;
-    if (!radioEntry || radioEntry.root !== root) {
+    const proxyNeeded = root.contains(target) && root.querySelector(secondarySlot) !== null;
+    if (
+      !radioEntry ||
+      radioEntry.proxy !== proxyNeeded ||
+      (proxyNeeded ? radioEntry.element.nextElementSibling !== target : radioEntry.element !== root)
+    ) {
       releaseRadioEntry();
-      radioEntry = { root, target, authoredTabIndex: tabIndex };
-      root.addEventListener('focus', forwardFocus);
+      const element = proxyNeeded ? root.ownerDocument.createElement('span') : root;
+      if (proxyNeeded) {
+        element.className = 'unica-visually-hidden';
+        target.before(element);
+      }
+      radioEntry = { element, proxy: proxyNeeded, target, authoredTabIndex: tabIndex };
+      element.addEventListener('focus', forwardFocus);
     }
     radioEntry.target = target;
     // WebKit skips a native radio set when its checked input cannot take focus,
@@ -272,8 +315,8 @@ export function createBinaryGroupDom(): BinaryGroupDom {
     // entry to an available input, and remove the bridge from Tab while inside.
     const active = getRootActiveElement(getRootNodeSafe(root), root.ownerDocument);
     const index = options.some((input) => input === active) ? -1 : Math.max(0, tabIndex ?? 0);
-    if (root.getAttribute('tabindex') !== String(index)) {
-      root.tabIndex = index;
+    if (radioEntry.element.getAttribute('tabindex') !== String(index)) {
+      radioEntry.element.tabIndex = index;
     }
   }
 
@@ -366,6 +409,13 @@ export function createBinaryGroupDom(): BinaryGroupDom {
     }
 
     return records.some((record) => {
+      if (
+        record.target !== root &&
+        root.contains(record.target) &&
+        (config?.disabled || config?.kind === 'radio')
+      ) {
+        return true;
+      }
       if (record.type === 'childList') {
         return (
           related(record.target) ||
@@ -465,7 +515,21 @@ export function createBinaryGroupDom(): BinaryGroupDom {
     observer ??= new view.MutationObserver((records) => reconcileMutations(records));
     observer.disconnect();
     observed = next;
-    const attributeFilter = ['disabled', 'form', 'id', 'name', 'hidden', 'inert', 'style', 'class'];
+    const attributeFilter = [
+      'disabled',
+      'form',
+      'id',
+      'name',
+      'hidden',
+      'inert',
+      'style',
+      'class',
+      'aria-disabled',
+      'href',
+      'tabindex',
+      'contenteditable',
+      'open',
+    ];
     for (const tree of observed) {
       observer.observe(tree, {
         attributes: true,
@@ -505,6 +569,16 @@ export function createBinaryGroupDom(): BinaryGroupDom {
         member.effectiveDisabled = disabled;
         availabilityUpdates.push(() => member.options.onAvailabilityChange?.(disabled));
       }
+    }
+    const ariaDisabled = config.disabled
+      ? hasEnabledSecondary(config.root)
+        ? undefined
+        : true
+      : config.ariaDisabled;
+    if (ariaDisabled === undefined) {
+      config.root.removeAttribute('aria-disabled');
+    } else if (config.root.getAttribute('aria-disabled') !== String(ariaDisabled)) {
+      config.root.setAttribute('aria-disabled', String(ariaDisabled));
     }
     if (config.keyed || config.kind === 'radio') {
       validateKeys(config.kind, members);

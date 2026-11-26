@@ -62,3 +62,8 @@ ul:has(> [data-wb-result-row] [data-choice-card-sample='switch']) {
 .choice-study-note[hidden] {
   display: none;
 }
+
+.choice-study-subject {
+  display: grid;
+  min-inline-size: 0;
+}

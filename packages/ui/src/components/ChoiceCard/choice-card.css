@@ -1,0 +1,309 @@
+@layer unica.components {
+  .unica-choice-card {
+    --_choice-inset: var(--surface-m-padding);
+    --_choice-radius: var(--surface-m-radius);
+    --_choice-gap: var(--space-12);
+    --_choice-font: var(--text-size-body-s);
+    --_choice-line: var(--text-size-body-s-lh);
+    --_choice-description-font: var(--text-size-body-s);
+    --_choice-description-line: var(--text-size-body-s-lh);
+    --_choice-fill: var(--choice-card-bg);
+    --_choice-edge: var(--choice-card-border);
+    --_choice-danger: var(--status-danger-soft-fg);
+    --_choice-focus: var(--focus-ring-color);
+    position: relative;
+    isolation: isolate;
+    display: flex;
+    align-items: flex-start;
+    gap: var(--_choice-gap);
+    inline-size: 100%;
+    min-inline-size: 0;
+    min-block-size: 44px;
+    padding: var(--_choice-inset);
+    background: var(--_choice-fill);
+    border: 1px solid var(--_choice-invalid-edge, var(--_choice-edge));
+    border-radius: var(--_choice-radius);
+    color: var(--fg-primary);
+    font-family: var(--font-family-base);
+    font-size: var(--_choice-font);
+    line-height: var(--_choice-line);
+    cursor: pointer;
+    transition:
+      background-color 120ms ease,
+      border-color 120ms ease;
+  }
+
+  .unica-choice-card[data-unica-choice-card-size='s'] {
+    --_choice-inset: var(--surface-s-padding);
+    --_choice-radius: var(--surface-s-radius);
+    --_choice-gap: var(--space-8);
+    --_choice-description-font: var(--text-size-caption-l);
+    --_choice-description-line: 1.5;
+  }
+
+  .unica-choice-card[data-unica-choice-card-size='l'] {
+    --_choice-inset: var(--surface-l-padding);
+    --_choice-radius: var(--surface-l-radius);
+    --_choice-font: var(--text-size-body-m);
+    --_choice-line: var(--text-size-body-m-lh);
+  }
+
+  .unica-choice-card-group {
+    align-items: stretch;
+    gap: var(--space-8);
+  }
+
+  .unica-choice-card-group[data-unica-binary-orientation='horizontal'] > .unica-choice-card {
+    flex: 1 1 auto;
+    inline-size: auto;
+    max-inline-size: 100%;
+  }
+
+  .unica-choice-card-marker-slot {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    block-size: var(--_choice-line);
+  }
+
+  .unica-choice-card[data-unica-choice-card-placement='end'] > .unica-choice-card-marker-slot {
+    order: 1;
+  }
+
+  .unica-choice-card > .unica-binary-native {
+    z-index: 2;
+    inset-block: 0 auto;
+    inset-inline: 0 auto;
+    inline-size: min(44px, 100%);
+    block-size: min(44px, 100%);
+  }
+
+  .unica-choice-card[data-unica-choice-card-placement='end'] > .unica-binary-native {
+    inset-inline: auto 0;
+  }
+
+  .unica-choice-card-hit {
+    position: absolute;
+    z-index: 1;
+    inset: -1px;
+    border-radius: inherit;
+  }
+
+  .unica-choice-card-content {
+    display: flex;
+    flex: 1 1 0;
+    flex-direction: column;
+    gap: var(--space-4);
+    min-inline-size: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .unica-choice-card-label {
+    font-size: var(--_choice-font);
+    font-weight: 600;
+    line-height: var(--_choice-line);
+  }
+
+  .unica-choice-card-description {
+    color: var(--fg-muted);
+    font-size: var(--_choice-description-font);
+    font-weight: 400;
+    line-height: var(--_choice-description-line);
+  }
+
+  .unica-choice-card-metadata {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-8);
+    margin-block-start: var(--space-4);
+    color: var(--fg-secondary);
+    font-size: var(--text-size-caption-l);
+    line-height: 1.5;
+  }
+
+  .unica-choice-card-secondary {
+    position: relative;
+    z-index: 3;
+    display: flex;
+    align-self: flex-start;
+    flex-wrap: wrap;
+    gap: var(--space-8);
+    max-inline-size: 100%;
+    margin-block-start: var(--space-8);
+    font-size: var(--text-size-body-s);
+    line-height: var(--text-size-body-s-lh);
+    cursor: auto;
+    pointer-events: none;
+  }
+
+  .unica-choice-card-secondary
+    :where(
+      a[href],
+      button,
+      input,
+      select,
+      textarea,
+      summary,
+      [contenteditable='true'],
+      [tabindex],
+      [role='link'],
+      [role='button']
+    ) {
+    pointer-events: auto;
+  }
+
+  .unica-choice-card-secondary a[href] {
+    display: inline-flex;
+    align-items: center;
+    min-block-size: 24px;
+  }
+
+  .unica-choice-card:has(> .unica-binary-native:checked) {
+    --_choice-fill: var(--choice-card-bg-selected);
+    --_choice-edge: var(--choice-card-border-selected);
+  }
+
+  @media (hover: hover) {
+    .unica-choice-card:where(
+        :not(
+          [data-unica-choice-card-readonly],
+          [data-unica-choice-card-busy],
+          :has(> .unica-binary-native:disabled)
+        )
+      ):is(
+        :has(> :is(.unica-choice-card-hit, .unica-binary-native):hover),
+        [data-unica-binary-external-hover]
+      ) {
+      --_choice-edge: color-mix(in srgb, var(--choice-card-border), var(--fg-secondary) 35%);
+    }
+
+    .unica-choice-card:where(
+        :not(
+          [data-unica-choice-card-readonly],
+          [data-unica-choice-card-busy],
+          :has(> .unica-binary-native:disabled)
+        )
+      ):has(> .unica-binary-native:checked):is(
+        :has(> :is(.unica-choice-card-hit, .unica-binary-native):hover),
+        [data-unica-binary-external-hover]
+      ) {
+      --_choice-edge: color-mix(
+        in srgb,
+        var(--choice-card-border-selected),
+        var(--accent-signal) 35%
+      );
+    }
+  }
+
+  .unica-choice-card:where(
+      :not(
+        [data-unica-choice-card-readonly],
+        [data-unica-choice-card-busy],
+        :has(> .unica-binary-native:disabled)
+      )
+    ):is(
+      :has(> :is(.unica-choice-card-hit, .unica-binary-native):active),
+      [data-unica-binary-external-active]
+    ) {
+    --_choice-fill: color-mix(in srgb, var(--choice-card-bg), var(--choice-card-bg-selected) 35%);
+    --_choice-edge: var(--choice-card-border-selected);
+  }
+
+  .unica-choice-card:where(
+      :not(
+        [data-unica-choice-card-readonly],
+        [data-unica-choice-card-busy],
+        :has(> .unica-binary-native:disabled)
+      )
+    ):has(> .unica-binary-native:checked):is(
+      :has(> :is(.unica-choice-card-hit, .unica-binary-native):active),
+      [data-unica-binary-external-active]
+    ) {
+    --_choice-fill: var(--choice-card-bg-selected);
+    --_choice-edge: var(--accent-signal);
+  }
+
+  .unica-choice-card:has(> .unica-binary-native:focus-visible) {
+    outline: 2px solid var(--_choice-focus);
+    outline-offset: 2px;
+  }
+
+  .unica-choice-card:not([data-unica-choice-card-kind='switch']):has(
+      > .unica-binary-native[aria-invalid='true']:enabled
+    ) {
+    --_choice-invalid-edge: var(--_choice-danger);
+  }
+
+  .unica-choice-card:not([data-unica-choice-card-kind='switch']):has(
+      > .unica-binary-native[aria-invalid='true']:enabled
+    )::before {
+    position: absolute;
+    inset: 0;
+    border: 1px solid var(--_choice-danger);
+    border-radius: inherit;
+    content: '';
+    pointer-events: none;
+  }
+
+  .unica-choice-card[data-unica-choice-card-readonly] {
+    cursor: default;
+  }
+
+  .unica-choice-card[data-unica-choice-card-busy] {
+    cursor: progress;
+  }
+
+  .unica-choice-card:has(> .unica-binary-native:disabled) {
+    --_choice-fill: var(--choice-card-bg);
+    --_choice-edge: var(--choice-card-border);
+    border-style: dashed;
+    color: var(--fg-disabled);
+    cursor: not-allowed;
+  }
+
+  .unica-choice-card[hidden] {
+    display: none;
+  }
+
+  :is(
+    .unica-choice-card-label,
+    .unica-choice-card-description,
+    .unica-choice-card-metadata,
+    .unica-choice-card-secondary
+  ):is(:empty, [hidden]) {
+    display: none;
+  }
+
+  @media (pointer: coarse) {
+    .unica-choice-card-secondary a[href] {
+      min-block-size: 44px;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .unica-choice-card {
+      transition: none;
+    }
+  }
+
+  @media (forced-colors: active) {
+    .unica-choice-card {
+      --_choice-fill: Canvas;
+      --_choice-edge: ButtonText;
+      --_choice-danger: CanvasText;
+      --_choice-focus: Highlight;
+    }
+
+    .unica-choice-card:has(> .unica-binary-native:checked) {
+      --_choice-fill: Canvas;
+      --_choice-edge: Highlight;
+    }
+
+    .unica-choice-card:has(> .unica-binary-native:disabled) {
+      --_choice-fill: Canvas;
+      --_choice-edge: GrayText;
+      color: GrayText;
+    }
+  }
+}

@@ -1,12 +1,12 @@
-import { Flex } from '@docouno/unica';
 import {
+  Flex,
   SwitchCard,
-  SwitchCardContent,
-  SwitchCardDescription,
+  ChoiceCardContent,
+  ChoiceCardLabel,
+  ChoiceCardDescription,
   SwitchCardIndicator,
-  SwitchCardLabel,
-} from '../../prototypes/choice-card/choice-card.proto.js';
-import { size, disabled, readOnly, loading, choice, eventProp } from '../control-props.js';
+} from '@docouno/unica';
+import { size, disabled, readOnly, loading, choice, eventProp, toggle } from '../control-props.js';
 import { defineComponent } from '../../workbench/types.js';
 import { previewProps } from '../preview-code.js';
 import { withOverlaySurface } from '../shared/with-overlay-surface.js';
@@ -19,27 +19,26 @@ import {
   Sizes,
   SwitchPending,
   SwitchRequest,
-} from '../../prototypes/choice-card/choice-card.examples.js';
+} from '../shared/choice-card-studies.js';
 import { WorkspaceSettings } from './workspace-settings.js';
 import settingsSource from './workspace-settings.tsx?raw';
 
 const label = 'Release summaries';
 const help = 'Send a digest after each release.';
-const proto = './prototypes/choice-card/choice-card.proto.js';
 
 export default defineComponent({
   id: 'switch-card',
   title: 'SwitchCard',
   category: 'Forms',
-  status: 'Proto',
+  status: 'UI',
   summary:
     'Immediate settings with a trailing switch and a stable value while a request is pending.',
   componentName: 'SwitchCard',
-  form: 'owned',
   props: {
     size,
     disabled,
     readOnly,
+    defaultChecked: toggle('Interaction', 'Start with this choice selected.'),
     loading,
     indicatorPlacement: choice(
       'Geometry',
@@ -47,10 +46,10 @@ export default defineComponent({
       ['start', 'end', 'none'],
       'end',
     ),
-    onChange: eventProp(
-      'Receives the native input’s React change event. The event log displays its checked value.',
-      '(event) => console.log(event.currentTarget.checked)',
-      'ChangeEventHandler<HTMLInputElement>',
+    onCheckedChange: eventProp(
+      'Receives the proposed checked value.',
+      '(next) => console.log(next)',
+      '(next: boolean) => void',
     ),
   },
   constraints: [
@@ -61,64 +60,72 @@ export default defineComponent({
       reason: 'A disabled switch card suppresses the pending indicator and leaves the tab order.',
     },
   ],
-  render: withOverlaySurface(
-    ({ values, ctx }) => (
-      <form {...ctx.form} data-choice-card-sample="switch">
-        <SwitchCard
-          {...values}
-          {...ctx.subject}
-          id={ctx.id}
-          name="summaries"
-          label={label}
-          description={<bdi>{help}</bdi>}
-          onChange={(event) => ctx.action('onChange')(event.currentTarget.checked)}
-        >
-          {values.indicatorPlacement === 'none' ? (
-            <SwitchCardContent>
-              <Flex align="start" justify="space-between" gap={12}>
-                <SwitchCardLabel>{label}</SwitchCardLabel>
-                <SwitchCardIndicator />
-              </Flex>
-              <SwitchCardDescription>
-                <bdi>{help}</bdi>
-              </SwitchCardDescription>
-            </SwitchCardContent>
-          ) : undefined}
+  render: withOverlaySurface(({ values, ctx }) => {
+    const { defaultChecked, ...options } = values;
+    const titleId = ctx.id + '-title';
+    const descriptionId = ctx.id + '-description';
+    const common = {
+      ...options,
+      id: ctx.id,
+      name: 'summaries',
+      value: 'on',
+      defaultChecked,
+      onCheckedChange: (next: boolean) => ctx.action('onCheckedChange')(next),
+    };
+    const card =
+      options.indicatorPlacement === 'none' ? (
+        <SwitchCard {...common} aria-labelledby={titleId} aria-describedby={descriptionId}>
+          <ChoiceCardContent>
+            <Flex align="start" justify="space-between" gap={12}>
+              <ChoiceCardLabel id={titleId}>{label}</ChoiceCardLabel>
+              <SwitchCardIndicator />
+            </Flex>
+            <ChoiceCardDescription id={descriptionId}>
+              <bdi>{help}</bdi>
+            </ChoiceCardDescription>
+          </ChoiceCardContent>
         </SwitchCard>
-      </form>
-    ),
-    'border-box',
-  ),
+      ) : (
+        <SwitchCard {...common} label={label} description={<bdi>{help}</bdi>} />
+      );
+    return (
+      <div {...ctx.subject} data-choice-card-sample="switch" key={String(defaultChecked)}>
+        {card}
+      </div>
+    );
+  }, 'border-box'),
   code: (values) => {
     const attributes = previewProps(values, {
       size: 'm',
       disabled: false,
       readOnly: false,
+      defaultChecked: false,
       loading: false,
       indicatorPlacement: 'end',
     });
     const manual = values.indicatorPlacement === 'none';
+    const describedBy = manual ? ' aria-describedby={id + "-description"}' : '';
+    const slots = manual
+      ? ` aria-labelledby={id + "-title"}`
+      : ` label="${label}" description={<bdi>${help}</bdi>}`;
     const content = manual
       ? `>
-        <SwitchCardContent>
-          <Flex align="start" justify="space-between" gap={12}>
-            <SwitchCardLabel>${label}</SwitchCardLabel>
-            <SwitchCardIndicator />
-          </Flex>
-          <SwitchCardDescription><bdi>${help}</bdi></SwitchCardDescription>
-        </SwitchCardContent>
-      </SwitchCard>`
+          <ChoiceCardContent>
+            <Flex align="start" justify="space-between" gap={12}>
+              <ChoiceCardLabel id={id + "-title"}>${label}</ChoiceCardLabel>
+              <SwitchCardIndicator />
+            </Flex>
+            <ChoiceCardDescription id={id + "-description"}><bdi>${help}</bdi></ChoiceCardDescription>
+          </ChoiceCardContent>
+        </SwitchCard>`
       : ' />';
-    return `import { useId } from 'react';
-${manual ? "import { Flex } from '@docouno/unica';\n" : ''}import { SwitchCard${manual ? ', SwitchCardContent, SwitchCardLabel, SwitchCardDescription, SwitchCardIndicator' : ''} } from '${proto}';
+    const snippet = `<SwitchCard name="summaries" value="on"${slots}${describedBy}${attributes} onCheckedChange={(next) => console.log(next)}${content}`;
+    return `${manual ? "import { useId } from 'react';\n" : ''}import { SwitchCard${manual ? ', Flex, ChoiceCardContent, ChoiceCardLabel, ChoiceCardDescription, SwitchCardIndicator' : ''} } from '@docouno/unica';
 import '@docouno/unica/styles.css';
 
 export function ReleaseSummaries() {
-  const id = useId();
-  return (
-    <form>
-      <SwitchCard id={id} name="summaries"${manual ? ' aria-describedby={id + "-description"}' : ` label="${label}" description={<bdi>${help}</bdi>}`}${attributes} onChange={(event) => console.log(event.currentTarget.checked)}${content}
-    </form>
+  ${manual ? 'const id = useId();\n  ' : ''}return (
+    ${snippet}
   );
 }`;
   },
@@ -157,10 +164,10 @@ export function ReleaseSummaries() {
       id: 'states',
       title: 'Pointer and keyboard feedback',
       kind: 'behavior',
-      mode: 'pinned',
+      mode: 'live',
       reset: true,
       caption:
-        'Hover, held press and keyboard contours stay visible for comparison. Activating a card changes its native switch.',
+        'Hover or hold the primary target to see the edge change. Tab to a choice for its outer focus ring.',
       render: withOverlaySurface(
         ({ ctx }) => <Interaction kind="switch" ctx={ctx} />,
         'border-box',
@@ -233,10 +240,10 @@ export function ReleaseSummaries() {
       caption:
         'Compare the selected access policy and the immediate notification setting at three densities. Toggle a notification without changing access.',
       render: withOverlaySurface(
-        ({ ctx }) => <WorkspaceSettings cardProps={ctx.subject} />,
+        ({ ctx }) => <WorkspaceSettings subjectProps={ctx.subject} />,
         'border-box',
       ),
-      code: settingsSource.replace('../../prototypes/', './prototypes/'),
+      code: settingsSource,
     },
   ],
 });

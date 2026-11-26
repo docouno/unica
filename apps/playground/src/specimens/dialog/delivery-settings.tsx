@@ -1,7 +1,16 @@
 import { useId, useRef, useState } from 'react';
 import type { ReactElement } from 'react';
-import { Button, Divider, Input, Select, Stack, Text, Textarea, Title } from '@docouno/unica';
-import { CheckboxCard, SwitchCard } from '../../prototypes/choice-card/choice-card.proto.js';
+import {
+  Button,
+  CheckboxCard,
+  Divider,
+  Input,
+  Select,
+  Stack,
+  Text,
+  Textarea,
+  Title,
+} from '@docouno/unica';
 import { FormField } from '../../prototypes/form-field/form-field.proto.js';
 import { DialogStudy } from '../../prototypes/dialog/dialog.examples.js';
 import {
@@ -148,12 +157,12 @@ export function DeliverySettings({
                   required
                 />
               </FormField>
-              <SwitchCard
+              <CheckboxCard
                 label="Include a preview"
                 description={<bdi>Add a short summary of each pending review.</bdi>}
                 name="preview"
                 checked={draft.preview}
-                onChange={(event) => setDraft({ ...draft, preview: event.currentTarget.checked })}
+                onCheckedChange={(next) => setDraft({ ...draft, preview: next })}
               />
               {long && (
                 <>
@@ -165,18 +174,14 @@ export function DeliverySettings({
                       label="Open reviews"
                       name="reviews"
                       checked={draft.reviews}
-                      onChange={(event) =>
-                        setDraft({ ...draft, reviews: event.currentTarget.checked })
-                      }
+                      onCheckedChange={(next) => setDraft({ ...draft, reviews: next })}
                       description={<bdi>Include reviews waiting for a response.</bdi>}
                     />
                     <CheckboxCard
                       label="Published work"
                       name="published"
                       checked={draft.published}
-                      onChange={(event) =>
-                        setDraft({ ...draft, published: event.currentTarget.checked })
-                      }
+                      onCheckedChange={(next) => setDraft({ ...draft, published: next })}
                       description={<bdi>Include documents published during this period.</bdi>}
                     />
                   </Stack>

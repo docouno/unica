@@ -1,9 +1,8 @@
-import { Textarea } from '@docouno/unica';
+import { Button, CheckboxCard, RadioCard, RadioCardGroup, Textarea } from '@docouno/unica';
 import { useId, useState } from 'react';
 import { folioSceneHref } from './folio/folio.routes.js';
 import type { ReactElement } from 'react';
 import { SlidersHorizontalIcon } from '@phosphor-icons/react';
-import { Button } from '@docouno/unica';
 import { DatePicker } from '../prototypes/date-picker/date-picker.proto.js';
 import {
   Drawer,
@@ -20,7 +19,6 @@ import { ToastCard } from '../prototypes/toast/toast.proto.js';
 import { FormField } from '../prototypes/form-field/form-field.proto.js';
 import { Combobox } from '../prototypes/combobox/combobox.proto.js';
 import type { Suggestion } from '../prototypes/combobox/combobox.proto.js';
-import { CheckboxCard, RadioCard } from '../prototypes/choice-card/choice-card.proto.js';
 import {
   Breadcrumb,
   BreadcrumbLink,
@@ -47,7 +45,7 @@ const reviewers = [
 function PropertiesScene(): ReactElement {
   const formId = useId();
   const scopeId = useId();
-  const visibilityName = useId();
+  const visibilityId = useId();
   const [open, setOpen] = useState(true);
   const [properties, setProperties] = useState<{
     visibility: 'workspace' | 'responders';
@@ -128,29 +126,32 @@ function PropertiesScene(): ReactElement {
               }}
             >
               <fieldset className="folio-fieldset">
-                <legend>Space visibility</legend>
-                <div className="folio-grid-2">
+                <legend id={visibilityId}>Space visibility</legend>
+                <RadioCardGroup
+                  className="folio-grid-2"
+                  aria-labelledby={visibilityId}
+                  value={draft.visibility}
+                  onValueChange={(next) => {
+                    if (next === 'workspace' || next === 'responders') {
+                      setDraft({ ...draft, visibility: next });
+                    }
+                  }}
+                >
                   <RadioCard
-                    name={visibilityName}
                     value="workspace"
-                    checked={draft.visibility === 'workspace'}
-                    onChange={() => setDraft({ ...draft, visibility: 'workspace' })}
                     label="Workspace internal"
                     description="All 14 engineers"
                   />
                   <RadioCard
-                    name={visibilityName}
                     value="responders"
-                    checked={draft.visibility === 'responders'}
-                    onChange={() => setDraft({ ...draft, visibility: 'responders' })}
                     label="Incident responders"
                     description="SRE on-call only"
                   />
-                </div>
+                </RadioCardGroup>
               </fieldset>
               <CheckboxCard
                 checked={draft.paging}
-                onChange={(event) => setDraft({ ...draft, paging: event.currentTarget.checked })}
+                onCheckedChange={(next) => setDraft({ ...draft, paging: next })}
                 label="Page on-call when verification expires"
                 description={<bdi>Opens a low-urgency PagerDuty review note if overdue.</bdi>}
               />

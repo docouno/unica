@@ -1,11 +1,15 @@
-import { Flex, Stack, Text } from '@docouno/unica';
+import type { ChangeEvent } from 'react';
 import {
+  Flex,
   RadioCard,
-  RadioCardContent,
-  RadioCardLabel,
-  RadioCardDescription,
+  ChoiceCardContent,
+  ChoiceCardLabel,
+  ChoiceCardDescription,
   RadioCardIndicator,
-} from '../../prototypes/choice-card/choice-card.proto.js';
+  RadioCardGroup,
+  Stack,
+  Text,
+} from '@docouno/unica';
 import { size, disabled, readOnly, choice } from '../control-props.js';
 import { defineComponent } from '../../workbench/types.js';
 import { previewProps } from '../preview-code.js';
@@ -18,7 +22,7 @@ import {
   Overlay,
   Sizes,
   Validation,
-} from '../../prototypes/choice-card/choice-card.examples.js';
+} from '../shared/choice-card-studies.js';
 import { BackupSchedule } from './backup-schedule.js';
 import backupSource from './backup-schedule.tsx?raw';
 import { OutputResolution } from './output-resolution.js';
@@ -26,21 +30,19 @@ import resolutionSource from './output-resolution.tsx?raw';
 
 const label = 'Daily backup';
 const help = 'Every day at 02:00 UTC.';
-const proto = './prototypes/choice-card/choice-card.proto.js';
 
 export default defineComponent({
   id: 'radio-card',
   title: 'RadioCard',
   category: 'Forms',
-  status: 'Proto',
+  status: 'UI',
   summary:
     'An exclusive choice with room for details, metadata, and independent secondary actions.',
   componentName: 'RadioCard',
-  form: 'owned',
   props: {
     size,
     disabled,
-    readOnly,
+    readOnly: { ...readOnly, description: 'Keep the whole group read-only.', demo: true },
     status: choice(
       'Semantics',
       'The danger example shows an approval message while the option is enabled.',
@@ -57,8 +59,7 @@ export default defineComponent({
       kind: 'action',
       group: 'Interaction',
       publicType: 'ChangeEventHandler<HTMLInputElement>',
-      description:
-        'Receives the native radio input’s React change event. The event log displays the selected value.',
+      description: 'Receives the native change event when this option is selected.',
       code: '(event) => console.log(event.currentTarget.value)',
     },
   },
@@ -71,83 +72,112 @@ export default defineComponent({
     },
   ],
   render: withOverlaySurface(({ values, ctx }) => {
-    const review = values.status === 'danger' && !values.disabled;
+    const { readOnly, ...options } = values;
+    const titleId = ctx.id + '-title';
+    const descriptionId = ctx.id + '-description';
+    const reviewId =
+      values.status === 'danger' && !values.disabled ? ctx.id + '-review' : undefined;
+    const common = {
+      ...options,
+      id: ctx.id,
+      value: 'daily',
+      onChange: (event: ChangeEvent<HTMLInputElement>) =>
+        ctx.action('onChange')(event.currentTarget.value),
+    };
+    const card =
+      options.indicatorPlacement === 'none' ? (
+        <RadioCard
+          {...common}
+          aria-labelledby={titleId}
+          aria-describedby={[descriptionId, reviewId].filter(Boolean).join(' ')}
+        >
+          <ChoiceCardContent>
+            <Flex align="start" justify="space-between" gap={12}>
+              <ChoiceCardLabel id={titleId}>{label}</ChoiceCardLabel>
+              <RadioCardIndicator />
+            </Flex>
+            <ChoiceCardDescription id={descriptionId}>
+              <bdi>{help}</bdi>
+            </ChoiceCardDescription>
+          </ChoiceCardContent>
+        </RadioCard>
+      ) : (
+        <RadioCard
+          {...common}
+          label={label}
+          description={<bdi>{help}</bdi>}
+          aria-describedby={reviewId}
+        />
+      );
     return (
-      <form {...ctx.form} data-choice-card-sample="">
-        <Stack gap={8}>
-          <RadioCard
-            {...values}
-            {...ctx.subject}
-            id={ctx.id}
-            name="backup"
-            value="daily"
-            label={label}
-            description={<bdi>{help}</bdi>}
-            aria-describedby={review ? ctx.id + '-review' : undefined}
-            onChange={(event) => ctx.action('onChange')(event.currentTarget.value)}
-          >
-            {values.indicatorPlacement === 'none' ? (
-              <RadioCardContent>
-                <Flex align="start" justify="space-between" gap={12}>
-                  <RadioCardLabel>{label}</RadioCardLabel>
-                  <RadioCardIndicator />
-                </Flex>
-                <RadioCardDescription>
-                  <bdi>{help}</bdi>
-                </RadioCardDescription>
-              </RadioCardContent>
-            ) : undefined}
-          </RadioCard>
-          {review && (
-            <Text id={ctx.id + '-review'} size="caption-l" color="danger">
-              <bdi>This schedule needs approval.</bdi>
-            </Text>
-          )}
-        </Stack>
-      </form>
+      <Stack gap={8}>
+        <RadioCardGroup
+          name={`${ctx.id}-backup`}
+          aria-label="Backup schedule"
+          readOnly={readOnly}
+          defaultValue="weekly"
+        >
+          <div {...ctx.subject} className="choice-study-subject" data-choice-card-sample="">
+            {card}
+          </div>
+          <RadioCard value="weekly" label="Weekly backup" />
+        </RadioCardGroup>
+        {reviewId && (
+          <Text id={reviewId} size="caption-l" color="danger">
+            <bdi>This schedule needs approval.</bdi>
+          </Text>
+        )}
+      </Stack>
     );
   }, 'border-box'),
   code: (values) => {
-    const attributes = previewProps(values, {
-      size: 'm',
-      disabled: false,
-      readOnly: false,
-      status: 'neutral',
-      indicatorPlacement: 'start',
-    });
+    const attributes = previewProps(
+      { ...values, readOnly: false },
+      {
+        size: 'm',
+        disabled: false,
+        readOnly: false,
+        status: 'neutral',
+        indicatorPlacement: 'start',
+      },
+    );
     const manual = values.indicatorPlacement === 'none';
     const review = values.status === 'danger' && !values.disabled;
-    const description = manual
+    const describedBy = manual
       ? review
-        ? ' aria-describedby={id + "-review " + id + "-description"}'
+        ? ' aria-describedby={id + "-description " + id + "-review"}'
         : ' aria-describedby={id + "-description"}'
       : review
         ? ' aria-describedby={id + "-review"}'
         : '';
+    const slots = manual
+      ? ` aria-labelledby={id + "-title"}`
+      : ` label="${label}" description={<bdi>${help}</bdi>}`;
     const content = manual
       ? `>
-          <RadioCardContent>
+          <ChoiceCardContent>
             <Flex align="start" justify="space-between" gap={12}>
-              <RadioCardLabel>${label}</RadioCardLabel>
+              <ChoiceCardLabel id={id + "-title"}>${label}</ChoiceCardLabel>
               <RadioCardIndicator />
             </Flex>
-            <RadioCardDescription><bdi>${help}</bdi></RadioCardDescription>
-          </RadioCardContent>
+            <ChoiceCardDescription id={id + "-description"}><bdi>${help}</bdi></ChoiceCardDescription>
+          </ChoiceCardContent>
         </RadioCard>`
       : ' />';
+    const snippet = `<RadioCard value="daily"${slots}${describedBy}${attributes} onChange={(event) => console.log(event.currentTarget.value)}${content}`;
     return `import { useId } from 'react';
-import { Stack${manual ? ', Flex' : ''}${review ? ', Text' : ''} } from '@docouno/unica';
-import { RadioCard${manual ? ', RadioCardContent, RadioCardLabel, RadioCardDescription, RadioCardIndicator' : ''} } from '${proto}';
+import { RadioCard, RadioCardGroup, Stack${manual ? ', Flex, ChoiceCardContent, ChoiceCardLabel, ChoiceCardDescription, RadioCardIndicator' : ''}${review ? ', Text' : ''} } from '@docouno/unica';
 import '@docouno/unica/styles.css';
 
 export function DailyBackup() {
   const id = useId();
   return (
-    <form>
-      <Stack gap={8}>
-        <RadioCard id={id} name="backup" value="daily"${manual ? '' : ` label="${label}" description={<bdi>${help}</bdi>}`}${description}${attributes} onChange={(event) => console.log(event.currentTarget.value)}${content}${review ? '\n        <Text id={id + "-review"} size="caption-l" color="danger"><bdi>This schedule needs approval.</bdi></Text>' : ''}
-      </Stack>
-    </form>
+    <Stack gap={8}>
+      <RadioCardGroup name={id + "-backup"} aria-label="Backup schedule" defaultValue="weekly"${values.readOnly ? ' readOnly' : ''}>
+        ${snippet}
+        <RadioCard value="weekly" label="Weekly backup" />
+      </RadioCardGroup>${review ? '\n      <Text id={id + "-review"} size="caption-l" color="danger">This schedule needs approval.</Text>' : ''}
+    </Stack>
   );
 }`;
   },
@@ -186,10 +216,10 @@ export function DailyBackup() {
       id: 'states',
       title: 'Pointer and keyboard feedback',
       kind: 'behavior',
-      mode: 'pinned',
+      mode: 'live',
       reset: true,
       caption:
-        'Hover, held press, and keyboard contours are pinned for comparison. Select an access level to move the dot within its pair.',
+        'Hover or hold the primary target to see the edge change. Tab to a choice for its outer focus ring.',
       render: withOverlaySurface(({ ctx }) => <Interaction kind="radio" ctx={ctx} />, 'border-box'),
     },
     {
@@ -210,9 +240,10 @@ export function DailyBackup() {
       title: 'Validate a retention policy',
       kind: 'behavior',
       mode: 'live',
+      actions: [{ id: 'check-selection', label: 'Check selection' }],
       reset: true,
       caption:
-        'Check an empty selection, choose a retention period, and check again. The pinned pair shows how selection and keyboard focus coexist with an error.',
+        'Check an empty selection, choose a retention period, and check again. Tab to the selected card in the second example to see the error edge and focus ring together.',
       render: withOverlaySurface(({ ctx }) => <Validation kind="radio" ctx={ctx} />, 'border-box'),
     },
     {
@@ -247,10 +278,10 @@ export function DailyBackup() {
       caption:
         'Daily and weekly backups share one native form field. Choose a schedule and save it to read the submitted answer.',
       render: withOverlaySurface(
-        ({ ctx }) => <BackupSchedule cardProps={ctx.subject} />,
+        ({ ctx }) => <BackupSchedule subjectProps={ctx.subject} />,
         'border-box',
       ),
-      code: backupSource.replace('../../prototypes/', './prototypes/'),
+      code: backupSource,
     },
     {
       id: 'output-resolution',
@@ -260,10 +291,10 @@ export function DailyBackup() {
       caption:
         'Choose a resolution to update the pixel dimensions of a fixed eight-by-six-inch image. Each group keeps its own choice.',
       render: withOverlaySurface(
-        ({ ctx }) => <OutputResolution cardProps={ctx.subject} />,
+        ({ ctx }) => <OutputResolution subjectProps={ctx.subject} />,
         'border-box',
       ),
-      code: resolutionSource.replace('../../prototypes/', './prototypes/'),
+      code: resolutionSource,
     },
   ],
 });

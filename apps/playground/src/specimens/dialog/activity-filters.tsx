@@ -1,7 +1,6 @@
 import { useId, useState } from 'react';
 import { SlidersHorizontalIcon } from '@phosphor-icons/react';
-import { Button, Input, Select, Stack, Text } from '@docouno/unica';
-import { CheckboxCard } from '../../prototypes/choice-card/choice-card.proto.js';
+import { Button, CheckboxCard, Input, Select, Stack, Text } from '@docouno/unica';
 import { FormField } from '../../prototypes/form-field/form-field.proto.js';
 import {
   Drawer,

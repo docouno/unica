@@ -1,9 +1,8 @@
 import { useId, useState } from 'react';
-import { Box, Button, Stack, Text } from '@docouno/unica';
-import { RadioCard } from '../../prototypes/choice-card/choice-card.proto.js';
+import { Box, Button, Stack, Text, RadioCard, RadioCardGroup } from '@docouno/unica';
 import '@docouno/unica/styles.css';
 
-export function BackupSchedule({ cardProps = {} } = {}) {
+export function BackupSchedule({ subjectProps = {} } = {}) {
   const id = useId();
   const [saved, setSaved] = useState('');
   return (
@@ -20,23 +19,22 @@ export function BackupSchedule({ cardProps = {} } = {}) {
         <Text id={id} size="body-m" weight="semibold">
           Backup schedule
         </Text>
-        <Stack gap={8} role="radiogroup" aria-labelledby={id}>
-          <RadioCard
-            {...cardProps}
-            name="backup"
-            value="daily"
-            label="Daily"
-            description={<bdi>Every day at 02:00 UTC.</bdi>}
-            defaultChecked
-          />
-          <RadioCard
-            {...cardProps}
-            name="backup"
-            value="weekly"
-            label="Weekly"
-            description={<bdi>Every Monday at 02:00 UTC.</bdi>}
-          />
-        </Stack>
+        <RadioCardGroup name="backup" defaultValue="daily" aria-labelledby={id}>
+          <div {...subjectProps}>
+            <RadioCard
+              value="daily"
+              label="Daily"
+              description={<bdi>Every day at 02:00 UTC.</bdi>}
+            />
+          </div>
+          <div {...subjectProps}>
+            <RadioCard
+              value="weekly"
+              label="Weekly"
+              description={<bdi>Every Monday at 02:00 UTC.</bdi>}
+            />
+          </div>
+        </RadioCardGroup>
         <Box>
           <Button type="submit" size="s">
             Save schedule

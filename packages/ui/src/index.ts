@@ -86,6 +86,37 @@ export type {
 } from './components/Checkbox/index.js';
 export { Chip, ChipGroup } from './components/Chip/index.js';
 export type { ChipGroupProps, ChipProps } from './components/Chip/index.js';
+export {
+  CheckboxCard,
+  CheckboxCardGroup,
+  CheckboxCardIndicator,
+  ChoiceCardContent,
+  ChoiceCardDescription,
+  ChoiceCardLabel,
+  ChoiceCardMetadata,
+  ChoiceCardSecondary,
+  RadioCard,
+  RadioCardGroup,
+  RadioCardIndicator,
+  SwitchCard,
+  SwitchCardIndicator,
+} from './components/ChoiceCard/index.js';
+export type {
+  CheckboxCardGroupProps,
+  CheckboxCardIndicatorProps,
+  CheckboxCardProps,
+  ChoiceCardContentProps,
+  ChoiceCardDescriptionProps,
+  ChoiceCardIndicatorPlacement,
+  ChoiceCardLabelProps,
+  ChoiceCardMetadataProps,
+  ChoiceCardSecondaryProps,
+  RadioCardGroupProps,
+  RadioCardIndicatorProps,
+  RadioCardProps,
+  SwitchCardIndicatorProps,
+  SwitchCardProps,
+} from './components/ChoiceCard/index.js';
 export { Code } from './components/Code/index.js';
 export type { CodeProps, CodeStatus } from './components/Code/index.js';
 export { Divider } from './components/Divider/index.js';

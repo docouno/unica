@@ -8,9 +8,10 @@ import {
   SwitchGroup,
   Stack,
   Text,
+  CheckboxCard,
+  CheckboxCardGroup,
 } from '@docouno/unica';
 import { FormField } from '../../prototypes/form-field/form-field.proto.js';
-import { CheckboxCard } from '../../prototypes/choice-card/choice-card.proto.js';
 import '@docouno/unica/styles.css';
 
 const sizes = Object.freeze({ compact: 's', regular: 'm', comfortable: 'l' });
@@ -137,9 +138,7 @@ export function Groups({ fieldProps = {} } = {}) {
         description={<bdi>Select the sources people can discover.</bdi>}
         descriptionId={`${id}-cards-description`}
       >
-        <Stack
-          gap={8}
-          role="group"
+        <CheckboxCardGroup
           aria-labelledby={`${id}-cards-label`}
           aria-describedby={`${id}-cards-description`}
         >
@@ -149,7 +148,7 @@ export function Groups({ fieldProps = {} } = {}) {
             defaultChecked
           />
           <CheckboxCard label="Working drafts" description={<bdi>Still open for feedback.</bdi>} />
-        </Stack>
+        </CheckboxCardGroup>
       </FormField>
     </Stack>
   );
