@@ -9,8 +9,18 @@ import {
   KeyIcon,
   ShieldCheckIcon,
 } from '@phosphor-icons/react';
-import { Badge, Button, Card, IconButton, Link, Stack, Switch, Text, Title } from '@docouno/unica';
-import { Avatar } from '../../prototypes/avatar/avatar.proto.js';
+import {
+  Avatar,
+  Badge,
+  Button,
+  Card,
+  IconButton,
+  Link,
+  Stack,
+  Switch,
+  Text,
+  Title,
+} from '@docouno/unica';
 import { Menu } from '../../prototypes/menu/menu.live.js';
 import { List, ListItem } from '../../prototypes/list/list.proto.js';
 import type { PreviewContext, PreviewProps, Surface } from '../../workbench/types.js';

@@ -1,26 +1,17 @@
 import { useState } from 'react';
 import type { ReactElement, ReactNode } from 'react';
 import { UsersIcon } from '@phosphor-icons/react';
-import { Card, Divider, Icon, Text } from '@docouno/unica';
+import { Avatar, AvatarGroup, Card, Divider, Icon, Text } from '@docouno/unica';
+import type { AvatarGroupProps } from '@docouno/unica';
 import { useStoryAction } from '../../workbench/storyFrameState.js';
 import type { PreviewProps } from '../../workbench/types.js';
-import { Avatar, AvatarGroup } from './avatar.proto.js';
-import type { AvatarGroupMember, AvatarGroupSize } from './avatar.proto.js';
+import { contributors as members } from './avatar.members.js';
 import './avatar.examples.css';
 
 const lightPortrait = '/assets/avatar-person-light.png';
 const darkPortrait = '/assets/avatar-person-dark.png';
 const brokenPortrait = 'data:image/png;base64,YnJva2Vu';
-const groupSizes: readonly AvatarGroupSize[] = ['xs', 's', 'm', 'l'];
-const members: readonly AvatarGroupMember[] = [
-  { id: 'editor', name: 'Content editor', src: lightPortrait },
-  { id: 'reviewer', name: 'Design reviewer', src: darkPortrait },
-  { id: 'writer', name: 'Workspace writer' },
-  { id: 'owner', name: 'Project owner' },
-  { id: 'engineer', name: 'Platform engineer' },
-  { id: 'researcher', name: 'Design researcher' },
-  { id: 'maintainer', name: 'Library maintainer' },
-];
+const groupSizes: readonly NonNullable<AvatarGroupProps['size']>[] = ['xs', 's', 'm', 'l'];
 
 function Sample({
   label,
@@ -110,7 +101,7 @@ export function ImageLifecycle({ ctx }: PreviewProps): ReactElement {
   const [request, setRequest] = useState(0);
   const name = reviewer ? 'Design reviewer' : 'Content editor';
   const src =
-    state === 'missing'
+    state === 'missing' || state === 'waiting'
       ? undefined
       : state === 'failed'
         ? brokenPortrait
@@ -127,13 +118,7 @@ export function ImageLifecycle({ ctx }: PreviewProps): ReactElement {
     <div className="avatar-example-stack">
       <div className="avatar-example-row">
         <Sample label="Waiting · held preview">
-          <Avatar
-            {...ctx.subject}
-            name="Content editor"
-            src={lightPortrait}
-            alt="Content editor"
-            previewStatus="loading"
-          />
+          <Avatar {...ctx.subject} name="Content editor" alt="Content editor" />
         </Sample>
         <Sample label="Loaded">
           <Avatar {...ctx.subject} name="Content editor" src={lightPortrait} alt="Content editor" />
@@ -155,15 +140,7 @@ export function ImageLifecycle({ ctx }: PreviewProps): ReactElement {
       </div>
       <Divider />
       <div className="avatar-example-person">
-        <Avatar
-          {...ctx.subject}
-          key={request}
-          name={name}
-          alt=""
-          src={src}
-          size="l"
-          previewStatus={state === 'waiting' ? 'loading' : undefined}
-        />
+        <Avatar {...ctx.subject} key={request} name={name} alt="" src={src} size="l" />
         <Text size="body-s" weight="medium">
           {name}
         </Text>
@@ -380,7 +357,7 @@ export function GroupDirection({ ctx }: PreviewProps): ReactElement {
 }
 
 export function NameHints({ ctx }: PreviewProps): ReactElement {
-  const namedMembers: readonly AvatarGroupMember[] = [
+  const namedMembers: AvatarGroupProps['members'] = [
     members[0]!,
     members[2]!,
     { id: 'long-name', name: 'Alexandra Montgomery-Wellington' },

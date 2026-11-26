@@ -1,6 +1,5 @@
 import { useId, useState } from 'react';
-import { Button, Stack, Text } from '@docouno/unica';
-import { Avatar } from '../../prototypes/avatar/avatar.proto.js';
+import { Avatar, Button, Stack, Text } from '@docouno/unica';
 
 export function AccountProfile({
   avatarProps = {},

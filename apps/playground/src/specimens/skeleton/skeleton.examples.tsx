@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import type { ReactElement, ReactNode } from 'react';
-import { Avatar } from '../../prototypes/avatar/avatar.proto.js';
-import { Flex, Skeleton, SkeletonText, Stack, Text, Title } from '@docouno/unica';
+import { Avatar, Flex, Skeleton, SkeletonText, Stack, Text, Title } from '@docouno/unica';
 import type { TextSize, TitleSize } from '@docouno/unica';
 import { useStoryAction } from '../../workbench/storyFrameState.js';
 import type { PreviewContext, PreviewProps } from '../../workbench/types.js';

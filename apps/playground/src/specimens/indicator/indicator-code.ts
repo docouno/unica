@@ -61,8 +61,7 @@ export function indicatorCode(values: IndicatorValues): string {
   const props = previewProps(marker, defaults);
   const style = Object.keys(layout).length ? ` style={${JSON.stringify(layout)}}` : '';
   if (host === 'avatar') {
-    return `import { Indicator, Stack } from '@docouno/unica';
-import { Avatar } from './prototypes/avatar/avatar.proto.js';
+    return `import { Avatar, Indicator, Stack } from '@docouno/unica';
 
 <Stack align="center">
   <Indicator${props}>

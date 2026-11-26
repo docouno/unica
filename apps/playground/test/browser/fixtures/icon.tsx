@@ -1,4 +1,5 @@
 import {
+  Avatar,
   Icon,
   Input,
   Link,
@@ -18,7 +19,6 @@ import {
   WorkspaceNavigation,
   WorkspaceTrash,
 } from '../../../src/prototypes/app-shell/app-shell.proto.js';
-import { Avatar } from '../../../src/prototypes/avatar/avatar.proto.js';
 import { FileItem, FileList } from '../../../src/prototypes/file-input/file-input.proto.js';
 import { Combobox } from '../../../src/prototypes/combobox/combobox.proto.js';
 import { MenuRows, MenuSurface } from '../../../src/prototypes/menu/menu.proto.js';
