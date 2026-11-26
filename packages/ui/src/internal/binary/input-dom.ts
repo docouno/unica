@@ -2,6 +2,7 @@ import {
   getDefaultView,
   getOwnerDocument,
   getRootNodeSafe,
+  isConnectedNode,
   isElementNode,
 } from '../../core/dom.js';
 
@@ -21,7 +22,8 @@ interface InputBinding extends InputCallbacks {
 }
 
 interface RootBindings {
-  readonly inputs: Map<HTMLInputElement, InputBinding>;
+  readonly inputs: ReadonlyMap<HTMLInputElement, InputBinding>;
+  readonly add: (binding: InputBinding) => void;
   readonly remove: (binding: InputBinding) => void;
   dispose: () => void;
 }
@@ -104,37 +106,44 @@ function createRootBindings(root: Node): RootBindings {
     pressed.clear();
   }
 
-  const observer =
-    view &&
-    new view.MutationObserver(() => {
-      for (const binding of inputs.values()) {
-        const { input } = binding;
-        const rootChanged = syncRoot(binding);
-        const { form, name } = input;
-        const disabled = input.matches(':disabled');
-        if (
-          rootChanged ||
-          form !== binding.form ||
-          name !== binding.name ||
-          disabled !== binding.disabled
-        ) {
-          binding.form = form;
-          binding.name = name;
-          binding.disabled = disabled;
-          binding.refresh(rootChanged);
-        }
+  function refresh(): void {
+    for (const binding of inputs.values()) {
+      const { input } = binding;
+      const rootChanged = syncRoot(binding);
+      const { form, name } = input;
+      const disabled = input.matches(':disabled');
+      if (
+        rootChanged ||
+        form !== binding.form ||
+        name !== binding.name ||
+        disabled !== binding.disabled
+      ) {
+        binding.form = form;
+        binding.name = name;
+        binding.disabled = disabled;
+        binding.refresh(rootChanged);
       }
-      if (hovered && !hovered.input.isConnected) {
-        updateHover(undefined);
-      }
-    });
+    }
+    if (hovered && !hovered.input.isConnected) {
+      updateHover(undefined);
+    }
+    if (connection && isConnectedNode(root)) {
+      connection.disconnect();
+    }
+  }
+
+  const detached = !isConnectedNode(root);
+  const observer = view && new view.MutationObserver(refresh);
+  // A detached root can be inserted into a shadow tree outside the DOM observer.
+  const connection =
+    detached && view?.ResizeObserver ? new view.ResizeObserver(refresh) : undefined;
   observer?.observe(root, {
     subtree: true,
     childList: true,
     attributes: true,
     attributeFilter: ['disabled', 'form', 'id', 'name'],
   });
-  if (!root.isConnected && document && document !== root) {
+  if (detached && document && document !== root) {
     observer?.observe(document, { subtree: true, childList: true });
   }
 
@@ -161,8 +170,15 @@ function createRootBindings(root: Node): RootBindings {
   activationRoot.addEventListener('input', input, true);
   return {
     inputs,
+    add(binding) {
+      inputs.set(binding.input, binding);
+      if (connection && !isConnectedNode(root)) {
+        connection.observe(binding.input);
+      }
+    },
     remove(binding) {
       inputs.delete(binding.input);
+      connection?.unobserve(binding.input);
       if (hovered === binding) {
         updateHover(undefined);
       }
@@ -175,6 +191,7 @@ function createRootBindings(root: Node): RootBindings {
     },
     dispose() {
       observer?.disconnect();
+      connection?.disconnect();
       for (const unbind of unbinds) {
         unbind();
       }
@@ -192,7 +209,7 @@ function register(root: Node, binding: InputBinding): void {
     registry = createRootBindings(root);
     roots.set(root, registry);
   }
-  registry.inputs.set(binding.input, binding);
+  registry.add(binding);
 }
 
 function unregister(binding: InputBinding): void {

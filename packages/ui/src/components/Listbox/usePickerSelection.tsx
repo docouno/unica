@@ -1,15 +1,9 @@
 import { useCallback, useRef, useState } from 'react';
 import type { JSX } from 'react';
-import {
-  getDefaultView,
-  getShadowHostSafe,
-  isElementNode,
-  isInertElement,
-  matchesSafe,
-  parentNodeOf,
-} from '../../core/dom.js';
+import { isInertElement, matchesSafe } from '../../core/dom.js';
 import { FormSelect, writeSelectValue } from '../../core/forms/carriers.js';
 import type { SelectValue } from '../../core/forms/carriers.js';
+import { observeControlPath } from '../../core/forms/observeControlPath.js';
 import { useFormValue } from '../../core/forms/useFormValue.js';
 import { warnOnce } from '../../core/devWarning.js';
 import type { Catalog, CollectionEntry, Row } from './collection.js';
@@ -75,41 +69,6 @@ function normalize(value: SelectValue, multiple: boolean): SelectValue {
   return multiple ? Array.from(new Set(keys)) : (keys[0] ?? null);
 }
 
-function observeDisabled(
-  control: HTMLSelectElement,
-  setDisabled: (disabled: boolean) => void,
-): () => void {
-  const view = getDefaultView(control.ownerDocument);
-  let path: Node[] = [];
-  const observer = view ? new view.MutationObserver(sync) : undefined;
-  function sync(): void {
-    setDisabled(matchesSafe(control, ':disabled'));
-    const next: Node[] = [];
-    for (
-      let node: Node | null = control;
-      node;
-      node = parentNodeOf(node) ?? getShadowHostSafe(node)
-    ) {
-      next.push(node);
-    }
-    if (next.length === path.length && next.every((node, index) => node === path[index])) {
-      return;
-    }
-    path = next;
-    observer?.disconnect();
-    for (const node of path) {
-      observer?.observe(node, {
-        childList: true,
-        ...(node === control || (isElementNode(node) && node.localName === 'fieldset')
-          ? { attributes: true, attributeFilter: ['disabled'] }
-          : undefined),
-      });
-    }
-  }
-  sync();
-  return () => observer?.disconnect();
-}
-
 export function usePickerSelection({
   catalog,
   props,
@@ -132,7 +91,7 @@ export function usePickerSelection({
       return;
     }
     control.current = node;
-    const stop = observeDisabled(node, setNativeDisabled);
+    const stop = observeControlPath(node, () => setNativeDisabled(matchesSafe(node, ':disabled')));
     return () => {
       stop();
       control.current = null;

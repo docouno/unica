@@ -2,6 +2,12 @@ import { useCallback, useMemo, useRef, useState } from 'react';
 import type { HTMLAttributes, JSX, KeyboardEvent, Ref, RefCallback } from 'react';
 import { cx, dataFlag } from '../../core/cx.js';
 import { FormInput } from '../../core/forms/carriers.js';
+import {
+  fieldControlId,
+  fieldDescription,
+  fieldGroupLabel,
+  useFormField,
+} from '../../core/forms/field-context.js';
 import type { StyleWithVars } from '../../core/mergeStyle.js';
 import { mergeRefs } from '../../core/mergeRefs.js';
 import { pickConsumerDataAttributes } from '../../core/passiveRoot.js';
@@ -96,10 +102,10 @@ export function SliderControl({
   onChange,
   onCommit,
   orientation = 'horizontal',
-  size = 'm',
-  status = 'neutral',
-  disabled = false,
-  readOnly = false,
+  size: sizeProp,
+  status: statusProp,
+  disabled: disabledProp,
+  readOnly: readOnlyProp,
   showValue = true,
   formatValue = serializeValue,
   marks = noMarks,
@@ -121,6 +127,12 @@ export function SliderControl({
   onBlurCapture,
   ...rest
 }: SliderControlProps): JSX.Element {
+  const scope = useFormField();
+  const field = scope?.target === (group ? 'group' : 'control') ? scope : null;
+  const size = sizeProp ?? field?.size ?? 'm';
+  const status = statusProp ?? (field?.status === 'danger' ? 'danger' : 'neutral');
+  const disabled = disabledProp ?? field?.disabled ?? false;
+  const readOnly = readOnlyProp ?? field?.readOnly ?? false;
   const root = useRef<HTMLDivElement>(null);
   const rail = useRef<HTMLDivElement>(null);
   const lower = useRef<HTMLInputElement>(null);
@@ -220,7 +232,13 @@ export function SliderControl({
   return (
     <div
       {...pickConsumerDataAttributes(rest, 'data-unica-slider-')}
-      {...(group ? naming(group) : undefined)}
+      {...(group
+        ? {
+            ...naming(group),
+            'aria-labelledby': fieldGroupLabel(field, group.labelledBy),
+            'aria-describedby': fieldDescription(field, group.describedBy, input.disabled),
+          }
+        : undefined)}
       ref={rootRef}
       className={cx('unica-slider', className)}
       style={style}
@@ -276,6 +294,12 @@ export function SliderControl({
               >
                 <FormInput
                   {...naming(thumb)}
+                  id={fieldControlId(field?.target === 'control' ? field : null, thumb.id)}
+                  aria-describedby={fieldDescription(
+                    field,
+                    thumb.describedBy,
+                    input.disabled || group !== undefined,
+                  )}
                   {...native[index]}
                   {...(!group ? keys : undefined)}
                   controlled={false}

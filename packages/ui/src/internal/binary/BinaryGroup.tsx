@@ -3,6 +3,16 @@ import type { Context, JSX } from 'react';
 import { cx } from '../../core/cx.js';
 import { mergeRefs } from '../../core/mergeRefs.js';
 import { writeInputChecked, writeRadioGroup } from '../../core/forms/carriers.js';
+import {
+  fieldDescription,
+  fieldGroupLabel,
+  FormFieldContext,
+  useFormField,
+} from '../../core/forms/field-context.js';
+import {
+  isInsideDisabledFieldset,
+  observeControlPath,
+} from '../../core/forms/observeControlPath.js';
 import type { FormWriteContext } from '../../core/forms/useFormValue.js';
 import { useFormValue } from '../../core/forms/useFormValue.js';
 import { useIsoLayoutEffect } from '../../core/useIsoLayoutEffect.js';
@@ -113,7 +123,7 @@ function useBinaryGroup<T extends GroupValue>(
     onValueChange,
     isSelected,
     select,
-    required = false,
+    required: requiredProp,
     requiredMessage,
     status,
   } = options;
@@ -121,13 +131,22 @@ function useBinaryGroup<T extends GroupValue>(
     ref,
     name: nameProp,
     form,
-    size,
-    disabled = false,
-    readOnly = false,
+    size: sizeProp,
+    disabled: disabledProp,
+    readOnly: readOnlyProp,
     orientation = 'vertical',
     className,
     ...attrs
   } = props;
+  const scope = useFormField();
+  const field = scope?.target === 'group' ? scope : null;
+  const size = sizeProp ?? field?.size;
+  const disabled = disabledProp ?? field?.disabled ?? false;
+  const readOnly = readOnlyProp ?? field?.readOnly ?? false;
+  const required = requiredProp ?? (kind !== 'switch' && field?.required) ?? false;
+  const [fieldsetDisabled, setFieldsetDisabled] = useState(false);
+  const unavailable = disabled || (field !== null && fieldsetDisabled);
+  const fieldInvalid = kind !== 'switch' && field?.status === 'danger';
   const generated = useId();
   const isRadio = kind === 'radio';
   const name = isRadio ? nameProp || generated : nameProp;
@@ -150,6 +169,13 @@ function useBinaryGroup<T extends GroupValue>(
     write: (next, config) => writeGroup(kind, dom, next, config),
   });
 
+  const observeFieldset = field !== null;
+  useIsoLayoutEffect(() => {
+    const group = root.current;
+    if (observeFieldset && group) {
+      return observeControlPath(group, () => setFieldsetDisabled(isInsideDisabledFieldset(group)));
+    }
+  }, [observeFieldset]);
   useIsoLayoutEffect(() => () => dom.disconnect(), [dom]);
   useIsoLayoutEffect(() => {
     if (root.current) {
@@ -158,7 +184,7 @@ function useBinaryGroup<T extends GroupValue>(
         kind,
         sharedOwner,
         keyed: managed,
-        disabled,
+        disabled: unavailable,
         ariaDisabled: attrs['aria-disabled'],
         form,
         tabIndex: attrs.tabIndex,
@@ -228,8 +254,12 @@ function useBinaryGroup<T extends GroupValue>(
       ref: rootRef,
       className: cx('unica-binary-group', className),
       'data-unica-binary-orientation': orientation,
-      'aria-disabled': disabled ? undefined : attrs['aria-disabled'],
-      'aria-invalid': disabled ? undefined : status === 'danger' || attrs['aria-invalid'],
+      'aria-labelledby': fieldGroupLabel(field, attrs['aria-labelledby']),
+      'aria-describedby': fieldDescription(field, attrs['aria-describedby'], unavailable),
+      'aria-disabled': unavailable ? undefined : attrs['aria-disabled'],
+      'aria-invalid': unavailable
+        ? undefined
+        : (status === undefined ? fieldInvalid : status === 'danger') || attrs['aria-invalid'],
       ...(isRadio && {
         'aria-readonly': readOnly || attrs['aria-readonly'],
         'aria-required': required || attrs['aria-required'],
@@ -275,7 +305,9 @@ export function BinaryToggleGroup({
   });
   return (
     <Provider value={context}>
-      <div {...rootProps} role="group" />
+      <div {...rootProps} role="group">
+        <FormFieldContext value={null}>{rootProps.children}</FormFieldContext>
+      </div>
     </Provider>
   );
 }
@@ -315,7 +347,9 @@ export function BinaryRadioGroup({
   });
   return (
     <RadioContext value={context}>
-      <div {...rootProps} role="radiogroup" />
+      <div {...rootProps} role="radiogroup">
+        <FormFieldContext value={null}>{rootProps.children}</FormFieldContext>
+      </div>
     </RadioContext>
   );
 }

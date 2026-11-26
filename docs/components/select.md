@@ -88,6 +88,8 @@ Pass `messages` to localize fixed copy and generated text. `PickerMessages` incl
 
 ## Placement and forms
 
+[FormField](form-field.md) binds its label, description, feedback, and count to the Select trigger. Use `controlId` on the field when the trigger needs a specific ID. Explicit Select props override inherited size, status, disabled, read-only, and required state. The search box has its own name and ID inside the panel.
+
 The browser puts the in-place panel in its top layer, including inside `<dialog>`. The panel starts below the trigger at logical start, with an 8px gap and 16px viewport clearance. It is at least as wide as the trigger or 264px, within the available width. The panel can flip for space and keeps its side when filtering while there is room. The active theme supplies the overlay material. Reduced motion retains a static activity glyph and forced colors retain the selection and focus cues.
 
 The option list keeps the same 2px gap between rows as Listbox. It scrolls beneath its header and search with a compact native scrollbar. Overflowing recovery content uses the same scrollbar. [Listbox row spacing](listbox.md#keyboard-and-availability)

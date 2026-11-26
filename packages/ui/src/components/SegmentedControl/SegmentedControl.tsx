@@ -3,8 +3,10 @@ import type { JSX, KeyboardEvent } from 'react';
 import { useRovingFocus } from '../../core/collections/useRovingFocus.js';
 import { cx, dataFlag } from '../../core/cx.js';
 import { warnOnce } from '../../core/devWarning.js';
-import { getDefaultView, isElementNode, isInertElement } from '../../core/dom.js';
+import { isElementNode, isInertElement } from '../../core/dom.js';
 import { FormInput, FormSelect } from '../../core/forms/carriers.js';
+import { fieldDescription, fieldGroupLabel, useFormField } from '../../core/forms/field-context.js';
+import { observeControlPath } from '../../core/forms/observeControlPath.js';
 import { mergeRefs } from '../../core/mergeRefs.js';
 import { useIsoLayoutEffect } from '../../core/useIsoLayoutEffect.js';
 import { Icon } from '../Icon/index.js';
@@ -69,19 +71,28 @@ export function SegmentedControl({
   value,
   defaultValue,
   onValueChange,
-  size = 'm',
+  size: sizeProp,
   orientation = 'horizontal',
   width = 'auto',
-  required = false,
-  disabled = false,
-  readOnly = false,
-  status = 'neutral',
+  required: requiredProp,
+  disabled: disabledProp,
+  readOnly: readOnlyProp,
+  status: statusProp,
+  'aria-describedby': describedBy,
+  'aria-labelledby': labelledBy,
   className,
   onFocus,
   onBlur,
   onKeyDown,
   ...props
 }: SegmentedControlProps): JSX.Element {
+  const scope = useFormField();
+  const field = scope?.target === 'group' ? scope : null;
+  const size = sizeProp ?? field?.size ?? 'm';
+  const status = statusProp ?? (field?.status === 'danger' ? 'danger' : 'neutral');
+  const required = requiredProp ?? field?.required ?? false;
+  const disabled = disabledProp ?? field?.disabled ?? false;
+  const readOnly = readOnlyProp ?? field?.readOnly ?? false;
   const rail = useRef<HTMLDivElement>(null);
   const rootRef = useMemo(() => mergeRefs(rail, ref), [ref]);
   const catalog = useMemo(() => createCatalog(items), [items]);
@@ -113,25 +124,8 @@ export function SegmentedControl({
     if (!input) {
       return;
     }
-    const sync = (): void => setFieldsetDisabled(!disabled && input.matches(':disabled'));
-    sync();
-    const view = getDefaultView(input.ownerDocument);
-    if (view?.MutationObserver) {
-      const observer = new view.MutationObserver(sync);
-      for (
-        let fieldset = input.closest('fieldset');
-        fieldset;
-        fieldset = fieldset.parentElement?.closest('fieldset') ?? null
-      ) {
-        observer.observe(fieldset, {
-          attributes: true,
-          attributeFilter: ['disabled'],
-          childList: true,
-        });
-      }
-      return () => observer.disconnect();
-    }
-  }, [carrier, disabled]);
+    return observeControlPath(input, () => setFieldsetDisabled(input.matches(':disabled')));
+  }, [carrier]);
 
   const collection = useMemo(
     () =>
@@ -197,6 +191,8 @@ export function SegmentedControl({
       {...props}
       ref={rootRef}
       role="radiogroup"
+      aria-labelledby={fieldGroupLabel(field, labelledBy)}
+      aria-describedby={fieldDescription(field, describedBy, unavailable)}
       aria-orientation={orientation}
       aria-readonly={readOnly || undefined}
       aria-disabled={unavailable || undefined}

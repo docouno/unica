@@ -2,6 +2,8 @@
 
 Use `Switch` for a named setting that changes immediately, such as enabling reminders. Use [Checkbox](checkbox.md) to collect an answer for a later form submission. A Switch is a native checkbox input with `role="switch"` and a track that shows the current setting.
 
+Use [FormField](form-field.md) to label a standalone switch or supply shared instructions to a SwitchGroup.
+
 ```tsx
 import { useId, useState } from 'react';
 import { Switch } from '@docouno/unica';

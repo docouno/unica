@@ -205,54 +205,50 @@ export default defineComponent({
     },
     'border-box',
   ),
-  code: ({ useValue, useDefaultValue, draft, rowCap, ...values }) => {
+  code: ({
+    useValue,
+    useDefaultValue,
+    draft,
+    rowCap,
+    size,
+    status,
+    disabled,
+    required,
+    ...editor
+  }) => {
     const attributes = previewProps(
-      { ...values, cols: nativeColumns(values.cols) },
+      { ...editor, cols: nativeColumns(editor.cols) },
       {
-        size: 'm',
         variant: 'default',
-        status: 'neutral',
         width: 'full',
-        disabled: false,
         readOnly: false,
-        required: false,
         resize: 'vertical',
         autosize: false,
         rows: 3,
         minRows: 3,
         wrap: 'soft',
-        ...(values.wrap === 'hard' ? {} : { cols: 20 }),
+        ...(editor.wrap === 'hard' ? {} : { cols: 20 }),
       },
+    );
+    const field = previewProps(
+      { size, status, disabled, required },
+      { size: 'm', status: 'neutral', disabled: false, required: false },
     );
     const initial = JSON.stringify(draft);
     const value = useValue ? ' value={value}' : useDefaultValue ? ` defaultValue={${initial}}` : '';
-    const feedback =
-      values.wrap === 'off' && values.status !== 'neutral' && !values.disabled
-        ? textareaFeedback[values.status]
-        : undefined;
-    const mark =
-      values.required && !values.disabled
-        ? ' <Text as="span" color="danger" aria-hidden="true">*</Text>'
-        : '';
-    const note = feedback
-      ? `
-        <Flex id={id + '-message'} gap={8} align="start">
-          <Icon icon={${feedback.name}} size="s" color="${values.status}" />
-          <Text size="caption-l" color="${values.status}"><bdi>${feedback.label}</bdi></Text>
-        </Flex>`
-      : '';
-    return `import { useId${useValue ? ', useState' : ''} } from 'react';
-import { ${feedback ? 'Flex, Icon, ' : ''}Stack, Text, Textarea } from '@docouno/unica';
-${feedback ? 'import { ' + feedback.name + " } from '@phosphor-icons/react';\n" : ''}import '@docouno/unica/styles.css';
+    const fallback =
+      editor.wrap === 'off' && status !== 'neutral' && !disabled
+        ? ` statusLabel="${textareaFeedback[status]}"`
+        : ' message=""';
+    return `${useValue ? "import { useState } from 'react';\n" : ''}import { FormField, Textarea } from '@docouno/unica';
+import '@docouno/unica/styles.css';
 
 export function ReleaseSummary() {
-  const id = useId();${useValue ? `\n  const [value, setValue] = useState(${initial});` : ''}
-  return (
+${useValue ? `  const [value, setValue] = useState(${initial});\n` : ''}  return (
     <form>
-      <Stack gap={8}${values.width === 'auto' ? " style={{ inlineSize: 'min(100%, 28rem)' }}" : ''}>
-        <Text as="label" htmlFor={id} size="body-s" weight="medium">${exampleLabel}${mark}</Text>
-        <Textarea id={id} dir="auto" placeholder="What shipped?"${attributes}${rowCap > 0 ? ` maxRows={${rowCap}}` : ''}${feedback ? ' aria-describedby={id + "-message"}' : ''}${value} onChange={(event) => ${useValue ? '{ setValue(event.currentTarget.value); console.log(event.currentTarget.value); }' : 'console.log(event.currentTarget.value)'}} />${note}
-      </Stack>
+      <FormField label="${exampleLabel}"${field}${fallback}${editor.width === 'auto' ? " style={{ inlineSize: 'min(100%, 28rem)' }}" : ''}>
+        <Textarea dir="auto" placeholder="What shipped?"${attributes}${rowCap > 0 ? ` maxRows={${rowCap}}` : ''}${value} onChange={(event) => ${useValue ? '{ setValue(event.currentTarget.value); console.log(event.currentTarget.value); }' : 'console.log(event.currentTarget.value)'}} />
+      </FormField>
     </form>
   );
 }`;

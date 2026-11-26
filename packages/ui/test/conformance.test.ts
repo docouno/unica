@@ -27,6 +27,7 @@ const EXTERNAL_CSS_HOOKS = new Set([
   '--badge-max-width',
   '--chip-max-width',
   '--element-radius',
+  '--form-field-label-width',
   '--kbd-bg',
   '--kbd-border',
   '--kbd-fg',

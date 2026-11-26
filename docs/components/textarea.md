@@ -2,6 +2,8 @@
 
 `Textarea` is a native multiline plain-text editor for notes, descriptions, and logs. It fills the form column by default and adapts to Base and Overlay surfaces through the active Soft, Frost, or Pixel theme.
 
+Use [FormField](form-field.md) to associate a label, description, feedback, and optional count. In `wrap="off"` mode, the field can display the glyph beside the feedback while the editor scrolls horizontally.
+
 ## Put it in a form
 
 Use a visible label and connect help, feedback, and any counter through `aria-describedby`. Pass each ID once in reading order, starting with any existing external references. The form owns validation timing, announcements, and saving state.

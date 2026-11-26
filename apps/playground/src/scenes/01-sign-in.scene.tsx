@@ -14,7 +14,7 @@ import type { ReactElement } from 'react';
 import { GithubLogoIcon, KeyIcon } from '@phosphor-icons/react';
 import { BrandMark } from '../prototypes/app-shell/app-shell.proto.js';
 import { Button } from '@docouno/unica';
-import { FormField } from '../prototypes/form-field/form-field.proto.js';
+import { FormField } from '@docouno/unica';
 import { defineScene } from '../workbench/types.js';
 import { FolioScene } from './folio/folio.shared.js';
 
@@ -108,7 +108,7 @@ function SignInScene(): ReactElement {
               setMessage('Your sign-in details are ready for your identity provider.');
             }}
           >
-            <FormField label="Work email" htmlFor={emailId} required>
+            <FormField label="Work email" controlId={emailId} required>
               <Input
                 id={emailId}
                 type="email"

@@ -123,6 +123,21 @@ export { Code } from './components/Code/index.js';
 export type { CodeProps, CodeStatus } from './components/Code/index.js';
 export { Divider } from './components/Divider/index.js';
 export type { DividerProps } from './components/Divider/index.js';
+export {
+  FormField,
+  FormFieldContext,
+  FormFieldDescription,
+  FormFieldFeedback,
+  FormFieldLabel,
+  useFormField,
+} from './components/FormField/index.js';
+export type {
+  FormFieldContextValue,
+  FormFieldDescriptionProps,
+  FormFieldFeedbackProps,
+  FormFieldLabelProps,
+  FormFieldProps,
+} from './components/FormField/index.js';
 export { HoverCard, HoverCardContent, HoverCardTrigger } from './components/HoverCard/index.js';
 export type {
   HoverCardContentProps,

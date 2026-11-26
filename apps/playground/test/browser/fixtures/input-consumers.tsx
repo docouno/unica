@@ -1,5 +1,7 @@
 import type { ReactElement } from 'react';
 import { useState } from 'react';
+import { FormField, Select } from '@docouno/unica';
+import { FileInput } from '../../../src/prototypes/file-input/file-input.proto.js';
 import { Autocomplete, Combobox } from '../../../src/prototypes/combobox/combobox.proto.js';
 import {
   DatePicker,
@@ -70,6 +72,32 @@ export default function InputConsumers(): ReactElement {
       <div data-testid="search-select">
         <Combobox label="Search choice" options={choices} defaultSelection={choices[0]} />
       </div>
+      <div data-testid="trigger-select">
+        <FormField
+          label="Primary choice"
+          description="Select a value."
+          status="danger"
+          message="Choose a catalog entry."
+        >
+          <Select options={choices} searchable />
+        </FormField>
+      </div>
+      <div data-testid="file-readonly">
+        <FileInput
+          label="Approved attachment"
+          description="A saved reference."
+          initialFileName="plan.pdf"
+          readOnly
+        />
+      </div>
+      <div data-testid="file-editable">
+        <FileInput
+          label="Upload attachment"
+          aria-label="Attachment for case 42"
+          description="Attach a document."
+          name="attachment"
+        />
+      </div>
       <div data-testid="number-fields">
         <NumberInput label="Compact count" size="s" defaultValue={3} />
         <NumberInput
@@ -84,7 +112,7 @@ export default function InputConsumers(): ReactElement {
           label="Disabled date"
           disabled
           status="danger"
-          message="Date entry is unavailable."
+          description="Date entry is unavailable."
         />
       </div>
       <output data-testid="picker-updates">{JSON.stringify(updates)}</output>

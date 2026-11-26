@@ -1,6 +1,7 @@
 import { createContext, useContext } from 'react';
 import type { JSX, ReactNode } from 'react';
 import { cx, dataFlag } from '../../core/cx.js';
+import { FormFieldContext } from '../../core/forms/field-context.js';
 import { CheckboxContext, RadioContext, SwitchContext } from '../../internal/binary/BinaryGroup.js';
 import type { BinaryGroupContext } from '../../internal/binary/BinaryGroup.js';
 import type { BinaryKind, BinarySize } from '../../internal/binary/types.js';
@@ -81,7 +82,7 @@ function ChoiceCard({
   ...props
 }: ChoiceCardProps): JSX.Element {
   const { row, carrier, inputId, labelId, descriptionId, size, locked, busy } =
-    useBinaryInput<HTMLDivElement>({ ...props, kind, group });
+    useBinaryInput<HTMLDivElement>({ ...props, kind, group, retainLocalLabel: true });
 
   return (
     <div
@@ -98,19 +99,25 @@ function ChoiceCard({
     >
       {carrier}
       <label className="unica-choice-card-hit" htmlFor={inputId} aria-hidden="true" />
-      <MarkerContext value={{ size, busy, thumbIcon }}>
-        {indicatorPlacement !== 'none' && <ChoiceMarkerSlot kind={kind} />}
-        {children ?? (
-          <ChoiceCardContent>
-            {labelId && <ChoiceCardLabel id={labelId}>{props.label}</ChoiceCardLabel>}
-            {descriptionId && (
-              <ChoiceCardDescription id={descriptionId}>{props.description}</ChoiceCardDescription>
-            )}
-            {hasBinaryContent(metadata) && <ChoiceCardMetadata>{metadata}</ChoiceCardMetadata>}
-            {hasBinaryContent(secondary) && <ChoiceCardSecondary>{secondary}</ChoiceCardSecondary>}
-          </ChoiceCardContent>
-        )}
-      </MarkerContext>
+      <FormFieldContext value={null}>
+        <MarkerContext value={{ size, busy, thumbIcon }}>
+          {indicatorPlacement !== 'none' && <ChoiceMarkerSlot kind={kind} />}
+          {children ?? (
+            <ChoiceCardContent>
+              {labelId && <ChoiceCardLabel id={labelId}>{props.label}</ChoiceCardLabel>}
+              {descriptionId && (
+                <ChoiceCardDescription id={descriptionId}>
+                  {props.description}
+                </ChoiceCardDescription>
+              )}
+              {hasBinaryContent(metadata) && <ChoiceCardMetadata>{metadata}</ChoiceCardMetadata>}
+              {hasBinaryContent(secondary) && (
+                <ChoiceCardSecondary>{secondary}</ChoiceCardSecondary>
+              )}
+            </ChoiceCardContent>
+          )}
+        </MarkerContext>
+      </FormFieldContext>
     </div>
   );
 }

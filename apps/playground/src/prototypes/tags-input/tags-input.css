@@ -62,13 +62,6 @@
   --tags-editor-inset: 10px;
 }
 
-.tags-field-proto[data-size='s'] .ff-label {
-  font-size: var(--size-s-control-font);
-}
-.tags-field-proto[data-size='l'] .ff-label {
-  font-size: var(--text-size-body-m);
-}
-
 .tags-editor-proto[data-variant='ghost'] {
   background: transparent;
   border-color: transparent;

@@ -13,12 +13,6 @@
 .textarea-demo-field[data-width='auto'] {
   inline-size: min(100%, 28rem);
 }
-.textarea-demo-counter {
-  margin-inline-start: auto;
-  max-inline-size: 100%;
-  font-variant-numeric: tabular-nums;
-  text-align: end;
-}
 .textarea-demo-plate {
   position: relative;
   inline-size: min(100%, 32rem);

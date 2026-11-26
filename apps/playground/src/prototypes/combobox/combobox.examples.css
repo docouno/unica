@@ -40,7 +40,6 @@
   display: grid;
   box-sizing: border-box;
   inline-size: min(100%, 32rem);
-  grid-template-columns: minmax(0, 1fr) auto;
   align-items: start;
   gap: var(--space-8) var(--space-12);
 }
@@ -50,36 +49,15 @@
   padding: var(--surface-s-padding);
 }
 
-/* Keep the field and action on one row as the label, feedback or receipt wraps. */
-.suggestion-save-pair-proto
-  :is(.suggestion-field-proto, .ff-proto, .ff-layout, .ff-body, .ff-control) {
-  display: contents;
-}
-
-.suggestion-save-pair-proto .ff-heading {
-  grid-column: 1 / -1;
-  grid-row: 1;
-}
-
-.suggestion-save-pair-proto .suggestion-editor-row-proto {
-  grid-column: 1;
-  grid-row: 2;
-}
-
-.suggestion-save-proto {
-  grid-column: 2;
-  grid-row: 2;
-}
-
-.suggestion-save-pair-proto .ff-support {
-  grid-column: 1 / -1;
-  grid-row: 3;
+.suggestion-editor-with-action-proto {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--space-12);
+  align-items: start;
 }
 
 .suggestion-save-pair-proto .suggestion-recovery-proto,
 .suggestion-saved-proto {
-  grid-column: 1 / -1;
-  grid-row: 4;
   min-inline-size: 0;
   overflow-wrap: anywhere;
 }

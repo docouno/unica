@@ -2,6 +2,8 @@
 
 Use `SegmentedControl` to choose one setting from a small group of short, peer options. Common examples include a view mode, a time range, or a compact form answer. Give the group the name of the setting and each option the name of its value.
 
+Use [FormField](form-field.md) with `target="group"` for shared instructions and feedback. Give FormField a `labelId` and pass that ID to SegmentedControl as `aria-labelledby`.
+
 ```tsx
 import { SegmentedControl, type SegmentedControlOption } from '@docouno/unica';
 

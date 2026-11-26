@@ -1,7 +1,6 @@
 import { useId, useState } from 'react';
 import { SlidersHorizontalIcon } from '@phosphor-icons/react';
-import { Button, CheckboxCard, Input, Select, Stack, Text } from '@docouno/unica';
-import { FormField } from '../../prototypes/form-field/form-field.proto.js';
+import { Button, CheckboxCard, FormField, Input, Select, Stack, Text } from '@docouno/unica';
 import {
   Drawer,
   DrawerBody,
@@ -104,7 +103,7 @@ export function ActivityFilters({ contentProps = {}, subject = {} } = {}) {
                 setOpen(false);
               }}
             >
-              <FormField htmlFor={id + '-action'} label="Action type">
+              <FormField controlId={id + '-action'} label="Action type">
                 <Select
                   id={id + '-action'}
                   name="action"
@@ -117,7 +116,7 @@ export function ActivityFilters({ contentProps = {}, subject = {} } = {}) {
                   }}
                 />
               </FormField>
-              <FormField htmlFor={id + '-actor'} label="Actor">
+              <FormField controlId={id + '-actor'} label="Actor">
                 <Input
                   id={id + '-actor'}
                   name="actor"

@@ -1,8 +1,9 @@
+import { fieldSupport } from '../../field-support.js';
 import { MinusGlyph, PlusGlyph, fieldStatusGlyphs } from '../control-glyphs.js';
 import { useEffect, useId, useRef, useState } from 'react';
 import type { ComponentPropsWithRef, ReactElement, ReactNode } from 'react';
 import { Icon, Spinner } from '@docouno/unica';
-import { FormField } from '../form-field/form-field.proto.js';
+import { FormField, useFormField } from '@docouno/unica';
 import type { ControlSize, FieldStatus, FieldVariant } from '@docouno/unica';
 import { useControlFocus } from '../control-focus.js';
 import './number-input.css';
@@ -283,7 +284,7 @@ export function NumberInput({
               {prefix}
             </span>
           )}
-          <input
+          <NumberEditor
             {...props}
             ref={(node) => {
               editor.current = node;
@@ -309,15 +310,7 @@ export function NumberInput({
             required={required}
             aria-busy={busy || undefined}
             aria-invalid={effectiveStatus === 'danger' || undefined}
-            aria-describedby={
-              [
-                props['aria-describedby'],
-                description ? `${inputId}-description` : '',
-                message ? `${inputId}-message` : '',
-              ]
-                .filter(Boolean)
-                .join(' ') || undefined
-            }
+            aria-describedby={props['aria-describedby']}
             onChange={(event) => {
               setDraft(event.currentTarget.value);
               onValueChange?.(
@@ -366,10 +359,9 @@ export function NumberInput({
       description={description}
       message={message ?? ''}
       status={effectiveStatus}
+      disabled={disabled}
       required={required}
-      htmlFor={inputId}
-      descriptionId={description ? `${inputId}-description` : undefined}
-      messageId={message ? `${inputId}-message` : undefined}
+      controlId={inputId}
       feedbackIcon={false}
       size={size}
       data-width={width}
@@ -379,5 +371,14 @@ export function NumberInput({
     </FormField>
   ) : (
     control
+  );
+}
+
+function NumberEditor(props: ComponentPropsWithRef<'input'>): ReactElement {
+  return (
+    <input
+      {...props}
+      aria-describedby={fieldSupport(useFormField(), props.disabled, props['aria-describedby'])}
+    />
   );
 }

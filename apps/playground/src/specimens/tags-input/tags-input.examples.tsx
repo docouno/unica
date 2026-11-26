@@ -1,8 +1,7 @@
 import { useId, useRef, useState } from 'react';
 import type { ReactElement, ReactNode } from 'react';
-import { Button, Card, Input, Stack, TagGroup, Text } from '@docouno/unica';
+import { Button, Card, FormField, Input, Stack, TagGroup, Text } from '@docouno/unica';
 import type { ControlSize } from '@docouno/unica';
-import { FormField } from '../../prototypes/form-field/form-field.proto.js';
 import { TagsInput } from '../../prototypes/tags-input/tags-input.proto.js';
 import type { PreviewProps } from '../../workbench/types.js';
 import { ExampleSurface } from '../shared/example-surface.js';
@@ -127,7 +126,7 @@ export function TagsAnatomy({ ctx }: PreviewProps): ReactElement {
       {(['s', 'm', 'l'] as const).map((size) => (
         <Example title={`${size.toUpperCase()} · shared control rhythm`} key={size} inert>
           <Stack gap={16}>
-            <FormField htmlFor={`${id}-title-${size}`} label="Collection title" size={size}>
+            <FormField controlId={`${id}-title-${size}`} label="Collection title" size={size}>
               <Input id={`${id}-title-${size}`} size={size} defaultValue="Field notes" />
             </FormField>
             <TagsInput {...ctx.subject} size={size} label="Topics" initialValues={['Research']} />
@@ -527,7 +526,7 @@ export function TagsSurfaces({ ctx }: PreviewProps): ReactElement {
       {(['base', 'overlay'] as const).map((surface) => {
         const fields = (
           <Example title={surface === 'base' ? 'Base · a form slot' : 'Overlay · the same field'}>
-            <FormField htmlFor={`${id}-${surface}`} label="Collection">
+            <FormField controlId={`${id}-${surface}`} label="Collection">
               <Input id={`${id}-${surface}`} defaultValue="Field notes" />
             </FormField>
             <TagsInput

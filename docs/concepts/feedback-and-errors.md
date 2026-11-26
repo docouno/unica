@@ -35,46 +35,15 @@ Choose one channel based on scope and lifecycle:
 
 ## Strict `<FormField>` Ownership & Three Canonical Compositions
 
-Data-entry controls (`Input`, `Textarea`, `NumberInput`, `Select`, `Combobox`, `Autocomplete`, `DatePicker`, `DateRangePicker`, `TagsInput`, `FileInput`, `Slider`, `RangeSlider`) **do not** expose shorthand `label`, `description`, or `message` props. Standalone inline fields (for example inside table cells or toolbars) accept native `<label htmlFor>`, `aria-label`, or `aria-labelledby`. Use a native label, description, and message with the shipped [Input](../components/input.md).
+Data-entry controls expose their editor attributes and can be composed with [FormField](../components/form-field.md) for the visible label, instructions, and message. A standalone inline field accepts a native label, `aria-label`, or `aria-labelledby`.
 
-For Select, use the trigger's field ID to associate the label and `aria-describedby` to associate help or error text. A validation status colors the trigger. For a failed catalog request, place the explanation and recovery action in the panel through `errorState`. [Select](../components/select.md)
+1. **Single editor.** Use the default `target="control"`. The visible native label and editor ID match in server-rendered HTML. An explicit ID belongs on `controlId`. The editor combines author descriptions with the field's instructions, message, and optional count. Its supported props can override inherited state.
+2. **Choice group.** Use `target="group"` with CheckboxGroup, RadioGroup, or another named group. Shared feedback describes the group rule. Individual options keep their names, local descriptions, and option status. A required CheckboxGroup validates that at least one available option is checked.
+3. **Composite editor.** Use `target="group"` and give each editor its own name. For a review window with independently editable start and end times, attach an end-specific error to End. Attach an error about the relationship between both values to the group. Pass `feedbackIcon={false}` if the affected editor already renders the glyph.
 
-### 1. Single Control (`target="control"`)
+The editor's availability governs its own invalid state and message reference. When only the editor is disabled, the field can still show external feedback. Disable the field to hide its validation message and keep the explanation of unavailability in `description`.
 
-```tsx
-<FormField
-  label="Billing email"
-  controlId="billing-email"
-  description="Invoices and receipt copies are sent here."
-  status="danger"
-  message="Enter a valid email address."
-  required
->
-  <Input name="email" type="email" />
-</FormField>
-```
-
-- **Deterministic SSR ID binding:** `FormField` calls `const fallbackId = useId()` on every render, then computes `resolvedControlId = props.controlId ?? fallbackId` (plus `descriptionId` and `messageId`) **before** children render and passes it to both `<label htmlFor={resolvedControlId}>` and `FormFieldContext`. The child control always renders `id={ctx.controlId}` so server-rendered HTML guarantees `label.htmlFor === input.id` before client effects run. Pass explicit custom IDs on `<FormField controlId="...">`; passing a conflicting `id` directly on the nested control emits a development `warnOnce` while keeping `ctx.controlId` authoritative.
-- **Merged descriptions & status:** The control joins `aria-describedby` in order `author → descriptionId → messageId`, inherits `status`, `disabled`, and `required` (explicit control props take precedence), sets `aria-invalid="true"` strictly when `status === 'danger' && !disabled`, and suppresses a duplicate feedback glyph on `FormField` when the control shell already paints its own status glyph.
-
-### 2. Option Group (`target="group"`)
-
-Use `target="group"` for `CheckboxGroup`, `RadioGroup`, and their [choice-card groups](../components/choice-card.md):
-
-- `FormField` renders a non-interactive group heading (`labelId`), shared `description` (`descriptionId`), and shared `message` (`messageId`).
-- The nested group container receives `role="group"` or `role="radiogroup"`, `aria-labelledby={labelId}`, `aria-describedby` (`author → descriptionId → messageId`), and `aria-invalid="true"` when `status === 'danger' && !disabled`.
-- Individual `Checkbox`, `Radio`, and `*Card` items retain their own option labels and descriptions. `FormField`'s `required` prop is **never** propagated onto every individual `Checkbox` (a required checkbox group validates a minimum selection rule, not that every box must be checked).
-
-When composing directly with `CheckboxGroup` or `RadioGroup`, pass the field heading ID as `aria-labelledby` and include shared help and error IDs in `aria-describedby`. Set the group's own `required` and `status` props to pair native validation with the visible message. Render the shared error once. See [CheckboxGroup](../components/checkbox.md#checkboxgroup) and [RadioGroup](../components/radio.md#radiogroup).
-
-### 3. Composite Multi-Input Editor (`target="group"`)
-
-Use `target="group"` with `feedbackIcon={false}` for editors containing multiple independently named inputs (such as a start/end review window or `DateRangePicker`):
-
-- `FormField` owns only the group heading (`labelId`), shared description (`descriptionId`), and shared message (`messageId`) without imposing one shared `controlId` or `status` across all inputs.
-- Each inner input keeps its own accessible name (`<label>` or `aria-label`), its own `id`, and its own local `status`.
-- **Single sub-field error:** Only the offending input receives `status="danger"`, `aria-invalid="true"` (when not `disabled`, preserved on `readOnly`), and `aria-describedby` pointing to `messageId`. Sibling inputs stay `status="neutral"`, and the outer `role="group"` does not duplicate `aria-invalid="true"`.
-- **Cross-field group error (no single culprit):** The `role="group"` container includes `messageId` in `aria-describedby` and receives `aria-invalid="true"` when `status === 'danger' && !disabled`.
+For a failed catalog request, use the Select panel's `errorState` to show the explanation and recovery action. [Select](../components/select.md#availability-and-messages)
 
 ## `Combobox` vs `Autocomplete` Value Authority
 

@@ -9,6 +9,7 @@ import {
   isInertElement,
 } from '../../core/dom.js';
 import { FormInput } from '../../core/forms/carriers.js';
+import { fieldControlId, fieldDescription, useFormField } from '../../core/forms/field-context.js';
 import { mergeRefs } from '../../core/mergeRefs.js';
 import {
   CloseGlyph,
@@ -39,9 +40,9 @@ function canFocus(input: HTMLInputElement): boolean {
 /** A single-line native field with decorative adornments and optional local clearing. */
 export function Input({
   type = 'text',
-  size = 'm',
+  size: sizeProp,
   variant = 'default',
-  status = 'neutral',
+  status: statusProp,
   width = 'full',
   value,
   defaultValue = '',
@@ -60,8 +61,10 @@ export function Input({
   inert,
   id,
   ref,
-  disabled,
-  readOnly,
+  disabled: disabledProp,
+  readOnly: readOnlyProp,
+  required: requiredProp,
+  'aria-describedby': describedBy,
   multiple,
   placeholder,
   onChange,
@@ -70,8 +73,15 @@ export function Input({
   onBlur,
   ...native
 }: InputProps): ReactElement {
+  const scope = useFormField();
+  const field = scope?.target === 'control' ? scope : null;
+  const size = sizeProp ?? field?.size ?? 'm';
+  const status = statusProp ?? field?.status ?? 'neutral';
+  const disabled = disabledProp ?? field?.disabled;
+  const readOnly = readOnlyProp ?? field?.readOnly;
+  const required = requiredProp ?? field?.required;
   const generatedId = useId();
-  const inputId = id || (clearable ? generatedId : id);
+  const inputId = fieldControlId(field, id) || (clearable ? generatedId : id);
   const input = useRef<HTMLInputElement>(null);
   const [nativeDisabled, setNativeDisabled] = useState(false);
   const observe = useCallback((node: HTMLInputElement | null) => {
@@ -108,7 +118,10 @@ export function Input({
   const nativePlaceholder = placeholder || ' ';
 
   for (const key of Object.keys(native)) {
-    if (key.toLowerCase().startsWith('data-unica-input-')) {
+    if (
+      key.toLowerCase().startsWith('data-unica-input-') ||
+      key.toLowerCase() === 'data-unica-form-field-glyph'
+    ) {
       Reflect.deleteProperty(native, key);
     }
   }
@@ -149,6 +162,9 @@ export function Input({
   return (
     <span
       className={cx('unica-input', className)}
+      data-unica-form-field-glyph={
+        StatusGlyph && field?.status === effectiveStatus ? field.controlId : undefined
+      }
       data-unica-input-size={size}
       data-unica-input-variant={variant}
       data-unica-input-status={effectiveStatus}
@@ -186,6 +202,8 @@ export function Input({
         dir={dir}
         disabled={disabled}
         readOnly={readOnly}
+        required={required}
+        aria-describedby={fieldDescription(field, describedBy, Boolean(unavailable))}
         multiple={multiple}
         controlled={controlled}
         defaultValue={value ?? defaultValue}

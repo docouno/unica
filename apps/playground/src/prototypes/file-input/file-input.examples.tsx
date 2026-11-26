@@ -164,7 +164,7 @@ export function FileAvailability({ ctx }: PreviewProps): ReactElement {
         initialFileName="research-notes.pdf"
         disabled
         status="danger"
-        message={<bdi>Changes are unavailable while this workspace is archived.</bdi>}
+        description={<bdi>Changes are unavailable while this workspace is archived.</bdi>}
       />
     </div>
   );

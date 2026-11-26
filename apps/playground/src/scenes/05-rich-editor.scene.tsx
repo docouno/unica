@@ -1,4 +1,4 @@
-import { FormField } from '../prototypes/form-field/form-field.proto.js';
+import { FormField } from '@docouno/unica';
 import {
   Badge,
   Blockquote,
@@ -381,7 +381,7 @@ function EditorScene(): ReactElement {
               }}
             >
               <FormField
-                htmlFor={`${referenceFormId}-path`}
+                controlId={`${referenceFormId}-path`}
                 label="Document path"
                 size="s"
                 required

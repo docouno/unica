@@ -1,17 +1,17 @@
 import { useId, useState } from 'react';
 import {
   Checkbox,
+  CheckboxCard,
+  CheckboxCardGroup,
   CheckboxGroup,
+  FormField,
   Radio,
   RadioGroup,
   Switch,
   SwitchGroup,
   Stack,
   Text,
-  CheckboxCard,
-  CheckboxCardGroup,
 } from '@docouno/unica';
-import { FormField } from '../../prototypes/form-field/form-field.proto.js';
 import '@docouno/unica/styles.css';
 
 const sizes = Object.freeze({ compact: 's', regular: 'm', comfortable: 'l' });
@@ -34,11 +34,8 @@ export function Groups({ fieldProps = {} } = {}) {
             orientation="horizontal"
             target="group"
             label="Send updates"
-            labelId={`${id}-${size}-label`}
             description={<bdi>Choose at least one way to receive updates.</bdi>}
-            descriptionId={`${id}-${size}-description`}
             message={missing[size] ? <bdi>Select a delivery method.</bdi> : undefined}
-            messageId={missing[size] ? `${id}-${size}-message` : undefined}
             status={missing[size] ? 'danger' : 'neutral'}
             required
           >
@@ -66,13 +63,7 @@ export function Groups({ fieldProps = {} } = {}) {
                 );
                 return () => binding.abort();
               }}
-              required
               requiredMessage="Select a delivery method."
-              size={size}
-              status={missing[size] ? 'danger' : 'neutral'}
-              aria-labelledby={`${id}-${size}-label`}
-              aria-describedby={`${id}-${size}-description${missing[size] ? ` ${id}-${size}-message` : ''}`}
-              aria-invalid={missing[size] || undefined}
               onValueChange={(values) =>
                 setMissing((current) => ({ ...current, [size]: !values.length }))
               }
@@ -93,16 +84,9 @@ export function Groups({ fieldProps = {} } = {}) {
         orientation="horizontal"
         target="group"
         label="Default access"
-        labelId={`${id}-radio-label`}
         description={<bdi>Applies to newly shared documents.</bdi>}
-        descriptionId={`${id}-radio-description`}
       >
-        <RadioGroup
-          name={`${id}-access`}
-          defaultValue="read"
-          aria-labelledby={`${id}-radio-label`}
-          aria-describedby={`${id}-radio-description`}
-        >
+        <RadioGroup name={`${id}-access`} defaultValue="read">
           <Radio value="read" label="Can view" />
           <Radio
             value="edit"
@@ -116,14 +100,9 @@ export function Groups({ fieldProps = {} } = {}) {
         orientation="horizontal"
         target="group"
         label="Notifications"
-        labelId={`${id}-switch-label`}
         description={<bdi>Each setting takes effect independently.</bdi>}
-        descriptionId={`${id}-switch-description`}
       >
-        <SwitchGroup
-          aria-labelledby={`${id}-switch-label`}
-          aria-describedby={`${id}-switch-description`}
-        >
+        <SwitchGroup>
           <Switch label="Mentions" defaultChecked />
           <Switch label="Weekly summary" />
         </SwitchGroup>
@@ -134,20 +113,19 @@ export function Groups({ fieldProps = {} } = {}) {
         target="group"
         label="Include in search"
         labelAlign="start"
-        labelId={`${id}-cards-label`}
         description={<bdi>Select the sources people can discover.</bdi>}
-        descriptionId={`${id}-cards-description`}
       >
-        <CheckboxCardGroup
-          aria-labelledby={`${id}-cards-label`}
-          aria-describedby={`${id}-cards-description`}
-        >
+        <CheckboxCardGroup name={`${id}-sources`} defaultValue={['published']}>
           <CheckboxCard
+            value="published"
             label="Published documents"
             description={<bdi>Reviewed and ready to share.</bdi>}
-            defaultChecked
           />
-          <CheckboxCard label="Working drafts" description={<bdi>Still open for feedback.</bdi>} />
+          <CheckboxCard
+            value="drafts"
+            label="Working drafts"
+            description={<bdi>Still open for feedback.</bdi>}
+          />
         </CheckboxCardGroup>
       </FormField>
     </Stack>

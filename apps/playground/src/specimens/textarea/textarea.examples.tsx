@@ -1,6 +1,6 @@
-import { useId, useState } from 'react';
+import { useState } from 'react';
 import type { ReactElement, ReactNode } from 'react';
-import { Flex, Icon, Stack, Text, Textarea } from '@docouno/unica';
+import { FormField, Stack, Text, Textarea } from '@docouno/unica';
 import type { TextareaProps } from '@docouno/unica';
 import { useStoryAction } from '../../workbench/storyFrameState.js';
 import type { PreviewProps } from '../../workbench/types.js';
@@ -25,73 +25,36 @@ export function LabeledTextarea({
   'aria-describedby': describedBy,
   ...props
 }: LabeledTextareaProps): ReactElement {
-  const generatedId = useId();
-  const inputId = id ?? generatedId;
   const status = props.status ?? 'neutral';
-  const statusFeedback =
-    props.wrap?.toLowerCase() === 'off' && status !== 'neutral' && !props.disabled
-      ? textareaFeedback[status]
-      : undefined;
-  const color = props.disabled || status === 'neutral' ? 'secondary' : status;
-  const feedback = message ?? statusFeedback?.label;
-  const descriptionId = description ? `${inputId}-description` : undefined;
-  const messageId = feedback ? `${inputId}-message` : undefined;
-  const counterId = counter ? `${inputId}-counter` : undefined;
-  const descriptionIds = [
-    ...new Set(
-      [describedBy, descriptionId, messageId, counterId].flatMap((ids) =>
-        ids ? ids.trim().split(/\s+/) : [],
-      ),
-    ),
-  ].join(' ');
-
+  const fallback =
+    props.wrap?.toLowerCase() === 'off' && status !== 'neutral' ? textareaFeedback[status] : '';
   return (
-    <Stack gap={8} className="textarea-demo-field" data-width={props.width}>
-      {label && (
-        <Text as="label" size="body-s" weight="medium" htmlFor={inputId}>
-          <bdi>{label}</bdi>
-          {props.required && !props.disabled && (
-            <Text as="span" color="danger" aria-hidden="true">
-              {' '}
-              *
-            </Text>
-          )}
-        </Text>
-      )}
-      <Textarea dir="auto" {...props} id={inputId} aria-describedby={descriptionIds || undefined} />
-      {(description || feedback || counter) && (
-        <Stack gap={4}>
-          {description && (
-            <Text as="p" size="caption-l" color="secondary" id={descriptionId}>
-              <bdi>{description}</bdi>
-            </Text>
-          )}
-          {(feedback || counter) && (
-            <Flex wrap="wrap" align="baseline" gap={8}>
-              {feedback && (
-                <Flex gap={8} align="start" id={messageId} style={{ flex: '1 1 14rem' }}>
-                  {statusFeedback && <Icon icon={statusFeedback.Icon} size="s" color={color} />}
-                  <Text size="caption-l" color={color}>
-                    <bdi>{feedback}</bdi>
-                  </Text>
-                </Flex>
-              )}
-              {counter && (
-                <Text
-                  as="span"
-                  size="caption-l"
-                  color={color}
-                  className="textarea-demo-counter"
-                  id={counterId}
-                >
-                  {counter}
-                </Text>
-              )}
-            </Flex>
-          )}
-        </Stack>
-      )}
-    </Stack>
+    <FormField
+      controlId={id}
+      label={label ? <bdi>{label}</bdi> : undefined}
+      className="textarea-demo-field"
+      data-width={props.width}
+      size={props.size}
+      status={status}
+      statusLabel={fallback}
+      disabled={props.disabled}
+      required={props.required}
+      description={description ? <bdi>{description}</bdi> : undefined}
+      message={message ? <bdi>{message}</bdi> : fallback ? undefined : ''}
+      counter={
+        counter === undefined ? undefined : (
+          <Text
+            as="span"
+            size="caption-l"
+            color={props.disabled || status === 'neutral' ? 'secondary' : status}
+          >
+            {counter}
+          </Text>
+        )
+      }
+    >
+      <Textarea dir="auto" {...props} aria-describedby={describedBy} />
+    </FormField>
   );
 }
 
@@ -269,7 +232,7 @@ export function TextareaAvailability({ ctx: { subject } }: PreviewProps): ReactE
         disabled
         defaultValue={paragraph}
         rows={3}
-        message="Editing becomes available after you join the project."
+        description="Editing becomes available after you join the project."
       />
       <LabeledTextarea
         {...subject}
@@ -286,7 +249,7 @@ export function TextareaAvailability({ ctx: { subject } }: PreviewProps): ReactE
         disabled
         status="danger"
         defaultValue="A previous draft is retained."
-        message="This section is unavailable while the request is closed."
+        description="This section is unavailable while the request is closed."
         rows={2}
       />
       <LabeledTextarea

@@ -475,6 +475,7 @@ export default defineScene({
     'button',
     'card',
     'checkbox',
+    'form-field',
     'icon',
     'kbd',
     'kbd-group',

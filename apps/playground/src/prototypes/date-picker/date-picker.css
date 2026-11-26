@@ -585,7 +585,7 @@
 .date-picker-proto[data-preview-inline] {
   inline-size: min(100%, 21rem);
 }
-.date-picker-proto[data-preview-inline] > .ff-proto {
+.date-inline-field-proto {
   padding: var(--space-12);
   border: 1px solid var(--border-subtle);
   border-radius: var(--size-m-radius);

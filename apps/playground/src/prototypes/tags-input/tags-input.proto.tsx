@@ -1,9 +1,10 @@
+import { FieldBinding } from '../../field-binding.js';
+import { fieldSupport } from '../../field-support.js';
 import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
 import type { ComponentPropsWithRef, ReactElement, ReactNode } from 'react';
-import { Tag } from '@docouno/unica';
+import { FormField, Tag } from '@docouno/unica';
 import type { ControlSize, FieldStatus, FieldVariant } from '@docouno/unica';
 import { useControlFocus } from '../control-focus.js';
-import { FormField } from '../form-field/form-field.proto.js';
 import './tags-input.css';
 
 export interface TagsInputProps extends Omit<
@@ -268,22 +269,13 @@ export function TagsInput({
     return () => node.removeEventListener('invalid', invalid);
   }, [draft, readOnly, disabled]);
 
-  const describedBy =
-    [
-      props['aria-describedby'],
-      description ? `${editorId}-description` : '',
-      feedback ? `${editorId}-message` : '',
-      atLimit ? `${editorId}-limit` : '',
-    ]
-      .filter(Boolean)
-      .join(' ') || undefined;
   return (
     <div className={`tags-field-proto ${className}`} style={style} data-size={size} hidden={hidden}>
       <FormField
         label={label}
-        htmlFor={editorId}
-        descriptionId={description ? `${editorId}-description` : undefined}
-        messageId={feedback ? `${editorId}-message` : undefined}
+        size={size}
+        disabled={disabled}
+        controlId={editorId}
         required={required}
         description={typeof description === 'string' ? <bdi>{description}</bdi> : description}
         message={typeof feedback === 'string' && feedback ? <bdi>{feedback}</bdi> : feedback}
@@ -372,82 +364,95 @@ export function TagsInput({
               </Tag>
             ))}
           <span className="tags-draft-row-proto" data-expanded={expanded || undefined}>
-            <textarea
-              {...props}
-              ref={editorRef}
-              id={editorId}
-              rows={1}
-              className="tags-draft-proto unica-scrollbar unica-scrollbar--compact"
-              value={projection}
-              readOnly={readOnly}
-              disabled={disabled}
-              placeholder={readOnly ? 'No tags' : atLimit && !draft ? 'Limit reached' : placeholder}
-              aria-label={label ? props['aria-label'] : (props['aria-label'] ?? 'Tags')}
-              aria-required={required || undefined}
-              aria-invalid={effectiveStatus === 'danger' || undefined}
-              aria-describedby={describedBy}
-              onChange={(event) => {
-                updateDraft(event.currentTarget.value);
-                setRejection('');
-              }}
-              onCompositionStart={(event) => {
-                composing.current = true;
-                props.onCompositionStart?.(event);
-              }}
-              onCompositionEnd={(event) => {
-                composing.current = false;
-                props.onCompositionEnd?.(event);
-              }}
-              onPaste={(event) => {
-                props.onPaste?.(event);
-                if (event.defaultPrevented || readOnly || disabled || composing.current) {
-                  return;
-                }
-                const text = event.clipboardData.getData('text/plain');
-                if (!text.includes('\n')) {
-                  return;
-                }
-                event.preventDefault();
-                const node = event.currentTarget;
-                accept(draft.slice(0, node.selectionStart) + text + draft.slice(node.selectionEnd));
-              }}
-              onKeyDown={(event) => {
-                props.onKeyDown?.(event);
-                if (
-                  event.defaultPrevented ||
-                  event.nativeEvent.isComposing ||
-                  composing.current ||
-                  readOnly ||
-                  disabled
-                ) {
-                  return;
-                }
-                if (event.key === 'Enter' && !event.shiftKey) {
-                  event.preventDefault();
-                  if (!event.repeat) {
-                    accept(draft);
+            <FieldBinding>
+              {(field) => (
+                <textarea
+                  {...props}
+                  ref={editorRef}
+                  id={editorId}
+                  rows={1}
+                  className="tags-draft-proto unica-scrollbar unica-scrollbar--compact"
+                  value={projection}
+                  readOnly={readOnly}
+                  disabled={disabled}
+                  placeholder={
+                    readOnly ? 'No tags' : atLimit && !draft ? 'Limit reached' : placeholder
                   }
-                } else if (
-                  !event.ctrlKey &&
-                  !event.metaKey &&
-                  !event.altKey &&
-                  !event.shiftKey &&
-                  event.currentTarget.selectionStart === 0 &&
-                  event.currentTarget.selectionEnd === 0 &&
-                  tags.length &&
-                  ((event.key === 'Backspace' && !draft) ||
-                    event.key ===
-                      (getComputedStyle(event.currentTarget).direction === 'rtl'
-                        ? 'ArrowRight'
-                        : 'ArrowLeft'))
-                ) {
-                  event.preventDefault();
-                  if (!event.repeat) {
-                    removeButtons.current.get(tags[tags.length - 1] ?? '')?.focus();
-                  }
-                }
-              }}
-            />
+                  aria-label={label ? props['aria-label'] : (props['aria-label'] ?? 'Tags')}
+                  aria-required={required || undefined}
+                  aria-invalid={effectiveStatus === 'danger' || undefined}
+                  aria-describedby={fieldSupport(
+                    field,
+                    disabled,
+                    props['aria-describedby'],
+                    atLimit && `${editorId}-limit`,
+                  )}
+                  onChange={(event) => {
+                    updateDraft(event.currentTarget.value);
+                    setRejection('');
+                  }}
+                  onCompositionStart={(event) => {
+                    composing.current = true;
+                    props.onCompositionStart?.(event);
+                  }}
+                  onCompositionEnd={(event) => {
+                    composing.current = false;
+                    props.onCompositionEnd?.(event);
+                  }}
+                  onPaste={(event) => {
+                    props.onPaste?.(event);
+                    if (event.defaultPrevented || readOnly || disabled || composing.current) {
+                      return;
+                    }
+                    const text = event.clipboardData.getData('text/plain');
+                    if (!text.includes('\n')) {
+                      return;
+                    }
+                    event.preventDefault();
+                    const node = event.currentTarget;
+                    accept(
+                      draft.slice(0, node.selectionStart) + text + draft.slice(node.selectionEnd),
+                    );
+                  }}
+                  onKeyDown={(event) => {
+                    props.onKeyDown?.(event);
+                    if (
+                      event.defaultPrevented ||
+                      event.nativeEvent.isComposing ||
+                      composing.current ||
+                      readOnly ||
+                      disabled
+                    ) {
+                      return;
+                    }
+                    if (event.key === 'Enter' && !event.shiftKey) {
+                      event.preventDefault();
+                      if (!event.repeat) {
+                        accept(draft);
+                      }
+                    } else if (
+                      !event.ctrlKey &&
+                      !event.metaKey &&
+                      !event.altKey &&
+                      !event.shiftKey &&
+                      event.currentTarget.selectionStart === 0 &&
+                      event.currentTarget.selectionEnd === 0 &&
+                      tags.length &&
+                      ((event.key === 'Backspace' && !draft) ||
+                        event.key ===
+                          (getComputedStyle(event.currentTarget).direction === 'rtl'
+                            ? 'ArrowRight'
+                            : 'ArrowLeft'))
+                    ) {
+                      event.preventDefault();
+                      if (!event.repeat) {
+                        removeButtons.current.get(tags[tags.length - 1] ?? '')?.focus();
+                      }
+                    }
+                  }}
+                />
+              )}
+            </FieldBinding>
             {!readOnly && !disabled && (
               <button
                 className="tags-add-proto"

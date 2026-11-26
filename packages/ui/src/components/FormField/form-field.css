@@ -1,0 +1,231 @@
+@layer unica.components {
+  .unica-form-field {
+    --_form-field-height: var(--size-m-height);
+    --_form-field-font: var(--text-size-body-s);
+    --_form-field-text-inset: var(--space-12);
+    --_form-field-text-line: var(--text-size-body-s-lh);
+    min-inline-size: 0;
+    color: var(--fg-primary);
+    font-family: var(--font-family-base);
+  }
+
+  .unica-form-field[data-unica-form-field-size='s'] {
+    --_form-field-height: var(--size-s-height);
+    --_form-field-font: var(--size-s-control-font);
+    --_form-field-text-inset: var(--space-8);
+  }
+
+  .unica-form-field[data-unica-form-field-size='l'] {
+    --_form-field-height: var(--size-l-height);
+    --_form-field-font: var(--text-size-body-m);
+    --_form-field-text-inset: var(--space-16);
+    --_form-field-text-line: var(--text-size-body-m-lh);
+  }
+
+  .unica-form-field-layout,
+  .unica-form-field-body {
+    display: grid;
+    gap: 8px;
+    min-inline-size: 0;
+  }
+  .unica-form-field-heading {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px 16px;
+    flex-wrap: wrap;
+    min-inline-size: 0;
+  }
+  .unica-form-field-label {
+    font-family: var(--font-family-base);
+    font-size: var(--_form-field-font, var(--text-size-body-s));
+    line-height: 1.4;
+    font-weight: 500;
+    overflow-wrap: anywhere;
+  }
+  .unica-form-field-required {
+    color: var(--status-danger-soft-fg);
+    white-space: nowrap;
+  }
+  .unica-form-field-optional {
+    color: var(--fg-muted);
+    font-size: var(--text-size-caption-l);
+    font-weight: 400;
+  }
+  .unica-form-field-action {
+    display: inline-flex;
+    flex: 0 1 auto;
+    min-inline-size: 0;
+    max-inline-size: 100%;
+    font-size: var(--text-size-caption-l);
+    line-height: 1.5;
+  }
+  .unica-form-field-control,
+  .unica-form-field-feedback > div {
+    min-inline-size: 0;
+  }
+  .unica-form-field-support {
+    display: grid;
+    gap: 4px;
+  }
+  .unica-form-field-description,
+  .unica-form-field-feedback,
+  .unica-form-field-counter {
+    font-family: var(--font-family-base);
+    font-weight: 400;
+    color: var(--fg-muted);
+    font-size: var(--text-size-caption-l);
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+  }
+  .unica-form-field-description > :is(p, ul, ol),
+  .unica-form-field-feedback > div > :is(p, ul, ol) {
+    margin-block: 0;
+  }
+  .unica-form-field-description > :is(p, ul, ol) + :is(p, ul, ol),
+  .unica-form-field-feedback > div > :is(p, ul, ol) + :is(p, ul, ol) {
+    margin-block-start: 4px;
+  }
+  .unica-form-field-description :is(ul, ol),
+  .unica-form-field-feedback :is(ul, ol) {
+    padding-inline-start: 1.5em;
+  }
+  .unica-form-field-feedback {
+    min-inline-size: 0;
+    display: flex;
+    align-items: start;
+    gap: 6px;
+  }
+  .unica-form-field-feedback-glyph {
+    flex: none;
+    inline-size: 1.2em;
+    block-size: 1.2em;
+    margin-block-start: 0.15em;
+  }
+  .unica-form-field-feedback[data-unica-form-field-status='info'] {
+    color: var(--status-info-soft-fg);
+  }
+  .unica-form-field-feedback[data-unica-form-field-status='success'] {
+    color: var(--status-success-soft-fg);
+  }
+  .unica-form-field-feedback[data-unica-form-field-status='warning'] {
+    color: var(--status-warning-soft-fg);
+  }
+  .unica-form-field-feedback[data-unica-form-field-status='danger'] {
+    color: var(--status-danger-soft-fg);
+  }
+  .unica-form-field-result {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 4px 12px;
+  }
+
+  .unica-form-field-counter {
+    min-inline-size: 0;
+    margin-inline-start: auto;
+    font-variant-numeric: tabular-nums;
+    text-align: end;
+  }
+
+  .unica-form-field[data-unica-form-field-orientation='horizontal'] {
+    container: unica-form-field / inline-size;
+    inline-size: 100%;
+  }
+
+  .unica-form-field-result[data-unica-form-field-reserved] {
+    min-block-size: calc(var(--text-size-caption-l) * 1.5);
+  }
+  .unica-form-field[data-unica-form-field-disabled]
+    > .unica-form-field-layout
+    > .unica-form-field-heading
+    > .unica-form-field-label {
+    color: var(--fg-disabled);
+  }
+  .unica-form-field[data-unica-form-field-disabled]
+    > .unica-form-field-layout
+    > .unica-form-field-heading
+    > .unica-form-field-label
+    > .unica-form-field-required {
+    color: inherit;
+  }
+  @container unica-form-field (min-width: 30rem) {
+    .unica-form-field[data-unica-form-field-orientation='horizontal'] > .unica-form-field-layout {
+      grid-template-columns: var(--form-field-label-width, minmax(0, 1fr)) minmax(0, 2fr);
+      column-gap: 24px;
+      align-items: start;
+    }
+    .unica-form-field[data-unica-form-field-orientation='horizontal']
+      > .unica-form-field-layout
+      > .unica-form-field-heading {
+      padding-block-start: max(
+        0px,
+        calc((var(--_form-field-height) - var(--_form-field-font) * 1.4) / 2)
+      );
+    }
+    .unica-form-field[data-unica-form-field-orientation='horizontal'][data-unica-form-field-align='start']
+      > .unica-form-field-layout
+      > .unica-form-field-heading {
+      padding-block-start: 0;
+    }
+    .unica-form-field[data-unica-form-field-orientation='horizontal'][data-unica-form-field-align='text']
+      > .unica-form-field-layout
+      > .unica-form-field-heading {
+      padding-block-start: calc(
+        1px + var(--_form-field-text-inset) +
+          (var(--_form-field-text-line) - var(--_form-field-font) * 1.4) / 2
+      );
+    }
+    .unica-form-field[data-unica-form-field-orientation='horizontal']
+      > .unica-form-field-layout
+      > .unica-form-field-body {
+      grid-column: 2;
+    }
+  }
+
+  .unica-form-field-body {
+    --_form-field-shell-glyph: initial;
+    --_form-field-row-glyph: initial;
+  }
+
+  .unica-form-field-body[data-unica-form-field-auto-glyph] {
+    --_form-field-shell-glyph: hidden;
+  }
+
+  .unica-form-field-body[data-unica-form-field-glyph-owner='editor'] {
+    --_form-field-shell-glyph: initial;
+    --_form-field-row-glyph: none;
+  }
+
+  .unica-form-field-body
+    [data-unica-form-field-glyph]
+    > :is(.unica-input-status, .unica-textarea-status, .unica-select-status) {
+    visibility: var(--_form-field-shell-glyph, inherit);
+  }
+
+  .unica-form-field-body
+    > .unica-form-field-support
+    > .unica-form-field-result
+    > .unica-form-field-feedback
+    > .unica-form-field-feedback-glyph {
+    display: var(--_form-field-row-glyph, block);
+  }
+
+  @media (forced-colors: active) {
+    .unica-form-field-label,
+    .unica-form-field-description,
+    .unica-form-field-feedback[data-unica-form-field-status],
+    .unica-form-field-required,
+    .unica-form-field-optional,
+    .unica-form-field-counter {
+      color: CanvasText;
+    }
+
+    .unica-form-field[data-unica-form-field-disabled]
+      > .unica-form-field-layout
+      > .unica-form-field-heading
+      > .unica-form-field-label {
+      color: GrayText;
+    }
+  }
+}

@@ -7,10 +7,9 @@ import {
 } from '../control-glyphs.js';
 import { useId, useLayoutEffect, useRef, useState } from 'react';
 import type { KeyboardEvent, ReactElement, ReactNode, RefObject } from 'react';
-import { Icon, Input, Kbd, ListboxGroup, ListboxOption, Spinner } from '@docouno/unica';
+import { FormField, Icon, Input, Kbd, ListboxGroup, ListboxOption, Spinner } from '@docouno/unica';
 import type { ControlSize, GlyphSource, InputProps } from '@docouno/unica';
 import { CloseGlyph } from '../control-glyphs.js';
-import { FormField } from '../form-field/form-field.proto.js';
 import './combobox.css';
 
 export interface Suggestion {
@@ -41,6 +40,7 @@ interface FieldProps extends Pick<
   readonly label?: ReactNode;
   readonly description?: ReactNode;
   readonly message?: ReactNode;
+  readonly editorAction?: ReactNode;
   readonly 'data-wb-subject'?: string | undefined;
   readonly options: readonly Suggestion[];
   readonly iconLeft?: GlyphSource | null | undefined;
@@ -384,6 +384,7 @@ function SuggestionField({
   label,
   description,
   message,
+  editorAction,
   'aria-describedby': authoredDescription,
   'data-wb-subject': subject,
   ...fieldProps
@@ -725,8 +726,6 @@ function SuggestionField({
       ...new Set(
         [
           authoredDescription,
-          description ? `${id}-description` : undefined,
-          message ? `${id}-message` : undefined,
           (shown ? browsingCopy : unconfirmed && recoveryCopy) ? recoveryId : undefined,
         ]
           .flatMap((part) => part?.trim().split(/\s+/) ?? [])
@@ -734,141 +733,150 @@ function SuggestionField({
       ),
     ].join(' ') || undefined;
 
+  const editor = (
+    <div
+      ref={row}
+      data-wb-subject={subject}
+      className="suggestion-editor-row-proto"
+      data-size={size}
+      data-status={
+        !disabled && fieldProps.status && fieldProps.status !== 'neutral' ? '' : undefined
+      }
+    >
+      <Input
+        {...fieldProps}
+        ref={input}
+        id={id}
+        className="suggestion-input-proto"
+        size={size}
+        placeholder={placeholder}
+        disabled={disabled}
+        readOnly={readOnly}
+        iconLeft={iconLeft ?? undefined}
+        value={catalog ? text : undefined}
+        defaultValue={catalog ? undefined : initialText}
+        dir="auto"
+        role="combobox"
+        autoComplete="off"
+        aria-autocomplete="list"
+        aria-expanded={shown}
+        aria-controls={shown ? listId : undefined}
+        aria-activedescendant={active ? optionId(listId, active.value) : undefined}
+        aria-label={
+          fieldProps['aria-label'] ??
+          (label ? undefined : catalog ? 'Search options' : 'Enter text')
+        }
+        aria-describedby={describedBy}
+        onKeyDown={onKeyDown}
+        onBlur={() => {
+          composing.current = false;
+          close();
+        }}
+        onCompositionStart={() => {
+          composing.current = true;
+        }}
+        onCompositionEnd={(event) => {
+          composing.current = false;
+          setOpen(catalog || event.currentTarget.value.trim().length > 0);
+        }}
+        onChange={(event) => {
+          const next = event.currentTarget.value;
+          changeText(next);
+          if (catalog) {
+            setEditing(true);
+          }
+          if (confirmed) {
+            onSelectionChange?.(null);
+          }
+          setRequested(undefined);
+          if (!composing.current) {
+            setOpen(catalog || next.trim().length > 0);
+          }
+        }}
+      />
+      {pending && <Spinner className="suggestion-spinner-proto" size={size} tone="muted" />}
+      {(clearable || readOnly || disclosure) && (
+        <span className="suggestion-actions-proto">
+          {clearable && (
+            <button
+              type="button"
+              className="suggestion-action-proto suggestion-clear-proto"
+              aria-label={catalog ? 'Clear selection and search text' : 'Clear text'}
+              aria-controls={id}
+              disabled={disabled || readOnly}
+              data-empty={!(text || confirmed) || undefined}
+              onPointerDown={(event) => event.preventDefault()}
+              onMouseDown={(event) => event.preventDefault()}
+              onClick={clear}
+            >
+              <Icon usage="slot" icon={CloseGlyph} size={size} />
+            </button>
+          )}
+          {readOnly && !disabled ? (
+            <Icon
+              usage="slot"
+              icon={LockGlyph}
+              size={size}
+              color="muted"
+              className="suggestion-lock-proto"
+            />
+          ) : (
+            disclosure && (
+              <button
+                type="button"
+                className="suggestion-action-proto suggestion-disclosure-proto"
+                aria-label={
+                  catalog
+                    ? shown
+                      ? 'Hide options'
+                      : 'Show options'
+                    : shown
+                      ? 'Hide suggestions'
+                      : 'Show suggestions'
+                }
+                aria-expanded={shown}
+                aria-controls={shown ? listId : undefined}
+                tabIndex={-1}
+                disabled={disabled}
+                onMouseDown={(event) => event.preventDefault()}
+                onClick={() => {
+                  focusInput();
+                  if (shown) {
+                    close();
+                  } else {
+                    setOpen(true);
+                  }
+                }}
+              >
+                <Icon usage="slot" icon={CaretDownGlyph} size={size} />
+              </button>
+            )
+          )}
+        </span>
+      )}
+    </div>
+  );
+
   return (
     <div ref={root} className="suggestion-field-proto" data-width={width}>
       <FormField
-        htmlFor={id}
+        controlId={id}
         label={label}
         required={fieldProps.required}
         size={size}
         description={description}
-        descriptionId={`${id}-description`}
         message={message ?? ''}
-        messageId={`${id}-message`}
         status={disabled ? 'neutral' : fieldProps.status}
-        feedbackIcon={false}
+        disabled={disabled}
       >
-        <div
-          ref={row}
-          data-wb-subject={subject}
-          className="suggestion-editor-row-proto"
-          data-size={size}
-          data-status={
-            !disabled && fieldProps.status && fieldProps.status !== 'neutral' ? '' : undefined
-          }
-        >
-          <Input
-            {...fieldProps}
-            ref={input}
-            id={id}
-            className="suggestion-input-proto"
-            size={size}
-            placeholder={placeholder}
-            disabled={disabled}
-            readOnly={readOnly}
-            iconLeft={iconLeft ?? undefined}
-            value={catalog ? text : undefined}
-            defaultValue={catalog ? undefined : initialText}
-            dir="auto"
-            role="combobox"
-            autoComplete="off"
-            aria-autocomplete="list"
-            aria-expanded={shown}
-            aria-controls={shown ? listId : undefined}
-            aria-activedescendant={active ? optionId(listId, active.value) : undefined}
-            aria-label={
-              fieldProps['aria-label'] ??
-              (label ? undefined : catalog ? 'Search options' : 'Enter text')
-            }
-            aria-describedby={describedBy}
-            onKeyDown={onKeyDown}
-            onBlur={() => {
-              composing.current = false;
-              close();
-            }}
-            onCompositionStart={() => {
-              composing.current = true;
-            }}
-            onCompositionEnd={(event) => {
-              composing.current = false;
-              setOpen(catalog || event.currentTarget.value.trim().length > 0);
-            }}
-            onChange={(event) => {
-              const next = event.currentTarget.value;
-              changeText(next);
-              if (catalog) {
-                setEditing(true);
-              }
-              if (confirmed) {
-                onSelectionChange?.(null);
-              }
-              setRequested(undefined);
-              if (!composing.current) {
-                setOpen(catalog || next.trim().length > 0);
-              }
-            }}
-          />
-          {pending && <Spinner className="suggestion-spinner-proto" size={size} tone="muted" />}
-          {(clearable || readOnly || disclosure) && (
-            <span className="suggestion-actions-proto">
-              {clearable && (
-                <button
-                  type="button"
-                  className="suggestion-action-proto suggestion-clear-proto"
-                  aria-label={catalog ? 'Clear selection and search text' : 'Clear text'}
-                  aria-controls={id}
-                  disabled={disabled || readOnly}
-                  data-empty={!(text || confirmed) || undefined}
-                  onPointerDown={(event) => event.preventDefault()}
-                  onMouseDown={(event) => event.preventDefault()}
-                  onClick={clear}
-                >
-                  <Icon usage="slot" icon={CloseGlyph} size={size} />
-                </button>
-              )}
-              {readOnly && !disabled ? (
-                <Icon
-                  usage="slot"
-                  icon={LockGlyph}
-                  size={size}
-                  color="muted"
-                  className="suggestion-lock-proto"
-                />
-              ) : (
-                disclosure && (
-                  <button
-                    type="button"
-                    className="suggestion-action-proto suggestion-disclosure-proto"
-                    aria-label={
-                      catalog
-                        ? shown
-                          ? 'Hide options'
-                          : 'Show options'
-                        : shown
-                          ? 'Hide suggestions'
-                          : 'Show suggestions'
-                    }
-                    aria-expanded={shown}
-                    aria-controls={shown ? listId : undefined}
-                    tabIndex={-1}
-                    disabled={disabled}
-                    onMouseDown={(event) => event.preventDefault()}
-                    onClick={() => {
-                      focusInput();
-                      if (shown) {
-                        close();
-                      } else {
-                        setOpen(true);
-                      }
-                    }}
-                  >
-                    <Icon usage="slot" icon={CaretDownGlyph} size={size} />
-                  </button>
-                )
-              )}
-            </span>
-          )}
-        </div>
+        {editorAction ? (
+          <div className="suggestion-editor-with-action-proto">
+            {editor}
+            {editorAction}
+          </div>
+        ) : (
+          editor
+        )}
       </FormField>
       {unconfirmed && !unavailable && !shown && (recoveryCopy || replacement) && (
         <div className="suggestion-recovery-proto">
