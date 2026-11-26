@@ -94,7 +94,7 @@ The default Close in Header centers its glyph on the title's first line. The gly
 | --- | --- |
 | Opening | Focus starts at Title, with a static target inside the panel as a fallback. For a short editor, `initialFocus` can target the first meaningful field. Touch opening starts reading at the title or static target when `initialFocus` points to an editable field. A safe button can receive focus on any input modality. |
 | Tab and Shift+Tab | Follow the active dialog's tab order. The browser makes the rest of the document inert. |
-| Escape | Closes the topmost nested Select or Popover first. Once their layers close, Escape requests closing the dialog. Active text composition keeps its Escape handling. |
+| Escape | Closes the topmost nested popup or submenu first. Once those layers close, Escape requests closing the dialog. Active text composition keeps its Escape handling. |
 | Close action or native cancel | Requests closing through `onOpenChange(false)`. |
 | Backdrop | Leaves the dialog open by default. With `dismissOnBackdrop`, a primary press and release from the same pointer on the backdrop requests closing. |
 | Accepted close | Releases the dialog immediately. Focus returns to the available `returnFocus` target, the actual invoking trigger, or the previously focused control, in that order. An intentional focus move during closing takes precedence. |
