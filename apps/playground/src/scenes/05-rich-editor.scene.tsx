@@ -37,9 +37,8 @@ import {
   WarningIcon,
 } from '@phosphor-icons/react';
 import { Subbar } from '../prototypes/app-shell/app-shell.proto.js';
-import { Button, IconButton } from '@docouno/unica';
+import { Button, IconButton, Listbox } from '@docouno/unica';
 import { ToastCard } from '../prototypes/toast/toast.proto.js';
-import { Listbox, SelectPanel } from '../prototypes/select/select.proto.js';
 import { Tabs, TabsContent, TabsList, TabsTab } from '../prototypes/tabs/tabs.proto.js';
 import {
   Breadcrumb,
@@ -320,10 +319,13 @@ function EditorScene(): ReactElement {
                     onFocus={() => setSlashOpen(true)}
                   />
                   {slashOpen && (
-                    <SelectPanel className="choice-panel-proto">
+                    <div
+                      className="unica-overlay-surface folio-slash-results"
+                      data-surface="overlay"
+                    >
                       <Listbox
                         size="s"
-                        title="Editorial blocks"
+                        aria-label="Editorial blocks"
                         value={null}
                         options={
                           query === '/callout'
@@ -341,7 +343,7 @@ function EditorScene(): ReactElement {
                           setSlashOpen(false);
                         }}
                       />
-                    </SelectPanel>
+                    </div>
                   )}
                 </div>
                 {insertedBlock && (

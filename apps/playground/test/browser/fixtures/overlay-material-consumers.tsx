@@ -4,17 +4,18 @@ import {
   PopoverContent,
   PopoverTitle,
   PopoverTrigger,
+  Select,
 } from '@docouno/unica';
+import { UserIcon } from '@phosphor-icons/react';
 import type { JSX } from 'react';
 import { Combobox } from '../../../src/prototypes/combobox/combobox.proto.js';
 import {
   DatePicker,
   DateRangePicker,
 } from '../../../src/prototypes/date-picker/date-picker.components.proto.js';
-import { Select } from '../../../src/prototypes/select/select.proto.js';
 
 const roles = [
-  { value: 'viewer', label: 'Viewer' },
+  { value: 'viewer', label: 'Viewer', icon: UserIcon },
   { value: 'editor', label: 'Editor', description: 'Edit pages and publish changes' },
 ];
 
@@ -29,8 +30,8 @@ export default function OverlayMaterialConsumersFixture(): JSX.Element {
         padding: 24,
       }}
     >
-      <Select label="Workspace role" options={roles} />
-      <Select label="Project role" options={roles} searchable />
+      <Select aria-label="Workspace role" options={roles} />
+      <Select aria-label="Project role" options={roles} searchable />
       <Combobox label="Assigned role" options={roles} />
       <Popover>
         <PopoverTrigger>Open note</PopoverTrigger>
@@ -41,6 +42,9 @@ export default function OverlayMaterialConsumersFixture(): JSX.Element {
       </Popover>
       <DatePicker label="Start date" />
       <DateRangePicker label="Schedule" />
+      {(['s', 'm', 'l'] as const).map((size) => (
+        <Combobox key={size} label={`Assigned role ${size}`} options={roles} size={size} />
+      ))}
     </div>
   );
 }

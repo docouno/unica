@@ -197,9 +197,12 @@ export default {
       await assertFocused(rangeTrigger);
 
       const simple = page.getByTestId('search-select');
-      await simple.getByRole('button', { name: 'Show choices' }).click();
-      assert.equal(await simple.getByRole('listbox', { name: 'Matching choices' }).count(), 1);
-      assert.equal(await simple.getByLabel('Search choice').inputValue(), 'Research notes');
+      await simple.getByRole('button', { name: 'Show options' }).click();
+      const list = simple.getByRole('listbox', { name: 'Matching options' });
+      await list.waitFor();
+      const editor = simple.getByRole('combobox', { name: 'Search choice' });
+      assert.equal(await editor.inputValue(), 'Research notes');
+      assert.equal(await list.getAttribute('id'), await editor.getAttribute('aria-controls'));
 
       const numbers = page.getByTestId('number-fields');
       const geometry = await numbers.locator('.number-input-proto').evaluateAll((fields) =>

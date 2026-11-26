@@ -7,6 +7,9 @@ import {
   Card,
   Checkbox,
   Input,
+  Select,
+  SelectContent,
+  SelectTrigger,
   Stack,
   Flex,
   VisuallyHidden,
@@ -42,7 +45,6 @@ import {
 } from '../../prototypes/empty/empty.proto.js';
 import { ContextMenu } from '../../prototypes/menu/context-menu.proto.js';
 import { Menu } from '../../prototypes/menu/menu.live.js';
-import { Select } from '../../prototypes/select/select-control.proto.js';
 import {
   Table,
   TableBody,
@@ -134,12 +136,16 @@ function RouteRow({
         <Select
           aria-label={`Policy for ${route.id}`}
           variant="ghost"
+          width="full"
           size={size}
           options={policies}
           value={policy}
           onValueChange={setPolicy}
           disabled={route.locked}
-        />
+        >
+          <SelectTrigger className="table-policy-trigger" />
+          <SelectContent />
+        </Select>
       </TableCell>
       <TableCell control="action" align="center">
         <Menu

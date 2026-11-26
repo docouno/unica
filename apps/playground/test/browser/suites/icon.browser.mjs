@@ -86,9 +86,9 @@ export default {
       [0, 6, 24, 12].forEach((expected, index) =>
         assert.ok(Math.abs(drawing[index] - expected) < 0.1),
       );
-      const listboxes = page.getByTestId('listbox-sizes').locator('.choice-option-icon-proto svg');
-      await size(listboxes.nth(0), 16);
-      await size(listboxes.nth(1), 20);
+      const listboxSizes = page.getByTestId('listbox-sizes');
+      await size(listboxSizes.getByRole('option', { name: 'Medium' }).locator('svg:visible'), 16);
+      await size(listboxSizes.getByRole('option', { name: 'Large' }).locator('svg:visible'), 20);
       const tabs = page.getByRole('tablist');
       const label = (text) => tabs.locator('.tab-label-proto').getByText(text, { exact: true });
       const withIcon = await getBox(label('With icon'));
@@ -303,15 +303,29 @@ export default {
         .count(),
       1,
     );
-    const selectStatus = chrome.locator('svg.select-status-proto');
-    await size(selectStatus, 20);
-    assert.equal(await selectStatus.getAttribute('data-replacement'), null);
-    const status = await selectStatus.evaluate((node) => {
-      const own = getComputedStyle(node);
-      return [own.fill, own.color, getComputedStyle(node.parentElement).color];
+    const select = chrome.getByRole('button', { name: 'Invalid selection' });
+    assert.equal(await select.getAttribute('aria-invalid'), 'true');
+    const status = await select.evaluate((button) => {
+      const tone = document.createElement('span');
+      tone.style.color = 'var(--status-danger-soft-fg)';
+      button.append(tone);
+      const color = getComputedStyle(tone).color;
+      tone.remove();
+      return [...button.querySelectorAll('svg')]
+        .filter((svg) => getComputedStyle(svg).color === color)
+        .map((svg) => ({
+          fill: getComputedStyle(svg).fill,
+          color,
+          size: svg.getBoundingClientRect().width,
+          replaced: svg.hasAttribute('data-replacement'),
+          parentColor: getComputedStyle(svg.parentElement).color,
+        }));
     });
-    assert.equal(status[0], status[1]);
-    assert.notEqual(status[0], status[2]);
+    assert.equal(status.length, 1);
+    assert.equal(status[0].size, 20);
+    assert.equal(status[0].replaced, false);
+    assert.equal(status[0].fill, status[0].color);
+    assert.notEqual(status[0].fill, status[0].parentColor);
     const warning = chrome.locator('.suggestion-notice-proto[data-warning] > svg');
     assert.equal(await warning.count(), 1);
     assert.equal(await warning.getAttribute('data-replacement'), null);

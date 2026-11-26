@@ -6,7 +6,6 @@ import {
   DateRangePicker,
 } from '../../../src/prototypes/date-picker/date-picker.proto.js';
 import { NumberInput } from '../../../src/prototypes/number-input/number-input.proto.js';
-import { Combobox as SearchSelect } from '../../../src/prototypes/select/select.proto.js';
 
 const choices = [
   { value: 'notes', label: 'Research notes' },
@@ -69,7 +68,7 @@ export default function InputConsumers(): ReactElement {
         />
       </div>
       <div data-testid="search-select">
-        <SearchSelect label="Search choice" options={choices} defaultValue="notes" />
+        <Combobox label="Search choice" options={choices} defaultSelection={choices[0]} />
       </div>
       <div data-testid="number-fields">
         <NumberInput label="Compact count" size="s" defaultValue={3} />

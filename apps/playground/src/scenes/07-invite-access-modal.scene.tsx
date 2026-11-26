@@ -3,8 +3,7 @@ import { folioSceneHref } from './folio/folio.routes.js';
 import type { ReactElement } from 'react';
 import { PlusIcon } from '@phosphor-icons/react';
 import { AsidePanel, WorkspaceNavigation } from '../prototypes/app-shell/app-shell.proto.js';
-import { Badge, Card, Input, Text, Textarea, Title } from '@docouno/unica';
-import { Button } from '@docouno/unica';
+import { Badge, Button, Card, Input, Select, Text, Textarea, Title } from '@docouno/unica';
 import {
   Modal,
   ModalBody,
@@ -18,7 +17,6 @@ import {
 } from '../prototypes/dialog/dialog.proto.js';
 import { ToastCard } from '../prototypes/toast/toast.proto.js';
 import { FormField } from '../prototypes/form-field/form-field.proto.js';
-import { Select } from '../prototypes/select/select.proto.js';
 import { CheckboxCard } from '../prototypes/choice-card/choice-card.proto.js';
 import {
   Table,
@@ -87,6 +85,11 @@ const roles = [
   { value: 'commenter', label: 'Commenter', description: 'Review and leave feedback' },
   { value: 'viewer', label: 'Viewer', description: 'Read shared pages' },
 ] as const;
+const expiryOptions = [
+  { value: '7', label: '7 days' },
+  { value: '14', label: '14 days' },
+  { value: '30', label: '30 days' },
+] as const;
 
 function InviteScene(): ReactElement {
   const formId = useId();
@@ -97,7 +100,7 @@ function InviteScene(): ReactElement {
     'platform@example.com',
     'reviewer@example.com',
   ]);
-  const [sent, setSent] = useState(false);
+  const [sent, setSent] = useState<{ readonly role: string; readonly expiry: string } | null>(null);
   return (
     <FolioScene>
       <Modal open={open} onOpenChange={setOpen}>
@@ -224,8 +227,14 @@ function InviteScene(): ReactElement {
               className="folio-stack"
               onSubmit={(event) => {
                 event.preventDefault();
+                const data = new FormData(event.currentTarget);
+                const selectedRole = roles.find((option) => option.value === data.get('role'));
+                const expiry = expiryOptions.find((option) => option.value === data.get('expiry'));
+                if (!selectedRole || !expiry) {
+                  return;
+                }
                 setOpen(false);
-                setSent(true);
+                setSent({ role: selectedRole.label, expiry: expiry.label });
               }}
             >
               <TagsInput
@@ -272,25 +281,26 @@ function InviteScene(): ReactElement {
                 />
               </FormField>
               <div className="folio-grid-2">
-                <div className="folio-role-field">
+                <FormField size="s" label="Default workspace role" htmlFor={`${formId}-role`}>
                   <Select
+                    id={`${formId}-role`}
+                    name="role"
                     size="s"
-                    label="Default workspace role"
                     options={roles}
                     value={role}
-                    onValueChange={(value) => setRole(value ?? 'editor')}
+                    onValueChange={(next) => setRole(next ?? 'editor')}
+                    searchable
                   />
-                </div>
-                <Select
-                  size="s"
-                  label="Invite link expiry"
-                  defaultValue="7"
-                  options={[
-                    { value: '7', label: '7 days' },
-                    { value: '14', label: '14 days' },
-                    { value: '30', label: '30 days' },
-                  ]}
-                />
+                </FormField>
+                <FormField size="s" label="Invite link expiry" htmlFor={`${formId}-expiry`}>
+                  <Select
+                    id={`${formId}-expiry`}
+                    name="expiry"
+                    size="s"
+                    defaultValue="7"
+                    options={expiryOptions}
+                  />
+                </FormField>
               </div>
             </form>
           </ModalBody>
@@ -307,9 +317,9 @@ function InviteScene(): ReactElement {
           <ToastCard
             status="success"
             title={`${invites.length} invitations prepared`}
-            onDismiss={() => setSent(false)}
+            onDismiss={() => setSent(null)}
           >
-            Workspace roles and capabilities are ready for review.
+            Workspace role: {sent.role}. Invite links expire in {sent.expiry}.
           </ToastCard>
         </div>
       )}

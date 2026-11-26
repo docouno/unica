@@ -186,6 +186,13 @@ interface OptionRow {
   disabled: boolean;
   selected: boolean;
   defaultSelected: boolean;
+  resetOnly?: true | undefined;
+}
+
+const resetOnlyOptions = /* @__PURE__ */ new WeakSet<HTMLOptionElement>();
+
+function optionKey(value: string, resetOnly: boolean | undefined): string {
+  return (resetOnly ? 'reset:' : 'value:') + value;
 }
 
 function toValueList(value: SelectValue | undefined): readonly string[] {
@@ -198,7 +205,8 @@ function toValueList(value: SelectValue | undefined): readonly string[] {
 /**
  * Option values are deduplicated as a set of distinct option keys.
  * Single selects keep catalog order so selection changes never rebuild DOM nodes.
- * Multi selects place committed entries first so FormData preserves committed order.
+ * Multi selects place committed entries first. If that would reorder the native
+ * reset defaults, distinct rows let the browser restore both values and order.
  */
 function optionRows(
   value: SelectValue,
@@ -257,7 +265,31 @@ function optionRows(
       defaultSelected,
     });
   }
-  return rows;
+  if (!multiple) {
+    return rows;
+  }
+  const defaults = defaultSet.values();
+  const resetOrderDiffers = rows.some(
+    (row) => row.defaultSelected && row.value !== defaults.next().value,
+  );
+  if (!resetOrderDiffers) {
+    return rows;
+  }
+
+  const current = rows.slice(0, selectedSet.size);
+  for (const row of current) {
+    row.defaultSelected = false;
+  }
+  const reset = Array.from(defaultSet, (id): OptionRow => ({
+    value: id,
+    label: catalog.get(id)?.label ?? id,
+    disabled: false,
+    selected: false,
+    defaultSelected: true,
+    resetOnly: true,
+  }));
+  const rest = rows.slice(selectedSet.size).filter((row) => !row.defaultSelected);
+  return [...current, ...reset, ...rest];
 }
 
 export type FormSelectProps = Omit<
@@ -292,8 +324,8 @@ export function FormSelect({
         <>
           {hasPlaceholder && <option value="" disabled />}
           <optgroup label="">
-            {rows.map(({ value, label, disabled }) => (
-              <option key={value} value={value} disabled={disabled}>
+            {rows.map(({ value, label, disabled, resetOnly }) => (
+              <option key={optionKey(value, resetOnly)} value={value} disabled={disabled}>
                 {label}
               </option>
             ))}
@@ -368,20 +400,18 @@ export function writeSelectValue(
     select.append(group);
   }
 
-  const nextValues = new Set<string>();
-  for (const row of rows) {
-    nextValues.add(row.value);
-  }
+  const nextKeys = new Set(rows.map((row) => optionKey(row.value, row.resetOnly)));
 
   // Prune removed or duplicate children before placing rows so removing a leading option
   // never causes O(N) insertBefore churn across all subsequent options.
-  const existingByValue = new Map<string, HTMLOptionElement>();
+  const existingByKey = new Map<string, HTMLOptionElement>();
   const stale: Element[] = [];
   for (let child = group.firstElementChild; child; child = child.nextElementSibling) {
     if (child.localName === 'option') {
       const opt = child as HTMLOptionElement;
-      if (nextValues.has(opt.value) && !existingByValue.has(opt.value)) {
-        existingByValue.set(opt.value, opt);
+      const key = optionKey(opt.value, resetOnlyOptions.has(opt));
+      if (nextKeys.has(key) && !existingByKey.has(key)) {
+        existingByKey.set(key, opt);
         continue;
       }
     }
@@ -393,9 +423,12 @@ export function writeSelectValue(
 
   let cursor: Element | null = group.firstElementChild;
   for (const row of rows) {
-    let opt = existingByValue.get(row.value);
+    let opt = existingByKey.get(optionKey(row.value, row.resetOnly));
     if (!opt) {
       opt = createElementSafe(doc, 'option');
+      if (row.resetOnly) {
+        resetOnlyOptions.add(opt);
+      }
       opt.value = row.value;
       opt.text = row.label;
       opt.disabled = row.disabled;

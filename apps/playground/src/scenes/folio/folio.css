@@ -221,7 +221,7 @@
   --text-size-body-m: var(--text-size-body-s);
   --text-size-body-m-lh: var(--text-size-body-s-lh);
 }
-.folio-sort-control.select-proto {
+.folio-sort-control {
   inline-size: 226px;
   max-inline-size: 100%;
 }
@@ -503,8 +503,10 @@
   gap: var(--space-4);
   inline-size: min(344px, 100%);
 }
-.folio-slash-command > .choice-panel-proto {
-  inline-size: 100%;
+.folio-slash-results {
+  position: relative;
+  min-inline-size: 0;
+  padding: var(--space-4);
 }
 .folio-fieldset {
   padding: 0;
@@ -522,10 +524,6 @@
 }
 .folio-members-content {
   padding-inline: 88px;
-}
-.folio-role-field {
-  position: relative;
-  min-inline-size: 0;
 }
 .folio-scene > .dialog-layer {
   --dialog-frame-max: 100svh;

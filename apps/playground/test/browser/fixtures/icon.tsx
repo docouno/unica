@@ -1,4 +1,13 @@
-import { Icon, Input, Link, Switch, UnicaProvider, defineGlyph } from '@docouno/unica';
+import {
+  Icon,
+  Input,
+  Link,
+  Listbox,
+  Select,
+  Switch,
+  UnicaProvider,
+  defineGlyph,
+} from '@docouno/unica';
 import type { IconAdapter } from '@docouno/unica';
 import { ArrowRightIcon, BellIcon, CheckIcon, IconContext } from '@phosphor-icons/react';
 import { useId, useState } from 'react';
@@ -13,8 +22,6 @@ import { Avatar } from '../../../src/prototypes/avatar/avatar.proto.js';
 import { FileItem, FileList } from '../../../src/prototypes/file-input/file-input.proto.js';
 import { Combobox } from '../../../src/prototypes/combobox/combobox.proto.js';
 import { MenuRows, MenuSurface } from '../../../src/prototypes/menu/menu.proto.js';
-import { Listbox } from '../../../src/prototypes/select/listbox.proto.js';
-import { Select } from '../../../src/prototypes/select/select.proto.js';
 import { Button } from '@docouno/unica';
 import {
   Drawer,
@@ -114,12 +121,12 @@ export default function IconFixture() {
           <Listbox
             size="m"
             aria-label="Medium options"
-            options={[{ value: 'm', label: 'Medium', icon: BellIcon }]}
+            options={[{ value: 'm', label: 'Medium', iconLeft: BellIcon }]}
           />
           <Listbox
             size="l"
             aria-label="Large options"
-            options={[{ value: 'l', label: 'Large', icon: BellIcon }]}
+            options={[{ value: 'l', label: 'Large', iconLeft: BellIcon }]}
           />
         </div>
       </section>
@@ -233,7 +240,7 @@ export default function IconFixture() {
           />
         </MenuSurface>
         <UnicaProvider iconAdapter={replacement}>
-          <Select options={[]} label="Invalid selection" size="l" status="danger" />
+          <Select options={[]} aria-label="Invalid selection" size="l" status="danger" />
           <Combobox options={[]} label="Lookup" searchState="error" previewOpen />
         </UnicaProvider>
         <UnicaProvider iconAdapter={() => null}>

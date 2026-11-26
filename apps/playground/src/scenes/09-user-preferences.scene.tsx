@@ -23,7 +23,7 @@ import {
 } from '../prototypes/app-shell/app-shell.proto.js';
 import { Badge } from '@docouno/unica';
 import { Breadcrumb, BreadcrumbPage } from '../prototypes/breadcrumb/breadcrumb.proto.js';
-import { Button } from '@docouno/unica';
+import { Button, Select } from '@docouno/unica';
 import {
   Accordion,
   AccordionContent,
@@ -31,7 +31,6 @@ import {
   AccordionTrigger,
 } from '../prototypes/disclosure/disclosure.proto.js';
 import { ToastCard } from '../prototypes/toast/toast.proto.js';
-import { Select } from '../prototypes/select/select.proto.js';
 import { NumberInput } from '../prototypes/number-input/number-input.proto.js';
 import {
   Table,
@@ -185,6 +184,7 @@ function PreferencesScene(): ReactElement {
                   </Text>
                 </div>
                 <Select
+                  className="folio-typeface-control"
                   ref={typeface}
                   size="s"
                   aria-label="Code and terminal typeface"
