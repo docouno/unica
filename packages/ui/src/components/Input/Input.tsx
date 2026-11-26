@@ -10,6 +10,7 @@ import {
 } from '../../core/dom.js';
 import { FormInput } from '../../core/forms/carriers.js';
 import { fieldControlId, fieldDescription, useFormField } from '../../core/forms/field-context.js';
+import { observeFieldInput } from '../../core/forms/observeFieldInput.js';
 import { mergeRefs } from '../../core/mergeRefs.js';
 import {
   CloseGlyph,
@@ -21,7 +22,6 @@ import {
 import { Icon } from '../Icon/index.js';
 import { Spinner } from '../Progress/index.js';
 import { INPUT_TYPE } from './consts.js';
-import { observeInput } from './observe-input.js';
 import type { InputProps } from './types.js';
 import { useInputValue } from './use-input-value.js';
 import './input.css';
@@ -86,7 +86,10 @@ export function Input({
   const [nativeDisabled, setNativeDisabled] = useState(false);
   const observe = useCallback((node: HTMLInputElement | null) => {
     if (node) {
-      return observeInput(node, setNativeDisabled);
+      return observeFieldInput(node, {
+        focusAttribute: 'data-unica-input-focus',
+        onChange: () => setNativeDisabled(node.matches(':disabled')),
+      });
     }
   }, []);
   const mergedRef = useMemo(() => mergeRefs(input, observe, ref), [observe, ref]);

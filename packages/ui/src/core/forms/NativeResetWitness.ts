@@ -1,10 +1,13 @@
 import {
   addListenerSafe,
+  containsSafe,
+  getAttributeSafe,
   getDefaultView,
   getFormElements,
   getLocalName,
   getOwnerDocument,
   getRootNodeSafe,
+  isElementNode,
   isHtmlForm,
   removeListenerSafe,
 } from '../dom.js';
@@ -39,7 +42,7 @@ interface Subscription {
   readonly prepare?: (() => () => void) | undefined;
 }
 
-type PendingReset = (subscription?: Subscription) => void;
+type PendingReset = (subscription?: Subscription, editedControl?: FormControl) => void;
 
 interface ResetObservation {
   readonly control: FormControl;
@@ -135,6 +138,41 @@ function observeReset(form: HTMLFormElement, root: Node): Map<Subscription, Rese
   return observations;
 }
 
+function formAssociationChanged(
+  control: FormControl,
+  form: HTMLFormElement,
+  mutations: readonly MutationRecord[],
+): boolean {
+  const formId = getAttributeSafe(control, 'form');
+  const elementPrototype = getDefaultView(getOwnerDocument(form))?.Element.prototype;
+  return mutations.some((record) => {
+    if (record.type === 'attributes' && isElementNode(record.target)) {
+      if (record.attributeName === 'form') {
+        return record.target === control && record.oldValue !== formId;
+      }
+      const id = getAttributeSafe(record.target, 'id');
+      return Boolean(
+        formId &&
+        record.oldValue !== id &&
+        (record.target === form || record.oldValue === formId || id === formId),
+      );
+    }
+    return [...record.addedNodes, ...record.removedNodes].some((node) => {
+      if (containsSafe(node, control) || containsSafe(node, form)) {
+        return true;
+      }
+      return Boolean(
+        formId &&
+        isElementNode(node) &&
+        (getAttributeSafe(node, 'id') === formId ||
+          Array.from(elementPrototype?.querySelectorAll.call(node, '[id]') ?? []).some(
+            (element) => getAttributeSafe(element, 'id') === formId,
+          )),
+      );
+    });
+  });
+}
+
 function handleReset(event: Event): void {
   if (!isHtmlForm(event.target)) {
     return;
@@ -157,6 +195,27 @@ function handleReset(event: Event): void {
   const operation = createResetOperation(event);
   const observations = observeReset(form, root);
   const view = getDefaultView(getOwnerDocument(form));
+  let associationRecords: MutationRecord[] = [];
+  const hasNumber = [...observations.values()].some((entries) =>
+    entries.some(
+      ({ control, owned }) =>
+        owned &&
+        getLocalName(control) === 'input' &&
+        (control as HTMLInputElement).type === 'number',
+    ),
+  );
+  const association =
+    event.isTrusted && hasNumber && view
+      ? new view.MutationObserver((records) => {
+          associationRecords = associationRecords.concat(records);
+        })
+      : undefined;
+  association?.observe(root, {
+    attributeFilter: ['form', 'id'],
+    attributeOldValue: true,
+    childList: true,
+    subtree: true,
+  });
   let active = true;
   let completed: Map<Subscription, ResetResult> | undefined;
   let cancelFallback: (() => void) | undefined;
@@ -166,6 +225,7 @@ function handleReset(event: Event): void {
     active = false;
     dispatches.delete(event);
     pendingResets.delete(finish);
+    association?.disconnect();
     for (const end of prepared.values()) {
       end();
     }
@@ -176,7 +236,7 @@ function handleReset(event: Event): void {
     }
   };
 
-  function finish(only?: Subscription): void {
+  function finish(only?: Subscription, editedControl?: FormControl): void {
     if (!active) {
       return;
     }
@@ -190,13 +250,31 @@ function handleReset(event: Event): void {
       const positions = new Map(
         Array.from(getFormElements(form), (control, index) => [control, index] as const),
       );
+      // An edit can replace the reset value in the same task. Ownership
+      // evidence is conclusive only if form association could not have changed
+      // during that dispatch, including a temporary move followed by a return.
+      const editorRetainedOwner =
+        editedControl && association
+          ? !formAssociationChanged(
+              editedControl,
+              form,
+              associationRecords.concat(association.takeRecords()),
+            )
+          : false;
+      association?.disconnect();
+      associationRecords = [];
       const ordered: { subscription: Subscription; position: number }[] = [];
       for (const [subscription, controls] of observations) {
         const participants = controls.filter(({ control, owned, appliedDefault }) => {
           const stayed = owned && control.form === form;
           // Check what the browser applied even if the control returned to its
           // previous owner before this checkpoint.
-          return result === 'reset' ? appliedDefault(stayed) : stayed;
+          // A native edit can already have replaced the reset value. This hint
+          // applies only to the editor reporting that event, never to peers.
+          if (result !== 'reset') {
+            return stayed;
+          }
+          return control === editedControl && stayed ? editorRetainedOwner : appliedDefault(stayed);
         });
         if (participants.length > 0) {
           const position = participants.reduce(
@@ -290,12 +368,12 @@ function handleReset(event: Event): void {
   });
 }
 
-function flushPendingResets(subscription?: Subscription): void {
+function flushPendingResets(subscription?: Subscription, editedControl?: FormControl): void {
   if (pendingResets.size === 0) {
     return;
   }
   for (const finish of [...pendingResets]) {
-    finish(subscription);
+    finish(subscription, editedControl);
   }
 }
 
@@ -323,7 +401,7 @@ function bindResetTarget(target: Node, subscription: Subscription): () => void {
 }
 
 export interface NativeResetSubscription {
-  flushCompleted: () => void;
+  flushCompleted: (editedControl?: FormControl) => void;
   syncTargets: () => void;
   unsubscribe: () => void;
 }
@@ -396,8 +474,8 @@ export function subscribeNativeReset(
   }
 
   return {
-    flushCompleted() {
-      flushPendingResets(subscription);
+    flushCompleted(editedControl) {
+      flushPendingResets(subscription, editedControl);
     },
     syncTargets,
     unsubscribe() {

@@ -100,6 +100,7 @@ export type {
   ListboxOptionProps,
   ListboxProps,
   ListboxSection,
+  NumberInputProps,
   PickerMessages,
   PopoverAlign,
   PopoverBodyProps,

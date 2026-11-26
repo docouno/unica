@@ -37,7 +37,7 @@ export interface FormValueState<T> {
   readonly propose: (next: T, source?: FormControl) => void;
   readonly reconcile: () => void;
   readonly repair: () => void;
-  readonly settleReset: () => void;
+  readonly settleReset: (editedControl?: FormControl) => void;
   readonly sync: () => void;
 }
 
@@ -171,7 +171,10 @@ export function useFormValue<T>(options: FormValueOptions<T>): FormValueState<T>
 
   const write = useCallback((next: T): void => writeWith(next, false), [writeWith]);
   const forceWrite = useCallback((next: T): void => writeWith(next, true), [writeWith]);
-  const settleReset = useCallback((): void => binding.current?.flushCompleted(), []);
+  const settleReset = useCallback(
+    (editedControl?: FormControl): void => binding.current?.flushCompleted(editedControl),
+    [],
+  );
   const reconcileValue = useCallback(
     (force: boolean): void => {
       if (mountedRef.current) {

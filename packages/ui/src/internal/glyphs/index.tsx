@@ -56,6 +56,24 @@ export function MinusGlyph({ className }: GlyphProps): ReactElement {
   );
 }
 
+export function DecreaseGlyph({ className }: GlyphProps): ReactElement {
+  return (
+    <Glyph
+      className={className}
+      path="M224,128a8,8,0,0,1-8,8H40a8,8,0,0,1,0-16H216A8,8,0,0,1,224,128Z"
+    />
+  );
+}
+
+export function IncreaseGlyph({ className }: GlyphProps): ReactElement {
+  return (
+    <Glyph
+      className={className}
+      path="M224,128a8,8,0,0,1-8,8H136v80a8,8,0,0,1-16,0V136H40a8,8,0,0,1,0-16h80V40a8,8,0,0,1,16,0v80h80A8,8,0,0,1,224,128Z"
+    />
+  );
+}
+
 export function CaretGlyph({ className, direction }: CaretGlyphProps): ReactElement {
   return (
     <Glyph

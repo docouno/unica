@@ -199,7 +199,11 @@
 
   .unica-form-field-body
     [data-unica-form-field-glyph]
-    > :is(.unica-input-status, .unica-textarea-status, .unica-select-status) {
+    > :is(.unica-input-status, .unica-textarea-status, .unica-select-status),
+  .unica-form-field-body
+    [data-unica-form-field-glyph]
+    + .unica-number-input-feedback
+    > .unica-number-input-status {
     visibility: var(--_form-field-shell-glyph, inherit);
   }
 

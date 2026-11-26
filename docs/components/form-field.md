@@ -42,7 +42,7 @@ export function BillingEmail() {
 
 Content props accept React nodes. Whitespace, booleans, and empty arrays and fragments count as absent. A custom element counts as supplied even if it later renders nothing. Pass `null` to omit it conditionally. Non-neutral status supplies fallback copy when the message is absent. Use `message=""` to suppress the row explicitly. A count of zero is valid content. The count may wrap below an adjacent message on narrow fields.
 
-Server-rendered fields show the glyph beside the feedback until the editor mounts. A visible Input, Textarea, or Select trigger with the matching status then owns the glyph.
+Server-rendered fields show the glyph beside the feedback until the editor mounts. A visible Input, Textarea, [NumberInput](number-input.md), or Select trigger with the matching status then owns the glyph.
 
 `FormField` accepts native div props and `Ref<HTMLDivElement>`. The standalone parts accept their own native props and React 19 refs.
 

@@ -307,7 +307,7 @@ export function ExportQuality() {
         ),
         'border-box',
       ),
-      code: exactSource.replace('../../prototypes/', './prototypes/'),
+      code: exactSource,
     },
   ],
 });
