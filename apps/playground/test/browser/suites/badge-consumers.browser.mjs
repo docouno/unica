@@ -40,13 +40,15 @@ export default {
     await page.getByRole('button', { name: 'Show tabs' }).click();
     const updates = page.getByRole('tab', { name: 'Updates 0 updates' });
     const review = page.getByRole('tab', { name: 'Review 104 pending reviews' });
-    const visibleCount = updates.locator('.unica-badge.tab-count-proto');
-    const clippedCount = review.locator('.unica-badge.tab-count-proto');
+    const visibleCount = updates.locator('.unica-badge.unica-tabs-count');
+    const clippedCount = review.locator('.unica-badge.unica-tabs-count');
     assert.equal(await visibleCount.textContent(), '0');
     assert.equal(await visibleCount.getAttribute('data-unica-badge-size'), 's');
     assert.equal(await visibleCount.getAttribute('aria-hidden'), 'true');
     await assertBox(visibleCount, { width: 20, height: 20 });
-    await clippedCount.locator('xpath=self::*[@data-count-clipped]').waitFor({ state: 'attached' });
+    await clippedCount
+      .locator('xpath=self::*[@data-unica-tabs-count-clipped]')
+      .waitFor({ state: 'attached' });
     assert.ok(await clippedCount.isHidden());
     assert.equal(await clippedCount.textContent(), '99+');
 

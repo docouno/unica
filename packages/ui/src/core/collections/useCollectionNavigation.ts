@@ -3,10 +3,12 @@ import type { KeyboardEvent } from 'react';
 import { markKeyboardNavigation } from '../focus-origin.js';
 import { getDefaultView, getOwnerDocument } from '../dom.js';
 import { navigateCollection } from './navigation.js';
-import type { NavigationOptions, TypeaheadBuffer } from './navigation.js';
+import type { CollectionItem, NavigationOptions, TypeaheadBuffer } from './navigation.js';
 
 export interface CollectionNavigationOptions extends Omit<NavigationOptions, 'direction'> {
   readonly navigateOnCurrent?: boolean | undefined;
+  /** Read a committed collection after any consumer key handler has run. */
+  readonly readItems?: (() => readonly CollectionItem[]) | undefined;
 }
 
 export interface CollectionNavigation {
@@ -48,7 +50,12 @@ export function useCollectionNavigation(
       const now = view?.performance?.now() ?? Date.now();
       const result = navigateCollection(
         nativeEvent,
-        { ...currentOptions, activeKey, direction },
+        {
+          ...currentOptions,
+          items: currentOptions.readItems?.() ?? currentOptions.items,
+          activeKey,
+          direction,
+        },
         buffer.current,
         now,
       );

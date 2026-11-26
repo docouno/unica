@@ -3,7 +3,7 @@ import { FileTextIcon, UsersIcon } from '@phosphor-icons/react';
 import { useId } from 'react';
 import type { ReactElement } from 'react';
 import { FormField } from '@docouno/unica';
-import { Tabs, TabsContent, TabsList, TabsTab } from '../../prototypes/tabs/tabs.proto.js';
+import { Tabs, TabsPanel, TabsList, TabsTrigger } from '@docouno/unica';
 import type { PreviewProps } from '../../workbench/types.js';
 
 export function ManualExample({ ctx }: PreviewProps): ReactElement {
@@ -17,35 +17,42 @@ export function ManualExample({ ctx }: PreviewProps): ReactElement {
         {...ctx.subject}
         defaultValue="overview"
         activationMode="manual"
+        mountStrategy={
+          ctx.story?.controls.mountStrategy === 'lazy'
+            ? 'lazy'
+            : ctx.story?.controls.mountStrategy === 'unmount'
+              ? 'unmount'
+              : 'eager'
+        }
         className="tabs-example-layout"
       >
         <TabsList aria-labelledby={heading}>
-          <TabsTab value="overview" iconLeft={FileTextIcon}>
+          <TabsTrigger value="overview" iconLeft={FileTextIcon}>
             Overview
-          </TabsTab>
-          <TabsTab value="people" iconLeft={UsersIcon}>
+          </TabsTrigger>
+          <TabsTrigger value="people" iconLeft={UsersIcon}>
             Recipients
-          </TabsTab>
-          <TabsTab value="audit" disabled>
+          </TabsTrigger>
+          <TabsTrigger value="audit" disabled>
             Audit
-          </TabsTab>
+          </TabsTrigger>
         </TabsList>
         <div className="tabs-example-panels">
-          <TabsContent value="overview" tabIndex={-1}>
+          <TabsPanel value="overview" tabIndex={-1}>
             <FormField controlId={`${heading}-report`} label="Report name">
               <Input id={`${heading}-report`} defaultValue="Weekly summary" />
             </FormField>
-          </TabsContent>
-          <TabsContent value="people">
+          </TabsPanel>
+          <TabsPanel value="people">
             <Text size="body-s" color="secondary">
               <bdi>Weekly reports are sent to the workspace owners.</bdi>
             </Text>
-          </TabsContent>
-          <TabsContent value="audit">
+          </TabsPanel>
+          <TabsPanel value="audit">
             <Text size="body-s" color="secondary">
               <bdi>Audit is unavailable.</bdi>
             </Text>
-          </TabsContent>
+          </TabsPanel>
         </div>
       </Tabs>
     </Card>
@@ -66,22 +73,22 @@ export function OverlayExample({ ctx }: PreviewProps): ReactElement {
         </Text>
         <Tabs {...ctx.subject} size="s" defaultValue="activity" className="tabs-example-layout">
           <TabsList aria-label="Snapshot panels">
-            <TabsTab value="activity" count={8} countLabel="8 events">
+            <TabsTrigger value="activity" count={8} countLabel="8 events">
               Activity
-            </TabsTab>
-            <TabsTab value="details">Details</TabsTab>
+            </TabsTrigger>
+            <TabsTrigger value="details">Details</TabsTrigger>
           </TabsList>
           <div className="tabs-example-panels">
-            <TabsContent value="activity">
+            <TabsPanel value="activity">
               <Text size="body-s" color="secondary">
                 <bdi>Eight events since the last snapshot.</bdi>
               </Text>
-            </TabsContent>
-            <TabsContent value="details">
+            </TabsPanel>
+            <TabsPanel value="details">
               <Text size="body-s" color="secondary">
                 <bdi>Created today at 09:41.</bdi>
               </Text>
-            </TabsContent>
+            </TabsPanel>
           </div>
         </Tabs>
       </section>

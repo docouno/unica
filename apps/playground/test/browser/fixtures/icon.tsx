@@ -28,6 +28,10 @@ import {
   ModalTrigger,
   Select,
   Switch,
+  Tabs,
+  TabsList,
+  TabsPanel,
+  TabsTrigger,
   UnicaProvider,
   defineGlyph,
 } from '@docouno/unica';
@@ -43,7 +47,6 @@ import {
 } from '../../../src/prototypes/app-shell/app-shell.proto.js';
 import { FileItem, FileList } from '../../../src/prototypes/file-input/file-input.proto.js';
 import { Combobox } from '../../../src/prototypes/combobox/combobox.proto.js';
-import { Tabs, TabsList, TabsTab } from '../../../src/prototypes/tabs/tabs.proto.js';
 
 function ProjectSvg({ children, ...props }: ComponentPropsWithRef<'svg'>) {
   const clip = useId();
@@ -271,13 +274,16 @@ export default function IconFixture() {
       </section>
 
       <Tabs defaultValue="one" orientation="vertical">
-        <TabsList>
-          <TabsTab value="one" iconLeft={BellIcon} count={12}>
+        <TabsList aria-label="Icon examples">
+          <TabsTrigger value="one" iconLeft={BellIcon} count={12}>
             With icon
-          </TabsTab>
-          <TabsTab value="two">Without icon</TabsTab>
-          <TabsTab value="three" iconLeft={BellIcon} aria-label="Icon only" />
+          </TabsTrigger>
+          <TabsTrigger value="two">Without icon</TabsTrigger>
+          <TabsTrigger value="three" iconLeft={BellIcon} aria-label="Icon only" />
         </TabsList>
+        <TabsPanel value="one">Bell information</TabsPanel>
+        <TabsPanel value="two">Label information</TabsPanel>
+        <TabsPanel value="three">Icon information</TabsPanel>
       </Tabs>
     </>
   );

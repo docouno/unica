@@ -1,7 +1,7 @@
 import { useId } from 'react';
 import { Stack, Text, Title } from '@docouno/unica';
 import '@docouno/unica/styles.css';
-import { Tabs, TabsContent, TabsList, TabsTab } from '../../prototypes/tabs/tabs.proto.js';
+import { Tabs, TabsPanel, TabsList, TabsTrigger } from '@docouno/unica';
 
 export function DocumentViews({ tabsProps = {} } = {}) {
   const titleId = useId();
@@ -14,10 +14,10 @@ export function DocumentViews({ tabsProps = {} } = {}) {
       <Tabs {...tabsProps} defaultValue="activity">
         <Stack gap={12}>
           <TabsList aria-labelledby={titleId}>
-            <TabsTab value="activity">Activity</TabsTab>
-            <TabsTab value="details">Details</TabsTab>
+            <TabsTrigger value="activity">Activity</TabsTrigger>
+            <TabsTrigger value="details">Details</TabsTrigger>
           </TabsList>
-          <TabsContent value="activity">
+          <TabsPanel value="activity">
             <Stack gap={4}>
               <Text size="body-s" weight="semibold">
                 Rollback steps updated
@@ -26,8 +26,8 @@ export function DocumentViews({ tabsProps = {} } = {}) {
                 Saved in revision 8
               </Text>
             </Stack>
-          </TabsContent>
-          <TabsContent value="details">
+          </TabsPanel>
+          <TabsPanel value="details">
             <Stack gap={4}>
               <Text size="body-s" weight="semibold">
                 Workspace access
@@ -36,7 +36,7 @@ export function DocumentViews({ tabsProps = {} } = {}) {
                 <bdi>Members can view this document.</bdi>
               </Text>
             </Stack>
-          </TabsContent>
+          </TabsPanel>
         </Stack>
       </Tabs>
     </Stack>

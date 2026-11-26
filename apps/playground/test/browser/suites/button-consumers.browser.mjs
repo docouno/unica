@@ -246,6 +246,8 @@ export default {
         }),
         `Selected tab must receive pointer input at its ${dir} inline start`,
       );
+      const transform = await arrow.locator('svg path').first().getAttribute('transform');
+      assert.equal(transform, dir === 'ltr' ? 'rotate(-90 128 128)' : 'rotate(90 128 128)');
       glyphs.push(await arrow.locator('svg path').first().getAttribute('d'));
       const reflection = await arrow.locator('svg').evaluate((svg) => {
         const { scale, transform } = getComputedStyle(svg);
@@ -259,7 +261,7 @@ export default {
         { timeout: 5000 },
       );
     }
-    assert.notEqual(glyphs[0], glyphs[1]);
+    assert.equal(glyphs[0], glyphs[1]);
   },
 
   'Zoomed Tabs keep the keyboard-selected label and its capped count in view': async ({
@@ -280,7 +282,7 @@ export default {
       const review = list.getByRole('tab', { name: /104 pending reviews/u, selected: true });
       await assertFocused(review);
       for (const part of [
-        review.locator('.tab-label-proto'),
+        review.locator('.unica-tabs-label'),
         review.getByText('99+', { exact: true }),
       ]) {
         assert.ok(
