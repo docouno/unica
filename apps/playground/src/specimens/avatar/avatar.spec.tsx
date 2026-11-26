@@ -1,4 +1,4 @@
-import { Avatar } from '../../prototypes/avatar/avatar.proto.js';
+import { Avatar } from '@docouno/unica';
 import {
   GroupDirection,
   GroupScale,
@@ -7,7 +7,7 @@ import {
   NameHints,
   PortraitCrop,
   SurfaceSeams,
-} from '../../prototypes/avatar/avatar.examples.js';
+} from './avatar.examples.js';
 import { defineComponent } from '../../workbench/types.js';
 import { previewProps } from '../preview-code.js';
 import { withOverlaySurface } from '../shared/with-overlay-surface.js';
@@ -21,12 +21,21 @@ function imageLabel(alt: string, name: string): string {
   return alt === 'decorative' ? '' : name.trim() || 'Profile';
 }
 
+const responsiveSources = {
+  none: undefined,
+  width: '/assets/avatar-person-light.png 256w',
+  density: '/assets/avatar-person-light.png 1x',
+} as const;
+const customMark = 'UX';
+const customMarkCode = JSON.stringify(customMark);
+const customElementCode = `<span>${customMark}</span>`;
+
 export default defineComponent({
   id: 'avatar',
-  title: 'Avatar & AvatarGroup',
+  title: 'Avatar',
   category: 'Surfaces & Structure',
-  status: 'Proto',
-  summary: 'Identify a person with a portrait or fallback and show the members of a group.',
+  status: 'UI',
+  summary: 'Identify a person with a portrait, initials, or a fallback mark.',
   componentName: 'Avatar',
   props: {
     size: {
@@ -50,8 +59,49 @@ export default defineComponent({
       description:
         'Required accessible image name. This example uses the person’s name or “Profile” when blank. An empty string makes the avatar decorative.',
       choices: [
-        { value: 'named', label: 'Informative', code: "name.trim() || 'Profile'" },
+        { value: 'named', label: 'Informative', code: '"Alex Rivera"' },
         { value: 'decorative', label: 'Decorative', code: '""' },
+      ],
+    },
+    srcSet: {
+      kind: 'slot',
+      group: 'Content',
+      default: 'none',
+      publicType: 'string',
+      description:
+        'Native responsive image candidates. A candidate can supply the photo by itself.',
+      choices: [
+        { value: 'none', label: 'No candidates' },
+        {
+          value: 'width',
+          label: 'Width descriptor',
+          code: JSON.stringify(responsiveSources.width),
+        },
+        {
+          value: 'density',
+          label: 'Density descriptor',
+          code: JSON.stringify(responsiveSources.density),
+        },
+      ],
+    },
+    sizes: {
+      kind: 'string',
+      group: 'Geometry',
+      default: '',
+      description: 'Native source size hint used with width descriptors in srcSet.',
+      examples: ['', '40px', '(max-width: 600px) 32px, 48px'],
+    },
+    fallback: {
+      kind: 'slot',
+      group: 'Content',
+      default: 'auto',
+      publicType: 'string | ReactElement',
+      description:
+        'Passive custom mark shown until a photo is ready. Omit it for initials or the person glyph.',
+      choices: [
+        { value: 'auto', label: 'Automatic' },
+        { value: 'mark', label: 'Custom mark', code: customMarkCode },
+        { value: 'element', label: 'Custom element', code: customElementCode },
       ],
     },
     src: {
@@ -83,23 +133,71 @@ export default defineComponent({
   constraints: [
     {
       kind: 'ignored',
-      when: { src: 'none' },
+      when: { src: 'none', srcSet: 'none' },
       affects: ['imagePosition'],
       reason: 'Crop position applies to the portrait image.',
     },
+    {
+      kind: 'ignored',
+      when: { srcSet: 'none' },
+      affects: ['sizes'],
+      reason: 'The browser uses sizes only to select from width candidates.',
+    },
+    {
+      kind: 'ignored',
+      when: { srcSet: 'density' },
+      affects: ['sizes'],
+      reason: 'Density descriptors already express resolution per CSS pixel.',
+    },
+    {
+      kind: 'precedence',
+      when: { srcSet: 'width' },
+      affects: ['src'],
+      reason: 'The browser selects width candidates ahead of the standalone URL.',
+    },
   ],
-  render: withOverlaySurface(({ ctx, values: { alt, name, size, src, imagePosition } }) => (
-    <Avatar
-      {...ctx.subject}
-      alt={imageLabel(alt, name)}
-      name={name}
-      size={size}
-      src={src === 'none' ? undefined : src}
-      imagePosition={imagePosition}
-    />
-  )),
-  code: ({ alt, name, size, src, imagePosition }) =>
-    `import { Avatar } from './prototypes/avatar/avatar.proto.js';\n\n<Avatar${previewProps({ alt: imageLabel(alt, name), name, size, src, imagePosition }, { size: 'm', src: 'none', imagePosition: '50% 50%' })} />`,
+  render: withOverlaySurface(
+    ({ ctx, values: { alt, name, size, src, srcSet, sizes, fallback, imagePosition } }) => (
+      <Avatar
+        {...ctx.subject}
+        alt={imageLabel(alt, name)}
+        name={name}
+        size={size}
+        src={src === 'none' ? undefined : src}
+        srcSet={responsiveSources[srcSet]}
+        sizes={sizes || undefined}
+        fallback={
+          fallback === 'auto' ? undefined : fallback === 'mark' ? (
+            customMark
+          ) : (
+            <span>{customMark}</span>
+          )
+        }
+        imagePosition={imagePosition}
+      />
+    ),
+  ),
+  code: ({ alt, name, size, src, srcSet, sizes, fallback, imagePosition }) => {
+    const attrs = previewProps(
+      {
+        alt: imageLabel(alt, name),
+        name,
+        size,
+        src,
+        srcSet: responsiveSources[srcSet] ?? '',
+        sizes,
+        imagePosition,
+      },
+      { size: 'm', src: 'none', srcSet: '', sizes: '', imagePosition: '50% 50%' },
+    );
+    const mark =
+      fallback === 'auto'
+        ? ''
+        : fallback === 'mark'
+          ? ` fallback=${customMarkCode}`
+          : ` fallback={${customElementCode}}`;
+    return `import { Avatar } from '@docouno/unica';\n\n<Avatar${attrs}${mark} />`;
+  },
   states: [
     {
       id: 'sizes',
@@ -150,7 +248,7 @@ export default defineComponent({
       actions: [{ id: 'retry', label: 'Retry image' }],
       reset: true,
       caption:
-        'Switch people or retry a failed portrait. The waiting preview holds the fallback in place. Loaded and failed images use the browser’s image lifecycle.',
+        'Switch people or retry with a valid source. The waiting sample holds the fallback with the source omitted. Loaded and failed images use the browser’s image lifecycle.',
       render: withOverlaySurface(ImageLifecycle, 'border-box'),
     },
     {
@@ -221,7 +319,7 @@ export default defineComponent({
       reset: true,
       caption:
         'Three members appear by default. View all seven names with the disclosure, or change the visible limit to compare the group and remainder.',
-      code: directorySource.replaceAll('../../prototypes/', './prototypes/'),
+      code: directorySource,
       render: withOverlaySurface(
         ({ ctx }) => (
           <div data-example-disclosure="">
@@ -240,7 +338,7 @@ export default defineComponent({
       mode: 'live',
       caption:
         'Open the account profile with the named button. The decorative portrait shares the button’s target and stays out of the keyboard order.',
-      code: profileSource.replaceAll('../../prototypes/', './prototypes/'),
+      code: profileSource,
       render: withOverlaySurface(
         ({ ctx }) => (
           <div data-example-disclosure="">

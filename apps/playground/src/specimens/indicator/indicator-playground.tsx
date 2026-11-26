@@ -1,7 +1,6 @@
-import { Button, Indicator, Stack, Text } from '@docouno/unica';
+import { Avatar, Button, Indicator, Stack, Text } from '@docouno/unica';
 import { useId, useState } from 'react';
 import type { ReactElement } from 'react';
-import { Avatar } from '../../prototypes/avatar/avatar.proto.js';
 import type { PreviewProps } from '../../workbench/types.js';
 import { indicatorPreview } from './indicator-code.js';
 import type { IndicatorValues } from './indicator.spec.js';

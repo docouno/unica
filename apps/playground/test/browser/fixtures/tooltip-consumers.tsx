@@ -1,5 +1,5 @@
+import { AvatarGroup } from '@docouno/unica';
 import type { ReactElement } from 'react';
-import { AvatarGroup } from '../../../src/prototypes/avatar/avatar.proto.js';
 import { DatePicker } from '../../../src/prototypes/date-picker/date-picker.components.proto.js';
 
 export default function TooltipConsumerFixture(): ReactElement {

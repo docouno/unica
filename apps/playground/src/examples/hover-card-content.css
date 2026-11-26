@@ -4,9 +4,6 @@
   gap: var(--space-12);
   min-inline-size: 0;
 }
-.hover-demo-identity > .avatar-proto {
-  flex: none;
-}
 .hover-demo-heading {
   display: grid;
   gap: var(--space-2);

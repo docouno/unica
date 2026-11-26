@@ -1,7 +1,6 @@
 import type { ReactElement } from 'react';
 import { UsersIcon } from '@phosphor-icons/react';
-import { Avatar } from '../prototypes/avatar/avatar.proto.js';
-import { Badge, Text, Title } from '@docouno/unica';
+import { Avatar, Badge, Text, Title } from '@docouno/unica';
 import './hover-card-content.css';
 
 export function TeamPreview(): ReactElement {

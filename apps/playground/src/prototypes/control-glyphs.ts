@@ -23,7 +23,6 @@ import {
   SlidersHorizontalIcon,
   TrashIcon,
   UserCircleIcon,
-  UserIcon,
   WarningCircleIcon,
   WarningIcon,
   XCircleIcon,
@@ -54,7 +53,6 @@ export const SidebarGlyph = defineGlyph(SidebarSimpleIcon, 'phosphor');
 export const SlidersGlyph = defineGlyph(SlidersHorizontalIcon, 'phosphor');
 export const TrashGlyph = defineGlyph(TrashIcon, 'phosphor');
 export const AccountGlyph = defineGlyph(UserCircleIcon, 'phosphor');
-export const UserGlyph = defineGlyph(UserIcon, 'phosphor');
 
 export const fieldStatusGlyphs = {
   info: defineGlyph(InfoIcon, 'phosphor'),

@@ -1,8 +1,7 @@
 import { useState } from 'react';
 import type { ReactElement } from 'react';
 import { ArrowRightIcon, FileTextIcon, PushPinIcon } from '@phosphor-icons/react';
-import { Avatar } from '../prototypes/avatar/avatar.proto.js';
-import { Button } from '@docouno/unica';
+import { Avatar, Button } from '@docouno/unica';
 import { ToastCard } from '../prototypes/toast/toast.proto.js';
 import {
   Alert,
@@ -304,6 +303,7 @@ export default defineScene({
     'alert',
     'app-shell',
     'avatar',
+    'avatar-group',
     'badge',
     'breadcrumb',
     'button',

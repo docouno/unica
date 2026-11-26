@@ -325,7 +325,11 @@ export default {
       assert.ok(await panel.evaluate((element) => element.matches(':popover-open')));
       await pressKeys(page, 'Escape');
       await panel.waitFor({ state: 'hidden' });
-      await assertFocused(trigger);
+      // Popover restores focus after sampling the trigger's visibility.
+      await page.waitForFunction(
+        (element) => element.ownerDocument.activeElement === element,
+        await trigger.elementHandle(),
+      );
     },
 
   'Tag and TagGroup keep server-rendered native actions through hydration': async ({

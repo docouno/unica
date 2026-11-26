@@ -78,6 +78,7 @@ export type Registration =
 
 export interface OverlayHandle {
   isOpen: () => boolean;
+  hasLostNativeOpen: () => boolean;
   update: (patch: OverlayUpdate) => void;
   setTrigger: (trigger: HTMLElement | null) => void;
   setOpen: (open: boolean, options?: CloseOptions) => void;
@@ -297,6 +298,9 @@ class Layer {
   }
 
   isOpen = (): boolean => this.active && isNativeOpen(this);
+
+  // An explicit native dismissal already cleared the layer's open phase.
+  hasLostNativeOpen = (): boolean => this.active && !isNativeOpen(this);
 
   private get restoresFocus(): boolean {
     const { options } = this;

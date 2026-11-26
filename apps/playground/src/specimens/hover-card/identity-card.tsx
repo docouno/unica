@@ -1,5 +1,6 @@
 import { UsersIcon } from '@phosphor-icons/react';
 import {
+  Avatar,
   Badge,
   Flex,
   HoverCard,
@@ -10,7 +11,6 @@ import {
   Text,
   Title,
 } from '@docouno/unica';
-import { Avatar } from '../../prototypes/avatar/avatar.proto.js';
 import '@docouno/unica/styles.css';
 
 function DirectoryIdentity({ team = false } = {}) {

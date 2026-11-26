@@ -1,6 +1,5 @@
 import { useId, useState } from 'react';
-import { Button, Flex, Stack, Text } from '@docouno/unica';
-import { Avatar, AvatarGroup } from '../../prototypes/avatar/avatar.proto.js';
+import { Avatar, AvatarGroup, Button, Flex, Stack, Text } from '@docouno/unica';
 
 const contributors = [
   { id: 'editor', name: 'Content editor', src: '/assets/avatar-person-light.png' },

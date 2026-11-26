@@ -247,7 +247,7 @@ Overflowing rails consume the [compact native scrollbar recipe](scrollbars.md) o
 
 ## Identity group geometry
 
-`--_avatar-group-overlap-factor` selects the geometry of compact identity groups. Soft and Frost use `1`: frames overlap with a true transparent 2px cutout that exposes the current surface, including glass. Pixel uses `0`: complete square frames sit 2px apart, retaining all four borders. The factor controls grouping geometry only; Avatar and AvatarGroup have no press motion or status-color axis. The current design reference lives in `apps/playground/src/prototypes/avatar/README.md`.
+`--_avatar-group-overlap-factor` selects the geometry of compact identity groups. Soft and Frost use `1`: frames overlap with a true transparent 2px cutout that exposes the current surface, including glass. Pixel uses `0`: complete square frames sit 2px apart, retaining all four borders. The cutout follows the corner geometry while the overlap factor controls the spacing. See the [Avatar and AvatarGroup contract](../components/avatar.md).
 
 ## Slider material feedback
 
