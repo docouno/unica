@@ -1,24 +1,73 @@
-import { DialogStudy } from '../../prototypes/dialog/dialog.examples.js';
 import { defineComponent } from '../../workbench/types.js';
 import { choice, eventProp, toggle } from '../control-props.js';
+import {
+  dialogRootConstraints,
+  dialogRootControls,
+  dialogRootProps,
+} from '../shared/dialog-controls.js';
+import { DialogStudy } from '../shared/dialog-study.js';
 import { ActivityFilters } from './activity-filters.js';
-import filtersSource from './activity-filters.tsx?raw';
 import { DeliverySettings } from './delivery-settings.js';
 import { ActivityDetailsPanel } from './drawer-preview.js';
-import panelSource from './drawer-preview.tsx?raw';
 
 const sizes = ['s', 'm', 'l'] as const;
 const sides = ['start', 'end', 'top', 'bottom'] as const;
 const adaptiveSide = { narrow: 'bottom', wide: 'end' } as const;
-const editablePanel = panelSource
-  .replaceAll('../../prototypes/', './prototypes/')
-  .replace('export function ActivityDetailsPanel', 'function ActivityDetailsPanel');
+const filtersExample = `import { useId, useRef, useState } from 'react';
+import {
+  Button, Checkbox, Drawer, DrawerBody, DrawerClose, DrawerContent,
+  DrawerFooter, DrawerHeader, DrawerTitle, DrawerTrigger, Input, Select,
+} from '@docouno/unica';
+import '@docouno/unica/styles.css';
+
+const actions = [
+  { value: 'all', label: 'All actions' },
+  { value: 'publication', label: 'Publication' },
+  { value: 'review', label: 'Reviews' },
+];
+
+export function ActivityFilters() {
+  const [open, setOpen] = useState(true);
+  const [filters, setFilters] = useState({ action: 'all', actor: '', scheduled: true });
+  const formId = useId();
+  const opener = useRef(null);
+
+  return (
+    <Drawer open={open} onOpenChange={setOpen}>
+      <DrawerTrigger asChild ref={opener}><Button variant="secondary">Activity filters</Button></DrawerTrigger>
+      <DrawerContent side={{ narrow: 'bottom', wide: 'end' }} width="s" returnFocus={opener}>
+        <DrawerHeader><DrawerTitle>Activity filters</DrawerTitle><DrawerClose /></DrawerHeader>
+        <DrawerBody>
+          <form id={formId} onSubmit={(event) => {
+            event.preventDefault();
+            const data = new FormData(event.currentTarget);
+            setFilters({
+              action: String(data.get('action')),
+              actor: String(data.get('actor')),
+              scheduled: data.has('scheduled'),
+            });
+            setOpen(false);
+          }}>
+            <Select aria-label="Action" name="action" options={actions} defaultValue={filters.action} />
+            <Input aria-label="Actor" name="actor" defaultValue={filters.actor} />
+            <Checkbox name="scheduled" defaultChecked={filters.scheduled} label="Include scheduled events" />
+          </form>
+        </DrawerBody>
+        <DrawerFooter>
+          <DrawerClose asChild><Button variant="secondary" tone="neutral">Cancel</Button></DrawerClose>
+          <Button type="submit" form={formId}>Apply filters</Button>
+        </DrawerFooter>
+      </DrawerContent>
+    </Drawer>
+  );
+}`;
 
 export default defineComponent({
   id: 'drawer',
   title: 'Drawer',
   category: 'Overlays',
-  status: 'Proto',
+  status: 'UI',
+  form: 'inline',
   summary:
     'A task panel attached to a workspace edge. Placement, panel width and content density can vary independently.',
   defaultSurface: 'overlay',
@@ -44,18 +93,15 @@ export default defineComponent({
       ),
       publicType: 'DrawerSide | { readonly narrow: DrawerSide; readonly wide: DrawerSide }',
     },
-    presentation: {
-      ...choice(
-        'Host',
-        'Launch the panel or pin it for comparison. The standalone example opens from its trigger.',
-        ['live', 'pinned'],
-        'live',
-      ),
-      demo: true,
-    },
+    ...dialogRootControls,
     dismissOnBackdrop: toggle(
       'Interaction',
       'Dismiss DrawerContent when a primary press and release both land on the backdrop.',
+    ),
+    swipeToClose: toggle(
+      'Interaction',
+      'Adds a drag handle to a bottom drawer. Close and Escape remain available.',
+      true,
     ),
     onOpenChange: eventProp(
       'Drawer reports a request to open or close. The owner decides whether to accept it.',
@@ -63,25 +109,52 @@ export default defineComponent({
       '(open: boolean) => void',
     ),
   },
+  constraints: [
+    ...dialogRootConstraints,
+    ...(['start', 'end', 'top'] as const).map((side) => ({
+      kind: 'ignored' as const,
+      when: { side, swipeToClose: true },
+      affects: ['swipeToClose'],
+      reason: 'The drag handle is available on the bottom edge.',
+    })),
+  ],
   render: ({ values, ctx }) => (
-    <DialogStudy height={320}>
+    <DialogStudy ctx={ctx} height={320} title="Activity details example">
       <ActivityDetailsPanel
+        key={values.open === 'unset' ? String(values.defaultOpen) : 'controlled'}
         contentProps={{
           size: values.size,
           width: values.width,
           side: values.side,
           dismissOnBackdrop: values.dismissOnBackdrop,
+          swipeToClose: values.swipeToClose,
         }}
+        rootProps={{ ...dialogRootProps(values), onOpenChange: ctx.action('onOpenChange') }}
         subject={ctx.subject}
-        pinned={values.presentation === 'pinned'}
-        onOpenChange={ctx.action('onOpenChange')}
       />
     </DialogStudy>
   ),
-  code: ({ size, width, side, dismissOnBackdrop }) => `${editablePanel}
+  code: ({ size, width, side, dismissOnBackdrop, swipeToClose, open, defaultOpen }) =>
+    `import { useRef } from 'react';
+import { Button, Drawer, DrawerClose, DrawerContent, DrawerDescription, DrawerHeader, DrawerTitle, DrawerTrigger } from '@docouno/unica';
+import '@docouno/unica/styles.css';
 
 export function ActivityDetails() {
-  return <ActivityDetailsPanel contentProps={${JSON.stringify({ size, width, side, dismissOnBackdrop })}} />;
+  const opener = useRef(null);
+  return (
+    <Drawer {...${JSON.stringify(dialogRootProps({ open, defaultOpen }))}}>
+      <DrawerTrigger asChild ref={opener}><Button variant="secondary">View activity details</Button></DrawerTrigger>
+      <DrawerContent {...${JSON.stringify({ size, width, side, dismissOnBackdrop, swipeToClose })}} returnFocus={opener}>
+        <DrawerHeader>
+          <div>
+            <DrawerTitle>Release notes</DrawerTitle>
+            <DrawerDescription>QA approved version 3.</DrawerDescription>
+          </div>
+          <DrawerClose />
+        </DrawerHeader>
+      </DrawerContent>
+    </Drawer>
+  );
 }`,
   states: [
     {
@@ -91,7 +164,7 @@ export function ActivityDetails() {
         'Each width group shows the four edges. Wider panels stop at the workspace boundary. These panels stay open for inspection. Use the Playground trigger to open a live panel.',
       rows: 'side',
       group: 'width',
-      fixed: { presentation: 'pinned' },
+      fixed: { open: 'true' },
     },
   ],
   cases: [
@@ -187,20 +260,25 @@ export function ActivityDetails() {
         'Choose an action type, an actor and whether to include scheduled events. Apply filters shows the accepted criteria. Cancel drops edits and the next opening restores the last applied values. The adaptive panel moves from inline end to bottom at 600px.',
       render: ({ ctx }) => {
         const controls = ctx.story?.controls;
+        const side = controls?.side;
         return (
-          <DialogStudy height={540}>
+          <DialogStudy ctx={ctx} height={540} title="Activity filters example">
             <ActivityFilters
               subject={ctx.subject}
+              formProps={ctx.form}
               contentProps={{
-                size: controls?.size ?? 'm',
-                width: controls?.width ?? 's',
-                side: controls?.side === 'adaptive' ? adaptiveSide : (controls?.side ?? 'end'),
+                size: sizes.find((size) => size === controls?.size) ?? 'm',
+                width: sizes.find((width) => width === controls?.width) ?? 's',
+                side:
+                  side === 'adaptive'
+                    ? adaptiveSide
+                    : (sides.find((edge) => edge === side) ?? 'end'),
               }}
             />
           </DialogStudy>
         );
       },
-      code: filtersSource.replaceAll('../../prototypes/', './prototypes/'),
+      code: filtersExample,
     },
   ],
 });

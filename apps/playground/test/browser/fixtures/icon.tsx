@@ -1,6 +1,12 @@
 import {
   Avatar,
   Button,
+  Drawer,
+  DrawerClose,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
   Empty,
   EmptyMedia,
   Icon,
@@ -14,6 +20,12 @@ import {
   MenuSubContent,
   MenuSubTrigger,
   MenuTrigger,
+  Modal,
+  ModalClose,
+  ModalContent,
+  ModalHeader,
+  ModalTitle,
+  ModalTrigger,
   Select,
   Switch,
   UnicaProvider,
@@ -31,18 +43,6 @@ import {
 } from '../../../src/prototypes/app-shell/app-shell.proto.js';
 import { FileItem, FileList } from '../../../src/prototypes/file-input/file-input.proto.js';
 import { Combobox } from '../../../src/prototypes/combobox/combobox.proto.js';
-import {
-  Drawer,
-  DrawerContent,
-  DrawerHeader,
-  DrawerTitle,
-  DrawerTrigger,
-  Modal,
-  ModalContent,
-  ModalHeader,
-  ModalTitle,
-  ModalTrigger,
-} from '../../../src/prototypes/dialog/dialog.proto.js';
 import { Tabs, TabsList, TabsTab } from '../../../src/prototypes/tabs/tabs.proto.js';
 
 function ProjectSvg({ children, ...props }: ComponentPropsWithRef<'svg'>) {
@@ -210,6 +210,7 @@ export default function IconFixture() {
             <ModalContent>
               <ModalHeader>
                 <ModalTitle>Example modal</ModalTitle>
+                <ModalClose />
               </ModalHeader>
             </ModalContent>
           </Modal>
@@ -218,6 +219,7 @@ export default function IconFixture() {
             <DrawerContent side="end">
               <DrawerHeader>
                 <DrawerTitle>Example drawer</DrawerTitle>
+                <DrawerClose />
               </DrawerHeader>
             </DrawerContent>
           </Drawer>

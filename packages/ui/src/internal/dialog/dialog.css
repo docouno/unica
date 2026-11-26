@@ -1,0 +1,371 @@
+@layer unica.components {
+  .unica-dialog {
+    --_dialog-inset: var(--space-24);
+    --_dialog-gap: var(--space-16);
+    --_dialog-width: 36rem;
+    --_dialog-radius: var(--surface-l-radius);
+    --_dialog-shadow: none;
+    --_dialog-enter: none;
+    --_dialog-rule: color-mix(in srgb, var(--fg-primary) 15%, transparent);
+    --_dialog-margin-start: 0px;
+    --_dialog-margin-end: 0px;
+    --_dialog-enter-x: 0px;
+    --_dialog-enter-y: 0px;
+    --_dialog-drag-distance: 0px;
+    --_dialog-drag-opacity: 1;
+    --_dialog-margin-top: max(var(--space-16), env(safe-area-inset-top, 0px));
+    --_dialog-margin-bottom: max(var(--space-16), env(safe-area-inset-bottom, 0px));
+    --_dialog-safe-start: var(--_if-ltr, env(safe-area-inset-left, 0px))
+      var(--_if-rtl, env(safe-area-inset-right, 0px));
+    --_dialog-safe-end: var(--_if-ltr, env(safe-area-inset-right, 0px))
+      var(--_if-rtl, env(safe-area-inset-left, 0px));
+    --_dialog-viewport-start: var(--_if-ltr, var(--_dialog-viewport-left, 0px))
+      var(--_if-rtl, var(--_dialog-viewport-right, 0px));
+    --_dialog-viewport-end: var(--_if-ltr, var(--_dialog-viewport-right, 0px))
+      var(--_if-rtl, var(--_dialog-viewport-left, 0px));
+    --_dialog-available-width: max(
+      0px,
+      calc(
+        var(--_dialog-viewport-width, 100dvw) - var(--_dialog-margin-start) -
+          var(--_dialog-margin-end)
+      )
+    );
+    --_dialog-available-height: max(
+      0px,
+      calc(
+        var(--_dialog-viewport-height, 100dvh) - var(--_dialog-margin-top) -
+          var(--_dialog-margin-bottom)
+      )
+    );
+
+    position: fixed;
+    inset-inline: calc(var(--_dialog-viewport-start) + var(--_dialog-margin-start))
+      calc(var(--_dialog-viewport-end) + var(--_dialog-margin-end));
+    inset-block: calc(var(--_dialog-viewport-top, 0px) + var(--_dialog-margin-top))
+      calc(var(--_dialog-viewport-bottom, 0px) + var(--_dialog-margin-bottom));
+    margin: auto;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--fg-primary);
+    font: var(--text-size-body-s) / var(--text-size-body-s-lh) var(--font-family-base);
+    inline-size: min(var(--_dialog-width), var(--_dialog-available-width));
+    block-size: max-content;
+    min-inline-size: 0;
+    min-block-size: 0;
+    max-inline-size: var(--_dialog-available-width);
+    max-block-size: var(--_dialog-available-height);
+    overflow: visible;
+  }
+
+  .unica-dialog:not(:modal) {
+    display: none;
+  }
+
+  .unica-dialog:modal {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .unica-dialog:modal::backdrop {
+    background: var(--scrim-bg);
+    opacity: var(--_dialog-drag-opacity, 1);
+    animation: unica-dialog-backdrop-enter 150ms ease-out;
+  }
+
+  .unica-dialog[data-unica-dialog='modal'] {
+    --_dialog-margin-x: var(--space-16);
+    --_dialog-margin-start: max(var(--_dialog-margin-x), var(--_dialog-safe-start));
+    --_dialog-margin-end: max(var(--_dialog-margin-x), var(--_dialog-safe-end));
+  }
+
+  .unica-dialog:is([data-unica-dialog-side='start'], [data-unica-dialog-side='end']) {
+    --_dialog-radius: 0px;
+    --_dialog-margin-top: 0px;
+    --_dialog-margin-bottom: 0px;
+    block-size: var(--_dialog-available-height);
+  }
+
+  .unica-dialog[data-unica-dialog-size='s'] {
+    --_dialog-inset: var(--space-16);
+    --_dialog-gap: var(--space-12);
+  }
+
+  .unica-dialog[data-unica-dialog-size='l'] {
+    --_dialog-inset: var(--space-32);
+    --_dialog-gap: var(--space-24);
+  }
+
+  .unica-dialog[data-unica-dialog-width='s'] {
+    --_dialog-width: 24rem;
+  }
+
+  .unica-dialog[data-unica-dialog-width='l'] {
+    --_dialog-width: 52rem;
+  }
+
+  .unica-dialog[data-unica-dialog-narrow] {
+    --_dialog-inset: var(--space-16);
+  }
+
+  .unica-dialog[data-unica-dialog-narrow][data-unica-dialog-size='l'] {
+    --_dialog-gap: var(--space-16);
+  }
+
+  .unica-dialog-surface {
+    position: relative;
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    min-inline-size: 0;
+    min-block-size: 0;
+    max-block-size: var(--_dialog-available-height);
+    border: 1px solid var(--_overlay-border);
+    border-radius: var(--_dialog-radius);
+    background: var(--bg-overlay);
+    backdrop-filter: var(--_overlay-backdrop);
+    box-shadow: var(--_dialog-shadow);
+    outline: none;
+    animation: var(--_dialog-enter, none);
+  }
+
+  .unica-dialog[data-unica-dialog='drawer'] > .unica-dialog-surface {
+    padding-inline: var(--_dialog-safe-start) var(--_dialog-safe-end);
+  }
+
+  .unica-dialog-surface::before,
+  .unica-dialog-surface::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+  }
+
+  .unica-dialog-surface::before {
+    box-shadow: var(--_overlay-rim);
+    mask-image: var(--_overlay-rim-mask);
+  }
+
+  .unica-dialog-surface::after {
+    background: var(--_motif-corner-ticks);
+  }
+
+  .unica-dialog-header,
+  .unica-dialog-footer {
+    position: relative;
+    flex: none;
+    padding-inline: var(--_dialog-inset);
+  }
+
+  .unica-dialog-header {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    align-items: start;
+    gap: var(--space-4) var(--space-8);
+    padding-block: var(--_dialog-inset) var(--_dialog-gap);
+  }
+
+  .unica-dialog-header:has(> .unica-dialog-close) {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .unica-dialog-header:not(
+    :has(~ .unica-dialog-body > :not(:empty), ~ .unica-dialog-footer:not(:empty))
+  ) {
+    padding-block-end: var(--_dialog-inset);
+  }
+
+  .unica-dialog-header > :not(.unica-dialog-close) {
+    min-inline-size: 0;
+    grid-column: 1;
+  }
+
+  .unica-dialog-header > :where(:has(> .unica-dialog-title + .unica-dialog-description)) {
+    display: grid;
+    gap: var(--space-4);
+  }
+
+  .unica-dialog-header > .unica-dialog-close {
+    grid-column: 2;
+    grid-row: 1;
+    justify-self: end;
+  }
+
+  .unica-dialog-header:has(> .unica-dialog-title + .unica-dialog-description)
+    > .unica-dialog-close {
+    grid-row: 1 / span 2;
+  }
+
+  .unica-dialog-title,
+  .unica-dialog-description {
+    margin: 0;
+    overflow-wrap: anywhere;
+    text-align: start;
+  }
+
+  .unica-dialog-title {
+    font: 600 var(--text-size-heading-s) / var(--text-size-heading-s-lh) var(--font-family-base);
+    letter-spacing: -0.02em;
+  }
+
+  .unica-dialog-description {
+    color: var(--fg-secondary);
+  }
+
+  .unica-dialog-surface > :is(.unica-dialog-title, .unica-dialog-description) {
+    flex: none;
+    margin-inline: var(--_dialog-inset);
+  }
+
+  .unica-dialog-surface > :is(.unica-dialog-title, .unica-dialog-description):first-child {
+    margin-block-start: var(--_dialog-inset);
+  }
+
+  .unica-dialog-surface > :is(.unica-dialog-title, .unica-dialog-description):last-child {
+    margin-block-end: var(--_dialog-inset);
+  }
+
+  .unica-dialog-header > .unica-dialog-close-icon {
+    --_dialog-close-target: var(--size-s-height);
+
+    /* Align the glyph frame to inline-end while leaving room for the focus outline. */
+    margin-inline-end: max(
+      calc(var(--space-4) - var(--_dialog-inset)),
+      calc((var(--size-s-icon) - var(--_dialog-close-target)) / 2)
+    );
+  }
+
+  .unica-dialog-header:has(.unica-dialog-title) > .unica-dialog-close-icon {
+    margin-block-start: calc((var(--text-size-heading-s-lh) - var(--_dialog-close-target)) / 2);
+  }
+
+  @media (pointer: coarse) {
+    .unica-dialog-header > .unica-dialog-close-icon {
+      --_dialog-close-target: max(44px, var(--size-s-height));
+    }
+  }
+
+  .unica-dialog-body {
+    min-block-size: 0;
+    margin: var(--space-4);
+    overflow: auto;
+    overscroll-behavior: contain;
+  }
+
+  .unica-dialog-body:focus-visible,
+  .unica-dialog-surface[data-unica-dialog-whole-scroll]:focus-visible {
+    outline: 2px solid var(--focus-ring-color);
+    outline-offset: -2px;
+  }
+
+  .unica-dialog-body-content {
+    display: grid;
+    align-content: start;
+    gap: var(--_dialog-gap);
+    min-inline-size: 0;
+    padding-block: var(--space-4);
+    padding-inline: calc(var(--_dialog-inset) - var(--space-4));
+    overflow-wrap: anywhere;
+  }
+
+  .unica-dialog-body:first-child .unica-dialog-body-content {
+    padding-block-start: calc(var(--_dialog-inset) - var(--space-4));
+  }
+
+  .unica-dialog-body:last-child .unica-dialog-body-content {
+    padding-block-end: calc(var(--_dialog-inset) - var(--space-4));
+  }
+
+  .unica-dialog-surface > .unica-dialog-body:has(> .unica-dialog-body-content:empty),
+  .unica-dialog-surface > .unica-dialog-footer:empty,
+  .unica-dialog-surface > .unica-dialog-header:empty {
+    display: none;
+  }
+
+  .unica-dialog-footer {
+    display: flex;
+    justify-content: end;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--space-8);
+    padding-block: var(--_dialog-gap) var(--_dialog-inset);
+  }
+
+  .unica-dialog-footer:first-child {
+    padding-block-start: var(--_dialog-inset);
+  }
+
+  .unica-dialog-header::after,
+  .unica-dialog-footer::before {
+    content: '';
+    position: absolute;
+    inset-inline: var(--_dialog-inset);
+    block-size: 1px;
+    pointer-events: none;
+  }
+
+  .unica-dialog-header::after {
+    inset-block-end: 0;
+  }
+
+  .unica-dialog-footer::before {
+    inset-block-start: 0;
+  }
+
+  .unica-dialog-surface[data-unica-dialog-before-content] > .unica-dialog-header::after,
+  .unica-dialog-surface[data-unica-dialog-after-content] > .unica-dialog-footer::before {
+    background: var(--_dialog-rule);
+  }
+
+  .unica-dialog-surface[data-unica-dialog-whole-scroll] {
+    overflow: auto;
+    overscroll-behavior: contain;
+  }
+
+  .unica-dialog-surface[data-unica-dialog-whole-scroll] > .unica-dialog-body {
+    flex: none;
+    overflow: visible;
+  }
+
+  @supports not (backdrop-filter: blur(1px)) {
+    .unica-dialog-surface {
+      background: var(--bg-surface-raised);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .unica-dialog:modal::backdrop,
+    .unica-dialog:modal > .unica-dialog-surface {
+      animation: none;
+    }
+  }
+
+  @media (forced-colors: active) {
+    .unica-dialog-surface {
+      --_dialog-rule: CanvasText;
+      background: Canvas;
+      color: CanvasText;
+      border-color: CanvasText;
+      box-shadow: none;
+      backdrop-filter: none;
+    }
+
+    .unica-dialog-surface::before,
+    .unica-dialog-surface::after {
+      display: none;
+    }
+
+    .unica-dialog:modal::backdrop {
+      background: Canvas;
+      forced-color-adjust: none;
+      opacity: calc(0.7 * var(--_dialog-drag-opacity, 1));
+    }
+  }
+
+  @keyframes unica-dialog-backdrop-enter {
+    from {
+      opacity: 0;
+    }
+  }
+}

@@ -167,7 +167,7 @@ export function TagsInput({
     setRejection('');
     setAnnouncement(`Removed ${tag}.`);
     if (keyboard && next.length) {
-      requestAnimationFrame(() =>
+      editor.current?.ownerDocument.defaultView?.requestAnimationFrame(() =>
         removeButtons.current.get(next[Math.min(index, next.length - 1)] ?? '')?.focus(),
       );
     } else {
@@ -178,14 +178,16 @@ export function TagsInput({
   // Keep the preview height in step with content, width, and typography.
   useLayoutEffect(() => {
     const node = editor.current;
-    if (!node) {
+    const document = node?.ownerDocument;
+    const view = document?.defaultView;
+    if (!node || !document || !view) {
       return;
     }
     const tail = node.parentElement;
     const action = tail?.querySelector<HTMLButtonElement>('.tags-add-proto');
     let previousMetrics = '';
     const metrics = (): string => {
-      const css = getComputedStyle(node);
+      const css = view.getComputedStyle(node);
       return [
         node.offsetWidth,
         node.clientWidth,
@@ -195,18 +197,18 @@ export function TagsInput({
         css.lineHeight,
         css.letterSpacing,
         css.wordSpacing,
-        action ? getComputedStyle(action).inlineSize : '',
+        action ? view.getComputedStyle(action).inlineSize : '',
       ].join(':');
     };
     const resize = (): void => {
       if (action) {
-        tail?.style.setProperty('--tags-action-width', getComputedStyle(action).inlineSize);
+        tail?.style.setProperty('--tags-action-width', view.getComputedStyle(action).inlineSize);
       }
       node.style.height = 'auto';
       node.style.height = `${node.scrollHeight}px`;
       tail?.style.setProperty('--tags-native-gutter', `${node.offsetWidth - node.clientWidth}px`);
       previousMetrics = metrics();
-      const css = getComputedStyle(node);
+      const css = view.getComputedStyle(node);
       const singleRow = Math.max(
         Number.parseFloat(css.minHeight),
         Number.parseFloat(css.lineHeight) +
@@ -220,7 +222,7 @@ export function TagsInput({
       }
     };
     resize();
-    const observer = new ResizeObserver(() => {
+    const observer = new view.ResizeObserver(() => {
       if (previousMetrics !== metrics()) {
         resize();
       }
@@ -235,7 +237,7 @@ export function TagsInput({
     // A font change can rewrap text without changing the measured box
     // or the action's minimum width. Inherited style changes need their own
     // invalidation rather than waiting for a ResizeObserver callback.
-    const inheritedStyles = new MutationObserver(() => {
+    const inheritedStyles = new view.MutationObserver(() => {
       if (previousMetrics !== metrics()) {
         resize();
       }

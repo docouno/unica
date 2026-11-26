@@ -55,8 +55,12 @@ async function folioScenes(page, mount) {
   return async (item) => {
     await navigate(page, { item, family: 'frost', scheme: 'dark', vp: '1280' });
     const scene = page.locator('[data-wb-scene]');
-    await scene.locator('[data-unica-card-variant]').first().waitFor();
-    return scene;
+    const workspace =
+      item === '07-invite-access-modal'
+        ? scene.locator('iframe[title="Folio invitations"]').contentFrame()
+        : scene;
+    await workspace.locator('[data-unica-card-variant]').first().waitFor();
+    return workspace;
   };
 }
 

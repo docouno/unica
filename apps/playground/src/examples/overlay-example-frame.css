@@ -32,6 +32,81 @@
   block-size: 100%;
 }
 
+.hint-example-frame--modal {
+  border: 0;
+  border-radius: 0;
+}
+
+.hint-example-frame[data-overlay-frame-fit] {
+  max-block-size: min(100svh, var(--hint-example-visible-height, 100svh));
+}
+
+.hint-example-root,
+.hint-example-root .hint-example-document {
+  background: var(--bg-canvas);
+}
+
+.hint-example-viewport {
+  container: artboard / inline-size;
+}
+
+.wb-inspector-preview:has(.hint-example-frame--modal),
+.wb-overlay-stage:has(> [data-stage-content] .hint-example-frame--modal) {
+  padding: 0;
+}
+
+.wb-overlay-stage:has(> [data-stage-content] .hint-example-frame--modal) {
+  border: 0;
+}
+
+.wb-overlay-stage:has(> [data-stage-content] .hint-example-frame--modal)
+  > :is([data-unica-underlay], [data-unica-stage-scrim]) {
+  display: none;
+}
+
+.wb-overlay-stage:has(> [data-stage-content] .hint-example-frame--modal) > [data-stage-content] {
+  inline-size: 100%;
+  min-inline-size: 0;
+}
+
+/* Keep matrix labels and insets outside the selected native viewport. */
+.wb-artboards[data-wb-fixed] .wb-matrix-artboard:has(.hint-example-frame--modal),
+.wb-artboards[data-wb-fixed]
+  :is(.wb-matrix-combination, .wb-matrix-grid td):has(.hint-example-frame--modal) {
+  padding-inline: 0;
+}
+
+.wb-artboards[data-wb-fixed] .wb-matrix-combinations:has(.hint-example-frame--modal) {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.wb-artboards[data-wb-fixed] .wb-matrix-combination:has(.hint-example-frame--modal) {
+  border-inline: 0;
+}
+
+.wb-artboards[data-wb-fixed]
+  .wb-matrix-combination:has(.hint-example-frame--modal)
+  > .wb-matrix-coordinate {
+  padding-inline: 10px;
+}
+
+.wb-artboards[data-wb-fixed]
+  .wb-matrix-grid:not(:has(> thead))
+  > tbody
+  > tr:has(.hint-example-frame--modal) {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.wb-artboards[data-wb-fixed] .wb-matrix-artboard .hint-example-frame--modal {
+  inline-size: var(--wb-preview-width);
+}
+
+html.hint-example-root[data-wb-freeze='1'] dialog:modal::backdrop {
+  animation-duration: 0s !important;
+  transition-duration: 0s !important;
+}
+
 /* A contained frame draws its own backdrop so native overlays can sample it. */
 .wb-overlay-stage:has(> [data-stage-content] [data-overlay-frame-contained]) {
   background: linear-gradient(var(--scrim-bg), var(--scrim-bg)) var(--bg-canvas);

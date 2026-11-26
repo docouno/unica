@@ -74,7 +74,12 @@ export type Registration =
       readonly passive?: boolean | undefined;
       readonly returnFocus?: boolean | undefined;
     })
-  | (OverlayOptions & { readonly kind: 'modal'; readonly element: HTMLDialogElement });
+  | (OverlayOptions & {
+      readonly kind: 'modal';
+      readonly element: HTMLDialogElement;
+      readonly prepareInitialFocus?: (() => (() => void) | undefined) | undefined;
+      readonly getReturnFocus?: (() => HTMLElement | null) | undefined;
+    });
 
 export interface OverlayHandle {
   isOpen: () => boolean;
@@ -251,6 +256,54 @@ function isZeroResize(entry: ResizeObserverEntry): boolean {
   return entry.contentRect.width === 0 && entry.contentRect.height === 0;
 }
 
+function preserveTextSelection(
+  document: Document,
+  candidates: readonly (Element | null | undefined)[],
+): () => void {
+  const view = liveViewOf(document);
+  const ranges = new Map<HTMLInputElement | HTMLTextAreaElement, () => void>();
+  for (const target of candidates) {
+    if (
+      !view ||
+      !(target instanceof view.HTMLInputElement || target instanceof view.HTMLTextAreaElement)
+    ) {
+      continue;
+    }
+    const {
+      selectionStart: start,
+      selectionEnd: end,
+      selectionDirection: direction,
+      value,
+    } = target;
+    if (start !== null && end !== null) {
+      ranges.set(target, () => {
+        if (target.value === value && target.selectionStart !== null) {
+          target.setSelectionRange(start, end, direction ?? 'none');
+        }
+      });
+    }
+  }
+  return () => {
+    const focused = deepFocus(document);
+    if (
+      view &&
+      (focused instanceof view.HTMLInputElement || focused instanceof view.HTMLTextAreaElement)
+    ) {
+      ranges.get(focused)?.();
+    }
+  };
+}
+
+interface ClosingFocusTargets {
+  readonly previousFocus: Element | null;
+  readonly invoker: HTMLElement | null;
+}
+
+interface NativeModalClosingFocus extends ClosingFocusTargets {
+  readonly stopWatching: (() => boolean) | undefined;
+  readonly restoreSelection: () => void;
+}
+
 class Layer {
   readonly document: Document;
   phase: Phase = 'closed';
@@ -264,14 +317,17 @@ class Layer {
   disposed = false;
   focused = false;
   nativeRestoresFocus = false;
+  nativeClosingFocus: NativeModalClosingFocus | undefined;
   private anchor: HTMLElement | null = null;
   private focusBeforeOpen: WeakRef<Element> | null = null;
   private suppressNextTriggerClick = false;
   private cancelSuppressClick: (() => void) | undefined;
   private previousInert: boolean | undefined;
   private openRevision = 0;
+  private waitingOpenRevision: number | undefined;
   private pendingOpenRequest = false;
   private unbindTrigger: (() => void) | undefined;
+  private composingEscape: KeyboardEvent | undefined;
 
   constructor(readonly options: Registration) {
     const { element, kind, trigger, onOpenChange } = options;
@@ -295,6 +351,10 @@ class Layer {
 
   get active(): boolean {
     return this.phase === 'open';
+  }
+
+  get waitingToOpen(): boolean {
+    return this.waitingOpenRevision === this.openRevision;
   }
 
   isOpen = (): boolean => this.active && isNativeOpen(this);
@@ -416,8 +476,10 @@ class Layer {
     }
     if (this.phase === 'closed' && !this.dismissed) {
       if (this.dismissPending) {
+        this.waitingOpenRevision = revision;
         queueMicrotask(() => this.commitOpen(true, revision));
       } else {
+        this.waitingOpenRevision = undefined;
         runtimeFor(this.document)?.open(this);
       }
     }
@@ -464,6 +526,7 @@ class Layer {
   finishExit = (options?: CloseOptions): void => {
     this.openRevision++;
     this.dismissed = false;
+    this.composingEscape = undefined;
     this.runtime?.close(this, options);
   };
 
@@ -515,7 +578,12 @@ class Layer {
     const { options, trigger } = this;
     this.operate(() => {
       if (options.kind === 'modal') {
-        showDialogModal(options.element);
+        const restore = options.prepareInitialFocus?.();
+        try {
+          showDialogModal(options.element);
+        } finally {
+          restore?.();
+        }
       } else {
         showElementPopover(
           options.element,
@@ -601,6 +669,7 @@ class Layer {
     }
     if (this.options.kind === 'modal') {
       // beforetoggle fires before the browser clears :modal.
+      this.runtime?.watchNativeModalClose?.(this);
       queueMicrotask(() => this.runtime?.reconcile());
     } else {
       this.runtime?.nativeDismiss(this);
@@ -611,11 +680,25 @@ class Layer {
     this.runtime?.reconcile();
   };
 
+  protectComposingEscape(event: KeyboardEvent): void {
+    this.composingEscape = event;
+    this.document.defaultView?.setTimeout(() => {
+      if (this.composingEscape === event) {
+        this.composingEscape = undefined;
+      }
+    }, 0);
+  }
+
   private onCancel = (event: Event): void => {
     if (!this.ownsCarrier || event.defaultPrevented || this.phase === 'closed') {
       return;
     }
     event.preventDefault();
+    // Some browsers dispatch native cancel before ending the IME composition.
+    if (this.composingEscape) {
+      this.composingEscape = undefined;
+      return;
+    }
     if (this.active) {
       this.onOpenChange(false, 'cancel');
     }
@@ -711,7 +794,7 @@ class OverlayRuntime implements OverlayRuntimeProtocol {
           layer.hide();
           this.detach(layer);
           if (notifyLost) {
-            this.reportDismiss(layer, 'lost', false, null);
+            this.reportDismiss(layer, 'lost', false, { previousFocus: null, invoker: null });
           }
         }
       } finally {
@@ -750,6 +833,16 @@ class OverlayRuntime implements OverlayRuntimeProtocol {
       const shouldReturnFocus = options?.returnFocus !== false && this.canReturnFocus(layer);
       const hadFocus = shouldReturnFocus && this.ownedFocus(layer);
       const previousFocus = layer.previousFocus?.deref() ?? null;
+      const invoker = layer.trigger;
+      // Native dialog close can move the caret when it restores a lower editor.
+      const restoreSelection =
+        hadFocus && layer.options.kind === 'modal'
+          ? preserveTextSelection(this.document, [
+              layer.options.getReturnFocus?.(),
+              invoker,
+              previousFocus,
+            ])
+          : undefined;
       stopFocusWatch = hadFocus ? this.watchClosingFocus(layer, previousFocus) : undefined;
       layer.beginExit();
       // A projection subscriber may synchronously dispose this layer.
@@ -760,13 +853,37 @@ class OverlayRuntime implements OverlayRuntimeProtocol {
         const externalFocus = stopFocusWatch?.();
         stopFocusWatch = undefined;
         if (hadFocus && !externalFocus) {
-          this.returnFocus(layer, previousFocus);
+          this.returnFocus(layer, { previousFocus, invoker });
+          restoreSelection?.();
         }
       }
     } finally {
       stopFocusWatch?.();
       this.completeTransaction();
     }
+  }
+
+  watchNativeModalClose(layer: Layer): void {
+    const { options } = layer;
+    if (
+      options.kind !== 'modal' ||
+      !layer.active ||
+      !this.ownedFocus(layer) ||
+      layer.nativeClosingFocus
+    ) {
+      return;
+    }
+    const previousFocus = layer.previousFocus?.deref() ?? null;
+    layer.nativeClosingFocus = {
+      previousFocus,
+      invoker: layer.trigger,
+      stopWatching: this.watchClosingFocus(layer, previousFocus),
+      restoreSelection: preserveTextSelection(this.document, [
+        options.getReturnFocus?.(),
+        layer.trigger,
+        previousFocus,
+      ]),
+    };
   }
 
   nativeDismiss(layer: Layer): void {
@@ -892,9 +1009,10 @@ class OverlayRuntime implements OverlayRuntimeProtocol {
       this.pending.delete(layer);
       layer.clearSuppressTriggerClick();
       layer.nativeRestoresFocus =
-        layer.options.kind === 'auto' &&
-        layer.options.resolveFocusTrigger !== undefined &&
-        !this.hasNativePopoverPeer(layer);
+        layer.options.kind === 'modal' ||
+        (layer.options.kind === 'auto' &&
+          layer.options.resolveFocusTrigger !== undefined &&
+          !this.hasNativePopoverPeer(layer));
       layer.phase = 'open';
       this.stack.push(layer);
       layer.updateTrigger();
@@ -927,6 +1045,8 @@ class OverlayRuntime implements OverlayRuntimeProtocol {
   }
 
   private detach(layer: Layer): void {
+    layer.nativeClosingFocus?.stopWatching?.();
+    layer.nativeClosingFocus = undefined;
     const index = this.stack.indexOf(layer);
     if (index >= 0) {
       this.stack.splice(index, 1);
@@ -1033,7 +1153,7 @@ class OverlayRuntime implements OverlayRuntimeProtocol {
     );
   }
 
-  private returnFocus(layer: Layer, previousFocus: Element | null): void {
+  private returnFocus(layer: Layer, { previousFocus, invoker }: ClosingFocusTargets): void {
     const isStillOwned = (): boolean => {
       const current = deepFocus(this.document);
       return (
@@ -1047,6 +1167,24 @@ class OverlayRuntime implements OverlayRuntimeProtocol {
       );
     };
     if (!isStillOwned()) {
+      return;
+    }
+    if (layer.options.kind === 'modal' && !layer.options.resolveFocusTrigger) {
+      const targets = [layer.options.getReturnFocus?.(), invoker, previousFocus];
+      for (const target of targets) {
+        if (!target || matchesSelector(target, '[aria-disabled="true" i]')) {
+          continue;
+        }
+        const before = deepFocus(this.document);
+        if (focusElement(target, this.document)) {
+          return;
+        }
+        // A focus handler may synchronously redirect to the next workflow.
+        const after = deepFocus(this.document);
+        if (after && after !== before && after !== documentBodyOf(this.document)) {
+          return;
+        }
+      }
       return;
     }
     const restore = (trigger: HTMLElement | null): void => {
@@ -1085,11 +1223,12 @@ class OverlayRuntime implements OverlayRuntimeProtocol {
     layer: Layer,
     previousFocus: Element | null,
   ): (() => boolean) | undefined {
-    if (!layer.options.resolveFocusTrigger) {
+    const modal = layer.options.kind === 'modal';
+    if (!modal && !layer.options.resolveFocusTrigger) {
       return undefined;
     }
-    // Only the first native auto or hint can have saved focus. It can restore
-    // a rendered target only if focus still belongs to the panel when it hides.
+    // A dialog or the first auto/hint popover can restore the focus it saved on entry.
+    // Ignore that one native restoration while preserving deliberate focus changes.
     const active = deepFocus(this.document);
     const style = previousFocus && getComputedStyleSafe(previousFocus);
     let expectedNativeFocus =
@@ -1100,7 +1239,7 @@ class OverlayRuntime implements OverlayRuntimeProtocol {
       previousFocus.getClientRects().length > 0 &&
       !matchesSelector(previousFocus, ':disabled') &&
       !hasHiddenAncestor(previousFocus, true) &&
-      !isInertElement(previousFocus) &&
+      !isInertElement(previousFocus, modal ? 'local' : 'document') &&
       style?.visibility !== 'hidden' &&
       style?.visibility !== 'collapse'
         ? previousFocus
@@ -1142,11 +1281,14 @@ class OverlayRuntime implements OverlayRuntimeProtocol {
     layer: Layer,
     reason: DismissReason,
     hadFocus: boolean,
-    previousFocus: Element | null,
+    targets: ClosingFocusTargets,
+    nativeClosingFocus?: NativeModalClosingFocus,
   ): void {
     layer.dismissed = true;
     layer.dismissPending = true;
-    const stopFocusWatch = hadFocus ? this.watchClosingFocus(layer, previousFocus) : undefined;
+    const stopFocusWatch =
+      nativeClosingFocus?.stopWatching ??
+      (hadFocus ? this.watchClosingFocus(layer, targets.previousFocus) : undefined);
     if (layer.options.kind === 'auto') {
       layer.options.onDismissStart?.(reason, this.pointerTarget);
     }
@@ -1155,14 +1297,25 @@ class OverlayRuntime implements OverlayRuntimeProtocol {
       try {
         const externalFocus = stopFocusWatch?.();
         if (!layer.disposed) {
-          if (hadFocus && !externalFocus && layer.phase === 'closed') {
+          const modal = layer.options.kind === 'modal';
+          if (
+            hadFocus &&
+            !externalFocus &&
+            layer.phase === 'closed' &&
+            !(modal && layer.waitingToOpen)
+          ) {
             try {
-              this.returnFocus(layer, previousFocus);
+              this.returnFocus(layer, targets);
+              nativeClosingFocus?.restoreSelection();
             } catch (error) {
               this.liveView()?.reportError(error);
             }
           }
-          layer.onOpenChange(false, reason);
+          // A synchronous authoritative close supersedes the report. The same
+          // closing can still owe a focus return.
+          if (!layer.disposed && (!modal || layer.dismissed)) {
+            layer.onOpenChange(false, reason);
+          }
         }
       } finally {
         layer.dismissPending = false;
@@ -1173,22 +1326,32 @@ class OverlayRuntime implements OverlayRuntimeProtocol {
   }
 
   private finalDismiss(layer: Layer, reason: DismissReason, browserClosing = false): void {
+    const nativeClosingFocus = layer.nativeClosingFocus;
+    layer.nativeClosingFocus = undefined;
     const wasActive = layer.active;
     const hadFocus =
       (wasActive || layer.phase === 'exiting') &&
       this.canReturnFocus(layer) &&
-      this.ownedFocus(layer);
-    const previousFocus = layer.previousFocus?.deref() ?? null;
+      (nativeClosingFocus !== undefined ||
+        this.ownedFocus(layer) ||
+        (layer.options.kind === 'modal' && layer.focused));
+    // Keep the closing opening's invoker and previous focus across any React
+    // commit that clears or updates the runtime handle before reporting loss.
+    const targets = nativeClosingFocus ?? {
+      previousFocus: layer.previousFocus?.deref() ?? null,
+      invoker: layer.trigger,
+    };
     this.transactions++;
     try {
       if (wasActive) {
-        this.reportDismiss(layer, reason, hadFocus, previousFocus);
+        this.reportDismiss(layer, reason, hadFocus, targets, nativeClosingFocus);
       } else if (hadFocus) {
+        nativeClosingFocus?.stopWatching?.();
         this.pendingReports++;
         queueMicrotask(() => {
           try {
             if (!layer.disposed && layer.phase === 'closed') {
-              this.returnFocus(layer, previousFocus);
+              this.returnFocus(layer, targets);
             }
           } finally {
             this.pendingReports--;
@@ -1260,6 +1423,11 @@ class OverlayRuntime implements OverlayRuntimeProtocol {
     }
     const path = event.composedPath();
     for (const layer of this.stack) {
+      // Retain the last ownership across native focus restoration. Some
+      // browsers clear :modal without sending a dialog beforetoggle.
+      if (layer.options.kind === 'modal' && !isNativeOpen(layer)) {
+        continue;
+      }
       layer.focused = path.includes(layer.options.element);
     }
   };
@@ -1366,10 +1534,14 @@ class OverlayRuntime implements OverlayRuntimeProtocol {
   }
 
   private onEscapeCapture = (event: KeyboardEvent): void => {
-    if (event.key !== 'Escape' || event.defaultPrevented || event.isComposing) {
+    if (event.key !== 'Escape' || event.defaultPrevented) {
       return;
     }
     const { barrier, layer } = this.resolveEscapeTargets();
+    if (event.isComposing || event.keyCode === 229) {
+      barrier?.protectComposingEscape?.(event);
+      return;
+    }
     const candidate = layer ?? barrier;
     if (!candidate) {
       return;
@@ -1386,7 +1558,12 @@ class OverlayRuntime implements OverlayRuntimeProtocol {
     if (!event.isComposing && this.pointerTarget) {
       this.clearPointer();
     }
-    if (event.key !== 'Escape' || event.defaultPrevented || event.isComposing) {
+    if (
+      event.key !== 'Escape' ||
+      event.defaultPrevented ||
+      event.isComposing ||
+      event.keyCode === 229
+    ) {
       return;
     }
     this.reconcile();

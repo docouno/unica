@@ -11,9 +11,10 @@ const trackers = new WeakMap<Document, FocusTracker>();
 
 // A local preview mechanism, not the library's eventual focus-management API.
 function trackFocus(doc: Document): FocusTracker {
+  const ElementConstructor = doc.defaultView?.Element;
   let origin: 'keyboard' | 'pointer' = 'keyboard';
   const sync = (target: EventTarget | null): void => {
-    if (!(target instanceof Element)) {
+    if (!ElementConstructor || !(target instanceof ElementConstructor)) {
       return;
     }
     const shell = target.closest<HTMLElement>('[data-preview-focus-scope]');
@@ -33,7 +34,8 @@ function trackFocus(doc: Document): FocusTracker {
       return;
     }
     const editing =
-      event.target instanceof Element &&
+      ElementConstructor &&
+      event.target instanceof ElementConstructor &&
       event.target.matches('input, textarea, [contenteditable="true"]');
     // Typing and moving the caret after a click keep the quiet editing treatment.
     if (editing && event.key !== 'Tab' && event.key !== 'Escape') {

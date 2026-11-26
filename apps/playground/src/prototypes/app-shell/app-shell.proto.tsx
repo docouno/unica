@@ -39,7 +39,6 @@ import { useShellPopoverPosition, windowBounds } from './app-shell-position.js';
 import { NavList, TreeView } from './navigation.proto.js';
 import type { NavigationSection } from './navigation.proto.js';
 export { DocumentTabs } from './document-tabs.proto.js';
-import '../dialog/dialog.css';
 import './app-shell.css';
 
 const AccessKeyGlyph = defineGlyph(KeyIcon, 'phosphor');
@@ -171,7 +170,8 @@ function ShellPanel({ id, side, label, children, dialogRef }: PanelProps): React
 
 function openShellPanel(panel: HTMLDialogElement | null, trigger: HTMLButtonElement): void {
   const shell = trigger.closest<HTMLElement>('.app-shell-proto');
-  if (!panel || !shell || panel.getAttribute('role') !== 'presentation') {
+  const view = trigger.ownerDocument.defaultView;
+  if (!panel || !shell || !view || panel.getAttribute('role') !== 'presentation') {
     return;
   }
   const body = panel.querySelector<HTMLElement>('.app-shell-aside-body');
@@ -181,7 +181,7 @@ function openShellPanel(panel: HTMLDialogElement | null, trigger: HTMLButtonElem
     ),
   );
   function position(): void {
-    if (!shell || !panel) {
+    if (!shell || !panel || !view) {
       return;
     }
     if (!trigger.getClientRects().length) {
@@ -190,14 +190,14 @@ function openShellPanel(panel: HTMLDialogElement | null, trigger: HTMLButtonElem
       return;
     }
     const frame = shell.getBoundingClientRect();
-    const viewport = windowBounds();
+    const viewport = windowBounds(view);
     const left = Math.max(viewport.left, frame.left);
     const right = Math.min(viewport.right, frame.right);
     const alignToFrame = right - left >= Math.min(240, viewport.right - viewport.left);
     panel.style.setProperty('--shell-sheet-left', `${alignToFrame ? left : viewport.left}px`);
     panel.style.setProperty(
       '--shell-sheet-right',
-      `${window.innerWidth - (alignToFrame ? right : viewport.right)}px`,
+      `${view.innerWidth - (alignToFrame ? right : viewport.right)}px`,
     );
     panel.style.setProperty('--shell-sheet-top', `${viewport.top}px`);
     panel.style.setProperty('--shell-sheet-height', `${viewport.bottom - viewport.top}px`);
@@ -205,8 +205,8 @@ function openShellPanel(panel: HTMLDialogElement | null, trigger: HTMLButtonElem
       panel.setAttribute('data-whole-scroll', '');
       return;
     }
-    const padding = getComputedStyle(panel);
-    const inset = getComputedStyle(body);
+    const padding = view.getComputedStyle(panel);
+    const inset = view.getComputedStyle(body);
     const chromeHeight = chrome.reduce((total, part) => total + part.offsetHeight, 0);
     const available =
       panel.clientHeight -
@@ -229,19 +229,19 @@ function openShellPanel(panel: HTMLDialogElement | null, trigger: HTMLButtonElem
   panel.showModal();
   position();
   heading?.focus({ preventScroll: true });
-  const observer = new ResizeObserver(position);
+  const observer = new view.ResizeObserver(position);
   observer.observe(shell);
   for (const part of chrome) {
     observer.observe(part);
   }
-  window.visualViewport?.addEventListener('resize', position);
-  window.visualViewport?.addEventListener('scroll', position);
+  view.visualViewport?.addEventListener('resize', position);
+  view.visualViewport?.addEventListener('scroll', position);
   panel.addEventListener(
     'close',
     () => {
       observer.disconnect();
-      window.visualViewport?.removeEventListener('resize', position);
-      window.visualViewport?.removeEventListener('scroll', position);
+      view.visualViewport?.removeEventListener('resize', position);
+      view.visualViewport?.removeEventListener('scroll', position);
       panel.setAttribute('role', 'presentation');
       panel.removeAttribute('aria-label');
       panel.removeAttribute('data-whole-scroll');

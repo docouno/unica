@@ -46,14 +46,10 @@
   padding-inline: var(--space-4);
 }
 .table-example-drawer-stage {
-  position: relative;
-  isolation: isolate;
-  inline-size: 100%;
-  min-block-size: 19rem;
   padding: var(--space-16);
 }
-.table-example-drawer .dialog-surface {
-  --dialog-width: 520px;
+.table-example-drawer {
+  max-inline-size: 520px;
 }
 .table-example-relations-scroll {
   max-block-size: 10rem;

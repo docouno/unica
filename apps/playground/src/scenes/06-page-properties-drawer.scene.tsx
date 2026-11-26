@@ -1,10 +1,6 @@
-import { Button, CheckboxCard, RadioCard, RadioCardGroup, Textarea } from '@docouno/unica';
-import { useId, useState } from 'react';
-import { folioSceneHref } from './folio/folio.routes.js';
-import type { ReactElement } from 'react';
-import { SlidersHorizontalIcon } from '@phosphor-icons/react';
-import { DatePicker } from '../prototypes/date-picker/date-picker.proto.js';
 import {
+  Button,
+  CheckboxCard,
   Drawer,
   DrawerBody,
   DrawerClose,
@@ -14,10 +10,17 @@ import {
   DrawerHeader,
   DrawerTitle,
   DrawerTrigger,
-} from '../prototypes/dialog/dialog.proto.js';
-import { ToastProvider, useToast } from '@docouno/unica';
-import { FolioToastRegion } from './folio/folio.toast.js';
-import { FormField } from '@docouno/unica';
+  FormField,
+  RadioCard,
+  RadioCardGroup,
+  Textarea,
+  ToastProvider,
+  useToast,
+} from '@docouno/unica';
+import { SlidersHorizontalIcon } from '@phosphor-icons/react';
+import { useId, useRef, useState } from 'react';
+import type { ReactElement } from 'react';
+import { OverlayExampleFrame } from '../examples/OverlayExampleFrame.js';
 import { Combobox } from '../prototypes/combobox/combobox.proto.js';
 import type { Suggestion } from '../prototypes/combobox/combobox.proto.js';
 import {
@@ -25,9 +28,14 @@ import {
   BreadcrumbLink,
   BreadcrumbPage,
 } from '../prototypes/breadcrumb/breadcrumb.proto.js';
+import { DatePicker } from '../prototypes/date-picker/date-picker.proto.js';
 import { defineScene } from '../workbench/types.js';
+import type { SceneContext } from '../workbench/types.js';
+import { folioSceneHref } from './folio/folio.routes.js';
 import { FolioScene, FolioWorkspace, RunbookArticle } from './folio/folio.shared.js';
+import { FolioToastRegion } from './folio/folio.toast.js';
 
+const workspaceHeight = 1200;
 const reviewers = [
   {
     value: 'network',
@@ -43,11 +51,12 @@ const reviewers = [
   },
 ] as const satisfies readonly Suggestion[];
 
-function PropertiesScene(): ReactElement {
+function PropertiesWorkspace(): ReactElement {
   const toast = useToast();
   const formId = useId();
   const scopeId = useId();
   const visibilityId = useId();
+  const trigger = useRef<HTMLButtonElement>(null);
   const [open, setOpen] = useState(true);
   const [properties, setProperties] = useState<{
     visibility: 'workspace' | 'responders';
@@ -70,50 +79,54 @@ function PropertiesScene(): ReactElement {
     setOpen(next);
   };
   return (
-    <FolioScene>
+    <FolioScene className="folio-overlay-workspace">
       <Drawer open={open} onOpenChange={changeOpen}>
-        <div inert={open}>
-          <FolioWorkspace
-            breadcrumb={
-              <Breadcrumb size="s">
-                <BreadcrumbLink href={folioSceneHref('02-workspace-overview')}>
-                  Platform Eng
-                </BreadcrumbLink>
-                <BreadcrumbLink href={folioSceneHref('03-document-collection')}>
-                  Runbooks
-                </BreadcrumbLink>
-                <BreadcrumbPage>Zero-Downtime PG Failover</BreadcrumbPage>
-              </Breadcrumb>
-            }
-            documentTabs
-            activeDocument="runbook"
-            minHeight={1200}
-            actions={
-              <DrawerTrigger
+        <FolioWorkspace
+          breadcrumb={
+            <Breadcrumb size="s">
+              <BreadcrumbLink href={folioSceneHref('02-workspace-overview')}>
+                Platform Eng
+              </BreadcrumbLink>
+              <BreadcrumbLink href={folioSceneHref('03-document-collection')}>
+                Runbooks
+              </BreadcrumbLink>
+              <BreadcrumbPage>Zero-Downtime PG Failover</BreadcrumbPage>
+            </Breadcrumb>
+          }
+          documentTabs
+          activeDocument="runbook"
+          minHeight={workspaceHeight}
+          actions={
+            <DrawerTrigger asChild>
+              <Button
+                ref={trigger}
                 size="s"
                 variant="secondary"
                 tone="neutral"
                 iconLeft={SlidersHorizontalIcon}
               >
                 Properties
-              </DrawerTrigger>
-            }
-          >
-            <div className="folio-prose-stage">
-              <RunbookArticle compact />
-            </div>
-          </FolioWorkspace>
-        </div>
+              </Button>
+            </DrawerTrigger>
+          }
+        >
+          <div className="folio-prose-stage">
+            <RunbookArticle compact />
+          </div>
+        </FolioWorkspace>
         <DrawerContent
           className="folio-properties-dialog"
           side={{ wide: 'end', narrow: 'bottom' }}
-          described
+          returnFocus={trigger}
         >
-          <DrawerHeader closeLabel="Close document properties">
-            <DrawerTitle>Document properties & review</DrawerTitle>
-            <DrawerDescription>
-              Configure visibility, incident automation, and review cadence.
-            </DrawerDescription>
+          <DrawerHeader>
+            <div>
+              <DrawerTitle>Document properties & review</DrawerTitle>
+              <DrawerDescription>
+                Configure visibility, incident automation, and review cadence.
+              </DrawerDescription>
+            </div>
+            <DrawerClose aria-label="Close document properties" />
           </DrawerHeader>
           <DrawerBody>
             <form
@@ -188,7 +201,11 @@ function PropertiesScene(): ReactElement {
             </form>
           </DrawerBody>
           <DrawerFooter>
-            <DrawerClose>Cancel</DrawerClose>
+            <DrawerClose asChild>
+              <Button variant="secondary" tone="neutral">
+                Cancel
+              </Button>
+            </DrawerClose>
             <Button type="submit" form={formId}>
               Save properties
             </Button>
@@ -197,6 +214,29 @@ function PropertiesScene(): ReactElement {
       </Drawer>
       <FolioToastRegion />
     </FolioScene>
+  );
+}
+
+function PropertiesScene({ ctx }: { readonly ctx?: SceneContext }): ReactElement {
+  const workspace = (
+    <ToastProvider>
+      <PropertiesWorkspace />
+    </ToastProvider>
+  );
+  return ctx ? (
+    <OverlayExampleFrame
+      ctx={ctx}
+      title="Folio page properties"
+      height={workspaceHeight}
+      className="folio-scene-frame"
+      modal
+      fitViewport
+      linksToParent
+    >
+      {workspace}
+    </OverlayExampleFrame>
+  ) : (
+    workspace
   );
 }
 
@@ -226,9 +266,5 @@ export default defineScene({
     'title',
     'toast',
   ],
-  render: () => (
-    <ToastProvider>
-      <PropertiesScene />
-    </ToastProvider>
-  ),
+  render: PropertiesScene,
 });

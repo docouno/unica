@@ -47,11 +47,11 @@ export default {
 
   'Pagination archive opens a dated page directly from the States overview': async ({
     page,
-    mount,
+    origin,
   }) => {
-    await mount('native');
     await page.goto(
-      new URL('/?item=pagination&tab=states&family=frost&scheme=light', page.url()).href,
+      new URL('/?item=pagination&tab=states&family=frost&scheme=light', origin).href,
+      { waitUntil: 'commit' },
     );
     await page.locator('html[data-wb-ready="1"]').waitFor({ state: 'attached', timeout: 20_000 });
     await page.getByRole('button', { name: 'Inspector', exact: true }).click();

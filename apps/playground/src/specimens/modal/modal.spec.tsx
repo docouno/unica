@@ -1,24 +1,106 @@
-import { DialogStudy } from '../../prototypes/dialog/dialog.examples.js';
 import { defineComponent } from '../../workbench/types.js';
 import { choice, eventProp, toggle } from '../control-props.js';
+import {
+  dialogRootConstraints,
+  dialogRootControls,
+  dialogRootProps,
+} from '../shared/dialog-controls.js';
+import { DialogStudy } from '../shared/dialog-study.js';
 import { DeleteExport } from './delete-export.js';
-import confirmationSource from './delete-export.tsx?raw';
 import { EditProject } from './edit-project.js';
 import { ExportDetails } from './export-details.js';
-import detailsSource from './export-details.tsx?raw';
 import { ReleaseReview } from './release-review.js';
-import releaseSource from './release-review.tsx?raw';
 
 const sizes = ['s', 'm', 'l'] as const;
-const editableReview = releaseSource
-  .replaceAll('../../prototypes/', './prototypes/')
-  .replace('export function ReleaseReview', 'function ReleaseReview');
+const confirmationExample = `import { useRef, useState } from 'react';
+import {
+  Button, Modal, ModalClose, ModalContent, ModalDescription,
+  ModalFooter, ModalHeader, ModalTitle, ModalTrigger,
+} from '@docouno/unica';
+import '@docouno/unica/styles.css';
+
+export function ConfirmExportDeletion({ onDelete }) {
+  const [open, setOpen] = useState(false);
+  const [deleted, setDeleted] = useState(false);
+  const cancel = useRef(null);
+  const opener = useRef(null);
+  const receipt = useRef(null);
+
+  return (
+    <Modal open={open} onOpenChange={setOpen}>
+      {deleted ? (
+        <p ref={receipt} tabIndex={-1} role="status">Export deleted</p>
+      ) : (
+        <ModalTrigger asChild ref={opener}><Button variant="secondary">Delete export</Button></ModalTrigger>
+      )}
+      <ModalContent role="alertdialog" width="s" size="s" initialFocus={cancel} returnFocus={deleted ? receipt : opener}>
+        <ModalHeader>
+          <div>
+            <ModalTitle>Delete this export?</ModalTitle>
+            <ModalDescription>The download link will stop working.</ModalDescription>
+          </div>
+        </ModalHeader>
+        <ModalFooter>
+          <ModalClose ref={cancel} asChild>
+            <Button variant="secondary" tone="neutral">Cancel</Button>
+          </ModalClose>
+          <Button tone="danger" onClick={() => { onDelete(); setDeleted(true); setOpen(false); }}>
+            Delete export
+          </Button>
+        </ModalFooter>
+      </ModalContent>
+    </Modal>
+  );
+}`;
+
+const detailsExample = `import { useRef, useState } from 'react';
+import {
+  Alert, AlertTitle, Button, Modal, ModalBody, ModalClose, ModalContent,
+  ModalDescription, ModalHeader, ModalTitle, ModalTrigger, Portal,
+} from '@docouno/unica';
+import '@docouno/unica/styles.css';
+
+export function ExportDetails() {
+  const [notified, setNotified] = useState(true);
+  const title = useRef(null);
+  const opener = useRef(null);
+
+  return (
+    <Modal defaultOpen>
+      <ModalTrigger asChild ref={opener}><Button variant="secondary">View export details</Button></ModalTrigger>
+      <ModalContent width="s" dismissOnBackdrop returnFocus={opener}>
+        <ModalHeader>
+          <div>
+            <ModalTitle ref={title}>Export details</ModalTitle>
+            <ModalDescription>November report</ModalDescription>
+          </div>
+          <ModalClose />
+        </ModalHeader>
+        <ModalBody>Format: PDF document</ModalBody>
+        {notified && (
+          <Portal>
+            <div style={{ position: 'fixed', insetInlineEnd: 16, insetBlockEnd: 16 }}>
+              <Alert status="success">
+                <AlertTitle>Export ready</AlertTitle>
+                <Button variant="ghost" onClick={() => {
+                  setNotified(false);
+                  title.current?.focus({ preventScroll: true });
+                }}>Dismiss</Button>
+              </Alert>
+            </div>
+          </Portal>
+        )}
+      </ModalContent>
+    </Modal>
+  );
+}`;
 
 export default defineComponent({
   id: 'modal',
   title: 'Modal',
   category: 'Overlays',
-  status: 'Proto',
+  status: 'UI',
+  form: 'inline',
   summary: 'A centered panel for a focused task, a decision or read-only details.',
   defaultSurface: 'overlay',
   props: {
@@ -34,15 +116,7 @@ export default defineComponent({
       sizes,
       'm',
     ),
-    presentation: {
-      ...choice(
-        'Host',
-        'Launch the panel or pin it for inspection. The standalone example opens from its trigger.',
-        ['live', 'pinned'],
-        'live',
-      ),
-      demo: true,
-    },
+    ...dialogRootControls,
     dismissOnBackdrop: toggle(
       'Interaction',
       'Dismiss ModalContent when a primary press and release both land on the backdrop.',
@@ -53,25 +127,42 @@ export default defineComponent({
       '(open: boolean) => void',
     ),
   },
+  constraints: dialogRootConstraints,
   render: ({ values, ctx }) => (
-    <DialogStudy height={320}>
+    <DialogStudy ctx={ctx} height={320} title="Release review example">
       <ReleaseReview
+        key={values.open === 'unset' ? String(values.defaultOpen) : 'controlled'}
         contentProps={{
           size: values.size,
           width: values.width,
           dismissOnBackdrop: values.dismissOnBackdrop,
         }}
-        pinned={values.presentation === 'pinned'}
+        rootProps={{ ...dialogRootProps(values), onOpenChange: ctx.action('onOpenChange') }}
         subject={ctx.subject}
-        onOpenChange={ctx.action('onOpenChange')}
       />
     </DialogStudy>
   ),
-  code: ({ size, width, dismissOnBackdrop }) =>
-    `${editableReview}
+  code: ({ size, width, dismissOnBackdrop, open, defaultOpen }) =>
+    `import { useRef } from 'react';
+import { Button, Modal, ModalClose, ModalContent, ModalDescription, ModalHeader, ModalTitle, ModalTrigger } from '@docouno/unica';
+import '@docouno/unica/styles.css';
 
 export function PreviewRelease() {
-  return <ReleaseReview contentProps={${JSON.stringify({ size, width, dismissOnBackdrop })}} />;
+  const opener = useRef(null);
+  return (
+    <Modal {...${JSON.stringify(dialogRootProps({ open, defaultOpen }))}}>
+      <ModalTrigger asChild ref={opener}><Button variant="secondary">Review release</Button></ModalTrigger>
+      <ModalContent {...${JSON.stringify({ size, width, dismissOnBackdrop })}} returnFocus={opener}>
+        <ModalHeader>
+          <div>
+            <ModalTitle>Release summary</ModalTitle>
+            <ModalDescription>Export links expire in 30 days.</ModalDescription>
+          </div>
+          <ModalClose />
+        </ModalHeader>
+      </ModalContent>
+    </Modal>
+  );
 }`,
   states: [
     {
@@ -81,7 +172,7 @@ export function PreviewRelease() {
         'Each width group shows compact, regular and spacious insets. Panels stop at the workspace boundary. These comparisons stay open. Use Playground to launch and dismiss a panel.',
       rows: 'size',
       group: 'width',
-      fixed: { presentation: 'pinned' },
+      fixed: { open: 'true' },
     },
   ],
   cases: [
@@ -174,11 +265,11 @@ export function PreviewRelease() {
       caption:
         'Cancel keeps the November export available. Delete export marks it as deleted and moves focus to the result. Reset restores the export.',
       render: ({ ctx }) => (
-        <DialogStudy height={340}>
+        <DialogStudy ctx={ctx} height={340} title="Delete export example">
           <DeleteExport subject={ctx.subject} />
         </DialogStudy>
       ),
-      code: confirmationSource.replaceAll('../../prototypes/', './prototypes/'),
+      code: confirmationExample,
     },
     {
       id: 'details',
@@ -189,11 +280,11 @@ export function PreviewRelease() {
       caption:
         'Inspect the November export and its ready notification. Dismiss the notice to return focus to the title. Close the panel or press its backdrop to return to the trigger.',
       render: ({ ctx }) => (
-        <DialogStudy height={500}>
+        <DialogStudy ctx={ctx} height={500} title="Export details example">
           <ExportDetails subject={ctx.subject} />
         </DialogStudy>
       ),
-      code: detailsSource.replaceAll('../../prototypes/', './prototypes/'),
+      code: detailsExample,
     },
   ],
 });

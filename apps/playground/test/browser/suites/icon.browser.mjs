@@ -243,8 +243,13 @@ export default {
       for (const host of ['modal', 'drawer']) {
         await page.getByRole('button', { name: `Open ${host}` }).click();
         const dialog = page.getByRole('dialog', { name: `Example ${host}` });
-        const close = dialog.getByRole('button', { name: 'Close dialog' });
-        chrome[host] = await close.locator('svg').evaluate((node) => node.outerHTML);
+        const close = dialog.getByRole('button', {
+          name: host === 'modal' ? 'Close dialog' : 'Close drawer',
+        });
+        await size(close, 30);
+        const glyph = close.locator('svg');
+        await size(glyph, 14);
+        chrome[host] = await glyph.evaluate((node) => node.outerHTML);
         await close.click();
         await dialog.waitFor({ state: 'hidden' });
       }

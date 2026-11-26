@@ -1,8 +1,3 @@
-import { useId, useState } from 'react';
-import { folioSceneHref } from './folio/folio.routes.js';
-import type { ReactElement } from 'react';
-import { PlusIcon } from '@phosphor-icons/react';
-import { AsidePanel, WorkspaceNavigation } from '../prototypes/app-shell/app-shell.proto.js';
 import {
   Badge,
   Button,
@@ -10,12 +5,6 @@ import {
   CheckboxCard,
   FormField,
   Input,
-  Select,
-  Text,
-  Textarea,
-  Title,
-} from '@docouno/unica';
-import {
   Modal,
   ModalBody,
   ModalClose,
@@ -25,9 +14,18 @@ import {
   ModalHeader,
   ModalTitle,
   ModalTrigger,
-} from '../prototypes/dialog/dialog.proto.js';
-import { ToastProvider, useToast } from '@docouno/unica';
-import { FolioToastRegion } from './folio/folio.toast.js';
+  Select,
+  Text,
+  Textarea,
+  Title,
+  ToastProvider,
+  useToast,
+} from '@docouno/unica';
+import { PlusIcon } from '@phosphor-icons/react';
+import { useId, useRef, useState } from 'react';
+import type { ReactElement } from 'react';
+import { OverlayExampleFrame } from '../examples/OverlayExampleFrame.js';
+import { AsidePanel, WorkspaceNavigation } from '../prototypes/app-shell/app-shell.proto.js';
 import {
   Table,
   TableBody,
@@ -44,10 +42,14 @@ import {
   BreadcrumbPage,
 } from '../prototypes/breadcrumb/breadcrumb.proto.js';
 import { defineScene } from '../workbench/types.js';
+import type { SceneContext } from '../workbench/types.js';
+import { folioSceneHref } from './folio/folio.routes.js';
 import { FolioScene, FolioWorkspace, PageIntro, Person } from './folio/folio.shared.js';
+import { FolioToastRegion } from './folio/folio.toast.js';
 
 const { TagsInput } = await import('../prototypes/tags-input/tags-input.proto.js');
 
+const workspaceHeight = 1020;
 const members = [
   {
     initials: 'PE',
@@ -101,10 +103,11 @@ const expiryOptions = [
   { value: '30', label: '30 days' },
 ] as const;
 
-function InviteScene(): ReactElement {
+function InviteWorkspace(): ReactElement {
   const toast = useToast();
   const formId = useId();
   const welcomeId = useId();
+  const trigger = useRef<HTMLButtonElement>(null);
   const [open, setOpen] = useState(true);
   const [role, setRole] = useState('editor');
   const [invites, setInvites] = useState<readonly string[]>([
@@ -112,132 +115,140 @@ function InviteScene(): ReactElement {
     'reviewer@example.com',
   ]);
   return (
-    <FolioScene>
+    <FolioScene className="folio-overlay-workspace">
       <Modal open={open} onOpenChange={setOpen}>
-        <div inert={open}>
-          <FolioWorkspace
-            classic
-            breadcrumb={
-              <Breadcrumb size="s">
-                <BreadcrumbLink href={folioSceneHref('02-workspace-overview')}>
-                  Platform Eng
-                </BreadcrumbLink>
-                <span>Administration</span>
-                <BreadcrumbPage>Members & roles</BreadcrumbPage>
-              </Breadcrumb>
-            }
-            minHeight={1020}
-            leftAside={
-              <AsidePanel title="Platform Eng">
-                <WorkspaceNavigation kind="admin" defaultActive="members" />
-              </AsidePanel>
-            }
-            actions={
-              <div className="folio-row">
-                <Button size="s" variant="secondary" tone="neutral">
-                  Export CSV
-                </Button>
-                <ModalTrigger size="s" iconLeft={PlusIcon}>
+        <FolioWorkspace
+          classic
+          breadcrumb={
+            <Breadcrumb size="s">
+              <BreadcrumbLink href={folioSceneHref('02-workspace-overview')}>
+                Platform Eng
+              </BreadcrumbLink>
+              <span>Administration</span>
+              <BreadcrumbPage>Members & roles</BreadcrumbPage>
+            </Breadcrumb>
+          }
+          minHeight={workspaceHeight}
+          leftAside={
+            <AsidePanel title="Platform Eng">
+              <WorkspaceNavigation kind="admin" defaultActive="members" />
+            </AsidePanel>
+          }
+          actions={
+            <div className="folio-row">
+              <Button size="s" variant="secondary" tone="neutral">
+                Export CSV
+              </Button>
+              <ModalTrigger asChild>
+                <Button ref={trigger} size="s" iconLeft={PlusIcon}>
                   Invite member
-                </ModalTrigger>
-              </div>
-            }
-          >
-            <div className="folio-content folio-members-content">
-              <PageIntro
-                title="Members & role directory"
-                description="Manage repository-backed runbook permissions, SAML groups, and hardware-key enforcement."
-              >
-                <Badge size="s" status="success" dot>
-                  SAML 2.0 Enforced
-                </Badge>
-              </PageIntro>
-              <div className="folio-grid-3">
-                {[
-                  {
-                    title: 'Active members',
-                    badge: 'Healthy',
-                    value: '14',
-                    detail: '100% 2FA verified',
-                  },
-                  {
-                    title: 'Tier-0 maintainers',
-                    badge: 'Restricted',
-                    value: '6',
-                    detail: 'Core Infrastructure & SRE',
-                  },
-                  {
-                    title: 'Pending invitations',
-                    badge: 'Awaiting SSO',
-                    value: '2',
-                    detail: 'Expires in 7 days',
-                  },
-                ].map((stat) => (
-                  <Card key={stat.title}>
-                    <div className="folio-row folio-between">
-                      <Text size="body-s" weight="medium">
-                        {stat.title}
-                      </Text>
-                      <Badge size="s" status="neutral">
-                        {stat.badge}
-                      </Badge>
-                    </div>
-                    <Title as="h2" size="heading-l">
-                      {stat.value}
-                    </Title>
-                    <Text size="caption-l" color="muted">
-                      {stat.detail}
-                    </Text>
-                  </Card>
-                ))}
-              </div>
-              <TableScroll aria-label="Workspace members">
-                <Table aria-label="Workspace members">
-                  <TableHeader>
-                    <TableRow>
-                      <TableColumnHeader>Member</TableColumnHeader>
-                      <TableColumnHeader>Work email</TableColumnHeader>
-                      <TableColumnHeader>Role</TableColumnHeader>
-                      <TableColumnHeader>Security</TableColumnHeader>
-                      <TableColumnHeader>Last active</TableColumnHeader>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {members.map((member) => (
-                      <TableRow key={member.email}>
-                        <TableRowHeader>
-                          <Person initials={member.initials} name={member.name} />
-                        </TableRowHeader>
-                        <TableCell>{member.email}</TableCell>
-                        <TableCell>
-                          <Badge status="neutral" size="s">
-                            {member.role}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>{member.security}</TableCell>
-                        <TableCell>{member.time}</TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </TableScroll>
+                </Button>
+              </ModalTrigger>
             </div>
-          </FolioWorkspace>
-        </div>
-        <ModalContent className="folio-invite-dialog" described>
-          <ModalHeader closeLabel="Close invitations">
-            <ModalTitle>Invite members to Platform Eng</ModalTitle>
-            <ModalDescription>
-              Invited engineers inherit repository-backed runbook permissions.
-            </ModalDescription>
+          }
+        >
+          <div className="folio-content folio-members-content">
+            <PageIntro
+              title="Members & role directory"
+              description="Manage repository-backed runbook permissions, SAML groups, and hardware-key enforcement."
+            >
+              <Badge size="s" status="success" dot>
+                SAML 2.0 Enforced
+              </Badge>
+            </PageIntro>
+            <div className="folio-grid-3">
+              {[
+                {
+                  title: 'Active members',
+                  badge: 'Healthy',
+                  value: '14',
+                  detail: '100% 2FA verified',
+                },
+                {
+                  title: 'Tier-0 maintainers',
+                  badge: 'Restricted',
+                  value: '6',
+                  detail: 'Core Infrastructure & SRE',
+                },
+                {
+                  title: 'Pending invitations',
+                  badge: 'Awaiting SSO',
+                  value: '2',
+                  detail: 'Expires in 7 days',
+                },
+              ].map((stat) => (
+                <Card key={stat.title}>
+                  <div className="folio-row folio-between">
+                    <Text size="body-s" weight="medium">
+                      {stat.title}
+                    </Text>
+                    <Badge size="s" status="neutral">
+                      {stat.badge}
+                    </Badge>
+                  </div>
+                  <Title as="h2" size="heading-l">
+                    {stat.value}
+                  </Title>
+                  <Text size="caption-l" color="muted">
+                    {stat.detail}
+                  </Text>
+                </Card>
+              ))}
+            </div>
+            <TableScroll aria-label="Workspace members">
+              <Table aria-label="Workspace members">
+                <TableHeader>
+                  <TableRow>
+                    <TableColumnHeader>Member</TableColumnHeader>
+                    <TableColumnHeader>Work email</TableColumnHeader>
+                    <TableColumnHeader>Role</TableColumnHeader>
+                    <TableColumnHeader>Security</TableColumnHeader>
+                    <TableColumnHeader>Last active</TableColumnHeader>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {members.map((member) => (
+                    <TableRow key={member.email}>
+                      <TableRowHeader>
+                        <Person initials={member.initials} name={member.name} />
+                      </TableRowHeader>
+                      <TableCell>{member.email}</TableCell>
+                      <TableCell>
+                        <Badge status="neutral" size="s">
+                          {member.role}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>{member.security}</TableCell>
+                      <TableCell>{member.time}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableScroll>
+          </div>
+        </FolioWorkspace>
+        <ModalContent className="folio-invite-dialog" returnFocus={trigger}>
+          <ModalHeader>
+            <div>
+              <ModalTitle>Invite members to Platform Eng</ModalTitle>
+              <ModalDescription>
+                Invited engineers inherit repository-backed runbook permissions.
+              </ModalDescription>
+            </div>
+            <ModalClose aria-label="Close invitations" />
           </ModalHeader>
-          <ModalBody>
+          <ModalBody className="folio-invite-body">
             <form
               id={formId}
               className="folio-stack"
               onSubmit={(event) => {
                 event.preventDefault();
-                const data = new FormData(event.currentTarget);
+                const form = event.currentTarget;
+                const view = form.ownerDocument.defaultView;
+                if (!view) {
+                  return;
+                }
+                const data = new view.FormData(form);
                 const selectedRole = roles.find((option) => option.value === data.get('role'));
                 const expiry = expiryOptions.find((option) => option.value === data.get('expiry'));
                 if (!selectedRole || !expiry) {
@@ -317,7 +328,11 @@ function InviteScene(): ReactElement {
             </form>
           </ModalBody>
           <ModalFooter>
-            <ModalClose>Cancel</ModalClose>
+            <ModalClose asChild>
+              <Button variant="secondary" tone="neutral">
+                Cancel
+              </Button>
+            </ModalClose>
             <Button type="submit" form={formId}>
               Send {invites.length} invites
             </Button>
@@ -326,6 +341,29 @@ function InviteScene(): ReactElement {
       </Modal>
       <FolioToastRegion />
     </FolioScene>
+  );
+}
+
+function InviteScene({ ctx }: { readonly ctx?: SceneContext }): ReactElement {
+  const workspace = (
+    <ToastProvider>
+      <InviteWorkspace />
+    </ToastProvider>
+  );
+  return ctx ? (
+    <OverlayExampleFrame
+      ctx={ctx}
+      title="Folio invitations"
+      height={workspaceHeight}
+      className="folio-scene-frame"
+      modal
+      fitViewport
+      linksToParent
+    >
+      {workspace}
+    </OverlayExampleFrame>
+  ) : (
+    workspace
   );
 }
 
@@ -356,9 +394,5 @@ export default defineScene({
     'title',
     'toast',
   ],
-  render: () => (
-    <ToastProvider>
-      <InviteScene />
-    </ToastProvider>
-  ),
+  render: InviteScene,
 });

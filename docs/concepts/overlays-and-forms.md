@@ -8,7 +8,7 @@ Normal document flow uses only two stacking tokens (`--z-content: 0` and `--z-st
 
 | Overlay Family | Native Carrier | Dismissal & Focus Contract |
 | --- | --- | --- |
-| `Modal`, `Drawer` | `<dialog>` via `showModal()` | Browser-enforced background `inert`, focus containment inside the active dialog, native `cancel` / `Escape` coordination, and shared document scroll lock. |
+| [Modal](../components/modal.md), [Drawer](../components/drawer.md) | `<dialog>` via `showModal()` | Browser-enforced background inertness, focus containment, controlled close requests, and shared document scroll lock. |
 | [Popover](../components/popover.md) | `popover="auto"` | Named non-modal dialog with outside-press and Escape dismissal, free tab navigation, and focus restoration to the invoking trigger when it owned focus. |
 | [Select](../components/select.md) | In-place `popover="auto"` | Anchored listbox or non-modal dialog with Escape and outside-press dismissal. Escape returns focus to the available trigger. Tab and outside press preserve the user's next destination. |
 | [Menu](../components/menu.md), [ContextMenu](../components/context-menu.md) | In-place `popover="auto"` | Cascading levels use DOM-nested auto popovers. Inline levels share their parent carrier. Escape closes a level, Tab resumes from the caller, and outside press preserves the destination. |
@@ -23,9 +23,11 @@ Unica's internal runtime coordinates native admission and dismissal per document
 
 Nested `popover="auto"` chains should remain inside their parent popover's DOM subtree (in-place or via a nested `UnicaProvider` `portalContainer`) so native light-dismiss ancestry stays reliable across all Baseline and Guarantee browsers, including releases where `showPopover({ source })` is not yet supported. Tooltip and HoverCard render in place and preserve the native tab order of their source controls. Their previews leave focus where the user last placed it when they dismiss.
 
-A bubble-phase `keydown` listener on the document respects `event.defaultPrevented` from inner React widgets and DOM controls before routing `Escape`. Passive notification viewports are skipped, and foreign open top-layer surfaces are respected. Inside a modal, `Escape` closes the innermost Popover first. After the nested panels close, the next `Escape` reaches the modal owner. Outside a modal, `auto` popovers delegate `Escape` to the browser, while `manual` layers and modals receive a close request. The event still reaches application listeners.
+A bubble-phase `keydown` listener on the document respects `event.defaultPrevented` from inner React widgets and DOM controls before routing `Escape`. Passive notification viewports are skipped, and foreign open top-layer surfaces are respected. Inside a modal, `Escape` closes the innermost popup or Menu level first. After the nested panels close, the next `Escape` reaches the modal owner. Outside a modal, `auto` popovers delegate `Escape` to the browser, while `manual` layers and modals receive a close request. The event still reaches application listeners.
 
-The document scroll lock is shared across physical Unica modals, compensates classic scrollbar gutter width to avoid horizontal layout shift when `scrollbar-gutter: stable` is absent, and leaves scrolling inside a dialog intact.
+Modal dialogs publish their native dialog element as the host for descendant portals. Modal stacks and scroll locks are local to the document that contains the dialog. The document scroll lock remains active until the last Unica modal closes. It compensates classic scrollbar gutter width when `scrollbar-gutter: stable` is absent, and leaves scrolling inside the dialog intact. [Portal](../components/portal.md)
+
+For a controlled Modal or Drawer, dismissal actions request `onOpenChange(false)` while the native layer is still active. The owner can keep the dialog open and render a child confirmation. A browser action that already closed the native dialog reports a completed dismissal. [Protecting a draft](../components/modal.md#protecting-a-draft)
 
 ### Inertness & Foreign Modal Dialog Boundary
 
@@ -48,6 +50,8 @@ Anchored panels pair native `popover` promotion with a lightweight positioning a
 - [Popover](../components/popover.md#placement-and-material) shows and hides immediately in every preset. Overlay transitions that use motion must preserve focus and dismissal timing, respect `prefers-reduced-motion`, and fall back to immediate visibility when unsupported.
 
 ## Native `<form>` Participation
+
+Use a native form inside modal Body and associate a Footer submitter with `form={id}`. Form associations and accessible name references use the physical DOM tree. Keep each referenced form or label in the same document and shadow tree as the associated element. [Forms and portal hosts](../components/modal.md#forms-and-portal-hosts)
 
 Every Unica data-entry control (`Input`, `Textarea`, `NumberInput`, `Checkbox`, `Radio`, `Switch`, `Chip`, `ChipGroup`, `Listbox`, `Select`, `Combobox`, `Autocomplete`, `DatePicker`, `DateRangePicker`, `Slider`, `RangeSlider`, `SegmentedControl`, `TagsInput`, `FileInput`, and `*Card` choices) behaves as a native `<form>` participant:
 

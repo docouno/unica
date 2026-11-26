@@ -1,5 +1,5 @@
 import { UnicaProvider } from '@docouno/unica';
-import { useLayoutEffect, useRef, useState } from 'react';
+import { useCallback, useLayoutEffect, useRef, useState } from 'react';
 import type { ReactElement, ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { UnicaUnderlay } from '../unica.workbench.shared.js';
@@ -7,8 +7,10 @@ import { useSubjectBounds } from '../workbench/subjectBounds.js';
 import type { PreviewContext } from '../workbench/types.js';
 import './overlay-example-frame.css';
 
-const source =
-  '<!doctype html><html lang="en"><head><meta charset="utf-8"></head><body class="hint-example-document"></body></html>';
+function source(linksToParent: boolean): string {
+  const base = linksToParent ? '<base target="_parent">' : '';
+  return `<!doctype html><html class="hint-example-root" lang="en"><head><meta charset="utf-8">${base}</head><body class="hint-example-document"></body></html>`;
+}
 
 function applyEnvironment(
   target: Document,
@@ -17,11 +19,6 @@ function applyEnvironment(
 ): void {
   const root = target.documentElement;
   const inherited = frame.ownerDocument.defaultView?.getComputedStyle(frame);
-  if (frame.closest('[data-wb-capture-route]')) {
-    root.dataset.wbFreeze = '1';
-  } else {
-    delete root.dataset.wbFreeze;
-  }
   root.dataset.theme = theme.id;
   root.style.colorScheme = theme.colorScheme;
   root.dir = inherited?.direction || 'ltr';
@@ -29,55 +26,160 @@ function applyEnvironment(
     inherited?.getPropertyValue('--font-scale').trim() === '1.2' ? '120' : '100';
 }
 
+// Theme editor declarations are scoped to the outer artboard. Keep their token
+// values and theme/surface filters in the frame, with the document root as its scope.
+function mirrorThemeOverrides(target: Document, frame: HTMLIFrameElement): () => void {
+  const shell = frame.closest('.wb-shell');
+  const root = frame.ownerDocument.documentElement;
+  const style = target.createElement('style');
+  const observer = new MutationObserver(sync);
+  target.head.append(style);
+
+  function sync(): void {
+    const overrides = shell?.querySelector(':scope > style[data-wb-theme-overrides]');
+    const css = overrides?.textContent?.replaceAll('.wb-shell .wb-artboard', ':root') ?? '';
+    if (style.textContent !== css) {
+      style.textContent = css;
+    }
+    if (root.dataset.wbFreeze === '1' || frame.closest('[data-wb-capture-route]')) {
+      target.documentElement.dataset.wbFreeze = '1';
+    } else {
+      delete target.documentElement.dataset.wbFreeze;
+    }
+    observer.disconnect();
+    observer.observe(root, { attributes: true, attributeFilter: ['data-wb-freeze'] });
+    if (shell) {
+      observer.observe(shell, { childList: true });
+    }
+    if (overrides) {
+      observer.observe(overrides, { childList: true, characterData: true, subtree: true });
+    }
+  }
+
+  sync();
+  return () => {
+    observer.disconnect();
+    style.remove();
+  };
+}
+
+function fitFrameToViewport(frame: HTMLIFrameElement): () => void {
+  const document = frame.ownerDocument;
+  const view = document.defaultView;
+  if (!view) {
+    return () => undefined;
+  }
+  const gallery = frame.closest('.wb-artboards');
+  const canvas = frame.closest('.wb-canvas');
+  const viewport = view.visualViewport;
+  const property = '--hint-example-visible-height';
+  let request: number | undefined;
+
+  const measure = (): void => {
+    // Give comparison rows the same viewport without resizing frames as the page scrolls.
+    const first =
+      gallery?.querySelector<HTMLIFrameElement>('iframe[data-overlay-frame-fit]') ?? frame;
+    const top = first.getBoundingClientRect().top + view.scrollY + (canvas?.scrollTop ?? 0);
+    const height = viewport?.height ?? view.innerHeight;
+    const remaining = height - Math.max(0, top);
+    const width = frame.getBoundingClientRect().width;
+    const scale = width > 0 && frame.offsetWidth > 0 ? width / frame.offsetWidth : 1;
+    const value = `${Math.max(1, Math.floor((remaining > 0 ? remaining : height) / scale))}px`;
+    if (frame.style.getPropertyValue(property) !== value) {
+      frame.style.setProperty(property, value);
+    }
+  };
+
+  const schedule = (): void => {
+    if (request === undefined) {
+      request = view.requestAnimationFrame(() => {
+        request = undefined;
+        measure();
+      });
+    }
+  };
+
+  measure();
+  const observer = new view.ResizeObserver(schedule);
+  observer.observe(document.documentElement);
+  observer.observe(frame);
+  view.addEventListener('resize', schedule);
+  viewport?.addEventListener('resize', schedule);
+  return () => {
+    observer.disconnect();
+    view.removeEventListener('resize', schedule);
+    viewport?.removeEventListener('resize', schedule);
+    if (request !== undefined) {
+      view.cancelAnimationFrame(request);
+    }
+    frame.style.removeProperty(property);
+  };
+}
+
 function FrameContent({
   children,
   surface,
   bounds,
+  modal,
   scopePortals,
 }: {
   readonly children: ReactNode;
   readonly surface: PreviewContext['surface'];
   readonly bounds: boolean;
+  readonly modal: boolean;
   readonly scopePortals: boolean;
 }): ReactElement {
   const scope = useRef<HTMLDivElement>(null);
-  const [portalHost, setPortalHost] = useState<HTMLDivElement | null>(null);
+  const [host, setHost] = useState<HTMLDivElement | null>(null);
+  const attach = useCallback(
+    (node: HTMLDivElement | null): void => {
+      scope.current = node;
+      if (!scopePortals) {
+        setHost(node);
+      }
+    },
+    [scopePortals],
+  );
   useSubjectBounds(scope, bounds);
   return (
-    <div ref={scope} className="hint-example-viewport">
+    <div ref={attach} className="hint-example-viewport">
       {surface === 'overlay' && (
         <>
           <UnicaUnderlay />
-          <div className="hint-example-scrim" aria-hidden="true" />
+          {!modal && <div className="hint-example-scrim" aria-hidden="true" />}
         </>
       )}
       <div
         className="hint-example-viewport-content"
         data-surface={surface}
-        ref={scopePortals ? setPortalHost : undefined}
+        ref={scopePortals ? setHost : undefined}
       >
-        {scopePortals ? (
-          <UnicaProvider portalContainer={portalHost}>{children}</UnicaProvider>
-        ) : (
-          children
-        )}
+        <UnicaProvider portalContainer={host}>{children}</UnicaProvider>
       </div>
     </div>
   );
 }
 
-/** Each comparison gets its own native viewport and one physically open preview. */
+/** Each comparison gets its own viewport for native top-layer content. */
 export function OverlayExampleFrame({
   ctx,
   title,
   height,
-  children,
+  modal = false,
   scopePortals = false,
+  fitViewport = false,
+  linksToParent = false,
+  className,
+  children,
 }: {
-  readonly ctx: PreviewContext;
+  readonly ctx: Pick<PreviewContext, 'theme' | 'surface'>;
   readonly title: string;
   readonly height: number;
+  readonly modal?: boolean;
   readonly scopePortals?: boolean;
+  readonly fitViewport?: boolean;
+  readonly linksToParent?: boolean;
+  readonly className?: string;
   readonly children: ReactNode;
 }): ReactElement {
   const frame = useRef<HTMLIFrameElement>(null);
@@ -86,15 +188,22 @@ export function OverlayExampleFrame({
   const [ready, setReady] = useState<Document | null>(null);
 
   useLayoutEffect(() => {
+    if (fitViewport && frame.current) {
+      return fitFrameToViewport(frame.current);
+    }
+  }, [fitViewport]);
+
+  useLayoutEffect(() => {
     if (frame.current && target) {
       applyEnvironment(target, frame.current, ctx.theme);
     }
   });
 
   useLayoutEffect(() => {
-    if (!target) {
+    if (!target || !frame.current) {
       return;
     }
+    const disposeOverrides = mirrorThemeOverrides(target, frame.current);
     let active = true;
     // The Workbench capture waits for fonts in the outer document. Queue frame fonts too.
     target.body.getBoundingClientRect();
@@ -106,6 +215,7 @@ export function OverlayExampleFrame({
     void target.fonts.ready.then(markReady, markReady);
     return () => {
       active = false;
+      disposeOverrides();
     };
   }, [target]);
 
@@ -144,23 +254,28 @@ export function OverlayExampleFrame({
   const bounds = new URLSearchParams(parentSearch).get('bounds') === '1';
   return (
     <>
-      {/* Dispose native popovers before removing their iframe document. */}
       {target &&
         createPortal(
-          <UnicaProvider portalContainer={target.body}>
-            <FrameContent surface={ctx.surface} bounds={bounds} scopePortals={scopePortals}>
-              {children}
-            </FrameContent>
-          </UnicaProvider>,
+          <FrameContent
+            surface={ctx.surface}
+            bounds={bounds}
+            modal={modal}
+            scopePortals={scopePortals}
+          >
+            {children}
+          </FrameContent>,
           target.body,
         )}
       <iframe
         ref={frame}
-        className="hint-example-frame"
-        data-overlay-frame-contained={scopePortals ? '' : undefined}
+        className={['hint-example-frame', modal && 'hint-example-frame--modal', className]
+          .filter(Boolean)
+          .join(' ')}
         title={title}
         height={height}
-        srcDoc={source}
+        srcDoc={source(linksToParent)}
+        data-overlay-frame-contained={scopePortals ? '' : undefined}
+        data-overlay-frame-fit={fitViewport ? '' : undefined}
         data-wb-pending={target && target === ready ? undefined : ''}
         onLoad={(event) => load(event.currentTarget)}
       />

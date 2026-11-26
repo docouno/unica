@@ -1,15 +1,20 @@
 import { useLayoutEffect } from 'react';
 import type { RefObject } from 'react';
 
-export function windowBounds(): { left: number; right: number; top: number; bottom: number } {
-  const viewport = window.visualViewport;
+export function windowBounds(view: Window): {
+  left: number;
+  right: number;
+  top: number;
+  bottom: number;
+} {
+  const viewport = view.visualViewport;
   const left = viewport?.offsetLeft ?? 0;
   const top = viewport?.offsetTop ?? 0;
   return {
     left,
-    right: left + (viewport?.width ?? document.documentElement.clientWidth),
+    right: left + (viewport?.width ?? view.document.documentElement.clientWidth),
     top,
-    bottom: top + (viewport?.height ?? window.innerHeight),
+    bottom: top + (viewport?.height ?? view.innerHeight),
   };
 }
 
@@ -23,15 +28,16 @@ export function useShellPopoverPosition(
   useLayoutEffect(() => {
     const anchor = anchorRef.current;
     const panel = panelRef.current;
-    if (!enabled || !anchor || !panel) {
+    const view = anchor?.ownerDocument.defaultView;
+    if (!enabled || !anchor || !panel || !view) {
       return;
     }
     const owner = anchor.closest('.app-shell-proto') ?? anchor;
-    const viewport = window.visualViewport;
+    const viewport = view.visualViewport;
     const choices = panel.querySelector('.app-shell-document-choices');
 
-    function place(trigger: HTMLButtonElement, surface: HTMLDivElement): void {
-      const { left, right, top, bottom } = windowBounds();
+    const place = (trigger: HTMLButtonElement, surface: HTMLDivElement): void => {
+      const { left, right, top, bottom } = windowBounds(view);
       const target = trigger.getBoundingClientRect();
       const open = surface.matches(':popover-open');
       if (
@@ -47,7 +53,7 @@ export function useShellPopoverPosition(
       }
       const width = Math.max(0, Math.min(preferredWidth, right - left - 16));
       surface.style.setProperty('--shell-popover-width', `${width}px`);
-      const rtl = getComputedStyle(trigger).direction === 'rtl';
+      const rtl = view.getComputedStyle(trigger).direction === 'rtl';
       const alignLeft = kind === 'account' ? !rtl : rtl;
       const x = alignLeft ? target.left : target.right - width;
       const above = target.top - top - 16;
@@ -67,13 +73,13 @@ export function useShellPopoverPosition(
       );
       surface.style.setProperty(
         '--shell-popover-bottom',
-        placeAbove ? `${window.innerHeight - target.top + 8}px` : 'auto',
+        placeAbove ? `${view.innerHeight - target.top + 8}px` : 'auto',
       );
       surface.style.setProperty(
         '--shell-popover-height',
         `${Math.max(0, placeAbove ? above : below)}px`,
       );
-    }
+    };
 
     const update = (): void => {
       if (panel.matches(':popover-open')) {
@@ -81,15 +87,15 @@ export function useShellPopoverPosition(
       }
     };
     const onScroll = (event: Event): void => {
-      if (!(event.target instanceof Node && panel.contains(event.target))) {
+      if (!(event.target instanceof view.Node && panel.contains(event.target))) {
         update();
       }
     };
-    const observer = new ResizeObserver(update);
+    const observer = new view.ResizeObserver(update);
     const stop = (): void => {
       observer.disconnect();
-      window.removeEventListener('scroll', onScroll, true);
-      window.removeEventListener('resize', update);
+      view.removeEventListener('scroll', onScroll, true);
+      view.removeEventListener('resize', update);
       viewport?.removeEventListener('scroll', update);
       viewport?.removeEventListener('resize', update);
     };
@@ -103,8 +109,8 @@ export function useShellPopoverPosition(
         update();
         observer.observe(owner);
         observer.observe(anchor);
-        window.addEventListener('scroll', onScroll, true);
-        window.addEventListener('resize', update);
+        view.addEventListener('scroll', onScroll, true);
+        view.addEventListener('resize', update);
         viewport?.addEventListener('scroll', update);
         viewport?.addEventListener('resize', update);
       } else {

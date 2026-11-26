@@ -156,22 +156,24 @@ export default {
       reducedMotion: 'reduce',
     });
     const panel = page.getByRole('dialog', { name: 'Document history' });
-    const body = panel.locator('.dialog-body');
-    const header = panel.locator('.dialog-header');
-    const footer = panel.locator('.dialog-footer');
-    assert.equal((await nativeParts(panel)).inlineGutter, 0);
+    const surface = panel.locator('.unica-dialog-surface');
+    const body = panel.locator('.unica-dialog-body');
+    const header = panel.locator('.unica-dialog-header');
+    const footer = panel.locator('.unica-dialog-footer');
+    assert.equal((await nativeParts(surface)).inlineGutter, 0);
     assert.equal((await nativeParts(body)).inlineGutter, 10);
     const before = [await header.boundingBox(), await footer.boundingBox()];
     await scrollByKeyboard(page, body, 'PageDown');
     assert.deepEqual([await header.boundingBox(), await footer.boundingBox()], before);
 
     await page.setViewportSize({ width: 360, height: 180 });
-    await page.locator('.dialog-surface[data-whole-scroll]').waitFor();
-    assert.equal((await nativeParts(panel)).inlineGutter, 10);
+    await panel.locator('.unica-dialog-surface[data-unica-dialog-whole-scroll]').waitFor();
+    assert.equal((await nativeParts(surface)).inlineGutter, 10);
     assert.equal((await nativeParts(body)).inlineGutter, 0);
-    assert.equal(await panel.getAttribute('tabindex'), '0');
+    assert.equal(await panel.getAttribute('tabindex'), null);
+    assert.equal(await surface.getAttribute('tabindex'), '0');
     assert.equal(await body.getAttribute('tabindex'), '-1');
-    await scrollByKeyboard(page, panel, 'PageDown');
+    await scrollByKeyboard(page, surface, 'PageDown');
   },
 
   'Expanded Toast preserves card width, shadows and dock while scrolling': async ({

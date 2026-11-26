@@ -23,6 +23,13 @@ import {
   Grid,
   GridItem,
   Icon,
+  Modal,
+  ModalClose,
+  ModalContent,
+  ModalDescription,
+  ModalFooter,
+  ModalHeader,
+  ModalTitle,
   Stack,
   Text,
   Title,
@@ -324,8 +331,7 @@ export function Documents({ ctx }: PreviewProps): ReactElement {
   const [newFocus, setNewFocus] = useState<string>();
   const [pending, setPending] = useState<string>();
   const [newCount, setNewCount] = useState(0);
-  const confirmation = useRef<HTMLDialogElement>(null);
-  const labelId = useId();
+  const safeAction = useRef<HTMLButtonElement>(null);
 
   function add(): void {
     const key = `draft-${newCount + 1}`;
@@ -363,7 +369,6 @@ export function Documents({ ctx }: PreviewProps): ReactElement {
                     remove(key);
                   } else {
                     setPending(key);
-                    confirmation.current?.showModal();
                   }
                 }}
               />
@@ -371,45 +376,50 @@ export function Documents({ ctx }: PreviewProps): ReactElement {
           }
         >
           <Canvas title={items.find((item) => item.value === value)?.label ?? 'Open a document'} />
-          <dialog
-            {...ctx.subject}
-            className="dialog-surface shell-study-confirm"
-            ref={confirmation}
-            aria-labelledby={labelId}
-            data-surface="overlay"
+          <Modal
+            open={pending !== undefined}
+            onOpenChange={(open) => {
+              if (!open) {
+                setPending(undefined);
+              }
+            }}
           >
-            <Title id={labelId} as="h2" size="heading-s">
-              <bdi>Close without saving?</bdi>
-            </Title>
-            <Text size="body-s" color="secondary">
-              <bdi>
-                <bdi>{items.find((item) => item.value === pending)?.label}</bdi> has unsaved
-                changes.
-              </bdi>
-            </Text>
-            <div className="app-shell-sticky-actions">
-              <Button
-                size="s"
-                variant="secondary"
-                tone="neutral"
-                onClick={() => confirmation.current?.close()}
-              >
-                Keep editing
-              </Button>
-              <Button
-                size="s"
-                tone="danger"
-                onClick={() => {
-                  confirmation.current?.close();
-                  if (pending) {
-                    remove(pending);
-                  }
-                }}
-              >
-                Discard and close
-              </Button>
-            </div>
-          </dialog>
+            <ModalContent
+              {...ctx.subject}
+              className="shell-study-confirm"
+              role="alertdialog"
+              initialFocus={safeAction}
+            >
+              <ModalHeader>
+                <div>
+                  <ModalTitle>Close without saving?</ModalTitle>
+                  <ModalDescription>
+                    <bdi>{items.find((item) => item.value === pending)?.label}</bdi> has unsaved
+                    changes.
+                  </ModalDescription>
+                </div>
+              </ModalHeader>
+              <ModalFooter>
+                <ModalClose asChild>
+                  <Button ref={safeAction} size="s" variant="secondary" tone="neutral">
+                    Keep editing
+                  </Button>
+                </ModalClose>
+                <Button
+                  size="s"
+                  tone="danger"
+                  onClick={() => {
+                    if (pending !== undefined) {
+                      remove(pending);
+                    }
+                    setPending(undefined);
+                  }}
+                >
+                  Discard and close
+                </Button>
+              </ModalFooter>
+            </ModalContent>
+          </Modal>
         </AppShell>
       </Example>
       <Example title="Empty strip">
