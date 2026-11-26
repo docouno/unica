@@ -80,3 +80,63 @@ export async function submitForm(form, submitButton) {
 export async function resetForm(form) {
   await form.evaluate((element) => HTMLFormElement.prototype.reset.call(element));
 }
+
+export async function textContrast(locator) {
+  const foreground = await locator.evaluate((node) => {
+    const color = getComputedStyle(node).color;
+    let opacity = 1;
+    for (let parent = node; parent; parent = parent.parentElement) {
+      opacity *= +getComputedStyle(parent).opacity;
+    }
+    if (!node.checkVisibility({ checkOpacity: true, checkVisibilityCSS: true })) {
+      throw new Error('The reference text is hidden');
+    }
+    const inlineColor = node.style.color;
+    node.style.color = 'transparent';
+    return { color, opacity, inlineColor };
+  });
+  let png;
+  try {
+    png = await locator.screenshot({ animations: 'disabled' });
+  } finally {
+    await locator.evaluate((node, color) => {
+      node.style.color = color;
+    }, foreground.inlineColor);
+  }
+  return locator.evaluate(
+    async (_node, { png, color, opacity }) => {
+      const bitmap = await createImageBitmap(
+        await (await fetch(`data:image/png;base64,${png}`)).blob(),
+      );
+      const canvas = new OffscreenCanvas(bitmap.width, bitmap.height);
+      const ctx = canvas.getContext('2d', { willReadFrequently: true });
+      ctx.drawImage(bitmap, 0, 0);
+      const { data: backdrop } = ctx.getImageData(0, 0, bitmap.width, bitmap.height);
+      ctx.clearRect(0, 0, 1, 1);
+      ctx.fillStyle = color;
+      ctx.fillRect(0, 0, 1, 1);
+      const [r, g, b, alpha] = ctx.getImageData(0, 0, 1, 1).data;
+      const blend = (opacity * alpha) / 255;
+      const weights = [0.2126, 0.7152, 0.0722];
+      const luminance = (rgb) =>
+        rgb.reduce((sum, value, axis) => {
+          const s = value / 255;
+          return sum + weights[axis] * (s <= 0.04045 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4);
+        }, 0);
+      let weakest = Infinity;
+      for (let index = 0; index < backdrop.length; index += 4) {
+        const bg = backdrop.subarray(index, index + 3);
+        const text = [r, g, b].map((channel, axis) => channel * blend + bg[axis] * (1 - blend));
+        const backgroundLight = luminance(bg);
+        const textLight = luminance(text);
+        weakest = Math.min(
+          weakest,
+          (Math.max(backgroundLight, textLight) + 0.05) /
+            (Math.min(backgroundLight, textLight) + 0.05),
+        );
+      }
+      return weakest;
+    },
+    { png: png.toString('base64'), ...foreground },
+  );
+}

@@ -1,13 +1,17 @@
 import { useRef, useState } from 'react';
 import { CloudSlashIcon, FileMagnifyingGlassIcon } from '@phosphor-icons/react';
-import { Button, Grid, Stack, Text, Title } from '@docouno/unica';
 import {
+  Button,
   Empty,
   EmptyActions,
   EmptyDescription,
   EmptyMedia,
   EmptyTitle,
-} from '../../prototypes/empty/empty.proto.js';
+  Grid,
+  Stack,
+  Text,
+  Title,
+} from '@docouno/unica';
 
 export function EmptyRoutes({
   emptyProps = {},
