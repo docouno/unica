@@ -11,9 +11,9 @@ import {
   ModalTrigger,
   Stack,
   Text,
+  Toast,
 } from '@docouno/unica';
 import '@docouno/unica/styles.css';
-import { ToastCard } from '../../prototypes/toast/toast.proto.js';
 
 export function DeleteExport({ subject = {} } = {}) {
   const triggerRef = useRef<HTMLButtonElement>(null);
@@ -89,7 +89,7 @@ export function DeleteExport({ subject = {} } = {}) {
       </Modal>
       {notice && (
         <div className="dialog-study-notice">
-          <ToastCard
+          <Toast
             status="success"
             title="Export deleted"
             onDismiss={() => {

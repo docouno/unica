@@ -200,7 +200,16 @@ const scenarios = {
     await submit.click();
     await dialog.waitFor({ state: 'hidden' });
     await assertFocused(invites.getByRole('button', { name: 'Invite member' }));
-    await invites.getByText('Workspace role: Viewer. Invite links expire in 14 days.').waitFor();
+    const notifications = invites.getByRole('region', { name: 'Notifications', exact: true });
+    const receipt = 'Workspace role: Viewer. Invite links expire in 14 days.';
+    await notifications
+      .getByRole('status')
+      .filter({ hasText: receipt })
+      .waitFor({ state: 'attached' });
+    await notifications
+      .getByRole('group', { name: '2 invitations prepared', exact: true })
+      .getByText(receipt, { exact: true })
+      .waitFor();
   },
 
   'Folio properties keeps pickers and scene links in the correct document at 360px': async ({
@@ -287,6 +296,10 @@ const scenarios = {
 
     await drawer.getByRole('button', { name: 'Save properties' }).click();
     await drawer.waitFor({ state: 'hidden' });
+    await properties
+      .getByRole('region', { name: 'Notifications', exact: true })
+      .getByRole('group', { name: 'Document properties saved', exact: true })
+      .waitFor();
     await properties.getByRole('button', { name: 'Properties', exact: true }).click();
     assert.equal(await date.inputValue(), '20/01/2027');
     assert.equal(await reviewer.inputValue(), 'Edge reliability');

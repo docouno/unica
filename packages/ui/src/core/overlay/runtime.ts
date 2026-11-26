@@ -1723,9 +1723,10 @@ export function resolveToastPortalHost(container: HTMLElement | null): HTMLEleme
   if (!modal) {
     return container;
   }
-  return container === documentBodyOf(document) || composedContains(container, modal)
-    ? modal
-    : null;
+  if (container === documentBodyOf(document) || composedContains(container, modal)) {
+    return modal;
+  }
+  return composedContains(modal, container) ? container : null;
 }
 
 export function subscribeToModalChanges(document: Document, notify: () => void): () => void {

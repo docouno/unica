@@ -25,7 +25,7 @@ Components never mix these three axes:
 Choose one channel based on scope and lifecycle:
 
 1. **Field or group validation** → `FormField` (`status` + `message`), paired with the affected control's own frame/indicator.
-2. **Operation result, background job, or generic async failure** → `Toast` (deduplicated by `id`, exposed via polite `status` or assertive `alert` regions without interrupting focus).
+2. **Operation result, background job, or generic async failure** → [Toast](../components/toast.md) (one live notification per explicit operation key, announced politely by default without moving focus).
 3. **Persistent contextual warning for a section/page or form submit summary** → [Alert](../components/alert.md).
 4. **Empty, filtered-out, or failed initial region load** → [Empty](../components/empty.md) with an explanation and a recovery action when one is available.
 

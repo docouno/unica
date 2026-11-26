@@ -14,6 +14,8 @@ import {
   RadioCard,
   RadioCardGroup,
   Textarea,
+  ToastProvider,
+  useToast,
 } from '@docouno/unica';
 import { SlidersHorizontalIcon } from '@phosphor-icons/react';
 import { useId, useRef, useState } from 'react';
@@ -27,11 +29,11 @@ import {
   BreadcrumbPage,
 } from '../prototypes/breadcrumb/breadcrumb.proto.js';
 import { DatePicker } from '../prototypes/date-picker/date-picker.proto.js';
-import { ToastCard } from '../prototypes/toast/toast.proto.js';
 import { defineScene } from '../workbench/types.js';
 import type { SceneContext } from '../workbench/types.js';
 import { folioSceneHref } from './folio/folio.routes.js';
 import { FolioScene, FolioWorkspace, RunbookArticle } from './folio/folio.shared.js';
+import { FolioToastRegion } from './folio/folio.toast.js';
 
 const workspaceHeight = 1200;
 const reviewers = [
@@ -50,6 +52,7 @@ const reviewers = [
 ] as const satisfies readonly Suggestion[];
 
 function PropertiesWorkspace(): ReactElement {
+  const toast = useToast();
   const formId = useId();
   const scopeId = useId();
   const visibilityId = useId();
@@ -69,7 +72,6 @@ function PropertiesWorkspace(): ReactElement {
     reviewer: reviewers[0],
   });
   const [draft, setDraft] = useState(properties);
-  const [saved, setSaved] = useState(false);
   const changeOpen = (next: boolean): void => {
     if (next) {
       setDraft(properties);
@@ -134,7 +136,11 @@ function PropertiesWorkspace(): ReactElement {
                 event.preventDefault();
                 setProperties(draft);
                 setOpen(false);
-                setSaved(true);
+                toast.show({
+                  status: 'success',
+                  title: 'Document properties saved',
+                  description: 'Visibility and review cadence updated for this document.',
+                });
               }}
             >
               <fieldset className="folio-fieldset">
@@ -206,22 +212,17 @@ function PropertiesWorkspace(): ReactElement {
           </DrawerFooter>
         </DrawerContent>
       </Drawer>
-      {saved && (
-        <div className="folio-toast-dock">
-          <ToastCard
-            status="success"
-            title="Document properties saved"
-            onDismiss={() => setSaved(false)}
-          >
-            Visibility and review cadence updated for this document.
-          </ToastCard>
-        </div>
-      )}
+      <FolioToastRegion />
     </FolioScene>
   );
 }
 
 function PropertiesScene({ ctx }: { readonly ctx?: SceneContext }): ReactElement {
+  const workspace = (
+    <ToastProvider>
+      <PropertiesWorkspace />
+    </ToastProvider>
+  );
   return ctx ? (
     <OverlayExampleFrame
       ctx={ctx}
@@ -231,10 +232,10 @@ function PropertiesScene({ ctx }: { readonly ctx?: SceneContext }): ReactElement
       modal
       linksToParent
     >
-      <PropertiesWorkspace />
+      {workspace}
     </OverlayExampleFrame>
   ) : (
-    <PropertiesWorkspace />
+    workspace
   );
 }
 

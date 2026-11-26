@@ -34,16 +34,21 @@ import {
   Spinner,
   Text,
   Title,
+  ToastProvider,
+  useToast,
 } from '@docouno/unica';
-import { ToastCard } from '../prototypes/toast/toast.proto.js';
 import { List, ListItem } from '../prototypes/list/list.proto.js';
 import { FolioScene, FolioWorkspace, PageIntro, SectionHeading } from './folio/folio.shared.js';
+import { FolioToastRegion } from './folio/folio.toast.js';
 import './folio/folio.settings.css';
 
 function ExtensionsScene(): ReactElement {
+  const toast = useToast();
+  const showNotice = (description: string): void => {
+    toast.show({ title: 'Connectors', description, status: 'info' });
+  };
   const [query, setQuery] = useState('');
   const [category, setCategory] = useState('all');
-  const [notice, setNotice] = useState('');
   const [sandboxCreated, setSandboxCreated] = useState(false);
   const sandboxHeading = useRef<HTMLHeadingElement>(null);
   const sandboxChanged = useRef(false);
@@ -110,14 +115,14 @@ function ExtensionsScene(): ReactElement {
               size="s"
               variant="secondary"
               tone="neutral"
-              onClick={() => setNotice('All connected integrations are healthy.')}
+              onClick={() => showNotice('All connected integrations are healthy.')}
             >
               Delivery logs
             </Button>
             <Button
               size="s"
               iconLeft={PlusIcon}
-              onClick={() => setNotice('Choose a connector below to review its setup.')}
+              onClick={() => showNotice('Choose a connector below to review its setup.')}
             >
               Register connector
             </Button>
@@ -179,7 +184,7 @@ function ExtensionsScene(): ReactElement {
                       size="s"
                       variant="secondary"
                       tone="neutral"
-                      onClick={() => setNotice('GitHub Enterprise configuration selected.')}
+                      onClick={() => showNotice('GitHub Enterprise configuration selected.')}
                     >
                       Configure
                     </Button>
@@ -235,7 +240,7 @@ function ExtensionsScene(): ReactElement {
                       size="s"
                       variant="secondary"
                       tone="neutral"
-                      onClick={() => setNotice('PagerDuty Incident Sync configuration selected.')}
+                      onClick={() => showNotice('PagerDuty Incident Sync configuration selected.')}
                     >
                       Configure
                     </Button>
@@ -284,7 +289,7 @@ function ExtensionsScene(): ReactElement {
                               variant="ghost"
                               tone="neutral"
                               aria-label={`Manage ${connector.title}`}
-                              onClick={() => setNotice(`${connector.title} management selected.`)}
+                              onClick={() => showNotice(`${connector.title} management selected.`)}
                             >
                               Manage
                             </Button>
@@ -368,13 +373,7 @@ function ExtensionsScene(): ReactElement {
           </section>
         </div>
       </FolioWorkspace>
-      {notice && (
-        <div className="folio-toast-dock">
-          <ToastCard status="info" title="Connectors" onDismiss={() => setNotice('')}>
-            {notice}
-          </ToastCard>
-        </div>
-      )}
+      <FolioToastRegion />
     </FolioScene>
   );
 }
@@ -401,5 +400,9 @@ export default defineScene({
     'title',
     'toast',
   ],
-  render: ExtensionsScene,
+  render: () => (
+    <ToastProvider>
+      <ExtensionsScene />
+    </ToastProvider>
+  ),
 });

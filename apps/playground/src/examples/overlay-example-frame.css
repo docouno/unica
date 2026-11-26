@@ -102,3 +102,17 @@ html.hint-example-root[data-wb-freeze='1'] dialog:modal::backdrop {
   animation-duration: 0s !important;
   transition-duration: 0s !important;
 }
+
+/* A contained frame draws its own backdrop so native overlays can sample it. */
+.wb-overlay-stage:has(> [data-stage-content] [data-overlay-frame-contained]) {
+  background: linear-gradient(var(--scrim-bg), var(--scrim-bg)) var(--bg-canvas);
+}
+
+.wb-overlay-stage:has(> [data-stage-content] [data-overlay-frame-contained])
+  > :is([data-unica-underlay], [data-unica-stage-scrim]) {
+  visibility: hidden;
+}
+
+.hint-example-frame[data-overlay-frame-contained] {
+  border: 0;
+}

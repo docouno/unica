@@ -11,9 +11,9 @@ import {
   ModalTitle,
   ModalTrigger,
   Portal,
+  Toast,
 } from '@docouno/unica';
 import '@docouno/unica/styles.css';
-import { ToastCard } from '../../prototypes/toast/toast.proto.js';
 
 const facts = [
   ['Format', 'PDF document'],
@@ -64,7 +64,7 @@ export function ExportDetails({ subject = {} } = {}) {
         {notified && (
           <Portal>
             <div className="dialog-study-notice dialog-study-notice--modal">
-              <ToastCard
+              <Toast
                 status="success"
                 title="Export ready"
                 onDismiss={() => {
@@ -73,7 +73,7 @@ export function ExportDetails({ subject = {} } = {}) {
                 }}
               >
                 November report
-              </ToastCard>
+              </Toast>
             </div>
           </Portal>
         )}

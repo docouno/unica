@@ -68,18 +68,25 @@ function FrameContent({
   surface,
   bounds,
   modal,
+  scopePortals,
 }: {
   readonly children: ReactNode;
   readonly surface: PreviewContext['surface'];
   readonly bounds: boolean;
   readonly modal: boolean;
+  readonly scopePortals: boolean;
 }): ReactElement {
   const scope = useRef<HTMLDivElement>(null);
   const [host, setHost] = useState<HTMLDivElement | null>(null);
-  const attach = useCallback((node: HTMLDivElement | null): void => {
-    scope.current = node;
-    setHost(node);
-  }, []);
+  const attach = useCallback(
+    (node: HTMLDivElement | null): void => {
+      scope.current = node;
+      if (!scopePortals) {
+        setHost(node);
+      }
+    },
+    [scopePortals],
+  );
   useSubjectBounds(scope, bounds);
   return (
     <div ref={attach} className="hint-example-viewport">
@@ -89,7 +96,11 @@ function FrameContent({
           {!modal && <div className="hint-example-scrim" aria-hidden="true" />}
         </>
       )}
-      <div className="hint-example-viewport-content" data-surface={surface}>
+      <div
+        className="hint-example-viewport-content"
+        data-surface={surface}
+        ref={scopePortals ? setHost : undefined}
+      >
         <UnicaProvider portalContainer={host}>{children}</UnicaProvider>
       </div>
     </div>
@@ -102,6 +113,7 @@ export function OverlayExampleFrame({
   title,
   height,
   modal = false,
+  scopePortals = false,
   linksToParent = false,
   className,
   children,
@@ -110,6 +122,7 @@ export function OverlayExampleFrame({
   readonly title: string;
   readonly height: number;
   readonly modal?: boolean;
+  readonly scopePortals?: boolean;
   readonly linksToParent?: boolean;
   readonly className?: string;
   readonly children: ReactNode;
@@ -182,7 +195,12 @@ export function OverlayExampleFrame({
     <>
       {target &&
         createPortal(
-          <FrameContent surface={ctx.surface} bounds={bounds} modal={modal}>
+          <FrameContent
+            surface={ctx.surface}
+            bounds={bounds}
+            modal={modal}
+            scopePortals={scopePortals}
+          >
             {children}
           </FrameContent>,
           target.body,
@@ -195,6 +213,7 @@ export function OverlayExampleFrame({
         title={title}
         height={height}
         srcDoc={source(linksToParent)}
+        data-overlay-frame-contained={scopePortals ? '' : undefined}
         data-wb-pending={target && target === ready ? undefined : ''}
         onLoad={(event) => load(event.currentTarget)}
       />

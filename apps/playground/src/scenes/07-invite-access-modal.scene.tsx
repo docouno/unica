@@ -18,13 +18,14 @@ import {
   Text,
   Textarea,
   Title,
+  ToastProvider,
+  useToast,
 } from '@docouno/unica';
 import { PlusIcon } from '@phosphor-icons/react';
 import { useId, useRef, useState } from 'react';
 import type { ReactElement } from 'react';
 import { OverlayExampleFrame } from '../examples/OverlayExampleFrame.js';
 import { AsidePanel, WorkspaceNavigation } from '../prototypes/app-shell/app-shell.proto.js';
-import { ToastCard } from '../prototypes/toast/toast.proto.js';
 import {
   Table,
   TableBody,
@@ -44,6 +45,7 @@ import { defineScene } from '../workbench/types.js';
 import type { SceneContext } from '../workbench/types.js';
 import { folioSceneHref } from './folio/folio.routes.js';
 import { FolioScene, FolioWorkspace, PageIntro, Person } from './folio/folio.shared.js';
+import { FolioToastRegion } from './folio/folio.toast.js';
 
 const { TagsInput } = await import('../prototypes/tags-input/tags-input.proto.js');
 
@@ -102,6 +104,7 @@ const expiryOptions = [
 ] as const;
 
 function InviteWorkspace(): ReactElement {
+  const toast = useToast();
   const formId = useId();
   const welcomeId = useId();
   const trigger = useRef<HTMLButtonElement>(null);
@@ -111,7 +114,6 @@ function InviteWorkspace(): ReactElement {
     'platform@example.com',
     'reviewer@example.com',
   ]);
-  const [sent, setSent] = useState<{ readonly role: string; readonly expiry: string } | null>(null);
   return (
     <FolioScene className="folio-overlay-workspace">
       <Modal open={open} onOpenChange={setOpen}>
@@ -253,7 +255,11 @@ function InviteWorkspace(): ReactElement {
                   return;
                 }
                 setOpen(false);
-                setSent({ role: selectedRole.label, expiry: expiry.label });
+                toast.show({
+                  status: 'success',
+                  title: `${invites.length} invitations prepared`,
+                  description: `Workspace role: ${selectedRole.label}. Invite links expire in ${expiry.label}.`,
+                });
               }}
             >
               <TagsInput
@@ -333,22 +339,17 @@ function InviteWorkspace(): ReactElement {
           </ModalFooter>
         </ModalContent>
       </Modal>
-      {sent && (
-        <div className="folio-toast-dock">
-          <ToastCard
-            status="success"
-            title={`${invites.length} invitations prepared`}
-            onDismiss={() => setSent(null)}
-          >
-            Workspace role: {sent.role}. Invite links expire in {sent.expiry}.
-          </ToastCard>
-        </div>
-      )}
+      <FolioToastRegion />
     </FolioScene>
   );
 }
 
 function InviteScene({ ctx }: { readonly ctx?: SceneContext }): ReactElement {
+  const workspace = (
+    <ToastProvider>
+      <InviteWorkspace />
+    </ToastProvider>
+  );
   return ctx ? (
     <OverlayExampleFrame
       ctx={ctx}
@@ -358,10 +359,10 @@ function InviteScene({ ctx }: { readonly ctx?: SceneContext }): ReactElement {
       modal
       linksToParent
     >
-      <InviteWorkspace />
+      {workspace}
     </OverlayExampleFrame>
   ) : (
-    <InviteWorkspace />
+    workspace
   );
 }
 
