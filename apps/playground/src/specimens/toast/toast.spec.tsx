@@ -1,3 +1,4 @@
+import { OverlayExampleFrame } from '../../examples/OverlayExampleFrame.js';
 import { defineComponent } from '../../workbench/types.js';
 import type { ComponentValues, PropSchema } from '../../workbench/types.js';
 import { toastCode } from './toast-code.js';
@@ -12,6 +13,16 @@ import { ToastOperation, ToastLifetime } from './toast-activity.examples.js';
 import { ToastReading, ToastStack } from './toast-queue.examples.js';
 import { ToastModalExample } from './toast-modal.example.js';
 import modalSource from './toast-modal.example.tsx?raw';
+
+// Keep the copy in JavaScript JSX while the rendered source retains its TypeScript checks.
+const modalCode = modalSource
+  .replace(/^import type .*;\n/mu, '')
+  .replace(/^interface ExportFile \{[^}]*\}\n\n/mu, '')
+  .replace(/\}: \{[^}]*\}(?=\s*(?:=\s*\{\})?\s*\))/gu, '}')
+  .replace(/\b(useRef|useState)<[^>]+>/gu, '$1')
+  .replace(/file: ExportFile/gu, 'file')
+  .replace(/\): void(?=\s*\{)/gu, ')')
+  .replace(/ as const/gu, '');
 
 const props = {
   status: {
@@ -71,6 +82,12 @@ const props = {
       'Supply a handler to show the close button and let the owner remove the notification.',
     code: 'handleDismiss',
   },
+  dismissLabel: {
+    kind: 'string',
+    group: 'Interaction',
+    default: '',
+    description: 'Optional accessible name for the dismiss button.',
+  },
   onUndo: {
     kind: 'action',
     group: 'Interaction',
@@ -95,9 +112,9 @@ const queueActions = [{ id: 'add', label: 'Add notification' }] as const;
 export default defineComponent({
   id: 'toast',
   title: 'Toast',
-  componentName: 'ToastCard',
+  componentName: 'Toast',
   category: 'Feedback & Status',
-  status: 'Proto',
+  status: 'UI',
   defaultSurface: 'overlay',
   summary:
     'Notifications for background work, reversible actions, and outcomes that remain available while the user continues working.',
@@ -167,7 +184,6 @@ export default defineComponent({
       title: 'Compact queue and placement',
       kind: 'behavior',
       mode: 'live',
-      overlayStage: true,
       controls: queueControls,
       actions: queueActions,
       reset: true,
@@ -180,7 +196,6 @@ export default defineComponent({
       title: 'Reading the queue',
       kind: 'behavior',
       mode: 'live',
-      overlayStage: true,
       controls: queueControls,
       actions: queueActions,
       reset: true,
@@ -193,7 +208,6 @@ export default defineComponent({
       title: 'One operation, changing result',
       kind: 'behavior',
       mode: 'live',
-      overlayStage: true,
       actions: [
         { id: 'resolve', label: 'Resolve' },
         { id: 'reject', label: 'Reject' },
@@ -218,11 +232,9 @@ export default defineComponent({
       title: 'Available reading time',
       kind: 'behavior',
       mode: 'live',
-      overlayStage: true,
-      controls: { paused: { kind: 'boolean', label: 'Pause timer', default: false } },
       reset: true,
       caption:
-        'Save a version and compare its six-second confirmation with a persistent Undo. Pointer, focus, inactive window, and the preview pause each hold the remaining time.',
+        'Save a version and compare its six-second confirmation with a persistent Undo. Pointer, focus, and an inactive window each pause the remaining time.',
       render: ToastLifetime,
     },
   ],
@@ -230,13 +242,17 @@ export default defineComponent({
     {
       id: 'modal',
       title: 'Notifications inside a native dialog',
+      controls: { fail: { kind: 'boolean', label: 'Fail export', default: false } },
       mode: 'live',
-      overlayStage: true,
       reset: true,
       caption:
-        'Choose a file name and prepare an export in the dialog. Inspect its notification, close the dialog, and return to the same queue.',
-      render: ({ ctx }) => <ToastModalExample subject={ctx.subject} />,
-      code: modalSource.replaceAll('../../prototypes/', './prototypes/'),
+        'Prepare an export and a text preview in the dialog. Try each notification action, then close the dialog and return to the export queue.',
+      render: ({ ctx }) => (
+        <OverlayExampleFrame scopePortals ctx={ctx} title="Export notifications" height={540}>
+          <ToastModalExample subject={ctx.subject} failNext={ctx.story?.controls.fail === true} />
+        </OverlayExampleFrame>
+      ),
+      code: modalCode,
     },
   ],
 });

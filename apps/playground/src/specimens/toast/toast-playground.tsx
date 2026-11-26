@@ -1,6 +1,6 @@
 import { Button } from '@docouno/unica';
 import type { KeyboardEvent, ReactElement } from 'react';
-import { ToastCard } from '../../prototypes/toast/toast.proto.js';
+import { Toast } from '@docouno/unica';
 import type { PreviewProps } from '../../workbench/types.js';
 import { toastTitle } from './toast-code.js';
 import type { ToastValues } from './toast.spec.js';
@@ -36,10 +36,11 @@ function SavedChange({ ctx, values }: PlaygroundProps): ReactElement {
   const reverted = phase === 'reverted';
   const undo = values.action === 'undo' && !reverted;
   return (
-    <ToastCard
+    <Toast
       {...ctx.subject}
       id={id}
       data-toast-comparison={ctx.tab === 'states' ? '' : undefined}
+      dismissLabel={values.dismissLabel.trim() || undefined}
       title={reverted ? 'Changes reverted' : toastTitle(values.title)}
       status={reverted ? 'success' : values.status}
       loading={!reverted && values.loading}
@@ -55,7 +56,6 @@ function SavedChange({ ctx, values }: PlaygroundProps): ReactElement {
             }
           : undefined
       }
-      onKeyDown={preventRepeatedActivation}
       onDismiss={() => {
         change('dismissed');
         ctx.action('onDismiss')();

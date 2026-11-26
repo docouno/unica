@@ -1,125 +1,150 @@
-import { useRef, useState } from 'react';
+import { ToastProvider, ToastViewport, Text, useToast } from '@docouno/unica';
+import type { ToastOptions, ToastPlacement } from '@docouno/unica';
+import { useLayoutEffect, useRef, useState } from 'react';
 import type { ReactElement } from 'react';
-import { Text, VisuallyHidden } from '@docouno/unica';
-import { ToastViewport } from '../../prototypes/toast/toast.proto.js';
-import type { ToastItem, ToastPlacement } from '../../prototypes/toast/toast.proto.js';
-import { useStoryAction } from '../../workbench/storyFrameState.js';
+import { OverlayExampleFrame } from '../../examples/OverlayExampleFrame.js';
 import type { PreviewProps } from '../../workbench/types.js';
+import { useToastStoryAction } from './use-toast-story-action.js';
 import './toast-queue.examples.css';
 
-interface QueueItem extends ToastItem {
+interface QueueItem extends ToastOptions {
   readonly command?: 'restore' | 'retry';
 }
 
 const initialItems: readonly QueueItem[] = [
-  { id: 'sync', title: 'Workspace is up to date', status: 'info' },
+  { title: 'Workspace is up to date', status: 'info' },
   {
-    id: 'report',
     title: 'Activity report ready',
     status: 'success',
-    children: 'The report includes all 12 entries.',
+    description: 'The report includes all 12 entries.',
   },
   {
-    id: 'backup',
     title: 'Draft backup failed',
     status: 'danger',
-    children: 'Your draft is still available. Retry its local backup.',
+    description: 'Your draft is still available. Retry its local backup.',
     command: 'retry',
   },
-  { id: 'archive', title: 'Document archived', command: 'restore' },
+  { title: 'Document archived', command: 'restore' },
 ];
 
 const readingItems: readonly QueueItem[] = [
-  { id: 'review', title: 'Review complete', status: 'success' },
-  { id: 'comments', title: 'Comments marked as read' },
-  { id: 'preferences', title: 'Preferences synced', status: 'info' },
+  { title: 'Review complete', status: 'success' },
+  { title: 'Comments marked as read' },
+  { title: 'Preferences synced', status: 'info' },
   {
-    id: 'shared',
     title: 'A link was shared with you',
     status: 'info',
-    children: 'The project brief is available in your workspace.',
+    description: 'The project brief is available in your workspace.',
   },
   {
-    id: 'import',
     title: '2 files were skipped',
     status: 'warning',
-    children: 'The other 18 files were imported.',
+    description: 'The other 18 files were imported.',
   },
   {
-    id: 'invite',
     title: 'Invitation sent',
     status: 'success',
-    children: 'Your teammate can join from the link in their email.',
+    description: 'Your teammate can join from the link in their email.',
   },
   ...initialItems,
 ];
 
 function Queue({
   ctx,
-  reading = false,
-}: PreviewProps & { readonly reading?: boolean }): ReactElement {
-  const [queue, setQueue] = useState(reading ? readingItems : initialItems);
-  const [announcement, setAnnouncement] = useState({ sequence: 0, text: '' });
+  reading,
+  ready,
+}: PreviewProps & { readonly reading: boolean; readonly ready: () => void }): ReactElement {
+  const toast = useToast();
+  const seeded = useRef(false);
+  const inspected = useRef(false);
   const number = useRef(0);
   const stage = useRef<HTMLDivElement>(null);
-  const hasNotifications = queue.length > 0;
+  const [carrier, setCarrier] = useState<HTMLDivElement | null>(null);
   const placement = (ctx.story?.controls.placement ?? 'bottom-end') as ToastPlacement;
-  const announce = (text: string): void => {
-    setAnnouncement((previous) => ({ sequence: previous.sequence + 1, text }));
-  };
 
-  useStoryAction(ctx, (action) => {
-    if (action !== 'add') {
+  useLayoutEffect(() => {
+    if (seeded.current) {
       return;
     }
-    const next = ++number.current;
-    setQueue((current) => [
-      ...current,
-      { id: `backup-${next}`, title: `Backup ${next} complete`, status: 'success' },
-    ]);
-  });
-
-  const items = queue.map(({ command, ...item }): ToastItem => {
-    const card = { ...item, 'data-queue-item': item.id };
-    if (!command) {
-      return card;
-    }
-    const restore = command === 'restore';
-    return {
-      ...card,
-      action: {
-        label: restore ? 'Undo' : 'Retry',
-        onClick: () => {
-          const owner = document.activeElement?.closest<HTMLElement>('[data-queue-item]');
-          if (owner?.dataset.queueItem === item.id && stage.current?.contains(owner)) {
-            owner
-              .querySelector<HTMLButtonElement>('.toast-dismiss')
-              ?.focus({ preventScroll: true });
-          }
-          const result: ToastItem = {
-            id: item.id,
-            status: 'success',
-            title: restore ? 'Document restored' : 'Draft backup complete',
-            children: restore ? 'Returned to the Documents folder.' : undefined,
-          };
-          setQueue((current) => current.map((entry) => (entry.id === item.id ? result : entry)));
-          announce(result.title);
+    seeded.current = true;
+    for (const { command, ...item } of reading ? readingItems : initialItems) {
+      const restore = command === 'restore';
+      const id = toast.show(
+        {
+          ...item,
+          persistent: true,
+          action: command
+            ? {
+                label: restore ? 'Undo' : 'Retry',
+                onClick: () => {
+                  if (id !== null) {
+                    toast.update(id, {
+                      status: 'success',
+                      title: restore ? 'Document restored' : 'Draft backup complete',
+                      description: restore ? 'Returned to the Documents folder.' : undefined,
+                      action: undefined,
+                    });
+                  }
+                },
+              }
+            : undefined,
         },
-      },
-    };
-  });
-
-  const focusStage = (): void => {
-    if (stage.current?.contains(document.activeElement)) {
-      stage.current.focus({ preventScroll: true });
+        { announce: false },
+      );
     }
-  };
+  }, [reading, toast]);
+
+  useLayoutEffect(() => {
+    const view = carrier?.ownerDocument.defaultView;
+    if (!carrier || !view || inspected.current) {
+      return;
+    }
+    let frame = 0;
+    const capturing =
+      view.frameElement?.ownerDocument.documentElement.querySelector('[data-wb-capture-route]') !==
+      null;
+    function inspect(): void {
+      if (!carrier || !view) {
+        return;
+      }
+      if (reading) {
+        carrier.querySelector<HTMLButtonElement>('[aria-expanded="false"]')?.click();
+        const list = carrier.querySelector<HTMLElement>('[role="group"][tabindex="0"]');
+        const max = list ? list.scrollHeight - list.clientHeight : 0;
+        if (!list || max <= 1) {
+          frame = view.requestAnimationFrame(inspect);
+          return;
+        }
+        if (capturing && (list.scrollTop <= 0 || list.scrollTop >= max)) {
+          list.scrollTop = Math.round(max / 2);
+          frame = view.requestAnimationFrame(inspect);
+          return;
+        }
+      }
+      inspected.current = true;
+      ready();
+    }
+    frame = view.requestAnimationFrame(inspect);
+    return () => view.cancelAnimationFrame(frame);
+  }, [carrier, reading, ready]);
+
+  useToastStoryAction(ctx, stage, (action, announce) => {
+    if (action === 'add') {
+      toast.show(
+        {
+          title: `Backup ${++number.current} complete`,
+          status: 'success',
+          persistent: true,
+        },
+        { announce },
+      );
+    }
+  });
 
   return (
     <div
       className="toast-queue-study"
       data-queue-stage=""
-      data-reading={reading || undefined}
       ref={stage}
       tabIndex={-1}
       role="group"
@@ -127,38 +152,41 @@ function Queue({
     >
       <ToastViewport
         {...ctx.subject}
-        items={items}
+        ref={setCarrier}
         placement={placement}
-        initialExpanded={reading}
-        onDismiss={(id) => {
-          if (items.length === 1) {
-            focusStage();
-          }
-          setQueue((current) => current.filter((item) => item.id !== id));
-          announce('Notification dismissed.');
-        }}
-        onDismissAll={() => {
-          focusStage();
-          setQueue([]);
-          announce('All notifications dismissed.');
-        }}
+        fallbackFocusRef={stage}
       />
-      {!hasNotifications && (
+      {!carrier && (
         <Text className="toast-queue-empty" size="body-s">
           No notifications
         </Text>
       )}
-      <VisuallyHidden role="status" aria-atomic="true">
-        <span key={announcement.sequence}>{announcement.text}</span>
-      </VisuallyHidden>
+    </div>
+  );
+}
+
+function QueueStudy({ ctx, reading }: PreviewProps & { readonly reading: boolean }): ReactElement {
+  const [ready, setReady] = useState(false);
+  return (
+    <div className="toast-queue-frame" data-wb-pending={ready ? undefined : ''}>
+      <OverlayExampleFrame
+        scopePortals
+        ctx={ctx}
+        title={reading ? 'Reading notifications' : 'Notification queue'}
+        height={reading ? 528 : 360}
+      >
+        <ToastProvider>
+          <Queue ctx={ctx} reading={reading} ready={() => setReady(true)} />
+        </ToastProvider>
+      </OverlayExampleFrame>
     </div>
   );
 }
 
 export function ToastStack({ ctx }: PreviewProps): ReactElement {
-  return <Queue ctx={ctx} />;
+  return <QueueStudy ctx={ctx} reading={false} />;
 }
 
 export function ToastReading({ ctx }: PreviewProps): ReactElement {
-  return <Queue ctx={ctx} reading />;
+  return <QueueStudy ctx={ctx} reading />;
 }

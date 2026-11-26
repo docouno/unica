@@ -1251,9 +1251,10 @@ export default {
     await page.setViewportSize({ width: 1440, height: 950 });
     await page.goto(
       `${origin}/?item=badge&tab=states&block=surfaces&family=all&scheme=both&surface=base&vp=1280&bounds=1`,
+      { waitUntil: 'commit' },
     );
     const board = page.locator('.wb-story-frame .wb-artboard').first();
-    await board.locator('[data-wb-bounds-label]').last().waitFor();
+    await board.locator('[data-wb-bounds-label]').last().waitFor({ timeout: 20_000 });
     const measurements = await board.evaluate(async (root) => {
       await document.fonts.ready;
       await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
@@ -1282,9 +1283,10 @@ export default {
     await page.setViewportSize({ width: 1920, height: 950 });
     await page.goto(
       `${origin}/?item=date-picker&tab=states&block=states&family=soft&scheme=dark&vp=1280&bounds=1`,
+      { waitUntil: 'commit' },
     );
     const board = page.locator('.wb-story-frame .wb-artboard');
-    await board.locator('[data-wb-bounds-label]').last().waitFor();
+    await board.locator('[data-wb-bounds-label]').last().waitFor({ timeout: 20_000 });
     const hint = board.getByText('DD/MM/YYYY · you can also paste an ISO date', { exact: true });
     assert.ok(await boundsLeavesTextVisible(hint), 'A dimension label covers the date format hint');
   },
@@ -1567,9 +1569,10 @@ export default {
       scale: '120',
       dir: 'rtl',
     });
-    const open = page.getByRole('button', { name: 'Open export options' });
+    const frame = page.frameLocator('iframe[title="Export notifications"]');
+    const open = frame.getByRole('button', { name: 'Open export options' });
     await open.press('Enter');
-    const dialog = page.locator('dialog:modal');
+    const dialog = frame.locator('dialog:modal');
     const queue = dialog.locator('[popover]:popover-open');
     const name = dialog.getByRole('textbox', { name: 'File name' });
     const prepare = dialog.getByRole('button', { name: 'Prepare export' });
@@ -1591,7 +1594,7 @@ export default {
     await name.fill('Second report');
     await holdEnter(prepare);
     await queue.getByRole('button', { name: /^Expand 3 notifications/ }).press('Enter');
-    const cards = queue.locator('.toast-card');
+    const cards = queue.locator('.unica-toast');
     assert.equal(await cards.count(), 3);
     await holdEnter(
       cards.filter({ hasText: 'First report.txt' }).getByRole('button', { name: /^Dismiss:/ }),
@@ -1612,17 +1615,97 @@ export default {
     if (await expand.count()) {
       await expand.press('Enter');
     }
-    await queue.locator('.toast-card').filter({ hasText: 'Second report.txt' }).waitFor();
+    await queue.locator('.unica-toast').filter({ hasText: 'Second report.txt' }).waitFor();
     assert.equal(
-      await queue.locator('.toast-card').filter({ hasText: 'Third report.txt' }).count(),
+      await queue.locator('.unica-toast').filter({ hasText: 'Third report.txt' }).count(),
       0,
     );
     assert.equal(await dialog.getByRole('status').textContent(), '');
     await page.keyboard.press('Escape');
     const reset = page.getByRole('button', { name: 'Reset', exact: true });
     await reset.focus();
-    await page.locator('.toast-dismiss-all').evaluate((button) => button.click());
+    await frame.locator('.unica-toast-dismiss-all').evaluate((button) => button.click());
     assert.equal(await reset.evaluate((button) => button.matches(':focus')), true);
+  },
+
+  'Toast composition keeps both queues clickable and routes same-name exports separately': async ({
+    page,
+    mount,
+  }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await mount('workbench-v3');
+    await navigate(page, {
+      item: 'toast',
+      tab: 'compositions',
+      block: 'modal',
+      family: 'frost',
+      scheme: 'dark',
+      vp: '768',
+    });
+    const frame = page.frameLocator('iframe[title="Export notifications"]');
+    await frame.getByRole('button', { name: 'Open export options' }).click();
+    const dialog = frame.getByRole('dialog', { name: 'Export options' });
+    const name = dialog.getByRole('textbox', { name: 'File name' });
+    await name.fill('Same report');
+    await name.press('Enter');
+    await name.press('Enter');
+    await dialog.getByRole('button', { name: 'Prepare text preview' }).click();
+    const preview = dialog.getByRole('region', { name: 'Preview notifications', exact: true });
+    const exports = dialog.getByRole('region', { name: 'Notifications', exact: true });
+    await preview.getByRole('button', { name: 'Read preview', exact: true }).click();
+    assert.equal(
+      await dialog.locator('details[open] summary:focus').textContent(),
+      'Export contents',
+    );
+    await exports.getByRole('button', { name: 'Expand 3 notifications' }).click();
+    const duplicates = exports
+      .getByRole('group', { name: 'Export ready', exact: true })
+      .filter({ hasText: 'Same report.txt' });
+    assert.equal(await duplicates.count(), 2);
+    await duplicates.first().getByRole('button', { name: 'View export', exact: true }).click();
+    const originalId = await dialog.locator('details[open] summary:focus').getAttribute('id');
+    assert.ok(originalId);
+    await duplicates.last().getByRole('button', { name: 'View export', exact: true }).click();
+    const nextId = await dialog.locator('details[open] summary:focus').getAttribute('id');
+    assert.ok(nextId);
+    assert.notEqual(nextId, originalId);
+  },
+
+  'Toast reading bounds track the actual portaled viewport': async ({ page, mount }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await mount('workbench-v3');
+    await navigate(page, {
+      item: 'toast',
+      tab: 'states',
+      block: 'reading',
+      family: 'pixel',
+      scheme: 'light',
+      vp: '360',
+      scale: '120',
+      dir: 'rtl',
+      bounds: '1',
+      freeze: '1',
+    });
+    const frame = page.frameLocator('[data-wb-block="reading"] iframe');
+    const carrier = frame.getByRole('region', { name: 'Notifications', exact: true });
+    await carrier.getByRole('group', { name: 'Notification list' }).waitFor();
+    const dimensions = await carrier.evaluate(
+      (node) => `${node.offsetWidth} × ${node.offsetHeight} px`,
+    );
+    assert.match(dimensions, /^264 × /);
+    await frame.locator('[data-wb-bounds-label]').getByText(dimensions, { exact: true }).waitFor();
+    const viewport = page.locator('[data-wb-block="reading"] iframe');
+    const underlays = await viewport.evaluate((element) => {
+      const inner = element.contentDocument.querySelector('[data-unica-underlay]');
+      const outer = element
+        .closest('.wb-overlay-stage')
+        .querySelector(':scope > [data-unica-underlay]');
+      return [
+        getComputedStyle(outer).visibility,
+        element.contentWindow.getComputedStyle(inner).visibility,
+      ];
+    });
+    assert.deepEqual(underlays, ['hidden', 'visible']);
   },
 
   'Dismissing a toast preserves focus owned by another message or artboard': async ({
@@ -1639,27 +1722,32 @@ export default {
       scheme: 'both',
     });
     const boards = page.locator('[data-wb-block="reading"] .wb-artboard');
-    const first = boards.first();
+    const first = boards.first().frameLocator('iframe');
     const close = first
-      .locator('.toast-card')
+      .locator('.unica-toast')
       .first()
       .getByRole('button', { name: /^Dismiss:/ });
     const undo = first.getByRole('button', { name: 'Undo', exact: true });
-    const next = boards.nth(1).getByRole('button', { name: 'Undo', exact: true });
+    const next = boards
+      .nth(1)
+      .frameLocator('iframe')
+      .getByRole('button', { name: 'Undo', exact: true });
     await undo.focus();
     await close.evaluate((button) => button.click());
     await page.evaluate(
       () => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))),
     );
     assert.equal(await undo.evaluate((button) => button.matches(':focus')), true);
-    await close.evaluate(
-      (button, destination) => {
-        button.focus();
-        button.click();
-        destination.focus();
-      },
-      await next.elementHandle(),
-    );
+    await close.evaluate((button) => {
+      button.focus();
+      button.click();
+      const frame = button.ownerDocument.defaultView.frameElement;
+      const siblings = frame.ownerDocument.querySelectorAll('[data-wb-block="reading"] iframe');
+      const target = [...siblings[1].contentDocument.querySelectorAll('.unica-toast-action')].find(
+        (action) => action.textContent.trim() === 'Undo',
+      );
+      target.focus();
+    });
     await page.evaluate(
       () => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))),
     );

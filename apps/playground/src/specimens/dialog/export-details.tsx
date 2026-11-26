@@ -9,7 +9,7 @@ import {
   ModalTitle,
   ModalTrigger,
 } from '../../prototypes/dialog/dialog.proto.js';
-import { ToastCard } from '../../prototypes/toast/toast.proto.js';
+import { Toast } from '@docouno/unica';
 import '@docouno/unica/styles.css';
 
 const facts = [
@@ -47,7 +47,7 @@ export function ExportDetails({ subject = {} } = {}) {
           dismissOnBackdrop
           notification={
             notified && (
-              <ToastCard
+              <Toast
                 status="success"
                 title="Export ready"
                 onDismiss={() => {
@@ -59,7 +59,7 @@ export function ExportDetails({ subject = {} } = {}) {
                 }}
               >
                 November report
-              </ToastCard>
+              </Toast>
             )
           }
         >

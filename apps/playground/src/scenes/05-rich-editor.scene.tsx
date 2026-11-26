@@ -38,7 +38,8 @@ import {
 } from '@phosphor-icons/react';
 import { Subbar } from '../prototypes/app-shell/app-shell.proto.js';
 import { Button, IconButton, Listbox } from '@docouno/unica';
-import { ToastCard } from '../prototypes/toast/toast.proto.js';
+import { ToastProvider, useToast } from '@docouno/unica';
+import { FolioToastRegion } from './folio/folio.toast.js';
 import { Tabs, TabsContent, TabsList, TabsTab } from '../prototypes/tabs/tabs.proto.js';
 import {
   Breadcrumb,
@@ -70,6 +71,10 @@ const blocks = [
 ] as const;
 
 function EditorScene(): ReactElement {
+  const toast = useToast();
+  const showNotice = (title: string): void => {
+    toast.show({ title, status: 'success' });
+  };
   const referenceFormId = useId();
   const [mode, setMode] = useState('write');
   const [preview, setPreview] = useState(false);
@@ -83,7 +88,6 @@ function EditorScene(): ReactElement {
   const [slashOpen, setSlashOpen] = useState(true);
   const [query, setQuery] = useState('/callout');
   const [insertedBlock, setInsertedBlock] = useState('');
-  const [notice, setNotice] = useState('');
   const referenceLabel = reference ? 'Edit document reference' : 'Add document reference';
   const workspace = (
     <FolioWorkspace
@@ -121,7 +125,7 @@ function EditorScene(): ReactElement {
           </Button>
           <Button
             size="s"
-            onClick={() => setNotice('Revision prepared for your workspace’s publishing review.')}
+            onClick={() => showNotice('Revision prepared for your workspace’s publishing review.')}
           >
             Publish changes
           </Button>
@@ -377,7 +381,7 @@ function EditorScene(): ReactElement {
                 setReference(path.trim());
                 setPinned(values.has('pinned'));
                 setReferenceOpen(false);
-                setNotice('Document reference updated.');
+                showNotice('Document reference updated.');
               }}
             >
               <FormField
@@ -414,7 +418,7 @@ function EditorScene(): ReactElement {
               onClick={() => {
                 setReference(null);
                 setReferenceOpen(false);
-                setNotice('Document reference unlinked.');
+                showNotice('Document reference unlinked.');
               }}
             >
               Unlink
@@ -453,11 +457,7 @@ function EditorScene(): ReactElement {
           {workspace}
         </Tabs>
       </Popover>
-      {notice && (
-        <div className="folio-toast-dock">
-          <ToastCard status="success" title={notice} onDismiss={() => setNotice('')} />
-        </div>
-      )}
+      <FolioToastRegion />
     </FolioScene>
   );
 }
@@ -492,5 +492,9 @@ export default defineScene({
     'title',
     'toast',
   ],
-  render: EditorScene,
+  render: () => (
+    <ToastProvider>
+      <EditorScene />
+    </ToastProvider>
+  ),
 });

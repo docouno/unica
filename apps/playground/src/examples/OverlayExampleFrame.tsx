@@ -33,12 +33,15 @@ function FrameContent({
   children,
   surface,
   bounds,
+  scopePortals,
 }: {
   readonly children: ReactNode;
   readonly surface: PreviewContext['surface'];
   readonly bounds: boolean;
+  readonly scopePortals: boolean;
 }): ReactElement {
   const scope = useRef<HTMLDivElement>(null);
+  const [portalHost, setPortalHost] = useState<HTMLDivElement | null>(null);
   useSubjectBounds(scope, bounds);
   return (
     <div ref={scope} className="hint-example-viewport">
@@ -48,8 +51,16 @@ function FrameContent({
           <div className="hint-example-scrim" aria-hidden="true" />
         </>
       )}
-      <div className="hint-example-viewport-content" data-surface={surface}>
-        {children}
+      <div
+        className="hint-example-viewport-content"
+        data-surface={surface}
+        ref={scopePortals ? setPortalHost : undefined}
+      >
+        {scopePortals ? (
+          <UnicaProvider portalContainer={portalHost}>{children}</UnicaProvider>
+        ) : (
+          children
+        )}
       </div>
     </div>
   );
@@ -61,10 +72,12 @@ export function OverlayExampleFrame({
   title,
   height,
   children,
+  scopePortals = false,
 }: {
   readonly ctx: PreviewContext;
   readonly title: string;
   readonly height: number;
+  readonly scopePortals?: boolean;
   readonly children: ReactNode;
 }): ReactElement {
   const frame = useRef<HTMLIFrameElement>(null);
@@ -135,7 +148,7 @@ export function OverlayExampleFrame({
       {target &&
         createPortal(
           <UnicaProvider portalContainer={target.body}>
-            <FrameContent surface={ctx.surface} bounds={bounds}>
+            <FrameContent surface={ctx.surface} bounds={bounds} scopePortals={scopePortals}>
               {children}
             </FrameContent>
           </UnicaProvider>,
@@ -144,6 +157,7 @@ export function OverlayExampleFrame({
       <iframe
         ref={frame}
         className="hint-example-frame"
+        data-overlay-frame-contained={scopePortals ? '' : undefined}
         title={title}
         height={height}
         srcDoc={source}

@@ -10,7 +10,7 @@ import {
   ModalTitle,
   ModalTrigger,
 } from '../../prototypes/dialog/dialog.proto.js';
-import { ToastCard } from '../../prototypes/toast/toast.proto.js';
+import { Toast } from '@docouno/unica';
 import '@docouno/unica/styles.css';
 
 export function DeleteExport({ subject = {} } = {}) {
@@ -103,7 +103,7 @@ export function DeleteExport({ subject = {} } = {}) {
             justifyContent: 'end',
           }}
         >
-          <ToastCard
+          <Toast
             status="success"
             title="Export deleted"
             onDismiss={() => {
