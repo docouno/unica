@@ -20,16 +20,22 @@ import {
 } from '../prototypes/breadcrumb/breadcrumb.proto.js';
 import { defineScene } from '../workbench/types.js';
 import { AsidePanel, WorkspaceNavigation } from '../prototypes/app-shell/app-shell.proto.js';
-import { Button } from '@docouno/unica';
 import {
+  Badge,
+  Button,
+  Card,
   Empty,
   EmptyActions,
   EmptyDescription,
   EmptyMedia,
   EmptyTitle,
-} from '../prototypes/empty/empty.proto.js';
+  Icon,
+  Input,
+  Spinner,
+  Text,
+  Title,
+} from '@docouno/unica';
 import { ToastCard } from '../prototypes/toast/toast.proto.js';
-import { Badge, Card, Icon, Input, Spinner, Text, Title } from '@docouno/unica';
 import { List, ListItem } from '../prototypes/list/list.proto.js';
 import { FolioScene, FolioWorkspace, PageIntro, SectionHeading } from './folio/folio.shared.js';
 import './folio/folio.settings.css';

@@ -1,33 +1,71 @@
 import { previewProps, previewText } from '../preview-code.js';
 import type { EmptyValues } from './empty.spec.js';
 
-export function emptyCode({ size, align, heading, media }: EmptyValues): string {
-  const hasMedia = media === 'icon';
+export function emptyCode({
+  size,
+  align,
+  as,
+  heading,
+  icon,
+  color,
+  children,
+  description,
+  actionLabel,
+}: EmptyValues): string {
+  const hasIcon = icon === 'document';
+  const hasIllustration = children === 'landscape';
+  const hasMedia = hasIcon || hasIllustration;
   const hasTitle = Boolean(heading.trim());
-  const slots = [
+  const hasDescription = Boolean(description.trim());
+  const hasAction = Boolean(actionLabel.trim());
+  const imports = [
+    ...(hasAction ? ['Button'] : []),
     'Empty',
-    'EmptyActions',
-    'EmptyDescription',
+    ...(hasAction ? ['EmptyActions'] : []),
+    ...(hasDescription ? ['EmptyDescription'] : []),
     ...(hasMedia ? ['EmptyMedia'] : []),
     ...(hasTitle ? ['EmptyTitle'] : []),
   ];
   const attrs = previewProps({ size, align }, { size: 'm', align: 'center' });
+  const titleAttrs = previewProps({ as }, { as: 'h3' });
+  const mediaAttrs =
+    (hasIcon ? ' icon={FileTextIcon}' : '') +
+    (hasIcon && !hasIllustration ? previewProps({ color }, { color: 'muted' }) : '');
+  const options = [
+    ...(hasAction ? ["pagesHref = '/pages'"] : []),
+    ...(hasIllustration ? ["illustrationSrc = '/assets/empty-landscape.svg'"] : []),
+  ];
   return [
-    "import { Button } from '@docouno/unica';",
-    ...(hasMedia ? ["import { FileTextIcon } from '@phosphor-icons/react';"] : []),
-    `import { ${slots.join(', ')} } from './prototypes/empty/empty.proto.js';`,
+    `import { ${imports.join(', ')} } from '@docouno/unica';`,
+    ...(hasIcon ? ["import { FileTextIcon } from '@phosphor-icons/react';"] : []),
     '',
-    "export function SavedPages({ pagesHref = '/pages' } = {}) {",
+    `export function SavedPages(${options.length ? `{ ${options.join(', ')} } = {}` : ''}) {`,
     '  return (',
     `    <Empty${attrs}>`,
-    ...(hasMedia ? ['      <EmptyMedia icon={FileTextIcon} />'] : []),
-    ...(hasTitle ? [`      <EmptyTitle><bdi>${previewText(heading)}</bdi></EmptyTitle>`] : []),
-    '      <EmptyDescription><bdi>Save a page to keep it close at hand.</bdi></EmptyDescription>',
-    '      <EmptyActions>',
-    '        <Button asChild tone="accent" variant="secondary">',
-    '          <a href={pagesHref}>Browse pages</a>',
-    '        </Button>',
-    '      </EmptyActions>',
+    ...(hasIllustration
+      ? [
+          `      <EmptyMedia${mediaAttrs}>`,
+          '        <img src={illustrationSrc} alt="" width="240" height="180" />',
+          '      </EmptyMedia>',
+        ]
+      : hasMedia
+        ? [`      <EmptyMedia${mediaAttrs} />`]
+        : []),
+    ...(hasTitle
+      ? [`      <EmptyTitle${titleAttrs}><bdi>${previewText(heading)}</bdi></EmptyTitle>`]
+      : []),
+    ...(hasDescription
+      ? [`      <EmptyDescription><bdi>${previewText(description)}</bdi></EmptyDescription>`]
+      : []),
+    ...(hasAction
+      ? [
+          '      <EmptyActions>',
+          '        <Button asChild tone="accent" variant="secondary">',
+          `          <a href={pagesHref}>${previewText(actionLabel)}</a>`,
+          '        </Button>',
+          '      </EmptyActions>',
+        ]
+      : []),
     '    </Empty>',
     '  );',
     '}',

@@ -14,16 +14,20 @@ import {
   DrawerHeader,
   DrawerTitle,
   DrawerTrigger,
+  Empty,
+  EmptyDescription,
+  EmptyMedia,
+  EmptyTitle,
+  Flex,
   IconButton,
   Input,
   Select,
   SelectContent,
   SelectTrigger,
-  Stack,
-  Flex,
-  VisuallyHidden,
   SkeletonText,
+  Stack,
   Text,
+  VisuallyHidden,
 } from '@docouno/unica';
 import { useId, useRef, useState } from 'react';
 import { OverlayExampleFrame } from '../../examples/OverlayExampleFrame.js';
@@ -38,12 +42,6 @@ import {
   PushPinIcon,
   ArrowCounterClockwiseIcon,
 } from '@phosphor-icons/react';
-import {
-  Empty,
-  EmptyDescription,
-  EmptyMedia,
-  EmptyTitle,
-} from '../../prototypes/empty/empty.proto.js';
 import { ContextMenu } from '../../prototypes/menu/context-menu.proto.js';
 import { Menu } from '../../prototypes/menu/menu.live.js';
 import {

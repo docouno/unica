@@ -1,6 +1,19 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import type { FormEvent, ReactElement } from 'react';
-import { Button, Card, Flex, Input, Stack, Text, Title } from '@docouno/unica';
+import {
+  Button,
+  Card,
+  Empty,
+  EmptyActions,
+  EmptyDescription,
+  EmptyMedia,
+  EmptyTitle,
+  Flex,
+  Input,
+  Stack,
+  Text,
+  Title,
+} from '@docouno/unica';
 import { CloudSlashIcon, MagnifyingGlassIcon } from '@phosphor-icons/react';
 import type { PreviewProps } from '../../workbench/types.js';
 import {
@@ -11,8 +24,7 @@ import {
   TableHeader,
   TableRow,
   TableRowHeader,
-} from '../table/table.proto.js';
-import { Empty, EmptyActions, EmptyDescription, EmptyMedia, EmptyTitle } from './empty.proto.js';
+} from '../../prototypes/table/table.proto.js';
 import './empty.examples.css';
 
 const runbooks = [

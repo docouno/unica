@@ -1,13 +1,13 @@
-import { Button } from '@docouno/unica';
-import { FileTextIcon } from '@phosphor-icons/react';
-import type { ReactElement } from 'react';
 import {
+  Button,
   Empty,
   EmptyActions,
   EmptyDescription,
   EmptyMedia,
   EmptyTitle,
-} from '../../prototypes/empty/empty.proto.js';
+} from '@docouno/unica';
+import { FileTextIcon } from '@phosphor-icons/react';
+import type { ReactElement } from 'react';
 import type { PreviewProps } from '../../workbench/types.js';
 import type { EmptyValues } from './empty.spec.js';
 
@@ -17,7 +17,7 @@ interface PlaygroundProps extends PreviewProps {
 
 export function EmptyPlayground({
   ctx,
-  values: { size, align, heading, media },
+  values: { size, align, as, heading, icon, color, children, description, actionLabel },
 }: PlaygroundProps): ReactElement {
   return (
     <Empty
@@ -26,25 +26,33 @@ export function EmptyPlayground({
       align={align}
       data-empty-comparison={ctx.tab === 'states' ? '' : undefined}
     >
-      {media === 'icon' && <EmptyMedia icon={FileTextIcon} />}
+      <EmptyMedia icon={icon === 'document' ? FileTextIcon : undefined} color={color}>
+        {children === 'landscape' && (
+          <img src="/assets/empty-landscape.svg" alt="" width="240" height="180" />
+        )}
+      </EmptyMedia>
       {heading.trim() && (
-        <EmptyTitle>
+        <EmptyTitle as={as}>
           <bdi>{heading}</bdi>
         </EmptyTitle>
       )}
-      <EmptyDescription>
-        <bdi>Save a page to keep it close at hand.</bdi>
-      </EmptyDescription>
-      <EmptyActions>
-        <Button asChild tone="accent" variant="secondary">
-          <a
-            href="/?item=03-document-collection"
-            onClick={() => ctx.action('onBrowse')('Browse pages')}
-          >
-            Browse pages
-          </a>
-        </Button>
-      </EmptyActions>
+      {description.trim() && (
+        <EmptyDescription>
+          <bdi>{description}</bdi>
+        </EmptyDescription>
+      )}
+      {actionLabel.trim() && (
+        <EmptyActions>
+          <Button asChild tone="accent" variant="secondary">
+            <a
+              href="/?item=03-document-collection"
+              onClick={() => ctx.action('onBrowse')(actionLabel)}
+            >
+              {actionLabel}
+            </a>
+          </Button>
+        </EmptyActions>
+      )}
     </Empty>
   );
 }

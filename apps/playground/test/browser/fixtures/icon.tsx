@@ -7,6 +7,8 @@ import {
   DrawerHeader,
   DrawerTitle,
   DrawerTrigger,
+  Empty,
+  EmptyMedia,
   Icon,
   Input,
   Link,
@@ -35,7 +37,6 @@ import {
 import { FileItem, FileList } from '../../../src/prototypes/file-input/file-input.proto.js';
 import { Combobox } from '../../../src/prototypes/combobox/combobox.proto.js';
 import { MenuRows, MenuSurface } from '../../../src/prototypes/menu/menu.proto.js';
-import { Empty, EmptyMedia } from '../../../src/prototypes/empty/empty.proto.js';
 import { Tabs, TabsList, TabsTab } from '../../../src/prototypes/tabs/tabs.proto.js';
 
 function ProjectSvg({ children, ...props }: ComponentPropsWithRef<'svg'>) {
