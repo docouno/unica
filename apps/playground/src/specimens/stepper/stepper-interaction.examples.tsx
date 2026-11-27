@@ -1,36 +1,27 @@
 import { useState } from 'react';
 import type { ReactElement } from 'react';
 import { Stack } from '@docouno/unica';
-import type { StepperStepProps } from '../../prototypes/stepper/stepper.proto.js';
+import type { StepperStepProps } from '@docouno/unica';
 import type { PreviewProps } from '../../workbench/types.js';
 import { StepMap } from './stepper-map.js';
 import './stepper-state.css';
 
-const pinnedSteps: readonly StepperStepProps[] = [
+const revisitSteps: readonly StepperStepProps[] = [
   { value: 'plan', label: 'Plan', completed: true },
-  { value: 'details', label: 'Details', completed: true, preview: 'hover' },
+  { value: 'details', label: 'Details', completed: true },
   {
     value: 'access',
     label: 'Access rules',
-    invalid: true,
-    issue: 'Assign an owner.',
-    preview: 'pressed',
+    status: 'danger',
+    message: 'Assign an owner.',
   },
-  { value: 'defaults', label: 'Defaults', completed: true, preview: 'focus' },
+  { value: 'defaults', label: 'Defaults', completed: true },
   { value: 'review', label: 'Review' },
   { value: 'launch', label: 'Launch' },
 ];
 
-const liveSteps = pinnedSteps.map((step) => {
-  const live = { ...step };
-  delete live.preview;
-  return live;
-});
-
 export function ReturnToStep({ ctx }: PreviewProps): ReactElement {
-  const [current, setCurrent] = useState('review');
-  const [pinned, setPinned] = useState(true);
-  const showLiveStates = () => setPinned(false);
+  const [current, setCurrent] = useState('details');
 
   return (
     <Stack
@@ -40,16 +31,16 @@ export function ReturnToStep({ ctx }: PreviewProps): ReactElement {
           : 'stepper-state-study'
       }
       data-surface={ctx.surface}
-      onFocusCapture={showLiveStates}
-      onPointerEnter={showLiveStates}
     >
       <StepMap
         {...ctx.subject}
-        label="Workspace setup"
+        aria-label="Workspace setup"
+        allowReturn
         layout="vertical"
-        steps={pinned ? pinnedSteps : liveSteps}
+        steps={revisitSteps}
         value={current}
         onValueChange={(next) => {
+          ctx.action('onValueChange')(next);
           if (ctx.story?.controls.request !== 'decline') {
             setCurrent(next);
           }
@@ -63,8 +54,8 @@ const importSteps: readonly StepperStepProps[] = [
   {
     value: 'source',
     label: 'Source repository',
-    invalid: true,
-    issue: 'Reconnect the repository.',
+    status: 'danger',
+    message: 'Reconnect the repository.',
   },
   { value: 'destination', label: 'Destination', description: 'Choose a workspace' },
   { value: 'review', label: 'Review' },
@@ -86,7 +77,7 @@ export function RepositoryImport({ ctx }: PreviewProps): ReactElement {
     >
       <StepMap
         {...ctx.subject}
-        label="Repository import"
+        aria-label="Repository import"
         layout="vertical"
         steps={importSteps}
         value="destination"

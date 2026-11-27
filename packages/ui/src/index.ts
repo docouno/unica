@@ -404,6 +404,15 @@ export type {
   SliderStatus,
   SliderValueFormatter,
 } from './components/Slider/index.js';
+export { Stepper, StepperStep } from './components/Stepper/index.js';
+export type {
+  StepperLayout,
+  StepperMessages,
+  StepperProps,
+  StepperSize,
+  StepperStepProps,
+  StepperStepStatus,
+} from './components/Stepper/index.js';
 export { Switch, SwitchGroup, SwitchIndicator } from './components/Switch/index.js';
 export type {
   SwitchGroupProps,

@@ -30,7 +30,7 @@ const props = {
       { value: 'compact' },
     ],
   },
-  label: {
+  'aria-label': {
     kind: 'string',
     group: 'Semantics',
     default: '',
@@ -44,8 +44,28 @@ const props = {
     publicType: 'string | null',
     default: 'review',
     description:
-      'Set the initial current stage of the example owner. A blank value passes null. An unmatched stage has no current marker.',
+      'Set the current stage supplied by the owner. A blank value passes null. An unmatched stage has no current marker.',
     examples: ['', 'details', 'access', 'review', 'publish'],
+  },
+  defaultValue: {
+    kind: 'string',
+    group: 'Interaction',
+    publicType: 'string | null',
+    default: 'review',
+    description: 'Set the initial stage when the map owns its position. A blank value passes null.',
+    examples: ['', 'details', 'review'],
+  },
+  mode: {
+    kind: 'enum',
+    group: 'Interaction',
+    demo: true,
+    label: 'Position owner',
+    default: 'controlled',
+    choices: [
+      { value: 'controlled', label: 'Application' },
+      { value: 'local', label: 'Stepper' },
+    ],
+    description: 'Switch between application-owned and local position.',
   },
   onValueChange: {
     kind: 'action',
@@ -70,11 +90,62 @@ const props = {
   allowReturn: {
     kind: 'boolean',
     group: 'Interaction',
-    demo: true,
     default: true,
     label: 'Allow return',
+    description: 'Enable requests to revisit completed stages or stages that need attention.',
+  },
+  label: {
+    kind: 'string',
+    group: 'Step',
+    label: 'First step label',
+    default: '',
     description:
-      'Choose an interactive or read-only map. Switching starts the map at its configured value.',
+      'Set the first StepperStep title. A blank field uses the process title for that step.',
+    examples: ['', 'Project details'],
+  },
+  description: {
+    kind: 'string',
+    group: 'Step',
+    label: 'First step description',
+    default: '',
+    description:
+      'Set the supporting text for the first StepperStep. A blank field uses the process example.',
+    examples: ['', 'Name and region'],
+  },
+  completed: {
+    kind: 'boolean',
+    group: 'Step',
+    label: 'First step completed',
+    default: true,
+    description: 'Keep the first step’s completion flag independently of its position and status.',
+  },
+  status: {
+    kind: 'enum',
+    group: 'Step',
+    label: 'First step status',
+    default: 'neutral',
+    choices: [{ value: 'neutral' }, { value: 'danger' }],
+    description: 'Show the first step in its neutral state or as needing attention.',
+  },
+  message: {
+    kind: 'string',
+    group: 'Step',
+    label: 'First step message',
+    default: 'Check the project details.',
+    description: 'Explain how to correct the first step when its status is danger.',
+    examples: ['', 'Check the project details.'],
+  },
+  messages: {
+    kind: 'slot',
+    group: 'Semantics',
+    label: 'Message formatting',
+    publicType: 'Partial<StepperMessages>',
+    default: 'default',
+    choices: [
+      { value: 'default', label: 'Default' },
+      { value: 'stages', code: '{ allSteps: "All stages" }', label: 'All stages' },
+    ],
+    description: 'Override generated text. This example changes the compact disclosure label.',
   },
 } as const satisfies PropSchema;
 
@@ -82,7 +153,7 @@ export type StepperValues = ComponentValues<typeof props>;
 
 const workspace = {
   example: 'workspace',
-  label: 'Workspace setup',
+  'aria-label': 'Workspace setup',
   value: 'access',
   allowReturn: false,
 } as const;
@@ -91,12 +162,32 @@ export default defineComponent({
   id: 'stepper',
   title: 'Stepper',
   category: 'Navigation',
-  status: 'Proto',
+  status: 'UI',
   componentName: 'Stepper',
   summary: 'An ordered map for setup, review, and other staged tasks.',
   props,
   code: stepperCode,
   render: withOverlaySurface(StepperPlayground, 'border-box'),
+  constraints: [
+    {
+      kind: 'precedence',
+      when: { mode: 'controlled' },
+      affects: ['defaultValue'],
+      reason: 'The application controls the current stage through value.',
+    },
+    {
+      kind: 'ignored',
+      when: { mode: 'local' },
+      affects: ['value'],
+      reason: 'The local example supplies defaultValue and lets Stepper manage the current stage.',
+    },
+    {
+      kind: 'ignored',
+      when: { status: 'neutral' },
+      affects: ['message'],
+      reason: 'The corrective message appears when the step needs attention.',
+    },
+  ],
   states: [
     {
       id: 'sizes',
@@ -195,7 +286,7 @@ export default defineComponent({
       },
       reset: true,
       caption:
-        'Details starts hovered, Access rules pressed and Defaults focused. Move into the map or tab to a stage to compare focus when its owner accepts or declines a return.',
+        'Plan is complete and Details is current. Hover or tap to inspect feedback, or tab to Plan and press Enter. Compare focus when the owner accepts or declines the request.',
       render: ReturnToStep,
     },
     {
@@ -228,7 +319,7 @@ export default defineComponent({
           </ExampleSurface>
         </div>
       ),
-      code: journeySource.replaceAll('../../prototypes/', './prototypes/'),
+      code: journeySource,
     },
   ],
 });

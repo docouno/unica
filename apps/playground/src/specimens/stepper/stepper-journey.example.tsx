@@ -1,7 +1,16 @@
 import { useId, useLayoutEffect, useRef, useState } from 'react';
-import { Button, Card, CardBody, CardFooter, Stack, Text, Title } from '@docouno/unica';
+import {
+  Button,
+  Card,
+  CardBody,
+  CardFooter,
+  Stack,
+  Stepper,
+  StepperStep,
+  Text,
+  Title,
+} from '@docouno/unica';
 import '@docouno/unica/styles.css';
-import { Stepper, StepperStep } from '../../prototypes/stepper/stepper.proto.js';
 
 const stages = [
   { value: 'details', label: 'Workspace details', description: 'Atlas workspace · Europe region' },
@@ -60,9 +69,10 @@ export function WorkspaceSetupExample({ subject = {} } = {}) {
     <Stack gap={24} style={{ inlineSize: 'min(100%, 48rem)', minInlineSize: 0 }}>
       <Stepper
         {...subject}
-        label="Workspace setup"
+        aria-label="Workspace setup"
         value={active?.value ?? null}
-        {...(active && { onValueChange: setCurrent })}
+        allowReturn={Boolean(active)}
+        onValueChange={setCurrent}
       >
         {stages.map((stage) => (
           <StepperStep
@@ -70,8 +80,10 @@ export function WorkspaceSetupExample({ subject = {} } = {}) {
             value={stage.value}
             label={stage.label}
             completed={completed.includes(stage.value)}
-            invalid={stage.value === 'access' && needsOwner}
-            issue={stage.value === 'access' && needsOwner ? 'Assign a workspace owner.' : undefined}
+            status={stage.value === 'access' && needsOwner ? 'danger' : 'neutral'}
+            message={
+              stage.value === 'access' && needsOwner ? 'Assign a workspace owner.' : undefined
+            }
           />
         ))}
       </Stepper>

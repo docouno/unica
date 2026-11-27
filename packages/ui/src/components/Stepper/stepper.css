@@ -1,0 +1,510 @@
+@layer unica.components {
+  .unica-stepper {
+    --_stepper-marker-size: 32px;
+    --_stepper-glyph-size: var(--text-size-body-s);
+    --_stepper-title-size: var(--text-size-body-s);
+    --_stepper-title-line: var(--text-size-body-s-lh);
+    --_stepper-marker-gap: var(--space-12);
+    --_stepper-map-gap: var(--space-16);
+    --_stepper-stack-gap: var(--space-24);
+    --_stepper-focus: var(--focus-ring-color);
+    --_stepper-hover-fill: color-mix(in srgb, var(--control-bg), var(--fg-muted) 10%);
+    --_stepper-press-fill: color-mix(in srgb, var(--control-bg), var(--fg-muted) 20%);
+    --_stepper-rail: color-mix(in srgb, var(--control-border-focus) 40%, transparent);
+    --_stepper-rail-traversed: color-mix(in srgb, var(--control-border-focus) 64%, transparent);
+
+    container: unica-stepper / inline-size;
+    min-inline-size: 0;
+    color: var(--fg-primary);
+    font-family: var(--font-family-base);
+    font-size: var(--text-size-body-s);
+    text-align: start;
+  }
+
+  .unica-stepper[data-unica-stepper-size='s'] {
+    --_stepper-marker-size: 24px;
+    --_stepper-glyph-size: var(--text-size-caption-l);
+    --_stepper-title-size: var(--text-size-body-xs);
+    --_stepper-title-line: var(--text-size-body-xs-lh);
+    --_stepper-marker-gap: var(--space-8);
+    --_stepper-map-gap: var(--space-12);
+    --_stepper-stack-gap: 20px;
+  }
+
+  .unica-stepper[data-unica-stepper-size='l'] {
+    --_stepper-marker-size: 40px;
+    --_stepper-glyph-size: var(--text-size-body-m);
+    --_stepper-title-size: var(--text-size-body-m);
+    --_stepper-title-line: var(--text-size-body-m-lh);
+    --_stepper-marker-gap: var(--space-16);
+    --_stepper-map-gap: var(--space-24);
+  }
+
+  .unica-stepper-view {
+    display: grid;
+    gap: var(--space-16);
+    min-inline-size: 0;
+  }
+
+  .unica-stepper-list {
+    /* Keep the normal gap wherever the horizontal columns can fit at their minimum size. */
+    --_stepper-column-min-width: var(--_stepper-marker-size);
+    --_stepper-column-gap: min(
+      var(--_stepper-map-gap),
+      max(
+        0px,
+        (100cqi - var(--_stepper-column-min-width) * var(--_stepper-step-count)) /
+          max(1, var(--_stepper-step-count) - 1)
+      )
+    );
+
+    display: flex;
+    flex-direction: column;
+    gap: var(--_stepper-stack-gap);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .unica-stepper-step {
+    position: relative;
+    display: grid;
+    flex: 1;
+    min-inline-size: 0;
+  }
+
+  .unica-stepper-entry {
+    position: relative;
+    display: grid;
+    justify-items: start;
+    align-content: start;
+    grid-template-columns: var(--_stepper-marker-size) minmax(0, 1fr);
+    gap: var(--_stepper-marker-gap);
+    max-inline-size: 100%;
+    margin: 0;
+    padding: 0;
+    color: inherit;
+    font: inherit;
+    text-align: start;
+  }
+
+  button.unica-stepper-entry {
+    inline-size: 100%;
+    min-inline-size: min(100%, var(--_stepper-marker-size));
+    border: 0;
+    background: transparent;
+  }
+
+  button.unica-stepper-entry:enabled {
+    cursor: pointer;
+  }
+
+  .unica-stepper-marker {
+    --_stepper-marker-fill: var(--control-bg);
+    --_stepper-marker-edge: var(--control-border);
+    --_stepper-marker-ink: var(--fg-muted);
+    --_stepper-marker-hover: var(--_stepper-hover-fill);
+    --_stepper-marker-press: var(--_stepper-press-fill);
+
+    display: grid;
+    inline-size: var(--_stepper-marker-size);
+    block-size: var(--_stepper-marker-size);
+    box-sizing: border-box;
+    place-items: center;
+    border: 1px solid var(--_stepper-marker-edge);
+    border-radius: var(--radius-full);
+    background: var(--_stepper-marker-fill);
+    color: var(--_stepper-marker-ink);
+    font-size: var(--_stepper-glyph-size);
+    font-weight: 650;
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+  }
+
+  .unica-stepper-marker svg {
+    inline-size: 1.15em;
+    block-size: 1.15em;
+  }
+
+  .unica-stepper-step[data-unica-stepper-state='completed'] .unica-stepper-marker {
+    --_stepper-marker-fill: var(--bg-surface-raised);
+    --_stepper-marker-ink: var(--fg-primary);
+  }
+
+  .unica-stepper-step[data-unica-stepper-current] .unica-stepper-marker {
+    --_stepper-marker-fill: var(--accent-solid);
+    --_stepper-marker-edge: var(--accent-signal);
+    --_stepper-marker-ink: var(--fg-on-accent);
+  }
+
+  .unica-stepper-step[data-unica-stepper-current]:not([data-unica-stepper-state='danger'])
+    .unica-stepper-marker {
+    box-shadow: var(--_stepper-current-shadow, none);
+  }
+
+  .unica-stepper-step[data-unica-stepper-state='danger'] .unica-stepper-marker {
+    --_stepper-marker-fill: var(--status-danger-soft-bg);
+    --_stepper-marker-edge: var(--status-danger-border);
+    --_stepper-marker-ink: var(--status-danger-soft-fg);
+    --_stepper-marker-hover: color-mix(
+      in srgb,
+      var(--status-danger-soft-bg) 90%,
+      var(--status-danger-soft-fg)
+    );
+    --_stepper-marker-press: color-mix(
+      in srgb,
+      var(--status-danger-soft-bg) 80%,
+      var(--status-danger-soft-fg)
+    );
+  }
+
+  .unica-stepper-connector {
+    position: absolute;
+    inset-block: calc(var(--_stepper-marker-size) + var(--space-8))
+      calc(var(--space-8) - var(--_stepper-stack-gap));
+    inset-inline-start: calc((var(--_stepper-marker-size) - 1px) / 2);
+    inline-size: 1px;
+    background: var(--_stepper-rail);
+    pointer-events: none;
+  }
+
+  .unica-stepper-connector[data-unica-stepper-traversed] {
+    background: var(--_stepper-rail-traversed);
+  }
+
+  .unica-stepper-copy,
+  .unica-stepper-summary-copy {
+    display: grid;
+    min-inline-size: 0;
+    gap: var(--space-2);
+    overflow-wrap: anywhere;
+  }
+
+  .unica-stepper-copy {
+    padding-block-start: max(
+      0px,
+      calc((var(--_stepper-marker-size) - var(--_stepper-title-line)) / 2)
+    );
+  }
+
+  .unica-stepper-title {
+    color: var(--fg-secondary);
+    font-size: var(--_stepper-title-size);
+    font-weight: 550;
+    line-height: var(--_stepper-title-line);
+  }
+
+  .unica-stepper-step[data-unica-stepper-current] .unica-stepper-title,
+  .unica-stepper-summary .unica-stepper-title {
+    color: var(--fg-primary);
+    font-weight: 650;
+  }
+
+  .unica-stepper-description,
+  .unica-stepper-position,
+  .unica-stepper-issue {
+    color: var(--fg-muted);
+    font-size: var(--text-size-caption-l);
+    line-height: var(--text-size-caption-l-lh);
+  }
+
+  .unica-stepper-position {
+    margin-block-end: var(--space-2);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .unica-stepper-issue {
+    color: var(--status-danger-soft-fg);
+    font-weight: 550;
+  }
+
+  button.unica-stepper-entry:enabled .unica-stepper-title-text {
+    text-decoration: underline;
+    text-decoration-color: color-mix(in srgb, currentColor 60%, transparent);
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.2em;
+  }
+
+  .unica-stepper-entry:focus-visible,
+  .unica-stepper-step:focus-visible {
+    outline: none;
+  }
+
+  .unica-stepper-entry:focus-visible .unica-stepper-marker,
+  .unica-stepper-step:focus-visible .unica-stepper-marker {
+    outline: 2px solid var(--_stepper-focus);
+    outline-offset: 2px;
+  }
+
+  .unica-stepper-entry:focus-visible .unica-stepper-title-text {
+    text-decoration-color: currentColor;
+  }
+
+  @media (hover: hover) {
+    button.unica-stepper-entry:enabled:hover:not(:active) .unica-stepper-marker {
+      background: var(--_stepper-marker-hover);
+    }
+
+    .unica-stepper-disclosure:enabled:hover:not(:active) {
+      background: var(--_stepper-hover-fill);
+    }
+
+    button.unica-stepper-entry:enabled:hover .unica-stepper-title-text {
+      text-decoration-color: currentColor;
+    }
+  }
+
+  button.unica-stepper-entry:enabled:active .unica-stepper-marker {
+    background: var(--_stepper-marker-press);
+  }
+
+  button.unica-stepper-entry:enabled:active .unica-stepper-title-text {
+    text-decoration-color: currentColor;
+  }
+
+  .unica-stepper-segments {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+    block-size: var(--space-8);
+    margin-block-end: var(--space-12);
+  }
+
+  .unica-stepper-segments span {
+    flex: 1;
+    block-size: var(--space-4);
+    border-radius: var(--radius-full);
+    background: var(--_stepper-rail);
+  }
+
+  .unica-stepper-segments span[data-unica-stepper-state='completed'] {
+    background: var(--_stepper-rail-traversed);
+  }
+
+  .unica-stepper-segments span[data-unica-stepper-current] {
+    block-size: var(--space-8);
+    background: var(--accent-solid);
+  }
+
+  .unica-stepper-segments span[data-unica-stepper-state='danger'] {
+    background: color-mix(in srgb, var(--status-danger-soft-fg) 58%, transparent);
+  }
+
+  .unica-stepper-segments span[data-unica-stepper-state='danger'][data-unica-stepper-current] {
+    background: var(--status-danger-soft-fg);
+  }
+
+  .unica-stepper-summary {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: start;
+    justify-content: space-between;
+    gap: var(--space-8) var(--space-16);
+  }
+
+  .unica-stepper-summary-copy {
+    flex: 1 1 10ch;
+  }
+
+  .unica-stepper-summary-issue {
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-4);
+  }
+
+  .unica-stepper-summary-issue[data-unica-stepper-other] {
+    color: var(--fg-secondary);
+    font-weight: 500;
+  }
+
+  .unica-stepper-summary-issue[data-unica-stepper-other] svg {
+    color: var(--status-danger-soft-fg);
+  }
+
+  .unica-stepper-summary-issue svg {
+    flex: none;
+    align-self: start;
+    margin-block-start: calc((var(--text-size-caption-l-lh) - 1em) / 2);
+  }
+
+  .unica-stepper-disclosure {
+    display: inline-flex;
+    max-inline-size: 100%;
+    min-block-size: 32px;
+    align-items: center;
+    gap: var(--space-4);
+    padding: var(--space-4) var(--space-8);
+    border: 1px solid var(--control-border);
+    border-radius: var(--size-s-radius);
+    background: var(--control-bg);
+    color: var(--fg-secondary);
+    font: inherit;
+    font-weight: 550;
+    text-align: start;
+    overflow-wrap: anywhere;
+  }
+
+  .unica-stepper-disclosure:enabled {
+    cursor: pointer;
+  }
+
+  .unica-stepper-disclosure svg {
+    flex: none;
+  }
+
+  .unica-stepper-disclosure[aria-expanded='true'] svg {
+    rotate: 180deg;
+  }
+
+  .unica-stepper-disclosure:enabled:active {
+    background: var(--_stepper-press-fill);
+  }
+
+  .unica-stepper-disclosure:focus-visible,
+  .unica-stepper-summary-copy:focus-visible,
+  .unica-stepper-list:focus-visible {
+    outline: 2px solid var(--_stepper-focus);
+    outline-offset: 2px;
+  }
+
+  .unica-stepper-view[data-unica-stepper-layout='vertical'] .unica-stepper-compact,
+  .unica-stepper-compact:not([data-unica-stepper-expanded]) + .unica-stepper-list {
+    display: none;
+  }
+
+  /* Hold focus through a responsive change until the disclosure state catches up. */
+  .unica-stepper-compact:has(.unica-stepper-disclosure:enabled) + .unica-stepper-list:focus-within {
+    display: flex;
+  }
+
+  .unica-stepper-compact:not([data-unica-stepper-expanded]):has(
+      .unica-stepper-disclosure:enabled
+    ):has(+ .unica-stepper-list:focus-within)
+    .unica-stepper-summary-copy {
+    visibility: hidden;
+  }
+
+  .unica-stepper-view[data-unica-stepper-layout='vertical'] .unica-stepper-list {
+    display: flex;
+  }
+
+  .unica-stepper-view[data-unica-stepper-layout='horizontal'] {
+    .unica-stepper-compact {
+      display: none;
+    }
+
+    .unica-stepper-list {
+      display: flex;
+      flex-direction: row;
+      gap: var(--_stepper-column-gap);
+    }
+
+    .unica-stepper-entry {
+      grid-template-columns: minmax(0, 1fr);
+      gap: var(--space-8);
+    }
+
+    .unica-stepper-copy {
+      padding-block-start: 0;
+    }
+
+    .unica-stepper-connector {
+      inset-block: calc((var(--_stepper-marker-size) - 1px) / 2) auto;
+      inset-inline: calc(var(--_stepper-marker-size) + var(--space-8))
+        calc(var(--space-8) - var(--_stepper-column-gap));
+      block-size: 1px;
+      inline-size: auto;
+    }
+  }
+
+  @container unica-stepper (inline-size >= 36em) {
+    .unica-stepper-view[data-unica-stepper-layout='responsive'] {
+      .unica-stepper-compact {
+        display: none;
+      }
+
+      .unica-stepper-list {
+        display: flex;
+        flex-direction: row;
+        gap: var(--_stepper-column-gap);
+      }
+
+      .unica-stepper-entry {
+        grid-template-columns: minmax(0, 1fr);
+        gap: var(--space-8);
+      }
+
+      .unica-stepper-copy {
+        padding-block-start: 0;
+      }
+
+      .unica-stepper-connector {
+        inset-block: calc((var(--_stepper-marker-size) - 1px) / 2) auto;
+        inset-inline: calc(var(--_stepper-marker-size) + var(--space-8))
+          calc(var(--space-8) - var(--_stepper-column-gap));
+        block-size: 1px;
+        inline-size: auto;
+      }
+    }
+  }
+
+  @media (pointer: coarse) {
+    .unica-stepper-list {
+      --_stepper-column-min-width: max(var(--_stepper-marker-size), 44px);
+    }
+
+    .unica-stepper-entry,
+    .unica-stepper-disclosure {
+      min-block-size: 44px;
+    }
+
+    button.unica-stepper-entry,
+    .unica-stepper-disclosure {
+      min-inline-size: min(100%, 44px);
+    }
+  }
+
+  @media (forced-colors: active) {
+    .unica-stepper {
+      --_stepper-current-shadow: none;
+      --_stepper-focus: Highlight;
+      --_stepper-rail: GrayText;
+      --_stepper-rail-traversed: CanvasText;
+    }
+
+    .unica-stepper-step .unica-stepper-marker,
+    .unica-stepper-step[data-unica-stepper-state] .unica-stepper-marker {
+      --_stepper-marker-fill: Canvas;
+      --_stepper-marker-ink: CanvasText;
+      --_stepper-marker-edge: CanvasText;
+      --_stepper-marker-hover: Canvas;
+      --_stepper-marker-press: Canvas;
+
+      forced-color-adjust: none;
+    }
+
+    .unica-stepper-step[data-unica-stepper-current]:not([data-unica-stepper-state='danger'])
+      .unica-stepper-marker {
+      --_stepper-marker-fill: Highlight;
+      --_stepper-marker-ink: HighlightText;
+      --_stepper-marker-edge: Highlight;
+    }
+
+    .unica-stepper-connector,
+    .unica-stepper-segments span,
+    .unica-stepper-entry .unica-stepper-marker {
+      forced-color-adjust: none;
+    }
+
+    .unica-stepper-segments span[data-unica-stepper-current] {
+      background: Highlight;
+    }
+
+    .unica-stepper-segments span[data-unica-stepper-state='danger'],
+    .unica-stepper-segments span[data-unica-stepper-state='danger'][data-unica-stepper-current] {
+      box-sizing: border-box;
+      border: 1px dashed CanvasText;
+      background: Canvas;
+    }
+  }
+}

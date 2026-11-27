@@ -20,6 +20,8 @@ import {
   Button,
   RadioCard,
   RadioCardGroup,
+  Stepper,
+  StepperStep,
   ToastProvider,
   useToast,
 } from '@docouno/unica';
@@ -32,7 +34,6 @@ import {
   FileList,
 } from '../prototypes/file-input/file-input.proto.js';
 import type { FileItemStatus } from '../prototypes/file-input/file-input.proto.js';
-import { Stepper, StepperStep } from '../prototypes/stepper/stepper.proto.js';
 import { FolioRail, FolioScene, PageIntro } from './folio/folio.shared.js';
 import './folio/folio.settings.css';
 
@@ -346,7 +347,7 @@ function WorkspaceAdminScene(): ReactElement {
               title="Import Markdown & ADR archives"
               description="Migrate repository-backed Markdown bundles while validating YAML frontmatter, internal links, and owner mappings."
             />
-            <Stepper value={currentStep} label="Batch import stages">
+            <Stepper value={currentStep} aria-label="Batch import stages">
               <StepperStep
                 value="source"
                 label="Source & schema"

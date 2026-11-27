@@ -1,4 +1,4 @@
-import type { StepperStepProps } from '../../prototypes/stepper/stepper.proto.js';
+import type { StepperStepProps } from '@docouno/unica';
 
 export const workspaceSteps: readonly StepperStepProps[] = [
   { value: 'details', label: 'Workspace details', description: 'Name and region' },
