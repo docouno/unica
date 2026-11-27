@@ -24,7 +24,11 @@ export default [
     },
   },
   {
-    files: ['src/components/Icon/Icon.tsx', 'src/components/Link/Link.tsx'],
+    files: [
+      'src/components/Icon/Icon.tsx',
+      'src/components/Link/Link.tsx',
+      'src/components/Pagination/PageTarget.tsx',
+    ],
     // These modules pass refs through opaque adapters, which the rule treats as
     // reads. Keep DOM ref reads in event handlers, effects, or other modules.
     rules: { 'react-hooks/refs': 'off' },

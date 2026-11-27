@@ -23,8 +23,7 @@ import {
   MenuItem,
   MenuTrigger,
 } from '@docouno/unica';
-import { Pagination } from '../prototypes/pagination/pagination.proto.js';
-import { SegmentedControl, Select } from '@docouno/unica';
+import { Pagination, SegmentedControl, Select } from '@docouno/unica';
 import {
   Table,
   TableBody,
@@ -621,7 +620,7 @@ function CollectionScene(): ReactElement {
               </Text>
               <Pagination
                 size="s"
-                label="Runbook pages"
+                aria-label="Runbook pages"
                 pageCount={Math.ceil(filteredRows.length / pageSize)}
                 page={page}
                 onPageChange={setPage}

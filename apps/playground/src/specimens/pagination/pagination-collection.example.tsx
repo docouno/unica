@@ -1,7 +1,6 @@
 import { useState } from 'react';
-import { Divider, Stack, Text, Title } from '@docouno/unica';
+import { Divider, Pagination, Stack, Text, Title } from '@docouno/unica';
 import '@docouno/unica/styles.css';
-import { Pagination } from '../../prototypes/pagination/pagination.proto.js';
 
 const documents = [
   'Deployment checklist',
@@ -52,8 +51,9 @@ const styles = `
     @container document-collection (inline-size >= 320px) {
       .document-collection-footer:has(nav) {
         grid-template-columns: minmax(0, 1fr) minmax(210px, 2fr);
-        --pagination-align: end;
       }
+
+      .document-collection-footer > nav { justify-items: end; }
     }
   }
 `;
@@ -110,7 +110,7 @@ function DocumentCollection({ title = '', results = documents, subject = {} }) {
                   {...subject}
                   size="s"
                   format="pages"
-                  label="Document result pages"
+                  aria-label="Document result pages"
                   pageCount={pageCount}
                   page={page}
                   onPageChange={setPage}

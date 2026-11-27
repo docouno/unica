@@ -15,7 +15,95 @@ async function expectEntry(board, title, day) {
   );
 }
 
+async function assertFooter(owner, wrapped) {
+  const geometry = await owner.evaluate((footer) => {
+    const nav = footer.querySelector('nav');
+    const range = footer.querySelector('[role=status] bdi').getBoundingClientRect();
+    const previous = nav.querySelector('[aria-label="Previous page"]').getBoundingClientRect();
+    const next = nav.querySelector('[aria-label="Next page"]').getBoundingClientRect();
+    const rect = footer.getBoundingClientRect();
+    const rtl = getComputedStyle(footer).direction === 'rtl';
+    return {
+      direction: getComputedStyle(footer).direction,
+      wrapped: previous.top >= range.bottom,
+      rowGap:
+        nav.getBoundingClientRect().top -
+        footer.querySelector('[role=status]').getBoundingClientRect().bottom,
+      commonStart: Math.abs(
+        (rtl ? range.right : range.left) - (rtl ? previous.right : previous.left),
+      ),
+      endGap: Math.abs((rtl ? rect.left : rect.right) - (rtl ? next.left : next.right)),
+    };
+  });
+  assert.equal(geometry.wrapped, wrapped);
+  if (wrapped) {
+    assert.equal(geometry.rowGap, 8);
+    assert.ok(geometry.commonStart <= 0.25);
+  } else {
+    assert.ok(geometry.endGap <= 0.25, JSON.stringify(geometry));
+  }
+}
+
 export default {
+  'Pagination consumers keep a sibling result range and logical footer alignment': async ({
+    page,
+    mount,
+  }) => {
+    await mount('pagination-consumers');
+    const references = page.getByTestId('references');
+    const referenceFooter = references.locator('.recovery-reference-footer');
+    for (const direction of ['ltr', 'rtl']) {
+      await references.evaluate((node, dir) => {
+        node.dir = dir;
+        node.style.boxSizing = 'content-box';
+        node.style.inlineSize = '278px';
+      }, direction);
+      await assertFooter(referenceFooter, true);
+      await references.evaluate((node) => {
+        node.style.inlineSize = '480px';
+      });
+      await assertFooter(referenceFooter, false);
+    }
+    await references.getByRole('button', { name: 'Next page' }).press('Enter');
+    assert.equal(await referenceFooter.getByRole('status').textContent(), '4–6 of 6 documents');
+    await assertFocused(references.getByRole('button', { name: 'Previous page' }));
+
+    const collection = page.getByTestId('collection');
+    assert.equal(await collection.getByRole('navigation').count(), 1);
+    const footer = collection.locator('.document-collection-footer:has(nav)');
+    const pager = footer.getByRole('navigation');
+    const status = footer.getByRole('status');
+    const before = await footer.boundingBox();
+    await pager.getByRole('button', { name: 'Page 4' }).click();
+    assert.equal(await status.textContent(), '10–11 of 11');
+    assert.equal((await footer.boundingBox()).y, before.y);
+    assert.equal(await collection.getByText('No matching documents').count(), 1);
+  },
+  'Pagination changes Folio results while preserving selection and resetting with filters': async ({
+    page,
+    origin,
+  }) => {
+    await page.setViewportSize({ width: 1500, height: 950 });
+    await page.goto(new URL('/?item=03-document-collection&solo=soft-light&vp=1440', origin).href);
+    const scene = page.locator('[data-wb-scene]');
+    const footer = scene.locator('.folio-collection-footer');
+    const pager = footer.getByRole('navigation', { name: 'Runbook pages' });
+    const range = footer.getByRole('status');
+    await pager.waitFor({ timeout: 20_000 });
+    assert.equal(await range.textContent(), 'Showing 1–4 of 6 runbooks');
+    await pager.getByRole('button', { name: 'Next page' }).press('Enter');
+    assert.equal(await range.textContent(), 'Showing 5–6 of 6 runbooks');
+    await scene.getByRole('radio', { name: 'Cards', exact: true }).click();
+    assert.equal(await range.textContent(), 'Showing 5–6 of 6 runbooks');
+    await scene.getByText(/2 selected/).waitFor();
+    await scene.getByRole('radio', { name: 'Drafts (0)', exact: true }).click();
+    assert.equal(await range.textContent(), 'Showing 0 runbooks');
+    assert.equal(await pager.count(), 0);
+    await scene.getByRole('link', { name: 'Reset', exact: true }).click();
+    assert.equal(await range.textContent(), 'Showing 1–4 of 8 runbooks');
+    await pager.waitFor();
+  },
+
   'Pagination archive links preserve the pages and boundaries of independent artboards': async ({
     page,
     mount,

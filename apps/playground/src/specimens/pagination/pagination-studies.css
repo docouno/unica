@@ -20,13 +20,7 @@
 
 .pagination-example-row {
   box-sizing: content-box;
-  inline-size: max-content;
   padding: var(--space-4);
-}
-
-/* Keep the complete numbered track available even in a narrow comparison artboard. */
-.pagination-example-row:not([data-narrow]) > nav {
-  inline-size: var(--pagination-track-width);
 }
 
 .pagination-example-row[data-narrow] {

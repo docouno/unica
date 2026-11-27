@@ -1,0 +1,289 @@
+@layer unica.components {
+  .unica-pagination {
+    --_pagination-height: var(--size-m-height);
+    --_pagination-radius: var(--size-m-radius);
+    --_pagination-icon: var(--size-m-icon);
+    --_pagination-font-size: var(--text-size-body-s);
+    --_pagination-line-height: var(--text-size-body-s-lh);
+    --_pagination-gap: var(--size-s-gap);
+    --_pagination-padding: var(--space-4);
+    --_pagination-hit: var(--_pagination-height);
+    min-inline-size: 0;
+    font-family: var(--font-family-base);
+    font-size: var(--_pagination-font-size);
+    font-weight: 500;
+    line-height: var(--_pagination-line-height);
+  }
+
+  .unica-pagination[data-unica-pagination-size='s'] {
+    --_pagination-height: var(--size-s-height);
+    --_pagination-radius: var(--size-s-radius);
+    --_pagination-icon: var(--size-s-icon);
+    --_pagination-font-size: var(--text-size-body-xs);
+    --_pagination-line-height: var(--text-size-body-xs-lh);
+  }
+
+  .unica-pagination[data-unica-pagination-size='l'] {
+    --_pagination-height: var(--size-l-height);
+    --_pagination-radius: var(--size-l-radius);
+    --_pagination-icon: var(--size-l-icon);
+    --_pagination-font-size: var(--text-size-body-m);
+    --_pagination-line-height: var(--text-size-body-m-lh);
+  }
+
+  @media (pointer: coarse) {
+    .unica-pagination {
+      --_pagination-hit: max(44px, var(--_pagination-height));
+    }
+  }
+
+  /* Intrinsic sizing reserves the complete numbered row in the second
+     column. The first column gets 1px at the exact width of that row. */
+  .unica-pagination-layout {
+    container: unica-pagination / inline-size;
+    display: grid;
+    inline-size: 100%;
+    grid-template-columns: minmax(0, 1fr) minmax(0, max-content);
+    justify-items: inherit;
+  }
+
+  .unica-pagination-ruler {
+    grid-area: 1 / 2;
+    justify-self: stretch;
+    min-inline-size: 0;
+    block-size: 0;
+    margin-inline-end: -1px;
+    overflow: clip;
+    visibility: hidden;
+  }
+
+  .unica-pagination-budget,
+  .unica-pagination-track {
+    --_pagination-numbered: var(--_pagination-hit)
+      repeat(var(--_pagination-slots), minmax(var(--_pagination-hit), 1fr)) var(--_pagination-hit);
+    display: grid;
+    inline-size: max-content;
+    column-gap: var(--_pagination-gap);
+  }
+
+  .unica-pagination-budget {
+    grid-template-columns: var(--_pagination-numbered);
+  }
+
+  .unica-pagination-layout[data-unica-pagination-format='auto'] .unica-pagination-budget {
+    min-inline-size: 360px;
+  }
+
+  /* Size the visible track against the outer container rather than against
+     the leftover width used by the inner container query. */
+  .unica-pagination-fit {
+    grid-area: 1 / 1;
+    justify-self: stretch;
+    container: unica-pagination-fit / inline-size;
+    display: grid;
+    grid-template-columns: 100cqi;
+    justify-items: inherit;
+    min-inline-size: 0;
+  }
+
+  .unica-pagination-track {
+    grid-template-columns: var(--_pagination-hit) minmax(0, max-content) var(--_pagination-hit);
+    align-items: center;
+    max-inline-size: 100%;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .unica-pagination-number,
+  .unica-pagination-gap {
+    display: none;
+    min-inline-size: 0;
+  }
+
+  .unica-pagination-gap {
+    place-items: center;
+    color: var(--fg-muted);
+    user-select: none;
+  }
+
+  .unica-pagination-number > *,
+  .unica-pagination-position > * {
+    grid-area: 1 / 1;
+  }
+
+  .unica-pagination-position {
+    display: grid;
+    align-items: center;
+    min-inline-size: 0;
+    padding-inline: var(--space-8);
+    color: var(--fg-secondary);
+    text-align: center;
+    overflow-wrap: anywhere;
+    white-space: pre-wrap;
+  }
+
+  .unica-pagination-position-metric {
+    visibility: hidden;
+  }
+
+  .unica-pagination-current-text {
+    color: var(--fg-primary);
+    font-weight: 650;
+  }
+
+  .unica-pagination-digits {
+    font-variant-numeric: tabular-nums;
+    font-variant-ligatures: none;
+    font-kerning: none;
+  }
+
+  .unica-pagination-measured-slot {
+    grid-column: 2;
+    display: grid;
+  }
+
+  .unica-pagination-numeral-metrics {
+    box-sizing: border-box;
+    display: grid;
+    block-size: 0;
+    padding-inline: var(--_pagination-padding);
+    border-inline: 1px solid transparent;
+    overflow: clip;
+    visibility: hidden;
+    white-space: nowrap;
+  }
+
+  .unica-pagination-numeral-metrics > bdi {
+    display: grid;
+    grid-area: 1 / 1;
+    justify-items: start;
+  }
+
+  .unica-pagination-numeral-metrics > bdi > * {
+    grid-area: 1 / 1;
+  }
+
+  .unica-pagination-numeral-metrics strong {
+    font-weight: 700;
+  }
+
+  @container unica-pagination-fit (inline-size >= 1px) {
+    .unica-pagination-layout:not([data-unica-pagination-format='compact']) .unica-pagination-track {
+      grid-template-columns: var(--_pagination-numbered);
+    }
+
+    .unica-pagination-layout:not([data-unica-pagination-format='compact'])
+      :is(.unica-pagination-number, .unica-pagination-gap) {
+      display: grid;
+    }
+
+    .unica-pagination-layout:not([data-unica-pagination-format='compact'])
+      .unica-pagination-position {
+      display: none;
+    }
+  }
+
+  .unica-pagination-cell {
+    box-sizing: border-box;
+    display: grid;
+    place-items: center;
+    inline-size: 100%;
+    min-inline-size: var(--_pagination-hit);
+    min-block-size: var(--_pagination-hit);
+    padding: 0 var(--_pagination-padding);
+    border: 1px solid transparent;
+    border-radius: var(--_pagination-radius);
+    background: transparent;
+    color: var(--fg-secondary);
+    font: inherit;
+    text-decoration: none;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: none;
+  }
+
+  .unica-pagination-cell[aria-current='page'] {
+    background: var(--accent-soft-bg);
+    color: var(--accent-soft-fg);
+    font-weight: 700;
+  }
+
+  button.unica-pagination-cell[aria-current='page'] {
+    cursor: default;
+  }
+
+  .unica-pagination-cell:is(:disabled, [aria-disabled='true']) {
+    color: var(--fg-disabled);
+    cursor: default;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .unica-pagination-cell:not([aria-current], :disabled, [aria-disabled]):hover {
+      background: color-mix(in srgb, var(--fg-primary) 10%, transparent);
+      color: var(--fg-primary);
+    }
+  }
+
+  .unica-pagination-cell:not([aria-current], :disabled, [aria-disabled]):active {
+    background: color-mix(in srgb, var(--fg-primary) 17%, transparent);
+    color: var(--fg-primary);
+  }
+
+  .unica-pagination-cell:focus-visible {
+    outline: 2px solid var(--focus-ring-color);
+    outline-offset: 2px;
+  }
+
+  .unica-pagination-arrow {
+    inline-size: var(--_pagination-icon);
+    block-size: var(--_pagination-icon);
+    scale: var(--_dir-scale, none);
+  }
+
+  @supports selector(:dir(rtl)) {
+    .unica-pagination-arrow:dir(ltr) {
+      scale: none;
+    }
+
+    .unica-pagination-arrow:dir(rtl) {
+      scale: -1 1;
+    }
+  }
+
+  @media (forced-colors: active) {
+    .unica-pagination-cell,
+    .unica-pagination-gap {
+      forced-color-adjust: none;
+      color: CanvasText;
+    }
+
+    .unica-pagination-cell[aria-current='page'] {
+      background: Highlight;
+      color: HighlightText;
+    }
+
+    .unica-pagination-cell:is(:disabled, [aria-disabled='true']),
+    .unica-pagination-gap {
+      color: GrayText;
+    }
+
+    .unica-pagination-cell:focus-visible {
+      outline-color: Highlight;
+    }
+
+    @media (hover: hover) and (pointer: fine) {
+      .unica-pagination-cell:not([aria-current], :disabled, [aria-disabled]):hover {
+        border-color: CanvasText;
+        background: transparent;
+        color: CanvasText;
+      }
+    }
+
+    .unica-pagination-cell:not([aria-current], :disabled, [aria-disabled]):active {
+      border-color: CanvasText;
+      background: transparent;
+      color: CanvasText;
+    }
+  }
+}
