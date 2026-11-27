@@ -113,7 +113,10 @@
 @container collection-results (inline-size >= 580px) {
   .folio-collection-footer:has(nav) {
     grid-template-columns: minmax(0, 1fr) minmax(360px, 1fr);
-    --pagination-align: end;
+  }
+
+  .folio-collection-footer > nav {
+    justify-items: end;
   }
 }
 .folio-page-intro,

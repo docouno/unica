@@ -28,9 +28,10 @@ const props = {
     kind: 'enum',
     group: 'Geometry',
     default: 'auto',
-    description: 'Show numbers when they fit or keep a compact position between the two arrows.',
+    description:
+      'Automatic shows numbers when the row fits and the container is at least 360px wide. Numbered shows numbers whenever the row fits. Both fall back to a compact position.',
     choices: [
-      { value: 'auto', label: 'Automatic', omit: true },
+      { value: 'auto', label: 'Automatic' },
       { value: 'pages', label: 'Numbered' },
       { value: 'compact', label: 'Compact' },
     ],
@@ -69,10 +70,45 @@ const props = {
     kind: 'action',
     group: 'Interaction',
     publicType: '(page: number) => void',
-    description: 'Receive a different page number requested by an available button.',
+    description:
+      'Receive a different page number requested by an available button. Omit this handler when supplying links.',
     code: 'handlePageChange',
   },
-  label: {
+  getPageHref: {
+    kind: 'slot',
+    group: 'Interaction',
+    default: 'omitted',
+    publicType: '(page: number) => string',
+    description: 'Build a native URL for each available target. The route owns the current page.',
+    choices: [
+      { value: 'omitted', label: 'Buttons' },
+      { value: 'archive', label: 'Page addresses', code: 'page => `/archive?page=${page}`' },
+    ],
+  },
+  renderLink: {
+    kind: 'slot',
+    group: 'Interaction',
+    default: 'omitted',
+    publicType: '(props: PaginationLinkProps) => ReactElement',
+    description: 'Adapt the supplied anchor props to a router link.',
+    choices: [
+      { value: 'omitted', label: 'Native anchor' },
+      { value: 'custom', label: 'Custom anchor', code: 'props => <a {...props} />' },
+    ],
+  },
+  messages: {
+    kind: 'slot',
+    group: 'Semantics',
+    default: 'omitted',
+    publicType: 'Partial<PaginationMessages>',
+    description:
+      'Translate the control names and position. Supply ten digits in order to use a different numeral system.',
+    choices: [
+      { value: 'omitted', label: 'English and 0–9' },
+      { value: 'arabic', label: 'Arabic and ٠–٩', code: 'arabicMessages' },
+    ],
+  },
+  'aria-label': {
     kind: 'string',
     group: 'Semantics',
     default: 'Pagination',
@@ -96,10 +132,30 @@ export default defineComponent({
   id: 'pagination',
   title: 'Pagination',
   category: 'Navigation',
-  status: 'Proto',
+  status: 'UI',
   componentName: 'Pagination',
   summary: 'Move through a collection with known page numbers and a stable navigation row.',
   props,
+  constraints: [
+    {
+      kind: 'forbidden',
+      when: { getPageHref: 'archive' },
+      affects: [{ key: 'page', value: 'uncontrolled' }],
+      reason: 'Links require a page from the current route.',
+    },
+    {
+      kind: 'forbidden',
+      when: { getPageHref: 'omitted' },
+      affects: [{ key: 'renderLink', value: 'custom' }],
+      reason: 'A link adapter requires getPageHref.',
+    },
+    ...(['1', '4', '12'] as const).map((page) => ({
+      kind: 'ignored' as const,
+      when: { page },
+      affects: ['defaultPage'],
+      reason: 'A supplied page owns the current position. Omit defaultPage in controlled mode.',
+    })),
+  ],
   code: paginationCode,
   render: withOverlaySurface(PaginationPlayground, 'border-box'),
   states: [
@@ -127,9 +183,10 @@ export default defineComponent({
       id: 'states',
       title: 'Pointer and focus states',
       kind: 'behavior',
-      mode: 'pinned',
+      mode: 'live',
       caption:
-        'Page 1 shows hover, page 2 combines current and focus, page 3 is pressed and page 4 shows focus on its own.',
+        'Hover and press a neighboring page. Use Tab to see keyboard focus on both the current page and its neighbors.',
+      reset: true,
       render: withOverlaySurface(PointerStates),
     },
     {
@@ -148,7 +205,7 @@ export default defineComponent({
       kind: 'behavior',
       mode: 'live',
       caption:
-        'Both rows switch to compact in a column up to 272px wide. Step through 24 pages or advance from 999 to 1000 in the large controls. The arrows hold their positions as the label grows.',
+        'Compare the same 24 pages in a narrow and a wide column. In the large compact row, advance from 999 to 1000 and watch the arrows hold their positions.',
       reset: true,
       render: withOverlaySurface(Compact),
     },
@@ -211,7 +268,7 @@ export default defineComponent({
       caption:
         'Step through the related documents. Pinned documents fit on one page, and the filtered collection has no results.',
       render: PaginationCollectionComposition,
-      code: collectionSource.replaceAll('../../prototypes/', './prototypes/'),
+      code: collectionSource,
     },
   ],
 });

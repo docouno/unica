@@ -78,6 +78,7 @@ it.each(unicaWorkbench.components)('$id declares states, cases and compositions'
 // These choices use the same word for a public value and for an omitted prop.
 const familyChoiceOmissions: Readonly<Record<string, boolean>> = {
   'alert.role.none': false,
+  'pagination.format.auto': false,
   'text.color.inherit': false,
   'title.color.inherit': false,
   'text.align.inherit': true,
@@ -251,6 +252,39 @@ it('connects the Button inspector to the toggle authority and a real anchor host
   expect(jsx()).toContain('<a href={href}>Create</a>');
   expect(jsx()).not.toContain('02-workspace-overview');
   expect(screen.getByRole<HTMLOptionElement>('option', { name: 'submit' }).disabled).toBe(true);
+});
+
+it('keeps Pagination links, controls, and copyable JSX in sync after following an address', () => {
+  window.history.replaceState(null, '', '/?item=pagination&solo=soft-light');
+  render(<WorkbenchApp config={unicaWorkbench} />);
+  const preview = within(screen.getByRole('region', { name: 'Preview' }));
+  const page = screen.getByRole('combobox', { name: 'page' });
+  const mode = screen.getByRole('combobox', { name: 'getPageHref' });
+  const current = () =>
+    preview.getByRole('navigation', { name: 'Pagination' }).querySelector('[aria-current="page"]');
+  const jsx = () => screen.getByRole('region', { name: 'JSX' }).textContent;
+
+  fireEvent.change(page, { target: { value: '4' } });
+  fireEvent.change(mode, { target: { value: 'archive' } });
+  const href = preview.getByRole('link', { name: 'Next page' }).getAttribute('href')!;
+  expect(jsx()).toContain('getPageHref=');
+  window.history.replaceState(null, '', href);
+  fireEvent(window, new Event('hashchange'));
+  expect(current()?.getAttribute('aria-label')).toBe('Page 5');
+
+  fireEvent.change(mode, { target: { value: 'omitted' } });
+  expect(preview.getByRole('button', { name: 'Next page' })).toBeDefined();
+  expect(current()?.getAttribute('aria-label')).toBe('Page 4');
+  expect(jsx()).toContain('onPageChange=');
+
+  fireEvent.change(mode, { target: { value: 'archive' } });
+  fireEvent.change(screen.getByRole('spinbutton', { name: 'pageCount' }), {
+    target: { value: '1' },
+  });
+  expect(preview.queryByRole('navigation', { name: 'Pagination' })).toBeNull();
+  fireEvent.click(screen.getByRole('button', { name: 'Reset props' }));
+  expect(preview.getByRole('button', { name: 'Next page' })).toBeDefined();
+  expect(current()?.getAttribute('aria-label')).toBe('Page 1');
 });
 
 it('covers allowed Button combinations and exposes Pairwise availability rules', () => {
