@@ -1,5 +1,6 @@
-import { Dropzone } from '../../prototypes/file-input/file-input.proto.js';
-import { size, disabled, readOnly, choice, toggle, eventProp } from '../control-props.js';
+import { Dropzone, FormField } from '@docouno/unica';
+import { intakeProps } from '../file-input/intake-props.js';
+import { size, disabled, readOnly, loading, required, choice, toggle } from '../control-props.js';
 import { defineComponent } from '../../workbench/types.js';
 import { previewProps } from '../preview-code.js';
 import { withOverlaySurface } from '../shared/with-overlay-surface.js';
@@ -13,7 +14,7 @@ import {
   LiveQueue,
   RowOverflow,
   RowSizes,
-} from '../../prototypes/file-input/file-input.examples.js';
+} from './dropzone.examples.js';
 import { ImageAttachment } from './image-attachment.js';
 import imageSource from './image-attachment.tsx?raw';
 import { BatchSummary } from './batch-summary.js';
@@ -23,12 +24,17 @@ export default defineComponent({
   id: 'dropzone',
   title: 'Dropzone & FileList',
   category: 'Forms',
-  status: 'Proto',
+  status: 'UI',
   summary:
     'Choose or drop local files, inspect transfer progress, and recover a rejected selection.',
   componentName: 'Dropzone',
+  form: 'owned',
   props: {
+    ...intakeProps,
     size,
+    loading,
+    required,
+    accept: { ...intakeProps.accept, default: '.md,.zip' },
     disabled,
     readOnly,
     status: choice(
@@ -37,23 +43,14 @@ export default defineComponent({
       ['neutral', 'danger'],
       'neutral',
     ),
-    multiple: toggle(
-      'Interaction',
-      'Allow multiple files in the native chooser. A drop reports all incoming files to the handler.',
-      true,
-    ),
-    title: {
+    multiple: toggle('Interaction', 'Append accepted files across successive selections.', true),
+    description: {
       kind: 'string',
       group: 'Content',
-      default: '',
-      description:
-        'Heading when disabled or read-only. Leave empty for the built-in availability message.',
+      default: 'Choose local files to inspect their names.',
+      description: 'Additional guidance shown alongside the admission rules inside the well.',
+      publicType: 'ReactNode',
     },
-    onFilesChange: eventProp(
-      'Receives the selected or dropped File objects. The event log displays their names.',
-      '(files) => console.log(files.map((file) => file.name))',
-      '(files: readonly File[]) => void',
-    ),
   },
   constraints: [
     {
@@ -64,33 +61,59 @@ export default defineComponent({
     },
   ],
   render: withOverlaySurface(
-    ({ values: { title, ...values }, ctx }) => (
-      <Dropzone
-        {...values}
-        {...ctx.subject}
-        data-file-intake-sample=""
-        {...(title && { title })}
-        accept=""
-        description={<bdi>Choose local files to inspect their names.</bdi>}
-        onFilesChange={(files) => ctx.action('onFilesChange')(files.map((file) => file.name))}
-      />
+    ({ values: { maxSize, maxFiles, ...values }, ctx }) => (
+      <form {...ctx.form} data-file-intake-sample="">
+        <FormField
+          label="Supporting files"
+          controlId={ctx.id}
+          disabled={values.disabled}
+          required={values.required}
+          status={values.status}
+          message={values.status === 'danger' && 'Check the attachment requirements.'}
+          feedbackIcon={false}
+        >
+          <Dropzone
+            {...values}
+            {...ctx.subject}
+            name="attachments"
+            maxSize={maxSize < 0 ? undefined : maxSize}
+            maxFiles={maxFiles < 0 ? undefined : maxFiles}
+            onValueChange={(files) => ctx.action('onValueChange')(files.map((file) => file.name))}
+            onIntake={(result) =>
+              ctx.action('onIntake')({
+                source: result.source,
+                accepted: result.accepted.map((file) => file.name),
+                rejected: result.rejected.map(({ name, code }) => ({ name, code })),
+              })
+            }
+          />
+        </FormField>
+      </form>
     ),
     'border-box',
   ),
   code: (values) => {
-    const attrs = previewProps(values, {
+    const { maxSize, maxFiles, ...props } = values;
+    const attrs = previewProps(props, {
       size: 'm',
       status: 'neutral',
       disabled: false,
       readOnly: false,
       multiple: true,
-      title: '',
+      loading: false,
+      required: false,
+      allowPaste: false,
+      announceIntake: true,
     });
-    return `import { Dropzone } from './prototypes/file-input/file-input.proto.js';
+    return `import { Dropzone, FormField } from '@docouno/unica';
 import '@docouno/unica/styles.css';
 
 export function FileIntake() {
-  return <Dropzone${attrs} accept="" description={<bdi>Choose local files to inspect their names.</bdi>} onFilesChange={(files) => console.log(files.map((file) => file.name))} />;
+  return (
+    <FormField label="Supporting files">
+      <Dropzone name="attachments"${attrs}${maxSize >= 0 ? ` maxSize={${maxSize}}` : ''}${maxFiles >= 0 ? ` maxFiles={${maxFiles}}` : ''} onValueChange={(files) => console.log(files.map((file) => file.name))} onIntake={(result) => console.log(result)} />
+    </FormField>
+  );
 }`;
   },
   states: [
@@ -134,18 +157,32 @@ export function FileIntake() {
       id: 'interaction',
       title: 'Hover, press, focus and drag',
       kind: 'behavior',
-      mode: 'pinned',
+      mode: 'live',
+      reset: true,
+      actions: [
+        { id: 'reject', label: 'Reject sample' },
+        { id: 'drag', label: 'Start sample drag' },
+        { id: 'leave', label: 'End sample drag' },
+      ],
       caption:
-        'Compare the pinned pointer and keyboard cues. During a drag the well invites a drop, even after a previous rejection.',
+        'Compare the actual pointer and keyboard cues. Start a sample file drag before or after a rejection.',
       render: withOverlaySurface(DropInteraction, 'border-box'),
     },
     {
       id: 'feedback',
       title: 'Rejection and partial acceptance',
       kind: 'behavior',
-      mode: 'pinned',
+      mode: 'live',
+      reset: true,
+      actions: [
+        { id: 'size', label: 'Try a large file' },
+        { id: 'count', label: 'Try count limit' },
+        { id: 'mixed', label: 'Try mixed batch' },
+        { id: 'duplicate', label: 'Try a duplicate' },
+        { id: 'folder', label: 'Try a folder' },
+      ],
       caption:
-        'Compare size, count, format, duplicate, and folder rejections. Attempt feedback stays beneath the picker and the accepted file remains in the list.',
+        'Try the size, count, type, duplicate and folder rules. Attempt feedback stays beneath the picker and accepted files remain in the list.',
       render: withOverlaySurface(DropFeedback, 'border-box'),
     },
     {
@@ -224,7 +261,10 @@ export function FileIntake() {
         ),
         'border-box',
       ),
-      code: imageSource.replace('../../prototypes/', './prototypes/'),
+      code: imageSource
+        .replace('useRef<HTMLInputElement>', 'useRef')
+        .replace('useState<readonly File[]>', 'useState')
+        .replace('useState<{ file: File; url: string } | null>', 'useState'),
     },
     {
       id: 'batch',
@@ -237,7 +277,7 @@ export function FileIntake() {
         ({ ctx }) => <BatchSummary intakeProps={ctx.subject} />,
         'border-box',
       ),
-      code: batchSource.replace('../../prototypes/', './prototypes/'),
+      code: batchSource,
     },
   ],
 });

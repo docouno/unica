@@ -388,7 +388,7 @@ export default {
     const queue = admin.getByRole('region', { name: 'Notifications' });
     await queue.getByRole('button', { name: 'Expand 2 notifications' }).click();
     await queue.getByRole('group', { name: 'Uploading archive' }).waitFor();
-    await admin.getByRole('button', { name: 'Remove legacy-envoy-rfcs.zip' }).click();
+    await admin.getByRole('button', { name: /Remove .*legacy-envoy-rfcs[.]zip/ }).click();
     await queue.waitFor({ state: 'detached' });
     await admin.getByRole('button', { name: 'Run dry-run check' }).click();
     await admin

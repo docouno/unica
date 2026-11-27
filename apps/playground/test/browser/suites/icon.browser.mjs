@@ -302,7 +302,8 @@ export default {
       await chrome.getByRole('img', { name: 'Unassigned user' }).locator('svg').count(),
       1,
     );
-    assert.equal(await chrome.locator('.file-item-icon-proto > svg').count(), 1);
+    const file = chrome.getByRole('list', { name: 'Example files' }).getByRole('listitem');
+    assert.equal(await file.locator('svg').count(), 1);
     const railButtons = chrome
       .getByRole('navigation', { name: 'Workspace sections' })
       .locator('.app-shell-rail-item');

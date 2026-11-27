@@ -220,7 +220,7 @@ export default {
       await mount('native');
       await openWorkbench(page, { item: '10-workspace-admin', vp: '1440' });
       const picker = page.getByRole('button', { name: /Choose file Frontmatter mapping schema/iu });
-      const schema = page.locator('input[type="file"][accept=".yaml,.yml"]');
+      const schema = page.locator('input[type="file"][name="schema"]');
       const close = page.getByRole('button', { name: 'Dismiss file validation summary' });
       const browse = page.getByLabel('Browse files', { exact: true });
       const choose = async (filename) => {
@@ -232,13 +232,19 @@ export default {
 
       await choose('pnpm-workspace.yaml');
       await page.getByText('pnpm-workspace.yaml', { exact: true }).waitFor();
-      const schemaSize = await page.locator('.file-input-detail-proto').textContent();
+      const selectedSchema = () =>
+        schema.evaluate(async (node) => {
+          const file = node.files[0];
+          return file && { name: file.name, size: file.size, text: await file.text() };
+        });
+      const original = await selectedSchema();
+      assert.equal(original.name, 'pnpm-workspace.yaml');
+      assert.ok(original.size > 0);
+      assert.match(original.text, /packages:/);
       await page.evaluate(observeAlerts, live);
       await choose('docs/README.md');
       await page.waitForFunction(() => window.alertEntries.length === 1);
-      assert.equal(await schema.inputValue(), '');
-      assert.equal(await schema.evaluate((node) => node.files.length), 0);
-      assert.equal(await page.locator('.file-input-detail-proto').textContent(), schemaSize);
+      assert.deepEqual(await selectedSchema(), original);
       await assertFocused(picker);
       await close.press('Enter');
       await close.waitFor({ state: 'detached' });
@@ -255,7 +261,7 @@ export default {
       await assertFocused(picker);
 
       const drop = (name) =>
-        page.locator('.dropzone-surface-proto').evaluate((target, filename) => {
+        page.locator('input[type=file][name=archives]').evaluate((target, filename) => {
           const dataTransfer = new DataTransfer();
           dataTransfer.items.add(new File(['Sample file content'], filename));
           target.dispatchEvent(
@@ -285,5 +291,33 @@ export default {
       await close.waitFor({ state: 'detached' });
       await assertFocused(picker);
       assert.equal(await page.evaluate(() => window.alertEntries.length), 6);
+
+      const archives = page.locator('input[type=file][name=archives]');
+      await archives.evaluate((target) => {
+        for (const bytes of ['first', 'different bytes']) {
+          const dataTransfer = new DataTransfer();
+          dataTransfer.items.add(new File([bytes], 'same-name.md'));
+          target.dispatchEvent(
+            new DragEvent('drop', { bubbles: true, cancelable: true, dataTransfer }),
+          );
+        }
+      });
+      const rows = page.getByRole('list', { name: 'Staged archives' });
+      await rows.getByText('same-name.md', { exact: true }).waitFor();
+      assert.deepEqual(
+        await archives.evaluate(async (node) => {
+          return Promise.all(
+            Array.from(node.files)
+              .filter(({ name }) => name === 'same-name.md')
+              .map((file) => file.text()),
+          );
+        }),
+        ['first'],
+      );
+      await page
+        .getByText('A staged archive already uses that filename.', { exact: true })
+        .waitFor();
+      await drop('not-an-archive.pdf');
+      await page.getByText(/up to 52[.]4 MB each/, { exact: false }).waitFor();
     },
 };

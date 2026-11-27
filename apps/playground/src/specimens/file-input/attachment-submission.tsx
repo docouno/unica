@@ -1,12 +1,13 @@
 import { useState } from 'react';
-import { Button, Stack, Text } from '@docouno/unica';
-import { FileInput } from '../../prototypes/file-input/file-input.proto.js';
+import { Button, FileInput, FormField, Stack, Text } from '@docouno/unica';
 import '@docouno/unica/styles.css';
 
 export function AttachmentSubmission({ fieldProps = {} } = {}) {
   const [receipt, setReceipt] = useState('');
   return (
     <form
+      method="post"
+      encType="multipart/form-data"
       onSubmit={(event) => {
         event.preventDefault();
         const file = new FormData(event.currentTarget).get('attachment');
@@ -18,12 +19,12 @@ export function AttachmentSubmission({ fieldProps = {} } = {}) {
       }}
     >
       <Stack gap={12}>
-        <FileInput
-          {...fieldProps}
+        <FormField
           label="Supporting attachment"
-          name="attachment"
-          description={<bdi>Choose or drop one file to include it in the form.</bdi>}
-        />
+          description="Choose or drop one file to include it in the form."
+        >
+          <FileInput {...fieldProps} name="attachment" />
+        </FormField>
         <Button size="s" type="submit" style={{ alignSelf: 'start' }}>
           Inspect submission
         </Button>

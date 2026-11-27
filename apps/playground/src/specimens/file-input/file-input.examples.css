@@ -59,14 +59,11 @@ ul:has(> [data-wb-result-row] [data-file-intake-sample]) {
   font-display: block;
   unicode-range: U+0648;
 }
-.file-demo-arabic
-  :is(
-    .file-input-name-proto,
-    .file-item-name-proto,
-    .file-item-detail-proto,
-    p[dir='auto'],
-    [role='status']
-  ),
-[data-file-intake-sample] .dropzone-unavailable-proto {
-  font-family: 'File Demo Arabic', 'File Demo Arabic Supplement', var(--font-family-base);
+:where([data-surface]):has(.file-demo-arabic) {
+  --file-demo-preset-font: var(--font-family-base);
+}
+
+.file-demo-arabic {
+  --font-family-base:
+    'File Demo Arabic', 'File Demo Arabic Supplement', var(--file-demo-preset-font, system-ui);
 }
