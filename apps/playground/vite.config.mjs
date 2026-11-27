@@ -18,6 +18,8 @@ export default defineConfig({
     include: ['@phosphor-icons/react'],
   },
   build: {
+    // The catalog loads the full packaged UI entry as one shared chunk.
+    chunkSizeWarningLimit: 525,
     cssTarget: [...VITE_CSS_TARGET],
     rolldownOptions: {
       output: {

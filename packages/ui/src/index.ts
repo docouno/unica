@@ -196,6 +196,19 @@ export type {
   EmptySize,
   EmptyTitleProps,
 } from './components/Empty/index.js';
+export { Dropzone, FileInput, FileList, FileListItem } from './components/FileInput/index.js';
+export type {
+  DropzoneProps,
+  FileInputProps,
+  FileIntakeMessages,
+  FileIntakeResult,
+  FileIntakeSource,
+  FileListItemProps,
+  FileListItemState,
+  FileListMessages,
+  FileListProps,
+  FileRejection,
+} from './components/FileInput/index.js';
 export {
   FormField,
   FormFieldContext,

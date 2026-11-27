@@ -59,7 +59,7 @@ export default {
     await open('04-document-reader');
     const details = page.getByRole('tab', { name: 'Details', exact: true });
     const history = page.getByRole('tab', { name: /History.*3 revisions/u });
-    await details.waitFor();
+    await details.waitFor({ timeout: 20_000 });
     await details.press('ArrowRight');
     assert.equal(await history.getAttribute('aria-selected'), 'true');
     assert.equal(await page.getByRole('tabpanel', { name: /History/u }).count(), 1);
@@ -70,6 +70,7 @@ export default {
     const write = page.getByRole('tab', { name: 'Write', exact: true });
     const diff = page.getByRole('tab', { name: /Diff.*42 changed lines/u });
     const split = page.getByRole('tab', { name: 'Split', exact: true });
+    await write.waitFor({ timeout: 20_000 });
     await write.press('Tab');
     const bold = page.getByRole('button', { name: 'Bold', exact: true });
     assert.equal(await bold.evaluate((node) => node === document.activeElement), true);

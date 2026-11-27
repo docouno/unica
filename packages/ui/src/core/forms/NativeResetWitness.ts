@@ -196,16 +196,17 @@ function handleReset(event: Event): void {
   const observations = observeReset(form, root);
   const view = getDefaultView(getOwnerDocument(form));
   let associationRecords: MutationRecord[] = [];
-  const hasNumber = [...observations.values()].some((entries) =>
-    entries.some(
-      ({ control, owned }) =>
-        owned &&
-        getLocalName(control) === 'input' &&
-        (control as HTMLInputElement).type === 'number',
-    ),
+  const needsAssociationWitness = [...observations.values()].some((entries) =>
+    entries.some(({ control, owned }) => {
+      if (!owned || getLocalName(control) !== 'input') {
+        return false;
+      }
+      const { type } = control as HTMLInputElement;
+      return type === 'number' || type === 'file';
+    }),
   );
   const association =
-    event.isTrusted && hasNumber && view
+    event.isTrusted && needsAssociationWitness && view
       ? new view.MutationObserver((records) => {
           associationRecords = associationRecords.concat(records);
         })

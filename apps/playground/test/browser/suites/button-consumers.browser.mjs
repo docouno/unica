@@ -104,7 +104,7 @@ export default {
     assert.equal(await board.getByRole('heading', { name: 'Page not found', level: 1 }).count(), 1);
   },
 
-  'FileItem keeps compact fine-pointer actions and separates coarse targets in narrow rows':
+  'FileListItem keeps compact fine-pointer actions and separates coarse targets in narrow rows':
     async ({ page, mount }) => {
       await page.setViewportSize({ width: 1440, height: 900 });
       await mount('button-consumers');
@@ -119,8 +119,8 @@ export default {
           dir,
         });
         const list = board.getByRole('list', { name: 'Pinned file lifecycle states' });
-        const retry = list.getByRole('button', { name: 'Retry supporting-research.zip' });
-        const remove = list.getByRole('button', { name: 'Remove supporting-research.zip' });
+        const retry = list.getByRole('button', { name: /Retry .*supporting-research[.]zip/ });
+        const remove = list.getByRole('button', { name: /Remove .*supporting-research[.]zip/ });
         await list.evaluate((node) => {
           node.style.maxInlineSize = '340px';
         });
@@ -168,8 +168,8 @@ export default {
       page.evaluate(
         () => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))),
       );
-    const peer = boards.nth(1).getByRole('button', { name: 'Remove assets.zip' });
-    const retry = (board) => board.getByRole('button', { name: 'Retry research-notes.md' });
+    const peer = boards.nth(1).getByRole('button', { name: /Remove .*assets[.]zip/ });
+    const retry = (board) => board.getByRole('button', { name: /Retry .*research-notes[.]md/ });
     await peer.focus();
     await retry(boards.first()).evaluate((button) => button.click());
     await retry(boards.first()).waitFor({ state: 'detached' });
@@ -179,10 +179,12 @@ export default {
     await retry(boards.nth(1)).press('Enter');
     await retry(boards.nth(1)).waitFor({ state: 'detached' });
     await settle();
-    await assertFocused(boards.nth(1).getByRole('button', { name: 'Remove research-notes.md' }));
+    await assertFocused(
+      boards.nth(1).getByRole('button', { name: /Remove .*research-notes[.]md/ }),
+    );
 
     const pinned = await open(page, { item: 'dropzone', tab: 'states', block: 'lifecycle' });
-    const sample = pinned.getByRole('button', { name: 'Retry supporting-research.zip' });
+    const sample = pinned.getByRole('button', { name: /Retry .*supporting-research[.]zip/ });
     await sample.press('Enter');
     await settle();
     await assertFocused(sample);

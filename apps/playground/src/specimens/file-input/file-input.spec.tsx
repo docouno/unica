@@ -1,4 +1,5 @@
-import { FileInput } from '../../prototypes/file-input/file-input.proto.js';
+import { FileInput, FormField } from '@docouno/unica';
+import { intakeProps } from './intake-props.js';
 import {
   FileAvailability,
   FileFeedback,
@@ -8,7 +9,7 @@ import {
   FileRoles,
   FileSurfaces,
   MultipleField,
-} from '../../prototypes/file-input/file-input.examples.js';
+} from './file-input.examples.js';
 import {
   size,
   variant,
@@ -18,7 +19,7 @@ import {
   loading,
   clearable,
   toggle,
-  eventProp,
+  required,
 } from '../control-props.js';
 import { defineComponent } from '../../workbench/types.js';
 import { withOverlaySurface } from '../shared/with-overlay-surface.js';
@@ -40,11 +41,12 @@ export default defineComponent({
   id: 'file-input',
   title: 'FileInput',
   category: 'Forms',
-  status: 'Proto',
+  status: 'UI',
   summary: 'Choose, replace, and remove local attachments in a compact form field.',
   componentName: 'FileInput',
   form: 'owned',
   props: {
+    ...intakeProps,
     size,
     variant,
     status: {
@@ -54,23 +56,10 @@ export default defineComponent({
     disabled,
     readOnly,
     loading,
+    required,
+    showSize: toggle('Content', 'Display the selected size next to the filename or count.'),
     clearable: { ...clearable, default: true },
-    multiple: toggle(
-      'Interaction',
-      'Allow several files in one selection. A new selection replaces the current native form value.',
-    ),
-    accept: {
-      kind: 'string',
-      group: 'Interaction',
-      default: '.pdf,.txt',
-      description:
-        'File types suggested by the native chooser. Drop validation belongs to the application.',
-    },
-    onFilesChange: eventProp(
-      'Receives selected File objects, or an empty list after removal. The event log displays their names.',
-      '(files) => console.log(files.map((file) => file.name))',
-      '(files: readonly File[]) => void',
-    ),
+    multiple: toggle('Interaction', 'Append accepted files across successive selections.'),
   },
   constraints: [
     {
@@ -79,40 +68,78 @@ export default defineComponent({
       affects: ['clearable'],
       reason: 'Individual removal in multiple selection belongs to a separate file list.',
     },
+    {
+      kind: 'precedence',
+      when: { disabled: true },
+      affects: ['readOnly', 'loading', 'status'],
+      reason: 'Disabled intake is unavailable and suppresses validation and pending feedback.',
+    },
+    {
+      kind: 'ignored',
+      when: { readOnly: true },
+      affects: ['loading', 'required', 'clearable'],
+      reason:
+        'The read-only view keeps the existing files available without mutation or required validation.',
+    },
   ],
-  render: withOverlaySurface(({ values, ctx }) => {
+  render: withOverlaySurface(({ values: { maxSize, maxFiles, ...values }, ctx }) => {
     const message = messages[values.status];
     return (
       <form {...ctx.form} data-file-intake-sample="" className="file-demo-field file-demo-arabic">
-        <FileInput
-          {...values}
-          {...ctx.subject}
-          id={ctx.id}
-          name="attachment"
+        <FormField
           label="Attach evidence"
+          controlId={ctx.id}
+          target={values.readOnly && !values.disabled ? 'group' : 'control'}
+          status={values.status}
+          disabled={values.disabled}
+          required={values.required}
           message={message && <bdi>{message}</bdi>}
-          onFilesChange={(files) => ctx.action('onFilesChange')(files.map((file) => file.name))}
-        />
+          feedbackIcon={false}
+        >
+          <FileInput
+            {...values}
+            {...ctx.subject}
+            name="attachment"
+            maxSize={maxSize < 0 ? undefined : maxSize}
+            maxFiles={maxFiles < 0 ? undefined : maxFiles}
+            onValueChange={(files) => ctx.action('onValueChange')(files.map((file) => file.name))}
+            onIntake={(result) =>
+              ctx.action('onIntake')({
+                source: result.source,
+                accepted: result.accepted.map((file) => file.name),
+                rejected: result.rejected.map(({ name, code }) => ({ name, code })),
+              })
+            }
+          />
+        </FormField>
       </form>
     );
   }, 'border-box'),
   code: (values) => {
-    const attrs = previewProps(values, {
+    const { status, maxSize, maxFiles, ...props } = values;
+    const attrs = previewProps(props, {
       size: 'm',
       variant: 'default',
-      status: 'neutral',
       disabled: false,
       readOnly: false,
       loading: false,
+      required: false,
       clearable: true,
       multiple: false,
+      allowPaste: false,
+      announceIntake: true,
+      showSize: false,
     });
-    const message = messages[values.status];
-    return `import { FileInput } from './prototypes/file-input/file-input.proto.js';
+    const message = messages[status];
+    return `import { FileInput, FormField } from '@docouno/unica';
 import '@docouno/unica/styles.css';
 
 export function EvidenceAttachment() {
-  return <FileInput label="Attach evidence" name="attachment"${attrs}${message ? ` message={<bdi>${previewText(message)}</bdi>}` : ''} onFilesChange={(files) => console.log(files.map((file) => file.name))} />;
+  return (
+    <FormField label="Attach evidence"${props.readOnly && !props.disabled ? ' target="group"' : ''}${status === 'neutral' ? '' : ` status="${status}"`}${message ? ` message={<bdi>${previewText(message)}</bdi>}` : ''}>
+      <FileInput name="attachment"${attrs}${maxSize >= 0 ? ` maxSize={${maxSize}}` : ''}${maxFiles >= 0 ? ` maxFiles={${maxFiles}}` : ''} onValueChange={(files) => console.log(files.map((file) => file.name))} onIntake={(result) => console.log(result)} />
+    </FormField>
+  );
 }`;
   },
   states: [
@@ -141,8 +168,12 @@ export function EvidenceAttachment() {
       kind: 'behavior',
       mode: 'live',
       reset: true,
+      actions: [
+        { id: 'drag', label: 'Start sample drag' },
+        { id: 'leave', label: 'End sample drag' },
+      ],
       caption:
-        'Tab to Choose file and Remove, or hold the pointer to compare the two button roles. The middle pair pins a file drag for comparison.',
+        'Tab to Choose file and Remove, or hold the pointer to compare the roles. The frame actions send sample drag events to the middle pair.',
       render: withOverlaySurface(FileInteraction, 'border-box'),
     },
     {
@@ -222,7 +253,7 @@ export function EvidenceAttachment() {
         ),
         'border-box',
       ),
-      code: submissionSource.replace('../../prototypes/', './prototypes/'),
+      code: submissionSource,
     },
     {
       id: 'text-preview',
@@ -239,7 +270,7 @@ export function EvidenceAttachment() {
         ),
         'border-box',
       ),
-      code: textSource.replace('../../prototypes/', './prototypes/'),
+      code: textSource,
     },
   ],
 });

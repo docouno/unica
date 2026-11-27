@@ -45,7 +45,7 @@ import {
   WorkspaceNavigation,
   WorkspaceTrash,
 } from '../../../src/prototypes/app-shell/app-shell.proto.js';
-import { FileItem, FileList } from '../../../src/prototypes/file-input/file-input.proto.js';
+import { FileList, FileListItem } from '@docouno/unica';
 import { Combobox } from '../../../src/prototypes/combobox/combobox.proto.js';
 
 function ProjectSvg({ children, ...props }: ComponentPropsWithRef<'svg'>) {
@@ -267,8 +267,8 @@ export default function IconFixture() {
           <LeftRail showBrand />
           <WorkspaceNavigation kind="admin" />
           <Avatar alt="Unassigned user" />
-          <FileList>
-            <FileItem name="Readme" />
+          <FileList aria-label="Example files">
+            <FileListItem name="Readme" />
           </FileList>
         </UnicaProvider>
       </section>

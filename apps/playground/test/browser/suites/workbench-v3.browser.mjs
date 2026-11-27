@@ -1260,7 +1260,7 @@ export default {
     );
     const board = page.locator('.wb-artboard').first();
     const picker = board.getByRole('button', { name: 'Choose file Attach evidence' });
-    const input = board.locator('input[type="file"]');
+    const input = board.locator('input[type="file"][name="attachment"]');
     await picker.waitFor({ timeout: 20_000 });
     const [chooser] = await Promise.all([page.waitForEvent('filechooser'), picker.press('Enter')]);
     await chooser.setFiles({
@@ -1268,7 +1268,7 @@ export default {
       mimeType: 'text/plain',
       buffer: Buffer.from('First'),
     });
-    await board.getByRole('button', { name: 'Remove first.txt' }).waitFor();
+    await board.getByRole('button', { name: /Remove .*first[.]txt/ }).waitFor();
     await input.evaluate((node) => {
       const owner = document.createElement('form');
       owner.id = 'external-attachment-owner';
@@ -1276,7 +1276,7 @@ export default {
       node.setAttribute('form', owner.id);
     });
     async function drop(names) {
-      await board.locator('.file-input-proto').evaluate((target, names) => {
+      await input.evaluate((target, names) => {
         const dataTransfer = new DataTransfer();
         for (const name of names) {
           dataTransfer.items.add(new File([name], name, { type: 'text/plain' }));
@@ -1292,10 +1292,10 @@ export default {
         return { name: entry.name, text: await entry.text() };
       });
     await drop(['ثاني.txt']);
-    await board.getByRole('button', { name: 'Remove ثاني.txt' }).waitFor();
+    await board.getByRole('button', { name: /Remove .*ثاني[.]txt/ }).waitFor();
     assert.deepEqual(await read(), { name: 'ثاني.txt', text: 'ثاني.txt' });
     await drop(['three.txt', 'four.txt']);
-    await board.getByRole('status').filter({ hasText: 'Drop one file at a time' }).waitFor();
+    await board.getByRole('status').filter({ hasText: 'Choose one file at a time' }).waitFor();
     assert.deepEqual(await read(), { name: 'ثاني.txt', text: 'ثاني.txt' });
     await input.evaluate((node) => {
       node.closest('form').reset();
@@ -1304,16 +1304,16 @@ export default {
     });
     await page.evaluate(() => new Promise(requestAnimationFrame));
     assert.deepEqual(await read(), { name: 'ثاني.txt', text: 'ثاني.txt' });
-    assert.equal(await board.getByRole('button', { name: 'Remove ثاني.txt' }).count(), 1);
+    assert.equal(await board.getByRole('button', { name: /Remove .*ثاني[.]txt/ }).count(), 1);
     await input.evaluate((node) => {
       node.form.reset();
       node.form.addEventListener('reset', (event) => event.preventDefault(), { once: true });
       node.form.reset();
     });
-    await board.getByRole('button', { name: 'Remove ثاني.txt' }).waitFor({ state: 'detached' });
+    await board.getByRole('button', { name: /Remove .*ثاني[.]txt/ }).waitFor({ state: 'detached' });
     assert.deepEqual(await read(), { name: '', text: '' });
     assert.equal(
-      await board.getByRole('status').filter({ hasText: 'Drop one file at a time' }).count(),
+      await board.getByRole('status').filter({ hasText: 'Choose one file at a time' }).count(),
       0,
     );
   },

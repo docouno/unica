@@ -53,12 +53,13 @@ Anchored panels pair native `popover` promotion with a lightweight positioning a
 
 Use a native form inside modal Body and associate a Footer submitter with `form={id}`. Form associations and accessible name references use the physical DOM tree. Keep each referenced form or label in the same document and shadow tree as the associated element. [Forms and portal hosts](../components/modal.md#forms-and-portal-hosts)
 
-Every Unica data-entry control (`Input`, `Textarea`, `NumberInput`, `Checkbox`, `Radio`, `Switch`, `Chip`, `ChipGroup`, `Listbox`, `Select`, `Combobox`, `Autocomplete`, `DatePicker`, `DateRangePicker`, `Slider`, `RangeSlider`, `SegmentedControl`, `TagsInput`, `FileInput`, and `*Card` choices) behaves as a native `<form>` participant:
+Every Unica data-entry control (`Input`, `Textarea`, `NumberInput`, `Checkbox`, `Radio`, `Switch`, `Chip`, `ChipGroup`, `Listbox`, `Select`, `Combobox`, `Autocomplete`, `DatePicker`, `DateRangePicker`, `Slider`, `RangeSlider`, `SegmentedControl`, `TagsInput`, `FileInput`, `Dropzone`, and `*Card` choices) behaves as a native `<form>` participant:
 
 1. **`FormData` & constraint validation**
    Controls use a native `<input>`, `<textarea>`, or `<select>` with the applicable `name`, `form`, and constraint attributes. A composite keeps its visually hidden native control mounted when its popup closes or its visible options change. A single-choice control with no selected value omits its entry. A native binary input contributes a value only when it is checked, enabled, and named. An explicitly selected empty string contributes an empty value. Repeated binary entries follow document order. Composite `select` carriers retain accepted selections even when options are absent from the visible catalog. A `select multiple` carrier submits repeated entries in committed order.
 
    [NumberInput](../components/number-input.md) uses the visible native number editor for both validation and submission. Its numeric proposal uses the JavaScript projection, while the form keeps the native draft string.
+   [FileInput](../components/file-input.md#native-form-lifecycle) and [Dropzone](../components/dropzone.md) put accepted files on a named native file input. Their chooser keeps candidates separate from committed bytes, and selection opens after client hydration. The component contract covers empty files, external form owners and controlled reset timing.
 
    [Slider and RangeSlider](../components/slider.md) use focusable native range inputs. A RangeSlider updates both sets of thumb bounds and values together. A native reset restores the pair in time for synchronous form reads.
 

@@ -93,6 +93,7 @@ export default {
     const dryRun = page.getByRole('button', { name: 'Run dry-run check' });
     assert.equal(await proceed.isDisabled(), true);
     assert.equal(await map.getByRole('button').count(), 0);
+    await map.getByText('Frontmatter rules mapped', { exact: true }).waitFor();
     await dryRun.press('Enter');
     await assertFocused(dryRun);
     assert.match(await current.textContent(), /Upload & verify/);
@@ -102,7 +103,7 @@ export default {
     await page.getByRole('button', { name: 'Back', exact: true }).press('Enter');
     await assertFocused(page.getByRole('heading', { name: /Archive bundles & validation queue/ }));
     assert.match(await current.textContent(), /Upload & verify/);
-    await page.locator('input[type="file"][accept=".md,.mdx,.zip"]').setInputFiles({
+    await page.locator('input[type="file"][name="archives"]').setInputFiles({
       name: 'release-notes.md',
       mimeType: 'text/markdown',
       buffer: Buffer.from('# Release notes'),
@@ -111,6 +112,8 @@ export default {
     assert.equal(await proceed.isDisabled(), true);
     await dryRun.press('Enter');
     assert.equal(await proceed.isEnabled(), true);
+    await page.getByRole('button', { name: /Remove .*folio-adr-schema-v3\.yaml/u }).press('Enter');
+    await map.getByText('Default frontmatter rules', { exact: true }).waitFor();
   },
 
   'Stepper exposes a live return trial and the shipped Usage document': async ({

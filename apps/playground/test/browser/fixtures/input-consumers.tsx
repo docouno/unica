@@ -1,4 +1,4 @@
-import { FormField, NumberInput, Select } from '@docouno/unica';
+import { FileInput, FormField, NumberInput, Select } from '@docouno/unica';
 import { useState } from 'react';
 import type { ReactElement } from 'react';
 import { Autocomplete, Combobox } from '../../../src/prototypes/combobox/combobox.proto.js';
@@ -6,7 +6,6 @@ import {
   DatePicker,
   DateRangePicker,
 } from '../../../src/prototypes/date-picker/date-picker.proto.js';
-import { FileInput } from '../../../src/prototypes/file-input/file-input.proto.js';
 
 const choices = [
   { value: 'notes', label: 'Research notes' },
@@ -82,20 +81,14 @@ export default function InputConsumers(): ReactElement {
         </FormField>
       </div>
       <div data-testid="file-readonly">
-        <FileInput
-          label="Approved attachment"
-          description="A saved reference."
-          initialFileName="plan.pdf"
-          readOnly
-        />
+        <FormField label="Approved attachment" description="A saved reference." target="group">
+          <FileInput value={[new File(['approved document'], 'plan.pdf')]} readOnly />
+        </FormField>
       </div>
       <div data-testid="file-editable">
-        <FileInput
-          label="Upload attachment"
-          aria-label="Attachment for case 42"
-          description="Attach a document."
-          name="attachment"
-        />
+        <FormField label="Upload attachment" description="Attach a document.">
+          <FileInput aria-label="Attachment for case 42" name="attachment" />
+        </FormField>
       </div>
       <div data-testid="number-fields">
         <NumberInput aria-label="Compact count" size="s" defaultValue={3} />

@@ -14,6 +14,11 @@ import {
   AlertTitle,
   Badge,
   Card,
+  Dropzone,
+  FileInput,
+  FileList,
+  FileListItem,
+  FormField,
   Progress,
   Text,
   Title,
@@ -25,25 +30,17 @@ import {
   ToastProvider,
   useToast,
 } from '@docouno/unica';
-import type { ToastId } from '@docouno/unica';
+import type { FileIntakeResult, FileListItemState, ToastId } from '@docouno/unica';
 import { FolioToastRegion } from './folio/folio.toast.js';
-import {
-  Dropzone,
-  FileInput,
-  FileItem,
-  FileList,
-} from '../prototypes/file-input/file-input.proto.js';
-import type { FileItemStatus } from '../prototypes/file-input/file-input.proto.js';
 import { FolioRail, FolioScene, PageIntro } from './folio/folio.shared.js';
 import './folio/folio.settings.css';
 
 interface StagedArchive {
   readonly id: string;
   readonly name: string;
-  readonly megabytes: number;
-  readonly detail: string;
-  readonly status: FileItemStatus;
-  readonly progress?: number;
+  readonly bytes: number;
+  readonly file?: File;
+  readonly state: FileListItemState;
 }
 
 type ImportSource = 'schema' | 'archives';
@@ -54,36 +51,35 @@ interface ImportError {
   readonly source: ImportSource;
 }
 
-function isSchema(file: File): boolean {
-  return /\.ya?ml$/i.test(file.name);
-}
+const maxArchiveBytes = 50 * 1024 * 1024;
+const archiveLimit = `${(maxArchiveBytes / 1_000_000).toFixed(1)} MB`;
+const savedSchema = { name: 'folio-adr-schema-v3.yaml', fileSize: 18_400 };
 
 const initialUpload: StagedArchive = {
   id: 'rfcs',
   name: 'legacy-envoy-rfcs.zip',
-  megabytes: 6.4,
-  detail: 'Uploading archive…',
-  status: 'uploading',
-  progress: 65,
+  bytes: 6_400_000,
+  state: { phase: 'uploading', label: 'Uploading archive…', progress: 65 },
 };
 
 const initialArchives: readonly StagedArchive[] = [
   {
     id: 'runbooks',
     name: 'core-infra-runbooks-2026-q3.zip',
-    megabytes: 18.2,
-    detail: '28 docs verified',
-    status: 'success',
+    bytes: 18_200_000,
+    state: { phase: 'success', label: '28 docs verified' },
   },
   initialUpload,
 ];
 
 function WorkspaceAdminScene(): ReactElement {
-  const [schema, setSchema] = useState('folio-adr-schema-v3.yaml');
-  const [schemaSize, setSchemaSize] = useState('18.4 KB');
+  const [hasSavedSchema, setHasSavedSchema] = useState(true);
+  const [schema, setSchema] = useState<readonly File[]>([]);
+  const hasSchema = hasSavedSchema || schema.length > 0;
   const policyLabelId = useId();
   const [policy, setPolicy] = useState('revision');
   const [archives, setArchives] = useState<readonly StagedArchive[]>(initialArchives);
+  const stagedArchives = useRef(initialArchives);
   const [currentStep, setCurrentStep] = useState<'source' | 'verify' | 'commit'>('verify');
   const [validation, setValidation] = useState<'checking' | 'required' | 'verified'>('checking');
   const [error, setError] = useState<ImportError | null>(null);
@@ -97,8 +93,8 @@ function WorkspaceAdminScene(): ReactElement {
   const attempt = useRef(0);
   const summary = useRef<HTMLDivElement>(null);
   const summaryClose = useRef<HTMLButtonElement>(null);
-  const schemaCard = useRef<HTMLDivElement>(null);
-  const archivesCard = useRef<HTMLDivElement>(null);
+  const schemaPicker = useRef<HTMLInputElement>(null);
+  const archivesPicker = useRef<HTMLInputElement>(null);
   const restoreFocus = useRef<{
     readonly source: ImportSource;
     readonly document: Document;
@@ -112,9 +108,9 @@ function WorkspaceAdminScene(): ReactElement {
     if (error) {
       summaryClose.current?.focus();
     } else if (restoration.source === 'schema') {
-      schemaCard.current?.querySelector('button')?.focus();
+      schemaPicker.current?.focus();
     } else {
-      archivesCard.current?.querySelector<HTMLInputElement>('input[type="file"]')?.focus();
+      archivesPicker.current?.focus();
     }
   }, [error]);
 
@@ -176,7 +172,8 @@ function WorkspaceAdminScene(): ReactElement {
     );
   }, [toast]);
   const readyToCommit = validation === 'verified';
-  const totalSize = archives.reduce((sum, archive) => sum + archive.megabytes, 0);
+  const totalSize = archives.reduce((sum, archive) => sum + archive.bytes, 0) / 1_000_000;
+  const archiveFiles = archives.flatMap(({ file }) => (file ? [file] : []));
 
   function showImportNotice(description: string, finishUpload = false): void {
     const options = {
@@ -237,25 +234,25 @@ function WorkspaceAdminScene(): ReactElement {
     }
   }
 
+  function updateArchives(next: readonly StagedArchive[]): void {
+    stagedArchives.current = next;
+    setArchives(next);
+  }
+
   function runDryRun(): void {
-    setArchives((current) =>
+    const current = stagedArchives.current;
+    updateArchives(
       current.map((archive) =>
-        archive.status === 'success'
+        archive.state.phase === 'success'
           ? archive
-          : {
-              id: archive.id,
-              name: archive.name,
-              megabytes: archive.megabytes,
-              detail: 'Archive validated',
-              status: 'success',
-            },
+          : { ...archive, state: { phase: 'success', label: 'Archive validated' } },
       ),
     );
     setValidation('verified');
     setCurrentStep('verify');
     clearValidationNotice();
     showImportNotice(
-      `Dry-run check complete: ${archives.length} staged archives passed validation.`,
+      `Dry-run check complete: ${current.length} staged archives passed validation.`,
       true,
     );
   }
@@ -268,43 +265,46 @@ function WorkspaceAdminScene(): ReactElement {
   }
 
   function chooseSchema(files: readonly File[]): void {
-    const file = files[0];
-    if (!file) {
-      return;
-    }
-    if (!isSchema(file)) {
-      reportResult('schema', 'Choose a YAML mapping schema.');
-      return;
-    }
-    setSchema(file.name);
+    setHasSavedSchema(false);
+    setSchema(files);
     invalidateVerification();
-    setSchemaSize(`${(file.size / 1024).toFixed(1)} KB`);
-    reportResult('schema');
+    if (files.length === 0) {
+      reportResult('schema');
+    }
   }
 
-  function addArchives(files: readonly File[]): void {
-    const accepted = files.filter(
-      (file) => /\.(?:md|mdx|zip)$/i.test(file.name) && file.size <= 50 * 1024 * 1024,
-    );
-    reportResult(
-      'archives',
-      accepted.length !== files.length
-        ? 'Choose UTF-8 Markdown or ZIP archives up to 50 MB each. Unsupported files were not added.'
-        : undefined,
-    );
-    const additions = accepted
-      .filter((file) => !archives.some((archive) => archive.name === file.name))
-      .map((file) => ({
-        id: `${file.name}-${file.size}-${file.lastModified}`,
+  function receiveArchives({ accepted, rejected }: FileIntakeResult): void {
+    // The next drop can arrive before React publishes the previous archive list.
+    const current = stagedArchives.current;
+    const names = new Set(current.map(({ name }) => name));
+    const additions: StagedArchive[] = [];
+    let duplicate = rejected.some(({ code }) => code === 'duplicate');
+    for (const file of accepted) {
+      if (names.has(file.name)) {
+        duplicate = true;
+        continue;
+      }
+      names.add(file.name);
+      additions.push({
+        id: `local:${file.name}`,
         name: file.name,
-        megabytes: file.size / 1024 / 1024,
-        detail: 'Queued for validation',
-        status: 'neutral' as const,
-      }));
+        bytes: file.size,
+        file,
+        state: { phase: 'queued', label: 'Queued for validation' },
+      });
+    }
     if (additions.length > 0) {
-      setArchives((current) => [...current, ...additions]);
+      updateArchives([...current, ...additions]);
       invalidateVerification();
     }
+    reportResult(
+      'archives',
+      rejected.some(({ code }) => code !== 'duplicate')
+        ? `Choose UTF-8 Markdown or ZIP archives up to ${archiveLimit} each. Unsupported files were not added.`
+        : duplicate
+          ? 'A staged archive already uses that filename.'
+          : undefined,
+    );
   }
 
   return (
@@ -351,7 +351,7 @@ function WorkspaceAdminScene(): ReactElement {
               <StepperStep
                 value="source"
                 label="Source & schema"
-                description={schema ? 'Frontmatter rules mapped' : 'Default frontmatter rules'}
+                description={hasSchema ? 'Frontmatter rules mapped' : 'Default frontmatter rules'}
                 completed
               />
               <StepperStep
@@ -379,7 +379,7 @@ function WorkspaceAdminScene(): ReactElement {
                 <AlertDescription>{error.message}</AlertDescription>
               </Alert>
             )}
-            <Card ref={schemaCard} className="folio-import-card">
+            <Card className="folio-import-card">
               <div className="folio-row folio-between folio-import-card-heading">
                 <div className="folio-stack">
                   <Title as="h2" size="body-m" ref={sourceHeading} tabIndex={-1}>
@@ -389,29 +389,35 @@ function WorkspaceAdminScene(): ReactElement {
                     Attach a YAML mapping rule set and choose how matching slugs are reconciled.
                   </Text>
                 </div>
-                <Badge size="s" status={schema ? 'success' : 'neutral'} dot={Boolean(schema)}>
-                  {schema ? 'Schema valid' : 'Default rules'}
+                <Badge size="s" status={hasSchema ? 'success' : 'neutral'} dot={hasSchema}>
+                  {hasSchema ? 'Schema valid' : 'Default rules'}
                 </Badge>
               </div>
-              <FileInput
-                accept=".yaml,.yml"
+              <FormField
                 label="Frontmatter mapping schema"
-                fileName={schema}
-                fileDetail={schemaSize}
-                onFilesChange={chooseSchema}
-                onChange={({ currentTarget }) => {
-                  const file = currentTarget.files?.[0];
-                  if (file && !isSchema(file)) {
-                    currentTarget.value = '';
-                  }
-                }}
-                onClear={() => {
-                  setSchema('');
-                  setSchemaSize('');
-                  invalidateVerification();
-                }}
                 description="Optional YAML mapping for custom status and service tags."
-              />
+              >
+                <FileInput
+                  ref={schemaPicker}
+                  name="schema"
+                  accept=".yaml,.yml"
+                  showSize
+                  value={schema}
+                  onValueChange={chooseSchema}
+                  announceIntake={false}
+                  onIntake={({ rejected }) =>
+                    reportResult(
+                      'schema',
+                      rejected.length ? 'Choose a YAML mapping schema.' : undefined,
+                    )
+                  }
+                />
+              </FormField>
+              <FileList aria-label="Saved mapping schema" emptyFocusRef={schemaPicker}>
+                {hasSavedSchema && (
+                  <FileListItem {...savedSchema} onRemove={() => chooseSchema([])} />
+                )}
+              </FileList>
               <div className="folio-import-policy">
                 <Text id={policyLabelId} size="body-s" weight="medium">
                   Duplicate document slug handling
@@ -438,7 +444,7 @@ function WorkspaceAdminScene(): ReactElement {
                 </RadioCardGroup>
               </div>
             </Card>
-            <Card ref={archivesCard} className="folio-import-card">
+            <Card className="folio-import-card">
               <div className="folio-row folio-between folio-import-card-heading">
                 <div className="folio-stack">
                   <Title as="h2" size="body-m" ref={verificationHeading} tabIndex={-1}>
@@ -453,10 +459,16 @@ function WorkspaceAdminScene(): ReactElement {
                 </Badge>
               </div>
               <Dropzone
+                ref={archivesPicker}
                 size="m"
-                description=".md and .mdx (UTF-8), or .zip · 50 MB max per file"
+                name="archives"
+                aria-label="Browse files"
+                description="Use UTF-8 for Markdown documents."
                 accept=".md,.mdx,.zip"
-                onFilesChange={addArchives}
+                maxSize={maxArchiveBytes}
+                value={archiveFiles}
+                announceIntake={false}
+                onIntake={receiveArchives}
               />
               <Progress
                 value={readyToCommit ? 100 : validation === 'checking' ? 84 : 0}
@@ -466,17 +478,17 @@ function WorkspaceAdminScene(): ReactElement {
                     : 'Schema & cross-link validation'
                 }
               />
-              <FileList>
+              <FileList aria-label="Staged archives" emptyFocusRef={archivesPicker}>
                 {archives.map((archive) => (
-                  <FileItem
+                  <FileListItem
                     key={archive.id}
                     name={archive.name}
-                    status={archive.status}
-                    progress={archive.progress}
-                    fileSize={`${archive.megabytes.toFixed(1)} MB`}
-                    detail={archive.detail}
+                    state={archive.state}
+                    fileSize={archive.bytes}
                     onRemove={() => {
-                      setArchives((current) => current.filter((file) => file.id !== archive.id));
+                      updateArchives(
+                        stagedArchives.current.filter((file) => file.id !== archive.id),
+                      );
                       if (archive.id === initialUpload.id) {
                         clearActivityNotice();
                       }
@@ -492,7 +504,7 @@ function WorkspaceAdminScene(): ReactElement {
                   tone="danger"
                   disabled={archives.length === 0}
                   onClick={() => {
-                    setArchives([]);
+                    updateArchives([]);
                     setCurrentStep('source');
                     setValidation('required');
                     clearValidationNotice();

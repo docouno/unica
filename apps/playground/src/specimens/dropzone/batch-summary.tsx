@@ -1,6 +1,5 @@
 import { useState } from 'react';
-import { Badge, Flex, Stack, Text } from '@docouno/unica';
-import { Dropzone } from '../../prototypes/file-input/file-input.proto.js';
+import { Badge, Dropzone, Flex, Stack, Text } from '@docouno/unica';
 import '@docouno/unica/styles.css';
 
 export function BatchSummary({ intakeProps = {} } = {}) {
@@ -12,13 +11,11 @@ export function BatchSummary({ intakeProps = {} } = {}) {
         multiple
         accept=""
         description={<bdi>Choose local files to measure this batch.</bdi>}
-        onFilesChange={(files) => {
-          if (files.length) {
-            setSummary({
-              count: files.length,
-              bytes: files.reduce((sum, file) => sum + file.size, 0),
-            });
-          }
+        onIntake={({ accepted }) => {
+          setSummary({
+            count: accepted.length,
+            bytes: accepted.reduce((sum, file) => sum + file.size, 0),
+          });
         }}
       />
       <Flex role="status" align="center" gap={8} wrap="wrap">
