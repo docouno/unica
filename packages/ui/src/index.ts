@@ -331,6 +331,12 @@ export type {
   ModalTriggerProps,
   ModalWidth,
 } from './components/Modal/index.js';
+export { Pagination } from './components/Pagination/index.js';
+export type {
+  PaginationLinkProps,
+  PaginationMessages,
+  PaginationProps,
+} from './components/Pagination/index.js';
 export {
   Popover,
   PopoverBody,

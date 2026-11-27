@@ -1,6 +1,5 @@
 import type { ReactElement } from 'react';
-import { Stack, Text, Title } from '@docouno/unica';
-import { Pagination } from '../../prototypes/pagination/pagination.proto.js';
+import { Pagination, Stack, Text, Title } from '@docouno/unica';
 import type { PreviewProps } from '../../workbench/types.js';
 import { ExampleSurface } from '../shared/example-surface.js';
 import { focusLinkedFragment, specimenBlockPage } from '../shared/specimen-fragment.js';
@@ -69,7 +68,7 @@ export function ArchivePages({ ctx }: PreviewProps): ReactElement {
       </Stack>
       <Pagination
         {...ctx.subject}
-        label="Archive pages"
+        aria-label="Archive pages"
         format="pages"
         size="s"
         pageCount={fieldNotes.length}

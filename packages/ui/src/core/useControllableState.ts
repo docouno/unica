@@ -9,6 +9,10 @@ export interface ControllableStateOptions<T> {
   readonly isEqual?: ((a: T, b: T) => boolean) | undefined;
 }
 
+interface StateAuthorityOptions<T> extends ControllableStateOptions<T> {
+  readonly allowModeSwitch?: boolean;
+}
+
 interface LocalOrigin<T> {
   readonly initialValue: T;
 }
@@ -67,7 +71,8 @@ export function useStateAuthority<T>({
   defaultValue,
   onChange,
   isEqual = Object.is,
-}: ControllableStateOptions<T>): [T, StateAuthority<T>] {
+  allowModeSwitch = false,
+}: StateAuthorityOptions<T>): [T, StateAuthority<T>] {
   const controlled = value !== undefined;
   const [history] = useState(() => createControlledHistory(defaultValue));
   const [local, setLocal] = useState<LocalState<T> | null>(null);
@@ -111,13 +116,18 @@ export function useStateAuthority<T>({
       committedValue: current,
       latestValue: nextLatest,
     };
-    if (controlled !== previous.controlled && !warned.current && devWarningsEnabled()) {
+    if (
+      !allowModeSwitch &&
+      controlled !== previous.controlled &&
+      !warned.current &&
+      devWarningsEnabled()
+    ) {
       warned.current = true;
       console.warn(
         `useControllableState switched to ${controlled ? 'controlled' : 'uncontrolled'} mode.`,
       );
     }
-  }, [controlled, history, origin, local, onChange, isEqual, current]);
+  }, [allowModeSwitch, controlled, history, origin, local, onChange, isEqual, current]);
 
   const read = useCallback((): T => committed.current.latestValue, []);
 

@@ -1,0 +1,10 @@
+Pagination layout test fixture
+
+File: pagination-fullwidth-400.ttf (Noto Sans JP, weight 400)
+Text: ０１２３４５６７８９
+Purpose: deterministic fullwidth digit metrics in the Pagination browser tests.
+
+Google Fonts text subset:
+https://fonts.googleapis.com/css2?family=Noto+Sans+JP%3Awght%40400&text=%EF%BC%90%EF%BC%91%EF%BC%92%EF%BC%93%EF%BC%94%EF%BC%95%EF%BC%96%EF%BC%97%EF%BC%98%EF%BC%99
+
+License: SIL Open Font License 1.1, included in ../../../../public/assets/licenses/tags-input-japanese-OFL.txt.

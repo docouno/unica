@@ -1,6 +1,5 @@
 import { useId, useState } from 'react';
-import { Flex, Link, Stack, Text, Title } from '@docouno/unica';
-import { Pagination } from '../../prototypes/pagination/pagination.proto.js';
+import { Link, Pagination, Stack, Text, Title } from '@docouno/unica';
 import {
   Table,
   TableBody,
@@ -13,6 +12,26 @@ import {
   TableScroll,
 } from '../../prototypes/table/table.proto.js';
 import '@docouno/unica/styles.css';
+
+const footerStyles = `
+  .recovery-reference-pages {
+    container: recovery-reference-pages / inline-size;
+  }
+
+  .recovery-reference-footer {
+    display: grid;
+    align-items: center;
+    gap: var(--space-8);
+  }
+
+  @container recovery-reference-pages (inline-size >= 360px) {
+    .recovery-reference-footer {
+      grid-template-columns: minmax(0, 1fr) 12rem;
+    }
+
+    .recovery-reference-footer > nav { justify-items: end; }
+  }
+`;
 
 const cellInset = {
   paddingInline: 'clamp(var(--space-2), 4% - var(--space-16), var(--table-cell-x))',
@@ -72,13 +91,16 @@ export function ReferenceIndex({ documentHref = '', subject = {} } = {}) {
           </TableBody>
         </Table>
       </TableScroll>
-      <Flex gap={8} wrap="wrap" align="center" justify="space-between">
-        <Text size="caption-l" color="muted" role="status">
-          <bdi>{page === 1 ? '1–3 of 6 documents' : '4–6 of 6 documents'}</bdi>
-        </Text>
-        <div style={{ inlineSize: 'min(100%, 12rem)', marginInlineStart: 'auto' }}>
+      <div className="recovery-reference-pages">
+        <style href="recovery-reference-footer-layout" precedence="examples">
+          {footerStyles}
+        </style>
+        <div className="recovery-reference-footer">
+          <Text size="caption-l" color="muted" role="status">
+            <bdi>{page === 1 ? '1–3 of 6 documents' : '4–6 of 6 documents'}</bdi>
+          </Text>
           <Pagination
-            label="Recovery references pages"
+            aria-label="Recovery references pages"
             format="compact"
             page={page}
             pageCount={2}
@@ -86,7 +108,7 @@ export function ReferenceIndex({ documentHref = '', subject = {} } = {}) {
             onPageChange={setPage}
           />
         </div>
-      </Flex>
+      </div>
       {!documentHref && (
         <article id={runbookId} tabIndex={-1} aria-labelledby={runbookId + '-heading'}>
           <Stack gap={4}>
