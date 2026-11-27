@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import type { ReactElement } from 'react';
 import { ArrowRightIcon, FileTextIcon, PushPinIcon } from '@phosphor-icons/react';
-import { Avatar, Button } from '@docouno/unica';
+import { Breadcrumb, BreadcrumbPage, Avatar, Button } from '@docouno/unica';
 import { Toast } from '@docouno/unica';
 import {
   Alert,
@@ -16,7 +16,6 @@ import {
 } from '@docouno/unica';
 import { List, ListItem } from '../prototypes/list/list.proto.js';
 import { SegmentedControl } from '@docouno/unica';
-import { Breadcrumb, BreadcrumbPage } from '../prototypes/breadcrumb/breadcrumb.proto.js';
 import { defineScene } from '../workbench/types.js';
 import {
   FolioScene,

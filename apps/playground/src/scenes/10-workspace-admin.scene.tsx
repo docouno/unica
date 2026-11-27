@@ -5,6 +5,9 @@ import { ArrowLeftIcon } from '@phosphor-icons/react';
 import { defineScene } from '../workbench/types.js';
 import { AppShell, Header } from '../prototypes/app-shell/app-shell.proto.js';
 import {
+  Breadcrumb,
+  BreadcrumbLink,
+  BreadcrumbPage,
   Alert,
   AlertClose,
   AlertDescription,
@@ -20,11 +23,6 @@ import {
   ToastProvider,
   useToast,
 } from '@docouno/unica';
-import {
-  Breadcrumb,
-  BreadcrumbLink,
-  BreadcrumbPage,
-} from '../prototypes/breadcrumb/breadcrumb.proto.js';
 import type { ToastId } from '@docouno/unica';
 import { FolioToastRegion } from './folio/folio.toast.js';
 import {

@@ -1,4 +1,7 @@
 import {
+  Breadcrumb,
+  BreadcrumbLink,
+  BreadcrumbPage,
   Badge,
   Collapsible,
   CollapsibleContent,
@@ -27,11 +30,6 @@ import { Menu, MenuContent, MenuItem, MenuSeparator, MenuTrigger } from '@docoun
 import { IconButton } from '@docouno/unica';
 import { TeamPreview } from '../examples/hover-card-content.js';
 import { Tabs, TabsPanel, TabsList, TabsTrigger } from '@docouno/unica';
-import {
-  Breadcrumb,
-  BreadcrumbLink,
-  BreadcrumbPage,
-} from '../prototypes/breadcrumb/breadcrumb.proto.js';
 import { defineScene } from '../workbench/types.js';
 import {
   DocumentActions,

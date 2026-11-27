@@ -1,6 +1,8 @@
 import { useContext, useId } from 'react';
-import type { ComponentPropsWithRef, MouseEvent, ReactElement, ReactNode } from 'react';
-import { Slot, requireSlotChild, resolveSlotProps } from '../../core/Slot.js';
+import type { MouseEvent, ReactElement } from 'react';
+import { Slot, resolveSlotProps } from '../../core/Slot.js';
+import { fallbackAnchorChild, requireAnchorChild, secureRel } from '../../core/anchor.js';
+import type { AnchorProps } from '../../core/anchor.js';
 import { useComponentDefaults } from '../../core/UnicaProvider.js';
 import { cx } from '../../core/cx.js';
 import { DescriptionFallback, DescriptionScope, descriptionIds } from '../../core/description.js';
@@ -12,75 +14,6 @@ import type { LinkProps } from './types.js';
 import './link.css';
 
 export type { LinkProps, LinkSize } from './types.js';
-
-type AnchorProps = ComponentPropsWithRef<'a'>;
-
-function requireAnchorChild(children: ReactNode, disabled: boolean): ReactElement<AnchorProps> {
-  const child: ReactElement<AnchorProps> = requireSlotChild<HTMLAnchorElement>(
-    children,
-    'Link asChild',
-  );
-  if (typeof child.type === 'string' && child.type !== 'a') {
-    throw new Error('Link asChild requires one anchor or one component that renders an anchor.');
-  }
-  if (child.type === 'a' && !disabled && typeof child.props.href !== 'string') {
-    throw new Error('An enabled Link asChild anchor requires a string href.');
-  }
-  if (
-    child.props.dangerouslySetInnerHTML !== undefined ||
-    typeof child.props.children === 'function' ||
-    (typeof child.type !== 'string' && child.props.children === undefined)
-  ) {
-    throw new Error('Link asChild requires its label to be supplied as ordinary children.');
-  }
-  return child;
-}
-
-function tokens(value?: string): string[] {
-  return value?.split(/[\t\n\f\r ]+/).filter(Boolean) ?? [];
-}
-
-function secureRel(rel?: string): string {
-  const words = new Map<string, string>();
-  for (const token of tokens(rel)) {
-    const key = token.toLowerCase();
-    if (key !== 'opener' && !words.has(key)) {
-      words.set(key, token);
-    }
-  }
-  words.set('noopener', 'noopener');
-  words.set('noreferrer', 'noreferrer');
-  return [...words.values()].join(' ');
-}
-
-// Router-specific props never cross into the native disabled fallback.
-const fallbackKeys = /* @__PURE__ */ new Set([
-  'id',
-  'className',
-  'style',
-  'title',
-  'lang',
-  'dir',
-  'hidden',
-  'inert',
-  'translate',
-  'slot',
-  'draggable',
-  'spellCheck',
-  'itemID',
-  'itemProp',
-  'itemRef',
-  'itemScope',
-  'itemType',
-]);
-
-function fallbackAttributes(props: AnchorProps): AnchorProps {
-  return Object.fromEntries(
-    Object.entries(props).filter(
-      ([name]) => fallbackKeys.has(name) || name.startsWith('aria-') || name.startsWith('data-'),
-    ),
-  );
-}
 
 function blockActivation(event: MouseEvent<HTMLAnchorElement>): void {
   event.preventDefault();
@@ -111,7 +44,7 @@ export function Link({
   const hintId = useId();
   const descriptionScope = useContext(DescriptionScope);
   const resolvedSize = useComponentDefaults('Link', 'size', { instance: size, builtIn: 'inherit' });
-  const child = asChild ? requireAnchorChild(children, disabled) : undefined;
+  const child = asChild ? requireAnchorChild(children, disabled, 'Link') : undefined;
   if (dangerouslySetInnerHTML !== undefined) {
     throw new Error('Link requires its label to be supplied as ordinary children.');
   }
@@ -226,7 +159,7 @@ export function Link({
           slotOwned={unavailable}
           slotContent={content}
         >
-          <a {...fallbackAttributes(child.props)} ref={child.props.ref} />
+          {fallbackAnchorChild(child)}
         </Slot>
       );
     }

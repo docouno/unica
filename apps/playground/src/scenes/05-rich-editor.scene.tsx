@@ -1,4 +1,4 @@
-import { FormField } from '@docouno/unica';
+import { Breadcrumb, BreadcrumbLink, BreadcrumbPage, FormField } from '@docouno/unica';
 import {
   Badge,
   Blockquote,
@@ -44,11 +44,6 @@ import { Subbar } from '../prototypes/app-shell/app-shell.proto.js';
 import { Button, IconButton, Listbox } from '@docouno/unica';
 import { ToastProvider, useToast } from '@docouno/unica';
 import { FolioToastRegion } from './folio/folio.toast.js';
-import {
-  Breadcrumb,
-  BreadcrumbLink,
-  BreadcrumbPage,
-} from '../prototypes/breadcrumb/breadcrumb.proto.js';
 import { defineScene } from '../workbench/types.js';
 import { FolioScene, FolioWorkspace, Person, TeamMembers } from './folio/folio.shared.js';
 
