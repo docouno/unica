@@ -13,14 +13,12 @@ import {
   PlusIcon,
   SlackLogoIcon,
 } from '@phosphor-icons/react';
+import { defineScene } from '../workbench/types.js';
+import { AsidePanel, WorkspaceNavigation } from '../prototypes/app-shell/app-shell.proto.js';
 import {
   Breadcrumb,
   BreadcrumbLink,
   BreadcrumbPage,
-} from '../prototypes/breadcrumb/breadcrumb.proto.js';
-import { defineScene } from '../workbench/types.js';
-import { AsidePanel, WorkspaceNavigation } from '../prototypes/app-shell/app-shell.proto.js';
-import {
   Badge,
   Button,
   Card,

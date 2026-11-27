@@ -1,6 +1,5 @@
-import { Stack, Title } from '@docouno/unica';
+import { Breadcrumb, BreadcrumbLink, Stack, Title } from '@docouno/unica';
 import '@docouno/unica/styles.css';
-import { Breadcrumb, BreadcrumbLink } from '../../prototypes/breadcrumb/breadcrumb.proto.js';
 
 export function BreadcrumbOverlayExample({
   workspaceHref = '/workspace',

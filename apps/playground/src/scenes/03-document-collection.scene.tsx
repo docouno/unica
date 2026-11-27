@@ -1,4 +1,4 @@
-import { Card, CardMedia, Link } from '@docouno/unica';
+import { Breadcrumb, BreadcrumbLink, BreadcrumbPage, Card, CardMedia, Link } from '@docouno/unica';
 import { useRef, useState } from 'react';
 import { folioSceneHref } from './folio/folio.routes.js';
 import type { ReactElement } from 'react';
@@ -37,11 +37,6 @@ import {
 } from '../prototypes/table/table.proto.js';
 import { TagGroup, Text, Title } from '@docouno/unica';
 import type { TagGroupItem } from '@docouno/unica';
-import {
-  Breadcrumb,
-  BreadcrumbLink,
-  BreadcrumbPage,
-} from '../prototypes/breadcrumb/breadcrumb.proto.js';
 import { defineScene } from '../workbench/types.js';
 import { DatabaseTopology, IngressTopology } from './folio/folio.diagrams.js';
 import {

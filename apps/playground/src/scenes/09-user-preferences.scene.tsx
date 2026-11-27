@@ -1,4 +1,6 @@
 import {
+  Breadcrumb,
+  BreadcrumbPage,
   Accordion,
   AccordionContent,
   AccordionItem,
@@ -30,7 +32,6 @@ import {
   SettingsNavigation,
   StickyActionBar,
 } from '../prototypes/app-shell/app-shell.proto.js';
-import { Breadcrumb, BreadcrumbPage } from '../prototypes/breadcrumb/breadcrumb.proto.js';
 import {
   Table,
   TableBody,

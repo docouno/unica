@@ -1,4 +1,7 @@
 import {
+  Breadcrumb,
+  BreadcrumbLink,
+  BreadcrumbPage,
   Badge,
   Button,
   Card,
@@ -36,11 +39,6 @@ import {
   TableRowHeader,
   TableScroll,
 } from '../prototypes/table/table.proto.js';
-import {
-  Breadcrumb,
-  BreadcrumbLink,
-  BreadcrumbPage,
-} from '../prototypes/breadcrumb/breadcrumb.proto.js';
 import { defineScene } from '../workbench/types.js';
 import type { SceneContext } from '../workbench/types.js';
 import { folioSceneHref } from './folio/folio.routes.js';
