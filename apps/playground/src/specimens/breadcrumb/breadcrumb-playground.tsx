@@ -1,11 +1,6 @@
-import { Icon } from '@docouno/unica';
+import { Breadcrumb, BreadcrumbLink, BreadcrumbPage, Icon } from '@docouno/unica';
 import { CaretRightIcon } from '@phosphor-icons/react';
 import type { ReactElement } from 'react';
-import {
-  Breadcrumb,
-  BreadcrumbLink,
-  BreadcrumbPage,
-} from '../../prototypes/breadcrumb/breadcrumb.proto.js';
 import type { PreviewProps } from '../../workbench/types.js';
 import { breadcrumbDestinations } from './breadcrumb-destinations.js';
 import type { BreadcrumbValues } from './breadcrumb.spec.js';
@@ -17,8 +12,9 @@ interface PlaygroundProps extends PreviewProps {
 
 export function BreadcrumbPlayground({
   ctx,
-  values: { size, underline, separator, page },
+  values: { size, underline, separator, page, current },
 }: PlaygroundProps): ReactElement {
+  const label = page.trim() ? <bdi>{page}</bdi> : null;
   return (
     <Breadcrumb
       {...ctx.subject}
@@ -33,11 +29,18 @@ export function BreadcrumbPlayground({
     >
       <BreadcrumbLink href={breadcrumbDestinations.workspace}>Workspace</BreadcrumbLink>
       <BreadcrumbLink href={breadcrumbDestinations.runbooks}>Runbooks</BreadcrumbLink>
-      {page.trim() ? (
-        <BreadcrumbPage>
-          <bdi>{page}</bdi>
-        </BreadcrumbPage>
-      ) : null}
+      {label &&
+        (current === 'page' ? (
+          <BreadcrumbPage>{label}</BreadcrumbPage>
+        ) : (
+          <BreadcrumbLink
+            href={breadcrumbDestinations.guide}
+            aria-current="page"
+            disabled={current === 'disabled'}
+          >
+            {label}
+          </BreadcrumbLink>
+        ))}
     </Breadcrumb>
   );
 }

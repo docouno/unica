@@ -1,4 +1,7 @@
 import {
+  Breadcrumb,
+  BreadcrumbLink,
+  BreadcrumbPage,
   Button,
   CheckboxCard,
   Drawer,
@@ -23,11 +26,6 @@ import type { ReactElement } from 'react';
 import { OverlayExampleFrame } from '../examples/OverlayExampleFrame.js';
 import { Combobox } from '../prototypes/combobox/combobox.proto.js';
 import type { Suggestion } from '../prototypes/combobox/combobox.proto.js';
-import {
-  Breadcrumb,
-  BreadcrumbLink,
-  BreadcrumbPage,
-} from '../prototypes/breadcrumb/breadcrumb.proto.js';
 import { DatePicker } from '../prototypes/date-picker/date-picker.proto.js';
 import { defineScene } from '../workbench/types.js';
 import type { SceneContext } from '../workbench/types.js';

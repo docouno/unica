@@ -51,8 +51,21 @@ const props = {
     demo: true,
     label: 'Current page',
     default: 'Service recovery',
-    examples: ['Service recovery', 'Guide'],
-    description: 'Text inside BreadcrumbPage. Clear the field to show the ancestors alone.',
+    examples: ['Service recovery', 'Guide', ''],
+    description: 'Label of the current location. Clear it to show the ancestors alone.',
+  },
+  current: {
+    kind: 'enum',
+    group: 'Content',
+    demo: true,
+    label: 'Current item',
+    default: 'page',
+    choices: [
+      { value: 'page', label: 'Static page' },
+      { value: 'permalink', label: 'Permalink' },
+      { value: 'disabled', label: 'Unavailable permalink' },
+    ],
+    description: 'Choose a static label, an available current link, or an unavailable one.',
   },
 } as const satisfies PropSchema;
 
@@ -62,19 +75,27 @@ export default defineComponent({
   id: 'breadcrumb',
   title: 'Breadcrumb',
   category: 'Navigation',
-  status: 'Proto',
+  status: 'UI',
   componentName: 'Breadcrumb',
   summary: 'Show the path from a workspace to the current page, with links to its ancestors.',
   props,
   code: breadcrumbCode,
   render: withOverlaySurface(BreadcrumbPlayground, 'border-box'),
+  constraints: [
+    {
+      kind: 'ignored',
+      when: { page: '' },
+      affects: ['current'],
+      reason: 'Without a current label, the trail shows only its ancestors.',
+    },
+  ],
   states: [
     {
       id: 'sizes',
       title: 'Sizes and separators',
       rows: 'size',
       cols: 'separator',
-      fixed: { page: 'Guide', underline: 'always' },
+      fixed: { page: 'Guide', current: 'page', underline: 'always' },
       caption: 'Compare type, spacing, and separators along the same path in each size.',
     },
     {
@@ -83,6 +104,15 @@ export default defineComponent({
       rows: 'underline',
       fixed: { size: 'm', separator: 'slash', page: 'Guide' },
       caption: 'Hover or focus an ancestor link to compare the three underline policies.',
+    },
+    {
+      id: 'current',
+      title: 'Current location',
+      rows: 'current',
+      cols: 'underline',
+      fixed: { page: 'Guide', size: 'm', separator: 'slash' },
+      caption:
+        'Compare the current page, permalink, and unavailable permalink in each underline mode.',
     },
   ],
   cases: [
@@ -101,7 +131,7 @@ export default defineComponent({
       kind: 'behavior',
       mode: 'live',
       caption:
-        'Tab through the live trail. Four rows pin the resting, hover, pressed, and keyboard focus appearances. The final ancestor is unavailable.',
+        'Hover, press, or Tab through the live links. Compare the available current permalink with an unavailable ancestor and an unavailable current permalink.',
       render: withOverlaySurface(BreadcrumbLinkStates, 'border-box'),
     },
     {
@@ -130,7 +160,7 @@ export default defineComponent({
           subject={ctx.subject}
         />
       ),
-      code: overlaySource.replaceAll('../../prototypes/', './prototypes/'),
+      code: overlaySource,
     },
   ],
 });

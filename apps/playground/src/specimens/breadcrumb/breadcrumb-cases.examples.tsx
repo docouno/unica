@@ -1,11 +1,6 @@
-import { Icon, Stack, Text, VisuallyHidden } from '@docouno/unica';
+import { Breadcrumb, BreadcrumbLink, BreadcrumbPage, Icon, Stack, Text } from '@docouno/unica';
 import { CaretRightIcon, HouseIcon } from '@phosphor-icons/react';
 import type { ReactElement, ReactNode } from 'react';
-import {
-  Breadcrumb,
-  BreadcrumbLink,
-  BreadcrumbPage,
-} from '../../prototypes/breadcrumb/breadcrumb.proto.js';
 import type { PreviewProps } from '../../workbench/types.js';
 import { breadcrumbDestinations } from './breadcrumb-destinations.js';
 
@@ -77,13 +72,6 @@ export function BreadcrumbAnatomy({ ctx }: PreviewProps): ReactElement {
   );
 }
 
-const comparisonStates = [
-  { label: 'Rest' },
-  { label: 'Hover', previewState: 'hover' },
-  { label: 'Pressed', previewState: 'active' },
-  { label: 'Keyboard focus', previewFocus: true },
-] as const;
-
 export function BreadcrumbLinkStates({ ctx }: PreviewProps): ReactElement {
   return (
     <Stack gap={16}>
@@ -96,29 +84,28 @@ export function BreadcrumbLinkStates({ ctx }: PreviewProps): ReactElement {
           >
             <Icon usage="slot" icon={HouseIcon} />
           </BreadcrumbLink>
-          <BreadcrumbLink href={breadcrumbDestinations.runbooks}>Runbooks</BreadcrumbLink>
+          <BreadcrumbLink href={breadcrumbDestinations.runbooks} underline="hover">
+            Runbooks
+          </BreadcrumbLink>
+          <BreadcrumbLink href={breadcrumbDestinations.guide} aria-current="page">
+            Failover guide
+          </BreadcrumbLink>
+        </Breadcrumb>
+      </TrailStudy>
+      <TrailStudy label="Unavailable ancestor">
+        <Breadcrumb {...ctx.subject} aria-label="Unpublished runbooks path">
+          <BreadcrumbLink href={breadcrumbDestinations.workspace}>Workspace</BreadcrumbLink>
+          <BreadcrumbLink disabled>Runbooks</BreadcrumbLink>
           <BreadcrumbPage>Failover guide</BreadcrumbPage>
         </Breadcrumb>
       </TrailStudy>
-      {comparisonStates.map(({ label, ...state }) => (
-        <TrailStudy key={label} label={label}>
-          <Breadcrumb {...ctx.subject} aria-label={label + ' link appearance'}>
-            <span>
-              <BreadcrumbLink href={breadcrumbDestinations.runbooks} inert {...state}>
-                Runbooks
-              </BreadcrumbLink>
-              <VisuallyHidden>Runbooks</VisuallyHidden>
-            </span>
-            <BreadcrumbPage>Failover guide</BreadcrumbPage>
-          </Breadcrumb>
-        </TrailStudy>
-      ))}
-      <TrailStudy label="Unavailable ancestor">
-        <Breadcrumb {...ctx.subject} aria-label="Unavailable link appearance">
-          <BreadcrumbLink href={breadcrumbDestinations.runbooks} disabled>
-            Runbooks
+      <TrailStudy label="Unavailable current permalink">
+        <Breadcrumb {...ctx.subject} aria-label="Unpublished guide path">
+          <BreadcrumbLink href={breadcrumbDestinations.workspace}>Workspace</BreadcrumbLink>
+          <BreadcrumbLink href={breadcrumbDestinations.runbooks}>Runbooks</BreadcrumbLink>
+          <BreadcrumbLink disabled aria-current="page">
+            Failover guide
           </BreadcrumbLink>
-          <BreadcrumbPage>Failover guide</BreadcrumbPage>
         </Breadcrumb>
       </TrailStudy>
     </Stack>
