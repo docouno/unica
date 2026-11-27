@@ -132,11 +132,18 @@ export function FieldWarningGlyph({ className }: GlyphProps): ReactElement {
   );
 }
 
-export function FieldDangerGlyph({ className }: GlyphProps): ReactElement {
+export function FieldDangerGlyph({
+  className,
+  weight = 'regular',
+}: GlyphProps & { readonly weight?: 'regular' | 'bold' }): ReactElement {
   return (
     <Glyph
       className={className}
-      path="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216Zm-8-80V80a8,8,0,0,1,16,0v56a8,8,0,0,1-16,0Zm20,36a12,12,0,1,1-12-12A12,12,0,0,1,140,172Z"
+      path={
+        weight === 'bold'
+          ? 'M128,20A108,108,0,1,0,236,128,108.12,108.12,0,0,0,128,20Zm0,192a84,84,0,1,1,84-84A84.09,84.09,0,0,1,128,212Zm-12-80V80a12,12,0,0,1,24,0v52a12,12,0,0,1-24,0Zm28,40a16,16,0,1,1-16-16A16,16,0,0,1,144,172Z'
+          : 'M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216Zm-8-80V80a8,8,0,0,1,16,0v56a8,8,0,0,1-16,0Zm20,36a12,12,0,1,1-12-12A12,12,0,0,1,140,172Z'
+      }
     />
   );
 }

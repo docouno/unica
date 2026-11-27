@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { Buffer } from 'node:buffer';
 import { assertFocused } from '../helpers.mjs';
 
 export default {
@@ -75,5 +76,68 @@ export default {
       await page.mouse.click(x, y);
       assert.equal(await button.getAttribute('aria-expanded'), 'false', surface);
     }
+  },
+
+  'Stepper keeps Folio import passive through dry run, commit, Back and revalidation': async ({
+    page,
+    origin,
+  }) => {
+    await page.setViewportSize({ width: 1500, height: 960 });
+    await page.goto(
+      new URL('/?item=10-workspace-admin&family=soft&scheme=dark&vp=1440&raw=1', origin).href,
+    );
+    const map = page.getByRole('group', { name: 'Batch import stages' });
+    await map.waitFor({ timeout: 20_000 });
+    const current = map.locator('[aria-current="step"]:visible');
+    const proceed = page.getByRole('button', { name: 'Continue to commit', exact: true });
+    const dryRun = page.getByRole('button', { name: 'Run dry-run check' });
+    assert.equal(await proceed.isDisabled(), true);
+    assert.equal(await map.getByRole('button').count(), 0);
+    await dryRun.press('Enter');
+    await assertFocused(dryRun);
+    assert.match(await current.textContent(), /Upload & verify/);
+    await proceed.press('Enter');
+    await assertFocused(page.getByText(/validated archives? (?:are|is) ready to import/));
+    assert.match(await current.textContent(), /Commit to space/);
+    await page.getByRole('button', { name: 'Back', exact: true }).press('Enter');
+    await assertFocused(page.getByRole('heading', { name: /Archive bundles & validation queue/ }));
+    assert.match(await current.textContent(), /Upload & verify/);
+    await page.locator('input[type="file"][accept=".md,.mdx,.zip"]').setInputFiles({
+      name: 'release-notes.md',
+      mimeType: 'text/markdown',
+      buffer: Buffer.from('# Release notes'),
+    });
+    await page.getByText('release-notes.md', { exact: true }).waitFor();
+    assert.equal(await proceed.isDisabled(), true);
+    await dryRun.press('Enter');
+    assert.equal(await proceed.isEnabled(), true);
+  },
+
+  'Stepper exposes a live return trial and the shipped Usage document': async ({
+    page,
+    origin,
+  }) => {
+    await page.setViewportSize({ width: 1300, height: 900 });
+    const url = new URL(
+      '/?item=stepper&tab=states&block=interaction&family=frost&scheme=dark&raw=1',
+      origin,
+    );
+    await page.goto(url.href);
+    const board = page.locator('[data-wb-block="interaction"] .wb-artboard');
+    const plan = board.getByRole('button', { name: 'Step 1: Plan, completed' });
+    await plan.waitFor({ timeout: 20_000 });
+    const current = board.locator('li[aria-current="step"]');
+    assert.match(await current.textContent(), /Details/);
+    assert.equal(await current.getByRole('button').count(), 0);
+    await plan.press('Enter');
+    assert.match(await current.textContent(), /Plan/);
+    await assertFocused(current);
+    url.searchParams.set('tab', 'usage');
+    url.searchParams.delete('block');
+    url.searchParams.delete('raw');
+    await page.goto(url.href);
+    await page.getByRole('heading', { name: 'Controlled process' }).waitFor();
+    await page.getByRole('heading', { name: 'Local position' }).waitFor();
+    assert.ok(await page.getByText('markerNumber(index)', { exact: true }).isVisible());
   },
 };

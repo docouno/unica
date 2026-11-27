@@ -1,5 +1,5 @@
 import type { ReactElement } from 'react';
-import type { StepperStepProps } from '../../prototypes/stepper/stepper.proto.js';
+import type { StepperStepProps } from '@docouno/unica';
 import type { PreviewContext, PreviewProps } from '../../workbench/types.js';
 import { StepMap } from './stepper-map.js';
 import { workspaceSteps } from './stepper-steps.js';
@@ -18,12 +18,12 @@ const corrections: ProgressMap = {
       return {
         ...step,
         completed: true,
-        invalid: true,
-        issue: 'Choose an available workspace name.',
+        status: 'danger',
+        message: 'Choose an available workspace name.',
       };
     }
     if (step.value === 'access') {
-      return { ...step, invalid: true, issue: 'Assign a workspace owner.' };
+      return { ...step, status: 'danger', message: 'Assign a workspace owner.' };
     }
     return step;
   }),
@@ -97,7 +97,7 @@ function StateStudy({
     >
       <StepMap
         {...ctx.subject}
-        label={map.label ?? 'Workspace setup'}
+        aria-label={map.label ?? 'Workspace setup'}
         value={map.value}
         steps={map.steps}
         layout={study === 'compact' ? 'compact' : 'vertical'}

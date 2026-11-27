@@ -1,11 +1,14 @@
 import type { ReactElement } from 'react';
-import { Stepper, StepperStep } from '../../prototypes/stepper/stepper.proto.js';
-import type { StepperProps, StepperStepProps } from '../../prototypes/stepper/stepper.proto.js';
+import { Stepper, StepperStep } from '@docouno/unica';
+import type { StepperProps, StepperStepProps } from '@docouno/unica';
 
 export function StepMap({
   steps,
   ...props
-}: Omit<StepperProps, 'children'> & { readonly steps: readonly StepperStepProps[] }): ReactElement {
+}: StepperProps & {
+  readonly children?: never;
+  readonly steps: readonly StepperStepProps[];
+}): ReactElement {
   return (
     <Stepper {...props}>
       {steps.map((step) => (

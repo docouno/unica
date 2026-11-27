@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import type { ReactElement } from 'react';
 import type { PreviewProps } from '../../workbench/types.js';
-import { stepperPreview } from './stepper-code.js';
+import { stageMessages, stepperPreview } from './stepper-code.js';
 import { StepMap } from './stepper-map.js';
 import type { StepperValues } from './stepper.spec.js';
 import './stepper-matrix.css';
@@ -12,7 +12,7 @@ interface PlaygroundProps extends PreviewProps {
 
 function WorkflowSteps({ ctx, values }: PlaygroundProps): ReactElement {
   const [current, setCurrent] = useState(values.value || null);
-  const { label, steps } = stepperPreview(values);
+  const { name, steps } = stepperPreview(values);
   const [overflowing, setOverflowing] = useState(false);
   const horizontal = values.layout === 'horizontal';
   const scrollable = horizontal && overflowing;
@@ -31,7 +31,7 @@ function WorkflowSteps({ ctx, values }: PlaygroundProps): ReactElement {
       data-stepper-process={values.example}
       data-example-disclosure={disclosure ? '' : undefined}
       role={scrollable ? 'region' : undefined}
-      aria-label={scrollable ? `Scrollable steps: ${label}` : undefined}
+      aria-label={scrollable ? `Scrollable steps: ${name}` : undefined}
       tabIndex={scrollable ? 0 : undefined}
       ref={(viewport) => {
         if (!horizontal || !viewport?.firstElementChild) {
@@ -47,9 +47,13 @@ function WorkflowSteps({ ctx, values }: PlaygroundProps): ReactElement {
     >
       <StepMap
         {...ctx.subject}
-        label={label}
+        aria-label={name}
         steps={steps}
-        value={current}
+        {...(values.mode === 'controlled'
+          ? { value: current }
+          : { defaultValue: values.defaultValue || null })}
+        allowReturn={values.allowReturn}
+        messages={values.messages === 'stages' ? stageMessages : undefined}
         size={values.size}
         layout={values.layout}
         {...(values.allowReturn ? { onValueChange: acceptStep } : {})}
@@ -59,6 +63,7 @@ function WorkflowSteps({ ctx, values }: PlaygroundProps): ReactElement {
 }
 
 export function StepperPlayground(props: PlaygroundProps): ReactElement {
-  const { example, allowReturn, value } = props.values;
-  return <WorkflowSteps key={`${example}:${allowReturn}:${value}`} {...props} />;
+  const { example, mode, value, defaultValue } = props.values;
+  const initial = mode === 'local' ? defaultValue : value;
+  return <WorkflowSteps key={JSON.stringify([example, mode, initial])} {...props} />;
 }
